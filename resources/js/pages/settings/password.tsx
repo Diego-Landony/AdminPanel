@@ -11,13 +11,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+/**
+ * Breadcrumbs para la navegación de configuración de contraseña
+ */
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Password settings',
+        title: 'Configuración de Contraseña',
         href: '/settings/password',
     },
 ];
 
+/**
+ * Página de configuración de contraseña
+ * Permite al usuario actualizar su contraseña de forma segura
+ */
 export default function Password() {
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
@@ -28,6 +35,9 @@ export default function Password() {
         password_confirmation: '',
     });
 
+    /**
+     * Actualiza la contraseña del usuario
+     */
     const updatePassword: FormEventHandler = (e) => {
         e.preventDefault();
 
@@ -50,15 +60,18 @@ export default function Password() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Password settings" />
+            <Head title="Configuración de Contraseña" />
 
             <SettingsLayout>
                 <div className="space-y-6">
-                    <HeadingSmall title="Update password" description="Ensure your account is using a long, random password to stay secure" />
+                    <HeadingSmall 
+                        title="Actualizar Contraseña" 
+                        description="Asegúrate de que tu cuenta use una contraseña larga y aleatoria para mantener la seguridad" 
+                    />
 
                     <form onSubmit={updatePassword} className="space-y-6">
                         <div className="grid gap-2">
-                            <Label htmlFor="current_password">Current password</Label>
+                            <Label htmlFor="current_password">Contraseña Actual</Label>
 
                             <Input
                                 id="current_password"
@@ -68,14 +81,14 @@ export default function Password() {
                                 type="password"
                                 className="mt-1 block w-full"
                                 autoComplete="current-password"
-                                placeholder="Current password"
+                                placeholder="Contraseña actual"
                             />
 
                             <InputError message={errors.current_password} />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="password">New password</Label>
+                            <Label htmlFor="password">Nueva Contraseña</Label>
 
                             <Input
                                 id="password"
@@ -85,14 +98,14 @@ export default function Password() {
                                 type="password"
                                 className="mt-1 block w-full"
                                 autoComplete="new-password"
-                                placeholder="New password"
+                                placeholder="Nueva contraseña"
                             />
 
                             <InputError message={errors.password} />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="password_confirmation">Confirm password</Label>
+                            <Label htmlFor="password_confirmation">Confirmar Contraseña</Label>
 
                             <Input
                                 id="password_confirmation"
@@ -101,14 +114,16 @@ export default function Password() {
                                 type="password"
                                 className="mt-1 block w-full"
                                 autoComplete="new-password"
-                                placeholder="Confirm password"
+                                placeholder="Confirmar nueva contraseña"
                             />
 
                             <InputError message={errors.password_confirmation} />
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <Button disabled={processing}>Save password</Button>
+                            <Button disabled={processing}>
+                                {processing ? 'Guardando...' : 'Guardar Contraseña'}
+                            </Button>
 
                             <Transition
                                 show={recentlySuccessful}
@@ -117,7 +132,7 @@ export default function Password() {
                                 leave="transition ease-in-out"
                                 leaveTo="opacity-0"
                             >
-                                <p className="text-sm text-neutral-600">Saved</p>
+                                <p className="text-sm text-neutral-600">Guardado</p>
                             </Transition>
                         </div>
                     </form>

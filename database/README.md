@@ -246,10 +246,10 @@ Tabla para trabajos fallidos en cola.
   - `last_login_at`: Para logins reales
   - `last_activity_at`: Para actividad continua
 - **Estados de usuario**: Basados en `last_activity_at`
-  - 🟢 En línea: < 5 minutos
-  - 🔵 Reciente: < 15 minutos
-  - ⚫ Desconectado: > 15 minutos
-  - ❌ Nunca: Sin registro
+  - En línea: < 5 minutos
+  - Reciente: < 15 minutos
+  - Desconectado: > 15 minutos
+  - Nunca: Sin registro
 
 ### **📊 Sistema de Auditoría**
 - **Registro automático** de todas las actividades importantes

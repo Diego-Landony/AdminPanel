@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\ThemeController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\AuditController;
 
 // Redirigir la página principal al login si no está autenticado
 Route::get('/', function () {
@@ -20,6 +22,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+
+    Route::get('users', [UserController::class, 'index'])->name('users.index');
+    Route::post('users/keep-alive', [UserController::class, 'keepAlive'])->name('users.keep-alive');
+    
+    Route::get('audit', [AuditController::class, 'index'])->name('audit.index');
 });
 
 require __DIR__.'/settings.php';

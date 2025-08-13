@@ -1,0 +1,126 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+use Carbon\Carbon;
+
+/**
+ * Controlador para la gestión de usuarios del sistema
+ * Proporciona funcionalidades para listar y gestionar usuarios
+ */
+class UserController extends Controller
+{
+    /**
+     * Muestra la lista de todos los usuarios del sistema
+     * 
+     * @param Request $request - Request actual
+     * @return \Inertia\Response - Vista de Inertia con la lista de usuarios
+     */
+    public function index(Request $request): Response
+    {
+        // Obtener usuarios con información de último acceso
+        $users = User::select([
+            'id',
+            'name',
+            'email',
+            'email_verified_at',
+            'created_at',
+            'updated_at',
+            'last_activity_at'
+        ])
+        ->orderBy('created_at', 'desc')
+        ->get()
+        ->map(function ($user) {
+            $isOnline = $this->isUserOnline($user->last_activity_at);
+            $status = $this->getUserStatus($user->last_activity_at);
+            
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'email_verified_at' => $user->email_verified_at,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+                'last_activity' => $user->last_activity_at,
+                'is_online' => $isOnline,
+                'status' => $status,
+            ];
+        });
+
+        return Inertia::render('users/index', [
+            'users' => $users,
+            'total_users' => $users->count(),
+            'verified_users' => $users->where('email_verified_at', '!=', null)->count(),
+            'online_users' => $users->where('is_online', true)->count(),
+        ]);
+    }
+
+    /**
+     * Mantiene la sesión del usuario activa
+     * Actualiza el last_activity_at cada 30 segundos
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function keepAlive(Request $request)
+    {
+        if (auth()->check()) {
+            $user = auth()->user();
+            $user->updateLastActivity();
+            
+            // Registrar actividad de heartbeat
+            $user->logActivity('heartbeat', 'Heartbeat para mantener sesión activa');
+            
+            // Devolver respuesta HTTP simple sin contenido
+            return response('', 204);
+        }
+        
+        // Si no está autenticado, devolver 401 sin contenido
+        return response('', 401);
+    }
+
+    /**
+     * Determina si un usuario está en línea
+     * En línea: Última actividad < 5 minutos
+     */
+    private function isUserOnline($lastActivityAt): bool
+    {
+        if (!$lastActivityAt) {
+            return false;
+        }
+        
+        $lastActivity = Carbon::parse($lastActivityAt)->utc();
+        $now = Carbon::now()->utc();
+        return $lastActivity->diffInMinutes($now) < 5;
+    }
+
+    /**
+     * Obtiene el estado del usuario basado en su última actividad
+     * 🟢 En línea: Última actividad < 5 minutos (más realista)
+     * 🔵 Reciente: Última actividad < 15 minutos (más preciso)
+     * ⚫ Desconectado: Última actividad > 15 minutos
+     * ❌ Nunca: Sin registro de actividad
+     */
+    private function getUserStatus($lastActivityAt): string
+    {
+        if (!$lastActivityAt) {
+            return 'never';
+        }
+        
+        $lastActivity = Carbon::parse($lastActivityAt)->utc();
+        $now = Carbon::now()->utc();
+        $minutesDiff = $lastActivity->diffInMinutes($now);
+        
+        if ($minutesDiff < 5) {
+            return 'online';
+        } elseif ($minutesDiff < 15) {
+            return 'recent';
+        } else {
+            return 'offline';
+        }
+    }
+}

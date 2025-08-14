@@ -37,7 +37,7 @@ class AuditController extends Controller
         // Query base para actividades de usuarios
         $activitiesQuery = UserActivity::with('user')
             ->when($dateFrom, fn($query) => $query->where('created_at', '>=', $dateFrom))
-            ->when($searchTerm, function ($query) use ($searchTerm) {
+            ->when($searchTerm && !empty(trim($searchTerm)), function ($query) use ($searchTerm) {
                 $query->where(function ($q) use ($searchTerm) {
                     $q->where('description', 'like', "%{$searchTerm}%")
                       ->orWhere('activity_type', 'like', "%{$searchTerm}%")
@@ -48,13 +48,13 @@ class AuditController extends Controller
                       });
                 });
             })
-            ->when($eventType, fn($query) => $query->where('activity_type', $eventType))
-            ->when($userId, fn($query) => $query->where('user_id', $userId));
+            ->when($eventType && !empty(trim($eventType)), fn($query) => $query->where('activity_type', $eventType))
+            ->when($userId && !empty(trim($userId)), fn($query) => $query->where('user_id', $userId));
 
         // Query base para logs de actividad
         $auditQuery = AuditLog::with('user')
             ->when($dateFrom, fn($query) => $query->where('created_at', '>=', $dateFrom))
-            ->when($searchTerm, function ($query) use ($searchTerm) {
+            ->when($searchTerm && !empty(trim($searchTerm)), function ($query) use ($searchTerm) {
                 $query->where(function ($q) use ($searchTerm) {
                     $q->where('description', 'like', "%{$searchTerm}%")
                       ->orWhere('event_type', 'like', "%{$searchTerm}%")
@@ -65,8 +65,8 @@ class AuditController extends Controller
                       });
                 });
             })
-            ->when($eventType, fn($query) => $query->where('event_type', $eventType))
-            ->when($userId, fn($query) => $query->where('user_id', $userId));
+            ->when($eventType && !empty(trim($eventType)), fn($query) => $query->where('event_type', $eventType))
+            ->when($userId && !empty(trim($userId)), fn($query) => $query->where('user_id', $userId));
 
         // Combinar y ordenar ambas consultas
         $allActivities = collect();
@@ -123,20 +123,42 @@ class AuditController extends Controller
         $paginatedActivities = $allActivities->slice($offset, $perPage);
         
         $activities = new \Illuminate\Pagination\LengthAwarePaginator(
-            $paginatedActivities,
+            $paginatedActivities->values(), // ✅ Convertir a array con valores indexados
             $allActivities->count(),
             $perPage,
             $currentPage,
-            ['path' => request()->url(), 'query' => request()->query()]
+            [
+                'path' => $request->url(), 
+                'pageName' => 'page'
+            ]
         );
+        
+        // ✅ SOLUCIÓN: Preservar todos los filtros en la paginación
+        $activities->appends($request->all());
 
-        // Obtener estadísticas
-        $totalEvents = $activitiesQuery->count() + $auditQuery->count();
-        $uniqueUsers = collect([$activitiesQuery->distinct('user_id')->pluck('user_id'), $auditQuery->distinct('user_id')->pluck('user_id')])
-            ->flatten()
-            ->unique()
-            ->count();
-        $todayEvents = $activitiesQuery->whereDate('created_at', today())->count() + $auditQuery->whereDate('created_at', today())->count();
+        // Obtener estadísticas del TOTAL (sin filtros de búsqueda, solo rango de fechas)
+        $totalStatsQuery = UserActivity::with('user')
+            ->when($dateFrom, fn($query) => $query->where('created_at', '>=', $dateFrom));
+        
+        $totalAuditStatsQuery = AuditLog::with('user')
+            ->when($dateFrom, fn($query) => $query->where('created_at', '>=', $dateFrom));
+        
+        // Si hay filtros aplicados, calcular estadísticas de los resultados filtrados
+        if ($searchTerm || $eventType || $userId) {
+            $totalEvents = $allActivities->count();
+            $uniqueUsers = $allActivities->pluck('user.id')->unique()->count();
+            $todayEvents = $allActivities->filter(function($activity) {
+                return \Carbon\Carbon::parse($activity['created_at'])->isToday();
+            })->count();
+        } else {
+            // Sin filtros, usar estadísticas del total
+            $totalEvents = $totalStatsQuery->count() + $totalAuditStatsQuery->count();
+            $uniqueUsers = collect([
+                $totalStatsQuery->distinct('user_id')->pluck('user_id'), 
+                $totalAuditStatsQuery->distinct('user_id')->pluck('user_id')
+            ])->flatten()->unique()->count();
+            $todayEvents = $totalStatsQuery->whereDate('created_at', today())->count() + $totalAuditStatsQuery->whereDate('created_at', today())->count();
+        }
 
         // Obtener tipos de eventos únicos para filtros (actividades + auditoría)
         $activityTypes = UserActivity::select('activity_type')
@@ -187,6 +209,8 @@ class AuditController extends Controller
             ],
         ]);
     }
+
+
 
     /**
      * Obtiene las iniciales de un nombre de usuario

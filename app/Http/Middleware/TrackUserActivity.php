@@ -22,17 +22,9 @@ class TrackUserActivity
         if (Auth::check()) {
             $user = Auth::user();
             
-            // Actualizar last_activity_at cada 30 segundos para heartbeat
+            // Actualizar last_activity_at cada 30 segundos para mantener sesión activa
             if (!$user->last_activity_at || $user->last_activity_at->diffInSeconds(now()) >= 30) {
                 $user->updateLastActivity();
-                
-                // También registrar la actividad de página vista (solo para rutas importantes)
-                if (!str_contains($request->path(), 'keep-alive')) {
-                    $user->logActivity('page_view', 'Vista de página: ' . $request->path(), [
-                        'route' => $request->route()?->getName(),
-                        'params' => $request->route()?->parameters(),
-                    ]);
-                }
             }
         }
 

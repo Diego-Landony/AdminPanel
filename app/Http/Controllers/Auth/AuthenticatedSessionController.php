@@ -33,6 +33,12 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // ✅ Registrar inicio de sesión en auditoría
+        $user = auth()->user();
+        if ($user) {
+            $user->logActivity('login', 'Usuario inició sesión');
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

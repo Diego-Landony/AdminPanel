@@ -1,8 +1,13 @@
 # 📊 Esquema de Base de Datos - Videra
 
+**Versión del Esquema:** 2.1.0 - Sistema de Roles Dinámicos y Simplificados  
+**Última Actualización:** Agosto 2025  
+**Base de Datos:** SQLite (Desarrollo) / MySQL (Producción)  
+**Características Principales:** Sistema RBAC con descubrimiento automático e interfaz simplificada
+
 ## 🎯 Resumen General
 
-Este documento describe el esquema completo de la base de datos SQLite del proyecto **Videra**, incluyendo todas las tablas, relaciones, índices y funcionalidades implementadas.
+Este documento describe el esquema completo de la base de datos SQLite del proyecto **Videra**, incluyendo todas las tablas, relaciones, índices y funcionalidades implementadas. El sistema incluye un **sistema de roles y permisos dinámicos** que se adapta automáticamente a las páginas del sistema.
 
 ---
 
@@ -29,6 +34,7 @@ Tabla principal para almacenar información de usuarios del sistema.
 - 1:N con `user_activities`
 - 1:N con `audit_logs`
 - 1:N con `sessions`
+- N:M con `roles` (a través de `role_user`)
 
 ---
 
@@ -200,6 +206,109 @@ Tabla para trabajos fallidos en cola.
 
 ---
 
+### 🛡️ **11. roles**
+Tabla para almacenar los roles del sistema de permisos.
+
+| Campo | Tipo | Descripción | Índices |
+|-------|------|-------------|---------|
+| `id` | INTEGER PRIMARY KEY | Identificador único auto-incremental | PRIMARY |
+| `name` | VARCHAR(255) | Nombre único del rol (slug) | UNIQUE |
+| `display_name` | VARCHAR(255) | Nombre visible del rol | - |
+| `description` | TEXT NULL | Descripción del rol | - |
+| `is_system` | BOOLEAN | Si es un rol del sistema (no eliminable) | DEFAULT: false |
+| `created_at` | TIMESTAMP | Fecha de creación | - |
+| `updated_at` | TIMESTAMP | Fecha de última actualización | - |
+
+**Relaciones:**
+- N:M con `users` (a través de `role_user`)
+- N:M con `permissions` (a través de `permission_role`)
+
+**Roles del Sistema (v2.1.0 - Simplificado):**
+- `Administrador` - Único rol del sistema protegido con acceso completo
+- Roles personalizados - Creados por administradores con nombres legibles únicos
+
+**Mejoras de Simplificación:**
+- **Campo único**: Solo `name` (eliminado `display_name` duplicado)
+- **Nombres legibles**: Roles usan nombres directos como "Administrador", "Editor"
+- **Interfaz limpia**: Formularios simplificados sin campos redundantes
+- **Usuarios sin roles**: Solo pueden acceder al dashboard
+- **Actualización automática**: El rol Administrador se actualiza con nuevos permisos
+
+---
+
+### 🔑 **12. permissions**
+Tabla para almacenar los permisos del sistema.
+
+| Campo | Tipo | Descripción | Índices |
+|-------|------|-------------|---------|
+| `id` | INTEGER PRIMARY KEY | Identificador único auto-incremental | PRIMARY |
+| `name` | VARCHAR(255) | Nombre único del permiso | UNIQUE |
+| `display_name` | VARCHAR(255) | Nombre visible del permiso | - |
+| `description` | TEXT NULL | Descripción del permiso | - |
+| `group` | VARCHAR(100) | Grupo al que pertenece el permiso | INDEX |
+| `created_at` | TIMESTAMP | Fecha de creación | - |
+| `updated_at` | TIMESTAMP | Fecha de última actualización | - |
+
+**Relaciones:**
+- N:M con `roles` (a través de `permission_role`)
+
+**Grupos de Permisos (Dinámicos v2.0.0):**
+- `dashboard` - Panel principal (solo view)
+- `users` - Gestión de usuarios (view, create, edit, delete)
+- `audit` - Logs de actividad (solo view)
+- `roles` - Gestión de roles y permisos (view, create, edit, delete)
+- Grupos futuros - Se generan automáticamente al detectar nuevas páginas
+
+**Acciones Estándar:**
+- `view` - Ver/listar elementos (siempre presente)
+- `create` - Crear nuevos elementos
+- `edit` - Modificar elementos existentes  
+- `delete` - Eliminar elementos
+
+**Nomenclatura:** Los permisos siguen el patrón `{página}.{acción}` (ej: `users.view`, `roles.create`)
+
+---
+
+### 🔗 **13. role_user**
+Tabla pivote para la relación muchos-a-muchos entre usuarios y roles.
+
+| Campo | Tipo | Descripción | Índices |
+|-------|------|-------------|---------|
+| `id` | INTEGER PRIMARY KEY | Identificador único auto-incremental | PRIMARY |
+| `user_id` | INTEGER | FK a tabla users | INDEX, FK |
+| `role_id` | INTEGER | FK a tabla roles | INDEX, FK |
+| `created_at` | TIMESTAMP | Fecha de asignación | - |
+| `updated_at` | TIMESTAMP | Fecha de última actualización | - |
+
+**Índices Únicos:**
+- `(user_id, role_id)` - Evita roles duplicados por usuario
+
+**Constraints:**
+- FK: `user_id` → `users.id` (ON DELETE CASCADE)
+- FK: `role_id` → `roles.id` (ON DELETE CASCADE)
+
+---
+
+### 🔐 **14. permission_role**
+Tabla pivote para la relación muchos-a-muchos entre roles y permisos.
+
+| Campo | Tipo | Descripción | Índices |
+|-------|------|-------------|---------|
+| `id` | INTEGER PRIMARY KEY | Identificador único auto-incremental | PRIMARY |
+| `permission_id` | INTEGER | FK a tabla permissions | INDEX, FK |
+| `role_id` | INTEGER | FK a tabla roles | INDEX, FK |
+| `created_at` | TIMESTAMP | Fecha de asignación | - |
+| `updated_at` | TIMESTAMP | Fecha de última actualización | - |
+
+**Índices Únicos:**
+- `(permission_id, role_id)` - Evita permisos duplicados por rol
+
+**Constraints:**
+- FK: `permission_id` → `permissions.id` (ON DELETE CASCADE)
+- FK: `role_id` → `roles.id` (ON DELETE CASCADE)
+
+---
+
 ## 🔗 Relaciones Entre Tablas
 
 ### **users → user_activities (1:N)**
@@ -216,6 +325,20 @@ Tabla para trabajos fallidos en cola.
 - Un usuario puede tener múltiples sesiones
 - FK: `sessions.user_id` → `users.id`
 - ON DELETE: CASCADE
+
+### **users ↔ roles (N:M)**
+- Un usuario puede tener múltiples roles
+- Un rol puede ser asignado a múltiples usuarios
+- Tabla pivote: `role_user`
+- FK: `role_user.user_id` → `users.id` (ON DELETE CASCADE)
+- FK: `role_user.role_id` → `roles.id` (ON DELETE CASCADE)
+
+### **roles ↔ permissions (N:M)**
+- Un rol puede tener múltiples permisos
+- Un permiso puede ser asignado a múltiples roles
+- Tabla pivote: `permission_role`
+- FK: `permission_role.role_id` → `roles.id` (ON DELETE CASCADE)
+- FK: `permission_role.permission_id` → `permissions.id` (ON DELETE CASCADE)
 
 ---
 
@@ -235,6 +358,24 @@ Tabla para trabajos fallidos en cola.
 3. **sessions**:
    - `user_id` - Para consultas por usuario
    - `last_activity` - Para limpiar sesiones expiradas
+
+4. **roles**:
+   - `name` - Nombre único del rol
+   - `is_system` - Para filtrar roles del sistema
+
+5. **permissions**:
+   - `name` - Nombre único del permiso
+   - `group` - Para agrupar permisos por funcionalidad
+
+6. **role_user**:
+   - `(user_id, role_id)` - Evita duplicados y optimiza consultas
+   - `user_id` - Para consultas por usuario
+   - `role_id` - Para consultas por rol
+
+7. **permission_role**:
+   - `(permission_id, role_id)` - Evita duplicados y optimiza consultas
+   - `permission_id` - Para consultas por permiso
+   - `role_id` - Para consultas por rol
 
 ---
 
@@ -264,6 +405,47 @@ Tabla para trabajos fallidos en cola.
 - **Zona horaria por usuario**: Campo `timezone` en users
 - **Formato Guatemala**: Conversión automática a `America/Guatemala`
 
+### **🛡️ Sistema de Roles y Permisos (v2.0.0 - Dinámico)**
+- **Arquitectura RBAC**: Role-Based Access Control con descubrimiento automático
+- **Detección automática**: Escanea páginas y genera permisos dinámicamente
+- **Escalabilidad**: Se adapta automáticamente a nuevas páginas del sistema
+- **Roles del sistema**: Solo "Administrador" como rol protegido
+- **Permisos granulares**: 4 acciones base (view, create, edit, delete)
+- **Sincronización automática**: Comando `permissions:sync` para actualizar
+- **Asignación múltiple**: Un usuario puede tener múltiples roles
+- **Herencia de permisos**: Los permisos se heredan de todos los roles asignados
+- **Gestión completa**: CRUD completo para roles personalizados
+- **Usuario por defecto**: admin@admin.com (contraseña: admin) con acceso completo
+
+**Sistema de Descubrimiento:**
+- **Servicio**: `PermissionDiscoveryService` - Escanea `/resources/js/pages/`
+- **Comando**: `php artisan permissions:sync` - Sincroniza permisos automáticamente
+- **Seeder dinámico**: `RolesAndPermissionsSeeder` - Usa descubrimiento automático
+- **Middleware**: `CheckUserPermissions` - Valida permisos dinámicamente
+- **Frontend**: Hook `usePermissions` - Gestión de permisos en React
+
+**Permisos Generados Automáticamente:**
+- **Dashboard**: `dashboard.view` (solo lectura)
+- **Usuarios**: `users.view`, `users.create`, `users.edit`, `users.delete`
+- **Actividad**: `audit.view` (solo lectura) 
+- **Roles**: `roles.view`, `roles.create`, `roles.edit`, `roles.delete`
+- **Páginas futuras**: Se detectan y generan automáticamente
+
+**Configuración de Acciones por Página:**
+```php
+dashboard: [view]                    // Solo lectura
+users:     [view, create, edit, delete]  // CRUD completo  
+audit:     [view]                    // Solo lectura
+roles:     [view, create, edit, delete]  // CRUD completo
+```
+
+**Flujo de Escalabilidad:**
+1. **Desarrollador** crea nueva página en `/resources/js/pages/nueva-pagina/`
+2. **Sistema** detecta automáticamente la página y archivos
+3. **Comando** `permissions:sync` genera permisos correspondientes
+4. **Administrador** obtiene automáticamente todos los nuevos permisos
+5. **Sidebar** se actualiza dinámicamente para mostrar nueva sección
+
 ---
 
 ## 🔧 Migraciones Ejecutadas
@@ -275,6 +457,10 @@ Tabla para trabajos fallidos en cola.
 5. **`2025_08_13_173244_add_last_activity_at_to_users_table.php`** - Campos last_activity_at y timezone
 6. **`2025_08_13_173253_create_user_activities_table.php`** - Tabla de actividades
 7. **`2025_08_13_173301_create_audit_logs_table.php`** - Tabla de auditoría
+8. **`2025_08_13_205211_create_roles_table.php`** - Tabla de roles del sistema
+9. **`2025_08_13_205216_create_permissions_table.php`** - Tabla de permisos
+10. **`2025_08_13_205222_create_role_user_table.php`** - Tabla pivote usuarios-roles
+11. **`2025_08_13_205228_create_permission_role_table.php`** - Tabla pivote roles-permisos
 
 ---
 
@@ -341,5 +527,14 @@ php artisan make:migration create_table_name
 ---
 
 **📅 Última actualización**: 13 de agosto de 2025  
-**🔢 Versión del esquema**: 1.2.0  
+**🔢 Versión del esquema**: 2.0.0 - Sistema de Roles y Permisos  
 **👥 Mantenido por**: Equipo de Desarrollo Videra
+
+### **🚀 Nuevas Funcionalidades v2.0.0**
+- ✅ **Sistema RBAC completo** con roles y permisos
+- ✅ **Gestión visual de roles** en la interfaz de usuarios
+- ✅ **Roles del sistema protegidos** contra eliminación accidental
+- ✅ **Permisos granulares** agrupados por funcionalidad
+- ✅ **Usuario administrador predeterminado** (admin@admin.com)
+- ✅ **Interfaz de creación/edición** de roles personalizados
+- ✅ **Validaciones de integridad** para roles y permisos

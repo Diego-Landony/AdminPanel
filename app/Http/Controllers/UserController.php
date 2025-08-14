@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Role;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,19 +24,35 @@ class UserController extends Controller
      */
     public function index(Request $request): Response
     {
-        // Obtener usuarios con información de último acceso
-        $users = User::select([
-            'id',
-            'name',
-            'email',
-            'email_verified_at',
-            'created_at',
-            'updated_at',
-            'last_activity_at'
-        ])
-        ->orderBy('created_at', 'desc')
-        ->get()
-        ->map(function ($user) {
+        // Obtener parámetros de paginación
+        $perPage = $request->get('per_page', 10);
+        $search = $request->get('search', '');
+        
+        // Query base
+        $query = User::with('roles')
+            ->select([
+                'id',
+                'name',
+                'email',
+                'email_verified_at',
+                'created_at',
+                'updated_at',
+                'last_activity_at'
+            ]);
+        
+        // Aplicar búsqueda si existe
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+        
+        // Paginar y obtener usuarios
+        $users = $query->orderBy('created_at', 'desc')
+            ->paginate($perPage)
+            ->appends($request->all()) // ✅ SOLUCIÓN: Preservar filtros en paginación
+            ->through(function ($user) {
             $isOnline = $this->isUserOnline($user->last_activity_at);
             $status = $this->getUserStatus($user->last_activity_at);
             
@@ -48,14 +66,35 @@ class UserController extends Controller
                 'last_activity' => $user->last_activity_at,
                 'is_online' => $isOnline,
                 'status' => $status,
+                'roles' => $user->roles->map(function ($role) {
+                    return [
+                        'id' => $role->id,
+                        'name' => $role->name,
+                        'display_name' => $role->display_name,
+                        'is_system' => $role->is_system,
+                    ];
+                }),
             ];
         });
 
+        // Obtener estadísticas del total (sin paginación)
+        $totalStats = User::select([
+            'id',
+            'email_verified_at',
+            'last_activity_at'
+        ])->get();
+
         return Inertia::render('users/index', [
             'users' => $users,
-            'total_users' => $users->count(),
-            'verified_users' => $users->where('email_verified_at', '!=', null)->count(),
-            'online_users' => $users->where('is_online', true)->count(),
+            'total_users' => $totalStats->count(),
+            'verified_users' => $totalStats->where('email_verified_at', '!=', null)->count(),
+            'online_users' => $totalStats->filter(function ($user) {
+                return $this->isUserOnline($user->last_activity_at);
+            })->count(),
+            'filters' => [
+                'search' => $search,
+                'per_page' => $perPage,
+            ],
         ]);
     }
 
@@ -71,9 +110,6 @@ class UserController extends Controller
         if (auth()->check()) {
             $user = auth()->user();
             $user->updateLastActivity();
-            
-            // Registrar actividad de heartbeat
-            $user->logActivity('heartbeat', 'Heartbeat para mantener sesión activa');
             
             // Devolver respuesta HTTP simple sin contenido
             return response('', 204);

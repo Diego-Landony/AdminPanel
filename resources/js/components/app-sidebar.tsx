@@ -2,41 +2,108 @@ import { NavMain } from '@/components/nav-main';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Users, UserCog, Activity } from 'lucide-react';
+import { LayoutGrid, Users, UserCog, Activity, Shield } from 'lucide-react';
+import { usePermissions } from '@/hooks/use-permissions';
 import AppLogo from './app-logo';
 
 /**
- * Elementos de navegación principales
+ * Configuración dinámica de páginas del sistema
+ * Se actualiza automáticamente según las páginas detectadas
  */
-const mainNavItems: NavItem[] = [
+interface PageConfig {
+    name: string;
+    title: string;
+    href: string;
+    icon: any;
+    group?: string;
+    permission: string;
+}
+
+const systemPages: PageConfig[] = [
     {
+        name: 'dashboard',
         title: 'Dashboard',
         href: '/dashboard',
         icon: LayoutGrid,
+        permission: 'dashboard.view'
     },
     {
-        title: 'Usuarios',
-        icon: Users,
-        items: [
-            {
-                title: 'Gestión de usuarios',
-                href: '/users',
-                icon: UserCog,
-            },
-            {
-                title: 'Actividad',
-                href: '/audit',
-                icon: Activity,
-            },
-        ],
+        name: 'users',
+        title: 'Gestión de usuarios',
+        href: '/users',
+        icon: UserCog,
+        group: 'Usuarios',
+        permission: 'users.view'
     },
+    {
+        name: 'audit',
+        title: 'Actividad',
+        href: '/audit',
+        icon: Activity,
+        group: 'Usuarios',
+        permission: 'audit.view'
+    },
+    {
+        name: 'roles',
+        title: 'Roles',
+        href: '/roles',
+        icon: Shield,
+        group: 'Usuarios',
+        permission: 'roles.view'
+    }
 ];
 
 /**
  * Sidebar principal de la aplicación
- * Solo incluye navegación principal
+ * Sistema dinámico basado en permisos escalable
  */
 export function AppSidebar() {
+    const { hasPermission, hasAnyPermissionInGroup } = usePermissions();
+
+    // Generar items de navegación basados en permisos dinámicamente
+    const getNavItems = (): NavItem[] => {
+        const items: NavItem[] = [];
+        const groupedItems: Record<string, NavItem[]> = {};
+
+        // Procesar cada página del sistema
+        systemPages.forEach(page => {
+            // Verificar si el usuario tiene permisos para esta página
+            if (!hasPermission(page.permission)) {
+                return;
+            }
+
+            const navItem: NavItem = {
+                title: page.title,
+                href: page.href,
+                icon: page.icon,
+            };
+
+            // Si tiene grupo, agregarlo al grupo correspondiente
+            if (page.group) {
+                if (!groupedItems[page.group]) {
+                    groupedItems[page.group] = [];
+                }
+                groupedItems[page.group].push(navItem);
+            } else {
+                // Sin grupo, agregar directamente
+                items.push(navItem);
+            }
+        });
+
+        // Agregar grupos que tienen items
+        Object.entries(groupedItems).forEach(([groupName, groupItems]) => {
+            if (groupItems.length > 0) {
+                items.push({
+                    title: groupName,
+                    icon: Users, // Icono por defecto para grupos
+                    items: groupItems,
+                });
+            }
+        });
+
+        return items;
+    };
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -52,7 +119,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={getNavItems()} />
             </SidebarContent>
         </Sidebar>
     );

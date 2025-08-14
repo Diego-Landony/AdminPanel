@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -69,6 +70,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Relación con los roles del usuario
+     */
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class);
+    }
+
+    /**
      * Actualiza el timestamp del último acceso del usuario
      * 
      * @return void
@@ -108,5 +117,49 @@ class User extends Authenticatable
             'method' => request()->method(),
             'metadata' => $metadata,
         ]);
+    }
+
+    /**
+     * Verifica si el usuario tiene un rol específico
+     */
+    public function hasRole(string $role): bool
+    {
+        return $this->roles()->where('name', $role)->exists();
+    }
+
+    /**
+     * Verifica si el usuario tiene un permiso específico
+     */
+    public function hasPermission(string $permission): bool
+    {
+        return $this->roles()
+            ->whereHas('permissions', function ($query) use ($permission) {
+                $query->where('name', $permission);
+            })
+            ->exists();
+    }
+
+    /**
+     * Verifica si el usuario es administrador
+     */
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('admin');
+    }
+
+    /**
+     * Obtiene todos los permisos del usuario
+     */
+    public function getAllPermissions(): array
+    {
+        return $this->roles()
+            ->with('permissions')
+            ->get()
+            ->flatMap(function ($role) {
+                return $role->permissions;
+            })
+            ->pluck('name')
+            ->unique()
+            ->toArray();
     }
 }

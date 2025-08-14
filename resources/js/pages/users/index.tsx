@@ -5,7 +5,18 @@ import { useEffect, useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Shield } from 'lucide-react';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
 
 /**
  * Breadcrumbs para la navegación de usuarios
@@ -22,6 +33,15 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 /**
+ * Interfaz para los roles
+ */
+interface Role {
+    id: number;
+    name: string;
+    is_system: boolean;
+}
+
+/**
  * Interfaz para los datos del usuario
  */
 interface User {
@@ -34,16 +54,33 @@ interface User {
     last_activity: string | null;
     is_online: boolean;
     status: string;
+    roles: Role[];
 }
 
 /**
  * Interfaz para las props de la página
  */
 interface UsersPageProps {
-    users: User[];
+    users: {
+        data: User[];
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+        from: number;
+        to: number;
+        filters?: {
+            search: string;
+            per_page: number;
+        };
+    };
     total_users: number;
     verified_users: number;
     online_users: number;
+    filters: {
+        search: string;
+        per_page: number;
+    };
 }
 
 /**
@@ -136,6 +173,8 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
     const [verifiedUsers, setVerifiedUsers] = useState(initialVerified);
     const [onlineUsers, setOnlineUsers] = useState(initialOnline);
     const [lastUpdate, setLastUpdate] = useState(new Date());
+    const [filters, setFilters] = useState(initialUsers.filters || { search: '', per_page: 10 });
+
 
     /**
      * Función para actualizar los datos de usuarios
@@ -147,7 +186,7 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
             preserveScroll: true,
             onSuccess: (page: any) => {
                 // Actualizar el estado local con los nuevos datos
-                setUsers(page.props.users as User[]);
+                setUsers(page.props.users);
                 setTotalUsers(page.props.total_users as number);
                 setVerifiedUsers(page.props.verified_users as number);
                 setOnlineUsers(page.props.online_users as number);
@@ -197,6 +236,49 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
      */
     const handleManualRefresh = () => {
         refreshUserData();
+    };
+
+    /**
+     * Abre el modal de edición de roles
+     */
+    const openRoleDialog = (user: User) => {
+        setSelectedUser(user);
+        setData('roles', user.roles.map(role => role.id));
+        setIsRoleDialogOpen(true);
+    };
+
+    /**
+     * Cierra el modal de edición de roles
+     */
+    const closeRoleDialog = () => {
+        setIsRoleDialogOpen(false);
+        setSelectedUser(null);
+        reset();
+    };
+
+    /**
+     * Maneja el cambio de roles
+     */
+    const handleRoleChange = (roleId: number, checked: boolean) => {
+        if (checked) {
+            setData('roles', [...data.roles, roleId]);
+        } else {
+            setData('roles', data.roles.filter(id => id !== roleId));
+        }
+    };
+
+    /**
+     * Guarda los cambios de roles
+     */
+    const saveRoles = () => {
+        if (!selectedUser) return;
+
+        patch(`/users/${selectedUser.id}/roles`, {
+            onSuccess: () => {
+                closeRoleDialog();
+                refreshUserData();
+            },
+        });
     };
 
     return (
@@ -253,6 +335,59 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                     </Card>
                 </div>
 
+                {/* Filtros de Búsqueda */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Filtros de Búsqueda</CardTitle>
+                        <CardDescription>
+                            Filtra los usuarios por nombre o email
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div>
+                                <label className="text-sm font-medium">Buscar</label>
+                                <input
+                                    type="text"
+                                    placeholder="Buscar por nombre o email..."
+                                    value={filters.search || ''}
+                                    onChange={(e) => {
+                                        router.get('/users', { 
+                                            search: e.target.value,
+                                            per_page: filters.per_page
+                                        }, { 
+                                            preserveState: true,
+                                            preserveScroll: true 
+                                        });
+                                    }}
+                                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium">Por página</label>
+                                <select
+                                    value={filters.per_page || 10}
+                                    onChange={(e) => {
+                                        router.get('/users', { 
+                                            search: filters.search || '',
+                                            per_page: parseInt(e.target.value)
+                                        }, { 
+                                            preserveState: true,
+                                            preserveScroll: true 
+                                        });
+                                    }}
+                                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                    <option value={10}>10</option>
+                                    <option value={25}>25</option>
+                                    <option value={50}>50</option>
+                                    <option value={100}>100</option>
+                                </select>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* Tabla de usuarios */}
                 <Card>
                     <CardHeader>
@@ -266,13 +401,15 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Usuario</TableHead>
+                                    <TableHead>Roles</TableHead>
                                     <TableHead>Estado</TableHead>
                                     <TableHead>Último Acceso</TableHead>
                                     <TableHead>Fecha de Creación</TableHead>
+
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {users.map((user) => (
+                                {users.data.map((user) => (
                                     <TableRow key={user.id}>
                                         <TableCell>
                                             <div>
@@ -280,6 +417,24 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                                                 <div className="text-sm text-muted-foreground">
                                                     {user.email}
                                                 </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex flex-wrap gap-1">
+                                                {user.roles.length > 0 ? (
+                                                    user.roles.map((role) => (
+                                                        <Badge 
+                                                            key={role.id} 
+                                                            variant={role.is_system ? "secondary" : "default"}
+                                                            className="text-xs"
+                                                        >
+                                                            <Shield className="w-3 h-3 mr-1" />
+                                                            {role.name}
+                                                        </Badge>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-muted-foreground text-sm">Sin roles</span>
+                                                )}
                                             </div>
                                         </TableCell>
                                         <TableCell>
@@ -298,8 +453,146 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                                 ))}
                             </TableBody>
                         </Table>
+                        
+                        {/* Paginación */}
+                        {users.last_page > 1 && (
+                            <div className="mt-6">
+                                <Pagination>
+                                    <PaginationContent>
+                                        <PaginationItem>
+                                            <PaginationPrevious 
+                                                href="#" 
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    router.get('/users', { 
+                                                        page: users.current_page - 1,
+                                                        search: filters.search,
+                                                        per_page: filters.per_page
+                                                    }, { 
+                                                        preserveState: true,
+                                                        preserveScroll: true 
+                                                    });
+                                                }}
+                                                className={users.current_page <= 1 ? 'pointer-events-none opacity-50' : ''}
+                                            />
+                                        </PaginationItem>
+                                        
+                                        {/* Primera página */}
+                                        {users.current_page > 3 && (
+                                            <>
+                                                <PaginationItem>
+                                                    <PaginationLink 
+                                                        href="#" 
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            router.get('/users', { 
+                                                                page: 1,
+                                                                search: filters.search,
+                                                                per_page: filters.per_page
+                                                            }, { 
+                                                                preserveState: true,
+                                                                preserveScroll: true 
+                                                            });
+                                                        }}
+                                                    >
+                                                        1
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                                {users.current_page > 4 && (
+                                                    <PaginationItem>
+                                                        <PaginationEllipsis />
+                                                    </PaginationItem>
+                                                )}
+                                            </>
+                                        )}
+                                        
+                                        {/* Páginas alrededor de la actual */}
+                                        {Array.from({ length: Math.min(3, users.last_page) }, (_, i) => {
+                                            const page = users.current_page - 1 + i;
+                                            if (page < 1 || page > users.last_page) return null;
+                                            
+                                            return (
+                                                <PaginationItem key={page}>
+                                                    <PaginationLink 
+                                                        href="#" 
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            router.get('/users', { 
+                                                                page: page,
+                                                                search: filters.search,
+                                                                per_page: filters.per_page
+                                                            }, { 
+                                                                preserveState: true,
+                                                                preserveScroll: true 
+                                                            });
+                                                        }}
+                                                        isActive={page === users.current_page}
+                                                    >
+                                                        {page}
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                            );
+                                        })}
+                                        
+                                        {/* Última página */}
+                                        {users.current_page < users.last_page - 2 && (
+                                            <>
+                                                {users.current_page < users.last_page - 3 && (
+                                                    <PaginationItem>
+                                                        <PaginationEllipsis />
+                                                    </PaginationItem>
+                                                )}
+                                                <PaginationItem>
+                                                    <PaginationLink 
+                                                        href="#" 
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            router.get('/users', { 
+                                                                page: users.last_page,
+                                                                search: filters.search,
+                                                                per_page: filters.per_page
+                                                            }, { 
+                                                                preserveState: true,
+                                                                preserveScroll: true 
+                                                            });
+                                                        }}
+                                                    >
+                                                        {users.last_page}
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                            </>
+                                        )}
+                                        
+                                        <PaginationItem>
+                                            <PaginationNext 
+                                                href="#" 
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    router.get('/users', { 
+                                                        page: users.current_page + 1,
+                                                        search: filters.search,
+                                                        per_page: filters.per_page
+                                                    }, { 
+                                                        preserveState: true,
+                                                        preserveScroll: true 
+                                                    });
+                                                }}
+                                                className={users.current_page >= users.last_page ? 'pointer-events-none opacity-50' : ''}
+                                            />
+                                        </PaginationItem>
+                                    </PaginationContent>
+                                </Pagination>
+                                
+                                <div className="text-center text-sm text-muted-foreground mt-4">
+                                    Página {users.current_page} de {users.last_page} - 
+                                    Mostrando {users.from} a {users.to} de {users.total} usuarios
+                                </div>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
+
+
             </div>
         </AppLayout>
     );

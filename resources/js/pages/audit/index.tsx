@@ -1,6 +1,5 @@
 import { type BreadcrumbItem } from '@/types';
-import { Head, router, useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, router } from '@inertiajs/react';
 
 import AppLayout from '@/layouts/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +8,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
 
 /**
  * Breadcrumbs para la navegación de auditoría
@@ -108,6 +115,21 @@ const getActivityTypeColor = (type: string): string => {
             return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
         case 'action':
             return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+        case 'user_created':
+        case 'user_updated':
+        case 'user_deleted':
+        case 'user_restored':
+        case 'user_force_deleted':
+            return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
+        case 'role_created':
+        case 'role_updated':
+        case 'role_deleted':
+        case 'role_restored':
+        case 'role_force_deleted':
+        case 'role_users_updated':
+            return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+        case 'theme_changed':
+            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
         default:
             return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
     }
@@ -128,6 +150,30 @@ const getActivityTypeText = (type: string): string => {
             return 'Actividad';
         case 'action':
             return 'Acción';
+        case 'user_created':
+            return 'Usuario creado';
+        case 'user_updated':
+            return 'Usuario actualizado';
+        case 'user_deleted':
+            return 'Usuario eliminado';
+        case 'user_restored':
+            return 'Usuario restaurado';
+        case 'user_force_deleted':
+            return 'Usuario eliminado permanentemente';
+        case 'role_created':
+            return 'Rol creado';
+        case 'role_updated':
+            return 'Rol actualizado';
+        case 'role_deleted':
+            return 'Rol eliminado';
+        case 'role_restored':
+            return 'Rol restaurado';
+        case 'role_force_deleted':
+            return 'Rol eliminado permanentemente';
+        case 'role_users_updated':
+            return 'Usuarios de rol actualizados';
+        case 'theme_changed':
+            return 'Tema cambiado';
         default:
             return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
     }
@@ -158,44 +204,19 @@ const formatDate = (dateString: string): string => {
  * Muestra todos los eventos y actividades del sistema con filtros y búsqueda
  */
 export default function AuditIndex({ activities, filters, stats, options }: AuditPageProps) {
-    const [localFilters, setLocalFilters] = useState(filters);
 
-    /**
-     * Función para aplicar filtros
-     */
-    const applyFilters = () => {
-        const filtersToSend = {
-            ...localFilters,
-            event_type: localFilters.event_type === 'all' ? '' : localFilters.event_type,
-            user_id: localFilters.user_id === 'all' ? '' : localFilters.user_id,
-        };
-        
-        router.get('/audit', filtersToSend, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
 
     /**
      * Función para limpiar filtros
      */
     const clearFilters = () => {
-        const clearedFilters = {
+        router.get('/audit', {
             search: '',
-            event_type: 'all',
-            user_id: 'all',
+            event_type: '',
+            user_id: '',
             date_range: 'last_14_days',
             per_page: 10,
-        };
-        setLocalFilters(clearedFilters);
-        router.get('/audit', clearedFilters);
-    };
-
-    /**
-     * Función para cambiar página
-     */
-    const changePage = (page: number) => {
-        router.get('/audit', { ...localFilters, page }, {
+        }, {
             preserveState: true,
             preserveScroll: true,
         });
@@ -257,22 +278,50 @@ export default function AuditIndex({ activities, filters, stats, options }: Audi
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                            <div>
-                                <label className="text-sm font-medium">Buscar</label>
+                        {/* Primera fila: Buscador centrado */}
+                        <div className="flex justify-center">
+                            <div className="w-full max-w-md">
+                                <label className="text-sm font-medium text-center block mb-2">Buscar</label>
                                 <Input
                                     placeholder="Buscar por nombre, descripción..."
-                                    value={localFilters.search}
-                                    onChange={(e) => setLocalFilters(prev => ({ ...prev, search: e.target.value }))}
-                                    className="mt-1"
+                                    value={filters.search || ''}
+                                    onChange={(e) => {
+                                        const filterParams = {
+                                            search: e.target.value,
+                                            event_type: filters.event_type || '',
+                                            user_id: filters.user_id || '',
+                                            date_range: filters.date_range || 'last_14_days',
+                                            per_page: filters.per_page || 10,
+                                        };
+
+                                        router.get('/audit', filterParams, {
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                        });
+                                    }}
+                                    className="mt-1 text-center"
                                 />
                             </div>
+                        </div>
 
+                        {/* Segunda fila: Filtros organizados */}
+                        <div className="grid gap-4 md:grid-cols-4">
                             <div>
                                 <label className="text-sm font-medium">Tipo de Evento</label>
                                 <Select
-                                    value={localFilters.event_type || "all"}
-                                    onValueChange={(value) => setLocalFilters(prev => ({ ...prev, event_type: value === "all" ? "" : value }))}
+                                    value={filters.event_type || "all"}
+                                    onValueChange={(value) => {
+                                        router.get('/audit', {
+                                            search: filters.search || '',
+                                            event_type: value === "all" ? "" : value,
+                                            user_id: filters.user_id || '',
+                                            date_range: filters.date_range || 'last_14_days',
+                                            per_page: filters.per_page || 10,
+                                        }, {
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                        });
+                                    }}
                                 >
                                     <SelectTrigger className="mt-1">
                                         <SelectValue placeholder="Todos los tipos" />
@@ -289,8 +338,19 @@ export default function AuditIndex({ activities, filters, stats, options }: Audi
                             <div>
                                 <label className="text-sm font-medium">Usuario</label>
                                 <Select
-                                    value={localFilters.user_id || "all"}
-                                    onValueChange={(value) => setLocalFilters(prev => ({ ...prev, user_id: value === "all" ? "" : value }))}
+                                    value={filters.user_id || "all"}
+                                    onValueChange={(value) => {
+                                        router.get('/audit', {
+                                            search: filters.search || '',
+                                            event_type: filters.event_type || '',
+                                            user_id: value === "all" ? "" : value,
+                                            date_range: filters.date_range || 'last_14_days',
+                                            per_page: filters.per_page || 10,
+                                        }, {
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                        });
+                                    }}
                                 >
                                     <SelectTrigger className="mt-1">
                                         <SelectValue placeholder="Todos los usuarios" />
@@ -309,8 +369,19 @@ export default function AuditIndex({ activities, filters, stats, options }: Audi
                             <div>
                                 <label className="text-sm font-medium">Período</label>
                                 <Select
-                                    value={localFilters.date_range}
-                                    onValueChange={(value) => setLocalFilters(prev => ({ ...prev, date_range: value }))}
+                                    value={filters.date_range || "last_14_days"}
+                                    onValueChange={(value) => {
+                                        router.get('/audit', {
+                                            search: filters.search || '',
+                                            event_type: filters.event_type || '',
+                                            user_id: filters.user_id || '',
+                                            date_range: value,
+                                            per_page: filters.per_page || 10,
+                                        }, {
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                        });
+                                    }}
                                 >
                                     <SelectTrigger className="mt-1">
                                         <SelectValue placeholder="Últimos 14 días" />
@@ -322,16 +393,42 @@ export default function AuditIndex({ activities, filters, stats, options }: Audi
                                     </SelectContent>
                                 </Select>
                             </div>
+
+                            <div>
+                                <label className="text-sm font-medium">Por página</label>
+                                <Select
+                                    value={filters.per_page?.toString() || "10"}
+                                    onValueChange={(value) => {
+                                        router.get('/audit', {
+                                            search: filters.search || '',
+                                            event_type: filters.event_type || '',
+                                            user_id: filters.user_id || '',
+                                            date_range: filters.date_range || 'last_14_days',
+                                            per_page: parseInt(value),
+                                        }, {
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                        });
+                                    }}
+                                >
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue placeholder="10" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {options.per_page_options.map((option) => (
+                                            <SelectItem key={option} value={option.toString()}>
+                                                {option}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
 
-                        <div className="flex gap-2 mt-4">
-                            <Button onClick={applyFilters}>
-                                <i className="fas fa-search mr-2"></i>
-                                Aplicar Filtros
-                            </Button>
+                        <div className="flex gap-3 mt-4">
                             <Button variant="outline" onClick={clearFilters}>
                                 <i className="fas fa-times mr-2"></i>
-                                Limpiar
+                                Limpiar Filtros
                             </Button>
                         </div>
                     </CardContent>
@@ -356,85 +453,219 @@ export default function AuditIndex({ activities, filters, stats, options }: Audi
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {activities.data.map((activity) => (
-                                    <TableRow key={activity.id}>
-                                        <TableCell>
-                                            <div>
-                                                <div className="font-medium text-sm">{activity.user.name}</div>
-                                                <div className="text-xs text-muted-foreground">
-                                                    {activity.user.email}
-                                                </div>
-                                                <div className="text-xs text-muted-foreground mt-1">
-                                                    {activity.ip_address || 'N/A'}
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={`${getActivityTypeColor(activity.event_type)} px-2 py-1 text-xs`}>
-                                                {getActivityTypeText(activity.event_type)}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-sm">
-                                            <div>
-                                                <div>{activity.description}</div>
-                                                {activity.type === 'audit' && activity.old_values && activity.new_values && (
-                                                    <div className="mt-2 space-y-1">
-                                                        {Object.keys(activity.new_values).map(key => {
-                                                            if (['name', 'email', 'password', 'timezone'].includes(key) && 
-                                                                activity.old_values[key] !== undefined && 
-                                                                activity.new_values[key] !== undefined && 
-                                                                activity.old_values[key] !== activity.new_values[key]) {
-                                                                return (
-                                                                    <div key={key} className="text-xs text-muted-foreground">
-                                                                        <span className="font-medium">{key}:</span>
-                                                                        <span className="text-red-600 line-through ml-1">
-                                                                            {key === 'password' ? '••••••••' : activity.old_values[key]}
-                                                                        </span>
-                                                                        <span className="text-green-600 ml-1">
-                                                                            {key === 'password' ? '••••••••' : activity.new_values[key]}
-                                                                        </span>
-                                                                    </div>
-                                                                );
-                                                            }
-                                                            return null;
-                                                        })}
+                                {activities.data && Array.isArray(activities.data) && activities.data.length > 0 ? (
+                                    activities.data.map((activity) => (
+                                        <TableRow key={activity.id}>
+                                            <TableCell>
+                                                <div>
+                                                    <div className="font-medium text-sm">{activity.user.name}</div>
+                                                    <div className="text-xs text-muted-foreground">
+                                                        {activity.user.email}
                                                     </div>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground">
-                                            {formatDate(activity.created_at)}
+                                                    <div className="text-xs text-muted-foreground mt-1">
+                                                        {activity.ip_address || 'N/A'}
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge className={`${getActivityTypeColor(activity.event_type)} px-2 py-1 text-xs`}>
+                                                    {getActivityTypeText(activity.event_type)}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-sm">
+                                                <div>
+                                                    <div>{activity.description}</div>
+                                                    {activity.type === 'audit' && activity.old_values && activity.new_values && (
+                                                        <div className="mt-2 space-y-1">
+                                                            {Object.keys(activity.new_values).map(key => {
+                                                                if (['name', 'email', 'password', 'timezone'].includes(key) && 
+                                                                    activity.old_values[key] !== undefined && 
+                                                                    activity.new_values[key] !== undefined && 
+                                                                    activity.old_values[key] !== activity.new_values[key]) {
+                                                                    return (
+                                                                        <div key={key} className="text-xs text-muted-foreground">
+                                                                            <span className="font-medium">{key}:</span>
+                                                                            <span className="text-red-600 line-through ml-1">
+                                                                                {key === 'password' ? '••••••••' : activity.old_values[key]}
+                                                                            </span>
+                                                                            <span className="text-green-600 ml-1">
+                                                                                {key === 'password' ? '••••••••' : activity.new_values[key]}
+                                                                            </span>
+                                                                        </div>
+                                                                    );
+                                                                }
+                                                                return null;
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-sm text-muted-foreground">
+                                                {formatDate(activity.created_at)}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                                            No hay actividades para mostrar
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                )}
                             </TableBody>
                         </Table>
 
                         {/* Paginación */}
                         {activities.last_page > 1 && (
-                            <div className="flex items-center justify-between mt-4">
-                                <div className="text-sm text-muted-foreground">
-                                    Página {activities.current_page} de {activities.last_page}
-                                </div>
-                                <div className="flex gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => changePage(activities.current_page - 1)}
-                                        disabled={activities.current_page <= 1}
-                                    >
-                                        <i className="fas fa-chevron-left mr-2"></i>
-                                        Anterior
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => changePage(activities.current_page + 1)}
-                                        disabled={activities.current_page >= activities.last_page}
-                                    >
-                                        Siguiente
-                                        <i className="fas fa-chevron-right ml-2"></i>
-                                    </Button>
+                            <div className="mt-6">
+                                <Pagination>
+                                    <PaginationContent>
+                                        <PaginationItem>
+                                            <PaginationPrevious 
+                                                href="#" 
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                                                                const pageParams = {
+                                                page: activities.current_page - 1,
+                                                search: filters.search || '',
+                                                event_type: filters.event_type || '',
+                                                user_id: filters.user_id || '',
+                                                date_range: filters.date_range || 'last_14_days',
+                                                per_page: filters.per_page || 10,
+                                            };
+
+                                                    router.get('/audit', pageParams, {
+                                                        preserveState: true,
+                                                        preserveScroll: true,
+                                                    });
+                                                }}
+                                                className={activities.current_page <= 1 ? 'pointer-events-none opacity-50' : ''}
+                                            />
+                                        </PaginationItem>
+                                        
+                                        {/* Primera página */}
+                                        {activities.current_page > 3 && (
+                                            <>
+                                                <PaginationItem>
+                                                    <PaginationLink 
+                                                        href="#" 
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            router.get('/audit', {
+                                                                page: 1,
+                                                                search: filters.search,
+                                                                event_type: filters.event_type,
+                                                                user_id: filters.user_id,
+                                                                date_range: filters.date_range,
+                                                                per_page: filters.per_page,
+                                                            }, {
+                                                                preserveState: true,
+                                                                preserveScroll: true,
+                                                            });
+                                                        }}
+                                                    >
+                                                        1
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                                {activities.current_page > 4 && (
+                                                    <PaginationItem>
+                                                        <PaginationEllipsis />
+                                                    </PaginationItem>
+                                                )}
+                                            </>
+                                        )}
+                                        
+                                        {/* Páginas alrededor de la actual */}
+                                        {Array.from({ length: Math.min(3, activities.last_page) }, (_, i) => {
+                                            const page = activities.current_page - 1 + i;
+                                            if (page < 1 || page > activities.last_page) return null;
+                                            
+                                            return (
+                                                <PaginationItem key={page}>
+                                                    <PaginationLink 
+                                                        href="#" 
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            const pageParams = {
+                                                                page: page,
+                                                                search: filters.search || '',
+                                                                event_type: filters.event_type || '',
+                                                                user_id: filters.user_id || '',
+                                                                date_range: filters.date_range || 'last_14_days',
+                                                                per_page: filters.per_page || 10,
+                                                            };
+
+                                                            router.get('/audit', pageParams, {
+                                                                preserveState: true,
+                                                                preserveScroll: true,
+                                                            });
+                                                        }}
+                                                        isActive={page === activities.current_page}
+                                                    >
+                                                        {page}
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                            );
+                                        })}
+                                        
+                                        {/* Última página */}
+                                        {activities.current_page < activities.last_page - 2 && (
+                                            <>
+                                                {activities.current_page < activities.last_page - 3 && (
+                                                    <PaginationItem>
+                                                        <PaginationEllipsis />
+                                                    </PaginationItem>
+                                                )}
+                                                <PaginationItem>
+                                                    <PaginationLink 
+                                                        href="#" 
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            router.get('/audit', {
+                                                                page: activities.last_page,
+                                                                search: filters.search,
+                                                                event_type: filters.event_type,
+                                                                user_id: filters.user_id,
+                                                                date_range: filters.date_range,
+                                                                per_page: filters.per_page,
+                                                            }, {
+                                                                preserveState: true,
+                                                                preserveScroll: true,
+                                                            });
+                                                        }}
+                                                    >
+                                                        {activities.last_page}
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                            </>
+                                        )}
+                                        
+                                        <PaginationItem>
+                                            <PaginationNext 
+                                                href="#" 
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    router.get('/audit', {
+                                                        page: activities.current_page + 1,
+                                                        search: filters.search,
+                                                        event_type: filters.event_type,
+                                                        user_id: filters.user_id,
+                                                        date_range: filters.date_range,
+                                                        per_page: filters.per_page,
+                                                    }, {
+                                                        preserveState: true,
+                                                        preserveScroll: true,
+                                                    });
+                                                }}
+                                                className={activities.current_page >= activities.last_page ? 'pointer-events-none opacity-50' : ''}
+                                            />
+                                        </PaginationItem>
+                                    </PaginationContent>
+                                </Pagination>
+                                
+                                <div className="text-center text-sm text-muted-foreground mt-4">
+                                    Página {activities.current_page} de {activities.last_page} - 
+                                    Mostrando {activities.from} a {activities.to} de {activities.total} eventos
                                 </div>
                             </div>
                         )}

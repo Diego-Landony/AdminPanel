@@ -33,13 +33,41 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // ✅ Registrar inicio de sesión en auditoría
+        // ✅ Registrar inicio de sesión en actividad
         $user = auth()->user();
         if ($user) {
             $user->logActivity('login', 'Usuario inició sesión');
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // ✅ Redirección inteligente basada en permisos
+        $user = auth()->user();
+        if ($user) {
+            // Si no tiene roles, ir directamente a no-access
+            if ($user->roles()->count() === 0) {
+                return redirect()->route('no-access');
+            }
+
+            // Verificar si tiene permisos (roles sin permisos = no-access)
+            if (count($user->getAllPermissions()) === 0) {
+                return redirect()->route('no-access');
+            }
+
+            // Verificar si tiene acceso al dashboard
+            if ($user->hasPermission('dashboard.view')) {
+                return redirect()->intended(route('dashboard', absolute: false));
+            }
+
+            // Si no tiene dashboard, buscar la primera página a la que tenga acceso
+            $firstAccessiblePage = $user->getFirstAccessiblePage();
+            if ($firstAccessiblePage) {
+                return redirect()->intended($firstAccessiblePage);
+            }
+
+            // Fallback: ir a no-access si no tiene permisos
+            return redirect()->route('no-access');
+        }
+
+        return redirect()->route('no-access');
     }
 
     /**

@@ -2,13 +2,13 @@
 
 namespace App\Services;
 
+use App\Models\Permission;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use App\Models\Permission;
 
 /**
  * Servicio para descubrir automáticamente páginas y generar permisos
- * 
+ *
  * Este servicio escanea las páginas del sistema y genera automáticamente
  * los permisos necesarios basado en las rutas y páginas existentes.
  */
@@ -19,7 +19,8 @@ class PermissionDiscoveryService
      */
     private array $excludedPages = [
         'auth',
-        'settings'  // Settings tiene su propio manejo
+        'settings',  // Settings tiene su propio manejo
+        'no-access', // Página de sistema para usuarios sin permisos
     ];
 
     /**
@@ -29,7 +30,7 @@ class PermissionDiscoveryService
         'view' => 'Ver',
         'create' => 'Crear',
         'edit' => 'Editar',
-        'delete' => 'Eliminar'
+        'delete' => 'Eliminar',
     ];
 
     /**
@@ -39,28 +40,28 @@ class PermissionDiscoveryService
         'dashboard' => [
             'actions' => ['view'],
             'display_name' => 'Dashboard',
-            'description' => 'Panel principal del sistema'
+            'description' => 'Panel principal del sistema',
         ],
         'users' => [
             'actions' => ['view', 'create', 'edit', 'delete'],
             'display_name' => 'Usuarios',
-            'description' => 'Gestión de usuarios del sistema'
+            'description' => 'Gestión de usuarios del sistema',
         ],
-        'audit' => [
+        'activity' => [
             'actions' => ['view'],
             'display_name' => 'Actividad',
-            'description' => 'Logs de auditoría y actividad del sistema'
+            'description' => 'Logs de actividad del sistema',
         ],
         'roles' => [
             'actions' => ['view', 'create', 'edit', 'delete'],
             'display_name' => 'Roles y Permisos',
-            'description' => 'Gestión de roles y permisos del sistema'
-        ]
+            'description' => 'Gestión de roles y permisos del sistema',
+        ],
     ];
 
     /**
      * Descubre automáticamente todas las páginas del sistema
-     * 
+     *
      * @return array Array de configuraciones de páginas
      */
     public function discoverPages(): array
@@ -68,16 +69,16 @@ class PermissionDiscoveryService
         $pagesPath = resource_path('js/pages');
         $discoveredPages = [];
 
-        if (!File::exists($pagesPath)) {
+        if (! File::exists($pagesPath)) {
             return $discoveredPages;
         }
 
         // Escanear directorios en pages/
         $directories = File::directories($pagesPath);
-        
+
         foreach ($directories as $directory) {
             $pageName = basename($directory);
-            
+
             // Saltar páginas excluidas
             if (in_array($pageName, $this->excludedPages)) {
                 continue;
@@ -95,8 +96,8 @@ class PermissionDiscoveryService
         $files = File::files($pagesPath);
         foreach ($files as $file) {
             $pageName = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-            
-            if (!in_array($pageName, $this->excludedPages) && !isset($discoveredPages[$pageName])) {
+
+            if (! in_array($pageName, $this->excludedPages) && ! isset($discoveredPages[$pageName])) {
                 if (isset($this->pageConfig[$pageName])) {
                     $discoveredPages[$pageName] = $this->pageConfig[$pageName];
                 } else {
@@ -110,9 +111,9 @@ class PermissionDiscoveryService
 
     /**
      * Detecta automáticamente la configuración de una página
-     * 
-     * @param string $pageName Nombre de la página
-     * @param string|null $directory Directorio de la página
+     *
+     * @param  string  $pageName  Nombre de la página
+     * @param  string|null  $directory  Directorio de la página
      * @return array Configuración de la página
      */
     private function autoDetectPageConfig(string $pageName, ?string $directory = null): array
@@ -120,13 +121,13 @@ class PermissionDiscoveryService
         $config = [
             'display_name' => Str::title($pageName),
             'description' => "Gestión de {$pageName}",
-            'actions' => ['view'] // Por defecto solo ver
+            'actions' => ['view'], // Por defecto solo ver
         ];
 
         // Si tiene directorio, verificar qué archivos existen para determinar acciones
         if ($directory && File::exists($directory)) {
-            $files = collect(File::files($directory))->map(fn($file) => pathinfo($file->getFilename(), PATHINFO_FILENAME));
-            
+            $files = collect(File::files($directory))->map(fn ($file) => pathinfo($file->getFilename(), PATHINFO_FILENAME));
+
             if ($files->contains('create')) {
                 $config['actions'][] = 'create';
             }
@@ -144,7 +145,7 @@ class PermissionDiscoveryService
 
     /**
      * Genera todos los permisos basado en las páginas descubiertas
-     * 
+     *
      * @return array Array de permisos a crear
      */
     public function generatePermissions(): array
@@ -158,7 +159,7 @@ class PermissionDiscoveryService
                     'name' => "{$pageName}.{$action}",
                     'display_name' => "{$this->baseActions[$action]} {$config['display_name']}",
                     'description' => $this->generatePermissionDescription($action, $config['description']),
-                    'group' => $pageName
+                    'group' => $pageName,
                 ];
             }
         }
@@ -168,14 +169,14 @@ class PermissionDiscoveryService
 
     /**
      * Genera la descripción de un permiso
-     * 
-     * @param string $action Acción del permiso
-     * @param string $pageDescription Descripción de la página
+     *
+     * @param  string  $action  Acción del permiso
+     * @param  string  $pageDescription  Descripción de la página
      * @return string Descripción del permiso
      */
     private function generatePermissionDescription(string $action, string $pageDescription): string
     {
-        return match($action) {
+        return match ($action) {
             'view' => "Acceso a visualizar {$pageDescription}",
             'create' => "Capacidad de crear nuevos elementos en {$pageDescription}",
             'edit' => "Capacidad de modificar elementos existentes en {$pageDescription}",
@@ -186,14 +187,19 @@ class PermissionDiscoveryService
 
     /**
      * Sincroniza los permisos con la base de datos
-     * 
+     *
+     * @param  bool  $removeObsolete  Si debe eliminar permisos obsoletos
      * @return array Resultado de la sincronización
      */
-    public function syncPermissions(): array
+    public function syncPermissions(bool $removeObsolete = false): array
     {
         $discoveredPermissions = $this->generatePermissions();
         $created = 0;
         $updated = 0;
+        $deleted = 0;
+
+        // Obtener nombres de permisos descubiertos
+        $discoveredPermissionNames = collect($discoveredPermissions)->pluck('name');
 
         foreach ($discoveredPermissions as $permissionData) {
             $permission = Permission::updateOrCreate(
@@ -208,18 +214,32 @@ class PermissionDiscoveryService
             }
         }
 
+        // Eliminar permisos obsoletos si se solicita
+        if ($removeObsolete) {
+            $obsoletePermissions = Permission::whereNotIn('name', $discoveredPermissionNames)->get();
+
+            foreach ($obsoletePermissions as $permission) {
+                // No eliminar permisos de configuración (settings) ya que se manejan manualmente
+                if (! str_starts_with($permission->name, 'settings.')) {
+                    $permission->delete();
+                    $deleted++;
+                }
+            }
+        }
+
         return [
             'discovered_pages' => count($this->discoverPages()),
             'total_permissions' => count($discoveredPermissions),
             'created' => $created,
             'updated' => $updated,
-            'permissions' => $discoveredPermissions
+            'deleted' => $deleted,
+            'permissions' => $discoveredPermissions,
         ];
     }
 
     /**
      * Obtiene la configuración de todas las páginas con sus grupos
-     * 
+     *
      * @return array Configuración completa de páginas
      */
     public function getPagesConfiguration(): array
@@ -235,9 +255,9 @@ class PermissionDiscoveryService
                 'group' => $pageName,
                 'actions' => $config['actions'],
                 'permissions' => array_map(
-                    fn($action) => "{$pageName}.{$action}",
+                    fn ($action) => "{$pageName}.{$action}",
                     $config['actions']
-                )
+                ),
             ];
         }
 
@@ -246,13 +266,14 @@ class PermissionDiscoveryService
 
     /**
      * Obtiene el nombre legible de un grupo de permisos
-     * 
-     * @param string $group Nombre del grupo
+     *
+     * @param  string  $group  Nombre del grupo
      * @return string Nombre legible del grupo
      */
     public function getGroupDisplayName(string $group): string
     {
         $pages = $this->discoverPages();
+
         return $pages[$group]['display_name'] ?? Str::title($group);
     }
 }

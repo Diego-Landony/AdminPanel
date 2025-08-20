@@ -54,6 +54,7 @@ class Permission extends Model
     public function getGroupDisplayName(): string
     {
         $discoveryService = app(\App\Services\PermissionDiscoveryService::class);
+
         return $discoveryService->getGroupDisplayName($this->group);
     }
 }

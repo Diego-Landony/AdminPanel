@@ -1,63 +1,49 @@
-import { usePage } from '@inertiajs/react';
-import { router } from '@inertiajs/react';
-import { useEffect } from 'react';
-import { type SharedData } from '@/types';
-import { changeTheme, syncThemeWithInertia } from '@/lib/theme-init';
+import { useState, useEffect, useCallback } from 'react';
+import { changeTheme, getCurrentTheme } from '@/lib/theme-init';
+
+type Theme = 'light' | 'dark' | 'system';
 
 /**
- * Hook personalizado para manejar el tema del sistema
- * Proporciona funciones para cambiar y obtener el tema actual
+ * Hook para manejar el estado del tema en los componentes de React.
+ * Lee desde localStorage y proporciona una función para cambiar el tema.
  */
 export function useTheme() {
-    const { appearance } = usePage<SharedData>().props;
+    const [appearance, setAppearance] = useState<Theme>(getCurrentTheme);
 
-    // Sincronizar tema cuando cambie el prop de Inertia
-    useEffect(() => {
-        if (appearance && typeof appearance === 'string') {
-            syncThemeWithInertia(appearance);
-        }
-    }, [appearance]);
-
-    /**
-     * Cambia el tema del sistema
-     * @param theme - Tema a establecer ('light', 'dark', 'system')
-     */
-    const setTheme = (theme: 'light' | 'dark' | 'system') => {
-        // Aplicar tema inmediatamente al DOM
+    const setTheme = useCallback((theme: Theme) => {
+        // 1. Llamar a la función centralizada para cambiar el tema
         changeTheme(theme);
         
-        // Enviar petición POST a Laravel para persistir el cambio
-        router.post(route('theme.update'), { theme }, {
-            preserveState: true,
-            preserveScroll: true,
-            onError: (errors) => {
-                console.error('Error al cambiar tema:', errors);
-            },
-        });
-    };
-
-    /**
-     * Obtiene el tema actual
-     */
-    const getCurrentTheme = () => appearance;
-
-    /**
-     * Verifica si el tema actual es oscuro
-     */
-    const isDark = () => appearance === 'dark' || 
-        (appearance === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-    /**
-     * Verifica si el tema actual es claro
-     */
-    const isLight = () => appearance === 'light' || 
-        (appearance === 'system' && window.matchMedia('(prefers-color-scheme: light)').matches);
+        // 2. Actualizar el estado de React para que los componentes reaccionen
+        setAppearance(theme);
+    }, []);
+    
+    // Escucha cambios en localStorage (ej. desde otra pestaña)
+    useEffect(() => {
+        const handleStorageChange = () => {
+            setAppearance(getCurrentTheme());
+        };
+        
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+    
+    // Escucha cambios de tema del sistema operativo
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        
+        const handleSystemChange = () => {
+            if (getCurrentTheme() === 'system') {
+                setAppearance('system');
+            }
+        };
+        
+        mediaQuery.addEventListener('change', handleSystemChange);
+        return () => mediaQuery.removeEventListener('change', handleSystemChange);
+    }, []);
 
     return {
         appearance,
         setTheme,
-        getCurrentTheme,
-        isDark,
-        isLight,
     };
 }

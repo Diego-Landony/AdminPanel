@@ -1,13 +1,13 @@
 // Components
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
+import { Loader2, Send, CheckCircle } from 'lucide-react';
 
-import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormField } from '@/components/ui/form-field';
 import AuthLayout from '@/layouts/auth-layout';
 
 /**
@@ -24,7 +24,9 @@ export default function ForgotPassword({ status }: { status?: string }) {
      */
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(route('password.email'));
+        post(route('password.email'), {
+            // Los mensajes de éxito/error se manejan automáticamente por el layout
+        });
     };
 
     return (
@@ -43,18 +45,18 @@ export default function ForgotPassword({ status }: { status?: string }) {
                     {/* Mensaje de estado */}
                     {status && (
                         <div className="mb-4 text-center text-sm font-medium text-green-600">
-                            <i className="fas fa-check-circle mr-2"></i>
+                            <CheckCircle className="mr-2 h-4 w-4" />
                             {status}
                         </div>
                     )}
 
                     <form onSubmit={submit}>
                         {/* Campo de email */}
-                        <div className="grid gap-2">
-                            <Label htmlFor="email">
-                                <i className="fas fa-envelope mr-2 text-muted-foreground"></i>
-                                Correo electrónico
-                            </Label>
+                        <FormField
+                            label="Correo electrónico"
+                            error={errors.email}
+                            required
+                        >
                             <Input
                                 id="email"
                                 type="email"
@@ -65,8 +67,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
                                 onChange={(e) => setData('email', e.target.value)}
                                 placeholder="correo@ejemplo.com"
                             />
-                            <InputError message={errors.email} />
-                        </div>
+                        </FormField>
                     </form>
                 </CardContent>
 
@@ -74,9 +75,9 @@ export default function ForgotPassword({ status }: { status?: string }) {
                     {/* Botón de envío */}
                     <Button className="w-full" onClick={submit} disabled={processing}>
                         {processing ? (
-                            <i className="fas fa-spinner fa-spin mr-2"></i>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : (
-                            <i className="fas fa-paper-plane mr-2"></i>
+                            <Send className="mr-2 h-4 w-4" />
                         )}
                         {processing ? 'Enviando...' : 'Enviar enlace'}
                     </Button>

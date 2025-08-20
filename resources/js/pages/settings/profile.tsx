@@ -3,12 +3,10 @@ import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
-import DeleteUser from '@/components/delete-user';
 import HeadingSmall from '@/components/heading-small';
-import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { FormField } from '@/components/ui/form-field';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 
@@ -50,6 +48,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
         patch(route('profile.update'), {
             preserveScroll: true,
+            // Los mensajes de éxito/error se manejan automáticamente por el layout
         });
     };
 
@@ -65,38 +64,34 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                     />
 
                     <form onSubmit={submit} className="space-y-6">
-                        <div className="grid gap-2">
-                            <Label htmlFor="name">Nombre</Label>
-
+                        <FormField
+                            label="Nombre"
+                            error={errors.name}
+                            required
+                        >
                             <Input
                                 id="name"
-                                className="mt-1 block w-full"
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                required
                                 autoComplete="name"
                                 placeholder="Nombre completo"
                             />
+                        </FormField>
 
-                            <InputError className="mt-2" message={errors.name} />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="email">Dirección de Correo</Label>
-
+                        <FormField
+                            label="Dirección de Correo"
+                            error={errors.email}
+                            required
+                        >
                             <Input
                                 id="email"
                                 type="email"
-                                className="mt-1 block w-full"
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
-                                required
                                 autoComplete="username"
                                 placeholder="Dirección de correo electrónico"
                             />
-
-                            <InputError className="mt-2" message={errors.email} />
-                        </div>
+                        </FormField>
 
                         {mustVerifyEmail && auth.user.email_verified_at === null && (
                             <div>
@@ -137,8 +132,6 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                         </div>
                     </form>
                 </div>
-
-                <DeleteUser />
             </SettingsLayout>
         </AppLayout>
     );

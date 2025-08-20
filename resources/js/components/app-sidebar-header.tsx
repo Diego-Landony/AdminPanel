@@ -4,6 +4,15 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
+
+interface PageProps {
+    auth?: {
+        user?: {
+            name?: string;
+            email?: string;
+        } | null;
+    };
+}
 import { Link } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
 import { ChevronDown, Settings, LogOut } from 'lucide-react';
@@ -12,7 +21,7 @@ import { ChevronDown, Settings, LogOut } from 'lucide-react';
  * Header del sidebar con breadcrumbs, selector de tema y opciones de usuario
  */
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
-    const { auth } = usePage().props as any;
+    const { auth } = usePage().props as PageProps;
     const user = auth?.user;
 
     return (

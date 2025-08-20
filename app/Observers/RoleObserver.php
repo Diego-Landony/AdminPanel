@@ -2,13 +2,12 @@
 
 namespace App\Observers;
 
+use App\Models\ActivityLog;
 use App\Models\Role;
-use App\Models\AuditLog;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * Observer para el modelo Role
- * Registra automáticamente todas las operaciones de roles para auditoría
+ * Registra automáticamente todas las operaciones de roles
  */
 class RoleObserver
 {
@@ -17,7 +16,7 @@ class RoleObserver
      */
     public function created(Role $role): void
     {
-        $this->logAuditEvent('role_created', $role, null, $role->toArray());
+        $this->logActivityEvent('role_created', $role, null, $role->toArray());
     }
 
     /**
@@ -25,17 +24,10 @@ class RoleObserver
      */
     public function updated(Role $role): void
     {
-        // Solo registrar si hay cambios reales (no timestamps automáticos)
-        $changes = $role->getDirty();
-        $ignoredFields = ['updated_at'];
-        $significantChanges = array_diff_key($changes, array_flip($ignoredFields));
-        
-        if (!empty($significantChanges)) {
-            $oldValues = $role->getOriginal();
-            $newValues = $role->toArray();
-            
-            $this->logAuditEvent('role_updated', $role, $oldValues, $newValues);
-        }
+        $oldValues = $role->getOriginal();
+        $newValues = $role->getChanges();
+
+        $this->logActivityEvent('role_updated', $role, $oldValues, $newValues);
     }
 
     /**
@@ -43,7 +35,7 @@ class RoleObserver
      */
     public function deleted(Role $role): void
     {
-        $this->logAuditEvent('role_deleted', $role, $role->toArray(), null);
+        $this->logActivityEvent('role_deleted', $role, $role->toArray(), null);
     }
 
     /**
@@ -51,7 +43,7 @@ class RoleObserver
      */
     public function restored(Role $role): void
     {
-        $this->logAuditEvent('role_restored', $role, null, $role->toArray());
+        $this->logActivityEvent('role_restored', $role, null, $role->toArray());
     }
 
     /**
@@ -59,29 +51,39 @@ class RoleObserver
      */
     public function forceDeleted(Role $role): void
     {
-        $this->logAuditEvent('role_force_deleted', $role, $role->toArray(), null);
+        $this->logActivityEvent('role_force_deleted', $role, $role->toArray(), null);
     }
 
     /**
-     * Registra un evento de auditoría
+     * Registra un evento de actividad
      */
-    private function logAuditEvent(string $eventType, Role $role, ?array $oldValues, ?array $newValues): void
+    private function logActivityEvent(string $eventType, Role $role, ?array $oldValues, ?array $newValues): void
     {
         try {
-            AuditLog::create([
-                'user_id' => Auth::id(), // Usuario que realizó la acción
+            // Solo registrar si hay un usuario autenticado
+            if (! auth()->check()) {
+                \Log::warning('No se pudo registrar actividad de rol: Usuario no autenticado');
+
+                return;
+            }
+
+            $user = auth()->user();
+
+            ActivityLog::create([
+                'user_id' => $user->id,
                 'event_type' => $eventType,
                 'target_model' => 'Role',
                 'target_id' => $role->id,
-                'description' => $this->getEventDescription($eventType, $role),
+                'description' => "Rol '{$role->name}' fue ".$this->getEventDescription($eventType, $role),
                 'old_values' => $oldValues,
                 'new_values' => $newValues,
-                'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
             ]);
+
+            \Log::info("Actividad de rol registrada: {$eventType} para rol '{$role->name}' por usuario {$user->email}");
         } catch (\Exception $e) {
-            // Log del error pero no fallar la operación principal
-            \Log::error('Error al registrar auditoría de rol: ' . $e->getMessage());
+            \Log::error('Error al registrar actividad de rol: '.$e->getMessage());
+            \Log::error('Stack trace: '.$e->getTraceAsString());
         }
     }
 
@@ -91,11 +93,11 @@ class RoleObserver
     private function getEventDescription(string $eventType, Role $role): string
     {
         return match ($eventType) {
-            'role_created' => "Rol '{$role->name}' fue creado",
-            'role_updated' => "Rol '{$role->name}' fue actualizado",
-            'role_deleted' => "Rol '{$role->name}' fue eliminado",
-            'role_restored' => "Rol '{$role->name}' fue restaurado",
-            'role_force_deleted' => "Rol '{$role->name}' fue eliminado permanentemente",
+            'role_created' => 'creado',
+            'role_updated' => 'actualizado',
+            'role_deleted' => 'eliminado',
+            'role_restored' => 'restaurado',
+            'role_force_deleted' => 'eliminado permanentemente',
             default => "Evento {$eventType} en rol '{$role->name}'",
         };
     }

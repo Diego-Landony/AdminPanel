@@ -1,21 +1,27 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        {{-- Inline script to detect system dark mode preference and apply it immediately --}}
+        {{-- Script de inicialización del tema para evitar FOUC (flash of unstyled content) --}}
         <script>
             (function() {
-                const appearance = '{{ $appearance ?? "system" }}';
-
-                if (appearance === 'system') {
-                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-                    if (prefersDark) {
-                        document.documentElement.classList.add('dark');
+                const THEME_KEY = 'appearance';
+                const theme = localStorage.getItem(THEME_KEY) || 'system';
+                
+                function applyTheme(themeValue) {
+                    const html = document.documentElement;
+                    html.classList.remove('light', 'dark');
+                    if (themeValue === 'system') {
+                        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                        html.classList.add(prefersDark ? 'dark' : 'light');
+                    } else {
+                        html.classList.add(themeValue);
                     }
                 }
+                
+                applyTheme(theme);
             })();
         </script>
 

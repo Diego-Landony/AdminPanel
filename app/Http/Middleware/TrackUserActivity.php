@@ -21,9 +21,9 @@ class TrackUserActivity
         // Solo rastrear actividad si el usuario está autenticado
         if (Auth::check()) {
             $user = Auth::user();
-            
+
             // Actualizar last_activity_at cada 30 segundos para mantener sesión activa
-            if (!$user->last_activity_at || $user->last_activity_at->diffInSeconds(now()) >= 30) {
+            if (! $user->last_activity_at || $user->last_activity_at->diffInSeconds(now()) >= 30) {
                 $user->updateLastActivity();
             }
         }

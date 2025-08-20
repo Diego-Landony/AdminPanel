@@ -6,14 +6,13 @@ import { type PropsWithChildren } from 'react';
 interface AuthLayoutProps {
     name?: string;
     title?: string;
-    description?: string;
 }
 
 /**
  * Layout simple para páginas de autenticación
  * Incluye logo y toggle de tema
  */
-export default function AuthSimpleLayout({ children, title, description }: PropsWithChildren<AuthLayoutProps>) {
+export default function AuthSimpleLayout({ children, title }: PropsWithChildren<AuthLayoutProps>) {
     return (
         <div className="flex min-h-svh flex-col items-center justify-center bg-background p-6 md:p-10">
             {/* Toggle de tema en la esquina superior derecha */}

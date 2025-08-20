@@ -1,13 +1,20 @@
 import { type BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { Head, router, Link } from '@inertiajs/react';
+import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
+
 
 import AppLayout from '@/layouts/app-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Shield } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+
+
+import { Shield, Plus, Edit, Trash2, Search, Users, Clock, Circle, X, RefreshCw } from 'lucide-react';
 import {
     Pagination,
     PaginationContent,
@@ -69,16 +76,12 @@ interface UsersPageProps {
         total: number;
         from: number;
         to: number;
-        filters?: {
-            search: string;
-            per_page: number;
-        };
     };
     total_users: number;
     verified_users: number;
     online_users: number;
     filters: {
-        search: string;
+        search: string | null;
         per_page: number;
     };
 }
@@ -122,18 +125,18 @@ const getStatusText = (status: string): string => {
 /**
  * Obtiene el icono del estado del usuario
  */
-const getStatusIcon = (status: string): string => {
+const getStatusIcon = (status: string): React.ReactElement => {
     switch (status) {
         case 'online':
-            return 'fas fa-circle text-green-600';
+            return <Circle className="h-2 w-2 text-green-600" />;
         case 'recent':
-            return 'fas fa-circle text-blue-600';
+            return <Circle className="h-2 w-2 text-blue-600" />;
         case 'offline':
-            return 'fas fa-circle text-gray-400';
+            return <Circle className="h-2 w-2 text-gray-400" />;
         case 'never':
-            return 'fas fa-circle text-red-600';
+            return <Circle className="h-2 w-2 text-red-600" />;
         default:
-            return 'fas fa-circle text-gray-400';
+            return <Circle className="h-2 w-2 text-gray-400" />;
     }
 };
 
@@ -166,34 +169,171 @@ const formatDate = (dateString: string | null): string => {
  * Se actualiza automáticamente cada minuto sin recargar la página
  * Mantiene la sesión del usuario activa cada 30 segundos
  */
-export default function UsersIndex({ users: initialUsers, total_users: initialTotal, verified_users: initialVerified, online_users: initialOnline }: UsersPageProps) {
+export default function UsersIndex({ users: initialUsers, total_users: initialTotal, online_users: initialOnline, filters }: UsersPageProps) {
+
+    
     // Estado local para los datos que se actualizan automáticamente
     const [users, setUsers] = useState(initialUsers);
     const [totalUsers, setTotalUsers] = useState(initialTotal);
-    const [verifiedUsers, setVerifiedUsers] = useState(initialVerified);
     const [onlineUsers, setOnlineUsers] = useState(initialOnline);
-    const [lastUpdate, setLastUpdate] = useState(new Date());
-    const [filters, setFilters] = useState(initialUsers.filters || { search: '', per_page: 10 });
+    const [, setLastUpdate] = useState(new Date());
+    
+    // Estado para filtros y búsqueda
+    const [searchValue, setSearchValue] = useState(filters.search || '');
+    const [perPage, setPerPage] = useState(filters.per_page || 10);
+    const [isSearching, setIsSearching] = useState(false);
+    
+    // Estado para eliminación
+    const [deletingUser, setDeletingUser] = useState<number | null>(null);
+    
+    // Estado para sincronización automática
+    const [lastSync, setLastSync] = useState(new Date());
+    const [isSyncing, setIsSyncing] = useState(false);
+
+    // Función para ejecutar búsqueda manualmente
+    const handleSearch = () => {
+        setIsSearching(true);
+        router.get(route('users.index'), 
+            { 
+                search: searchValue,
+                per_page: perPage 
+            }, 
+            { 
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+                onSuccess: (page: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                    // Actualizar el estado local con los nuevos datos
+                    setUsers(page.props.users);
+                    setTotalUsers(page.props.total_users);
+                    setOnlineUsers(page.props.online_users);
+                    setIsSearching(false);
+                },
+                onError: () => {
+                    setIsSearching(false);
+                }
+            }
+        );
+    };
+
+    // Función para limpiar la búsqueda
+    const handleClear = () => {
+        setSearchValue('');
+        setIsSearching(true);
+        router.get(route('users.index'), 
+            { 
+                per_page: perPage 
+            }, 
+            { 
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+                onSuccess: (page: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                    // Actualizar el estado local con los nuevos datos
+                    setUsers(page.props.users);
+                    setTotalUsers(page.props.total_users);
+                    setOnlineUsers(page.props.online_users);
+                    setIsSearching(false);
+                },
+                onError: () => {
+                    setIsSearching(false);
+                }
+            }
+        );
+    };
+
+    // Función para manejar Enter en el campo de búsqueda
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleSearch();
+        }
+    };
+
+    // Auto-actualizar perPage cuando cambie
+    useEffect(() => {
+        if (perPage !== filters.per_page) {
+            router.get(route('users.index'), 
+                { 
+                    search: filters.search,
+                    per_page: perPage 
+                }, 
+                { 
+                    preserveState: true,
+                    preserveScroll: true,
+                    replace: true 
+                }
+            );
+        }
+    }, [perPage, filters.per_page, filters.search]);
+
+    // Función helper para paginación
+    const goToPage = (page: number) => {
+        router.get(route('users.index'), { 
+            page: page,
+            search: searchValue,
+            per_page: perPage
+        }, { 
+            preserveState: true,
+            preserveScroll: true,
+            replace: true
+        });
+    };
+
+
 
 
     /**
-     * Función para actualizar los datos de usuarios
+     * Función para eliminar usuario
      */
-    const refreshUserData = () => {
-        router.visit('/users', {
-            only: ['users', 'total_users', 'verified_users', 'online_users'],
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: (page: any) => {
-                // Actualizar el estado local con los nuevos datos
-                setUsers(page.props.users);
-                setTotalUsers(page.props.total_users as number);
-                setVerifiedUsers(page.props.verified_users as number);
-                setOnlineUsers(page.props.online_users as number);
-                setLastUpdate(new Date());
+    const handleDeleteUser = (user: User) => {
+        if (deletingUser) return;
+        
+        setDeletingUser(user.id);
+        
+        router.delete(route('users.destroy', user.id), {
+            onSuccess: () => {
+                setDeletingUser(null);
             },
+            onError: (errors) => {
+                setDeletingUser(null);
+                // Los errores de validación se muestran automáticamente
+                // Los errores del servidor se manejan por el layout
+                if (Object.keys(errors).length === 0) {
+                    toast.error('Error del servidor al eliminar el usuario. Inténtalo de nuevo.');
+                }
+            }
         });
     };
+
+    /**
+     * Función para actualizar los datos de usuarios (auto-refresh)
+     * Preserva los filtros de búsqueda actuales
+     */
+    const refreshUserData = useCallback(() => {
+        setIsSyncing(true);
+        router.get(route('users.index'), {
+            search: searchValue, // Usar el estado local actual
+            per_page: perPage,
+            page: 1 // Resetear a la primera página al sincronizar
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+            onSuccess: (page: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                // Actualizar el estado local con los nuevos datos
+                setUsers(page.props.users);
+                setTotalUsers(page.props.total_users);
+                setOnlineUsers(page.props.online_users);
+                setLastUpdate(new Date());
+                setLastSync(new Date());
+                setIsSyncing(false);
+            },
+            onError: () => {
+                setIsSyncing(false);
+            }
+        });
+    }, [searchValue, perPage]);
 
     /**
      * Efecto para actualizar automáticamente los datos cada minuto
@@ -205,7 +345,7 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
 
         // Limpiar el intervalo cuando el componente se desmonte
         return () => clearInterval(interval);
-    }, []);
+    }, [refreshUserData]); // Solo ejecutar una vez al montar el componente
 
     /**
      * Efecto para mantener la sesión del usuario activa cada 30 segundos
@@ -231,363 +371,543 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
         return () => clearInterval(sessionInterval);
     }, []);
 
-    /**
-     * Función para actualizar manualmente los datos
-     */
-    const handleManualRefresh = () => {
-        refreshUserData();
-    };
 
-    /**
-     * Abre el modal de edición de roles
-     */
-    const openRoleDialog = (user: User) => {
-        setSelectedUser(user);
-        setData('roles', user.roles.map(role => role.id));
-        setIsRoleDialogOpen(true);
-    };
 
-    /**
-     * Cierra el modal de edición de roles
-     */
-    const closeRoleDialog = () => {
-        setIsRoleDialogOpen(false);
-        setSelectedUser(null);
-        reset();
-    };
 
-    /**
-     * Maneja el cambio de roles
-     */
-    const handleRoleChange = (roleId: number, checked: boolean) => {
-        if (checked) {
-            setData('roles', [...data.roles, roleId]);
-        } else {
-            setData('roles', data.roles.filter(id => id !== roleId));
-        }
-    };
-
-    /**
-     * Guarda los cambios de roles
-     */
-    const saveRoles = () => {
-        if (!selectedUser) return;
-
-        patch(`/users/${selectedUser.id}/roles`, {
-            onSuccess: () => {
-                closeRoleDialog();
-                refreshUserData();
-            },
-        });
-    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Gestión de Usuarios" />
             
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
-                {/* Header con información de última actualización */}
+            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6">
+                {/* Encabezado */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-sm text-muted-foreground">
-                            Última actualización: {lastUpdate.toLocaleTimeString('es-GT', { 
-                                hour: '2-digit', 
-                                minute: '2-digit',
-                                second: '2-digit'
-                            })}
+                        <h1 className="text-3xl font-bold tracking-tight">Gestión de Usuarios</h1>
+                        <p className="text-muted-foreground">
+                            Administra los usuarios del sistema.
                         </p>
                     </div>
-                    <button
-                        onClick={handleManualRefresh}
-                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    >
-                        <i className="fas fa-sync-alt mr-2"></i>
-                        Actualizar
-                    </button>
+                    <Link href={route('users.create')}>
+                        <Button>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Crear Usuario
+                        </Button>
+                    </Link>
                 </div>
 
-                {/* Tarjetas de estadísticas */}
-                <div className="grid gap-4 md:grid-cols-2">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total de Usuarios</CardTitle>
-                            <i className="fas fa-users text-muted-foreground"></i>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{totalUsers}</div>
-                            <p className="text-xs text-muted-foreground">
-                                Usuarios registrados en el sistema
-                            </p>
-                        </CardContent>
-                    </Card>
 
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Usuarios En Línea</CardTitle>
-                            <i className="fas fa-circle text-muted-foreground"></i>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{onlineUsers}</div>
-                            <p className="text-xs text-muted-foreground">
-                                Activos en los últimos 5 minutos
-                            </p>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Filtros de Búsqueda */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Filtros de Búsqueda</CardTitle>
-                        <CardDescription>
-                            Filtra los usuarios por nombre o email
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div>
-                                <label className="text-sm font-medium">Buscar</label>
-                                <input
-                                    type="text"
-                                    placeholder="Buscar por nombre o email..."
-                                    value={filters.search || ''}
-                                    onChange={(e) => {
-                                        router.get('/users', { 
-                                            search: e.target.value,
-                                            per_page: filters.per_page
-                                        }, { 
-                                            preserveState: true,
-                                            preserveScroll: true 
-                                        });
-                                    }}
-                                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium">Por página</label>
-                                <select
-                                    value={filters.per_page || 10}
-                                    onChange={(e) => {
-                                        router.get('/users', { 
-                                            search: filters.search || '',
-                                            per_page: parseInt(e.target.value)
-                                        }, { 
-                                            preserveState: true,
-                                            preserveScroll: true 
-                                        });
-                                    }}
-                                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                >
-                                    <option value={10}>10</option>
-                                    <option value={25}>25</option>
-                                    <option value={50}>50</option>
-                                    <option value={100}>100</option>
-                                </select>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
 
                 {/* Tabla de usuarios */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Lista de Usuarios</CardTitle>
-                        <CardDescription>
-                            Todos los usuarios registrados en el sistema con su información de actividad
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Usuario</TableHead>
-                                    <TableHead>Roles</TableHead>
-                                    <TableHead>Estado</TableHead>
-                                    <TableHead>Último Acceso</TableHead>
-                                    <TableHead>Fecha de Creación</TableHead>
-
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {users.data.map((user) => (
-                                    <TableRow key={user.id}>
-                                        <TableCell>
-                                            <div>
-                                                <div className="font-medium">{user.name}</div>
-                                                <div className="text-sm text-muted-foreground">
-                                                    {user.email}
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-wrap gap-1">
-                                                {user.roles.length > 0 ? (
-                                                    user.roles.map((role) => (
-                                                        <Badge 
-                                                            key={role.id} 
-                                                            variant={role.is_system ? "secondary" : "default"}
-                                                            className="text-xs"
-                                                        >
-                                                            <Shield className="w-3 h-3 mr-1" />
-                                                            {role.name}
-                                                        </Badge>
-                                                    ))
-                                                ) : (
-                                                    <span className="text-muted-foreground text-sm">Sin roles</span>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={`${getStatusColor(user.status)} px-3 py-1 text-xs font-medium`}>
-                                                <i className={`${getStatusIcon(user.status)} text-xs mr-2`}></i>
-                                                <span>{getStatusText(user.status)}</span>
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground">
-                                            {formatDate(user.last_activity)}
-                                        </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground">
-                                            {formatDate(user.created_at)}
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                        
-                        {/* Paginación */}
-                        {users.last_page > 1 && (
-                            <div className="mt-6">
-                                <Pagination>
-                                    <PaginationContent>
-                                        <PaginationItem>
-                                            <PaginationPrevious 
-                                                href="#" 
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    router.get('/users', { 
-                                                        page: users.current_page - 1,
-                                                        search: filters.search,
-                                                        per_page: filters.per_page
-                                                    }, { 
-                                                        preserveState: true,
-                                                        preserveScroll: true 
-                                                    });
-                                                }}
-                                                className={users.current_page <= 1 ? 'pointer-events-none opacity-50' : ''}
-                                            />
-                                        </PaginationItem>
-                                        
-                                        {/* Primera página */}
-                                        {users.current_page > 3 && (
-                                            <>
-                                                <PaginationItem>
-                                                    <PaginationLink 
-                                                        href="#" 
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            router.get('/users', { 
-                                                                page: 1,
-                                                                search: filters.search,
-                                                                per_page: filters.per_page
-                                                            }, { 
-                                                                preserveState: true,
-                                                                preserveScroll: true 
-                                                            });
-                                                        }}
-                                                    >
-                                                        1
-                                                    </PaginationLink>
-                                                </PaginationItem>
-                                                {users.current_page > 4 && (
-                                                    <PaginationItem>
-                                                        <PaginationEllipsis />
-                                                    </PaginationItem>
-                                                )}
-                                            </>
-                                        )}
-                                        
-                                        {/* Páginas alrededor de la actual */}
-                                        {Array.from({ length: Math.min(3, users.last_page) }, (_, i) => {
-                                            const page = users.current_page - 1 + i;
-                                            if (page < 1 || page > users.last_page) return null;
-                                            
-                                            return (
-                                                <PaginationItem key={page}>
-                                                    <PaginationLink 
-                                                        href="#" 
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            router.get('/users', { 
-                                                                page: page,
-                                                                search: filters.search,
-                                                                per_page: filters.per_page
-                                                            }, { 
-                                                                preserveState: true,
-                                                                preserveScroll: true 
-                                                            });
-                                                        }}
-                                                        isActive={page === users.current_page}
-                                                    >
-                                                        {page}
-                                                    </PaginationLink>
-                                                </PaginationItem>
-                                            );
-                                        })}
-                                        
-                                        {/* Última página */}
-                                        {users.current_page < users.last_page - 2 && (
-                                            <>
-                                                {users.current_page < users.last_page - 3 && (
-                                                    <PaginationItem>
-                                                        <PaginationEllipsis />
-                                                    </PaginationItem>
-                                                )}
-                                                <PaginationItem>
-                                                    <PaginationLink 
-                                                        href="#" 
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            router.get('/users', { 
-                                                                page: users.last_page,
-                                                                search: filters.search,
-                                                                per_page: filters.per_page
-                                                            }, { 
-                                                                preserveState: true,
-                                                                preserveScroll: true 
-                                                            });
-                                                        }}
-                                                    >
-                                                        {users.last_page}
-                                                    </PaginationLink>
-                                                </PaginationItem>
-                                            </>
-                                        )}
-                                        
-                                        <PaginationItem>
-                                            <PaginationNext 
-                                                href="#" 
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    router.get('/users', { 
-                                                        page: users.current_page + 1,
-                                                        search: filters.search,
-                                                        per_page: filters.per_page
-                                                    }, { 
-                                                        preserveState: true,
-                                                        preserveScroll: true 
-                                                    });
-                                                }}
-                                                className={users.current_page >= users.last_page ? 'pointer-events-none opacity-50' : ''}
-                                            />
-                                        </PaginationItem>
-                                    </PaginationContent>
-                                </Pagination>
+                <Card className="border border-muted/50 shadow-sm">
+                    <CardHeader className="pb-6">
+                        <div className="flex flex-col space-y-4">
+                            <div className="flex items-start justify-between">
+                                {/* Estadísticas compactas integradas */}
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                    <span className="flex items-center gap-1">
+                                        <Users className="h-3 w-3 text-primary" />
+                                        <span>usuarios <span className="font-medium text-foreground">{totalUsers}</span></span>
+                                    </span>
+                                    <span className="text-muted-foreground/50">•</span>
+                                    <span className="flex items-center gap-1">
+                                        <Clock className="h-3 w-3 text-green-600" />
+                                        <span>en línea <span className="font-medium text-foreground">{onlineUsers}</span></span>
+                                    </span>
+                                    <span className="text-muted-foreground/50">•</span>
+                                    <span className="flex items-center gap-1">
+                                        <Users className="h-3 w-3 text-red-600" />
+                                        <span>desconectados <span className="font-medium text-foreground">{totalUsers - onlineUsers}</span></span>
+                                    </span>
+                                </div>
                                 
-                                <div className="text-center text-sm text-muted-foreground mt-4">
-                                    Página {users.current_page} de {users.last_page} - 
-                                    Mostrando {users.from} a {users.to} de {users.total} usuarios
+                                {/* Indicador de sincronización */}
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={refreshUserData}
+                                        disabled={isSyncing}
+                                        className="h-8 px-2"
+                                        title="Sincronizar datos"
+                                    >
+                                        {isSyncing ? (
+                                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                        ) : (
+                                            <RefreshCw className="h-4 w-4" />
+                                        )}
+                                    </Button>
+                                    <span className="text-xs">
+                                        Última sincronización: {lastSync.toLocaleTimeString('es-ES', { 
+                                            hour: '2-digit', 
+                                            minute: '2-digit' 
+                                        })}
+                                    </span>
                                 </div>
                             </div>
+                            
+                            {/* Filtros integrados en el header */}
+                            <div className="flex items-center gap-4 pt-2">
+                                <div className="flex items-center gap-2 flex-1 max-w-lg">
+                                    <div className="relative flex-1">
+                                        <Input
+                                            placeholder="Buscar usuarios..."
+                                            value={searchValue}
+                                            onChange={(e) => setSearchValue(e.target.value)}
+                                            onKeyPress={handleKeyPress}
+                                            className="h-9 pl-9 transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                            disabled={isSearching}
+                                        />
+                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    </div>
+                                    <Button
+                                        onClick={handleSearch}
+                                        disabled={isSearching}
+                                        size="sm"
+                                        className="h-9 px-3"
+                                    >
+                                        {isSearching ? (
+                                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                        ) : (
+                                            <>
+                                                <Search className="h-4 w-4 mr-1" />
+                                                Buscar
+                                            </>
+                                        )}
+                                    </Button>
+                                    {(searchValue || filters.search) && (
+                                        <Button
+                                            onClick={handleClear}
+                                            disabled={isSearching}
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-9 px-3"
+                                        >
+                                            <X className="h-4 w-4 mr-1" />
+                                            Limpiar
+                                        </Button>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Label className="text-sm text-muted-foreground whitespace-nowrap">
+                                        Mostrar
+                                    </Label>
+                                    <Select
+                                        value={perPage.toString()}
+                                        onValueChange={(value) => {
+                                            const newPerPage = parseInt(value);
+                                            setPerPage(newPerPage);
+                                            
+                                            // La búsqueda se maneja automáticamente con el debounce
+                                            // al cambiar perPage
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-9 w-20">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="25">25</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                            <SelectItem value="100">100</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <span className="text-sm text-muted-foreground">por página</span>
+                                </div>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        {/* Mensaje cuando no hay resultados */}
+                        {searchValue && users.data.length === 0 && (
+                            <div className="text-center py-12">
+                                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                                <h3 className="text-lg font-medium text-muted-foreground mb-2">
+                                    No se encontraron coincidencias
+                                </h3>
+                                <p className="text-sm text-muted-foreground mb-4">
+                                    No hay usuarios que coincidan con "{searchValue}"
+                                </p>
+                                <Button 
+                                    variant="outline" 
+                                    onClick={() => {
+                                        setSearchValue('');
+                                        // La búsqueda se maneja automáticamente con el debounce
+                                    }}
+                                >
+                                    Limpiar búsqueda
+                                </Button>
+                            </div>
+                        )}
+
+                        {/* Vista de tabla para desktop, cards para mobile/tablet */}
+                        {users.data.length > 0 && (
+                            <>
+                                <div className="hidden lg:block">
+                                    {/* Tabla minimalista para desktop */}
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr className="border-b border-border">
+                                                    <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
+                                                        Usuario
+                                                    </th>
+                                                    <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
+                                                        Roles
+                                                    </th>
+                                                    <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
+                                                        Información
+                                                    </th>
+                                                    <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
+                                                        Estado
+                                                    </th>
+                                                    <th className="text-right py-3 px-4 font-medium text-sm text-muted-foreground">
+                                                        Acciones
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-border/50">
+                                                {users.data.map((user) => (
+                                                    <tr key={user.id} className="hover:bg-muted/30 transition-colors">
+                                                        {/* Columna Usuario */}
+                                                        <td className="py-4 px-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                                    <Users className="w-5 h-5 text-primary" />
+                                                                </div>
+                                                                <div className="min-w-0">
+                                                                    <div className="font-medium text-sm text-foreground truncate">
+                                                                        {user.name}
+                                                                    </div>
+                                                                    <div className="text-sm text-muted-foreground truncate">
+                                                                        {user.email}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+
+                                                        {/* Columna Roles */}
+                                                        <td className="py-4 px-4">
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {user.roles.length > 0 ? (
+                                                                    user.roles.slice(0, 2).map((role) => (
+                                                                        <Badge 
+                                                                            key={role.id} 
+                                                                            variant={role.is_system ? "secondary" : "default"}
+                                                                            className="text-xs px-2 py-1"
+                                                                        >
+                                                                            <Shield className="w-3 h-3 mr-1" />
+                                                                            {role.name}
+                                                                        </Badge>
+                                                                    ))
+                                                                ) : (
+                                                                    <span className="text-sm text-muted-foreground italic">Sin roles</span>
+                                                                )}
+                                                                {user.roles.length > 2 && (
+                                                                    <Badge variant="outline" className="text-xs px-2 py-1">
+                                                                        +{user.roles.length - 2}
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                        </td>
+
+                                                        {/* Columna Información */}
+                                                        <td className="py-4 px-4">
+                                                            <div className="space-y-1 text-sm text-muted-foreground">
+                                                                <div className="flex items-center gap-2">
+                                                                    <Clock className="w-3 h-3" />
+                                                                    <span>Última actividad: {formatDate(user.last_activity)}</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <Users className="w-3 h-3" />
+                                                                    <span>Creado: {formatDate(user.created_at)}</span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+
+                                                        {/* Columna Estado */}
+                                                        <td className="py-4 px-4">
+                                                            <Badge className={`${getStatusColor(user.status)} px-3 py-1 text-xs font-medium`}>
+                                                                <span className="mr-2">{getStatusIcon(user.status)}</span>
+                                                                {getStatusText(user.status)}
+                                                            </Badge>
+                                                        </td>
+
+                                                        {/* Columna Acciones */}
+                                                        <td className="py-4 px-4">
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                <Link href={route('users.edit', user.id)}>
+                                                                    <Button 
+                                                                        variant="ghost" 
+                                                                        size="sm" 
+                                                                        className="h-8 w-8 p-0 hover:bg-muted"
+                                                                        title="Editar usuario"
+                                                                    >
+                                                                        <Edit className="w-4 h-4" />
+                                                                    </Button>
+                                                                </Link>
+                                                                <Dialog>
+                                                                    <DialogTrigger asChild>
+                                                                        <Button 
+                                                                            variant="ghost" 
+                                                                            size="sm"
+                                                                            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                                            title="Eliminar usuario"
+                                                                        >
+                                                                            <Trash2 className="w-4 h-4" />
+                                                                        </Button>
+                                                                    </DialogTrigger>
+                                                                    <DialogContent>
+                                                                        <DialogHeader>
+                                                                            <DialogTitle>Confirmar eliminación</DialogTitle>
+                                                                            <DialogDescription>
+                                                                                ¿Estás seguro de que quieres eliminar al usuario "{user.name}"? 
+                                                                                Esta acción no se puede deshacer.
+                                                                            </DialogDescription>
+                                                                        </DialogHeader>
+                                                                        <DialogFooter>
+                                                                            <Button 
+                                                                                variant="destructive" 
+                                                                                onClick={() => handleDeleteUser(user)}
+                                                                                disabled={deletingUser === user.id}
+                                                                                className="w-full sm:w-auto"
+                                                                            >
+                                                                                {deletingUser === user.id ? (
+                                                                                    <>
+                                                                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-1" />
+                                                                                        Eliminando...
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <Trash2 className="w-4 h-4 mr-1" />
+                                                                                        Eliminar
+                                                                                    </>
+                                                                                )}
+                                                                            </Button>
+                                                                        </DialogFooter>
+                                                                    </DialogContent>
+                                                                </Dialog>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                {/* Vista de cards para mobile/tablet */}
+                                <div className="lg:hidden">
+                                    <div className="grid gap-3 md:gap-4">
+                                        {users.data.map((user) => (
+                                            <div key={user.id} className="bg-card border border-border rounded-lg p-4 space-y-3 hover:bg-muted/50 transition-colors">
+                                                    {/* Header compacto */}
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                            <Users className="w-4 h-4 text-primary" />
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="font-medium text-sm break-words">{user.name}</div>
+                                                            <div className="text-sm text-muted-foreground break-words">
+                                                                {user.email}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <Badge className={`${getStatusColor(user.status)} px-3 py-1 text-xs font-medium flex-shrink-0 ml-2`}>
+                                                            <span className="mr-2">{getStatusIcon(user.status)}</span>
+                                                        {getStatusText(user.status)}
+                                                    </Badge>
+                                                </div>
+                                                
+                                                    {/* Roles compactos */}
+                                                <div className="flex flex-wrap gap-1">
+                                                    {user.roles.length > 0 ? (
+                                                        user.roles.slice(0, 3).map((role) => (
+                                                            <Badge 
+                                                                key={role.id} 
+                                                                variant={role.is_system ? "secondary" : "default"}
+                                                                className="text-xs px-2 py-0.5"
+                                                            >
+                                                                <Shield className="w-3 h-3 mr-1" />
+                                                                {role.name}
+                                                            </Badge>
+                                                        ))
+                                                    ) : (
+                                                        <span className="text-sm text-muted-foreground">Sin roles</span>
+                                                    )}
+                                                    {user.roles.length > 3 && (
+                                                        <span className="text-sm text-muted-foreground">+{user.roles.length - 3}</span>
+                                                    )}
+                                                </div>
+                                                
+                                                {/* Fechas */}
+                                                <div className="flex items-center justify-between text-sm text-muted-foreground pt-2 border-t border-border">
+                                                        <span>Última actividad: {formatDate(user.last_activity)}</span>
+                                                    <span>Creado: {formatDate(user.created_at)}</span>
+                                                </div>
+                                                
+                                                {/* Acciones */}
+                                                <div className="flex items-center justify-end space-x-2 pt-2 border-t border-border">
+                                                    <Link href={route('users.edit', user.id)}>
+                                                        <Button variant="ghost" size="sm" className="h-8 px-3" title="Editar usuario">
+                                                            <Edit className="w-4 h-4 mr-1" />
+                                                            Editar
+                                                        </Button>
+                                                    </Link>
+                                                    <Dialog>
+                                                        <DialogTrigger asChild>
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="sm"
+                                                                className="h-8 px-3 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                                title="Eliminar usuario"
+                                                            >
+                                                                {deletingUser === user.id ? (
+                                                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-1" />
+                                                                ) : (
+                                                                    <Trash2 className="w-4 h-4 mr-1" />
+                                                                )}
+                                                                {deletingUser === user.id ? 'Eliminando...' : 'Eliminar'}
+                                                            </Button>
+                                                        </DialogTrigger>
+                                                        <DialogContent>
+                                                            <DialogHeader>
+                                                                    <DialogTitle>Confirmar eliminación</DialogTitle>
+                                                                <DialogDescription>
+                                                                        ¿Estás seguro de que quieres eliminar al usuario "{user.name}"? 
+                                                                    Esta acción no se puede deshacer.
+                                                                </DialogDescription>
+                                                            </DialogHeader>
+                                                            <DialogFooter>
+                                                                <Button 
+                                                                    variant="destructive"
+                                                                    onClick={() => handleDeleteUser(user)}
+                                                                    disabled={deletingUser === user.id}
+                                                                    className="w-full sm:w-auto"
+                                                                >
+                                                                    {deletingUser === user.id ? (
+                                                                        <>
+                                                                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-1" />
+                                                                            Eliminando...
+                                                                        </>
+                                                                    ) : (
+                                                                        <>
+                                                                            <Trash2 className="w-4 h-4 mr-1" />
+                                                                            Eliminar
+                                                                        </>
+                                                                    )}
+                                                                </Button>
+                                                            </DialogFooter>
+                                                        </DialogContent>
+                                                    </Dialog>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                
+                                {/* Paginación */}
+                                {users.last_page > 1 && (
+                                    <div className="mt-6">
+                                        <Pagination>
+                                            <PaginationContent>
+                                                <PaginationItem>
+                                                    <PaginationPrevious 
+                                                        href="#" 
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            goToPage(users.current_page - 1);
+                                                        }}
+                                                        className={users.current_page <= 1 ? 'pointer-events-none opacity-50' : ''}
+                                                    />
+                                                </PaginationItem>
+                                                
+                                                {/* Primera página */}
+                                                {users.current_page > 3 && (
+                                                    <>
+                                                        <PaginationItem>
+                                                            <PaginationLink 
+                                                                href="#" 
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    goToPage(1);
+                                                                }}
+                                                            >
+                                                                1
+                                                            </PaginationLink>
+                                                        </PaginationItem>
+                                                        {users.current_page > 4 && (
+                                                            <PaginationItem>
+                                                                <PaginationEllipsis />
+                                                            </PaginationItem>
+                                                        )}
+                                                    </>
+                                                )}
+                                                
+                                                {/* Páginas alrededor de la actual */}
+                                                {Array.from({ length: Math.min(3, users.last_page) }, (_, i) => {
+                                                    const page = users.current_page - 1 + i;
+                                                    if (page < 1 || page > users.last_page) return null;
+                                                    
+                                                    return (
+                                                        <PaginationItem key={page}>
+                                                            <PaginationLink 
+                                                                href="#" 
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    goToPage(page);
+                                                                }}
+                                                                isActive={page === users.current_page}
+                                                            >
+                                                                {page}
+                                                            </PaginationLink>
+                                                        </PaginationItem>
+                                                    );
+                                                })}
+                                                
+                                                {/* Última página */}
+                                                {users.current_page < users.last_page - 2 && (
+                                                    <>
+                                                        {users.current_page < users.last_page - 3 && (
+                                                            <PaginationItem>
+                                                                <PaginationEllipsis />
+                                                            </PaginationItem>
+                                                        )}
+                                                        <PaginationItem>
+                                                            <PaginationLink 
+                                                                href="#" 
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    goToPage(users.last_page);
+                                                                }}
+                                                            >
+                                                                {users.last_page}
+                                                            </PaginationLink>
+                                                        </PaginationItem>
+                                                    </>
+                                                )}
+                                                
+                                                <PaginationItem>
+                                                    <PaginationNext 
+                                                        href="#" 
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            goToPage(users.current_page + 1);
+                                                        }}
+                                                        className={users.current_page >= users.last_page ? 'pointer-events-none opacity-50' : ''}
+                                                    />
+                                                </PaginationItem>
+                                            </PaginationContent>
+                                        </Pagination>
+                                        
+                                        <div className="text-center text-sm text-muted-foreground mt-4">
+                                            Página {users.current_page} de {users.last_page} - 
+                                            Mostrando {users.from} a {users.to} de {users.total} usuarios
+                                        </div>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </CardContent>
                 </Card>
@@ -597,3 +917,5 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
         </AppLayout>
     );
 }
+
+

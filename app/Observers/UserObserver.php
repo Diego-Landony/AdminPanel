@@ -2,13 +2,12 @@
 
 namespace App\Observers;
 
+use App\Models\ActivityLog;
 use App\Models\User;
-use App\Models\AuditLog;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * Observer para el modelo User
- * Registra automáticamente todos los cambios en usuarios para auditoría
+ * Registra automáticamente todos los cambios en usuarios
  */
 class UserObserver
 {
@@ -17,7 +16,7 @@ class UserObserver
      */
     public function created(User $user): void
     {
-        $this->logAuditEvent('user_created', $user, null, $user->toArray());
+        $this->logActivityEvent('user_created', $user, null, $user->toArray());
     }
 
     /**
@@ -25,17 +24,10 @@ class UserObserver
      */
     public function updated(User $user): void
     {
-        // Solo registrar si hay cambios reales (no timestamps automáticos)
-        $changes = $user->getDirty();
-        $ignoredFields = ['updated_at', 'last_activity_at'];
-        $significantChanges = array_diff_key($changes, array_flip($ignoredFields));
-        
-        if (!empty($significantChanges)) {
-            $oldValues = $user->getOriginal();
-            $newValues = $user->toArray();
-            
-            $this->logAuditEvent('user_updated', $user, $oldValues, $newValues);
-        }
+        $oldValues = $user->getOriginal();
+        $newValues = $user->getChanges();
+
+        $this->logActivityEvent('user_updated', $user, $oldValues, $newValues);
     }
 
     /**
@@ -43,7 +35,7 @@ class UserObserver
      */
     public function deleted(User $user): void
     {
-        $this->logAuditEvent('user_deleted', $user, $user->toArray(), null);
+        $this->logActivityEvent('user_deleted', $user, $user->toArray(), null);
     }
 
     /**
@@ -51,7 +43,7 @@ class UserObserver
      */
     public function restored(User $user): void
     {
-        $this->logAuditEvent('user_restored', $user, null, $user->toArray());
+        $this->logActivityEvent('user_restored', $user, null, $user->toArray());
     }
 
     /**
@@ -59,29 +51,39 @@ class UserObserver
      */
     public function forceDeleted(User $user): void
     {
-        $this->logAuditEvent('user_force_deleted', $user, $user->toArray(), null);
+        $this->logActivityEvent('user_force_deleted', $user, $user->toArray(), null);
     }
 
     /**
-     * Registra un evento de auditoría
+     * Registra un evento de actividad
      */
-    private function logAuditEvent(string $eventType, User $user, ?array $oldValues, ?array $newValues): void
+    private function logActivityEvent(string $eventType, User $user, ?array $oldValues, ?array $newValues): void
     {
         try {
-            AuditLog::create([
-                'user_id' => Auth::id(), // Usuario que realizó la acción
+            // Solo registrar si hay un usuario autenticado
+            if (! auth()->check()) {
+                \Log::warning('No se pudo registrar actividad de usuario: Usuario no autenticado');
+
+                return;
+            }
+
+            $currentUser = auth()->user();
+
+            ActivityLog::create([
+                'user_id' => $currentUser->id,
                 'event_type' => $eventType,
                 'target_model' => 'User',
                 'target_id' => $user->id,
-                'description' => $this->getEventDescription($eventType, $user),
+                'description' => "Usuario '{$user->name}' ({$user->email}) fue ".$this->getEventDescription($eventType, $user),
                 'old_values' => $oldValues,
                 'new_values' => $newValues,
-                'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
             ]);
+
+            \Log::info("Actividad de usuario registrada: {$eventType} para usuario '{$user->name}' por usuario {$currentUser->email}");
         } catch (\Exception $e) {
-            // Log del error pero no fallar la operación principal
-            \Log::error('Error al registrar auditoría: ' . $e->getMessage());
+            \Log::error('Error al registrar actividad: '.$e->getMessage());
+            \Log::error('Stack trace: '.$e->getTraceAsString());
         }
     }
 
@@ -91,11 +93,11 @@ class UserObserver
     private function getEventDescription(string $eventType, User $user): string
     {
         return match ($eventType) {
-            'user_created' => "Usuario '{$user->name}' ({$user->email}) fue creado",
-            'user_updated' => "Usuario '{$user->name}' ({$user->email}) fue actualizado",
-            'user_deleted' => "Usuario '{$user->name}' ({$user->email}) fue eliminado",
-            'user_restored' => "Usuario '{$user->name}' ({$user->email}) fue restaurado",
-            'user_force_deleted' => "Usuario '{$user->name}' ({$user->email}) fue eliminado permanentemente",
+            'user_created' => 'creado',
+            'user_updated' => 'actualizado',
+            'user_deleted' => 'eliminado',
+            'user_restored' => 'restaurado',
+            'user_force_deleted' => 'eliminado permanentemente',
             default => "Evento {$eventType} en usuario '{$user->name}'",
         };
     }

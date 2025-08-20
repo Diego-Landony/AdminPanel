@@ -3,30 +3,13 @@ import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import { Toaster } from '@/components/ui/sonner';
+import { useNotifications } from '@/hooks/useNotifications';
 import { type BreadcrumbItem } from '@/types';
 import { type PropsWithChildren } from 'react';
-import { usePage } from '@inertiajs/react';
-import { toast } from 'sonner';
-import { useEffect } from 'react';
 
 export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWithChildren<{ breadcrumbs?: BreadcrumbItem[] }>) {
-    const { props } = usePage<any>();
-
-    // Manejar mensajes flash de Laravel
-    useEffect(() => {
-        if (props.flash?.success) {
-            toast.success(props.flash.success);
-        }
-        if (props.flash?.error) {
-            toast.error(props.flash.error);
-        }
-        if (props.flash?.info) {
-            toast.info(props.flash.info);
-        }
-        if (props.flash?.warning) {
-            toast.warning(props.flash.warning);
-        }
-    }, [props.flash]);
+    // Usar el hook de notificaciones para manejar mensajes flash automáticamente
+    useNotifications();
 
     return (
         <>

@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
+import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+
 import AppLayout from '@/layouts/app-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
     Pagination,
     PaginationContent,
@@ -15,31 +21,27 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import { BreadcrumbItem } from '@/types';
-import { Shield, Plus, Edit, Trash2, Users, AlertTriangle } from 'lucide-react';
-import { toast } from 'sonner';
+import { Shield, Plus, Edit, Trash2, Search, Users, UserCheck, X } from 'lucide-react';
+
 
 /**
  * Breadcrumbs para la navegación de roles
  */
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Usuarios',
-        href: '/users',
+        title: 'Roles',
+        href: '/roles',
     },
     {
-        title: 'Roles',
+        title: 'Roles del Sistema',
         href: '/roles',
     },
 ];
 
-/**
- * Interfaz para los datos del rol
- */
-interface User {
+interface Permission {
     id: number;
     name: string;
-    email: string;
+    guard_name: string;
 }
 
 interface Role {
@@ -47,17 +49,22 @@ interface Role {
     name: string;
     description: string | null;
     is_system: boolean;
-    permissions: string[];
-    users_count: number;
-    users: User[];
+    guard_name: string;
     created_at: string;
     updated_at: string;
+    permissions: Permission[];
+    users_count: number;
+    users: User[];
 }
 
-/**
- * Props de la página
- */
-interface RolesPageProps {
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    roles: Role[];
+}
+
+interface RolesIndexProps {
     roles: {
         data: Role[];
         current_page: number;
@@ -67,281 +74,415 @@ interface RolesPageProps {
         from: number;
         to: number;
     };
-    permissions: Record<string, Array<{
-        name: string;
-        description: string | null;
-        group: string;
-    }>>;
     filters: {
         search: string;
         per_page: number;
     };
+    roleStats?: {
+        total: number;
+        system: number;
+        created: number;
+    };
 }
 
-/**
- * Página principal de gestión de roles
- */
-export default function RolesIndex({ roles, permissions, filters }: RolesPageProps) {
+export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProps) {
+    const [searchValue, setSearchValue] = useState(filters.search || '');
+    const [perPage, setPerPage] = useState(filters.per_page.toString());
     const [deletingRole, setDeletingRole] = useState<number | null>(null);
-    const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
+    const [selectedRole, setSelectedRole] = useState<Role | null>(null);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [showUsersModal, setShowUsersModal] = useState(false);
-    const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+    const [usersInRole, setUsersInRole] = useState<User[]>([]);
 
-    /**
-     * Abre el dialog de confirmación para eliminar un rol
-     */
-    const openDeleteDialog = (role: Role) => {
-        setRoleToDelete(role);
-        setShowDeleteDialog(true);
+    // Función para ejecutar búsqueda manualmente
+    const handleSearch = () => {
+        router.get(route('roles.index'), 
+            { 
+                search: searchValue,
+                per_page: perPage 
+            }, 
+            { 
+                preserveState: true,
+                preserveScroll: true,
+                replace: true 
+            }
+        );
     };
 
-    /**
-     * Confirma y elimina el rol
-     */
-    const confirmDeleteRole = () => {
-        if (roleToDelete) {
-            setDeletingRole(roleToDelete.id);
-            setShowDeleteDialog(false);
-            
-            // Agregar headers CSRF y manejo de errores mejorado
-            router.delete(`/roles/${roleToDelete.id}`, {
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                onFinish: () => {
-                    setDeletingRole(null);
-                    setRoleToDelete(null);
-                    toast.success('Rol eliminado exitosamente');
-                },
-                onError: (errors) => {
-                    setDeletingRole(null);
-                    console.error('Error eliminando rol:', errors);
-                    // Mostrar notificación de error
-                    toast.error('Error al eliminar el rol');
-                }
-            });
+    // Función para limpiar la búsqueda
+    const handleClear = () => {
+        setSearchValue('');
+        router.get(route('roles.index'), 
+            { 
+                per_page: perPage 
+            }, 
+            { 
+                preserveState: true,
+                preserveScroll: true,
+                replace: true 
+            }
+        );
+    };
+
+    // Función para manejar Enter en el campo de búsqueda
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleSearch();
         }
     };
 
-    /**
-     * Cancela la eliminación
-     */
-    const cancelDelete = () => {
-        setShowDeleteDialog(false);
-        setRoleToDelete(null);
-    };
+    // Auto-actualizar perPage cuando cambie
+    useEffect(() => {
+        if (parseInt(perPage) !== filters.per_page) {
+            router.get(route('roles.index'), 
+                { 
+                    search: filters.search,
+                    per_page: perPage 
+                }, 
+                { 
+                    preserveState: true,
+                    preserveScroll: true,
+                    replace: true 
+                }
+            );
+        }
+    }, [perPage, filters.per_page, filters.search]);
 
-    /**
-     * Abre el modal de usuarios para un rol específico
-     */
-    const openUsersModal = (role: Role) => {
+
+
+    const openDeleteDialog = (role: Role) => {
         setSelectedRole(role);
-        setShowUsersModal(true);
+        setShowDeleteDialog(true);
     };
 
-    /**
-     * Cierra el modal de usuarios
-     */
-    const closeUsersModal = () => {
-        setShowUsersModal(false);
+    const closeDeleteDialog = () => {
         setSelectedRole(null);
+            setShowDeleteDialog(false);
+        setDeletingRole(null);
     };
 
+    const handleDeleteRole = async () => {
+        if (!selectedRole) return;
 
+        setDeletingRole(selectedRole.id);
+        try {
+            router.delete(route('roles.destroy', selectedRole.id), {
+                onSuccess: () => {
+                    closeDeleteDialog();
+                },
+                onError: () => {
+                    setDeletingRole(null);
+                }
+            });
+        } catch (error) {
+            setDeletingRole(null);
+            console.error('Error al eliminar rol:', error);
+        }
+    };
+
+    const openUsersModal = async (role: Role) => {
+        setSelectedRole(role);
+        try {
+            // Los usuarios ya vienen del backend en role.users
+            if (role.users && Array.isArray(role.users) && role.users.length > 0) {
+                setUsersInRole(role.users);
+                setShowUsersModal(true);
+            } else {
+                setUsersInRole([]);
+        setShowUsersModal(true);
+            }
+        } catch (error) {
+            console.error('Error al cargar usuarios:', error);
+            toast.error('Error al cargar usuarios del rol');
+        }
+    };
+
+    const closeUsersModal = () => {
+        setSelectedRole(null);
+        setShowUsersModal(false);
+        setUsersInRole([]);
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Roles" />
+            <Head title="Roles del Sistema" />
             
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
+            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6">
                 {/* Encabezado */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">Roles del Sistema</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">Roles del Sistema</h1>
                         <p className="text-muted-foreground">
                             Gestiona los roles y permisos de los usuarios
                         </p>
                     </div>
-                    <Button asChild>
-                        <Link href="/roles/create">
+                    <Link href={route('roles.create')}>
+                        <Button>
                             <Plus className="mr-2 h-4 w-4" />
                             Crear Rol
+                        </Button>
                         </Link>
-                    </Button>
                 </div>
 
-                {/* Estadísticas */}
-                <div className="grid gap-4 md:grid-cols-3 mb-6">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total de Roles</CardTitle>
-                            <Shield className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{roles.total}</div>
-                            <p className="text-xs text-muted-foreground">
-                                Roles configurados en el sistema
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Roles del Sistema</CardTitle>
-                            <Shield className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">
-                                {roles.data.filter(role => role.is_system).length}
+                {/* Tabla de roles */}
+                <Card className="border border-muted/50 shadow-sm">
+                    <CardHeader className="pb-6">
+                        <div className="flex flex-col space-y-4">
+                            <div className="flex items-start justify-between">
+                                {/* Estadísticas compactas integradas */}
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                    <span className="flex items-center gap-1">
+                                        <Shield className="h-3 w-3 text-primary" />
+                                        <span>roles <span className="font-medium text-foreground">{roleStats?.total || roles.total || 0}</span></span>
+                                    </span>
+                                    <span className="text-muted-foreground/50">•</span>
+                                    <span className="flex items-center gap-1">
+                                        <UserCheck className="h-3 w-3 text-blue-600" />
+                                        <span>del sistema <span className="font-medium text-foreground">{roleStats?.system || roles.data.filter(role => role.is_system).length || 0}</span></span>
+                                    </span>
+                                    <span className="text-muted-foreground/50">•</span>
+                                    <span className="flex items-center gap-1">
+                                        <Users className="h-3 w-3 text-green-600" />
+                                        <span>creados <span className="font-medium text-foreground">{roleStats?.created || roles.data.filter(role => !role.is_system).length || 0}</span></span>
+                                    </span>
                             </div>
-                            <p className="text-xs text-muted-foreground">
-                                Roles predefinidos del sistema
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Roles Personalizados</CardTitle>
-                            <Shield className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">
-                                {roles.data.filter(role => !role.is_system).length}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Roles creados por administradores
-                            </p>
-                        </CardContent>
-                    </Card>
                 </div>
 
-                {/* Filtros de Búsqueda */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Filtros de Búsqueda</CardTitle>
-                        <CardDescription>
-                            Filtra los roles por nombre o descripción
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div>
-                                <label className="text-sm font-medium">Buscar</label>
-                                <input
-                                    type="text"
-                                    placeholder="Buscar por nombre o descripción..."
-                                    value={filters.search}
-                                    onChange={(e) => {
-                                        router.get('/roles', { 
-                                            search: e.target.value,
-                                            per_page: filters.per_page
-                                        }, { 
-                                            preserveState: true,
-                                            preserveScroll: true 
-                                        });
-                                    }}
-                                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium">Por página</label>
-                                <select
-                                    value={filters.per_page}
-                                    onChange={(e) => {
-                                        router.get('/roles', { 
-                                            search: filters.search,
-                                            per_page: parseInt(e.target.value)
-                                        }, { 
-                                            preserveState: true,
-                                            preserveScroll: true 
-                                        });
-                                    }}
-                                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                >
-                                    <option value={10}>10</option>
-                                    <option value={25}>25</option>
-                                    <option value={50}>50</option>
-                                    <option value={100}>100</option>
-                                </select>
+                            {/* Filtros integrados en el header */}
+                            <div className="flex items-center gap-4 pt-2">
+                                <div className="flex items-center gap-2 flex-1 max-w-lg">
+                                    <div className="relative flex-1">
+                                        <Input
+                                            placeholder="Buscar roles..."
+                                            value={searchValue}
+                                            onChange={(e) => setSearchValue(e.target.value)}
+                                            onKeyPress={handleKeyPress}
+                                            className="h-9 pl-9 transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                        />
+                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    </div>
+                                    <Button
+                                        onClick={handleSearch}
+                                        size="sm"
+                                        className="h-9 px-3"
+                                    >
+                                        <Search className="h-4 w-4 mr-1" />
+                                        Buscar
+                                    </Button>
+                                    {(searchValue || filters.search) && (
+                                        <Button
+                                            onClick={handleClear}
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-9 px-3"
+                                        >
+                                            <X className="h-4 w-4 mr-1" />
+                                            Limpiar
+                                        </Button>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Label className="text-sm text-muted-foreground whitespace-nowrap">
+                                        Mostrar
+                                    </Label>
+                                    <Select value={perPage} onValueChange={setPerPage}>
+                                        <SelectTrigger className="h-9 w-20">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="10">10</SelectItem>
+                                        <SelectItem value="25">25</SelectItem>
+                                        <SelectItem value="50">50</SelectItem>
+                                        <SelectItem value="100">100</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                    <span className="text-sm text-muted-foreground">por página</span>
+                                </div>
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
-
-                {/* Tabla de Roles */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Lista de Roles</CardTitle>
-                        <CardDescription>
-                            Todos los roles configurados en el sistema con sus permisos y usuarios
-                        </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-1/3">Rol</TableHead>
-                                    <TableHead className="w-1/3">Descripción</TableHead>
-                                    <TableHead className="w-24 text-center">Usuarios</TableHead>
-                                    <TableHead className="w-32 text-center">Acciones</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                                                {/* Vista de tabla para desktop, cards para mobile/tablet */}
+                        {roles.data.length > 0 ? (
+                            <>
+                                <div className="hidden lg:block">
+                                    {/* Tabla minimalista para desktop */}
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr className="border-b border-border">
+                                                    <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
+                                                        Rol
+                                                    </th>
+                                                    <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
+                                                        Descripción
+                                                    </th>
+                                                    <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
+                                                        Permisos
+                                                    </th>
+                                                    <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
+                                                        Usuarios
+                                                    </th>
+                                                    <th className="text-right py-3 px-4 font-medium text-sm text-muted-foreground">
+                                                        Acciones
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-border/50">
+                                                {roles.data.map((role) => (
+                                                    <tr key={role.id} className="hover:bg-muted/30 transition-colors">
+                                                        {/* Columna Rol */}
+                                                        <td className="py-4 px-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                                    <Shield className="w-5 h-5 text-primary" />
+                                                                </div>
+                                                                <div className="min-w-0">
+                                                                    <div className="font-medium text-sm text-foreground truncate">
+                                                                        {role.name}
+                                                                    </div>
+                                                                    {role.is_system && (
+                                                                        <Badge variant="secondary" className="text-xs px-2 py-0.5 mt-1">
+                                                                            Sistema
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </td>
+
+                                                        {/* Columna Descripción */}
+                                                        <td className="py-4 px-4">
+                                                            <div className="text-sm text-muted-foreground max-w-xs">
+                                                                {role.description ? role.description : 'Sin descripción'}
+                                                            </div>
+                                                        </td>
+
+                                                        {/* Columna Permisos */}
+                                                        <td className="py-4 px-4">
+                                                            <div className="text-sm text-muted-foreground">
+                                                                {role.permissions.length} permiso(s)
+                                                            </div>
+                                                        </td>
+
+                                                        {/* Columna Usuarios */}
+                                                        <td className="py-4 px-4">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => openUsersModal(role)}
+                                                                disabled={role.users_count === 0}
+                                                                className="h-8 px-3 text-sm font-medium"
+                                                                title={`Ver usuarios con rol ${role.name}`}
+                                                            >
+                                                                <Users className="w-4 h-4 mr-2" />
+                                                                {role.users_count} usuario(s)
+                                                            </Button>
+                                                        </td>
+
+                                                        {/* Columna Acciones */}
+                                                        <td className="py-4 px-4">
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                {/* Permitir editar el rol admin, pero no otros roles del sistema */}
+                                                                {(role.name === 'admin' || !role.is_system) && (
+                                                                    <Link href={`/roles/${role.id}/edit`}>
+                                                                        <Button 
+                                                                            variant="ghost" 
+                                                                            size="sm" 
+                                                                            className="h-8 w-8 p-0 hover:bg-muted"
+                                                                            title="Editar rol"
+                                                                        >
+                                                                            <Edit className="w-4 h-4" />
+                                                                        </Button>
+                                                                    </Link>
+                                                                )}
+                                                                
+                                                                {/* Solo permitir eliminar roles que no sean del sistema */}
+                                                                {!role.is_system && (
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        onClick={() => openDeleteDialog(role)}
+                                                                        disabled={deletingRole === role.id}
+                                                                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                                        title="Eliminar rol"
+                                                                    >
+                                                                        {deletingRole === role.id ? (
+                                                                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                                                        ) : (
+                                                                            <Trash2 className="w-4 h-4" />
+                                                                        )}
+                                                                    </Button>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                {/* Vista de cards para mobile/tablet */}
+                                <div className="lg:hidden">
+                        <div className="grid gap-3 md:gap-4">
                                 {roles.data.map((role) => (
-                                    <TableRow key={role.id}>
-                                        <TableCell className="max-w-0 w-1/3">
-                                            <div className="flex items-center space-x-3">
+                                <div key={role.id} className="bg-card border border-border rounded-lg p-4 space-y-3 hover:bg-muted/50 transition-colors">
+                                    {/* Header con rol y estado */}
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-3 flex-1 min-w-0">
                                                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                                                     <Shield className="w-4 h-4 text-primary" />
                                                 </div>
                                                 <div className="min-w-0 flex-1">
-                                                    <div className="font-medium text-sm truncate">{role.name}</div>
-                                                    {role.is_system && (
-                                                        <div className="text-xs text-muted-foreground">Sistema</div>
-                                                    )}
+                                                    <div className="flex items-center gap-2">
+                                                    <span className="font-medium text-sm break-words">{role.name}</span>
+                                                        {role.is_system && (
+                                                        <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                                                                Sistema
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                <div className="text-xs text-muted-foreground mt-1">
+                                                    {role.permissions.length} permiso(s) • {role.users_count} usuario(s)
                                                 </div>
                                             </div>
-                                        </TableCell>
-                                        <TableCell className="max-w-0 w-1/3">
-                                            <div className="text-sm text-muted-foreground break-words leading-relaxed">
-                                                {role.description ? (
-                                                    <div className="whitespace-normal">
-                                                        {role.description}
+                                        </div>
                                                     </div>
-                                                ) : (
-                                                    <span className="italic">Sin descripción</span>
-                                                )}
+                                    
+                                    {/* Descripción */}
+                                    <div className="text-sm text-muted-foreground break-words leading-relaxed line-clamp-3">
+                                        {role.description ? role.description : 'Sin descripción'}
                                             </div>
-                                        </TableCell>
-                                        <TableCell className="w-24 text-center">
-                                            <button 
-                                                className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                    
+                                    {/* Usuarios y acciones */}
+                                    <div className="flex items-center justify-between pt-2 border-t border-border">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
                                                 onClick={() => openUsersModal(role)}
                                                 disabled={role.users_count === 0}
+                                            className="h-8 px-3 text-sm font-medium"
                                                 title={`Ver usuarios con rol ${role.name}`}
                                             >
-                                                <Users className="w-3 h-3" />
-                                                {role.users_count}
-                                            </button>
-
-                                        </TableCell>
-                                        <TableCell className="w-32">
-                                            <div className="flex items-center justify-center space-x-1">
-                                                {/* Permitir editar el rol Administrador, pero no otros roles del sistema */}
-                                                {(role.name === 'Administrador' || !role.is_system) && (
+                                            <Users className="w-4 h-4 mr-2" />
+                                            {role.users_count} usuario(s)
+                                            </Button>
+                                        
+                                        <div className="flex items-center space-x-2">
+                                                {/* Permitir editar el rol admin, pero no otros roles del sistema */}
+                                                {(role.name === 'admin' || !role.is_system) && (
+                                                            <Link href={`/roles/${role.id}/edit`}>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        asChild
-                                                        className="h-8 w-8 p-0"
+                                                    className="h-8 px-3"
                                                         title={`Editar rol ${role.name}`}
                                                     >
-                                                        <Link href={`/roles/${role.id}/edit`}>
-                                                            <Edit className="h-4 w-4" />
+                                                        <Edit className="w-4 h-4 mr-1" />
+                                                        Editar
+                                                                </Button>
                                                         </Link>
-                                                    </Button>
                                                 )}
                                                 
                                                 {/* Solo permitir eliminar roles que no sean del sistema */}
@@ -351,22 +492,50 @@ export default function RolesIndex({ roles, permissions, filters }: RolesPagePro
                                                         size="sm"
                                                         onClick={() => openDeleteDialog(role)}
                                                         disabled={deletingRole === role.id}
-                                                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                    className="h-8 px-3 text-red-600 hover:text-red-700 hover:bg-red-50"
                                                         title={`Eliminar rol ${role.name}`}
                                                     >
                                                         {deletingRole === role.id ? (
-                                                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-1" />
                                                         ) : (
-                                                            <Trash2 className="h-4 w-4" />
+                                                        <Trash2 className="w-4 h-4 mr-1" />
                                                         )}
+                                                    {deletingRole === role.id ? 'Eliminando...' : 'Eliminar'}
                                                     </Button>
                                                 )}
                                             </div>
-                                        </TableCell>
-                                    </TableRow>
+                                    </div>
+                                </div>
                                 ))}
-                            </TableBody>
-                        </Table>
+                        </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-center py-12 text-muted-foreground">
+                                <div className="flex flex-col items-center space-y-3">
+                                    <Shield className="w-12 h-12 text-muted-foreground/50" />
+                                    <div className="space-y-1">
+                                        <p className="text-lg font-medium">No se encontraron roles</p>
+                                        <p className="text-sm">
+                                            {filters.search 
+                                                ? `No hay roles que coincidan con "${filters.search}"`
+                                                : 'No hay roles disponibles en el sistema'
+                                            }
+                                        </p>
+                                    </div>
+                                    {filters.search && (
+                                        <Button
+                                            onClick={handleClear}
+                                            variant="outline"
+                                            size="sm"
+                                        >
+                                            <X className="h-4 w-4 mr-2" />
+                                            Limpiar búsqueda
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                         
                         {/* Paginación */}
                         {roles.last_page > 1 && (
@@ -391,40 +560,8 @@ export default function RolesIndex({ roles, permissions, filters }: RolesPagePro
                                             />
                                         </PaginationItem>
                                         
-                                        {/* Primera página */}
-                                        {roles.current_page > 3 && (
-                                            <>
-                                                <PaginationItem>
-                                                    <PaginationLink 
-                                                        href="#" 
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            router.get('/roles', { 
-                                                                page: 1,
-                                                                search: filters.search,
-                                                                per_page: filters.per_page
-                                                            }, { 
-                                                                preserveState: true,
-                                                                preserveScroll: true 
-                                                            });
-                                                        }}
-                                                    >
-                                                        1
-                                                    </PaginationLink>
-                                                </PaginationItem>
-                                                {roles.current_page > 4 && (
-                                                    <PaginationItem>
-                                                        <PaginationEllipsis />
-                                                    </PaginationItem>
-                                                )}
-                                            </>
-                                        )}
-                                        
-                                        {/* Páginas alrededor de la actual */}
-                                        {Array.from({ length: Math.min(3, roles.last_page) }, (_, i) => {
-                                            const page = roles.current_page - 1 + i;
-                                            if (page < 1 || page > roles.last_page) return null;
-                                            
+                                        {Array.from({ length: Math.min(5, roles.last_page) }, (_, i) => {
+                                            const page = i + 1;
                                             return (
                                                 <PaginationItem key={page}>
                                                     <PaginationLink 
@@ -448,33 +585,10 @@ export default function RolesIndex({ roles, permissions, filters }: RolesPagePro
                                             );
                                         })}
                                         
-                                        {/* Última página */}
-                                        {roles.current_page < roles.last_page - 2 && (
-                                            <>
-                                                {roles.current_page < roles.last_page - 3 && (
+                                        {roles.last_page > 5 && (
                                                     <PaginationItem>
                                                         <PaginationEllipsis />
                                                     </PaginationItem>
-                                                )}
-                                                <PaginationItem>
-                                                    <PaginationLink 
-                                                        href="#" 
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            router.get('/roles', { 
-                                                                page: roles.last_page,
-                                                                search: filters.search,
-                                                                per_page: filters.per_page
-                                                            }, { 
-                                                                preserveState: true,
-                                                                preserveScroll: true 
-                                                            });
-                                                        }}
-                                                    >
-                                                        {roles.last_page}
-                                                    </PaginationLink>
-                                                </PaginationItem>
-                                            </>
                                         )}
                                         
                                         <PaginationItem>
@@ -496,116 +610,84 @@ export default function RolesIndex({ roles, permissions, filters }: RolesPagePro
                                         </PaginationItem>
                                     </PaginationContent>
                                 </Pagination>
-                                
-                                <div className="text-center text-sm text-muted-foreground mt-4">
-                                    Página {roles.current_page} de {roles.last_page} - 
-                                    Mostrando {roles.from} a {roles.to} de {roles.total} roles
-                                </div>
                             </div>
                         )}
                     </CardContent>
                 </Card>
-
-                {/* Dialog de confirmación para eliminar rol */}
-                <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-                    <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                                <AlertTriangle className="h-5 w-5 text-red-500" />
-                                Confirmar Eliminación
-                            </DialogTitle>
-                            <DialogDescription>
-                                {roleToDelete && (
-                                    <>
-                                        ¿Estás seguro de que quieres eliminar el rol <strong>"{roleToDelete.name}"</strong>?
-                                        {roleToDelete.users_count > 0 ? (
-                                            <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                                                <div className="flex items-center gap-2 text-yellow-800">
-                                                    <AlertTriangle className="h-4 w-4" />
-                                                    <span className="font-medium">Advertencia Importante</span>
-                                                </div>
-                                                <p className="text-sm text-yellow-700 mt-1">
-                                                    Este rol está asignado a <strong>{roleToDelete.users_count} usuario(s)</strong>. 
-                                                    Si lo eliminas, todos estos usuarios <strong>perderán este rol automáticamente</strong>.
-                                                </p>
-                                                <div className="mt-2 text-xs text-yellow-600">
-                                                    ⚠️ <strong>Consecuencia:</strong> Los usuarios quedarán sin este rol y podrían 
-                                                    perder acceso a funcionalidades del sistema.
-                                                </div>
                                             </div>
-                                        ) : (
-                                            <p className="mt-2 text-sm">
-                                                Esta acción no se puede deshacer.
-                                            </p>
-                                        )}
-                                    </>
-                                )}
-                            </DialogDescription>
-                        </DialogHeader>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={cancelDelete}>
-                                Cancelar
-                            </Button>
-                            <Button 
-                                variant="destructive" 
-                                onClick={confirmDeleteRole}
-                                disabled={deletingRole !== null}
-                            >
-                                {deletingRole !== null ? 'Eliminando...' : 'Eliminar Rol'}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
 
-                {/* Modal de usuarios del rol */}
-                <Dialog open={showUsersModal} onOpenChange={setShowUsersModal}>
-                    <DialogContent className="sm:max-w-[500px]">
+            {/* Modal para mostrar usuarios del rol */}
+            <Dialog open={showUsersModal} onOpenChange={closeUsersModal}>
+                <DialogContent className="max-w-2xl">
                         <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                                <Users className="h-5 w-5 text-blue-500" />
+                        <DialogTitle>
                                 Usuarios con rol "{selectedRole?.name}"
                             </DialogTitle>
                             <DialogDescription>
-                                {selectedRole && selectedRole.users.length > 0 ? (
-                                    `${selectedRole.users.length} usuario(s) tiene(n) asignado este rol`
-                                ) : (
-                                    'No hay usuarios asignados a este rol'
-                                )}
+                            Lista de usuarios que tienen asignado este rol.
                             </DialogDescription>
                         </DialogHeader>
                         
-                        {selectedRole && selectedRole.users.length > 0 && (
-                            <div className="max-h-96 overflow-y-auto">
-                                <div className="space-y-2">
-                                    {selectedRole.users.map((user) => (
-                                        <div key={user.id} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50">
-                                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                                <span className="text-sm font-medium text-blue-600">
-                                                    {user.name.charAt(0).toUpperCase()}
-                                                </span>
+                    <ScrollArea className="max-h-96">
+                        <div className="space-y-3">
+                            {usersInRole.length > 0 ? (
+                                usersInRole.map((user) => (
+                                    <div key={user.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                                <Users className="w-4 h-4 text-primary" />
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-sm font-medium text-gray-900 truncate">
-                                                    {user.name}
-                                                </div>
-                                                <div className="text-sm text-gray-500 truncate">
-                                                    {user.email}
-                                                </div>
+                                            <div>
+                                                <div className="font-medium text-sm">{user.name}</div>
+                                                <div className="text-xs text-muted-foreground">{user.email}</div>
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
 
-                        <DialogFooter>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    <div className="flex flex-col items-center space-y-2">
+                                        <Users className="w-8 h-8 text-muted-foreground/50" />
+                                        <span>No hay usuarios asignados a este rol</span>
+                                    </div>
+                                </div>
+                            )}
+                            </div>
+                    </ScrollArea>
+
+                    <div className="flex justify-end pt-4 border-t border-border">
                             <Button variant="outline" onClick={closeUsersModal}>
                                 Cerrar
                             </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Dialog de confirmación para eliminar */}
+            <Dialog open={showDeleteDialog} onOpenChange={closeDeleteDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Eliminar Rol</DialogTitle>
+                        <DialogDescription>
+                            ¿Estás seguro de que deseas eliminar el rol <strong>"{selectedRole?.name}"</strong>?
+                            Esta acción no se puede deshacer.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={closeDeleteDialog}>
+                            Cancelar
+                        </Button>
+                        <Button 
+                            variant="destructive"
+                            onClick={handleDeleteRole}
+                            disabled={deletingRole !== null}
+                        >
+                            {deletingRole ? 'Eliminando...' : 'Eliminar'}
+                        </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-            </div>
         </AppLayout>
     );
 }

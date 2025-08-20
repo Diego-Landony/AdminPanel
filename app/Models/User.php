@@ -4,8 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -62,11 +62,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Relación con los logs de auditoría del usuario
+     * Relación con los logs de actividad del usuario
      */
-    public function auditLogs(): HasMany
+    public function activityLogs(): HasMany
     {
-        return $this->hasMany(AuditLog::class);
+        return $this->hasMany(ActivityLog::class);
     }
 
     /**
@@ -79,8 +79,6 @@ class User extends Authenticatable
 
     /**
      * Actualiza el timestamp del último acceso del usuario
-     * 
-     * @return void
      */
     public function updateLastLogin(): void
     {
@@ -89,8 +87,6 @@ class User extends Authenticatable
 
     /**
      * Actualiza el timestamp de la última actividad del usuario
-     * 
-     * @return void
      */
     public function updateLastActivity(): void
     {
@@ -100,18 +96,16 @@ class User extends Authenticatable
 
     /**
      * Registra una actividad del usuario
-     * 
-     * @param string $type Tipo de actividad
-     * @param string $description Descripción de la actividad
-     * @param array $metadata Metadatos adicionales
-     * @return UserActivity
+     *
+     * @param  string  $type  Tipo de actividad
+     * @param  string  $description  Descripción de la actividad
+     * @param  array  $metadata  Metadatos adicionales
      */
     public function logActivity(string $type, string $description, array $metadata = []): UserActivity
     {
         return $this->activities()->create([
             'activity_type' => $type,
             'description' => $description,
-            'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
             'url' => request()->fullUrl(),
             'method' => request()->method(),
@@ -161,5 +155,44 @@ class User extends Authenticatable
             ->pluck('name')
             ->unique()
             ->toArray();
+    }
+
+    /**
+     * Obtiene la primera página a la que el usuario tiene acceso
+     * Orden de prioridad: dashboard > users > activity > roles > settings
+     * Si no tiene permisos, retorna dashboard como página por defecto
+     */
+    public function getFirstAccessiblePage(): ?string
+    {
+        // Si no tiene roles, solo puede acceder al dashboard
+        if ($this->roles()->count() === 0) {
+            return '/dashboard';
+        }
+
+        $priorityPages = [
+            'dashboard.view' => '/dashboard',
+            'users.view' => '/users',
+            'activity.view' => '/activity',
+            'roles.view' => '/roles',
+            'settings.view' => '/settings',
+        ];
+
+        foreach ($priorityPages as $permission => $route) {
+            if ($this->hasPermission($permission)) {
+                return $route;
+            }
+        }
+
+        // Si no tiene permisos específicos pero tiene roles, puede acceder al dashboard
+        return '/dashboard';
+    }
+
+    /**
+     * Verifica si el usuario tiene acceso a alguna página del sistema
+     * Los usuarios siempre tienen acceso al dashboard como mínimo
+     */
+    public function hasAnyPageAccess(): bool
+    {
+        return true; // Siempre tienen acceso al dashboard
     }
 }

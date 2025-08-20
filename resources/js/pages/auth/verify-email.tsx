@@ -1,6 +1,7 @@
 // Components
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
+import { Loader2, Send, CheckCircle, LogOut } from 'lucide-react';
 
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
             {/* Mensaje de enlace enviado */}
             {status === 'verification-link-sent' && (
                 <div className="mb-4 text-center text-sm font-medium text-green-600">
-                    <i className="fas fa-check-circle mr-2"></i>
+                    <CheckCircle className="mr-2 h-4 w-4" />
                     Se ha enviado un nuevo enlace de verificación a la dirección de correo electrónico 
                     que proporcionaste durante el registro.
                 </div>
@@ -43,16 +44,16 @@ export default function VerifyEmail({ status }: { status?: string }) {
                 {/* Botón para reenviar email de verificación */}
                 <Button disabled={processing} variant="secondary">
                     {processing ? (
-                        <i className="fas fa-spinner fa-spin mr-2"></i>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                        <i className="fas fa-paper-plane mr-2"></i>
+                        <Send className="mr-2 h-4 w-4" />
                     )}
                     {processing ? 'Reenviando...' : 'Reenviar email de verificación'}
-                </Button>
+                    </Button>
 
                 {/* Enlace para cerrar sesión */}
                 <TextLink href={route('logout')} method="post" className="mx-auto block text-sm">
-                    <i className="fas fa-sign-out-alt mr-1"></i>
+                    <LogOut className="mr-1 h-4 w-4" />
                     Cerrar sesión
                 </TextLink>
             </form>

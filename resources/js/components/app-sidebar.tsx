@@ -2,7 +2,7 @@ import { NavMain } from '@/components/nav-main';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Users, UserCog, Activity, Shield } from 'lucide-react';
+import { LayoutGrid, Users, UserCog, Activity, Shield, LucideIcon } from 'lucide-react';
 import { usePermissions } from '@/hooks/use-permissions';
 import AppLogo from './app-logo';
 
@@ -14,7 +14,7 @@ interface PageConfig {
     name: string;
     title: string;
     href: string;
-    icon: any;
+    icon: LucideIcon;
     group?: string;
     permission: string;
 }
@@ -36,12 +36,12 @@ const systemPages: PageConfig[] = [
         permission: 'users.view'
     },
     {
-        name: 'audit',
+        name: 'activity',
         title: 'Actividad',
-        href: '/audit',
+        href: '/activity',
         icon: Activity,
         group: 'Usuarios',
-        permission: 'audit.view'
+        permission: 'activity.view'
     },
     {
         name: 'roles',
@@ -58,7 +58,7 @@ const systemPages: PageConfig[] = [
  * Sistema dinámico basado en permisos escalable
  */
 export function AppSidebar() {
-    const { hasPermission, hasAnyPermissionInGroup } = usePermissions();
+    const { hasPermission } = usePermissions();
 
     // Generar items de navegación basados en permisos dinámicamente
     const getNavItems = (): NavItem[] => {
@@ -100,6 +100,15 @@ export function AppSidebar() {
                 });
             }
         });
+
+        // ✅ Si no hay items de navegación, mostrar mensaje de "sin acceso"
+        if (items.length === 0) {
+            items.push({
+                title: 'Sin Acceso',
+                href: '/no-access',
+                icon: Shield,
+            });
+        }
 
         return items;
     };

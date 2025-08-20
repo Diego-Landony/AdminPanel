@@ -1,13 +1,14 @@
 import { Head, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import { FormEventHandler, useState } from 'react';
+import { LogIn, Loader2, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
-import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormField } from '@/components/ui/form-field';
 import AuthLayout from '@/layouts/auth-layout';
 
 /**
@@ -31,6 +32,8 @@ interface LoginProps {
  * Página de inicio de sesión
  */
 export default function Login({ status, canResetPassword }: LoginProps) {
+    const [showPassword, setShowPassword] = useState(false);
+    
     // Hook de Inertia para manejar el formulario
     const { data, setData, post, processing, errors, reset } = useForm<Required<LoginForm>>({
         email: '',
@@ -45,6 +48,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
         e.preventDefault();
         post(route('login'), {
             onFinish: () => reset('password'),
+            // Los mensajes de éxito/error se manejan automáticamente por el layout
         });
     };
 
@@ -64,15 +68,14 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     <form onSubmit={submit}>
                         <div className="flex flex-col gap-6">
                             {/* Campo de correo electrónico */}
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">
-                                    <i className="fas fa-envelope mr-2 text-muted-foreground"></i>
-                                    Correo electrónico
-                                </Label>
+                            <FormField
+                                label="Correo electrónico"
+                                error={errors.email}
+                                required
+                            >
                                 <Input
                                     id="email"
                                     type="email"
-                                    required
                                     autoFocus
                                     tabIndex={1}
                                     autoComplete="email"
@@ -80,27 +83,40 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     onChange={(e) => setData('email', e.target.value)}
                                     placeholder="usuario@email.com"
                                 />
-                                <InputError message={errors.email} />
-                            </div>
+                            </FormField>
 
                             {/* Campo de contraseña */}
-                            <div className="grid gap-2">
-                                <Label htmlFor="password">
-                                    <i className="fas fa-lock mr-2 text-muted-foreground"></i>
-                                    Contraseña
-                                </Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    required
-                                    tabIndex={2}
-                                    autoComplete="current-password"
-                                    value={data.password}
-                                    onChange={(e) => setData('password', e.target.value)}
-                                    placeholder="Tu contraseña"
-                                />
-                                <InputError message={errors.password} />
-                            </div>
+                            <FormField
+                                label="Contraseña"
+                                error={errors.password}
+                                required
+                            >
+                                <div className="relative">
+                                    <Input
+                                        id="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        tabIndex={2}
+                                        autoComplete="current-password"
+                                        value={data.password}
+                                        onChange={(e) => setData('password', e.target.value)}
+                                        placeholder="Tu contraseña"
+                                        className="pr-10"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="absolute right-1 top-1 h-8 w-8 p-0"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="h-4 w-4" />
+                                        ) : (
+                                            <Eye className="h-4 w-4" />
+                                        )}
+                                    </Button>
+                                </div>
+                            </FormField>
 
                             {/* Checkbox de recordar sesión */}
                             <div className="flex items-center space-x-3">
@@ -121,9 +137,9 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     {/* Botón de envío */}
                     <Button type="submit" className="w-full" onClick={submit} disabled={processing}>
                         {processing ? (
-                            <i className="fas fa-spinner fa-spin mr-2"></i>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : (
-                            <i className="fas fa-sign-in-alt mr-2"></i>
+                            <LogIn className="mr-2 h-4 w-4" />
                         )}
                         {processing ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                     </Button>
@@ -131,7 +147,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     {/* Mensaje de estado */}
                     {status && (
                         <div className="text-center text-sm font-medium text-green-600">
-                            <i className="fas fa-check-circle mr-2"></i>
+                            <CheckCircle className="mr-2 h-4 w-4" />
                             {status}
                         </div>
                     )}

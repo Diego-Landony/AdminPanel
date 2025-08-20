@@ -3,49 +3,32 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Inertia\Inertia;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Validation\Rule;
 
 /**
- * Controlador para manejar el cambio de tema del sistema
- * Utiliza cookies nativas de Laravel para persistir la preferencia del usuario
+ * Controlador para manejar la persistencia del tema en el servidor.
  */
 class ThemeController extends Controller
 {
     /**
-     * Actualiza el tema del sistema
-     * 
-     * @param Request $request - Request con el tema seleccionado
-     * @return \Inertia\Response - Respuesta de Inertia
+     * Actualiza la cookie del tema del sistema.
+     *
+     * @param  Request  $request
+     * @return JsonResponse
      */
-    public function update(Request $request)
+    public function update(Request $request): JsonResponse
     {
-        // Validar que el tema sea uno de los permitidos
-        $request->validate([
-            'theme' => 'required|in:light,dark,system',
+        $validated = $request->validate([
+            'theme' => ['required', Rule::in(['light', 'dark', 'system'])],
         ]);
 
-        $theme = $request->input('theme');
-        
-        // Establecer cookie con el tema seleccionado
-        // La cookie durará 1 año (365 días)
-        cookie()->queue('appearance', $theme, 365 * 24 * 60 * 60);
+        $theme = $validated['theme'];
 
-        // Redirigir de vuelta a la página anterior con mensaje de éxito
-        return back()->with('theme_updated', 'Tema actualizado correctamente');
-    }
+        // Almacenar la preferencia en una cookie por un año.
+        Cookie::queue('appearance', $theme, 60 * 24 * 365);
 
-    /**
-     * Obtiene el tema actual del sistema
-     * 
-     * @param Request $request - Request actual
-     * @return \Inertia\Response - Respuesta de Inertia
-     */
-    public function get(Request $request)
-    {
-        $theme = $request->cookie('appearance', 'system');
-        
-        return Inertia::render('theme-info', [
-            'currentTheme' => $theme,
-        ]);
+        return response()->json(['message' => 'Theme updated successfully.']);
     }
 }

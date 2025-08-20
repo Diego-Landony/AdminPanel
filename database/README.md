@@ -73,7 +73,7 @@ Tabla para tracking detallado de todas las actividades de usuarios.
 
 ---
 
-### 🔍 **3. audit_logs**
+### **🔍 **3. activity_logs**
 Tabla para logs de auditoría del sistema estilo Netbird.
 
 | Campo | Tipo | Descripción | Índices |
@@ -88,7 +88,8 @@ Tabla para logs de auditoría del sistema estilo Netbird.
 | `new_values` | JSON NULL | Valores nuevos después del cambio | - |
 | `ip_address` | VARCHAR(45) NULL | Dirección IP del usuario | - |
 | `user_agent` | TEXT NULL | User Agent del navegador | - |
-| `created_at` | TIMESTAMP | Fecha de creación (con DEFAULT CURRENT_TIMESTAMP) | INDEX |
+| `created_at` | TIMESTAMP | Fecha de creación | INDEX |
+| `updated_at` | TIMESTAMP | Fecha de última actualización | INDEX |
 
 **Índices Compuestos:**
 - `(user_id, created_at)` - Para consultas de auditoría por usuario
@@ -450,17 +451,14 @@ roles:     [view, create, edit, delete]  // CRUD completo
 
 ## 🔧 Migraciones Ejecutadas
 
-1. **`0001_01_01_000000_create_users_table.php`** - Tabla base de usuarios
-2. **`0001_01_01_000001_create_cache_table.php`** - Sistema de caché
-3. **`0001_01_01_000002_create_jobs_table.php`** - Sistema de colas
-4. **`2025_08_12_193838_add_last_login_at_to_users_table.php`** - Campo last_login_at
-5. **`2025_08_13_173244_add_last_activity_at_to_users_table.php`** - Campos last_activity_at y timezone
-6. **`2025_08_13_173253_create_user_activities_table.php`** - Tabla de actividades
-7. **`2025_08_13_173301_create_audit_logs_table.php`** - Tabla de auditoría
-8. **`2025_08_13_205211_create_roles_table.php`** - Tabla de roles del sistema
-9. **`2025_08_13_205216_create_permissions_table.php`** - Tabla de permisos
-10. **`2025_08_13_205222_create_role_user_table.php`** - Tabla pivote usuarios-roles
-11. **`2025_08_13_205228_create_permission_role_table.php`** - Tabla pivote roles-permisos
+1. **`0001_01_01_000000_create_initial_schema.php`** - Esquema completo del sistema (usuarios, roles, permisos, actividades, auditoría)
+2. **`2025_08_12_193838_add_last_login_at_to_users_table.php`** - Campo last_login_at
+3. **`2025_08_13_173244_add_last_activity_at_to_users_table.php`** - Campos last_activity_at y timezone
+4. **`2025_08_13_173253_create_user_activities_table.php`** - Tabla de actividades
+5. **`2025_08_13_205211_create_roles_table.php`** - Tabla de roles del sistema
+6. **`2025_08_13_205216_create_permissions_table.php`** - Tabla de permisos
+7. **`2025_08_13_205222_create_role_user_table.php`** - Tabla pivote usuarios-roles
+8. **`2025_08_13_205228_create_permission_role_table.php`** - Tabla pivote roles-permisos
 
 ---
 

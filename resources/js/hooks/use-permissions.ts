@@ -1,5 +1,20 @@
 import { usePage } from '@inertiajs/react';
 
+interface UserRole {
+    name: string;
+    permissions?: string[];
+}
+
+interface User {
+    roles?: UserRole[];
+}
+
+interface PageProps {
+    auth?: {
+        user?: User;
+    };
+}
+
 /**
  * Hook para verificar permisos del usuario
  * 
@@ -7,7 +22,7 @@ import { usePage } from '@inertiajs/react';
  */
 export function usePermissions() {
     const { props } = usePage();
-    const user = (props as any).auth?.user;
+    const user = (props as PageProps).auth?.user;
 
     /**
      * Verifica si el usuario tiene un permiso específico
@@ -22,7 +37,7 @@ export function usePermissions() {
         }
 
         // Verificar si alguno de sus roles tiene el permiso
-        return user.roles.some((role: any) => 
+        return user.roles.some((role: UserRole) => 
             role.permissions && role.permissions.includes(permission)
         );
     };
@@ -32,7 +47,7 @@ export function usePermissions() {
      */
     const hasRole = (roleName: string): boolean => {
         if (!user || !user.roles) return false;
-        return user.roles.some((role: any) => role.name === roleName);
+        return user.roles.some((role: UserRole) => role.name === roleName);
     };
 
     /**
@@ -51,7 +66,7 @@ export function usePermissions() {
         const permissions = new Set<string>();
         permissions.add('dashboard.view'); // Siempre incluir dashboard
         
-        user.roles.forEach((role: any) => {
+        user.roles.forEach((role: UserRole) => {
             if (role.permissions) {
                 role.permissions.forEach((permission: string) => {
                     permissions.add(permission);

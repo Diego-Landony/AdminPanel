@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { toast } from 'sonner';
 import AppLayout from '@/layouts/app-layout';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { FormField } from '@/components/ui/form-field';
+import { FormError } from '@/components/ui/form-error';
 import { BreadcrumbItem } from '@/types';
 import { ArrowLeft, Save } from 'lucide-react';
 
@@ -62,7 +64,18 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
      */
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/roles');
+        post('/roles', {
+            onSuccess: () => {
+                // Éxito manejado automáticamente por el layout
+            },
+            onError: (errors) => {
+                // Los errores de validación se muestran automáticamente
+                // Los errores del servidor se manejan por el layout
+                if (Object.keys(errors).length === 0) {
+                    toast.error('Error del servidor al crear el rol. Inténtalo de nuevo.');
+                }
+            }
+        });
     };
 
     /**
@@ -81,32 +94,6 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
      */
     const isPermissionSelected = (permissionName: string): boolean => {
         return data.permissions.includes(permissionName);
-    };
-
-    /**
-     * Selecciona/deselecciona todos los permisos de un grupo
-     */
-    const handleGroupToggle = (groupPermissions: Permission[], checked: boolean) => {
-        const groupPermissionNames = groupPermissions.map(p => p.name);
-        
-        if (checked) {
-            const newPermissions = [...data.permissions];
-            groupPermissionNames.forEach(permission => {
-                if (!newPermissions.includes(permission)) {
-                    newPermissions.push(permission);
-                }
-            });
-            setData('permissions', newPermissions);
-        } else {
-            setData('permissions', data.permissions.filter(p => !groupPermissionNames.includes(p)));
-        }
-    };
-
-    /**
-     * Verifica si todos los permisos de un grupo están seleccionados
-     */
-    const isGroupSelected = (groupPermissions: Permission[]): boolean => {
-        return groupPermissions.every(p => data.permissions.includes(p.name));
     };
 
     /**
@@ -145,129 +132,130 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Información básica del rol */}
-                    <div className="space-y-6">
-                        <div className="space-y-3">
-                            <Label htmlFor="name" className="text-base font-medium">Nombre del Rol</Label>
-                            <Input
-                                id="name"
-                                type="text"
-                                value={data.name}
-                                onChange={e => setData('name', e.target.value)}
-                                placeholder="ej: Gerente"
-                                className={`h-11 ${errors.name ? 'border-red-500' : ''}`}
-                            />
-                            {errors.name && (
-                                <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+                    {/* Contenedor con ancho máximo para hacer el contenido más angosto */}
+                    <div className="max-w-4xl mx-auto">
+                        {/* Información básica del rol */}
+                        <div className="space-y-6">
+                            <FormField
+                                label="Nombre del Rol"
+                                error={errors.name}
+                                required
+                            >
+                                <Input
+                                    id="name"
+                                    type="text"
+                                    value={data.name}
+                                    onChange={e => setData('name', e.target.value)}
+                                    placeholder="Ej: usuario"
+                                    className="h-11"
+                                />
+                            </FormField>
+
+                            <FormField
+                                label="Descripción"
+                                error={errors.description}
+                            >
+                                <Textarea
+                                    id="description"
+                                    value={data.description}
+                                    onChange={e => setData('description', e.target.value)}
+                                    placeholder="Describe las responsabilidades y alcance de este rol..."
+                                    className="min-h-[100px]"
+                                />
+                            </FormField>
+                        </div>
+
+                        {/* Permisos */}
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <h3 className="text-lg font-semibold">Permisos del Rol</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    Selecciona las acciones que este rol puede realizar en cada página
+                                </p>
+                            </div>
+
+                            {/* Tabla compacta de permisos */}
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-1/3">Página</TableHead>
+                                            <TableHead className="w-16 text-center">Ver</TableHead>
+                                            <TableHead className="w-16 text-center">Crear</TableHead>
+                                            <TableHead className="w-16 text-center">Editar</TableHead>
+                                            <TableHead className="w-16 text-center">Eliminar</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {Object.entries(permissions).map(([group, groupPermissions]) => {
+                                            // Agrupar permisos por acción
+                                            const actions = {
+                                                view: groupPermissions.find(p => p.name.endsWith('.view')),
+                                                create: groupPermissions.find(p => p.name.endsWith('.create')),
+                                                edit: groupPermissions.find(p => p.name.endsWith('.edit')),
+                                                delete: groupPermissions.find(p => p.name.endsWith('.delete'))
+                                            };
+
+                                            return (
+                                                <TableRow key={group}>
+                                                    <TableCell className="font-medium">
+                                                        {getGroupDisplayName(group)}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        {actions.view && (
+                                                            <Checkbox
+                                                                id={actions.view?.name || ''}
+                                                                checked={isPermissionSelected(actions.view?.name || '')}
+                                                                onCheckedChange={(checked) => 
+                                                                    handlePermissionChange(actions.view?.name || '', checked as boolean)
+                                                                }
+                                                            />
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        {actions.create && (
+                                                            <Checkbox
+                                                                id={actions.create?.name || ''}
+                                                                checked={isPermissionSelected(actions.create?.name || '')}
+                                                                onCheckedChange={(checked) => 
+                                                                    handlePermissionChange(actions.create?.name || '', checked as boolean)
+                                                                }
+                                                            />
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        {actions.edit && (
+                                                            <Checkbox
+                                                                id={actions.edit?.name || ''}
+                                                                checked={isPermissionSelected(actions.edit?.name || '')}
+                                                                onCheckedChange={(checked) => 
+                                                                    handlePermissionChange(actions.edit?.name || '', checked as boolean)
+                                                                }
+                                                            />
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        {actions.delete && (
+                                                            <Checkbox
+                                                                id={actions.delete?.name || ''}
+                                                                checked={isPermissionSelected(actions.delete?.name || '')}
+                                                                onCheckedChange={(checked) => 
+                                                                    handlePermissionChange(actions.delete?.name || '', checked as boolean)
+                                                                }
+                                                            />
+                                                        )}
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                            
+                            {errors.permissions && (
+                                <FormError message={errors.permissions} />
                             )}
                         </div>
-
-                        <div className="space-y-3">
-                            <Label htmlFor="description" className="text-base font-medium">Descripción</Label>
-                            <Textarea
-                                id="description"
-                                value={data.description}
-                                onChange={e => setData('description', e.target.value)}
-                                placeholder="Describe las responsabilidades y alcance de este rol..."
-                                className={`min-h-[100px] ${errors.description ? 'border-red-500' : ''}`}
-                            />
-                            {errors.description && (
-                                <p className="text-sm text-red-500 mt-1">{errors.description}</p>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Permisos */}
-                    <div className="space-y-6">
-                        <div className="space-y-2">
-                            <h3 className="text-lg font-semibold">Permisos del Rol</h3>
-                            <p className="text-sm text-muted-foreground">
-                                Selecciona las acciones que este rol puede realizar en cada página
-                            </p>
-                        </div>
-
-                        
-                        {/* Tabla compacta de permisos */}
-                        <div className="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="w-1/3">Página</TableHead>
-                                        <TableHead className="w-16 text-center">Ver</TableHead>
-                                        <TableHead className="w-16 text-center">Crear</TableHead>
-                                        <TableHead className="w-16 text-center">Editar</TableHead>
-                                        <TableHead className="w-16 text-center">Eliminar</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {Object.entries(permissions).map(([group, groupPermissions]) => {
-                                        // Agrupar permisos por acción
-                                        const actions = {
-                                            view: groupPermissions.find(p => p.name.endsWith('.view')),
-                                            create: groupPermissions.find(p => p.name.endsWith('.create')),
-                                            edit: groupPermissions.find(p => p.name.endsWith('.edit')),
-                                            delete: groupPermissions.find(p => p.name.endsWith('.delete'))
-                                        };
-
-                                        return (
-                                            <TableRow key={group}>
-                                                <TableCell className="font-medium">
-                                                    {getGroupDisplayName(group)}
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    {actions.view && (
-                                                        <Checkbox
-                                                            id={actions.view?.name || ''}
-                                                            checked={isPermissionSelected(actions.view?.name || '')}
-                                                            onCheckedChange={(checked) => 
-                                                                handlePermissionChange(actions.view?.name || '', checked as boolean)
-                                                            }
-                                                        />
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    {actions.create && (
-                                                        <Checkbox
-                                                            id={actions.create?.name || ''}
-                                                            checked={isPermissionSelected(actions.create?.name || '')}
-                                                            onCheckedChange={(checked) => 
-                                                                handlePermissionChange(actions.create?.name || '', checked as boolean)
-                                                            }
-                                                        />
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    {actions.edit && (
-                                                        <Checkbox
-                                                            id={actions.edit?.name || ''}
-                                                            checked={isPermissionSelected(actions.edit?.name || '')}
-                                                            onCheckedChange={(checked) => 
-                                                                handlePermissionChange(actions.edit?.name || '', checked as boolean)
-                                                            }
-                                                        />
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    {actions.delete && (
-                                                        <Checkbox
-                                                            id={actions.delete?.name || ''}
-                                                            checked={isPermissionSelected(actions.delete?.name || '')}
-                                                            onCheckedChange={(checked) => 
-                                                                handlePermissionChange(actions.delete?.name || '', checked as boolean)
-                                                            }
-                                                        />
-                                                    )}
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </div>
-                        
-                        {errors.permissions && (
-                            <p className="text-sm text-red-500 mt-2">{errors.permissions}</p>
-                        )}
                     </div>
 
                     {/* Botones de acción */}

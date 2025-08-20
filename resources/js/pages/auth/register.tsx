@@ -1,12 +1,12 @@
 import { Head, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import { FormEventHandler, useState } from 'react';
+import { UserPlus, Loader2, Eye, EyeOff } from 'lucide-react';
 
-import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormField } from '@/components/ui/form-field';
 import AuthLayout from '@/layouts/auth-layout';
 
 /**
@@ -23,6 +23,9 @@ type RegisterForm = {
  * Página de registro de usuarios
  */
 export default function Register() {
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
+    
     // Hook de Inertia para manejar el formulario
     const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
         name: '',
@@ -38,6 +41,7 @@ export default function Register() {
         e.preventDefault();
         post(route('register'), {
             onFinish: () => reset('password', 'password_confirmation'),
+            // Los mensajes de éxito/error se manejan automáticamente por el layout
         });
     };
 
@@ -57,15 +61,14 @@ export default function Register() {
                     <form onSubmit={submit}>
                         <div className="flex flex-col gap-6">
                             {/* Campo de nombre completo */}
-                            <div className="grid gap-2">
-                                <Label htmlFor="name">
-                                    <i className="fas fa-user mr-2 text-muted-foreground"></i>
-                                    Nombre completo
-                                </Label>
+                            <FormField
+                                label="Nombre completo"
+                                error={errors.name}
+                                required
+                            >
                                 <Input
                                     id="name"
                                     type="text"
-                                    required
                                     autoFocus
                                     tabIndex={1}
                                     autoComplete="name"
@@ -74,19 +77,17 @@ export default function Register() {
                                     disabled={processing}
                                     placeholder="Tu nombre completo"
                                 />
-                                <InputError message={errors.name} className="mt-2" />
-                            </div>
+                            </FormField>
 
                             {/* Campo de correo electrónico */}
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">
-                                    <i className="fas fa-envelope mr-2 text-muted-foreground"></i>
-                                    Correo electrónico
-                                </Label>
+                            <FormField
+                                label="Correo electrónico"
+                                error={errors.email}
+                                required
+                            >
                                 <Input
                                     id="email"
                                     type="email"
-                                    required
                                     tabIndex={2}
                                     autoComplete="email"
                                     value={data.email}
@@ -94,47 +95,75 @@ export default function Register() {
                                     disabled={processing}
                                     placeholder="correo@ejemplo.com"
                                 />
-                                <InputError message={errors.email} />
-                            </div>
+                            </FormField>
 
                             {/* Campo de contraseña */}
-                            <div className="grid gap-2">
-                                <Label htmlFor="password">
-                                    <i className="fas fa-lock mr-2 text-muted-foreground"></i>
-                                    Contraseña
-                                </Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    required
-                                    tabIndex={3}
-                                    autoComplete="new-password"
-                                    value={data.password}
-                                    onChange={(e) => setData('password', e.target.value)}
-                                    disabled={processing}
-                                    placeholder="Tu contraseña"
-                                />
-                                <InputError message={errors.password} />
-                            </div>
+                            <FormField
+                                label="Contraseña"
+                                error={errors.password}
+                                required
+                            >
+                                <div className="relative">
+                                    <Input
+                                        id="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        tabIndex={3}
+                                        autoComplete="new-password"
+                                        value={data.password}
+                                        onChange={(e) => setData('password', e.target.value)}
+                                        disabled={processing}
+                                        placeholder="Tu contraseña"
+                                        className="pr-10"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="absolute right-1 top-1 h-8 w-8 p-0"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="h-4 w-4" />
+                                        ) : (
+                                            <Eye className="h-4 w-4" />
+                                        )}
+                                    </Button>
+                                </div>
+                            </FormField>
 
                             {/* Campo de confirmación de contraseña */}
-                            <div className="grid gap-2">
-                                <Label htmlFor="password_confirmation">
-                                    <i className="fas fa-shield-alt mr-2 text-muted-foreground"></i>
-                                    Confirmar contraseña
-                                </Label>
-                                <Input
-                                    id="password_confirmation"
-                                    type="password"
-                                    name="password_confirmation"
-                                    autoComplete="new-password"
-                                    value={data.password_confirmation}
-                                    onChange={(e) => setData('password_confirmation', e.target.value)}
-                                    disabled={processing}
-                                    placeholder="Confirma tu contraseña"
-                                />
-                                <InputError message={errors.password_confirmation} className="mt-2" />
-                            </div>
+                            <FormField
+                                label="Confirmar contraseña"
+                                error={errors.password_confirmation}
+                                required
+                            >
+                                <div className="relative">
+                                    <Input
+                                        id="password_confirmation"
+                                        type={showPasswordConfirmation ? 'text' : 'password'}
+                                        name="password_confirmation"
+                                        autoComplete="new-password"
+                                        value={data.password_confirmation}
+                                        onChange={(e) => setData('password_confirmation', e.target.value)}
+                                        disabled={processing}
+                                        placeholder="Confirma tu contraseña"
+                                        className="pr-10"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="absolute right-1 top-1 h-8 w-8 p-0"
+                                        onClick={() => setShowPasswordConfirmation(!showPasswordConfirmation)}
+                                    >
+                                        {showPasswordConfirmation ? (
+                                            <EyeOff className="h-4 w-4" />
+                                        ) : (
+                                            <Eye className="h-4 w-4" />
+                                        )}
+                                    </Button>
+                                </div>
+                            </FormField>
                         </div>
                     </form>
                 </CardContent>
@@ -143,9 +172,9 @@ export default function Register() {
                     {/* Botón de envío */}
                     <Button type="submit" className="w-full" onClick={submit} disabled={processing}>
                         {processing ? (
-                            <i className="fas fa-spinner fa-spin mr-2"></i>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : (
-                            <i className="fas fa-user-plus mr-2"></i>
+                            <UserPlus className="mr-2 h-4 w-4" />
                         )}
                         {processing ? 'Creando cuenta...' : 'Crear cuenta'}
                     </Button>

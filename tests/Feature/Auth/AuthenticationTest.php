@@ -9,7 +9,33 @@ test('login screen can be rendered', function () {
 });
 
 test('users can authenticate using the login screen', function () {
-    $user = User::factory()->create();
+    // Crear un usuario con rol de administrador para la prueba
+    $user = User::factory()->create([
+        'email' => 'test@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    // Crear rol de administrador
+    $adminRole = \App\Models\Role::create([
+        'name' => 'admin',
+        'display_name' => 'Administrador',
+        'description' => 'Rol de administrador para pruebas',
+        'is_system' => false,
+    ]);
+
+    // Crear permiso para el dashboard
+    $dashboardPermission = \App\Models\Permission::create([
+        'name' => 'dashboard.view',
+        'display_name' => 'Ver Dashboard',
+        'description' => 'Permite acceder al dashboard del sistema',
+        'group' => 'dashboard',
+    ]);
+
+    // Asignar permiso al rol
+    $adminRole->permissions()->attach($dashboardPermission->id);
+
+    // Asignar rol al usuario
+    $user->roles()->attach($adminRole->id);
 
     $response = $this->post('/login', [
         'email' => $user->email,

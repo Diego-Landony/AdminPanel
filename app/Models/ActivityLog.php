@@ -6,15 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Modelo para los logs de auditoría del sistema
- * Registra eventos importantes y cambios en el sistema
+ * Modelo para los logs de actividad del sistema
+ * Registra todas las acciones y cambios realizados por los usuarios
  */
-class AuditLog extends Model
+class ActivityLog extends Model
 {
     /**
      * Indicates if the model should be timestamped.
      */
-    public $timestamps = false;
+    public $timestamps = true;
 
     /**
      * The attributes that are mass assignable.
@@ -27,7 +27,6 @@ class AuditLog extends Model
         'description',
         'old_values',
         'new_values',
-        'ip_address',
         'user_agent',
     ];
 
@@ -49,7 +48,7 @@ class AuditLog extends Model
     }
 
     /**
-     * Tipos de eventos de auditoría
+     * Tipos de eventos de actividad
      */
     public static function getEventTypes(): array
     {
@@ -60,25 +59,25 @@ class AuditLog extends Model
             'user_deleted' => 'Usuario eliminado',
             'user_restored' => 'Usuario restaurado',
             'user_force_deleted' => 'Usuario eliminado permanentemente',
-            
+
             // Eventos de autenticación
             'login' => 'Inicio de sesión',
             'logout' => 'Cierre de sesión',
             'password_changed' => 'Contraseña cambiada',
             'profile_updated' => 'Perfil actualizado',
-            
+
             // Eventos de configuración
             'settings_changed' => 'Configuración cambiada',
             'theme_changed' => 'Tema cambiado',
-            
+
             // Eventos de archivos
             'file_uploaded' => 'Archivo subido',
             'file_deleted' => 'Archivo eliminado',
-            
+
             // Eventos de permisos
             'permission_granted' => 'Permiso otorgado',
             'permission_revoked' => 'Permiso revocado',
-            
+
             // Eventos de roles
             'role_created' => 'Rol creado',
             'role_updated' => 'Rol actualizado',

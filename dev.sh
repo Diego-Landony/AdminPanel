@@ -46,7 +46,8 @@ print_menu() {
     echo -e "  ${GREEN}4)${NC} 🔄 Reiniciar servidor"
     echo -e "  ${GREEN}5)${NC} 📋 Ver logs en tiempo real"
     echo -e "  ${GREEN}6)${NC} 📖 Ver documentación"
-    echo -e "  ${GREEN}7)${NC} 🚪 Salir"
+    echo -e "  ${GREEN}7)${NC} 🔧 Corregir permisos"
+    echo -e "  ${GREEN}8)${NC} 🚪 Salir"
     echo ""
 }
 
@@ -81,6 +82,15 @@ run_script() {
     fi
 }
 
+# Función para iniciar servidor con corrección automática de permisos
+start_server_with_permissions() {
+    print_status "Verificando permisos antes de iniciar el servidor..."
+    run_script "fix-permissions.sh"
+    echo ""
+    print_status "Iniciando servidor..."
+    run_script "start-server.sh"
+}
+
 # Función para reiniciar servidor
 restart_server() {
     print_status "Reiniciando servidor..."
@@ -108,13 +118,12 @@ main_menu() {
         print_header
         print_menu
         
-        read -p "Selecciona una opción (1-7): " choice
+        read -p "Selecciona una opción (1-8): " choice
         
         case $choice in
             1)
                 echo ""
-                print_status "Iniciando servidor..."
-                run_script "start-server.sh"
+                start_server_with_permissions
                 echo ""
                 read -p "Presiona Enter para continuar..."
                 ;;
@@ -150,11 +159,18 @@ main_menu() {
                 read -p "Presiona Enter para continuar..."
                 ;;
             7)
+                echo ""
+                print_status "Corrigiendo permisos..."
+                run_script "fix-permissions.sh"
+                echo ""
+                read -p "Presiona Enter para continuar..."
+                ;;
+            8)
                 print_success "¡Hasta luego!"
                 exit 0
                 ;;
             *)
-                print_error "Opción inválida. Selecciona 1-7."
+                print_error "Opción inválida. Selecciona 1-8."
                 sleep 2
                 ;;
         esac
@@ -169,7 +185,7 @@ else
     # Modo directo con argumentos
     case $1 in
         "start"|"iniciar"|"1")
-            run_script "start-server.sh"
+            start_server_with_permissions
             ;;
         "stop"|"detener"|"2")
             run_script "stop-server.sh"
@@ -186,6 +202,13 @@ else
         "docs"|"documentacion"|"6")
             show_docs
             ;;
+        "fix"|"corregir"|"7")
+            echo ""
+            print_status "Corrigiendo permisos..."
+            run_script "fix-permissions.sh"
+            echo ""
+            read -p "Presiona Enter para continuar..."
+            ;;
         "help"|"ayuda"|"-h"|"--help")
             echo ""
             print_header
@@ -197,6 +220,7 @@ else
             echo "  ./dev.sh restart            # Reiniciar servidor"
             echo "  ./dev.sh logs               # Ver logs en tiempo real"
             echo "  ./dev.sh docs               # Ver documentación"
+            echo "  ./dev.sh fix                # Corregir permisos"
             echo ""
             echo -e "${CYAN}Comandos rápidos:${NC}"
             echo "  ./dev.sh 1                  # Iniciar servidor"
@@ -205,6 +229,7 @@ else
             echo "  ./dev.sh 4                  # Reiniciar servidor"
             echo "  ./dev.sh 5                  # Ver logs en tiempo real"
             echo "  ./dev.sh 6                  # Ver documentación"
+            echo "  ./dev.sh 7                  # Corregir permisos"
             echo ""
             ;;
         *)

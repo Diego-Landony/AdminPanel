@@ -14,7 +14,13 @@ class UserActivity extends Model
     /**
      * Indicates if the model should be timestamped.
      */
-    public $timestamps = false;
+    public $timestamps = true;
+
+    /**
+     * The name of the "updated at" column.
+     * Since this model only has created_at, we disable updated_at
+     */
+    const UPDATED_AT = null;
 
     /**
      * The attributes that are mass assignable.
@@ -23,7 +29,6 @@ class UserActivity extends Model
         'user_id',
         'activity_type',
         'description',
-        'ip_address',
         'user_agent',
         'url',
         'method',

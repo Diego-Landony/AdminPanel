@@ -1,35 +1,52 @@
-import { LucideIcon } from 'lucide-react';
-import type { Config } from 'ziggy-js';
+import type { route as routeFn } from 'ziggy-js';
 
-export interface Auth {
-    user: User;
+declare global {
+    const route: typeof routeFn;
+}
+
+// Extend Inertia core types
+declare module '@inertiajs/core' {
+    export interface PageProps {
+        auth: {
+            user: {
+                id: number;
+                name: string;
+                email: string;
+                avatar?: string;
+                email_verified_at?: string | null;
+                created_at?: string;
+                updated_at?: string;
+            };
+        };
+        name?: string;
+        quote?: {
+            message: string;
+            author: string;
+        };
+        sidebarOpen?: boolean;
+        ziggy?: {
+            location: string;
+        };
+        [key: string]: unknown;
+    }
+}
+
+// Navigation types
+export interface NavItem {
+    title: string;
+    href?: string;
+    icon?: React.ComponentType<{ className?: string }> | null;
+    isActive?: boolean;
+    items?: NavItem[]; // Para submenús
 }
 
 export interface BreadcrumbItem {
     title: string;
-    href: string;
-}
-
-export interface NavGroup {
-    title: string;
-    items: NavItem[];
-}
-
-export interface NavItem {
-    title: string;
     href?: string;
-    icon?: LucideIcon | null;
-    isActive?: boolean;
-    items?: NavItem[];  // Para submenús
 }
 
-export interface SharedData {
-    name: string;
-    quote: { message: string; author: string };
-    auth: Auth;
-    ziggy: Config & { location: string };
-    sidebarOpen: boolean;
-    [key: string]: unknown;
+export interface Auth {
+    user: User;
 }
 
 export interface User {
@@ -37,8 +54,26 @@ export interface User {
     name: string;
     email: string;
     avatar?: string;
-    email_verified_at: string | null;
-    created_at: string;
-    updated_at: string;
-    [key: string]: unknown; // This allows for additional properties...
+    email_verified_at?: string | null;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface NavGroup {
+    title: string;
+    items: NavItem[];
+}
+
+export interface SharedData {
+    auth: Auth;
+    name?: string;
+    quote?: {
+        message: string;
+        author: string;
+    };
+    sidebarOpen?: boolean;
+    ziggy?: {
+        location: string;
+    };
+    [key: string]: unknown;
 }

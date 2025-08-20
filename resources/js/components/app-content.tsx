@@ -3,6 +3,7 @@ import * as React from 'react';
 
 interface AppContentProps extends React.ComponentProps<'main'> {
     variant?: 'header' | 'sidebar';
+    children?: React.ReactNode;
 }
 
 export function AppContent({ variant = 'header', children, ...props }: AppContentProps) {

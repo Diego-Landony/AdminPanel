@@ -1,88 +1,50 @@
 /**
  * Script de inicialización del tema
- * Se ejecuta al cargar la página para aplicar el tema correcto
+ * Se ejecuta para aplicar el tema correcto y evitar el "flash" (FOUC).
+ * Prioriza localStorage como la fuente de verdad en el cliente.
  */
+
+const THEME_KEY = 'appearance';
+type Theme = 'light' | 'dark' | 'system';
 
 /**
- * Inicializa el tema del sistema
- * Lee la cookie de Laravel y aplica el tema correspondiente
+ * Aplica el tema al elemento <html>.
  */
-export function initializeTheme() {
-    // Obtener el tema de la cookie
-    const getCookie = (name: string): string | null => {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
-        return null;
-    };
-
-    const theme = getCookie('appearance') || 'system';
-    
-    // Aplicar el tema al DOM
-    applyTheme(theme);
-    
-    // Escuchar cambios en la preferencia del sistema (para tema automático)
-    if (theme === 'system') {
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        mediaQuery.addEventListener('change', (e) => {
-            if (getCookie('appearance') === 'system') {
-                applyTheme('system');
-            }
-        });
-    }
-}
-
-/**
- * Aplica el tema especificado al DOM
- * @param theme - Tema a aplicar ('light', 'dark', 'system')
- */
-function applyTheme(theme: string) {
+function applyTheme(theme: Theme) {
     const html = document.documentElement;
-    
-    // Remover clases existentes
     html.classList.remove('light', 'dark');
-    
-    // Aplicar nueva clase
+
     if (theme === 'system') {
-        // Para tema automático, usar la preferencia del sistema
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            html.classList.add('dark');
-        } else {
-            html.classList.add('light');
-        }
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        html.classList.add(prefersDark ? 'dark' : 'light');
     } else {
         html.classList.add(theme);
     }
 }
 
 /**
- * Función para cambiar el tema dinámicamente
- * @param theme - Tema a establecer
+ * Cambia el tema, lo guarda en localStorage y actualiza el servidor.
  */
-export function changeTheme(theme: 'light' | 'dark' | 'system') {
-    // Establecer cookie
-    document.cookie = `appearance=${theme}; path=/; max-age=${365 * 24 * 60 * 60}`;
+export function changeTheme(theme: Theme) {
+    // 1. Guardar en localStorage (fuente de verdad del cliente)
+    localStorage.setItem(THEME_KEY, theme);
     
-    // Aplicar tema
+    // 2. Aplicar al DOM
     applyTheme(theme);
+    
+    // 3. Notificar al servidor para persistir en la cookie (para la próxima sesión)
+    document.cookie = `${THEME_KEY}=${theme}; path=/; max-age=31536000; SameSite=Lax`;
+    
+    // Opcional: Enviar una petición silenciosa si se necesita una acción inmediata del servidor.
+    // En este caso, la cookie es suficiente.
 }
 
 /**
- * Función para sincronizar el tema con el estado de Inertia
- * @param appearance - Tema desde Inertia
+ * Obtiene el tema actual desde localStorage.
  */
-export function syncThemeWithInertia(appearance: string) {
-    if (appearance) {
-        applyTheme(appearance);
-    }
+export function getCurrentTheme(): Theme {
+    return (localStorage.getItem(THEME_KEY) as Theme) || 'system';
 }
 
-// Inicializar tema cuando se carga el script
-if (typeof document !== 'undefined') {
-    // Esperar a que el DOM esté listo
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeTheme);
-    } else {
-        initializeTheme();
-    }
-}
+// La inicialización del tema se maneja directamente en app.blade.php
+// para evitar FOUC (Flash of Unstyled Content)

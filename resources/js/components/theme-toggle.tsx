@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useTheme } from '@/hooks/use-theme';
+import { Sun, Moon, Monitor } from 'lucide-react';
 
 /**
  * Componente de toggle de tema
@@ -15,11 +16,11 @@ export function ThemeToggle() {
     const getThemeIcon = () => {
         switch (appearance) {
             case 'light':
-                return <i className="fas fa-sun h-4 w-4"></i>;
+                return <Sun className="h-4 w-4" />;
             case 'dark':
-                return <i className="fas fa-moon h-4 w-4"></i>;
+                return <Moon className="h-4 w-4" />;
             default:
-                return <i className="fas fa-desktop h-4 w-4"></i>;
+                return <Monitor className="h-4 w-4" />;
         }
     };
 
@@ -50,15 +51,15 @@ export function ThemeToggle() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setTheme('light')}>
-                    <i className="fas fa-sun mr-2 h-4 w-4"></i>
+                    <Sun className="mr-2 h-4 w-4" />
                     <span>Claro</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setTheme('dark')}>
-                    <i className="fas fa-moon mr-2 h-4 w-4"></i>
+                    <Moon className="mr-2 h-4 w-4" />
                     <span>Oscuro</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setTheme('system')}>
-                    <i className="fas fa-desktop mr-2 h-4 w-4"></i>
+                    <Monitor className="mr-2 h-4 w-4" />
                     <span>Automático</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>

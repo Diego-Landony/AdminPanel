@@ -88,6 +88,8 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
     const [isUserSheetOpen, setIsUserSheetOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     
+    // Verificar si es el rol de administrador
+    const isAdminRole = role.name === 'admin';
 
 
     // Solo manejar notificaciones del servidor (NO errores de validación)
@@ -196,7 +198,7 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Editar Rol: ${role.name}`} />
+            <Head title={`Editar Rol - ${role.name}`} />
             
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
                 {/* Encabezado */}
@@ -206,14 +208,7 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                         <p className="text-muted-foreground">
                             Modifica los permisos y la información de este rol
                         </p>
-                        {role.name === 'admin' && (
-                            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                <p className="text-sm text-blue-800">
-                                    <strong>Rol del Sistema:</strong> Este rol tiene acceso completo a todas las funcionalidades 
-                                    y se actualiza automáticamente con nuevos permisos.
-                                </p>
-                            </div>
-                        )}
+                     
                     </div>
                     <Button variant="outline" asChild>
                         <Link href="/roles">
@@ -323,6 +318,8 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                                     value={data.name}
                                     onChange={e => setData('name', e.target.value)}
                                     placeholder="ej: Gerente"
+                                    disabled={isAdminRole}
+                                    className={isAdminRole ? 'opacity-50 cursor-not-allowed' : ''}
                                 />
                             </FormField>
 
@@ -335,7 +332,8 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                                     value={data.description}
                                     onChange={e => setData('description', e.target.value)}
                                     placeholder="Describe las responsabilidades y alcance de este rol..."
-                                    className="min-h-[100px]"
+                                    className={`min-h-[100px] ${isAdminRole ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    disabled={isAdminRole}
                                 />
                             </FormField>
                         </div>
@@ -459,9 +457,13 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                         <Button type="button" variant="outline" asChild>
                             <Link href="/roles">Cancelar</Link>
                         </Button>
-                        <Button type="submit" disabled={processing}>
+                        <Button 
+                            type="submit" 
+                            disabled={processing || isAdminRole}
+                            className={isAdminRole ? 'opacity-50 cursor-not-allowed' : ''}
+                        >
                             <Save className="mr-2 h-4 w-4" />
-                            {processing ? 'Guardando...' : 'Guardar Cambios'}
+                            {isAdminRole ? 'No Editable' : (processing ? 'Guardando...' : 'Guardar Cambios')}
                         </Button>
                     </div>
                 </form>

@@ -2,10 +2,10 @@
 
 namespace App\Providers;
 
-use App\Models\User;
 use App\Models\Role;
-use App\Observers\UserObserver;
+use App\Models\User;
 use App\Observers\RoleObserver;
+use App\Observers\UserObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider

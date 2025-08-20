@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cookie;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 /**
@@ -14,9 +13,6 @@ class ThemeController extends Controller
 {
     /**
      * Actualiza la cookie del tema del sistema.
-     *
-     * @param  Request  $request
-     * @return JsonResponse
      */
     public function update(Request $request): JsonResponse
     {

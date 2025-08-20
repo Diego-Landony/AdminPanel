@@ -202,11 +202,12 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
-                onSuccess: (page: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                onSuccess: (page: unknown) => {
                     // Actualizar el estado local con los nuevos datos
-                    setUsers(page.props.users);
-                    setTotalUsers(page.props.total_users);
-                    setOnlineUsers(page.props.online_users);
+                    const response = page as { props: { users: any; total_users: number; online_users: number } };
+                    setUsers(response.props.users);
+                    setTotalUsers(response.props.total_users);
+                    setOnlineUsers(response.props.online_users);
                     setIsSearching(false);
                 },
                 onError: () => {
@@ -228,11 +229,12 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
-                onSuccess: (page: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                onSuccess: (page: unknown) => {
                     // Actualizar el estado local con los nuevos datos
-                    setUsers(page.props.users);
-                    setTotalUsers(page.props.total_users);
-                    setOnlineUsers(page.props.online_users);
+                    const response = page as { props: { users: any; total_users: number; online_users: number } };
+                    setUsers(response.props.users);
+                    setTotalUsers(response.props.total_users);
+                    setOnlineUsers(response.props.online_users);
                     setIsSearching(false);
                 },
                 onError: () => {
@@ -320,11 +322,12 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
             preserveState: true,
             preserveScroll: true,
             replace: true,
-            onSuccess: (page: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+            onSuccess: (page: unknown) => {
                 // Actualizar el estado local con los nuevos datos
-                setUsers(page.props.users);
-                setTotalUsers(page.props.total_users);
-                setOnlineUsers(page.props.online_users);
+                const response = page as { props: { users: any; total_users: number; online_users: number } };
+                setUsers(response.props.users);
+                setTotalUsers(response.props.total_users);
+                setOnlineUsers(response.props.online_users);
                 setLastUpdate(new Date());
                 setLastSync(new Date());
                 setIsSyncing(false);

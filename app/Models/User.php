@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -194,5 +195,13 @@ class User extends Authenticatable
     public function hasAnyPageAccess(): bool
     {
         return true; // Siempre tienen acceso al dashboard
+    }
+
+    /**
+     * Envía la notificación de restablecimiento de contraseña
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 }

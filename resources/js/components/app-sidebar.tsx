@@ -22,7 +22,7 @@ interface PageConfig {
 const systemPages: PageConfig[] = [
     {
         name: 'dashboard',
-        title: 'Dashboard',
+        title: 'Panel de Control',
         href: '/dashboard',
         icon: LayoutGrid,
         permission: 'dashboard.view'

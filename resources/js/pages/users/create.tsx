@@ -31,7 +31,6 @@ const breadcrumbs: BreadcrumbItem[] = [
  */
 export default function CreateUser() {
     const [showPassword, setShowPassword] = useState(false);
-    const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
     
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
@@ -172,25 +171,12 @@ export default function CreateUser() {
                                         <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                         <Input
                                             id="password_confirmation"
-                                            type={showPasswordConfirmation ? 'text' : 'password'}
+                                            type={showPassword ? 'text' : 'password'}
                                             placeholder="Repite la contraseña"
                                             value={data.password_confirmation}
                                             onChange={(e) => setData('password_confirmation', e.target.value)}
-                                            className="pl-10 pr-10"
+                                            className="pl-10"
                                         />
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            className="absolute right-1 top-1 h-8 w-8 p-0"
-                                            onClick={() => setShowPasswordConfirmation(!showPasswordConfirmation)}
-                                        >
-                                            {showPasswordConfirmation ? (
-                                                <EyeOff className="h-4 w-4" />
-                                            ) : (
-                                                <Eye className="h-4 w-4" />
-                                            )}
-                                        </Button>
                                     </div>
                                 </FormField>
                             </div>

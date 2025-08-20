@@ -4,23 +4,23 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 
 /**
- * Breadcrumbs para la navegación del dashboard
+ * Breadcrumbs para la navegación del panel de control
  */
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Dashboard',
+        title: 'Panel de Control',
         href: '/dashboard',
     },
 ];
 
 /**
- * Página principal del dashboard
+ * Página principal del panel de control
  * Muestra la información principal y estadísticas del usuario
  */
-export default function Dashboard() {
+export default function PanelControl() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
+            <Head title="Panel de Control" />
             
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
                 {/* Sección de tarjetas informativas */}

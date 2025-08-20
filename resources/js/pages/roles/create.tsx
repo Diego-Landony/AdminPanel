@@ -101,7 +101,7 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
      */
     const getGroupDisplayName = (group: string): string => {
         const groupNames: Record<string, string> = {
-            'dashboard': 'Panel de Control',
+            'dashboard': 'Dashboard',
             'users': 'Usuarios',
             'activity': 'Actividad',
             'roles': 'Roles y Permisos',

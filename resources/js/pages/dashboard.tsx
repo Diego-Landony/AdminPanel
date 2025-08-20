@@ -1,26 +1,26 @@
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
+import { Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 
 /**
- * Breadcrumbs para la navegación del panel de control
+ * Breadcrumbs para la navegación del dashboard
  */
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Panel de Control',
+        title: 'Dashboard',
         href: '/dashboard',
     },
 ];
 
 /**
- * Página principal del panel de control
+ * Página principal del dashboard
  * Muestra la información principal y estadísticas del usuario
  */
-export default function PanelControl() {
+export default function Dashboard() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Panel de Control" />
+            <Head title="Dashboard" />
             
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
                 {/* Sección de tarjetas informativas */}

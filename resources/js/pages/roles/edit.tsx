@@ -135,7 +135,7 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
      */
     const getGroupDisplayName = (group: string): string => {
         const groupNames: Record<string, string> = {
-            'dashboard': 'Panel de Control',
+            'dashboard': 'Dashboard',
             'users': 'Usuarios',
             'activity': 'Actividad',
             'roles': 'Roles y Permisos',

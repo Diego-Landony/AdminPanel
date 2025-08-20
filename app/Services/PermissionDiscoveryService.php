@@ -37,6 +37,11 @@ class PermissionDiscoveryService
      * Configuración específica de páginas con sus acciones permitidas
      */
     private array $pageConfig = [
+        'home' => [
+            'actions' => ['view'],
+            'display_name' => 'Inicio',
+            'description' => 'Página principal después del login',
+        ],
         'dashboard' => [
             'actions' => ['view'],
             'display_name' => 'Dashboard',

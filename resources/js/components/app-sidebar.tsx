@@ -2,7 +2,7 @@ import { NavMain } from '@/components/nav-main';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Users, UserCog, Activity, Shield, LucideIcon } from 'lucide-react';
+import { LayoutGrid, Users, UserCog, Activity, Shield, LucideIcon, Home } from 'lucide-react';
 import { usePermissions } from '@/hooks/use-permissions';
 import AppLogo from './app-logo';
 
@@ -21,8 +21,15 @@ interface PageConfig {
 
 const systemPages: PageConfig[] = [
     {
+        name: 'home',
+        title: 'Inicio',
+        href: '/home',
+        icon: Home,
+        permission: 'home.view'
+    },
+    {
         name: 'dashboard',
-        title: 'Panel de Control',
+        title: 'Dashboard',
         href: '/dashboard',
         icon: LayoutGrid,
         permission: 'dashboard.view'

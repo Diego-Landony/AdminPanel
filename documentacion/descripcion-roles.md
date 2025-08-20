@@ -205,6 +205,154 @@ private array $pageConfig = [
 
 ---
 
+## 🔄 Gestión Automática de Nuevos Permisos
+
+### **📋 Comandos de Consola para Nuevas Páginas**
+
+Cuando se crean nuevas páginas en el sistema, es necesario ejecutar comandos manuales para que los nuevos permisos se añadan automáticamente al rol de administrador.
+
+#### **🔄 Comando Principal de Sincronización**
+
+```bash
+# Sincronizar todos los permisos y actualizar el rol de administrador
+php artisan db:seed --class=DatabaseSeeder
+```
+
+**¿Qué hace este comando?**
+- 🔍 Descubre automáticamente nuevas páginas en `/resources/js/pages/`
+- ➕ Crea nuevos permisos para las páginas detectadas
+- ✏️ Actualiza permisos existentes si han cambiado
+- 🛡️ Asigna TODOS los permisos (incluyendo los nuevos) al rol de administrador
+- 👤 Mantiene la configuración de usuarios existente
+
+#### **📊 Verificar Permisos Existentes**
+
+```bash
+# Listar todas las rutas del sistema
+php artisan route:list
+
+# Ver solo rutas con nombre específico
+php artisan route:list --name=home
+php artisan route:list --name=dashboard
+php artisan route:list --name=users
+```
+
+#### **🔍 Verificar Permisos en Base de Datos**
+
+```bash
+# Entrar al tinker para consultar permisos
+php artisan tinker
+
+# Dentro de tinker, ejecutar:
+# Ver todos los permisos
+App\Models\Permission::all(['name', 'display_name', 'description']);
+
+# Ver permisos de una página específica
+App\Models\Permission::where('name', 'like', 'home%')->get(['name', 'display_name', 'description']);
+
+# Ver permisos del rol administrador
+$adminRole = App\Models\Role::where('name', 'admin')->first();
+$adminRole->permissions()->pluck('name');
+
+# Salir del tinker
+exit
+```
+
+#### **⚡ Comando Rápido para Verificar**
+
+```bash
+# Verificar permisos sin entrar al tinker (comando directo)
+php artisan tinker --execute="echo 'Total permisos: ' . App\Models\Permission::count(); echo PHP_EOL; echo 'Permisos home: '; App\Models\Permission::where('name', 'like', 'home%')->pluck('name')->each(function(\$p) { echo \$p . PHP_EOL; });"
+```
+
+### **📝 Proceso Completo para Nueva Página**
+
+#### **Paso 1: Crear la Nueva Página**
+```bash
+# Crear archivo en resources/js/pages/
+touch resources/js/pages/nueva-pagina.tsx
+```
+
+#### **Paso 2: Agregar Configuración (Opcional)**
+```php
+// En app/Services/PermissionDiscoveryService.php
+private array $pageConfig = [
+    'nueva-pagina' => [
+        'actions' => ['view', 'create', 'edit', 'delete'],
+        'display_name' => 'Nueva Página',
+        'description' => 'Descripción de la nueva funcionalidad',
+    ],
+    // ... otras páginas
+];
+```
+
+#### **Paso 3: Crear Ruta**
+```php
+// En routes/web.php
+Route::get('nueva-pagina', function () {
+    return Inertia::render('nueva-pagina');
+})->name('nueva-pagina')->middleware('permission:nueva-pagina.view');
+```
+
+#### **Paso 4: Sincronizar Permisos**
+```bash
+# Ejecutar seeder para crear permisos y asignarlos al admin
+php artisan db:seed --class=DatabaseSeeder
+```
+
+#### **Paso 5: Verificar**
+```bash
+# Verificar que se crearon los permisos
+php artisan route:list --name=nueva-pagina
+
+# Verificar permisos en base de datos
+php artisan tinker --execute="echo 'Permisos nueva-pagina: '; App\Models\Permission::where('name', 'like', 'nueva-pagina%')->pluck('name')->each(function(\$p) { echo \$p . PHP_EOL; });"
+```
+
+### **🚨 Casos Especiales**
+
+#### **🔄 Solo Actualizar Permisos (Sin Usuarios)**
+```bash
+# Si solo quieres sincronizar permisos sin tocar usuarios
+php artisan tinker --execute="
+\$discoveryService = new App\Services\PermissionDiscoveryService;
+\$result = \$discoveryService->syncPermissions();
+echo 'Permisos sincronizados: ' . \$result['total_permissions'] . PHP_EOL;
+echo 'Nuevos: ' . \$result['created'] . PHP_EOL;
+echo 'Actualizados: ' . \$result['updated'] . PHP_EOL;
+"
+```
+
+#### **🛡️ Asignar Nuevos Permisos Solo al Admin**
+```bash
+# Asignar solo los nuevos permisos al rol admin
+php artisan tinker --execute="
+\$adminRole = App\Models\Role::where('name', 'admin')->first();
+\$allPermissionIds = App\Models\Permission::pluck('id');
+\$adminRole->permissions()->sync(\$allPermissionIds);
+echo 'Admin actualizado con ' . \$allPermissionIds->count() . ' permisos' . PHP_EOL;
+"
+```
+
+### **📋 Resumen de Comandos Esenciales**
+
+| Comando | Descripción | Uso |
+|---------|-------------|-----|
+| `php artisan db:seed --class=DatabaseSeeder` | **Comando principal** - Sincroniza todo | Después de crear nuevas páginas |
+| `php artisan route:list` | Ver todas las rutas | Verificar que las rutas existen |
+| `php artisan tinker` | Consola interactiva | Consultas avanzadas de permisos |
+| `php artisan migrate` | Actualizar base de datos | Si hay cambios en estructura |
+
+### **💡 Recomendaciones**
+
+1. **🔄 Siempre ejecutar** `php artisan db:seed --class=DatabaseSeeder` después de crear nuevas páginas
+2. **🔍 Verificar rutas** con `php artisan route:list` antes de probar
+3. **📝 Documentar cambios** en el código cuando se añaden nuevas funcionalidades
+4. **🧪 Probar permisos** en un entorno de desarrollo antes de producción
+5. **💾 Hacer backup** de la base de datos antes de ejecutar seeders en producción
+
+---
+
 ## 💻 Implementación Técnica
 
 ### **🔧 Componentes Clave**

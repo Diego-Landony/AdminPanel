@@ -10,7 +10,7 @@ use Inertia\Inertia;
 // Redirigir la página principal al login si no está autenticado
 Route::get('/', function () {
     if (auth()->check()) {
-        return redirect()->route('dashboard');
+        return redirect()->route('home');
     }
 
     return redirect()->route('login');
@@ -21,6 +21,11 @@ Route::post('/theme/update', [ThemeController::class, 'update'])->name('theme.up
 Route::get('/theme/get', [ThemeController::class, 'get'])->name('theme.get');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    // Home - página principal después del login
+    Route::get('home', function () {
+        return Inertia::render('home');
+    })->name('home')->middleware('permission:home.view');
+
     // Dashboard - requiere permisos específicos
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');

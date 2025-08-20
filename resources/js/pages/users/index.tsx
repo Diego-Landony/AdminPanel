@@ -204,10 +204,10 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                 replace: true,
                 onSuccess: (page: unknown) => {
                     // Actualizar el estado local con los nuevos datos
-                    const response = page as { props: { users: any; total_users: number; online_users: number } };
-                    setUsers(response.props.users);
-                    setTotalUsers(response.props.total_users);
-                    setOnlineUsers(response.props.online_users);
+                    const response1 = page as { props: { users: UsersPageProps['users']; total_users: number; online_users: number } };
+                    setUsers(response1.props.users);
+                    setTotalUsers(response1.props.total_users);
+                    setOnlineUsers(response1.props.online_users);
                     setIsSearching(false);
                 },
                 onError: () => {
@@ -231,10 +231,10 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                 replace: true,
                 onSuccess: (page: unknown) => {
                     // Actualizar el estado local con los nuevos datos
-                    const response = page as { props: { users: any; total_users: number; online_users: number } };
-                    setUsers(response.props.users);
-                    setTotalUsers(response.props.total_users);
-                    setOnlineUsers(response.props.online_users);
+                    const response1 = page as { props: { users: UsersPageProps['users']; total_users: number; online_users: number } };
+                    setUsers(response1.props.users);
+                    setTotalUsers(response1.props.total_users);
+                    setOnlineUsers(response1.props.online_users);
                     setIsSearching(false);
                 },
                 onError: () => {
@@ -324,10 +324,10 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
             replace: true,
             onSuccess: (page: unknown) => {
                 // Actualizar el estado local con los nuevos datos
-                const response = page as { props: { users: any; total_users: number; online_users: number } };
-                setUsers(response.props.users);
-                setTotalUsers(response.props.total_users);
-                setOnlineUsers(response.props.online_users);
+                const response1 = page as { props: { users: UsersPageProps['users']; total_users: number; online_users: number } };
+                setUsers(response1.props.users);
+                setTotalUsers(response1.props.total_users);
+                setOnlineUsers(response1.props.online_users);
                 setLastUpdate(new Date());
                 setLastSync(new Date());
                 setIsSyncing(false);

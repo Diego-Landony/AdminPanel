@@ -45,7 +45,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info("   ✅ Rol administrador con {$allPermissionIds->count()} permisos");
 
         // 4. Crear usuario administrador por defecto
-        $this->command->info('👤 Creando usuario administrador por defecto...');
+        $this->command->info('👤 Verificando usuario administrador por defecto...');
 
         $adminUser = User::firstOrCreate(
             ['email' => 'admin@admin.com'],
@@ -65,7 +65,11 @@ class DatabaseSeeder extends Seeder
             $this->command->info('   ℹ️  Usuario admin@admin.com ya tiene el rol administrador');
         }
 
-        // 6. Crear algunos usuarios de prueba (opcional)
+        // 6. El usuario admin@admin.com ahora se crea automáticamente en la migración inicial
+        // No es necesario crearlo aquí para evitar duplicados
+        $this->command->info('ℹ️  Usuario admin@admin.com se crea automáticamente en la migración inicial');
+
+        // 7. Crear algunos usuarios de prueba (opcional)
         if (app()->environment('local')) {
             $this->command->info('🧪 Creando usuarios de prueba...');
 
@@ -100,6 +104,7 @@ class DatabaseSeeder extends Seeder
         $this->command->line("   🔑 Permisos totales: {$permissionsResult['total_permissions']}");
         $this->command->line('   🛡️  Rol: admin (acceso completo)');
         $this->command->line('   👤 Usuario: admin@admin.com (contraseña: admin)');
+        $this->command->line('   👤 Usuario: admin@test.com (contraseña: admintest)');
 
         if (app()->environment('local')) {
             $this->command->line('   🧪 Usuarios de prueba: user1@test.com, user2@test.com (contraseña: password)');
@@ -109,6 +114,8 @@ class DatabaseSeeder extends Seeder
         $this->command->info('🔐 Credenciales de acceso:');
         $this->command->line('   Email: admin@admin.com');
         $this->command->line('   Contraseña: admin');
+        $this->command->line('   Email: admin@test.com');
+        $this->command->line('   Contraseña: admintest');
         $this->command->line('');
         $this->command->info('✨ El sistema está listo para usar. ¡Bienvenido a Videra!');
     }

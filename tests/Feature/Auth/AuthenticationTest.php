@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\User;
+use App\Models\Role;
+use App\Models\Permission;
 
 test('login screen can be rendered', function () {
     $response = $this->get('/login');
@@ -16,26 +18,30 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     // Crear rol de administrador
-    $adminRole = \App\Models\Role::create([
-        'name' => 'admin',
-        'display_name' => 'Administrador',
-        'description' => 'Rol de administrador para pruebas',
-        'is_system' => false,
-    ]);
+    $adminRole = Role::firstOrCreate(
+        ['name' => 'admin'],
+        [
+            'display_name' => 'Administrador',
+            'description' => 'Rol de administrador para pruebas',
+            'is_system' => false,
+        ]
+    );
 
     // Crear permiso para el dashboard
-    $dashboardPermission = \App\Models\Permission::create([
-        'name' => 'dashboard.view',
-        'display_name' => 'Ver Dashboard',
-        'description' => 'Permite acceder al dashboard del sistema',
-        'group' => 'dashboard',
-    ]);
+    $dashboardPermission = Permission::firstOrCreate(
+        ['name' => 'dashboard.view'],
+        [
+            'display_name' => 'Ver Dashboard',
+            'description' => 'Permite acceder al dashboard del sistema',
+            'group' => 'dashboard',
+        ]
+    );
 
     // Asignar permiso al rol
-    $adminRole->permissions()->attach($dashboardPermission->id);
+    $adminRole->permissions()->sync([$dashboardPermission->id]);
 
     // Asignar rol al usuario
-    $user->roles()->attach($adminRole->id);
+    $user->roles()->sync([$adminRole->id]);
 
     $response = $this->post('/login', [
         'email' => $user->email,

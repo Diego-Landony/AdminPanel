@@ -6,12 +6,14 @@ use App\Models\User;
 
 test('sistema puede crear usuario administrador', function () {
     // Crear rol admin
-    $adminRole = Role::create([
-        'name' => 'admin',
-        'display_name' => 'Administrador',
-        'description' => 'Administrador del sistema',
-        'is_system' => true,
-    ]);
+    $adminRole = Role::firstOrCreate(
+        ['name' => 'admin'],
+        [
+            'display_name' => 'Administrador',
+            'description' => 'Administrador del sistema',
+            'is_system' => true,
+        ]
+    );
 
     // Crear permisos básicos
     $permissions = [
@@ -21,28 +23,32 @@ test('sistema puede crear usuario administrador', function () {
     ];
 
     foreach ($permissions as $name => $displayName) {
-        Permission::create([
-            'name' => $name,
-            'display_name' => $displayName,
-            'description' => "Permiso para {$displayName}",
-            'group' => 'general',
-        ]);
+        Permission::firstOrCreate(
+            ['name' => $name],
+            [
+                'display_name' => $displayName,
+                'description' => "Permiso para {$displayName}",
+                'group' => 'general',
+            ]
+        );
     }
 
     // Asignar permisos al rol admin
-    $adminRole->permissions()->attach(Permission::pluck('id'));
+    $adminRole->permissions()->sync(Permission::whereIn('name', array_keys($permissions))->pluck('id'));
 
     // Crear usuario admin
-    $adminUser = User::create([
-        'name' => 'Administrador',
-        'email' => 'admin@admin.com',
-        'password' => bcrypt('admin'),
-        'email_verified_at' => now(),
-        'timezone' => 'America/Guatemala',
-    ]);
+    $adminUser = User::firstOrCreate(
+        ['email' => 'admin@admin.com'],
+        [
+            'name' => 'Administrador',
+            'password' => bcrypt('admin'),
+            'email_verified_at' => now(),
+            'timezone' => 'America/Guatemala',
+        ]
+    );
 
     // Asignar rol admin al usuario
-    $adminUser->roles()->attach($adminRole->id);
+    $adminUser->roles()->sync([$adminRole->id]);
 
     // Verificar que el usuario existe
     expect($adminUser)->toBeInstanceOf(User::class);
@@ -53,35 +59,41 @@ test('sistema puede crear usuario administrador', function () {
 
 test('sistema puede autenticar usuario admin', function () {
     // Crear rol admin
-    $adminRole = Role::create([
-        'name' => 'admin',
-        'display_name' => 'Administrador',
-        'description' => 'Administrador del sistema',
-        'is_system' => true,
-    ]);
+    $adminRole = Role::firstOrCreate(
+        ['name' => 'admin'],
+        [
+            'display_name' => 'Administrador',
+            'description' => 'Administrador del sistema',
+            'is_system' => true,
+        ]
+    );
 
     // Crear permiso para el dashboard
-    $dashboardPermission = Permission::create([
-        'name' => 'dashboard.view',
-        'display_name' => 'Ver Dashboard',
-        'description' => 'Permite acceder al dashboard del sistema',
-        'group' => 'dashboard',
-    ]);
+    $dashboardPermission = Permission::firstOrCreate(
+        ['name' => 'dashboard.view'],
+        [
+            'display_name' => 'Ver Dashboard',
+            'description' => 'Permite acceder al dashboard del sistema',
+            'group' => 'dashboard',
+        ]
+    );
 
     // Asignar permiso al rol
-    $adminRole->permissions()->attach($dashboardPermission->id);
+    $adminRole->permissions()->sync([$dashboardPermission->id]);
 
     // Crear usuario admin
-    $adminUser = User::create([
-        'name' => 'Administrador',
-        'email' => 'admin@admin.com',
-        'password' => bcrypt('admin'),
-        'email_verified_at' => now(),
-        'timezone' => 'America/Guatemala',
-    ]);
+    $adminUser = User::firstOrCreate(
+        ['email' => 'admin@admin.com'],
+        [
+            'name' => 'Administrador',
+            'password' => bcrypt('admin'),
+            'email_verified_at' => now(),
+            'timezone' => 'America/Guatemala',
+        ]
+    );
 
     // Asignar rol admin al usuario
-    $adminUser->roles()->attach($adminRole->id);
+    $adminUser->roles()->sync([$adminRole->id]);
 
     $response = $this->post('/login', [
         'email' => 'admin@admin.com',
@@ -94,12 +106,14 @@ test('sistema puede autenticar usuario admin', function () {
 
 test('base de datos tiene estructura correcta', function () {
     // Crear rol admin
-    $adminRole = Role::create([
-        'name' => 'admin',
-        'display_name' => 'Administrador',
-        'description' => 'Administrador del sistema',
-        'is_system' => true,
-    ]);
+    $adminRole = Role::firstOrCreate(
+        ['name' => 'admin'],
+        [
+            'display_name' => 'Administrador',
+            'description' => 'Administrador del sistema',
+            'is_system' => true,
+        ]
+    );
 
     // Crear permisos básicos
     $permissions = [
@@ -109,28 +123,32 @@ test('base de datos tiene estructura correcta', function () {
     ];
 
     foreach ($permissions as $name => $displayName) {
-        Permission::create([
-            'name' => $name,
-            'display_name' => $displayName,
-            'description' => "Permiso para {$displayName}",
-            'group' => 'general',
-        ]);
+        Permission::firstOrCreate(
+            ['name' => $name],
+            [
+                'display_name' => $displayName,
+                'description' => "Permiso para {$displayName}",
+                'group' => 'general',
+            ]
+        );
     }
 
     // Asignar permisos al rol admin
-    $adminRole->permissions()->attach(Permission::pluck('id'));
+    $adminRole->permissions()->sync(Permission::whereIn('name', array_keys($permissions))->pluck('id'));
 
     // Crear usuario admin
-    $adminUser = User::create([
-        'name' => 'Administrador',
-        'email' => 'admin@admin.com',
-        'password' => bcrypt('admin'),
-        'email_verified_at' => now(),
-        'timezone' => 'America/Guatemala',
-    ]);
+    $adminUser = User::firstOrCreate(
+        ['email' => 'admin@admin.com'],
+        [
+            'name' => 'Administrador',
+            'password' => bcrypt('admin'),
+            'email_verified_at' => now(),
+            'timezone' => 'America/Guatemala',
+        ]
+    );
 
     // Asignar rol admin al usuario
-    $adminUser->roles()->attach($adminRole->id);
+    $adminUser->roles()->sync([$adminRole->id]);
 
     // Verificar que las tablas principales existen
     $this->assertDatabaseHas('users', [

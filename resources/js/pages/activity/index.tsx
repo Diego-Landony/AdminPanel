@@ -1,7 +1,7 @@
 
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { type DateRange } from 'react-day-picker';
 import { toast } from "sonner";
 
@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ActivitySkeleton } from '@/components/skeletons';
 
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -402,6 +403,9 @@ export default function ActivityIndex({ activities, filters, options }: Activity
         per_page: filters.per_page || 10,
     });
 
+    // Estado para el loading
+    const [isLoading, setIsLoading] = useState(false);
+
     // Estado para los diálogos
     const [eventTypesOpen, setEventTypesOpen] = useState(false);
     const [usersOpen, setUsersOpen] = useState(false);
@@ -422,6 +426,8 @@ export default function ActivityIndex({ activities, filters, options }: Activity
      * Función para aplicar filtros (búsqueda global)
      */
     const applyFilters = () => {
+        setIsLoading(true);
+        
         // Actualizar localFilters con el valor actual de búsqueda
         const updatedFilters = {
             ...localFilters,
@@ -444,6 +450,7 @@ export default function ActivityIndex({ activities, filters, options }: Activity
             preserveState: true,
             preserveScroll: true,
             onSuccess: (page) => {
+                setIsLoading(false);
                 // Verificar si no hay resultados
                 const activities = page.props.activities as { total?: number };
                 if (activities && activities.total === 0) {
@@ -467,6 +474,7 @@ export default function ActivityIndex({ activities, filters, options }: Activity
                 }
             },
             onError: () => {
+                setIsLoading(false);
                 toast.error("Error al cargar los datos de actividad");
             }
         });
@@ -884,7 +892,9 @@ export default function ActivityIndex({ activities, filters, options }: Activity
 
                     <CardContent>
                         {/* Vista de tabla para desktop, cards para mobile/tablet */}
-                            {activities.data && Array.isArray(activities.data) && activities.data.length > 0 ? (
+                        {isLoading ? (
+                            <ActivitySkeleton rows={localFilters.per_page} />
+                        ) : activities.data && Array.isArray(activities.data) && activities.data.length > 0 ? (
                             <>
                                 <div className="hidden lg:block">
                                     {/* Tabla minimalista para desktop */}

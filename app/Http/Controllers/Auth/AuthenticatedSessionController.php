@@ -52,12 +52,12 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->route('no-access');
             }
 
-            // Verificar si tiene acceso al dashboard
-            if ($user->hasPermission('dashboard.view')) {
-                return redirect()->intended(route('dashboard', absolute: false));
+            // Verificar si tiene acceso al home (página principal)
+            if ($user->hasPermission('home.view')) {
+                return redirect()->intended(route('home', absolute: false));
             }
 
-            // Si no tiene dashboard, buscar la primera página a la que tenga acceso
+            // Si no tiene acceso al home, buscar la primera página a la que tenga acceso
             $firstAccessiblePage = $user->getFirstAccessiblePage();
             if ($firstAccessiblePage) {
                 return redirect()->intended($firstAccessiblePage);

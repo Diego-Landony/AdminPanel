@@ -55,8 +55,8 @@ class CheckUserPermissions
                 ], 403);
             }
 
-            // Redirigir a dashboard si no tiene el permiso específico
-            return redirect()->route('dashboard')
+            // Redirigir a home si no tiene el permiso específico
+            return redirect()->route('home')
                 ->with('error', 'No tienes permisos para acceder a esta página.');
         }
 

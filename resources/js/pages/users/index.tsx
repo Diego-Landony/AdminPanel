@@ -1,6 +1,6 @@
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, Link } from '@inertiajs/react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { toast } from 'sonner';
 
 
@@ -24,6 +24,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
+import { UsersSkeleton } from '@/components/skeletons';
 
 /**
  * Breadcrumbs para la navegación de usuarios
@@ -189,10 +190,14 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
     // Estado para sincronización automática
     const [lastSync, setLastSync] = useState(new Date());
     const [isSyncing, setIsSyncing] = useState(false);
+    
+    // Estado para el loading
+    const [isLoading, setIsLoading] = useState(false);
 
     // Función para ejecutar búsqueda manualmente
     const handleSearch = () => {
         setIsSearching(true);
+        setIsLoading(true);
         router.get(route('users.index'), 
             { 
                 search: searchValue,
@@ -209,9 +214,11 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                     setTotalUsers(response1.props.total_users);
                     setOnlineUsers(response1.props.online_users);
                     setIsSearching(false);
+                    setIsLoading(false);
                 },
                 onError: () => {
                     setIsSearching(false);
+                    setIsLoading(false);
                 }
             }
         );
@@ -221,6 +228,7 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
     const handleClear = () => {
         setSearchValue('');
         setIsSearching(true);
+        setIsLoading(true);
         router.get(route('users.index'), 
             { 
                 per_page: perPage 
@@ -236,9 +244,11 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                     setTotalUsers(response1.props.total_users);
                     setOnlineUsers(response1.props.online_users);
                     setIsSearching(false);
+                    setIsLoading(false);
                 },
                 onError: () => {
                     setIsSearching(false);
+                    setIsLoading(false);
                 }
             }
         );
@@ -521,30 +531,35 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                         </div>
                     </CardHeader>
                     <CardContent>
-                        {/* Mensaje cuando no hay resultados */}
-                        {searchValue && users.data.length === 0 && (
-                            <div className="text-center py-12">
-                                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                <h3 className="text-lg font-medium text-muted-foreground mb-2">
-                                    No se encontraron coincidencias
-                                </h3>
-                                <p className="text-sm text-muted-foreground mb-4">
-                                    No hay usuarios que coincidan con "{searchValue}"
-                                </p>
-                                <Button 
-                                    variant="outline" 
-                                    onClick={() => {
-                                        setSearchValue('');
-                                        // La búsqueda se maneja automáticamente con el debounce
-                                    }}
-                                >
-                                    Limpiar búsqueda
-                                </Button>
-                            </div>
-                        )}
+                        {/* Skeleton mientras carga */}
+                        {isLoading ? (
+                            <UsersSkeleton rows={perPage} />
+                        ) : (
+                            <>
+                                {/* Mensaje cuando no hay resultados */}
+                                {searchValue && users.data.length === 0 && (
+                                    <div className="text-center py-12">
+                                        <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                                        <h3 className="text-lg font-medium text-muted-foreground mb-2">
+                                            No se encontraron coincidencias
+                                        </h3>
+                                        <p className="text-sm text-muted-foreground mb-4">
+                                            No hay usuarios que coincidan con "{searchValue}"
+                                        </p>
+                                        <Button 
+                                            variant="outline" 
+                                            onClick={() => {
+                                                setSearchValue('');
+                                                // La búsqueda se maneja automáticamente con el debounce
+                                            }}
+                                        >
+                                            Limpiar búsqueda
+                                        </Button>
+                                    </div>
+                                )}
 
-                        {/* Vista de tabla para desktop, cards para mobile/tablet */}
-                        {users.data.length > 0 && (
+                                {/* Vista de tabla para desktop, cards para mobile/tablet */}
+                                {users.data.length > 0 && (
                             <>
                                 <div className="hidden lg:block">
                                     {/* Tabla minimalista para desktop */}
@@ -910,6 +925,8 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                                         </div>
                                     </div>
                                 )}
+                            </>
+                        )}
                             </>
                         )}
                     </CardContent>

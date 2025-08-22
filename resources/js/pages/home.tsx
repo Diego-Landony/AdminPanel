@@ -20,7 +20,7 @@ const breadcrumbs: BreadcrumbItem[] = [
  * Primera página después del login
  */
 export default function Home() {
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading] = useState(false);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

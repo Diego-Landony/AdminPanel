@@ -144,7 +144,7 @@ test('test user can authenticate', function () {
         'password' => 'admintest',
     ]);
     
-    $response->assertRedirect('/dashboard'); // Corregido: redirige a dashboard, no a home
+    $response->assertRedirect('/home'); // Corregido: ahora redirige a home después del login
     
     // Verificar que el usuario está autenticado
     $this->assertAuthenticated();

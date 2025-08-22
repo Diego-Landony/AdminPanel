@@ -1,7 +1,7 @@
 
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { type DateRange } from 'react-day-picker';
 import { toast } from "sonner";
 

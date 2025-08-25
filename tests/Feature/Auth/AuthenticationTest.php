@@ -27,18 +27,18 @@ test('users can authenticate using the login screen', function () {
         ]
     );
 
-    // Crear permiso para el dashboard
-    $dashboardPermission = Permission::firstOrCreate(
-        ['name' => 'dashboard.view'],
+    // Crear permiso para el home
+    $homePermission = Permission::firstOrCreate(
+        ['name' => 'home.view'],
         [
-            'display_name' => 'Ver Dashboard',
-            'description' => 'Permite acceder al dashboard del sistema',
-            'group' => 'dashboard',
+            'display_name' => 'Ver Home',
+            'description' => 'Permite acceder a la página de inicio',
+            'group' => 'home',
         ]
     );
 
     // Asignar permiso al rol
-    $adminRole->permissions()->sync([$dashboardPermission->id]);
+    $adminRole->permissions()->sync([$homePermission->id]);
 
     // Asignar rol al usuario
     $user->roles()->sync([$adminRole->id]);
@@ -49,7 +49,7 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $response->assertRedirect(route('home', absolute: false));
 });
 
 test('users can not authenticate with invalid password', function () {
@@ -70,4 +70,47 @@ test('users can logout', function () {
 
     $this->assertGuest();
     $response->assertRedirect('/');
+});
+
+test('login form can be submitted with Enter key', function () {
+    // Crear un usuario con rol de administrador para la prueba
+    $user = User::factory()->create([
+        'email' => 'test@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    // Crear rol de administrador
+    $adminRole = Role::firstOrCreate(
+        ['name' => 'admin'],
+        [
+            'display_name' => 'Administrador',
+            'description' => 'Rol de administrador para pruebas',
+            'is_system' => false,
+        ]
+    );
+
+    // Crear permiso para el home
+    $homePermission = Permission::firstOrCreate(
+        ['name' => 'home.view'],
+        [
+            'display_name' => 'Ver Home',
+            'description' => 'Permite acceder a la página de inicio',
+            'group' => 'home',
+        ]
+    );
+
+    // Asignar permiso al rol
+    $adminRole->permissions()->sync([$homePermission->id]);
+
+    // Asignar rol al usuario
+    $user->roles()->sync([$adminRole->id]);
+
+    // Simular envío del formulario (que es lo que haría el Enter key)
+    $response = $this->post('/login', [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('home', absolute: false));
 });

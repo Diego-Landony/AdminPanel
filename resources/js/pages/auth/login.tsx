@@ -81,6 +81,12 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     autoComplete="email"
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && data.email && data.password) {
+                                            e.preventDefault();
+                                            submit(e);
+                                        }
+                                    }}
                                     placeholder="usuario@email.com"
                                 />
                             </FormField>
@@ -99,6 +105,12 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                         autoComplete="current-password"
                                         value={data.password}
                                         onChange={(e) => setData('password', e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && data.email && data.password) {
+                                                e.preventDefault();
+                                                submit(e);
+                                            }
+                                        }}
                                         placeholder="Tu contraseña"
                                         className="pr-10"
                                     />

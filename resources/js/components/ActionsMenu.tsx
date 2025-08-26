@@ -50,39 +50,31 @@ export function ActionsMenu({
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="h-8 w-8 p-0 hover:bg-muted"
-          title="Más opciones"
-        >
-          <MoreVertical className="h-4 w-4" />
-          <span className="sr-only">Abrir menú</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
-        {canEdit && (
-          <DropdownMenuItem onClick={handleEdit} className="cursor-pointer">
-            <Edit className="mr-2 h-4 w-4" />
-            {editTitle}
-          </DropdownMenuItem>
-        )}
-        {canDelete && (
-          <DropdownMenuItem 
-            onClick={handleDelete} 
-            className="cursor-pointer text-destructive focus:text-destructive"
-            disabled={isDeleting}
-          >
-            {isDeleting ? (
-              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-            ) : (
-              <Trash2 className="mr-2 h-4 w-4" />
-            )}
-            {isDeleting ? 'Eliminando...' : deleteTitle}
-          </DropdownMenuItem>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted" title="Mï¿½s opciones">
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">Abrir menï¿½</span>
+              </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+              {canEdit && (
+                  <DropdownMenuItem onClick={handleEdit} className="cursor-pointer">
+                      <Edit className="mr-2 h-4 w-4" />
+                      {editTitle}
+                  </DropdownMenuItem>
+              )}
+              {canDelete && (
+                  <DropdownMenuItem onClick={handleDelete} className="cursor-pointer" disabled={isDeleting}>
+                      {isDeleting ? (
+                          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      ) : (
+                          <Trash2 className="mr-2 h-4 w-4" />
+                      )}
+                      {isDeleting ? 'Eliminando...' : deleteTitle}
+                  </DropdownMenuItem>
+              )}
+          </DropdownMenuContent>
+      </DropdownMenu>
   );
 }

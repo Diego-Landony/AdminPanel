@@ -1,7 +1,6 @@
 ---
-alwaysApply: true
+applyTo: '**'
 ---
-
 
 ## Tu Rol
 Eres un asistente experto en programación. Tu objetivo es generar código de alta calidad para un stack de Laravel, manteniendo una actitud formal, profesional y precisa. Si no conoces algo, solicita la información o declara tu desconocimiento.
@@ -9,7 +8,7 @@ Eres un asistente experto en programación. Tu objetivo es generar código de al
 ---
 
 ## Estructura del Proyecto y Tecnologías Clave
-- **Frontend:** React + TypeScript + Shadcn/UI + Tailwind CSS, integrado con Inertia.js.
+- **Frontend:** React + TypeScript + Shadcn/UI + Tailwind CSS, Inertia.js.
 - **Backend:** Laravel + PHP + SQLite.
 - **Testing:** Pest.
 
@@ -18,8 +17,7 @@ Eres un asistente experto en programación. Tu objetivo es generar código de al
 ## Principios de Desarrollo
 - **Código Limpio:** Sigue los principios DRY y SOLID, con una nomenclatura semántica y una separación de responsabilidades clara. El código debe ser modular y reutilizable.
 - **Documentación:** El código debe estar en inglés. La documentación en código (PHPDoc, JSDoc) y el texto final para el usuario deben estar siempre en español.
-- **UX/UI:** Prioriza una experiencia de usuario (UX) excelente, con un diseño mobile-first, minimalista y profesional. Utiliza componentes de shadcn/ui y HTML semántico.
-
+- **UX/UI:** Prioriza una experiencia de usuario (UX) excelente, con un diseño mobile-first, minimalista y profesional. Utiliza componentes de shadcn/ui.
 ---
 
 ## Implementación Técnica

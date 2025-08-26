@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 
-import { Shield, Plus, Edit, Trash2, Search, Users, Clock, Circle, X, RefreshCw } from 'lucide-react';
+import { Shield, Plus, Search, Users, Clock, Circle, X, RefreshCw, Trash2 } from 'lucide-react';
 import {
     Pagination,
     PaginationContent,
@@ -25,6 +25,7 @@ import {
     PaginationPrevious,
 } from "@/components/ui/pagination";
 import { UsersSkeleton } from '@/components/skeletons';
+import { ActionsMenu } from '@/components/ActionsMenu';
 
 /**
  * Breadcrumbs para la navegación de usuarios
@@ -653,27 +654,17 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
 
                                                         {/* Columna Acciones */}
                                                         <td className="py-4 px-4">
-                                                            <div className="flex items-center justify-end gap-2">
-                                                                <Link href={route('users.edit', user.id)}>
-                                                                    <Button 
-                                                                        variant="ghost" 
-                                                                        size="sm" 
-                                                                        className="h-8 w-8 p-0 hover:bg-muted"
-                                                                        title="Editar usuario"
-                                                                    >
-                                                                        <Edit className="w-4 h-4" />
-                                                                    </Button>
-                                                                </Link>
-                                                                <Dialog>
+                                                            <div className="flex items-center justify-end">
+                                                                <ActionsMenu
+                                                                    editHref={route('users.edit', user.id)}
+                                                                    onDelete={() => setDeletingUser(user.id)}
+                                                                    isDeleting={deletingUser === user.id}
+                                                                    editTitle="Editar usuario"
+                                                                    deleteTitle="Eliminar usuario"
+                                                                />
+                                                                <Dialog open={deletingUser === user.id} onOpenChange={(open) => !open && setDeletingUser(null)}>
                                                                     <DialogTrigger asChild>
-                                                                        <Button 
-                                                                            variant="ghost" 
-                                                                            size="sm"
-                                                                            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                                            title="Eliminar usuario"
-                                                                        >
-                                                                            <Trash2 className="w-4 h-4" />
-                                                                        </Button>
+                                                                        <div style={{ display: 'none' }} />
                                                                     </DialogTrigger>
                                                                     <DialogContent>
                                                                         <DialogHeader>
@@ -766,28 +757,17 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                                                 </div>
                                                 
                                                 {/* Acciones */}
-                                                <div className="flex items-center justify-end space-x-2 pt-2 border-t border-border">
-                                                    <Link href={route('users.edit', user.id)}>
-                                                        <Button variant="ghost" size="sm" className="h-8 px-3" title="Editar usuario">
-                                                            <Edit className="w-4 h-4 mr-1" />
-                                                            Editar
-                                                        </Button>
-                                                    </Link>
-                                                    <Dialog>
+                                                <div className="flex items-center justify-end pt-2 border-t border-border">
+                                                    <ActionsMenu
+                                                        editHref={route('users.edit', user.id)}
+                                                        onDelete={() => setDeletingUser(user.id)}
+                                                        isDeleting={deletingUser === user.id}
+                                                        editTitle="Editar usuario"
+                                                        deleteTitle="Eliminar usuario"
+                                                    />
+                                                    <Dialog open={deletingUser === user.id} onOpenChange={(open) => !open && setDeletingUser(null)}>
                                                         <DialogTrigger asChild>
-                                                            <Button 
-                                                                variant="ghost" 
-                                                                size="sm"
-                                                                className="h-8 px-3 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                                title="Eliminar usuario"
-                                                            >
-                                                                {deletingUser === user.id ? (
-                                                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-1" />
-                                                                ) : (
-                                                                    <Trash2 className="w-4 h-4 mr-1" />
-                                                                )}
-                                                                {deletingUser === user.id ? 'Eliminando...' : 'Eliminar'}
-                                                            </Button>
+                                                            <div style={{ display: 'none' }} />
                                                         </DialogTrigger>
                                                         <DialogContent>
                                                             <DialogHeader>

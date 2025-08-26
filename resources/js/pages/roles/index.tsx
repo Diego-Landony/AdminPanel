@@ -22,8 +22,9 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Shield, Plus, Edit, Trash2, Search, Users, UserCheck, X } from 'lucide-react';
+import { Shield, Plus, Search, Users, UserCheck, X } from 'lucide-react';
 import { RolesSkeleton } from '@/components/skeletons';
+import { ActionsMenu } from '@/components/ActionsMenu';
 
 
 /**
@@ -401,38 +402,16 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
 
                                                         {/* Columna Acciones */}
                                                         <td className="py-4 px-4">
-                                                            <div className="flex items-center justify-end gap-2">
-                                                                {/* Permitir editar el rol admin, pero no otros roles del sistema */}
-                                                                {(role.name === 'admin' || !role.is_system) && (
-                                                                    <Link href={`/roles/${role.id}/edit`}>
-                                                                        <Button 
-                                                                            variant="ghost" 
-                                                                            size="sm" 
-                                                                            className="h-8 w-8 p-0 hover:bg-muted"
-                                                                            title="Editar rol"
-                                                                        >
-                                                                            <Edit className="w-4 h-4" />
-                                                                        </Button>
-                                                                    </Link>
-                                                                )}
-                                                                
-                                                                {/* Solo permitir eliminar roles que no sean del sistema */}
-                                                                {!role.is_system && (
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="sm"
-                                                                        onClick={() => openDeleteDialog(role)}
-                                                                        disabled={deletingRole === role.id}
-                                                                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                                        title="Eliminar rol"
-                                                                    >
-                                                                        {deletingRole === role.id ? (
-                                                                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                                                        ) : (
-                                                                            <Trash2 className="w-4 h-4" />
-                                                                        )}
-                                                                    </Button>
-                                                                )}
+                                                            <div className="flex items-center justify-end">
+                                                                <ActionsMenu
+                                                                    editHref={`/roles/${role.id}/edit`}
+                                                                    onDelete={() => openDeleteDialog(role)}
+                                                                    canEdit={role.name === 'admin' || !role.is_system}
+                                                                    canDelete={!role.is_system}
+                                                                    isDeleting={deletingRole === role.id}
+                                                                    editTitle="Editar rol"
+                                                                    deleteTitle="Eliminar rol"
+                                                                />
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -488,41 +467,15 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                                                         {role.users_count} usuario(s)
                                                     </Button>
                                                     
-                                                    <div className="flex items-center space-x-2">
-                                                        {/* Permitir editar el rol admin, pero no otros roles del sistema */}
-                                                        {(role.name === 'admin' || !role.is_system) && (
-                                                            <Link href={`/roles/${role.id}/edit`}>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-8 px-3"
-                                                                    title={`Editar rol ${role.name}`}
-                                                                >
-                                                                    <Edit className="w-4 h-4 mr-1" />
-                                                                    Editar
-                                                                </Button>
-                                                            </Link>
-                                                        )}
-                                                        
-                                                        {/* Solo permitir eliminar roles que no sean del sistema */}
-                                                        {!role.is_system && (
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => openDeleteDialog(role)}
-                                                                disabled={deletingRole === role.id}
-                                                                className="h-8 px-3 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                                title={`Eliminar rol ${role.name}`}
-                                                            >
-                                                                {deletingRole === role.id ? (
-                                                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-1" />
-                                                                ) : (
-                                                                    <Trash2 className="w-4 h-4 mr-1" />
-                                                                )}
-                                                                {deletingRole === role.id ? 'Eliminando...' : 'Eliminar'}
-                                                            </Button>
-                                                        )}
-                                                    </div>
+                                                    <ActionsMenu
+                                                        editHref={`/roles/${role.id}/edit`}
+                                                        onDelete={() => openDeleteDialog(role)}
+                                                        canEdit={role.name === 'admin' || !role.is_system}
+                                                        canDelete={!role.is_system}
+                                                        isDeleting={deletingRole === role.id}
+                                                        editTitle="Editar rol"
+                                                        deleteTitle="Eliminar rol"
+                                                    />
                                                 </div>
                                             </div>
                                         ))}

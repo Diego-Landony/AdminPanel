@@ -199,16 +199,13 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Editar Rol - ${role.name}`} />
-            
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
+
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 {/* Encabezado */}
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight">Editar Rol: {role.name}</h1>
-                        <p className="text-muted-foreground">
-                            Modifica los permisos y la información de este rol
-                        </p>
-                     
+                        <p className="text-muted-foreground">Modifica los permisos y la información de este rol</p>
                     </div>
                     <Button variant="outline" asChild>
                         <Link href="/roles">
@@ -220,24 +217,25 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Contenedor con ancho máximo para hacer el contenido más angosto */}
-                    <div className="max-w-4xl mx-auto">
+                    <div className="mx-auto max-w-4xl">
                         {/* Botón de gestión de usuarios en la parte superior izquierda */}
                         <div className="mb-6">
                             <Sheet open={isUserSheetOpen} onOpenChange={setIsUserSheetOpen}>
                                 <SheetTrigger asChild>
                                     <Button variant="outline" size="sm">
-                                        <Users className="h-4 w-4 mr-2" />
+                                        <Users className="mr-2 h-4 w-4" />
                                         Gestionar Usuarios del Rol
                                     </Button>
                                 </SheetTrigger>
-                                <SheetContent className="w-[400px] sm:w-[540px]">
+                                <SheetContent className="w-[400px] p-4 sm:w-[540px]">
                                     <SheetHeader className="pb-4">
                                         <SheetTitle className="text-lg">Gestionar Usuarios del Rol</SheetTitle>
-                                        <SheetDescription className="text-sm">
-                                            Selecciona los usuarios que tendrán este rol
-                                        </SheetDescription>
+                                        <SheetDescription className="text-sm">Selecciona los usuarios que tendrán este rol</SheetDescription>
+                                        <div className="mt-2">
+                                            <span className="text-xs text-muted-foreground">Los cambios se guardan automáticamente</span>
+                                        </div>
                                     </SheetHeader>
-                                    
+
                                     <div className="space-y-4">
                                         {/* Buscador compacto */}
                                         <div className="relative">
@@ -248,19 +246,19 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                                 className="h-9 text-sm"
                                             />
-                                            <Users className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <Users className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                                         </div>
 
                                         {/* Lista de usuarios compacta */}
-                                        <div className="border rounded-lg overflow-hidden">
+                                        <div className="overflow-hidden rounded-lg border">
                                             <ScrollArea className="h-[350px]">
                                                 <div className="p-2">
                                                     {filteredUsers.map((user) => (
-                                                        <div 
-                                                            key={user.id} 
-                                                            className={`flex items-center gap-3 p-2 rounded-md transition-colors ${
-                                                                selectedUsers.includes(user.id) 
-                                                                    ? 'bg-primary/5 border border-primary/20' 
+                                                        <div
+                                                            key={user.id}
+                                                            className={`flex items-center gap-3 rounded-md p-2 transition-colors ${
+                                                                selectedUsers.includes(user.id)
+                                                                    ? 'border border-primary/20 bg-primary/5'
                                                                     : 'hover:bg-muted/50'
                                                             }`}
                                                         >
@@ -268,18 +266,16 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                                                                 id={`user-${user.id}`}
                                                                 checked={selectedUsers.includes(user.id)}
                                                                 onCheckedChange={(checked) => handleUserChange(user.id, checked as boolean)}
-                                                                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                                                className="data-[state=checked]:border-primary data-[state=checked]:bg-primary"
                                                             />
-                                                            <div className="flex-1 min-w-0">
-                                                                <Label 
+                                                            <div className="min-w-0 flex-1">
+                                                                <Label
                                                                     htmlFor={`user-${user.id}`}
-                                                                    className="text-sm font-medium cursor-pointer block"
+                                                                    className="block cursor-pointer text-sm font-medium"
                                                                 >
                                                                     {user.name}
                                                                 </Label>
-                                                                <p className="text-xs text-muted-foreground truncate">
-                                                                    {user.email}
-                                                                </p>
+                                                                <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                                                             </div>
                                                         </div>
                                                     ))}
@@ -287,20 +283,7 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                                             </ScrollArea>
                                         </div>
 
-                                        {/* Footer compacto */}
-                                        <div className="flex items-center justify-between pt-3 border-t">
-                                            <span className="text-xs text-muted-foreground">
-                                                Los cambios se guardan automáticamente
-                                            </span>
-                                            <Button 
-                                                variant="outline" 
-                                                size="sm"
-                                                onClick={() => setIsUserSheetOpen(false)}
-                                                className="ml-auto"
-                                            >
-                                                Cerrar
-                                            </Button>
-                                        </div>
+                                        {/* footer eliminado - mensaje movido arriba junto a la descripción */}
                                     </div>
                                 </SheetContent>
                             </Sheet>
@@ -308,31 +291,25 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
 
                         {/* Información básica del rol */}
                         <div className="space-y-6">
-                            <FormField
-                                label="Nombre del Rol"
-                                error={errors.name}
-                            >
+                            <FormField label="Nombre del Rol" error={errors.name}>
                                 <Input
                                     id="name"
                                     type="text"
                                     value={data.name}
-                                    onChange={e => setData('name', e.target.value)}
+                                    onChange={(e) => setData('name', e.target.value)}
                                     placeholder="ej: Gerente"
                                     disabled={isAdminRole}
-                                    className={isAdminRole ? 'opacity-50 cursor-not-allowed' : ''}
+                                    className={isAdminRole ? 'cursor-not-allowed opacity-50' : ''}
                                 />
                             </FormField>
 
-                            <FormField
-                                label="Descripción"
-                                error={errors.description}
-                            >
+                            <FormField label="Descripción" error={errors.description}>
                                 <Textarea
                                     id="description"
                                     value={data.description}
-                                    onChange={e => setData('description', e.target.value)}
+                                    onChange={(e) => setData('description', e.target.value)}
                                     placeholder="Describe las responsabilidades y alcance de este rol..."
-                                    className={`min-h-[100px] ${isAdminRole ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    className={`min-h-[100px] ${isAdminRole ? 'cursor-not-allowed opacity-50' : ''}`}
                                     disabled={isAdminRole}
                                 />
                             </FormField>
@@ -343,23 +320,21 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                             <div className="space-y-2">
                                 <h3 className="text-lg font-semibold">Permisos del Rol</h3>
                                 <p className="text-sm text-muted-foreground">
-                                    {role.name === 'admin' 
+                                    {role.name === 'admin'
                                         ? 'Este rol tiene automáticamente todos los permisos del sistema'
-                                        : 'Selecciona las acciones que este rol puede realizar en cada página'
-                                    }
+                                        : 'Selecciona las acciones que este rol puede realizar en cada página'}
                                 </p>
                             </div>
-                            
+
                             {role.name === 'admin' && (
-                                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-3">
                                     <p className="text-sm text-green-800">
-                                        <strong>Permisos Automáticos:</strong> El rol Administrador tiene acceso completo 
-                                        a todas las funcionalidades del sistema y se actualiza automáticamente cuando se 
-                                        agregan nuevas páginas o funcionalidades.
+                                        <strong>Permisos Automáticos:</strong> El rol Administrador tiene acceso completo a todas las funcionalidades
+                                        del sistema y se actualiza automáticamente cuando se agregan nuevas páginas o funcionalidades.
                                     </p>
                                 </div>
                             )}
-                            
+
                             {/* Tabla compacta de permisos */}
                             <div className="overflow-x-auto">
                                 <Table>
@@ -376,27 +351,25 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                                         {Object.entries(permissions).map(([group, groupPermissions]) => {
                                             // Agrupar permisos por acción
                                             const actions = {
-                                                view: groupPermissions.find(p => p.name.endsWith('.view')),
-                                                create: groupPermissions.find(p => p.name.endsWith('.create')),
-                                                edit: groupPermissions.find(p => p.name.endsWith('.edit')),
-                                                delete: groupPermissions.find(p => p.name.endsWith('.delete'))
+                                                view: groupPermissions.find((p) => p.name.endsWith('.view')),
+                                                create: groupPermissions.find((p) => p.name.endsWith('.create')),
+                                                edit: groupPermissions.find((p) => p.name.endsWith('.edit')),
+                                                delete: groupPermissions.find((p) => p.name.endsWith('.delete')),
                                             };
 
                                             return (
                                                 <TableRow key={group}>
-                                                    <TableCell className="font-medium">
-                                                        {getGroupDisplayName(group)}
-                                                    </TableCell>
+                                                    <TableCell className="font-medium">{getGroupDisplayName(group)}</TableCell>
                                                     <TableCell className="text-center">
                                                         {actions.view && (
                                                             <Checkbox
                                                                 id={actions.view?.name || ''}
                                                                 checked={isPermissionSelected(actions.view?.name || '')}
-                                                                onCheckedChange={(checked) => 
+                                                                onCheckedChange={(checked) =>
                                                                     handlePermissionChange(actions.view?.name || '', checked as boolean)
                                                                 }
                                                                 disabled={role.name === 'admin'}
-                                                                className={role.name === 'admin' ? 'opacity-50 cursor-not-allowed' : ''}
+                                                                className={role.name === 'admin' ? 'cursor-not-allowed opacity-50' : ''}
                                                             />
                                                         )}
                                                     </TableCell>
@@ -405,11 +378,11 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                                                             <Checkbox
                                                                 id={actions.create?.name || ''}
                                                                 checked={isPermissionSelected(actions.create?.name || '')}
-                                                                onCheckedChange={(checked) => 
+                                                                onCheckedChange={(checked) =>
                                                                     handlePermissionChange(actions.create?.name || '', checked as boolean)
                                                                 }
                                                                 disabled={role.name === 'admin'}
-                                                                className={role.name === 'admin' ? 'opacity-50 cursor-not-allowed' : ''}
+                                                                className={role.name === 'admin' ? 'cursor-not-allowed opacity-50' : ''}
                                                             />
                                                         )}
                                                     </TableCell>
@@ -418,11 +391,11 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                                                             <Checkbox
                                                                 id={actions.edit?.name || ''}
                                                                 checked={isPermissionSelected(actions.edit?.name || '')}
-                                                                onCheckedChange={(checked) => 
+                                                                onCheckedChange={(checked) =>
                                                                     handlePermissionChange(actions.edit?.name || '', checked as boolean)
                                                                 }
                                                                 disabled={role.name === 'admin'}
-                                                                className={role.name === 'admin' ? 'opacity-50 cursor-not-allowed' : ''}
+                                                                className={role.name === 'admin' ? 'cursor-not-allowed opacity-50' : ''}
                                                             />
                                                         )}
                                                     </TableCell>
@@ -431,11 +404,11 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                                                             <Checkbox
                                                                 id={actions.delete?.name || ''}
                                                                 checked={isPermissionSelected(actions.delete?.name || '')}
-                                                                onCheckedChange={(checked) => 
+                                                                onCheckedChange={(checked) =>
                                                                     handlePermissionChange(actions.delete?.name || '', checked as boolean)
                                                                 }
                                                                 disabled={role.name === 'admin'}
-                                                                className={role.name === 'admin' ? 'opacity-50 cursor-not-allowed' : ''}
+                                                                className={role.name === 'admin' ? 'cursor-not-allowed opacity-50' : ''}
                                                             />
                                                         )}
                                                     </TableCell>
@@ -445,10 +418,8 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                                     </TableBody>
                                 </Table>
                             </div>
-                            
-                            {errors.permissions && (
-                                <FormError message={errors.permissions} />
-                            )}
+
+                            {errors.permissions && <FormError message={errors.permissions} />}
                         </div>
                     </div>
 
@@ -457,13 +428,9 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                         <Button type="button" variant="outline" asChild>
                             <Link href="/roles">Cancelar</Link>
                         </Button>
-                        <Button 
-                            type="submit" 
-                            disabled={processing || isAdminRole}
-                            className={isAdminRole ? 'opacity-50 cursor-not-allowed' : ''}
-                        >
+                        <Button type="submit" disabled={processing || isAdminRole} className={isAdminRole ? 'cursor-not-allowed opacity-50' : ''}>
                             <Save className="mr-2 h-4 w-4" />
-                            {isAdminRole ? 'No Editable' : (processing ? 'Guardando...' : 'Guardar Cambios')}
+                            {isAdminRole ? 'No Editable' : processing ? 'Guardando...' : 'Guardar Cambios'}
                         </Button>
                     </div>
                 </form>

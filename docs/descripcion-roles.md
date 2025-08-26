@@ -671,10 +671,3 @@ El sistema se mantiene actualizado automáticamente:
 
 El sistema de roles y permisos de **Videra** representa una solución moderna y escalable que equilibra **simplicidad**, **robustez** y **flexibilidad**. Su capacidad de auto-descubrimiento y sincronización automática garantiza que el sistema evolucione naturalmente con el crecimiento de la aplicación, manteniendo siempre la seguridad y usabilidad como prioridades principales.
 
-**¡El sistema está listo para escalar con tu aplicación! 🚀**
-
----
-
-*Documentación generada para Videra v2.0.0 - Sistema de Roles Dinámicos*  
-*Fecha: Agosto 2025*  
-*Autor: AI Assistant - Claude Sonnet 4*

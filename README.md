@@ -1,243 +1,193 @@
-# 🚀 Videra
+# Dashboard de Gestión
 
-**Sistema de gestión empresarial moderno y eficiente**
-
-## 📋 Descripción
-
-Videra es una aplicación web empresarial desarrollada con tecnologías modernas que proporciona una solución completa para la gestión de empresas, incluyendo módulos de usuarios, inventario, ventas, reportes y más.
+Dashboard web para gestión de usuarios, roles y permisos con seguimiento de actividad.
 
 ## 🛠️ Stack Tecnológico
 
-### Backend
-- **Laravel 12** - Framework PHP moderno y robusto
-- **PHP 8.3+** - Versión más reciente de PHP
-- **SQLite** - Base de datos ligera y eficiente
-- **Composer** - Gestor de dependencias PHP
+- **Laravel 12.22** + **PHP 8.3**
+- **React 19** + **TypeScript** + **Inertia.js 2.0**
+- **Tailwind CSS 4.0** + **shadcn/ui**
+- **SQLite** (desarrollo) / **MySQL/PostgreSQL** (producción)
+- **Pest** (testing)
 
-### Frontend
-- **React 19** - Biblioteca de interfaz de usuario moderna
-- **TypeScript** - Tipado estático para JavaScript
-- **Tailwind CSS 4.0** - Framework CSS utility-first
-- **Shadcn/UI** - Componentes de interfaz reutilizables
-- **Inertia.js 2.0** - Integración perfecta entre Laravel y React
-
-### Herramientas de Desarrollo
-- **Pest** - Framework de testing PHP
-- **Vite** - Bundler y dev server
-- **ESLint** - Linter para JavaScript/TypeScript
-- **Prettier** - Formateador de código
-
-## 🚀 Instalación Rápida
+## ⚡ Instalación
 
 ### Prerrequisitos
-- **PHP 8.3** o superior
-- **Composer 2.6+**
-- **Node.js 18+** y NPM
-- **Git**
+- PHP 8.2+ con SQLite
+- Node.js 18+ y npm
+- Composer
 
-### ⚡ Instalación en 5 Pasos
-
-1. **Clonar el repositorio**
-   ```bash
-   git clone https://github.com/Diego-Landony/videra.git
-   cd videra
-   ```
-
-2. **Instalar dependencias PHP y Node.js**
-   ```bash
-   composer install
-   npm install
-   ```
-
-3. **Configurar el entorno**
-   ```bash
-   cp .env.example .env
-   php artisan key:generate
-   ```
-
-4. **Crear y poblar la base de datos**
-   ```bash
-   php artisan migrate:fresh --seed
-   ```
-
-5. **Compilar assets y ejecutar**
-   ```bash
-   npm run build
-   php artisan serve
-   ```
-
-### 🔐 Acceso al Sistema
-
-Una vez instalado, puedes acceder con:
-
-- **URL**: `http://localhost:8000`
-- **Email**: `admin@admin.com`
-- **Contraseña**: `admin`
-
-## 📁 Estructura del Proyecto
-
-```
-videra/
-├── app/                    # Lógica de aplicación Laravel
-│   ├── Console/           # Comandos Artisan
-│   ├── Http/              # Controladores, Middleware, Requests
-│   ├── Models/             # Modelos Eloquent
-│   ├── Observers/          # Observadores de modelos
-│   ├── Providers/          # Proveedores de servicios
-│   ├── Rules/              # Reglas de validación personalizadas
-│   └── Services/           # Servicios de la aplicación
-├── database/               # Migraciones, seeders y factories
-├── resources/              # Assets y vistas
-│   ├── js/                # Componentes React
-│   └── css/               # Estilos CSS
-├── routes/                 # Definición de rutas
-├── storage/                # Archivos de almacenamiento
-├── tests/                  # Tests con Pest
-└── vendor/                 # Dependencias Composer
-```
-
-## 🔧 Comandos Útiles
-
-### Desarrollo
+### Comandos
 ```bash
-npm run dev          # Iniciar Vite en modo desarrollo
-npm run build        # Compilar assets para producción
-php artisan serve    # Iniciar servidor Laravel
+# Clonar e instalar
+git clone <repo>
+cd dashboard
+composer install
+npm install
+
+# Configurar
+cp .env.example .env
+php artisan key:generate
+
+# Base de datos
+php artisan migrate:fresh --seed
+
+# Compilar y ejecutar
+npm run build
+php artisan serve
 ```
 
-### Base de Datos
-```bash
-php artisan migrate:fresh --seed    # Recrear BD y ejecutar seeders
-php artisan migrate                 # Ejecutar migraciones pendientes
-php artisan migrate:rollback        # Revertir última migración
-php artisan db:seed                # Ejecutar seeders
-```
+### Acceso
+- **URL**: http://localhost:8000
+- **Usuario**: admin@admin.com
+- **Contraseña**: admin
 
-### Testing
-```bash
-php artisan test                   # Ejecutar todos los tests
-php artisan test --filter=User    # Ejecutar tests específicos
-```
+## 📄 Funcionalidades
 
-### Utilidades
-```bash
-php artisan permissions:sync      # Sincronizar permisos del sistema
-php artisan route:list            # Listar todas las rutas
-php artisan make:model User       # Crear nuevo modelo
-```
+### **Gestión de Usuarios**
+- Lista con búsqueda y paginación
+- Crear, editar, eliminar usuarios
+- Estados en tiempo real (online/offline)
+- Gestión de contraseñas opcional
 
-## 🌟 Características Principales
+### **Sistema de Roles y Permisos**
+- Roles del sistema y personalizados
+- Permisos automáticos por página
+- Asignación granular de permisos
+- Auto-discovery de nuevas páginas
 
-### 🔐 Sistema de Autenticación
+### **Seguimiento de Actividad**
+- Logs de auditoría completos
+- Tracking de cambios en tiempo real
+- Filtros por usuario, tipo y fecha
+- Vista unificada de actividades
+
+### **Autenticación**
 - Login/logout seguro
 - Verificación de email
 - Reset de contraseñas
 - Sesiones persistentes
 
-### 👥 Gestión de Usuarios
-- CRUD completo de usuarios
-- Roles y permisos granulares
-- Tracking de actividad en tiempo real
-- Estados online/offline
-
-### 🛡️ Sistema de Permisos
-- Permisos automáticos basados en páginas
-- Roles del sistema protegidos
-- Asignación granular de permisos
-- Discovery automático de funcionalidades
-
-### 📊 Actividad y Auditoría
-- Logs de actividad del sistema
-- Tracking de cambios en modelos
-- Historial de acciones de usuarios
-- IP y user agent tracking
-
-### 🎨 Interfaz Moderna
-- Diseño responsive mobile-first
+### **Configuración Personal**
+- Perfil de usuario editable
+- Cambio de contraseña
 - Tema claro/oscuro/sistema
-- Componentes Shadcn/UI
-- Tailwind CSS 4.0
 
-## 🚀 Despliegue en Producción
+## 🚀 Comandos de Desarrollo
 
-### Configuración del Servidor
 ```bash
-# Configurar variables de entorno
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://tu-dominio.com
+# Desarrollo
+npm run dev              # Vite dev server
+composer run dev         # Laravel + Vite + Queue + Logs
 
-# Configurar base de datos
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=videra_prod
-DB_USERNAME=tu_usuario
-DB_PASSWORD=tu_contraseña
+# Base de datos
+php artisan migrate:fresh --seed
+php artisan db:seed
 
-# Configurar cache y sesiones
-CACHE_DRIVER=redis
-SESSION_DRIVER=redis
-QUEUE_CONNECTION=redis
+# Testing
+php artisan test
+php artisan test --filter=User
+
+# Producción
+npm run build
+composer install --no-dev --optimize-autoloader
 ```
 
-### Comandos de Despliegue
-```bash
-# Instalar dependencias
-composer install --optimize-autoloader --no-dev
-npm ci && npm run build
+## 📊 Estructura del Proyecto
 
-# Configurar base de datos
-php artisan migrate --force
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-
-# Configurar permisos
-chmod -R 755 storage bootstrap/cache
-chown -R www-data:www-data storage bootstrap/cache
 ```
+dashboard/
+├── app/
+│   ├── Http/Controllers/    # UserController, RoleController, etc.
+│   ├── Models/              # User, Role, Permission, ActivityLog
+│   └── Services/            # PermissionDiscoveryService
+├── resources/js/
+│   ├── pages/              # Páginas React (users, roles, activity)
+│   ├── components/ui/      # Componentes shadcn/ui
+│   └── layouts/           # Layouts de la app
+├── database/
+│   ├── migrations/        # Schema completo
+│   └── seeders/          # Usuarios y permisos por defecto
+└── docs/                 # Documentación técnica
+```
+
+## 🗄️ Base de Datos
+
+### **Tablas Principales:**
+- `users` - Gestión de usuarios con soft deletes
+- `roles` - Roles del sistema y personalizados  
+- `permissions` - Permisos granulares auto-generados
+- `user_activities` - Actividades de usuarios
+- `activity_logs` - Logs de auditoría con old/new values
+
+### **Usuarios por Defecto:**
+- **admin@admin.com** / **admin** (acceso completo)
+- **admin@test.com** / **admintest** (acceso completo)
+
+## 🔐 Sistema de Permisos
+
+### **Auto-Discovery:**
+El sistema detecta automáticamente nuevas páginas en `resources/js/pages/` y genera permisos con patrón `{página}.{acción}`:
+
+```
+users.view, users.create, users.edit, users.delete
+roles.view, roles.create, roles.edit, roles.delete  
+activity.view, dashboard.view, etc.
+```
+
+### **Protecciones:**
+- Rol `admin` siempre tiene todos los permisos
+- Roles del sistema protegidos contra eliminación
+- Usuario admin@admin.com no se puede eliminar
+
+## 📱 Responsive Design
+
+- **Desktop**: Tablas completas con todas las funcionalidades
+- **Mobile/Tablet**: Vista de cards optimizada
+- **Componentes**: shadcn/ui + Tailwind CSS 4.0
+- **Tema**: Claro/Oscuro/Sistema automático
 
 ## 🧪 Testing
 
-El proyecto incluye tests completos con Pest:
-
 ```bash
-# Ejecutar tests
-php artisan test
-
-# Tests con coverage
-php artisan test --coverage
-
-# Tests específicos
-php artisan test --filter=UserController
+php artisan test                    # Todos los tests
+php artisan test --filter=User     # Tests específicos
+composer run test                   # Con config clear
 ```
 
-## 🤝 Contribución
+## 🔧 Comandos Útiles
 
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/NuevaFuncionalidad`)
-3. Commit tus cambios (`git commit -m 'Agregar nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/NuevaFuncionalidad`)
-5. Abre un Pull Request
+```bash
+# Sincronizar permisos tras añadir páginas
+php artisan tinker
+$service = new App\Services\PermissionDiscoveryService;
+$service->syncPermissions();
 
-## 📝 Licencia
+# Ver todas las rutas
+php artisan route:list
 
-Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+# Limpiar cache
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+```
 
-## 👨‍💻 Autor
+## 📈 Producción
 
-**Diego Landony** - [GitHub](https://github.com/Diego-Landony)
+```bash
+# Variables de entorno
+APP_ENV=production
+APP_DEBUG=false  
+DB_CONNECTION=mysql
 
-## 🆘 Soporte
-
-Si encuentras algún problema:
-
-1. Revisa los logs en `storage/logs/`
-2. Ejecuta `php artisan permissions:sync` para sincronizar permisos
-3. Verifica que todas las migraciones se ejecutaron: `php artisan migrate:status`
-4. Revisa que el seeder se ejecutó: `php artisan db:seed`
+# Deploy
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+php artisan migrate --force
+php artisan config:cache
+php artisan route:cache
+```
 
 ---
 
-⭐ Si este proyecto te gusta, ¡dale una estrella!
+Sistema simple y directo para gestión de usuarios con roles y seguimiento completo de actividad.

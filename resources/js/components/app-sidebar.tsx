@@ -25,14 +25,14 @@ const systemPages: PageConfig[] = [
         title: 'Inicio',
         href: '/home',
         icon: Home,
-        permission: 'home.view'
+        permission: 'home.view',
     },
     {
         name: 'dashboard',
         title: 'Dashboard',
         href: '/dashboard',
         icon: LayoutGrid,
-        permission: 'dashboard.view'
+        permission: 'dashboard.view',
     },
     {
         name: 'users',
@@ -40,15 +40,14 @@ const systemPages: PageConfig[] = [
         href: '/users',
         icon: UserCog,
         group: 'Usuarios',
-        permission: 'users.view'
+        permission: 'users.view',
     },
     {
         name: 'activity',
         title: 'Actividad',
         href: '/activity',
         icon: Activity,
-        group: 'Usuarios',
-        permission: 'activity.view'
+        permission: 'activity.view',
     },
     {
         name: 'roles',
@@ -56,8 +55,8 @@ const systemPages: PageConfig[] = [
         href: '/roles',
         icon: Shield,
         group: 'Usuarios',
-        permission: 'roles.view'
-    }
+        permission: 'roles.view',
+    },
 ];
 
 /**
@@ -90,7 +89,13 @@ export function AppSidebar() {
                 if (!groupedItems[page.group]) {
                     groupedItems[page.group] = [];
                 }
-                groupedItems[page.group].push(navItem);
+                // Push a child item without an icon so subitems don't show icons
+                groupedItems[page.group].push({
+                    title: navItem.title,
+                    href: navItem.href,
+                    // explicitly no icon for subitems
+                    icon: null,
+                });
             } else {
                 // Sin grupo, agregar directamente
                 items.push(navItem);

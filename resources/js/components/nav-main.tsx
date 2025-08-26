@@ -32,7 +32,10 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                 <SidebarMenuItem>
                                     <CollapsibleTrigger asChild>
                                         <SidebarMenuButton tooltip={{ children: item.title }}>
-                                            {item.icon && <item.icon />}
+                                            {item.icon && (
+                                                // render top-level icon for groups with subitems
+                                                <item.icon className="mr-2 h-4 w-4" />
+                                            )}
                                             <span>{item.title}</span>
                                             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                                         </SidebarMenuButton>
@@ -41,12 +44,8 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                         <SidebarMenuSub>
                                             {item.items.map((subItem) => (
                                                 <SidebarMenuSubItem key={subItem.title}>
-                                                    <SidebarMenuSubButton 
-                                                        asChild
-                                                        isActive={subItem.href ? page.url.startsWith(subItem.href) : false}
-                                                    >
+                                                    <SidebarMenuSubButton asChild isActive={subItem.href ? page.url.startsWith(subItem.href) : false}>
                                                         <Link href={subItem.href || '#'} prefetch>
-                                                            {subItem.icon && <subItem.icon />}
                                                             <span>{subItem.title}</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
@@ -62,13 +61,16 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                     // Item normal sin subitems
                     return (
                         <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton 
-                                asChild 
-                                isActive={item.href ? page.url.startsWith(item.href) : false} 
+                            <SidebarMenuButton
+                                asChild
+                                isActive={item.href ? page.url.startsWith(item.href) : false}
                                 tooltip={{ children: item.title }}
                             >
                                 <Link href={item.href || '#'} prefetch>
-                                    {item.icon && <item.icon />}
+                                    {item.icon && (
+                                        // render top-level icon
+                                        <item.icon className="mr-2 h-4 w-4" />
+                                    )}
                                     <span>{item.title}</span>
                                 </Link>
                             </SidebarMenuButton>

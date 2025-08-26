@@ -13,11 +13,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ActivitySkeleton } from '@/components/skeletons';
 
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Search, X, Filter, Calendar as CalendarIcon, Users, Inbox } from 'lucide-react';
 import {
     Pagination,
@@ -438,8 +439,10 @@ export default function ActivityIndex({ activities, filters, options }: Activity
     // Estado para el loading
     const [isLoading, setIsLoading] = useState(false);
 
-    // Estado para el Sheet de filtros
-    const [filtersOpen, setFiltersOpen] = useState(false);
+    // Estado para los diálogos
+    const [eventTypesOpen, setEventTypesOpen] = useState(false);
+    const [usersOpen, setUsersOpen] = useState(false);
+    const [dateRangeOpen, setDateRangeOpen] = useState(false);
 
     // Estado para búsqueda en usuarios
     const [userSearchTerm, setUserSearchTerm] = useState('');
@@ -481,7 +484,6 @@ export default function ActivityIndex({ activities, filters, options }: Activity
             preserveScroll: true,
             onSuccess: (page) => {
                 setIsLoading(false);
-                setFiltersOpen(false); // Cerrar el sheet después de aplicar filtros
                 // Verificar si no hay resultados
                 const activities = page.props.activities as { total?: number };
                 if (activities && activities.total === 0) {
@@ -586,6 +588,36 @@ export default function ActivityIndex({ activities, filters, options }: Activity
     };
 
     /**
+     * Obtener texto para mostrar tipos de evento seleccionados
+     */
+    const getEventTypesText = () => {
+        if (localFilters.event_types.length === 0) return 'Seleccionar tipos...';
+        if (localFilters.event_types.length === 1) return options.event_types[localFilters.event_types[0]];
+        if (localFilters.event_types.length <= 3) {
+            return localFilters.event_types.map(type => options.event_types[type]).join(', ');
+        }
+        return `${localFilters.event_types.length} tipos seleccionados`;
+    };
+
+    /**
+     * Obtener texto para mostrar usuarios seleccionados
+     */
+    const getUsersText = () => {
+        if (localFilters.user_ids.length === 0) return 'Seleccionar usuarios...';
+        if (localFilters.user_ids.length === 1) {
+            const user = options.users.find(u => u.id.toString() === localFilters.user_ids[0]);
+            return user ? user.name : 'Usuario no encontrado';
+        }
+        if (localFilters.user_ids.length <= 3) {
+            return localFilters.user_ids.map(id => {
+                const user = options.users.find(u => u.id.toString() === id);
+                return user ? user.name : 'Usuario no encontrado';
+            }).join(', ');
+        }
+        return `${localFilters.user_ids.length} usuarios seleccionados`;
+    };
+
+    /**
      * Filtrar usuarios por término de búsqueda
      */
     const filteredUsers = options.users.filter(
@@ -632,200 +664,265 @@ export default function ActivityIndex({ activities, filters, options }: Activity
                                         </span>
                                     </span>
                                 </div>
-
-                                {/* Botón para abrir filtros */}
-                                <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-                                    <SheetTrigger asChild>
-                                        <Button variant="outline" className="flex items-center gap-2">
-                                            <Filter className="h-4 w-4" />
-                                            Filtros
-                                            {hasActiveFilters() && (
-                                                <span className="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-xs text-primary-foreground">
-                                                    {[
-                                                        searchValue.trim() !== '' ? 1 : 0,
-                                                        localFilters.event_types.length,
-                                                        localFilters.user_ids.length,
-                                                        localFilters.dateRange?.from || localFilters.dateRange?.to ? 1 : 0,
-                                                    ].reduce((a, b) => a + b, 0)}
-                                                </span>
-                                            )}
-                                        </Button>
-                                    </SheetTrigger>
-                                    <SheetContent className="w-full overflow-y-auto sm:w-[480px]">
-                                        <SheetHeader>
-                                            <SheetTitle>Filtros de Actividad</SheetTitle>
-                                            <SheetDescription>Configura los filtros para buscar actividades específicas</SheetDescription>
-                                        </SheetHeader>
-
-                                        <div className="space-y-6 pt-6">
-                                            {/* Búsqueda */}
-                                            <div className="space-y-2">
-                                                <Label className="text-sm font-medium">Buscar</Label>
-                                                <div className="relative">
-                                                    <Input
-                                                        placeholder="Buscar por nombre, descripción, tipo de evento..."
-                                                        value={searchValue}
-                                                        onChange={(e) => setSearchValue(e.target.value)}
-                                                        className="w-full pl-9"
-                                                    />
-                                                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
-                                                </div>
-                                            </div>
-
-                                            {/* Tipo de Evento */}
-                                            <div className="space-y-3">
-                                                <Label className="text-sm font-medium">Tipo de Evento</Label>
-                                                <ScrollArea className="h-48 rounded-md border p-3">
-                                                    <div className="space-y-3">
-                                                        {Object.entries(options.event_types).map(([key, label]) => (
-                                                            <div key={key} className="flex items-center space-x-3">
-                                                                <Checkbox
-                                                                    id={`event-${key}`}
-                                                                    checked={localFilters.event_types.includes(key)}
-                                                                    onCheckedChange={(checked) => handleEventTypeChange(key, checked as boolean)}
-                                                                />
-                                                                <Label htmlFor={`event-${key}`} className="flex-1 cursor-pointer text-sm">
-                                                                    {label}
-                                                                </Label>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </ScrollArea>
-                                            </div>
-
-                                            {/* Usuario */}
-                                            <div className="space-y-3">
-                                                <Label className="text-sm font-medium">Usuario</Label>
-                                                <div className="space-y-2">
-                                                    <Input
-                                                        placeholder="Buscar usuarios..."
-                                                        value={userSearchTerm}
-                                                        onChange={(e) => setUserSearchTerm(e.target.value)}
-                                                    />
-                                                    <ScrollArea className="h-48 rounded-md border p-3">
-                                                        <div className="space-y-3">
-                                                            {filteredUsers.map((user) => (
-                                                                <div key={user.id} className="flex items-center space-x-3">
-                                                                    <Checkbox
-                                                                        id={`user-${user.id}`}
-                                                                        checked={localFilters.user_ids.includes(user.id.toString())}
-                                                                        onCheckedChange={(checked) =>
-                                                                            handleUserChange(user.id.toString(), checked as boolean)
-                                                                        }
-                                                                    />
-                                                                    <Label htmlFor={`user-${user.id}`} className="flex-1 cursor-pointer text-sm">
-                                                                        <div>
-                                                                            <div className="font-medium">{user.name}</div>
-                                                                            <div className="text-xs text-muted-foreground">{user.email}</div>
-                                                                        </div>
-                                                                    </Label>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </ScrollArea>
-                                                </div>
-                                            </div>
-
-                                            {/* Rango de Fechas */}
-                                            <div className="space-y-3">
-                                                <Label className="text-sm font-medium">Rango de Fechas</Label>
-                                                <div className="space-y-3">
-                                                    <div className="space-y-2">
-                                                        <Label className="text-xs text-muted-foreground">Fecha de inicio</Label>
-                                                        <Input
-                                                            type="date"
-                                                            value={
-                                                                localFilters.dateRange?.from ? format(localFilters.dateRange.from, 'yyyy-MM-dd') : ''
-                                                            }
-                                                            onChange={(e) => {
-                                                                const date = e.target.value ? new Date(e.target.value) : undefined;
-                                                                setLocalFilters((prev) => ({
-                                                                    ...prev,
-                                                                    dateRange: {
-                                                                        from: date,
-                                                                        to:
-                                                                            prev.dateRange?.to && date && date > prev.dateRange.to
-                                                                                ? undefined
-                                                                                : prev.dateRange?.to,
-                                                                    },
-                                                                }));
-                                                            }}
-                                                            max={
-                                                                localFilters.dateRange?.to
-                                                                    ? format(localFilters.dateRange.to, 'yyyy-MM-dd')
-                                                                    : format(new Date(), 'yyyy-MM-dd')
-                                                            }
-                                                        />
-                                                    </div>
-
-                                                    <div className="space-y-2">
-                                                        <Label className="text-xs text-muted-foreground">Fecha de fin</Label>
-                                                        <Input
-                                                            type="date"
-                                                            value={localFilters.dateRange?.to ? format(localFilters.dateRange.to, 'yyyy-MM-dd') : ''}
-                                                            onChange={(e) => {
-                                                                const date = e.target.value ? new Date(e.target.value) : undefined;
-                                                                setLocalFilters((prev) => ({
-                                                                    ...prev,
-                                                                    dateRange: {
-                                                                        from: prev.dateRange?.from,
-                                                                        to: date,
-                                                                    },
-                                                                }));
-                                                            }}
-                                                            min={
-                                                                localFilters.dateRange?.from
-                                                                    ? format(localFilters.dateRange.from, 'yyyy-MM-dd')
-                                                                    : undefined
-                                                            }
-                                                            max={format(new Date(), 'yyyy-MM-dd')}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Registros por página */}
-                                            <div className="space-y-2">
-                                                <Label className="text-sm font-medium">Registros por página</Label>
-                                                <Select
-                                                    value={localFilters.per_page.toString()}
-                                                    onValueChange={(value) => {
-                                                        const newPerPage = parseInt(value);
-                                                        setLocalFilters((prev) => ({
-                                                            ...prev,
-                                                            per_page: newPerPage,
-                                                        }));
-                                                    }}
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {options.per_page_options.map((option) => (
-                                                            <SelectItem key={option} value={option.toString()}>
-                                                                {option}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-
-                                        {/* Botones de acción en el Sheet */}
-                                        <div className="mt-6 flex flex-col gap-2 border-t pt-6">
-                                            <Button onClick={applyFilters} disabled={isLoading} className="w-full">
-                                                <Search className="mr-2 h-4 w-4" />
-                                                {isLoading ? 'Aplicando...' : 'Aplicar Filtros'}
+                            </div>
+                            
+                            {/* Filtros integrados en el header */}
+                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 pt-2">
+                                {/* Tipo de Evento con Dialog */}
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium text-muted-foreground">Tipo de Evento</Label>
+                                    <Dialog open={eventTypesOpen} onOpenChange={setEventTypesOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button 
+                                                variant="outline" 
+                                                className="w-full justify-between h-9 text-left font-normal transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                            >
+                                                <span className="truncate">{getEventTypesText()}</span>
+                                                <Filter className="ml-2 h-4 w-4 text-muted-foreground" />
                                             </Button>
-                                            {hasActiveFilters() && (
-                                                <Button variant="outline" onClick={clearFilters} className="w-full">
-                                                    <X className="mr-2 h-4 w-4" />
-                                                    Limpiar Filtros
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </SheetContent>
-                                </Sheet>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-md">
+                                            <DialogHeader>
+                                                <DialogTitle>Seleccionar Tipos de Evento</DialogTitle>
+                                                <DialogDescription>
+                                                    Marca los tipos de evento que deseas filtrar
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <ScrollArea className="h-64">
+                                                <div className="space-y-3 p-2">
+                                                    {Object.entries(options.event_types).map(([key, label]) => (
+                                                        <div key={key} className="flex items-center space-x-3">
+                                                            <Checkbox
+                                                                id={`event-${key}`}
+                                                                checked={localFilters.event_types.includes(key)}
+                                                                onCheckedChange={(checked) => 
+                                                                    handleEventTypeChange(key, checked as boolean)
+                                                                }
+                                                            />
+                                                            <Label 
+                                                                htmlFor={`event-${key}`}
+                                                                className="text-sm cursor-pointer"
+                                                            >
+                                                                {label}
+                                                            </Label>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </ScrollArea>
+                                        </DialogContent>
+                                    </Dialog>
+                                </div>
+
+                                {/* Usuario con Dialog */}
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium text-muted-foreground">Usuario</Label>
+                                    <Dialog open={usersOpen} onOpenChange={setUsersOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button 
+                                                variant="outline" 
+                                                className="w-full justify-between h-9 text-left font-normal transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                            >
+                                                <span className="truncate">{getUsersText()}</span>
+                                                <Users className="ml-2 h-4 w-4 text-muted-foreground" />
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-md">
+                                            <DialogHeader>
+                                                <DialogTitle>Seleccionar Usuarios</DialogTitle>
+                                                <DialogDescription>
+                                                    Marca los usuarios que deseas filtrar
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            {/* Buscador de usuarios */}
+                                            <div className="mb-4">
+                                                <Input
+                                                    placeholder="Buscar usuarios..."
+                                                    value={userSearchTerm}
+                                                    onChange={(e) => setUserSearchTerm(e.target.value)}
+                                                    className="w-full"
+                                                />
+                                            </div>
+                                            <ScrollArea className="h-64">
+                                                <div className="space-y-3 p-2">
+                                                    {filteredUsers.map((user) => (
+                                                        <div key={user.id} className="flex items-center space-x-3">
+                                                            <Checkbox
+                                                                id={`user-${user.id}`}
+                                                                checked={localFilters.user_ids.includes(user.id.toString())}
+                                                                onCheckedChange={(checked) => 
+                                                                    handleUserChange(user.id.toString(), checked as boolean)
+                                                                }
+                                                            />
+                                                            <Label 
+                                                                htmlFor={`user-${user.id}`}
+                                                                className="text-sm cursor-pointer"
+                                                            >
+                                                                <div>
+                                                                    <div className="font-medium">{user.name}</div>
+                                                                    <div className="text-xs text-muted-foreground">{user.email}</div>
+                                                                </div>
+                                                            </Label>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </ScrollArea>
+                                        </DialogContent>
+                                    </Dialog>
+                                </div>
+
+                                {/* Rango de Fechas con inputs nativos mejorados */}
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium text-muted-foreground">Rango de Fechas</Label>
+                                    <Dialog open={dateRangeOpen} onOpenChange={setDateRangeOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button 
+                                                variant="outline" 
+                                                className="w-full justify-between h-9 text-left font-normal transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                            >
+                                                <span className="truncate">
+                                                    {localFilters.dateRange?.from && localFilters.dateRange?.to 
+                                                        ? `${format(localFilters.dateRange.from, "dd/MM/yyyy", { locale: es })} - ${format(localFilters.dateRange.to, "dd/MM/yyyy", { locale: es })}`
+                                                        : "Seleccionar fechas..."
+                                                    }
+                                                </span>
+                                                <CalendarIcon className="ml-2 h-4 w-4 text-muted-foreground" />
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-md">
+                                            <DialogHeader>
+                                                <DialogTitle>Seleccionar Rango de Fechas</DialogTitle>
+                                                <DialogDescription>
+                                                    Selecciona el período de fechas para filtrar los eventos
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <div className="space-y-4 p-4">
+                                                {/* Fecha de inicio */}
+                                                <div className="space-y-2">
+                                                    <Label className="text-sm font-medium text-foreground">Fecha de inicio</Label>
+                                                    <Input
+                                                        type="date"
+                                                        value={localFilters.dateRange?.from ? format(localFilters.dateRange.from, 'yyyy-MM-dd') : ''}
+                                                        onChange={(e) => {
+                                                            const date = e.target.value ? new Date(e.target.value) : undefined;
+                                                            setLocalFilters(prev => ({
+                                                                ...prev,
+                                                                dateRange: {
+                                                                    from: date,
+                                                                    to: prev.dateRange?.to && date && date > prev.dateRange.to ? undefined : prev.dateRange?.to
+                                                                }
+                                                            }));
+                                                        }}
+                                                        max={localFilters.dateRange?.to ? format(localFilters.dateRange.to, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')}
+                                                        className="h-9 text-sm transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                                    />
+                                                </div>
+                                                
+                                                {/* Fecha de fin */}
+                                                <div className="space-y-2">
+                                                    <Label className="text-sm font-medium text-foreground">Fecha de fin</Label>
+                                                    <Input
+                                                        type="date"
+                                                        value={localFilters.dateRange?.to ? format(localFilters.dateRange.to, 'yyyy-MM-dd') : ''}
+                                                        onChange={(e) => {
+                                                            const date = e.target.value ? new Date(e.target.value) : undefined;
+                                                            setLocalFilters(prev => ({
+                                                                ...prev,
+                                                                dateRange: {
+                                                                    from: prev.dateRange?.from,
+                                                                    to: date
+                                                                }
+                                                            }));
+                                                        }}
+                                                        min={localFilters.dateRange?.from ? format(localFilters.dateRange.from, 'yyyy-MM-dd') : undefined}
+                                                        max={format(new Date(), 'yyyy-MM-dd')}
+                                                        className="h-9 text-sm transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+                                </div>
+
+                                {/* Por página */}
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium text-muted-foreground">Registros por página</Label>
+                                    <Select
+                                        value={localFilters.per_page.toString()}
+                                        onValueChange={(value) => {
+                                            const newPerPage = parseInt(value);
+                                            setLocalFilters(prev => ({ 
+                                                ...prev, 
+                                                per_page: newPerPage 
+                                            }));
+                                            
+                                            // Aplicar filtros automáticamente cuando cambia la paginación
+                                            const filterParams = {
+                                                search: searchValue,
+                                                event_type: localFilters.event_types.join(','),
+                                                user_id: localFilters.user_ids.join(','),
+                                                start_date: localFilters.dateRange?.from ? format(localFilters.dateRange.from, 'yyyy-MM-dd') : '',
+                                                end_date: localFilters.dateRange?.to ? format(localFilters.dateRange.to, 'yyyy-MM-dd') : '',
+                                                per_page: newPerPage,
+                                            };
+                                            
+                                            router.get('/activity', filterParams, {
+                                                preserveState: true,
+                                                preserveScroll: true,
+                                            });
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full h-9 transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {options.per_page_options.map((option) => (
+                                                <SelectItem key={option} value={option.toString()}>
+                                                    {option}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            {/* Barra de búsqueda y botones en la misma fila */}
+                            <div className="flex flex-col lg:flex-row gap-4 pt-4">
+                                {/* Barra de búsqueda */}
+                                <div className="flex-1 space-y-2 max-w-md">
+                                    <Label className="text-sm font-medium text-muted-foreground">Buscar</Label>
+                                    <div className="relative">
+                                        <Input
+                                            placeholder="Buscar por nombre, descripción, tipo de evento..."
+                                            value={searchValue}
+                                            onChange={(e) => setSearchValue(e.target.value)}
+                                            className="w-full h-9 pl-9 text-base transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                        />
+                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    </div>
+                                </div>
+
+                                {/* Botones de acción */}
+                                <div className="flex flex-col sm:flex-row gap-2 lg:flex-shrink-0 lg:items-end">
+                                    <Button 
+                                        onClick={applyFilters}
+                                        className="px-6 py-2 font-medium transition-all duration-200 w-full sm:w-auto h-9"
+                                        size="default"
+                                    >
+                                        <Search className="mr-2 h-4 w-4" />
+                                        Aplicar Filtros
+                                    </Button>
+                                    {hasActiveFilters() && (
+                                        <Button 
+                                            variant="outline" 
+                                            onClick={clearFilters}
+                                            className="px-6 py-2 font-medium transition-all duration-200 w-full sm:w-auto h-9"
+                                            size="default"
+                                        >
+                                            <X className="mr-2 h-4 w-4" />
+                                            Limpiar Filtros
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </CardHeader>

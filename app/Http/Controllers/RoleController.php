@@ -23,9 +23,11 @@ class RoleController extends Controller
      */
     public function index(Request $request): Response
     {
-        // Obtener parámetros de paginación
+        // Obtener parámetros de paginación y ordenamiento
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search', '');
+        $sortField = $request->get('sort_field', 'name');
+        $sortDirection = $request->get('sort_direction', 'asc');
 
         // Query base con eager loading optimizado
         $query = Role::with([
@@ -48,10 +50,18 @@ class RoleController extends Controller
             });
         }
 
+        // Aplicar ordenamiento
+        if ($sortField === 'name') {
+            $query->orderBy('name', $sortDirection);
+        } elseif ($sortField === 'created_at') {
+            $query->orderBy('created_at', $sortDirection);
+        } else {
+            // Ordenamiento por defecto: roles del sistema primero, luego por nombre
+            $query->orderBy('is_system', 'desc')->orderBy('name', 'asc');
+        }
+
         // Paginar y obtener roles
-        $roles = $query->orderBy('is_system', 'desc')
-            ->orderBy('name')
-            ->paginate($perPage)
+        $roles = $query->paginate($perPage)
             ->appends($request->all()) // ✅ SOLUCIÓN: Preservar filtros en paginación
             ->through(function ($role) {
                 return [
@@ -88,6 +98,8 @@ class RoleController extends Controller
             'filters' => [
                 'search' => $search,
                 'per_page' => $perPage,
+                'sort_field' => $sortField,
+                'sort_direction' => $sortDirection,
             ],
             'roleStats' => $roleStats,
         ]);

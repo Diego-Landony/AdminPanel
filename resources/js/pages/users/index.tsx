@@ -198,6 +198,12 @@ export default function UsersIndex({ users, total_users, online_users, filters }
     const [sortField, setSortField] = useState<string | null>(filters.sort_field || null);
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(filters.sort_direction || 'asc');
 
+    // Sincronizar estado de ordenamiento con los filtros del backend
+    useEffect(() => {
+        setSortField(filters.sort_field || null);
+        setSortDirection(filters.sort_direction || 'asc');
+    }, [filters.sort_field, filters.sort_direction]);
+
     // Función para manejar ordenamiento
     const handleSort = (field: string) => {
         const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
@@ -310,7 +316,9 @@ export default function UsersIndex({ users, total_users, online_users, filters }
         router.get(route('users.index'), { 
             page: page,
             search: searchValue,
-            per_page: perPage
+            per_page: perPage,
+            sort_field: sortField,
+            sort_direction: sortDirection
         }, { 
             preserveState: true,
             preserveScroll: true

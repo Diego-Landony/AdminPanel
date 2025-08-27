@@ -1,7 +1,7 @@
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 import AppLayout from '@/layouts/app-layout';
@@ -22,7 +22,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Shield, Plus, Search, Users, UserCheck, X } from 'lucide-react';
+import { Shield, Plus, Search, Users, UserCheck, X, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { RolesSkeleton } from '@/components/skeletons';
 import { ActionsMenu } from '@/components/ActionsMenu';
 
@@ -80,6 +80,8 @@ interface RolesIndexProps {
     filters: {
         search: string;
         per_page: number;
+        sort_field?: string;
+        sort_direction?: 'asc' | 'desc';
     };
     roleStats?: {
         total: number;
@@ -99,6 +101,48 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
     
     // Estado para el loading
     const [isLoading, setIsLoading] = useState(false);
+    
+    // Estado para ordenamiento
+    const [sortField, setSortField] = useState<string | null>(filters.sort_field || null);
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(filters.sort_direction || 'asc');
+
+    // Sincronizar estado de ordenamiento con los filtros del backend
+    useEffect(() => {
+        setSortField(filters.sort_field || null);
+        setSortDirection(filters.sort_direction || 'asc');
+    }, [filters.sort_field, filters.sort_direction]);
+
+    // Función para manejar ordenamiento
+    const handleSort = (field: string) => {
+        const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
+        setSortField(field);
+        setSortDirection(newDirection);
+
+        // Obtener parámetros actuales y agregar ordenamiento
+        const searchParams = new URLSearchParams(window.location.search);
+        const currentParams = Object.fromEntries(searchParams.entries());
+        
+        router.get(route('roles.index'), {
+            ...currentParams,
+            sort_field: field,
+            sort_direction: newDirection,
+            page: 1 // Resetear a página 1 cuando se ordena
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true
+        });
+    };
+
+    // Función para obtener el icono de ordenamiento
+    const getSortIcon = (field: string) => {
+        if (sortField !== field) {
+            return <ArrowUpDown className="h-3 w-3 text-gray-400 hover:text-gray-600" />;
+        }
+        return sortDirection === 'asc' 
+            ? <ArrowUp className="h-3 w-3 text-primary" />
+            : <ArrowDown className="h-3 w-3 text-primary" />;
+    };
 
     // Función para ejecutar búsqueda manualmente
     const handleSearch = () => {
@@ -154,6 +198,20 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
 
     // Auto-actualizar perPage eliminado para evitar conflictos con paginación
     // El cambio de perPage se maneja directamente en el onChange del Select
+
+    // Función helper para paginación
+    const goToPage = (page: number) => {
+        router.get(route('roles.index'), { 
+            page: page,
+            search: filters.search,
+            per_page: filters.per_page,
+            sort_field: sortField,
+            sort_direction: sortDirection
+        }, { 
+            preserveState: true,
+            preserveScroll: true
+        });
+    };
 
     const openDeleteDialog = (role: Role) => {
         setSelectedRole(role);
@@ -332,13 +390,25 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                                             <thead>
                                                 <tr className="border-b border-border">
                                                     <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
-                                                        Rol
+                                                        <button
+                                                            onClick={() => handleSort('name')}
+                                                            className="flex items-center gap-2 hover:text-foreground transition-colors"
+                                                        >
+                                                            Rol
+                                                            {getSortIcon('name')}
+                                                        </button>
                                                     </th>
                                                     <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
                                                         Descripción
                                                     </th>
                                                     <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
-                                                        Permisos
+                                                        <button
+                                                            onClick={() => handleSort('created_at')}
+                                                            className="flex items-center gap-2 hover:text-foreground transition-colors"
+                                                        >
+                                                            Fecha de Creación
+                                                            {getSortIcon('created_at')}
+                                                        </button>
                                                     </th>
                                                     <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
                                                         Usuarios
@@ -351,7 +421,7 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                                             <tbody className="divide-y divide-border/50">
                                                 {roles.data.map((role) => (
                                                     <tr key={role.id} className="hover:bg-muted/30 transition-colors">
-                                                        {/* Columna Rol */}
+                                                        {/* Columna Rol con permisos debajo */}
                                                         <td className="py-4 px-4">
                                                             <div className="flex items-center gap-3">
                                                                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -361,11 +431,16 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                                                                     <div className="font-medium text-sm text-foreground truncate">
                                                                         {role.name}
                                                                     </div>
-                                                                    {role.is_system && (
-                                                                        <Badge variant="secondary" className="text-xs px-2 py-0.5 mt-1">
-                                                                            Sistema
-                                                                        </Badge>
-                                                                    )}
+                                                                    <div className="flex items-center gap-2 mt-1">
+                                                                        {role.is_system && (
+                                                                            <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                                                                                Sistema
+                                                                            </Badge>
+                                                                        )}
+                                                                        <span className="text-xs text-muted-foreground">
+                                                                            {role.permissions.length} permiso(s)
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </td>
@@ -377,10 +452,14 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                                                             </div>
                                                         </td>
 
-                                                        {/* Columna Permisos */}
+                                                        {/* Columna Fecha de Creación */}
                                                         <td className="py-4 px-4">
                                                             <div className="text-sm text-muted-foreground">
-                                                                {role.permissions.length} permiso(s)
+                                                                {new Date(role.created_at).toLocaleDateString('es-ES', {
+                                                                    day: '2-digit',
+                                                                    month: '2-digit', 
+                                                                    year: 'numeric'
+                                                                })}
                                                             </div>
                                                         </td>
 
@@ -442,6 +521,13 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                                                             </div>
                                                             <div className="text-xs text-muted-foreground mt-1">
                                                                 {role.permissions.length} permiso(s) • {role.users_count} usuario(s)
+                                                            </div>
+                                                            <div className="text-xs text-muted-foreground">
+                                                                Creado: {new Date(role.created_at).toLocaleDateString('es-ES', {
+                                                                    day: '2-digit',
+                                                                    month: '2-digit', 
+                                                                    year: 'numeric'
+                                                                })}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -518,14 +604,7 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                                                 href="#" 
                                                 onClick={(e) => {
                                                     e.preventDefault();
-                                                    router.get('/roles', { 
-                                                        page: roles.current_page - 1,
-                                                        search: filters.search,
-                                                        per_page: filters.per_page
-                                                    }, { 
-                                                        preserveState: true,
-                                                        preserveScroll: true 
-                                                    });
+                                                    goToPage(roles.current_page - 1);
                                                 }}
                                                 className={roles.current_page <= 1 ? 'pointer-events-none opacity-50' : ''}
                                             />
@@ -539,14 +618,7 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                                                         href="#"
                                                         onClick={(e) => {
                                                             e.preventDefault();
-                                                            router.get('/roles', {
-                                                                page: 1,
-                                                                search: filters.search,
-                                                                per_page: filters.per_page
-                                                            }, {
-                                                                preserveState: true,
-                                                                preserveScroll: true
-                                                            });
+                                                            goToPage(1);
                                                         }}
                                                     >
                                                         1
@@ -571,14 +643,7 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                                                         href="#" 
                                                         onClick={(e) => {
                                                             e.preventDefault();
-                                                            router.get('/roles', { 
-                                                                page: page,
-                                                                search: filters.search,
-                                                                per_page: filters.per_page
-                                                            }, { 
-                                                                preserveState: true,
-                                                                preserveScroll: true 
-                                                            });
+                                                            goToPage(page);
                                                         }}
                                                         isActive={page === roles.current_page}
                                                     >
@@ -601,14 +666,7 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                                                         href="#"
                                                         onClick={(e) => {
                                                             e.preventDefault();
-                                                            router.get('/roles', {
-                                                                page: roles.last_page,
-                                                                search: filters.search,
-                                                                per_page: filters.per_page
-                                                            }, {
-                                                                preserveState: true,
-                                                                preserveScroll: true
-                                                            });
+                                                            goToPage(roles.last_page);
                                                         }}
                                                     >
                                                         {roles.last_page}
@@ -622,14 +680,7 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                                                 href="#" 
                                                 onClick={(e) => {
                                                     e.preventDefault();
-                                                    router.get('/roles', { 
-                                                        page: roles.current_page + 1,
-                                                        search: filters.search,
-                                                        per_page: filters.per_page
-                                                    }, { 
-                                                        preserveState: true,
-                                                        preserveScroll: true 
-                                                    });
+                                                    goToPage(roles.current_page + 1);
                                                 }}
                                                 className={roles.current_page >= roles.last_page ? 'pointer-events-none opacity-50' : ''}
                                             />

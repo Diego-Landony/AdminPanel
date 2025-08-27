@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 
-import { Shield, Plus, Search, Users, Clock, Circle, X, RefreshCw, Trash2 } from 'lucide-react';
+import { Shield, Plus, Search, Users, Clock, Circle, X, RefreshCw, Trash2, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import {
     Pagination,
     PaginationContent,
@@ -85,6 +85,8 @@ interface UsersPageProps {
     filters: {
         search: string | null;
         per_page: number;
+        sort_field?: string;
+        sort_direction?: 'asc' | 'desc';
     };
 }
 
@@ -168,17 +170,14 @@ const formatDate = (dateString: string | null): string => {
 /**
  * Página de gestión de usuarios
  * Muestra una lista de todos los usuarios del sistema con su información de actividad
- * Se actualiza automáticamente cada minuto sin recargar la página
+ * Usa paginación de Inertia sin estado local para evitar conflictos
  * Mantiene la sesión del usuario activa cada 30 segundos
  */
-export default function UsersIndex({ users: initialUsers, total_users: initialTotal, online_users: initialOnline, filters }: UsersPageProps) {
+export default function UsersIndex({ users, total_users, online_users, filters }: UsersPageProps) {
 
     
-    // Estado local para los datos que se actualizan automáticamente
-    const [users, setUsers] = useState(initialUsers);
-    const [totalUsers, setTotalUsers] = useState(initialTotal);
-    const [onlineUsers, setOnlineUsers] = useState(initialOnline);
-    const [, setLastUpdate] = useState(new Date());
+    // Usar directamente los props de Inertia para datos principales (igual que en actividad)
+    // Solo mantener estado local para UI y filtros temporales
     
     // Estado para filtros y búsqueda
     const [searchValue, setSearchValue] = useState(filters.search || '');
@@ -194,6 +193,42 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
     
     // Estado para el loading
     const [isLoading, setIsLoading] = useState(false);
+    
+    // Estado para ordenamiento
+    const [sortField, setSortField] = useState<string | null>(filters.sort_field || null);
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(filters.sort_direction || 'asc');
+
+    // Función para manejar ordenamiento
+    const handleSort = (field: string) => {
+        const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
+        setSortField(field);
+        setSortDirection(newDirection);
+
+        // Obtener parámetros actuales y agregar ordenamiento
+        const searchParams = new URLSearchParams(window.location.search);
+        const currentParams = Object.fromEntries(searchParams.entries());
+        
+        router.get(route('users.index'), {
+            ...currentParams,
+            sort_field: field,
+            sort_direction: newDirection,
+            page: 1 // Resetear a página 1 cuando se ordena
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true
+        });
+    };
+
+    // Función para obtener el icono de ordenamiento
+    const getSortIcon = (field: string) => {
+        if (sortField !== field) {
+            return <ArrowUpDown className="h-3 w-3 text-gray-400 hover:text-gray-600" />;
+        }
+        return sortDirection === 'asc' 
+            ? <ArrowUp className="h-3 w-3 text-primary" />
+            : <ArrowDown className="h-3 w-3 text-primary" />;
+    };
 
     // Función para ejecutar búsqueda manualmente
     const handleSearch = () => {
@@ -208,12 +243,7 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
-                onSuccess: (page: unknown) => {
-                    // Actualizar el estado local con los nuevos datos
-                    const response1 = page as { props: { users: UsersPageProps['users']; total_users: number; online_users: number } };
-                    setUsers(response1.props.users);
-                    setTotalUsers(response1.props.total_users);
-                    setOnlineUsers(response1.props.online_users);
+                onSuccess: () => {
                     setIsSearching(false);
                     setIsLoading(false);
                 },
@@ -238,12 +268,7 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
-                onSuccess: (page: unknown) => {
-                    // Actualizar el estado local con los nuevos datos
-                    const response1 = page as { props: { users: UsersPageProps['users']; total_users: number; online_users: number } };
-                    setUsers(response1.props.users);
-                    setTotalUsers(response1.props.total_users);
-                    setOnlineUsers(response1.props.online_users);
+                onSuccess: () => {
                     setIsSearching(false);
                     setIsLoading(false);
                 },
@@ -288,8 +313,7 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
             per_page: perPage
         }, { 
             preserveState: true,
-            preserveScroll: true,
-            replace: true
+            preserveScroll: true
         });
     };
 
@@ -320,26 +344,20 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
     };
 
     /**
-     * Función para actualizar los datos de usuarios (auto-refresh)
-     * Preserva los filtros de búsqueda actuales
+     * Función para actualizar los datos de usuarios (sincronización manual)
+     * Preserva los filtros de búsqueda actuales y la página actual
      */
     const refreshUserData = useCallback(() => {
         setIsSyncing(true);
-        router.get(route('users.index'), {
-            search: searchValue, // Usar el estado local actual
-            per_page: perPage,
-            page: 1 // Resetear a la primera página al sincronizar
-        }, {
+        // Obtener parámetros actuales de la URL para preservar estado
+        const searchParams = new URLSearchParams(window.location.search);
+        const currentParams = Object.fromEntries(searchParams.entries());
+        
+        router.get(route('users.index'), currentParams, {
             preserveState: true,
             preserveScroll: true,
             replace: true,
-            onSuccess: (page: unknown) => {
-                // Actualizar el estado local con los nuevos datos
-                const response1 = page as { props: { users: UsersPageProps['users']; total_users: number; online_users: number } };
-                setUsers(response1.props.users);
-                setTotalUsers(response1.props.total_users);
-                setOnlineUsers(response1.props.online_users);
-                setLastUpdate(new Date());
+            onSuccess: () => {
                 setLastSync(new Date());
                 setIsSyncing(false);
             },
@@ -347,19 +365,20 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                 setIsSyncing(false);
             }
         });
-    }, [searchValue, perPage]);
+    }, []);
 
     /**
-     * Efecto para actualizar automáticamente los datos cada minuto
+     * Sincronización automática deshabilitada para evitar conflictos con paginación
+     * Los datos se actualizan solo cuando el usuario hace clic en el botón de sincronización
      */
-    useEffect(() => {
-        const interval = setInterval(() => {
-            refreshUserData();
-        }, 60000); // 1 minuto
-
-        // Limpiar el intervalo cuando el componente se desmonte
-        return () => clearInterval(interval);
-    }, [refreshUserData]); // Solo ejecutar una vez al montar el componente
+    // useEffect(() => {
+    //     const interval = setInterval(() => {
+    //         refreshUserData();
+    //     }, 60000); // 1 minuto
+    //
+    //     // Limpiar el intervalo cuando el componente se desmonte
+    //     return () => clearInterval(interval);
+    // }, [refreshUserData]); // Solo ejecutar una vez al montar el componente
 
     /**
      * Efecto para mantener la sesión del usuario activa cada 30 segundos
@@ -421,17 +440,17 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                     <span className="flex items-center gap-1">
                                         <Users className="h-3 w-3 text-primary" />
-                                        <span>usuarios <span className="font-medium text-foreground">{totalUsers}</span></span>
+                                        <span>usuarios <span className="font-medium text-foreground">{total_users}</span></span>
                                     </span>
                                     <span className="text-muted-foreground/50">•</span>
                                     <span className="flex items-center gap-1">
                                         <Clock className="h-3 w-3 text-green-600" />
-                                        <span>en línea <span className="font-medium text-foreground">{onlineUsers}</span></span>
+                                        <span>en línea <span className="font-medium text-foreground">{online_users}</span></span>
                                     </span>
                                     <span className="text-muted-foreground/50">•</span>
                                     <span className="flex items-center gap-1">
                                         <Users className="h-3 w-3 text-red-600" />
-                                        <span>desconectados <span className="font-medium text-foreground">{totalUsers - onlineUsers}</span></span>
+                                        <span>desconectados <span className="font-medium text-foreground">{total_users - online_users}</span></span>
                                     </span>
                                 </div>
                                 
@@ -454,7 +473,8 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                                     <span className="text-xs">
                                         Última sincronización: {lastSync.toLocaleTimeString('es-ES', { 
                                             hour: '2-digit', 
-                                            minute: '2-digit' 
+                                            minute: '2-digit',
+                                            second: '2-digit'
                                         })}
                                     </span>
                                 </div>
@@ -569,7 +589,13 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                                             <thead>
                                                 <tr className="border-b border-border">
                                                     <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
-                                                        Usuario
+                                                        <button
+                                                            onClick={() => handleSort('name')}
+                                                            className="flex items-center gap-2 hover:text-foreground transition-colors"
+                                                        >
+                                                            Usuario
+                                                            {getSortIcon('name')}
+                                                        </button>
                                                     </th>
                                                     <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
                                                         Roles
@@ -578,7 +604,13 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                                                         Información
                                                     </th>
                                                     <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
-                                                        Estado
+                                                        <button
+                                                            onClick={() => handleSort('status')}
+                                                            className="flex items-center gap-2 hover:text-foreground transition-colors"
+                                                        >
+                                                            Estado
+                                                            {getSortIcon('status')}
+                                                        </button>
                                                     </th>
                                                     <th className="text-right py-3 px-4 font-medium text-sm text-muted-foreground">
                                                         Acciones
@@ -898,11 +930,6 @@ export default function UsersIndex({ users: initialUsers, total_users: initialTo
                                                 </PaginationItem>
                                             </PaginationContent>
                                         </Pagination>
-                                        
-                                        <div className="text-center text-sm text-muted-foreground mt-4">
-                                            Página {users.current_page} de {users.last_page} - 
-                                            Mostrando {users.from} a {users.to} de {users.total} usuarios
-                                        </div>
                                     </div>
                                 )}
                             </>

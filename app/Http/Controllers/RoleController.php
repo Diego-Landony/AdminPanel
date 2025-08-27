@@ -241,21 +241,33 @@ class RoleController extends Controller
                 'permissions' => 'array',
             ]);
 
-            $oldValues = $role->toArray();
+            // Capturar valores anteriores para el log de actividad
+            $oldValues = [
+                'name' => $role->name,
+                'description' => $role->description,
+                'permissions' => $role->permissions()->pluck('name')->toArray(),
+            ];
+            
             $newValues = $request->only(['name', 'description']);
+            $permissionNames = $request->input('permissions', []);
 
             // Si es el rol "admin", asegurar que tenga todos los permisos
             if ($role->name === 'admin') {
-                $allPermissions = Permission::pluck('id')->toArray();
-                $request->merge(['permissions' => $allPermissions]);
+                $allPermissions = Permission::pluck('name')->toArray();
+                $permissionNames = $allPermissions;
             }
 
             $role->update($newValues);
 
             // Sincronizar permisos - convertir nombres a IDs
-            $permissionNames = $request->input('permissions', []);
             $permissionIds = Permission::whereIn('name', $permissionNames)->pluck('id')->toArray();
             $role->permissions()->sync($permissionIds);
+
+            // Preparar nuevos valores para el log
+            $newValues['permissions'] = $permissionNames;
+
+            // Log de la actividad
+            $this->logRoleUpdate($role, $oldValues, $newValues);
 
             return back()->with('success', 'Rol actualizado exitosamente');
         } catch (\Illuminate\Database\QueryException $e) {
@@ -450,6 +462,68 @@ class RoleController extends Controller
             ]);
         } catch (\Exception $e) {
             \Log::error('Error al registrar actividad de usuarios de rol: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Registra la actividad de actualización de un rol
+     */
+    private function logRoleUpdate(Role $role, array $oldValues, array $newValues): void
+    {
+        try {
+            $changes = [];
+            $description = "Rol '{$role->name}' actualizado";
+
+            // Detectar cambios en nombre
+            if (isset($oldValues['name']) && isset($newValues['name']) && $oldValues['name'] !== $newValues['name']) {
+                $changes[] = "nombre: '{$oldValues['name']}' → '{$newValues['name']}'";
+            }
+
+            // Detectar cambios en descripción
+            if (isset($oldValues['description']) && isset($newValues['description']) && $oldValues['description'] !== $newValues['description']) {
+                $oldDesc = $oldValues['description'] ?: '(sin descripción)';
+                $newDesc = $newValues['description'] ?: '(sin descripción)';
+                $changes[] = "descripción: '{$oldDesc}' → '{$newDesc}'";
+            }
+
+            // Detectar cambios en permisos
+            if (isset($oldValues['permissions']) && isset($newValues['permissions'])) {
+                $oldPermissions = array_values($oldValues['permissions']);
+                $newPermissions = array_values($newValues['permissions']);
+                
+                sort($oldPermissions);
+                sort($newPermissions);
+                
+                if ($oldPermissions !== $newPermissions) {
+                    $addedPermissions = array_diff($newPermissions, $oldPermissions);
+                    $removedPermissions = array_diff($oldPermissions, $newPermissions);
+                    
+                    if (!empty($addedPermissions)) {
+                        $changes[] = "permisos agregados: " . implode(', ', $addedPermissions);
+                    }
+                    
+                    if (!empty($removedPermissions)) {
+                        $changes[] = "permisos removidos: " . implode(', ', $removedPermissions);
+                    }
+                }
+            }
+
+            // Si hay cambios, agregar al descripción
+            if (!empty($changes)) {
+                $description .= " - " . implode(', ', $changes);
+            }
+
+            ActivityLog::create([
+                'user_id' => auth()->id(),
+                'event_type' => 'role_updated',
+                'target_model' => 'Role',
+                'target_id' => $role->id,
+                'description' => $description,
+                'old_values' => $oldValues,
+                'new_values' => $newValues,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error al registrar actividad de actualización de rol: '.$e->getMessage());
         }
     }
 }

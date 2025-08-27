@@ -314,25 +314,86 @@ const getEnhancedDescription = (activity: ActivityData): React.ReactElement => {
 
     // Para roles actualizados
     if (activity.event_type === 'role_updated') {
-        const oldName = (oldValues.name as string) || '';
-        const newName = (newValues.name as string) || '';
-
-        if (oldName && newName) {
+        // Buscar patrones específicos en la descripción para resaltar cambios
+        const descriptionText = description;
+        
+        // Patrón para cambios de nombre: "nombre: 'viejo' → 'nuevo'"
+        const nameMatch = descriptionText.match(/nombre:\s*'([^']+)'\s*→\s*'([^']+)'/);
+        if (nameMatch) {
+            const [, oldName, newName] = nameMatch;
+            const restOfDescription = descriptionText.replace(nameMatch[0], '').replace(/^[^-]*-\s*/, '').trim();
+            
+            return (
+                <span>
+                    {"Rol actualizado - nombre: '"}
+                    <HighlightedText text={oldName} type="old" />
+                    {"' → '"}
+                    <HighlightedText text={newName} type="new" />
+                    {"'"}
+                    {restOfDescription && `, ${restOfDescription}`}
+                </span>
+            );
+        }
+        
+        // Patrón para cambios de descripción: "descripción: 'vieja' → 'nueva'"
+        const descMatch = descriptionText.match(/descripción:\s*'([^']+)'\s*→\s*'([^']+)'/);
+        if (descMatch) {
+            const [, oldDesc, newDesc] = descMatch;
+            const beforeMatch = descriptionText.substring(0, descriptionText.indexOf(descMatch[0]));
+            const afterMatch = descriptionText.substring(descriptionText.indexOf(descMatch[0]) + descMatch[0].length);
+            
+            return (
+                <span>
+                    {beforeMatch && beforeMatch.replace(/^[^-]*-\s*/, '').replace(/,\s*$/, '')}
+                    {beforeMatch && ', '}
+                    {"descripción: '"}
+                    <HighlightedText text={oldDesc} type="old" />
+                    {"' → '"}
+                    <HighlightedText text={newDesc} type="new" />
+                    {"'"}
+                    {afterMatch && `, ${afterMatch.replace(/^,\s*/, '')}`}
+                </span>
+            );
+        }
+        
+        // Patrón para permisos agregados: "permisos agregados: perm1, perm2"
+        const addedPermsMatch = descriptionText.match(/permisos agregados:\s*([^,]+(?:,[^,]+)*)/);
+        const removedPermsMatch = descriptionText.match(/permisos removidos:\s*([^,]+(?:,[^,]+)*)/);
+        
+        if (addedPermsMatch || removedPermsMatch) {
+            const roleName = descriptionText.match(/Rol '([^']+)' actualizado/)?.[1] || 'rol';
+            
             return (
                 <span>
                     {"Rol '"}
-                    <HighlightedText text={oldName} type="old" />
-                    {"' fue actualizado a '"}
-                    <HighlightedText text={newName} type="new" />
-                    {"'"}
+                    <HighlightedText text={roleName} type="new" />
+                    {"' actualizado"}
+                    {addedPermsMatch && (
+                        <span>
+                            {" - permisos agregados: "}
+                            <HighlightedText text={addedPermsMatch[1]} type="new" />
+                        </span>
+                    )}
+                    {removedPermsMatch && (
+                        <span>
+                            {addedPermsMatch ? ", " : " - "}
+                            {"permisos removidos: "}
+                            <HighlightedText text={removedPermsMatch[1]} type="old" />
+                        </span>
+                    )}
                 </span>
             );
-        } else if (newName) {
+        }
+        
+        // Patrón básico para rol actualizado
+        const roleMatch = descriptionText.match(/Rol '([^']+)' actualizado/);
+        if (roleMatch) {
+            const [, roleName] = roleMatch;
             return (
                 <span>
-                    {"Nuevo rol '"}
-                    <HighlightedText text={newName} type="new" />
-                    {"' fue creado"}
+                    {"Rol '"}
+                    <HighlightedText text={roleName} type="new" />
+                    {"' fue actualizado"}
                 </span>
             );
         }
@@ -413,6 +474,40 @@ const getEnhancedDescription = (activity: ActivityData): React.ReactElement => {
                     <HighlightedText text={oldName} type="old" />
                     {"' fue eliminado"}
                     {activity.event_type === 'role_force_deleted' && ' permanentemente'}
+                </span>
+            );
+        }
+    }
+
+    // Para usuarios de rol actualizados
+    if (activity.event_type === 'role_users_updated') {
+        // Extraer información del description para resaltar nombres de usuarios y roles
+        const match = description.match(/Usuarios actualizados para el rol '([^']+)'(.*)/);
+        if (match) {
+            const roleName = match[1];
+            const details = match[2];
+            
+            // Extraer usuarios agregados
+            const addedMatch = details.match(/- Agregados: ([^-]+)/);
+            const removedMatch = details.match(/- Removidos: (.+)$/);
+            
+            return (
+                <span>
+                    {"Usuarios actualizados para el rol '"}
+                    <HighlightedText text={roleName} type="new" />
+                    {"'"}
+                    {addedMatch && (
+                        <span>
+                            {" - Agregados: "}
+                            <HighlightedText text={addedMatch[1].trim()} type="new" />
+                        </span>
+                    )}
+                    {removedMatch && (
+                        <span>
+                            {" - Removidos: "}
+                            <HighlightedText text={removedMatch[1].trim()} type="old" />
+                        </span>
+                    )}
                 </span>
             );
         }

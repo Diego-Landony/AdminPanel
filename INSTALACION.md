@@ -106,12 +106,4 @@ php artisan migrate:fresh --seed
 
 ---
 
-## 🌟 ¡Listo para usar!
 
-El sistema incluye:
-- Usuario administrador preconfigurado
-- Todos los permisos automáticamente asignados
-- Base de datos optimizada con índices
-- Estructura de archivos limpia y organizada
-
-¡Disfruta usando Videra! 🎉

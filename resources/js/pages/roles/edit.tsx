@@ -218,11 +218,37 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Contenedor con ancho máximo para hacer el contenido más angosto */}
                     <div className="mx-auto max-w-4xl">
-                        {/* Botón de gestión de usuarios en la parte superior izquierda */}
-                        <div className="mb-6">
+                        {/* Información básica del rol */}
+                        <div className="space-y-6">
+                            <FormField label="Nombre del Rol" error={errors.name}>
+                                <Input
+                                    id="name"
+                                    type="text"
+                                    value={data.name}
+                                    onChange={(e) => setData('name', e.target.value)}
+                                    placeholder="ej: Gerente"
+                                    disabled={isAdminRole}
+                                    className={isAdminRole ? 'cursor-not-allowed opacity-50' : ''}
+                                />
+                            </FormField>
+
+                            <FormField label="Descripción" error={errors.description}>
+                                <Textarea
+                                    id="description"
+                                    value={data.description}
+                                    onChange={(e) => setData('description', e.target.value)}
+                                    placeholder="Describe las responsabilidades y alcance de este rol..."
+                                    className={`min-h-[100px] ${isAdminRole ? 'cursor-not-allowed opacity-50' : ''}`}
+                                    disabled={isAdminRole}
+                                />
+                            </FormField>
+                        </div>
+
+                        {/* Botón de gestión de usuarios */}
+                        <div className="flex justify-start py-6">
                             <Sheet open={isUserSheetOpen} onOpenChange={setIsUserSheetOpen}>
                                 <SheetTrigger asChild>
-                                    <Button variant="outline" size="sm">
+                                    <Button variant="outline">
                                         <Users className="mr-2 h-4 w-4" />
                                         Gestionar Usuarios del Rol
                                     </Button>
@@ -287,32 +313,6 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                                     </div>
                                 </SheetContent>
                             </Sheet>
-                        </div>
-
-                        {/* Información básica del rol */}
-                        <div className="space-y-6">
-                            <FormField label="Nombre del Rol" error={errors.name}>
-                                <Input
-                                    id="name"
-                                    type="text"
-                                    value={data.name}
-                                    onChange={(e) => setData('name', e.target.value)}
-                                    placeholder="ej: Gerente"
-                                    disabled={isAdminRole}
-                                    className={isAdminRole ? 'cursor-not-allowed opacity-50' : ''}
-                                />
-                            </FormField>
-
-                            <FormField label="Descripción" error={errors.description}>
-                                <Textarea
-                                    id="description"
-                                    value={data.description}
-                                    onChange={(e) => setData('description', e.target.value)}
-                                    placeholder="Describe las responsabilidades y alcance de este rol..."
-                                    className={`min-h-[100px] ${isAdminRole ? 'cursor-not-allowed opacity-50' : ''}`}
-                                    disabled={isAdminRole}
-                                />
-                            </FormField>
                         </div>
 
                         {/* Permisos */}

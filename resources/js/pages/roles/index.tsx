@@ -152,22 +152,8 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
         }
     };
 
-    // Auto-actualizar perPage cuando cambie
-    useEffect(() => {
-        if (parseInt(perPage) !== filters.per_page) {
-            router.get(route('roles.index'), 
-                { 
-                    search: filters.search,
-                    per_page: perPage 
-                }, 
-                { 
-                    preserveState: true,
-                    preserveScroll: true,
-                    replace: true 
-                }
-            );
-        }
-    }, [perPage, filters.per_page, filters.search]);
+    // Auto-actualizar perPage eliminado para evitar conflictos con paginación
+    // El cambio de perPage se maneja directamente en el onChange del Select
 
     const openDeleteDialog = (role: Role) => {
         setSelectedRole(role);
@@ -304,7 +290,20 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                                     <Label className="text-sm text-muted-foreground whitespace-nowrap">
                                         Mostrar
                                     </Label>
-                                    <Select value={perPage} onValueChange={setPerPage}>
+                                    <Select value={perPage} onValueChange={(value) => {
+                                        setPerPage(value);
+                                        router.get(route('roles.index'), 
+                                            { 
+                                                search: filters.search,
+                                                per_page: value 
+                                            }, 
+                                            { 
+                                                preserveState: true,
+                                                preserveScroll: true,
+                                                replace: true 
+                                            }
+                                        );
+                                    }}>
                                         <SelectTrigger className="h-9 w-20">
                                             <SelectValue />
                                         </SelectTrigger>
@@ -532,8 +531,40 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                                             />
                                         </PaginationItem>
                                         
-                                        {Array.from({ length: Math.min(5, roles.last_page) }, (_, i) => {
-                                            const page = i + 1;
+                                        {/* Primera página */}
+                                        {roles.current_page > 3 && (
+                                            <>
+                                                <PaginationItem>
+                                                    <PaginationLink
+                                                        href="#"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            router.get('/roles', {
+                                                                page: 1,
+                                                                search: filters.search,
+                                                                per_page: filters.per_page
+                                                            }, {
+                                                                preserveState: true,
+                                                                preserveScroll: true
+                                                            });
+                                                        }}
+                                                    >
+                                                        1
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                                {roles.current_page > 4 && (
+                                                    <PaginationItem>
+                                                        <PaginationEllipsis />
+                                                    </PaginationItem>
+                                                )}
+                                            </>
+                                        )}
+
+                                        {/* Páginas alrededor de la actual */}
+                                        {Array.from({ length: Math.min(3, roles.last_page) }, (_, i) => {
+                                            const page = roles.current_page - 1 + i;
+                                            if (page < 1 || page > roles.last_page) return null;
+
                                             return (
                                                 <PaginationItem key={page}>
                                                     <PaginationLink 
@@ -556,11 +587,34 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                                                 </PaginationItem>
                                             );
                                         })}
-                                        
-                                        {roles.last_page > 5 && (
-                                            <PaginationItem>
-                                                <PaginationEllipsis />
-                                            </PaginationItem>
+
+                                        {/* Última página */}
+                                        {roles.current_page < roles.last_page - 2 && (
+                                            <>
+                                                {roles.current_page < roles.last_page - 3 && (
+                                                    <PaginationItem>
+                                                        <PaginationEllipsis />
+                                                    </PaginationItem>
+                                                )}
+                                                <PaginationItem>
+                                                    <PaginationLink
+                                                        href="#"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            router.get('/roles', {
+                                                                page: roles.last_page,
+                                                                search: filters.search,
+                                                                per_page: filters.per_page
+                                                            }, {
+                                                                preserveState: true,
+                                                                preserveScroll: true
+                                                            });
+                                                        }}
+                                                    >
+                                                        {roles.last_page}
+                                                    </PaginationLink>
+                                                </PaginationItem>
+                                            </>
                                         )}
                                         
                                         <PaginationItem>

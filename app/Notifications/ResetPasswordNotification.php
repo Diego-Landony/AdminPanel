@@ -30,7 +30,12 @@ class ResetPasswordNotification extends ResetPassword
         ], false));
 
         return (new MailMessage)
-            ->subject('Restablecer Contraseña - '.config('app.name'))
-            ->view('emails.reset-password', ['url' => $url]);
+            ->subject(__('passwords.subject'))
+            ->greeting(__('passwords.greeting'))
+            ->line(__('passwords.body'))
+            ->action(__('passwords.action'), $url)
+            ->line(__('passwords.expire', ['count' => config('auth.passwords.'.config('auth.defaults.passwords').'.expire')]))
+            ->line(__('passwords.footer'))
+            ->salutation(__('passwords.salutation').' '.config('app.name'));
     }
 }

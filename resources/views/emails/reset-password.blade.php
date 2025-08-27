@@ -100,7 +100,7 @@
         }
         
         .cta-button:focus {
-            outline: 2px solid #008938;
+            outline: 2px solid #01757bff;
             outline-offset: 2px;
         }
         
@@ -145,6 +145,8 @@
             box-sizing: border-box;
             overflow-wrap: break-word;
             word-wrap: break-word;
+            white-space: normal;
+            overflow-x: auto;
         }
         
         .url-text {
@@ -155,6 +157,8 @@
             line-height: 1.4;
             max-width: 100%;
             overflow-wrap: break-word;
+            white-space: normal;
+            display: block;
         }
         
         .footer {
@@ -239,7 +243,7 @@
                 </div>
                 
                 <div class="url-container">
-                    <div class="url-text">{{ $url }}</div>
+                    <span class="url-text">{{ $url }}</span>
                 </div>
             </div>
         </div>

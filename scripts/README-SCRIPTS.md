@@ -55,7 +55,7 @@ Una vez iniciado el servidor, puedes acceder desde:
 
 - **🌐 Local:** `http://localhost:8000`
 - **🌐 Red:** `http://[IP-DEL-SERVIDOR]:8000`
-- **🌐 Dominio:** `https://videra.subwaycardgt.com`
+- **🌐 Dominio:** `https://dashboard.subwaycardgt.com`
 
 ## 🔧 Configuración
 

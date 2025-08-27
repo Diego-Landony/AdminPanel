@@ -69,7 +69,20 @@ function SidebarProvider({
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
-  const [_open, _setOpen] = React.useState(defaultOpen)
+  const [_open, _setOpen] = React.useState<boolean>(() => {
+    try {
+      // Try to read the cookie and initialize state from it so sidebar
+      // collapsed/expanded state persists across page navigations.
+      const match = document.cookie.match(new RegExp('(^| )' + SIDEBAR_COOKIE_NAME + '=([^;]+)'))
+      if (match && typeof match[2] !== 'undefined') {
+        return match[2] === 'true'
+      }
+    } catch (e) {
+      // If for any reason we can't access cookies (SSR or privacy settings), fall back
+    }
+
+    return defaultOpen
+  })
   const open = openProp ?? _open
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {

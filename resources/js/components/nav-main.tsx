@@ -70,6 +70,8 @@ function GroupItem({ item }: { item: NavItem }) {
         if (isSubItemActive) setOpen(true)
     }, [isSubItemActive])
 
+    const [dropdownOpen, setDropdownOpen] = React.useState<boolean>(false)
+
     const firstHref = item.items?.[0]?.href
 
     return (
@@ -79,12 +81,13 @@ function GroupItem({ item }: { item: NavItem }) {
                     // When sidebar is collapsed, show a click-triggered dropdown that
                     // only contains the children. The button itself does not navigate.
                     <>
-                        <DropdownMenu>
+                        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
                             <DropdownMenuTrigger asChild>
-                                <SidebarMenuButton asChild isActive={!!isSubItemActive}>
-                                    <div className="flex items-center">
+                                <SidebarMenuButton asChild isActive={!!isSubItemActive} tooltip={{ children: item.title }}>
+                                    <div className="flex items-center w-full">
                                         {item.icon && <item.icon className="mr-2 h-4 w-4" />}
                                         <span>{item.title}</span>
+                                        <ChevronRight className={`ml-auto size-4 transition-transform ${dropdownOpen ? 'rotate-90' : ''}`} />
                                     </div>
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>

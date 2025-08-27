@@ -77,7 +77,7 @@ function SidebarProvider({
       if (match && typeof match[2] !== 'undefined') {
         return match[2] === 'true'
       }
-    } catch (e) {
+    } catch {
       // If for any reason we can't access cookies (SSR or privacy settings), fall back
     }
 

@@ -14,7 +14,7 @@ import { SidebarMenuAction } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { ChevronRight } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import {
     DropdownMenu,
     DropdownMenuTrigger,
@@ -23,6 +23,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export function NavMain({ items = [] }: { items: NavItem[] }) {
+    const page = usePage();
+    
     return (
         <SidebarGroup className="px-2 py-0">
             <SidebarGroupLabel>Menú</SidebarGroupLabel>
@@ -37,7 +39,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                         <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton
                                 asChild
-                                isActive={item.href ? usePage().url.startsWith(item.href) : false}
+                                isActive={item.href ? page.url.startsWith(item.href) : false}
                                 tooltip={{ children: item.title }}
                             >
                                 <Link href={item.href || '#'} prefetch>
@@ -72,7 +74,6 @@ function GroupItem({ item }: { item: NavItem }) {
 
     const [dropdownOpen, setDropdownOpen] = React.useState<boolean>(false)
 
-    const firstHref = item.items?.[0]?.href
 
     return (
         <Collapsible key={item.title} open={open} onOpenChange={setOpen} className="group/collapsible">

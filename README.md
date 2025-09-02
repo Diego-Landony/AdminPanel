@@ -15,7 +15,6 @@ Dashboard web para gestión de usuarios, roles y permisos con seguimiento de act
     - php8.3-zip
 - Node.js 18+ y npm
 - Composer 2+
-- Servidor web (Caddy/Nginx/Apache)
 
 ### Requisitos de Base de Datos
 - SQLite 3
@@ -47,7 +46,7 @@ cd AdminSubwayApp
 # Instalar dependencias de producción
 composer install --no-dev --optimize-autoloader
 npm install
-npm run build
+npm run build # Compila los assets para producción
 
 # Configuración del entorno
 cp .env.example .env
@@ -63,6 +62,9 @@ chown www-data:www-data database/database.sqlite
 
 # Ejecutar migraciones
 php artisan migrate --force
+
+# Compilar los assets para producción
+npm run build
 ```
 
 ### 4. Optimizaciones para Producción
@@ -78,9 +80,28 @@ sudo chmod -R 775 storage bootstrap/cache
 ```
 
 ### Acceso
-- **URL**: http://localhost:8000
-- **Usuario**: admin@admin.com
-- **Contraseña**: admin
+
+## 🌐 Acceso y Configuración del Servidor Web
+
+En producción, el sistema debe ser accedido a través de la ruta `public/index.php`.
+
+### Ejemplo de configuración para Caddy (Laravel)
+
+```caddyfile
+root * /var/www/html/AdminSubwayApp/public
+php_fastcgi unix//run/php/php8.3-fpm.sock
+file_server
+encode gzip
+
+# Rewrite para el index.php de Laravel
+try_files {path} {path}/ /index.php?{query}
+```
+
+Esto asegura que todas las rutas sean gestionadas por Laravel y los assets públicos estén disponibles correctamente.
+
+**URL de acceso:** http://localhost:8000 (o el dominio configurado)
+**Usuario por defecto:** admin@admin.com
+**Contraseña:** admin
 
 ## 📄 Funcionalidades
 

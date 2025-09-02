@@ -1,40 +1,80 @@
-# Dashboard de Gestión
+# Dashboard de Gestión AdminSubway
 
 Dashboard web para gestión de usuarios, roles y permisos con seguimiento de actividad.
 
-## 🛠️ Stack Tecnológico
+## 🛠️ Requisitos del Sistema
 
-- **Laravel 12.22** + **PHP 8.3**
-- **React 19** + **TypeScript** + **Inertia.js 2.0**
-- **Tailwind CSS 4.0** + **shadcn/ui**
-- **SQLite** (desarrollo) / **MySQL/PostgreSQL** (producción)
-- **Pest** (testing)
-
-## ⚡ Instalación
-
-### Prerrequisitos
-- PHP 8.2+ con SQLite
+### Requisitos del Servidor
+- PHP 8.3+
+  - Extensiones requeridas:
+    - php8.3-fpm
+    - php8.3-sqlite3
+    - php8.3-xml
+    - php8.3-curl
+    - php8.3-mbstring
+    - php8.3-zip
 - Node.js 18+ y npm
-- Composer
+- Composer 2+
+- Servidor web (Caddy/Nginx/Apache)
 
-### Comandos
+### Requisitos de Base de Datos
+- SQLite 3
+
+## ⚡ Instalación en Producción
+
+### 1. Preparación del Servidor
 ```bash
-# Clonar e instalar
-git clone <repo>
-cd dashboard
-composer install
-npm install
+# Instalar dependencias del sistema
+sudo apt update
+sudo apt install php8.3 php8.3-fpm php8.3-sqlite3 php8.3-xml php8.3-curl php8.3-mbstring php8.3-zip
 
-# Configurar
+# Instalar Node.js 18+
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# Verificar instalaciones
+php -v
+node -v
+npm -v
+```
+
+### 2. Configuración del Proyecto
+```bash
+# Clonar repositorio
+git clone <repo>
+cd AdminSubwayApp
+
+# Instalar dependencias de producción
+composer install --no-dev --optimize-autoloader
+npm install
+npm run build
+
+# Configuración del entorno
 cp .env.example .env
 php artisan key:generate
+```
 
-# Base de datos
-php artisan migrate:fresh --seed
+### 3. Configuración de la Base de Datos
+```bash
+# Crear y configurar SQLite
+touch database/database.sqlite
+chmod 664 database/database.sqlite
+chown www-data:www-data database/database.sqlite
 
-# Compilar y ejecutar
-npm run build
-php artisan serve
+# Ejecutar migraciones
+php artisan migrate --force
+```
+
+### 4. Optimizaciones para Producción
+```bash
+# Optimizar Laravel
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# Establecer permisos correctos
+sudo chown -R www-data:www-data storage bootstrap/cache
+sudo chmod -R 775 storage bootstrap/cache
 ```
 
 ### Acceso
@@ -62,42 +102,28 @@ php artisan serve
 - Filtros por usuario, tipo y fecha
 - Vista unificada de actividades
 
-### **Autenticación**
-- Login/logout seguro
-- Verificación de email
-- Reset de contraseñas
-- Sesiones persistentes
+### **Configuración del Sistema**
+- Gestión de roles y permisos
+- Monitoreo de actividad
+- Configuración de correo
+- Backups automáticos
 
-### **Configuración Personal**
-- Perfil de usuario editable
-- Cambio de contraseña
-- Tema claro/oscuro/sistema
+## ⚠️ Notas Importantes
+- Asegúrate de que APP_ENV esté configurado como 'production'
+- Deshabilita APP_DEBUG en producción
+- Configura correctamente los permisos de archivos
+- Realiza backups regulares de la base de datos
+- Mantén las dependencias actualizadas
 
-## 🚀 Comandos de Desarrollo
+## 🔒 Seguridad
+- Actualiza regularmente todas las dependencias
+- Monitorea los logs de actividad
+- Mantén copias de seguridad actualizadas
+- Utiliza HTTPS en producción
+- Configura correctamente los headers de seguridad
 
-```bash
-# Desarrollo
-npm run dev              # Vite dev server
-composer run dev         # Laravel + Vite + Queue + Logs
-
-# Base de datos
-php artisan migrate:fresh --seed
-php artisan db:seed
-
-# Testing
-php artisan test
-php artisan test --filter=User
-
-# Producción
-npm run build
-composer install --no-dev --optimize-autoloader
-```
-
-## 📊 Estructura del Proyecto
-
-```
-dashboard/
-├── app/
+## � Soporte
+Para reportar problemas o solicitar soporte, por favor crear un issue en el repositorio.
 │   ├── Http/Controllers/    # UserController, RoleController, etc.
 │   ├── Models/              # User, Role, Permission, ActivityLog
 │   └── Services/            # PermissionDiscoveryService

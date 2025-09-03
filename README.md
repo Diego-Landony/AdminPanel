@@ -206,6 +206,9 @@ composer run test                   # Con config clear
 
 ```bash
 # Sincronizar permisos tras añadir páginas
+php artisan permissions:sync
+
+# Alternativa usando Tinker
 php artisan tinker
 $service = new App\Services\PermissionDiscoveryService;
 $service->syncPermissions();

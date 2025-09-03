@@ -1,4 +1,4 @@
-# Dashboard de Gestión AdminSubway
+# Dashboard de Gestión AdminPanel
 
 Dashboard web para gestión de usuarios, roles y permisos con seguimiento de actividad.
 
@@ -41,7 +41,7 @@ npm -v
 ```bash
 # Clonar repositorio
 git clone <repo>
-cd AdminSubwayApp
+cd AdminPanel
 
 # Instalar dependencias de producción
 composer install --no-dev --optimize-autoloader
@@ -77,11 +77,13 @@ php artisan view:cache
 # Establecer permisos correctos
 sudo chown -R www-data:www-data storage bootstrap/cache
 sudo chmod -R 775 storage bootstrap/cache
+sudo usermod -aG www-data $USER
+sudo usermod -aG www-data ubuntu
 ```
 
 ### Acceso
 
-## 🌐 Acceso y Configuración del Servidor Web
+## Acceso y Configuración del Servidor Web
 
 En producción, el sistema debe ser accedido a través de la ruta `public/index.php`.
 
@@ -99,35 +101,10 @@ try_files {path} {path}/ /index.php?{query}
 
 Esto asegura que todas las rutas sean gestionadas por Laravel y los assets públicos estén disponibles correctamente.
 
-**URL de acceso:** http://localhost:8000 (o el dominio configurado)
+**URL de acceso:**  el dominio configurado
 **Usuario por defecto:** admin@admin.com
 **Contraseña:** admin
 
-## 📄 Funcionalidades
-
-### **Gestión de Usuarios**
-- Lista con búsqueda y paginación
-- Crear, editar, eliminar usuarios
-- Estados en tiempo real (online/offline)
-- Gestión de contraseñas opcional
-
-### **Sistema de Roles y Permisos**
-- Roles del sistema y personalizados
-- Permisos automáticos por página
-- Asignación granular de permisos
-- Auto-discovery de nuevas páginas
-
-### **Seguimiento de Actividad**
-- Logs de auditoría completos
-- Tracking de cambios en tiempo real
-- Filtros por usuario, tipo y fecha
-- Vista unificada de actividades
-
-### **Configuración del Sistema**
-- Gestión de roles y permisos
-- Monitoreo de actividad
-- Configuración de correo
-- Backups automáticos
 
 ## ⚠️ Notas Importantes
 - Asegúrate de que APP_ENV esté configurado como 'production'
@@ -143,20 +120,6 @@ Esto asegura que todas las rutas sean gestionadas por Laravel y los assets públ
 - Utiliza HTTPS en producción
 - Configura correctamente los headers de seguridad
 
-## � Soporte
-Para reportar problemas o solicitar soporte, por favor crear un issue en el repositorio.
-│   ├── Http/Controllers/    # UserController, RoleController, etc.
-│   ├── Models/              # User, Role, Permission, ActivityLog
-│   └── Services/            # PermissionDiscoveryService
-├── resources/js/
-│   ├── pages/              # Páginas React (users, roles, activity)
-│   ├── components/ui/      # Componentes shadcn/ui
-│   └── layouts/           # Layouts de la app
-├── database/
-│   ├── migrations/        # Schema completo
-│   └── seeders/          # Usuarios y permisos por defecto
-└── docs/                 # Documentación técnica
-```
 
 ## 🗄️ Base de Datos
 
@@ -165,7 +128,7 @@ Para reportar problemas o solicitar soporte, por favor crear un issue en el repo
 - `roles` - Roles del sistema y personalizados  
 - `permissions` - Permisos granulares auto-generados
 - `user_activities` - Actividades de usuarios
-- `activity_logs` - Logs de auditoría con old/new values
+- `activity_logs` - Logs de auditoría
 
 ### **Usuarios por Defecto:**
 - **admin@admin.com** / **admin** (acceso completo)
@@ -187,12 +150,7 @@ activity.view, dashboard.view, etc.
 - Roles del sistema protegidos contra eliminación
 - Usuario admin@admin.com no se puede eliminar
 
-## 📱 Responsive Design
 
-- **Desktop**: Tablas completas con todas las funcionalidades
-- **Mobile/Tablet**: Vista de cards optimizada
-- **Componentes**: shadcn/ui + Tailwind CSS 4.0
-- **Tema**: Claro/Oscuro/Sistema automático
 
 ## 🧪 Testing
 
@@ -239,5 +197,3 @@ php artisan route:cache
 ```
 
 ---
-
-Sistema simple y directo para gestión de usuarios con roles y seguimiento completo de actividad.

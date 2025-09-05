@@ -131,7 +131,23 @@ class CustomerController extends Controller
                 'customer_type_id',
             ])->get();
 
-        // Contar tipos específicos usando la nueva relación
+        // Obtener todos los tipos de clientes con estadísticas
+        $customerTypes = CustomerType::active()->ordered()->get();
+        $customerTypeStats = $customerTypes->map(function ($type) use ($totalStats) {
+            $count = $totalStats->filter(function ($customer) use ($type) {
+                return $customer->customer_type_id === $type->id;
+            })->count();
+
+            return [
+                'id' => $type->id,
+                'name' => $type->name,
+                'display_name' => $type->display_name,
+                'color' => $type->color,
+                'count' => $count,
+            ];
+        });
+
+        // Contar tipos específicos usando la nueva relación (compatibilidad)
         $premiumCount = $totalStats->filter(function ($customer) {
             return $customer->customerType && in_array($customer->customerType->name, ['premium', 'gold', 'platinum']);
         })->count();
@@ -149,6 +165,7 @@ class CustomerController extends Controller
             })->count(),
             'premium_customers' => $premiumCount,
             'vip_customers' => $vipCount,
+            'customer_type_stats' => $customerTypeStats,
             'filters' => [
                 'search' => $search,
                 'per_page' => (int) $perPage,

@@ -1,6 +1,6 @@
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, Link } from '@inertiajs/react';
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import AppLayout from '@/layouts/app-layout';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-import { Plus, Search, Users, Clock, Circle, ArrowUp, ArrowDown, ArrowUpDown, CreditCard, RefreshCw, Star, Crown } from 'lucide-react';
+import { Plus, Search, Users, Clock, Circle, ArrowUp, ArrowDown, ArrowUpDown, CreditCard, RefreshCw, Star, Crown, Medal, Award } from 'lucide-react';
 import {
     Pagination,
     PaginationContent,
@@ -67,6 +67,17 @@ interface Customer {
 }
 
 /**
+ * Interfaz para las estadísticas de tipos de clientes
+ */
+interface CustomerTypeStat {
+    id: number;
+    name: string;
+    display_name: string;
+    color: string;
+    count: number;
+}
+
+/**
  * Interfaz para las props de la página
  */
 interface CustomersPageProps {
@@ -84,6 +95,7 @@ interface CustomersPageProps {
     online_customers: number;
     premium_customers: number;
     vip_customers: number;
+    customer_type_stats: CustomerTypeStat[];
     filters: {
         search: string | null;
         per_page: number;
@@ -203,6 +215,38 @@ const formatDate = (dateString: string | null): string => {
 
 
 /**
+ * Obtiene el icono uniforme para todos los tipos de clientes con el color apropiado
+ */
+const getCustomerTypeIcon = (color: string, size: string = "h-3 w-3"): React.ReactElement => {
+    const colorClass = getCustomerTypeIconColor(color);
+    return <Award className={`${size} ${colorClass}`} />;
+};
+
+/**
+ * Obtiene el color del icono basado en el color del tipo de cliente
+ */
+const getCustomerTypeIconColor = (color: string): string => {
+    switch (color) {
+        case 'green':
+            return 'text-green-600';
+        case 'orange':
+            return 'text-orange-600';
+        case 'gray':
+            return 'text-gray-600';
+        case 'yellow':
+            return 'text-yellow-600';
+        case 'purple':
+            return 'text-purple-600';
+        case 'blue':
+            return 'text-blue-600';
+        case 'red':
+            return 'text-red-600';
+        default:
+            return 'text-primary';
+    }
+};
+
+/**
  * Hook personalizado para debounce
  */
 const useDebounce = (value: string, delay: number): string => {
@@ -231,6 +275,7 @@ export default function CustomersIndex({
     online_customers,
     premium_customers,
     vip_customers,
+    customer_type_stats,
     filters
 }: CustomersPageProps) {
     const [search, setSearch] = useState<string>(filters.search || '');
@@ -365,16 +410,19 @@ export default function CustomersIndex({
                                         <Clock className="h-3 w-3 text-green-600" />
                                         <span>en línea <span className="font-medium text-foreground">{online_customers}</span></span>
                                     </span>
-                                    <span className="text-muted-foreground/50">•</span>
-                                    <span className="flex items-center gap-1">
-                                        <Star className="h-3 w-3 text-yellow-600" />
-                                        <span>premium <span className="font-medium text-foreground">{premium_customers}</span></span>
-                                    </span>
-                                    <span className="text-muted-foreground/50">•</span>
-                                    <span className="flex items-center gap-1">
-                                        <Crown className="h-3 w-3 text-purple-600" />
-                                        <span>vip <span className="font-medium text-foreground">{vip_customers}</span></span>
-                                    </span>
+                                    {customer_type_stats && customer_type_stats.length > 0 && (
+                                        <>
+                                            {customer_type_stats.map((typeStat, index) => (
+                                                <React.Fragment key={typeStat.id}>
+                                                    <span className="text-muted-foreground/50">•</span>
+                                                    <span className="flex items-center gap-1">
+                                                        {getCustomerTypeIcon(typeStat.color)}
+                                                        <span>{typeStat.display_name.toLowerCase()} <span className="font-medium text-foreground">{typeStat.count}</span></span>
+                                                    </span>
+                                                </React.Fragment>
+                                            ))}
+                                        </>
+                                    )}
                                 </div>
                                 
                                 {/* Indicador de sincronización */}
@@ -546,6 +594,11 @@ export default function CustomersIndex({
                                                                 </div>
                                                                 <div className="mt-1">
                                                                     <div className="flex items-center gap-2">
+                                                                        {customer.customer_type && (
+                                                                            <span className="flex items-center">
+                                                                                {getCustomerTypeIcon(customer.customer_type.color, "h-3 w-3")}
+                                                                            </span>
+                                                                        )}
                                                                         <Badge className={getClientTypeColor(customer.customer_type, customer.client_type)}>
                                                                             {customer.customer_type?.display_name || customer.client_type || 'Regular'}
                                                                         </Badge>

@@ -2,7 +2,7 @@ import { NavMain } from '@/components/nav-main';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Users, UserCog, Activity, Shield, LucideIcon, Home, Star } from 'lucide-react';
+import { LayoutGrid, Users, UserCog, Activity, Shield, LucideIcon, Home, Star, UserCircle, Settings } from 'lucide-react';
 import { usePermissions } from '@/hooks/use-permissions';
 import AppLogo from './app-logo';
 
@@ -38,7 +38,7 @@ const systemPages: PageConfig[] = [
         name: 'users',
         title: 'Gestión de usuarios',
         href: '/users',
-        icon: UserCog,
+        icon: Settings,
         group: 'Usuarios',
         permission: 'users.view',
     },
@@ -46,7 +46,7 @@ const systemPages: PageConfig[] = [
         name: 'customers',
         title: 'Gestión de clientes',
         href: '/customers',
-        icon: Users,
+        icon: UserCircle,
         group: 'Clientes',
         permission: 'customers.view',
     },
@@ -121,9 +121,17 @@ export function AppSidebar() {
         // Agregar grupos que tienen items
         Object.entries(groupedItems).forEach(([groupName, groupItems]) => {
             if (groupItems.length > 0) {
+                // Asignar iconos específicos para cada grupo
+                let groupIcon = Users; // Icono por defecto
+                if (groupName === 'Usuarios') {
+                    groupIcon = UserCog;
+                } else if (groupName === 'Clientes') {
+                    groupIcon = UserCircle;
+                }
+                
                 items.push({
                     title: groupName,
-                    icon: Users, // Icono por defecto para grupos
+                    icon: groupIcon,
                     items: groupItems,
                 });
             }

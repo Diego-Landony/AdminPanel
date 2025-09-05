@@ -28,6 +28,7 @@ test('customer has fillable attributes', function () {
         'puntos',
         'puntos_updated_at',
         'timezone',
+        'customer_type_id',
     ];
     
     expect($customer->getFillable())->toEqual($expectedFillable);

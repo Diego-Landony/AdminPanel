@@ -25,6 +25,7 @@
 - **birth_date** (date)
 - **gender** (varchar)
 - **client_type** (varchar, indexed)
+- **customer_type_id** (bigint, foreign key → customer_types.id, indexed)
 - **phone** (varchar)
 - **address** (text)
 - **location** (varchar)
@@ -40,6 +41,18 @@
 - **created_at** (timestamp, indexed)
 - **updated_at** (timestamp)
 - **deleted_at** (timestamp)
+
+### customer_types
+- **id** (bigint, primary key)
+- **name** (varchar, unique) - Internal name (e.g., 'regular', 'bronze', 'silver', 'gold', 'platinum')
+- **display_name** (varchar) - Display name (e.g., 'Regular', 'Bronce', 'Plata', 'Oro', 'Platino')
+- **points_required** (integer, default 0) - Points required to achieve this type
+- **multiplier** (decimal 4,2, default 1.00) - Points multiplier for this type
+- **color** (varchar) - Color identifier for UI display
+- **is_active** (boolean, default true) - Whether this type is active
+- **sort_order** (integer, default 0) - Display order
+- **created_at** (timestamp)
+- **updated_at** (timestamp)
 
 ### permissions
 - **id** (bigint, primary key)

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CustomerTypeController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\UserController;
@@ -69,6 +70,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:customers.edit');
     Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy')
         ->middleware('permission:customers.delete');
+
+    // Gestión de tipos de clientes - requiere permisos específicos
+    Route::get('customer-types', [CustomerTypeController::class, 'index'])->name('customer-types.index')
+        ->middleware('permission:customer-types.view');
+    Route::get('customer-types/create', [CustomerTypeController::class, 'create'])->name('customer-types.create')
+        ->middleware('permission:customer-types.create');
+    Route::post('customer-types', [CustomerTypeController::class, 'store'])->name('customer-types.store')
+        ->middleware('permission:customer-types.create');
+    Route::get('customer-types/{customerType}', [CustomerTypeController::class, 'show'])->name('customer-types.show')
+        ->middleware('permission:customer-types.view');
+    Route::get('customer-types/{customerType}/edit', [CustomerTypeController::class, 'edit'])->name('customer-types.edit')
+        ->middleware('permission:customer-types.edit');
+    Route::put('customer-types/{customerType}', [CustomerTypeController::class, 'update'])->name('customer-types.update')
+        ->middleware('permission:customer-types.edit');
+    Route::patch('customer-types/{customerType}', [CustomerTypeController::class, 'update'])
+        ->middleware('permission:customer-types.edit');
+    Route::delete('customer-types/{customerType}', [CustomerTypeController::class, 'destroy'])->name('customer-types.destroy')
+        ->middleware('permission:customer-types.delete');
 
     // Actividad - requiere permiso específico
     Route::get('activity', [ActivityController::class, 'index'])->name('activity.index')

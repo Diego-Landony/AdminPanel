@@ -2,7 +2,7 @@ import { NavMain } from '@/components/nav-main';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Users, UserCog, Activity, Shield, LucideIcon, Home } from 'lucide-react';
+import { LayoutGrid, Users, UserCog, Activity, Shield, LucideIcon, Home, Star } from 'lucide-react';
 import { usePermissions } from '@/hooks/use-permissions';
 import AppLogo from './app-logo';
 
@@ -49,6 +49,14 @@ const systemPages: PageConfig[] = [
         icon: Users,
         group: 'Clientes',
         permission: 'customers.view',
+    },
+    {
+        name: 'customer-types',
+        title: 'Tipos de cliente',
+        href: '/customer-types',
+        icon: Star,
+        group: 'Clientes',
+        permission: 'customer-types.view',
     },
     {
         name: 'activity',

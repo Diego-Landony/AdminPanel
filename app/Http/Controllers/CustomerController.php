@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\CustomerType;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,25 +31,27 @@ class CustomerController extends Controller
         $sortField = $request->get('sort_field', 'created_at');
         $sortDirection = $request->get('sort_direction', 'desc');
 
-        // Query base
-        $query = Customer::select([
-            'id',
-            'full_name',
-            'email',
-            'subway_card',
-            'birth_date',
-            'gender',
-            'client_type',
-            'phone',
-            'location',
-            'email_verified_at',
-            'created_at',
-            'updated_at',
-            'last_activity_at',
-            'last_purchase_at',
-            'puntos',
-            'puntos_updated_at',
-        ]);
+        // Query base con relación de tipo de cliente
+        $query = Customer::with('customerType')
+            ->select([
+                'id',
+                'full_name',
+                'email',
+                'subway_card',
+                'birth_date',
+                'gender',
+                'client_type',
+                'customer_type_id',
+                'phone',
+                'location',
+                'email_verified_at',
+                'created_at',
+                'updated_at',
+                'last_activity_at',
+                'last_purchase_at',
+                'puntos',
+                'puntos_updated_at',
+            ]);
 
         // Aplicar búsqueda global si existe
         if ($search) {
@@ -84,6 +87,11 @@ class CustomerController extends Controller
                 $isOnline = $this->isCustomerOnline($customer->last_activity_at);
                 $status = $this->getCustomerStatus($customer->last_activity_at);
 
+                // Actualizar tipo de cliente basado en puntos
+                if ($customer->puntos !== null) {
+                    $customer->updateCustomerType();
+                }
+
                 return [
                     'id' => $customer->id,
                     'full_name' => $customer->full_name,
@@ -91,7 +99,14 @@ class CustomerController extends Controller
                     'subway_card' => $customer->subway_card,
                     'birth_date' => $customer->birth_date,
                     'gender' => $customer->gender,
-                    'client_type' => $customer->client_type,
+                    'client_type' => $customer->client_type, // Mantener para compatibilidad
+                    'customer_type' => $customer->customerType ? [
+                        'id' => $customer->customerType->id,
+                        'name' => $customer->customerType->name,
+                        'display_name' => $customer->customerType->display_name,
+                        'color' => $customer->customerType->color,
+                        'multiplier' => $customer->customerType->multiplier,
+                    ] : null,
                     'phone' => $customer->phone,
                     'location' => $customer->location,
                     'email_verified_at' => $customer->email_verified_at,
@@ -106,13 +121,24 @@ class CustomerController extends Controller
                 ];
             });
 
-        // Obtener estadísticas del total (sin paginación)
-        $totalStats = Customer::select([
-            'id',
-            'email_verified_at',
-            'last_activity_at',
-            'client_type',
-        ])->get();
+        // Obtener estadísticas del total (sin paginación) con tipos de cliente
+        $totalStats = Customer::with('customerType')
+            ->select([
+                'id',
+                'email_verified_at',
+                'last_activity_at',
+                'client_type',
+                'customer_type_id',
+            ])->get();
+
+        // Contar tipos específicos usando la nueva relación
+        $premiumCount = $totalStats->filter(function ($customer) {
+            return $customer->customerType && in_array($customer->customerType->name, ['premium', 'gold', 'platinum']);
+        })->count();
+
+        $vipCount = $totalStats->filter(function ($customer) {
+            return $customer->customerType && $customer->customerType->name === 'platinum';
+        })->count();
 
         return Inertia::render('customers/index', [
             'customers' => $customers,
@@ -121,8 +147,8 @@ class CustomerController extends Controller
             'online_customers' => $totalStats->filter(function ($customer) {
                 return $this->isCustomerOnline($customer->last_activity_at);
             })->count(),
-            'premium_customers' => $totalStats->where('client_type', 'premium')->count(),
-            'vip_customers' => $totalStats->where('client_type', 'vip')->count(),
+            'premium_customers' => $premiumCount,
+            'vip_customers' => $vipCount,
             'filters' => [
                 'search' => $search,
                 'per_page' => (int) $perPage,
@@ -137,7 +163,11 @@ class CustomerController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('customers/create');
+        $customerTypes = CustomerType::active()->ordered()->get();
+
+        return Inertia::render('customers/create', [
+            'customer_types' => $customerTypes,
+        ]);
     }
 
     /**
@@ -168,6 +198,7 @@ class CustomerController extends Controller
                 'birth_date' => $request->birth_date,
                 'gender' => $request->gender,
                 'client_type' => $request->client_type ?? 'regular',
+                'customer_type_id' => $request->customer_type_id,
                 'phone' => $request->phone,
                 'address' => $request->address,
                 'location' => $request->location,
@@ -175,6 +206,9 @@ class CustomerController extends Controller
                 'email_verified_at' => now(),
                 'timezone' => 'America/Guatemala',
             ]);
+
+            // Actualizar tipo de cliente automáticamente basado en puntos
+            $customer->updateCustomerType();
 
             return redirect()->route('customers.index')->with('success', 'Cliente creado exitosamente');
         } catch (\Illuminate\Database\QueryException $e) {

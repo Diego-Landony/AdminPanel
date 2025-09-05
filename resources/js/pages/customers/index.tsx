@@ -46,6 +46,13 @@ interface Customer {
     birth_date: string;
     gender: string | null;
     client_type: string | null;
+    customer_type: {
+        id: number;
+        name: string;
+        display_name: string;
+        color: string | null;
+        multiplier: number;
+    } | null;
     phone: string | null;
     location: string | null;
     email_verified_at: string | null;
@@ -140,10 +147,34 @@ const getStatusIcon = (status: string): React.ReactElement => {
 };
 
 /**
- * Obtiene el color del tipo de cliente
+ * Obtiene el color del tipo de cliente basado en el nuevo sistema
  */
-const getClientTypeColor = (type: string | null): string => {
-    switch (type) {
+const getClientTypeColor = (customerType: Customer['customer_type'], fallbackType?: string | null): string => {
+    if (customerType && customerType.color) {
+        switch (customerType.color) {
+            case 'gray':
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300 border border-gray-200 dark:border-gray-700';
+            case 'orange':
+                return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 border border-orange-200 dark:border-orange-700';
+            case 'slate':
+                return 'bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
+            case 'yellow':
+                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-700';
+            case 'purple':
+                return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300 border border-purple-200 dark:border-purple-700';
+            case 'green':
+                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-700';
+            case 'blue':
+                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-700';
+            case 'red':
+                return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-700';
+            default:
+                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-700';
+        }
+    }
+
+    // Fallback al sistema anterior si no hay customer_type
+    switch (fallbackType) {
         case 'premium':
             return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-700';
         case 'vip':
@@ -514,9 +545,16 @@ export default function CustomersIndex({
                                                                     <code className="text-sm">{customer.subway_card}</code>
                                                                 </div>
                                                                 <div className="mt-1">
-                                                                    <Badge className={getClientTypeColor(customer.client_type)}>
-                                                                        {customer.client_type || 'Regular'}
-                                                                    </Badge>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Badge className={getClientTypeColor(customer.customer_type, customer.client_type)}>
+                                                                            {customer.customer_type?.display_name || customer.client_type || 'Regular'}
+                                                                        </Badge>
+                                                                        {customer.customer_type && (
+                                                                            <span className="text-xs text-muted-foreground">
+                                                                                {customer.customer_type.multiplier}x
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </td>
                                                             <td className="p-4">

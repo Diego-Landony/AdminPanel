@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -36,6 +37,7 @@ class Customer extends Authenticatable
         'puntos',
         'puntos_updated_at',
         'timezone',
+        'customer_type_id',
     ];
 
     /**
@@ -82,5 +84,34 @@ class Customer extends Authenticatable
     {
         $this->last_activity_at = now();
         $this->saveQuietly();
+    }
+
+    /**
+     * Relación con el tipo de cliente
+     */
+    public function customerType(): BelongsTo
+    {
+        return $this->belongsTo(CustomerType::class);
+    }
+
+    /**
+     * Actualiza automáticamente el tipo de cliente basado en los puntos
+     */
+    public function updateCustomerType(): void
+    {
+        $newType = CustomerType::getTypeForPoints($this->puntos ?? 0);
+        
+        if ($newType && $this->customer_type_id !== $newType->id) {
+            $this->customer_type_id = $newType->id;
+            $this->saveQuietly();
+        }
+    }
+
+    /**
+     * Scope para filtrar por tipo de cliente
+     */
+    public function scopeOfType($query, $typeId)
+    {
+        return $query->where('customer_type_id', $typeId);
     }
 }

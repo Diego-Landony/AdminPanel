@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Tabla de usuarios
+    // Tabla de usuarios (compatible con MariaDB, sin ENGINE ni CHARSET explícitos)
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -158,7 +158,7 @@ return new class extends Migration
 
         // Crear usuario de test admin@test.com con contraseña admintest
         $this->createTestAdminUser();
-        
+
         // Crear usuario administrador principal admin@admin.com con contraseña admin
         $this->createMainAdminUser();
     }

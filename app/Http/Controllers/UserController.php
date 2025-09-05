@@ -60,22 +60,21 @@ class UserController extends Controller
         if ($sortField === 'name') {
             $query->orderBy('name', $sortDirection);
         } elseif ($sortField === 'status') {
-            // Para status, ordenamos por last_activity_at para obtener los más activos primero
-            // Usando sintaxis compatible con SQLite
+            // Sintaxis compatible con MariaDB/MySQL
             $query->orderByRaw("
-                CASE 
+                CASE
                     WHEN last_activity_at IS NULL THEN 4
-                    WHEN last_activity_at >= datetime('now', '-5 minutes') THEN 1
-                    WHEN last_activity_at >= datetime('now', '-1 hour') THEN 2
+                    WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
+                    WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
                     ELSE 3
                 END " . ($sortDirection === 'asc' ? 'ASC' : 'DESC'));
         } else {
             // Ordenamiento por defecto: usuarios en línea primero, luego por fecha de creación
             $query->orderByRaw("
-                CASE 
+                CASE
                     WHEN last_activity_at IS NULL THEN 4
-                    WHEN last_activity_at >= datetime('now', '-5 minutes') THEN 1
-                    WHEN last_activity_at >= datetime('now', '-1 hour') THEN 2
+                    WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
+                    WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
                     ELSE 3
                 END ASC
             ")->orderBy('created_at', 'desc');

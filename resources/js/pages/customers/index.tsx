@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-import { Plus, Search, Users, Clock, Circle, ArrowUp, ArrowDown, ArrowUpDown, CreditCard, RefreshCw, Star, Crown, Medal, Award } from 'lucide-react';
+import { Plus, Search, Users, Clock, Circle, ArrowUp, ArrowDown, ArrowUpDown, CreditCard, RefreshCw, Star, Crown, Medal, Award, MapPin } from 'lucide-react';
 import {
     Pagination,
     PaginationContent,
@@ -491,12 +491,54 @@ export default function CustomersIndex({
 
                         {/* Tabla de clientes */}
                         {isLoading ? (
-                            <UsersSkeleton />
+                            <>
+                                {/* Skeleton para desktop */}
+                                <div className="hidden lg:block">
+                                    <UsersSkeleton />
+                                </div>
+                                
+                                {/* Skeleton para mobile/tablet */}
+                                <div className="lg:hidden">
+                                    <div className="grid gap-3 md:gap-4">
+                                        {[...Array(5)].map((_, i) => (
+                                            <div key={i} className="space-y-3 rounded-lg border border-border bg-card p-4">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex-1 space-y-2">
+                                                        <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
+                                                        <div className="h-3 bg-muted rounded w-1/2 animate-pulse"></div>
+                                                    </div>
+                                                    <div className="h-6 w-16 bg-muted rounded animate-pulse"></div>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div className="space-y-2">
+                                                        <div className="h-3 bg-muted rounded w-16 animate-pulse"></div>
+                                                        <div className="h-6 bg-muted rounded animate-pulse"></div>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <div className="h-3 bg-muted rounded w-12 animate-pulse"></div>
+                                                        <div className="h-4 bg-muted rounded w-20 animate-pulse"></div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="h-4 w-4 bg-muted rounded animate-pulse"></div>
+                                                    <div className="h-6 w-20 bg-muted rounded animate-pulse"></div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <div className="h-3 bg-muted rounded w-32 animate-pulse"></div>
+                                                    <div className="h-3 bg-muted rounded w-40 animate-pulse"></div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
                         ) : (
                             <>
-                                <div className="rounded-md border">
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full">
+                                {/* Vista de tabla para desktop */}
+                                <div className="hidden lg:block">
+                                    <div className="rounded-md border">
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full">
                                             <thead>
                                                 <tr className="border-b bg-muted/50">
                                                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
@@ -629,7 +671,8 @@ export default function CustomersIndex({
                                                                     {customer.phone || 'N/A'}
                                                                 </div>
                                                                 {customer.location && (
-                                                                    <div className="text-xs text-muted-foreground">
+                                                                    <div className="text-xs text-muted-foreground flex items-center">
+                                                                        <MapPin className="h-3 w-3 inline mr-1" />
                                                                         {customer.location}
                                                                     </div>
                                                                 )}
@@ -659,6 +702,121 @@ export default function CustomersIndex({
                                                 )}
                                             </tbody>
                                         </table>
+                                    </div>
+                                </div>
+                                </div>
+
+                                {/* Vista de cards para mobile/tablet */}
+                                <div className="lg:hidden">
+                                    <div className="grid gap-4 sm:gap-4 md:gap-5">
+                                        {customers.data.map((customer) => (
+                                            <div
+                                                key={customer.id}
+                                                className="space-y-3 rounded-lg border border-border bg-card p-4 sm:p-5 transition-colors hover:bg-muted/50 hover:shadow-sm"
+                                            >
+                                                {/* Header del card - Nombre y estado */}
+                                                <div className="flex flex-col space-y-2 sm:flex-row sm:items-start sm:justify-between sm:space-y-0">
+                                                    <div className="flex-1 min-w-0">
+                                                        <h3 className="font-medium text-foreground truncate mb-1">
+                                                            {customer.full_name}
+                                                        </h3>
+                                                        <p className="text-sm text-muted-foreground truncate">
+                                                            {customer.email}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 flex-shrink-0">
+                                                        {getStatusIcon(customer.status)}
+                                                        <Badge className={`${getStatusColor(customer.status)} text-xs`}>
+                                                            {getStatusText(customer.status)}
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+
+                                                {/* Información básica */}
+                                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                                    {/* Tarjeta Subway */}
+                                                    <div className="space-y-1">
+                                                        <div className="flex items-center gap-1 text-muted-foreground">
+                                                            <CreditCard className="h-3 w-3" />
+                                                            <span className="text-xs">Tarjeta</span>
+                                                        </div>
+                                                        <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                                                            {customer.subway_card}
+                                                        </code>
+                                                    </div>
+
+                                                    {/* Puntos */}
+                                                    <div className="space-y-1">
+                                                        <div className="text-xs text-muted-foreground">Puntos</div>
+                                                        <div className="font-medium text-blue-600">
+                                                            {(customer.puntos || 0).toLocaleString()} pts
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Tipo de cliente */}
+                                                {customer.customer_type && (
+                                                    <div className="flex items-center gap-2">
+                                                        {getCustomerTypeIcon(customer.customer_type.color, "h-4 w-4")}
+                                                        <Badge className={getClientTypeColor(customer.customer_type, customer.client_type)}>
+                                                            {customer.customer_type.display_name}
+                                                        </Badge>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {customer.customer_type.multiplier}x
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                {/* Información de contacto */}
+                                                <div className="grid grid-cols-1 gap-2 text-sm">
+                                                    {customer.phone && (
+                                                        <div className="flex items-center gap-2 text-muted-foreground">
+                                                            <span className="text-xs">📞</span>
+                                                            <span>{customer.phone}</span>
+                                                        </div>
+                                                    )}
+                                                    {customer.location && (
+                                                        <div className="flex items-center gap-2 text-muted-foreground">
+                                                            <MapPin className="h-3 w-3" />
+                                                            <span>{customer.location}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Verificación de email */}
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        {customer.email_verified_at ? (
+                                                            <Badge variant="outline" className="text-xs px-2 py-0.5 bg-green-50 text-green-700 border-green-200">
+                                                                ✓ Verificado
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge variant="outline" className="text-xs px-2 py-0.5 bg-red-50 text-red-700 border-red-200">
+                                                                ✗ No verificado
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    {/* Última actividad */}
+                                                    {customer.last_activity && (
+                                                        <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                                            <Clock className="h-3 w-3" />
+                                                            <span>{formatDate(customer.last_activity)}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Última compra */}
+                                                {customer.last_purchase && (
+                                                    <div className="text-xs text-muted-foreground">
+                                                        <span className="font-medium">Última compra:</span> {formatDate(customer.last_purchase)}
+                                                        <span className="ml-2">
+                                                            ({Math.floor((new Date().getTime() - new Date(customer.last_purchase).getTime()) / (24 * 60 * 60 * 1000))} días)
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
 

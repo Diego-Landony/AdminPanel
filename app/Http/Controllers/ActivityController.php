@@ -200,6 +200,20 @@ class ActivityController extends Controller
                 'user_force_deleted' => 'Usuario eliminado permanentemente',
                 'role_restored' => 'Rol restaurado',
                 'role_force_deleted' => 'Rol eliminado permanentemente',
+                
+                // Eventos de clientes
+                'customer_created' => 'Cliente creado',
+                'customer_updated' => 'Cliente actualizado',
+                'customer_deleted' => 'Cliente eliminado',
+                'customer_restored' => 'Cliente restaurado',
+                'customer_force_deleted' => 'Cliente eliminado permanentemente',
+                
+                // Eventos de tipos de cliente
+                'customer_type_created' => 'Tipo de cliente creado',
+                'customer_type_updated' => 'Tipo de cliente actualizado',
+                'customer_type_deleted' => 'Tipo de cliente eliminado',
+                'customer_type_restored' => 'Tipo de cliente restaurado',
+                'customer_type_force_deleted' => 'Tipo de cliente eliminado permanentemente',
             ];
 
             return [$type => $eventTypeTranslations[$type] ?? ucfirst(str_replace('_', ' ', $type))];

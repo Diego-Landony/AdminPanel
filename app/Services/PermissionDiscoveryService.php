@@ -52,6 +52,16 @@ class PermissionDiscoveryService
             'display_name' => 'Usuarios',
             'description' => 'Gestión de usuarios del sistema',
         ],
+        'customers' => [
+            'actions' => ['view', 'create', 'edit', 'delete'],
+            'display_name' => 'Clientes',
+            'description' => 'Gestión de clientes del sistema',
+        ],
+        'customer-types' => [
+            'actions' => ['view', 'create', 'edit', 'delete'],
+            'display_name' => 'Tipos de Cliente',
+            'description' => 'Gestión de tipos de cliente del sistema',
+        ],
         'activity' => [
             'actions' => ['view'],
             'display_name' => 'Actividad',
@@ -95,6 +105,9 @@ class PermissionDiscoveryService
             } else {
                 $discoveredPages[$pageName] = $this->autoDetectPageConfig($pageName, $directory);
             }
+
+            // Buscar subdirectorios para páginas anidadas (como customers/types -> customer-types)
+            $this->discoverNestedPages($directory, $discoveredPages);
         }
 
         // Agregar páginas de un solo archivo (como dashboard.tsx)
@@ -267,6 +280,47 @@ class PermissionDiscoveryService
         }
 
         return $configuration;
+    }
+
+    /**
+     * Descubre páginas anidadas en subdirectorios
+     *
+     * @param  string  $parentDirectory  Directorio padre
+     * @param  array  &$discoveredPages  Array de páginas descubiertas (por referencia)
+     * @return void
+     */
+    private function discoverNestedPages(string $parentDirectory, array &$discoveredPages): void
+    {
+        $parentName = basename($parentDirectory);
+        $subdirectories = File::directories($parentDirectory);
+
+        foreach ($subdirectories as $subdirectory) {
+            $subName = basename($subdirectory);
+            
+            // Crear nombre de página anidada (ej: customers/types -> customer-types)
+            $nestedPageName = Str::singular($parentName) . '-' . $subName;
+            
+            // Saltar si está excluida o ya existe
+            if (in_array($nestedPageName, $this->excludedPages) || isset($discoveredPages[$nestedPageName])) {
+                continue;
+            }
+
+            // Solo procesar si tiene archivos tsx/jsx (páginas React)
+            $pageFiles = collect(File::files($subdirectory))
+                ->filter(fn($file) => in_array($file->getExtension(), ['tsx', 'jsx']));
+
+            if ($pageFiles->isNotEmpty()) {
+                // Usar configuración predefinida o detectar automáticamente
+                if (isset($this->pageConfig[$nestedPageName])) {
+                    $discoveredPages[$nestedPageName] = $this->pageConfig[$nestedPageName];
+                } else {
+                    $discoveredPages[$nestedPageName] = $this->autoDetectPageConfig($nestedPageName, $subdirectory);
+                }
+            }
+
+            // Recursión para subdirectorios más profundos si es necesario
+            $this->discoverNestedPages($subdirectory, $discoveredPages);
+        }
     }
 
     /**

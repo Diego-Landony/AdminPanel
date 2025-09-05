@@ -129,12 +129,16 @@ const getActivityTypeColor = (type: string): string => {
         // Creaciones - Verde para éxito/creación
         case 'user_created':
         case 'role_created':
+        case 'customer_created':
+        case 'customer_type_created':
             return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
 
         // Actualizaciones - Azul para información/cambios
         case 'user_updated':
         case 'role_updated':
         case 'role_users_updated':
+        case 'customer_updated':
+        case 'customer_type_updated':
         case 'theme_changed':
             return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
 
@@ -143,11 +147,17 @@ const getActivityTypeColor = (type: string): string => {
         case 'user_force_deleted':
         case 'role_deleted':
         case 'role_force_deleted':
+        case 'customer_deleted':
+        case 'customer_force_deleted':
+        case 'customer_type_deleted':
+        case 'customer_type_force_deleted':
             return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
 
         // Restauraciones - Amarillo para advertencia/restauración
         case 'user_restored':
         case 'role_restored':
+        case 'customer_restored':
+        case 'customer_type_restored':
             return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
 
         // Acciones generales - Púrpura para acciones especiales
@@ -198,6 +208,28 @@ const getActivityTypeText = (type: string): string => {
             return 'Usuarios de rol actualizados';
         case 'theme_changed':
             return 'Tema cambiado';
+        // Eventos de clientes
+        case 'customer_created':
+            return 'Cliente creado';
+        case 'customer_updated':
+            return 'Cliente actualizado';
+        case 'customer_deleted':
+            return 'Cliente eliminado';
+        case 'customer_restored':
+            return 'Cliente restaurado';
+        case 'customer_force_deleted':
+            return 'Cliente eliminado permanentemente';
+        // Eventos de tipos de cliente  
+        case 'customer_type_created':
+            return 'Tipo de cliente creado';
+        case 'customer_type_updated':
+            return 'Tipo de cliente actualizado';
+        case 'customer_type_deleted':
+            return 'Tipo de cliente eliminado';
+        case 'customer_type_restored':
+            return 'Tipo de cliente restaurado';
+        case 'customer_type_force_deleted':
+            return 'Tipo de cliente eliminado permanentemente';
         default:
             return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
     }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\UserController;
@@ -52,6 +53,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy')
         ->middleware('permission:users.delete');
     Route::post('users/keep-alive', [UserController::class, 'keepAlive'])->name('users.keep-alive');
+
+    // Gestión de clientes - requiere permisos específicos
+    Route::get('customers', [CustomerController::class, 'index'])->name('customers.index')
+        ->middleware('permission:customers.view');
+    Route::get('customers/create', [CustomerController::class, 'create'])->name('customers.create')
+        ->middleware('permission:customers.create');
+    Route::post('customers', [CustomerController::class, 'store'])->name('customers.store')
+        ->middleware('permission:customers.create');
+    Route::get('customers/{customer}/edit', [CustomerController::class, 'edit'])->name('customers.edit')
+        ->middleware('permission:customers.edit');
+    Route::put('customers/{customer}', [CustomerController::class, 'update'])->name('customers.update')
+        ->middleware('permission:customers.edit');
+    Route::patch('customers/{customer}', [CustomerController::class, 'update'])
+        ->middleware('permission:customers.edit');
+    Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy')
+        ->middleware('permission:customers.delete');
 
     // Actividad - requiere permiso específico
     Route::get('activity', [ActivityController::class, 'index'])->name('activity.index')

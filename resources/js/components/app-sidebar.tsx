@@ -43,6 +43,14 @@ const systemPages: PageConfig[] = [
         permission: 'users.view',
     },
     {
+        name: 'customers',
+        title: 'Gestión de clientes',
+        href: '/customers',
+        icon: Users,
+        group: 'Clientes',
+        permission: 'customers.view',
+    },
+    {
         name: 'activity',
         title: 'Actividad',
         href: '/activity',

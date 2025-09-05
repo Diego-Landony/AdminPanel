@@ -42,6 +42,22 @@ return [
             'synchronous' => null,
         ],
 
+        'mariadb_testing' => [
+            'driver' => 'mariadb',
+            'host' => env('DB_TEST_HOST', '127.0.0.1'),
+            'port' => env('DB_TEST_PORT', '3306'),
+            'database' => env('DB_TEST_DATABASE', 'subwayapp_test'),
+            'username' => env('DB_TEST_USERNAME', 'lima'),
+            'password' => env('DB_TEST_PASSWORD', 'lima'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => [],
+        ],
+
     // 'mysql' connection removed. Use 'mariadb' instead.
 
         'mariadb' => [

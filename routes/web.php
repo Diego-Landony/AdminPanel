@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerTypeController;
+use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\UserController;
@@ -88,6 +89,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:customer-types.edit');
     Route::delete('customer-types/{customerType}', [CustomerTypeController::class, 'destroy'])->name('customer-types.destroy')
         ->middleware('permission:customer-types.delete');
+
+    // Gestión de restaurantes - requiere permisos específicos
+    Route::get('restaurants', [RestaurantController::class, 'index'])->name('restaurants.index')
+        ->middleware('permission:restaurants.view');
+    Route::get('restaurants/create', [RestaurantController::class, 'create'])->name('restaurants.create')
+        ->middleware('permission:restaurants.create');
+    Route::post('restaurants', [RestaurantController::class, 'store'])->name('restaurants.store')
+        ->middleware('permission:restaurants.create');
+    Route::get('restaurants/{restaurant}/edit', [RestaurantController::class, 'edit'])->name('restaurants.edit')
+        ->middleware('permission:restaurants.edit');
+    Route::put('restaurants/{restaurant}', [RestaurantController::class, 'update'])->name('restaurants.update')
+        ->middleware('permission:restaurants.edit');
+    Route::patch('restaurants/{restaurant}', [RestaurantController::class, 'update'])
+        ->middleware('permission:restaurants.edit');
+    Route::delete('restaurants/{restaurant}', [RestaurantController::class, 'destroy'])->name('restaurants.destroy')
+        ->middleware('permission:restaurants.delete');
 
     // Actividad - requiere permiso específico
     Route::get('activity', [ActivityController::class, 'index'])->name('activity.index')

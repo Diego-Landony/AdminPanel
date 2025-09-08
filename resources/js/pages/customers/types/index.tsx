@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Shield, Users, Star, Edit, Trash2 } from 'lucide-react';
+import { Plus, Shield, Users, Star } from 'lucide-react';
 import { ActionsMenu } from '@/components/ActionsMenu';
+import { CustomerTypesSkeleton } from '@/components/skeletons';
 
 /**
  * Breadcrumbs para la navegación de tipos de clientes
@@ -80,6 +81,7 @@ export default function CustomerTypesIndex({ customer_types, stats }: CustomerTy
     const [deletingType, setDeletingType] = useState<number | null>(null);
     const [selectedType, setSelectedType] = useState<CustomerType | null>(null);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [isLoading] = useState(false);
 
     const openDeleteDialog = (type: CustomerType) => {
         setSelectedType(type);
@@ -161,7 +163,9 @@ export default function CustomerTypesIndex({ customer_types, stats }: CustomerTy
                     </CardHeader>
 
                     <CardContent>
-                        {customer_types.length > 0 ? (
+                        {isLoading ? (
+                            <CustomerTypesSkeleton rows={5} />
+                        ) : customer_types.length > 0 ? (
                             <>
                                 <div className="hidden lg:block">
                                     {/* Tabla para desktop */}

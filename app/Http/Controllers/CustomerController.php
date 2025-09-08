@@ -143,7 +143,7 @@ class CustomerController extends Controller
                 'name' => $type->name,
                 'display_name' => $type->display_name,
                 'color' => $type->color,
-                'count' => $count,
+                'customer_count' => $count,
             ];
         });
 

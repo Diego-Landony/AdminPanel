@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
-import { ArrowLeft, Save, User, Mail, Lock, Eye, EyeOff, CreditCard, Phone, MapPin, Calendar, Hash } from 'lucide-react';
+import { ArrowLeft, Save, User, Mail, Lock, Eye, EyeOff, CreditCard, Phone, MapPin, Calendar, Hash, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import AppLayout from '@/layouts/app-layout';
@@ -159,11 +159,13 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                         <div className="flex items-center gap-2">
                             {customer.email_verified_at ? (
                                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                    ✓ Email Verificado
+                                    <Check className="h-3 w-3 mr-1" />
+                                    Email Verificado
                                 </Badge>
                             ) : (
                                 <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                                    ✗ Email No Verificado
+                                    <X className="h-3 w-3 mr-1" />
+                                    Email No Verificado
                                 </Badge>
                             )}
                         </div>

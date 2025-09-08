@@ -2,7 +2,7 @@ import { NavMain } from '@/components/nav-main';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Users, UserCog, Activity, Shield, LucideIcon, Home, Star, UserCircle, Settings } from 'lucide-react';
+import { LayoutGrid, Users, UserCog, Activity, Shield, LucideIcon, Home, Star, UserCircle, Settings, Building } from 'lucide-react';
 import { usePermissions } from '@/hooks/use-permissions';
 import AppLogo from './app-logo';
 
@@ -57,6 +57,14 @@ const systemPages: PageConfig[] = [
         icon: Star,
         group: 'Clientes',
         permission: 'customer-types.view',
+    },
+    {
+        name: 'restaurants',
+        title: 'Gestión de restaurantes',
+        href: '/restaurants',
+        icon: Building,
+        group: 'Restaurantes',
+        permission: 'restaurants.view',
     },
     {
         name: 'activity',

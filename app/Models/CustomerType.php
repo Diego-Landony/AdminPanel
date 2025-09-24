@@ -49,4 +49,11 @@ class CustomerType extends Model
             ->orderBy('points_required', 'desc')
             ->first();
     }
+
+    public static function getDefault(): ?self
+    {
+        return static::active()
+            ->orderBy('points_required')
+            ->first();
+    }
 }

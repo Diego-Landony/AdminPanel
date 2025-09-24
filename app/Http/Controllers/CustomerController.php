@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\CustomerType;
-use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -40,7 +39,6 @@ class CustomerController extends Controller
                 'subway_card',
                 'birth_date',
                 'gender',
-                'client_type',
                 'customer_type_id',
                 'phone',
                 'location',
@@ -60,7 +58,10 @@ class CustomerController extends Controller
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('subway_card', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('client_type', 'like', "%{$search}%");
+                    ->orWhereHas('customerType', function ($subQuery) use ($search) {
+                        $subQuery->where('name', 'like', "%{$search}%")
+                                 ->orWhere('display_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -69,13 +70,13 @@ class CustomerController extends Controller
             $query->orderBy('full_name', $sortDirection);
         } elseif ($sortField === 'status') {
             // Sintaxis compatible con MariaDB/MySQL
-            $query->orderByRaw("
+            $query->orderByRaw('
                 CASE
                     WHEN last_activity_at IS NULL THEN 4
                     WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
                     WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
                     ELSE 3
-                END " . ($sortDirection === 'asc' ? 'ASC' : 'DESC'));
+                END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
         } else {
             $query->orderBy($sortField, $sortDirection);
         }
@@ -84,9 +85,6 @@ class CustomerController extends Controller
         $customers = $query->paginate($perPage)
             ->appends($request->all()) // Preservar filtros en paginación
             ->through(function ($customer) {
-                $isOnline = $this->isCustomerOnline($customer->last_activity_at);
-                $status = $this->getCustomerStatus($customer->last_activity_at);
-
                 // Actualizar tipo de cliente basado en puntos
                 if ($customer->puntos !== null) {
                     $customer->updateCustomerType();
@@ -99,7 +97,6 @@ class CustomerController extends Controller
                     'subway_card' => $customer->subway_card,
                     'birth_date' => $customer->birth_date,
                     'gender' => $customer->gender,
-                    'client_type' => $customer->client_type, // Mantener para compatibilidad
                     'customer_type' => $customer->customerType ? [
                         'id' => $customer->customerType->id,
                         'name' => $customer->customerType->name,
@@ -107,6 +104,8 @@ class CustomerController extends Controller
                         'color' => $customer->customerType->color,
                         'multiplier' => $customer->customerType->multiplier,
                     ] : null,
+                    // ✅ Legacy compatibility: provide client_type as computed field
+                    'client_type' => $customer->customerType?->name ?? 'regular',
                     'phone' => $customer->phone,
                     'location' => $customer->location,
                     'email_verified_at' => $customer->email_verified_at,
@@ -116,8 +115,8 @@ class CustomerController extends Controller
                     'last_purchase' => $customer->last_purchase_at,
                     'puntos' => $customer->puntos ?? 0,
                     'puntos_updated_at' => $customer->puntos_updated_at,
-                    'is_online' => $isOnline,
-                    'status' => $status,
+                    'is_online' => $customer->is_online, // ✅ Usar accessor del modelo
+                    'status' => $customer->status, // ✅ Usar accessor del modelo
                 ];
             });
 
@@ -127,7 +126,6 @@ class CustomerController extends Controller
                 'id',
                 'email_verified_at',
                 'last_activity_at',
-                'client_type',
                 'customer_type_id',
             ])->get();
 
@@ -161,7 +159,7 @@ class CustomerController extends Controller
             'total_customers' => $totalStats->count(),
             'verified_customers' => $totalStats->where('email_verified_at', '!=', null)->count(),
             'online_customers' => $totalStats->filter(function ($customer) {
-                return $this->isCustomerOnline($customer->last_activity_at);
+                return $customer->is_online; // ✅ Usar accessor del modelo
             })->count(),
             'premium_customers' => $premiumCount,
             'vip_customers' => $vipCount,
@@ -200,12 +198,15 @@ class CustomerController extends Controller
                 'subway_card' => 'required|string|max:255|unique:customers',
                 'birth_date' => 'required|date|before:today',
                 'gender' => 'nullable|string|max:50',
-                'client_type' => 'nullable|string|max:50',
+                'customer_type_id' => 'nullable|exists:customer_types,id',
                 'phone' => 'nullable|string|max:255',
                 'address' => 'nullable|string|max:1000',
                 'location' => 'nullable|string|max:255',
                 'nit' => 'nullable|string|max:255',
             ]);
+
+            // Get default customer type if not provided
+            $customerTypeId = $request->customer_type_id ?? CustomerType::getDefault()?->id;
 
             $customer = Customer::create([
                 'full_name' => $request->full_name,
@@ -214,8 +215,7 @@ class CustomerController extends Controller
                 'subway_card' => $request->subway_card,
                 'birth_date' => $request->birth_date,
                 'gender' => $request->gender,
-                'client_type' => $request->client_type ?? 'regular',
-                'customer_type_id' => $request->customer_type_id,
+                'customer_type_id' => $customerTypeId,
                 'phone' => $request->phone,
                 'address' => $request->address,
                 'location' => $request->location,
@@ -259,7 +259,12 @@ class CustomerController extends Controller
             'subway_card' => $customer->subway_card,
             'birth_date' => $customer->birth_date ? $customer->birth_date->format('Y-m-d') : null,
             'gender' => $customer->gender,
-            'client_type' => $customer->client_type,
+            'customer_type_id' => $customer->customer_type_id,
+            'customer_type' => $customer->customerType ? [
+                'id' => $customer->customerType->id,
+                'name' => $customer->customerType->name,
+                'display_name' => $customer->customerType->display_name,
+            ] : null,
             'phone' => $customer->phone,
             'address' => $customer->address,
             'location' => $customer->location,
@@ -287,7 +292,7 @@ class CustomerController extends Controller
                 'subway_card' => 'required|string|max:255|unique:customers,subway_card,'.$customer->id,
                 'birth_date' => 'required|date|before:today',
                 'gender' => 'nullable|string|max:50',
-                'client_type' => 'nullable|string|max:50',
+                'customer_type_id' => 'nullable|exists:customer_types,id',
                 'phone' => 'nullable|string|max:255',
                 'address' => 'nullable|string|max:1000',
                 'location' => 'nullable|string|max:255',
@@ -307,7 +312,7 @@ class CustomerController extends Controller
                 'subway_card' => $request->subway_card,
                 'birth_date' => $request->birth_date,
                 'gender' => $request->gender,
-                'client_type' => $request->client_type ?? 'regular',
+                'customer_type_id' => $request->customer_type_id,
                 'phone' => $request->phone,
                 'address' => $request->address,
                 'location' => $request->location,
@@ -369,44 +374,6 @@ class CustomerController extends Controller
             \Log::error('Error inesperado al eliminar cliente: '.$e->getMessage());
 
             return back()->with('error', 'Error inesperado al eliminar el cliente. Inténtalo de nuevo o contacta al administrador.');
-        }
-    }
-
-    /**
-     * Determina si un cliente está en línea
-     * En línea: Última actividad < 5 minutos
-     */
-    private function isCustomerOnline($lastActivityAt): bool
-    {
-        if (! $lastActivityAt) {
-            return false;
-        }
-
-        $lastActivity = Carbon::parse($lastActivityAt)->utc();
-        $now = Carbon::now()->utc();
-
-        return $lastActivity->diffInMinutes($now) < 5;
-    }
-
-    /**
-     * Obtiene el estado del cliente basado en su última actividad
-     */
-    private function getCustomerStatus($lastActivityAt): string
-    {
-        if (! $lastActivityAt) {
-            return 'never';
-        }
-
-        $lastActivity = Carbon::parse($lastActivityAt)->utc();
-        $now = Carbon::now()->utc();
-        $minutesDiff = $lastActivity->diffInMinutes($now);
-
-        if ($minutesDiff < 5) {
-            return 'online';
-        } elseif ($minutesDiff < 15) {
-            return 'recent';
-        } else {
-            return 'offline';
         }
     }
 }

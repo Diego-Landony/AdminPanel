@@ -19,6 +19,7 @@ import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 export function NavMain({ items = [] }: { items: NavItem[] }) {
     const page = usePage();
     const { state } = useSidebar();
+    const [clickedGroup, setClickedGroup] = React.useState<string | null>(null);
 
     return (
         <SidebarGroup className="px-2 py-0">
@@ -26,7 +27,14 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
             <SidebarMenu>
                 {items.map((item) => {
                     if (item.items && item.items.length > 0) {
-                        return <GroupItem key={item.title} item={item} />
+                        return (
+                            <GroupItem
+                                key={item.title}
+                                item={item}
+                                clickedGroup={clickedGroup}
+                                setClickedGroup={setClickedGroup}
+                            />
+                        )
                     }
 
                     // Item normal sin subitems
@@ -52,7 +60,15 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
     )
 }
 
-function GroupItem({ item }: { item: NavItem }) {
+function GroupItem({
+    item,
+    clickedGroup,
+    setClickedGroup
+}: {
+    item: NavItem;
+    clickedGroup: string | null;
+    setClickedGroup: (group: string | null) => void;
+}) {
     const page = usePage()
     const { state, setOpen: setSidebarOpen } = useSidebar()
 
@@ -60,20 +76,38 @@ function GroupItem({ item }: { item: NavItem }) {
         (subItem) => subItem.href && page.url.startsWith(subItem.href)
     )
 
-    const [open, setOpen] = React.useState<boolean>(() => !!isSubItemActive)
+    // Solo abrir inicialmente si tiene items activos Y la sidebar está expandida
+    const [open, setOpen] = React.useState<boolean>(() =>
+        state === 'expanded' && !!isSubItemActive
+    )
 
+    // Solo mantener abierto si tiene items activos, pero no auto-abrir cuando sidebar se expande
     React.useEffect(() => {
-        if (isSubItemActive) setOpen(true)
-    }, [isSubItemActive])
+        if (isSubItemActive && state === 'expanded') {
+            // Solo abrir automáticamente si este grupo fue clickeado recientemente
+            if (clickedGroup === item.title) {
+                setOpen(true)
+            }
+        } else if (state === 'collapsed') {
+            // Cerrar todos los grupos cuando la sidebar se colapsa
+            setOpen(false)
+        }
+    }, [isSubItemActive, state, clickedGroup, item.title])
 
     const handleItemClick = () => {
         if (state === 'collapsed') {
+            // Marcar este grupo como el clickeado
+            setClickedGroup(item.title)
             // Si está cerrada, expandir sidebar y abrir el grupo
             setSidebarOpen(true)
             setOpen(true)
         } else {
             // Si está abierta, solo toggle el grupo
             setOpen(!open)
+            // Limpiar el grupo clickeado si se está cerrando
+            if (open) {
+                setClickedGroup(null)
+            }
         }
     }
 

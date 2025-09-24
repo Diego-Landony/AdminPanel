@@ -1,30 +1,25 @@
 import React from 'react'
-import { 
-    SidebarGroup, 
-    SidebarGroupLabel, 
-    SidebarMenu, 
-    SidebarMenuButton, 
+import {
+    SidebarGroup,
+    SidebarGroupLabel,
+    SidebarMenu,
+    SidebarMenuButton,
     SidebarMenuItem,
     SidebarMenuSub,
     SidebarMenuSubButton,
-    SidebarMenuSubItem
+    SidebarMenuSubItem,
+    useSidebar,
+    SidebarMenuAction
 } from '@/components/ui/sidebar';
-import { useSidebar } from '@/components/ui/sidebar';
-import { SidebarMenuAction } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { ChevronRight } from 'lucide-react';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
-import {
-    DropdownMenu,
-    DropdownMenuTrigger,
-    DropdownMenuContent,
-    DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
 
 export function NavMain({ items = [] }: { items: NavItem[] }) {
     const page = usePage();
-    
+    const { state } = useSidebar();
+
     return (
         <SidebarGroup className="px-2 py-0">
             <SidebarGroupLabel>Menú</SidebarGroupLabel>
@@ -40,11 +35,10 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                             <SidebarMenuButton
                                 asChild
                                 isActive={item.href ? page.url.startsWith(item.href) : false}
-                                tooltip={{ children: item.title }}
+                                tooltip={state === 'collapsed' ? { children: item.title } : undefined}
                             >
                                 <Link href={item.href || '#'} prefetch>
                                     {item.icon && (
-                                        // render top-level icon
                                         <item.icon className="mr-2 h-4 w-4" />
                                     )}
                                     <span>{item.title}</span>
@@ -60,7 +54,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
 
 function GroupItem({ item }: { item: NavItem }) {
     const page = usePage()
-    const { state } = useSidebar()
+    const { state, setOpen: setSidebarOpen } = useSidebar()
 
     const isSubItemActive = item.items?.some(
         (subItem) => subItem.href && page.url.startsWith(subItem.href)
@@ -72,65 +66,46 @@ function GroupItem({ item }: { item: NavItem }) {
         if (isSubItemActive) setOpen(true)
     }, [isSubItemActive])
 
-    const [dropdownOpen, setDropdownOpen] = React.useState<boolean>(false)
-
+    const handleItemClick = () => {
+        if (state === 'collapsed') {
+            // Si está cerrada, expandir sidebar y abrir el grupo
+            setSidebarOpen(true)
+            setOpen(true)
+        } else {
+            // Si está abierta, solo toggle el grupo
+            setOpen(!open)
+        }
+    }
 
     return (
         <Collapsible key={item.title} open={open} onOpenChange={setOpen} className="group/collapsible">
             <SidebarMenuItem>
-                {state === 'collapsed' ? (
-                    // When sidebar is collapsed, show a click-triggered dropdown that
-                    // only contains the children. The button itself does not navigate.
-                    <>
-                        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-                            <DropdownMenuTrigger asChild>
-                                <SidebarMenuButton asChild isActive={!!isSubItemActive} tooltip={{ children: item.title }}>
-                                    <div className="flex items-center w-full">
-                                        {item.icon && <item.icon className="mr-2 h-4 w-4" />}
-                                        <span>{item.title}</span>
-                                        <ChevronRight className={`ml-auto size-4 transition-transform ${dropdownOpen ? 'rotate-90' : ''}`} />
-                                    </div>
-                                </SidebarMenuButton>
-                            </DropdownMenuTrigger>
+                <SidebarMenuButton
+                    isActive={!!isSubItemActive}
+                    onClick={handleItemClick}
+                    tooltip={state === 'collapsed' ? { children: item.title } : undefined}
+                >
+                    {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                    <span>{item.title}</span>
+                </SidebarMenuButton>
 
-                            <DropdownMenuContent sideOffset={8} className="w-48">
-                                {item.items?.map((subItem) => (
-                                    <DropdownMenuItem key={subItem.title} asChild>
-                                        <Link href={subItem.href || '#'} prefetch className="block w-full">
-                                            {subItem.title}
-                                        </Link>
-                                    </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </>
-                    ) : (
-                    // Expanded sidebar: clicking the title toggles the group's open state
-                    <>
-                        <SidebarMenuButton isActive={!!isSubItemActive} onClick={() => setOpen((v) => !v)}>
-                            {item.icon && <item.icon className="mr-2 h-4 w-4" />}
-                            <span>{item.title}</span>
-                        </SidebarMenuButton>
+                <SidebarMenuAction aria-expanded={open} onClick={handleItemClick}>
+                    <ChevronRight className={`transition-transform duration-200 ${open ? 'rotate-90' : ''}`} />
+                </SidebarMenuAction>
 
-                        <SidebarMenuAction aria-expanded={open} onClick={() => setOpen((v) => !v)}>
-                            <ChevronRight className={`transition-transform duration-200 ${open ? 'rotate-90' : ''}`} />
-                        </SidebarMenuAction>
-
-                        <CollapsibleContent>
-                            <SidebarMenuSub>
-                                {item.items?.map((subItem) => (
-                                    <SidebarMenuSubItem key={subItem.title}>
-                                        <SidebarMenuSubButton asChild isActive={subItem.href ? page.url.startsWith(subItem.href) : false}>
-                                            <Link href={subItem.href || '#'} prefetch>
-                                                <span>{subItem.title}</span>
-                                            </Link>
-                                        </SidebarMenuSubButton>
-                                    </SidebarMenuSubItem>
-                                ))}
-                            </SidebarMenuSub>
-                        </CollapsibleContent>
-                    </>
-                )}
+                <CollapsibleContent>
+                    <SidebarMenuSub>
+                        {item.items?.map((subItem) => (
+                            <SidebarMenuSubItem key={subItem.title}>
+                                <SidebarMenuSubButton asChild isActive={subItem.href ? page.url.startsWith(subItem.href) : false}>
+                                    <Link href={subItem.href || '#'} prefetch>
+                                        <span>{subItem.title}</span>
+                                    </Link>
+                                </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                        ))}
+                    </SidebarMenuSub>
+                </CollapsibleContent>
             </SidebarMenuItem>
         </Collapsible>
     )

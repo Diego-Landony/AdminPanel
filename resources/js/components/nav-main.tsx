@@ -124,7 +124,7 @@ function GroupItem({
                 </SidebarMenuButton>
 
                 <SidebarMenuAction aria-expanded={open} onClick={handleItemClick}>
-                    <ChevronRight className={`transition-transform duration-200 ${open ? 'rotate-90' : ''}`} />
+                    <ChevronRight className={`transition-transform duration-200 text-foreground ${open ? 'rotate-90' : ''}`} />
                 </SidebarMenuAction>
 
                 <CollapsibleContent>

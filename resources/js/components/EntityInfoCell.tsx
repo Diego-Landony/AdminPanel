@@ -35,14 +35,14 @@ export const EntityInfoCell: React.FC<EntityInfoCellProps> = ({
                 <IconComponent className="w-5 h-5 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
-                <div className="font-medium text-sm text-foreground break-words">
+                <div className="font-medium text-sm text-foreground break-words line-clamp-2">
                     {primaryText}
                 </div>
-                <div className="text-sm text-muted-foreground break-words">
+                <div className="text-sm text-muted-foreground break-words line-clamp-1">
                     {secondaryText}
                 </div>
                 {badges && (
-                    <div className="flex flex-wrap gap-1 mt-1">
+                    <div className="flex flex-wrap gap-1 mt-2">
                         {badges}
                     </div>
                 )}

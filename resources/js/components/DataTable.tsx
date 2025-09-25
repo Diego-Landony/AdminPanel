@@ -270,37 +270,46 @@ export function DataTable<T extends { id: number | string }>({
         <CardHeader className="pb-6">
           <div className="flex flex-col space-y-4">
             {/* Stats and Actions Row */}
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between flex-wrap gap-4">
               {/* Statistics */}
               {stats && stats.length > 0 && (
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground min-w-0">
                   {stats.map((stat, index) => (
-                    <React.Fragment key={index}>
-                      {index > 0 && <span className="text-muted-foreground/50">•</span>}
-                      <span className="flex items-center gap-1">
-                        {React.cloneElement(stat.icon as React.ReactElement<{ className?: string }>, {
-                          className: "h-3 w-3"
-                        })}
-                        <span>
-                          {stat.title.toLowerCase()}{' '}
-                          <span className="font-medium text-foreground">{stat.value}</span>
-                        </span>
+                    <div key={index} className="flex items-center gap-2 flex-shrink-0">
+                      {React.cloneElement(stat.icon as React.ReactElement<{ className?: string }>, {
+                        className: "h-4 w-4 flex-shrink-0"
+                      })}
+                      <span className="whitespace-nowrap">
+                        <span className="lowercase">{stat.title}</span>{' '}
+                        <span className="font-medium text-foreground tabular-nums">{stat.value}</span>
                       </span>
-                    </React.Fragment>
+                    </div>
                   ))}
                 </div>
               )}
 
-              {/* Refresh Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={refreshData}
-                disabled={isRefreshing}
-                className="h-8 px-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              </Button>
+              {/* Refresh Button with Last Sync */}
+              <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={refreshData}
+                  disabled={isRefreshing}
+                  className="h-8 px-2"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  {isRefreshing ? 'Sincronizando...' : 'Sincronizar'}
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  Última: {new Date().toLocaleString('es-GT', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    day: '2-digit',
+                    month: '2-digit'
+                  })}
+                </span>
+              </div>
             </div>
           </div>
         </CardHeader>

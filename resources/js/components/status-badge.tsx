@@ -47,32 +47,42 @@ export function ColorBadge({ color, children, className = '' }: { color: string 
     );
 }
 
-// Configuraciones predefinidas pero extensibles
+// Configuraciones predefinidas pero extensibles - ESTADOS ESTANDARIZADOS
 export const CONNECTION_STATUS_CONFIGS: Record<string, StatusConfig> = {
+    active: {
+        color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-700',
+        text: 'Activo',
+        icon: <CheckCircle className="h-3 w-3" />
+    },
     online: {
         color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-700',
-        text: 'En línea',
-        icon: <Circle className="h-2 w-2 text-green-600" />
+        text: 'Activo',
+        icon: <CheckCircle className="h-3 w-3" />
     },
     recent: {
         color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-700',
-        text: 'Reciente',
-        icon: <Circle className="h-2 w-2 text-blue-600" />
+        text: 'Intermitente',
+        icon: <Clock className="h-3 w-3" />
+    },
+    inactive: {
+        color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-700',
+        text: 'Inactivo',
+        icon: <XCircle className="h-3 w-3" />
     },
     offline: {
-        color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600',
-        text: 'Desconectado',
-        icon: <Circle className="h-2 w-2 text-gray-400" />
+        color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-700',
+        text: 'Inactivo',
+        icon: <XCircle className="h-3 w-3" />
     },
     never: {
         color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-700',
-        text: 'Nunca',
-        icon: <Circle className="h-2 w-2 text-red-600" />
+        text: 'Inactivo',
+        icon: <XCircle className="h-3 w-3" />
     },
     default: {
-        color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600',
-        text: 'Desconocido',
-        icon: <Circle className="h-2 w-2 text-gray-400" />
+        color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-700',
+        text: 'Intermitente',
+        icon: <Clock className="h-3 w-3" />
     }
 };
 
@@ -116,32 +126,42 @@ export const CUSTOMER_TYPE_COLORS: Record<string, StatusConfig> = {
     }
 };
 
-// Configuraciones de estado para usuarios con iconos profesionales
+// Configuraciones de estado para usuarios con iconos profesionales - ESTANDARIZADO
 export const USER_STATUS_CONFIGS: Record<string, StatusConfig> = {
+    active: {
+        color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-700',
+        text: 'Activo',
+        icon: <CheckCircle className="h-3 w-3" />
+    },
     online: {
         color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-700',
-        text: 'En línea',
-        icon: <Circle className="w-2 h-2 fill-current" />
+        text: 'Activo',
+        icon: <CheckCircle className="h-3 w-3" />
     },
     recent: {
         color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-700',
-        text: 'Reciente',
-        icon: <Clock className="w-3 h-3" />
+        text: 'Intermitente',
+        icon: <Clock className="h-3 w-3" />
+    },
+    inactive: {
+        color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-700',
+        text: 'Inactivo',
+        icon: <XCircle className="h-3 w-3" />
     },
     offline: {
-        color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600',
-        text: 'Desconectado',
-        icon: <Circle className="w-2 h-2 fill-muted-foreground" />
+        color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-700',
+        text: 'Inactivo',
+        icon: <XCircle className="h-3 w-3" />
     },
     never: {
         color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-700',
-        text: 'Nunca conectado',
-        icon: <Circle className="w-2 h-2" />
+        text: 'Inactivo',
+        icon: <XCircle className="h-3 w-3" />
     },
     default: {
-        color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600',
-        text: 'Desconocido',
-        icon: <Circle className="w-2 h-2" />
+        color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-700',
+        text: 'Intermitente',
+        icon: <Clock className="h-3 w-3" />
     }
 };
 

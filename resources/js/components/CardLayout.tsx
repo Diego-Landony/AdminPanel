@@ -75,11 +75,11 @@ export const ResponsiveCardHeader: React.FC<ResponsiveCardHeaderProps> = ({
 
           {/* Title and Subtitle */}
           <div className="min-w-0 flex-1 space-y-1">
-            <h3 className="font-semibold leading-tight">
+            <h3 className="font-semibold leading-tight truncate">
               {title}
             </h3>
             {subtitle && (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground truncate">
                 {subtitle}
               </p>
             )}

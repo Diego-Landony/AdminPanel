@@ -277,8 +277,12 @@ export default function RestaurantsIndex({
             title={restaurant.name}
             subtitle={restaurant.email || 'Sin email'}
             badge={{
-                children: restaurant.is_active ? 'Activo' : 'Inactivo',
-                variant: restaurant.is_active ? "default" : "destructive"
+                children: <StatusBadge
+                    status={restaurant.is_active ? 'active' : 'inactive'}
+                    configs={ACTIVE_STATUS_CONFIGS}
+                    showIcon={false}
+                    className="text-xs"
+                />
             }}
             dataFields={[
                 {

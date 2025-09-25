@@ -1,5 +1,5 @@
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
@@ -7,11 +7,14 @@ import { toast } from 'sonner';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Shield, UserCheck, Trash2, Eye } from 'lucide-react';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
+import { Shield, UserCheck } from 'lucide-react';
+import { EntityInfoCell } from '@/components/EntityInfoCell';
+import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { RolesSkeleton } from '@/components/skeletons';
-import { ActionsMenu } from '@/components/ActionsMenu';
+import { TableActions } from '@/components/TableActions';
 import { DataTable } from '@/components/DataTable';
 import {
   ResponsiveCard,
@@ -19,7 +22,6 @@ import {
   ResponsiveCardContent,
   DataField,
   CardActions,
-  BadgeGroup
 } from '@/components/CardLayout';
 
 /**
@@ -99,33 +101,27 @@ const formatDate = (dateString: string): string => {
 /**
  * Componente para renderizar la información básica del rol
  */
-const RoleInfoCell: React.FC<{ role: Role }> = ({ role }) => (
-  <div className="flex items-center gap-3">
-    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-      <Shield className="w-5 h-5 text-primary" />
-    </div>
-    <div className="min-w-0">
-      <div className="flex items-center gap-2">
-        <span className="font-medium text-sm text-foreground">
-          {role.name}
-        </span>
-        {role.is_system && (
-          <Badge variant="secondary" className="text-xs px-2 py-0.5">
-            Sistema
-          </Badge>
-        )}
-      </div>
-      <div className="text-sm text-muted-foreground">
-        {role.permissions.length} permiso(s) • {role.users_count} usuario(s)
-      </div>
-    </div>
-  </div>
-);
+const RoleInfoCell: React.FC<{ role: Role }> = ({ role }) => {
+  const badges = role.is_system ? (
+    <Badge variant="secondary" className="text-xs px-2 py-0.5">
+      Sistema
+    </Badge>
+  ) : undefined;
+
+  return (
+    <EntityInfoCell
+      icon={Shield}
+      primaryText={role.name}
+      secondaryText={`${role.permissions.length} permiso(s) • ${role.users_count} usuario(s)`}
+      badges={badges}
+    />
+  );
+};
 
 /**
  * Componente para la mobile card del rol
  */
-const RoleMobileCard: React.FC<{ role: Role }> = ({ role }) => {
+const RoleMobileCard: React.FC<{ role: Role; onDelete: (role: Role) => void; isDeleting: boolean }> = ({ role, onDelete, isDeleting }) => {
   const [showUsersModal, setShowUsersModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
@@ -141,68 +137,59 @@ const RoleMobileCard: React.FC<{ role: Role }> = ({ role }) => {
 
   return (
     <>
-      <ResponsiveCard>
-        <ResponsiveCardHeader
-          icon={<Shield className="w-4 h-4 text-primary" />}
-          title={
-            <div className="flex items-center gap-2">
-              <span>{role.name}</span>
-              {role.is_system && (
-                <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                  Sistema
-                </Badge>
-              )}
-            </div>
+      <StandardMobileCard
+        icon={Shield}
+        title={
+          <div className="flex items-center gap-2">
+            <span>{role.name}</span>
+            {role.is_system && (
+              <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                Sistema
+              </Badge>
+            )}
+          </div>
+        }
+        subtitle={
+          <span className="text-xs">
+            {role.permissions.length} permiso(s) • {role.users_count} usuario(s)
+          </span>
+        }
+        dataFields={[
+          {
+            label: "Descripción",
+            value: role.description || 'Sin descripción'
+          },
+          {
+            label: "Usuarios con este rol",
+            value: role.users_count > 0 ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openUsersModal(role)}
+                className="h-7 px-3 text-xs"
+              >
+                <UserCheck className="w-3 h-3 mr-1" />
+                Ver {role.users_count} usuario(s)
+              </Button>
+            ) : (
+              <span className="text-xs text-muted-foreground">Ningún usuario asignado</span>
+            )
+          },
+          {
+            label: "Fecha de Creación",
+            value: formatDate(role.created_at)
           }
-          subtitle={
-            <span className="text-xs">
-              {role.permissions.length} permiso(s) • {role.users_count} usuario(s)
-            </span>
-          }
-        />
-
-        <ResponsiveCardContent>
-          <DataField
-            label="Descripción"
-            value={role.description || 'Sin descripción'}
-          />
-
-          <DataField
-            label="Usuarios con este rol"
-            value={
-              role.users_count > 0 ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => openUsersModal(role)}
-                  className="h-7 px-3 text-xs"
-                >
-                  <UserCheck className="w-3 h-3 mr-1" />
-                  Ver {role.users_count} usuario(s)
-                </Button>
-              ) : (
-                <span className="text-xs text-muted-foreground">Ningún usuario asignado</span>
-              )
-            }
-          />
-
-          <DataField
-            label="Fecha de Creación"
-            value={formatDate(role.created_at)}
-          />
-        </ResponsiveCardContent>
-
-        <CardActions>
-          <ActionsMenu
-            editHref={route('roles.edit', role.id)}
-            onDelete={() => {}}
-            isDeleting={false}
-            editTitle="Editar rol"
-            deleteTitle={role.is_system ? undefined : "Eliminar rol"}
-            canDelete={!role.is_system}
-          />
-        </CardActions>
-      </ResponsiveCard>
+        ]}
+        actions={{
+          editHref: route('roles.edit', role.id),
+          onDelete: () => onDelete(role),
+          isDeleting,
+          editTooltip: "Editar rol",
+          deleteTooltip: "Eliminar rol",
+          canDelete: !role.is_system,
+          showDelete: !role.is_system
+        }}
+      />
 
       {/* Modal para mostrar usuarios */}
       <Dialog open={showUsersModal} onOpenChange={closeUsersModal}>
@@ -241,6 +228,9 @@ const RoleMobileCard: React.FC<{ role: Role }> = ({ role }) => {
 export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProps) {
   const [showUsersModal, setShowUsersModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [deletingRole, setDeletingRole] = useState<number | null>(null);
+  const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const openUsersModal = useCallback((role: Role) => {
     setSelectedRole(role);
@@ -251,6 +241,35 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
     setShowUsersModal(false);
     setSelectedRole(null);
   }, []);
+
+  const openDeleteDialog = useCallback((role: Role) => {
+    setRoleToDelete(role);
+    setShowDeleteDialog(true);
+  }, []);
+
+  const closeDeleteDialog = useCallback(() => {
+    setRoleToDelete(null);
+    setShowDeleteDialog(false);
+    setDeletingRole(null);
+  }, []);
+
+  const handleDeleteRole = async () => {
+    if (!roleToDelete) return;
+
+    setDeletingRole(roleToDelete.id);
+    router.delete(route('roles.destroy', roleToDelete.id), {
+      onSuccess: () => {
+        closeDeleteDialog();
+        toast.success('Rol eliminado correctamente');
+      },
+      onError: (error) => {
+        setDeletingRole(null);
+        if (error.message) {
+          toast.error(error.message);
+        }
+      }
+    });
+  };
 
   // Definición de columnas para la tabla
   const columns = [
@@ -310,13 +329,14 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
       width: 'xs' as const,
       textAlign: 'right' as const,
       render: (role: Role) => (
-        <ActionsMenu
+        <TableActions
           editHref={route('roles.edit', role.id)}
-          onDelete={() => {}}
-          isDeleting={false}
-          editTitle="Editar rol"
-          deleteTitle={role.is_system ? undefined : "Eliminar rol"}
+          onDelete={() => openDeleteDialog(role)}
+          isDeleting={deletingRole === role.id}
+          editTooltip="Editar rol"
+          deleteTooltip="Eliminar rol"
           canDelete={!role.is_system}
+          showDelete={!role.is_system}
         />
       )
     }
@@ -356,7 +376,13 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
         createLabel="Crear Rol"
         searchPlaceholder="Buscar roles..."
         loadingSkeleton={RolesSkeleton}
-        renderMobileCard={(role) => <RoleMobileCard role={role} />}
+        renderMobileCard={(role) => (
+          <RoleMobileCard
+            role={role}
+            onDelete={openDeleteDialog}
+            isDeleting={deletingRole === role.id}
+          />
+        )}
         routeName="/roles"
         breakpoint="md"
       />
@@ -398,6 +424,21 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de confirmación de eliminación */}
+      <DeleteConfirmationDialog
+        isOpen={showDeleteDialog}
+        onClose={closeDeleteDialog}
+        onConfirm={handleDeleteRole}
+        isDeleting={deletingRole !== null}
+        entityName={roleToDelete?.name || ''}
+        entityType="rol"
+        customMessage={
+          roleToDelete && roleToDelete.users_count > 0 ?
+          `¿Estás seguro de que quieres eliminar el rol "${roleToDelete.name}"? Este rol está asignado a ${roleToDelete.users_count} usuario${roleToDelete.users_count !== 1 ? 's' : ''} y será removido de ${roleToDelete.users_count === 1 ? 'ese usuario' : 'esos usuarios'}. Esta acción no se puede deshacer.` :
+          undefined
+        }
+      />
     </AppLayout>
   );
 }

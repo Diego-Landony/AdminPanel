@@ -7,18 +7,20 @@ import AppLayout from '@/layouts/app-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ActivitySkeleton } from '@/components/skeletons';
 import { DataTable } from '@/components/DataTable';
-import { ResponsiveCard, ResponsiveCardHeader, ResponsiveCardContent, DataField, CardActions } from '@/components/CardLayout';
+import { ResponsiveCard, ResponsiveCardHeader, ResponsiveCardContent, DataField } from '@/components/CardLayout';
 
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Search, Filter, Calendar as CalendarIcon, Users, Inbox } from 'lucide-react';
+import { Filter, Calendar as CalendarIcon, Users } from 'lucide-react';
+import { EntityInfoCell } from '@/components/EntityInfoCell';
+import { StandardMobileCard } from '@/components/StandardMobileCard';
+import { FilterDialog, DateRangeFilterDialog } from '@/components/FilterDialog';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -239,44 +241,33 @@ const getEnhancedDescription = (activity: ActivityData): React.ReactElement => {
 };
 
 const UserInfoCell: React.FC<{ activity: ActivityData }> = ({ activity }) => (
-    <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <Users className="w-5 h-5 text-primary" />
-        </div>
-        <div className="min-w-0">
-            <div className="font-medium text-sm text-foreground break-words">
-                {activity.user.name}
-            </div>
-            <div className="text-sm text-muted-foreground break-words">
-                {activity.user.email}
-            </div>
-        </div>
-    </div>
+    <EntityInfoCell
+        icon={Users}
+        primaryText={activity.user.name}
+        secondaryText={activity.user.email}
+    />
 );
 
 const ActivityMobileCard: React.FC<{ activity: ActivityData }> = ({ activity }) => (
-    <ResponsiveCard>
-        <ResponsiveCardHeader
-            icon={<Users className="w-4 h-4 text-primary" />}
-            title={activity.user.name}
-            subtitle={activity.user.email}
-            badge={{
-                children: getActivityTypeText(activity.event_type),
-                className: getActivityTypeColor(activity.event_type)
-            }}
-        />
-
-        <ResponsiveCardContent>
-            <DataField
-                label="Descripción"
-                value={<div className="text-sm">{getEnhancedDescription(activity)}</div>}
-            />
-            <DataField
-                label="Fecha"
-                value={formatDate(activity.created_at)}
-            />
-        </ResponsiveCardContent>
-    </ResponsiveCard>
+    <StandardMobileCard
+        icon={Users}
+        title={activity.user.name}
+        subtitle={activity.user.email}
+        badge={{
+            children: getActivityTypeText(activity.event_type),
+            className: getActivityTypeColor(activity.event_type)
+        }}
+        dataFields={[
+            {
+                label: "Descripción",
+                value: <div className="text-sm">{getEnhancedDescription(activity)}</div>
+            },
+            {
+                label: "Fecha",
+                value: formatDate(activity.created_at)
+            }
+        ]}
+    />
 );
 
 export default function ActivityIndex({ activities, filters, options, stats }: ActivityPageProps) {
@@ -319,34 +310,6 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
         }
     };
 
-    const getEventTypesText = () => {
-        if (localFilters.event_types.length === 0) return 'Seleccionar tipos...';
-        if (localFilters.event_types.length === 1) return options.event_types[localFilters.event_types[0]];
-        if (localFilters.event_types.length <= 3) {
-            return localFilters.event_types.map(type => options.event_types[type]).join(', ');
-        }
-        return `${localFilters.event_types.length} tipos seleccionados`;
-    };
-
-    const getUsersText = () => {
-        if (localFilters.user_ids.length === 0) return 'Seleccionar usuarios...';
-        if (localFilters.user_ids.length === 1) {
-            const user = options.users.find(u => u.id.toString() === localFilters.user_ids[0]);
-            return user ? user.name : 'Usuario no encontrado';
-        }
-        if (localFilters.user_ids.length <= 3) {
-            return localFilters.user_ids.map(id => {
-                const user = options.users.find(u => u.id.toString() === id);
-                return user ? user.name : 'Usuario no encontrado';
-            }).join(', ');
-        }
-        return `${localFilters.user_ids.length} usuarios seleccionados`;
-    };
-
-    const filteredUsers = options.users.filter(
-        (user) => user.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-                   user.email.toLowerCase().includes(userSearchTerm.toLowerCase())
-    );
 
     const columns = [
         {
@@ -411,147 +374,62 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
 
     const FiltersDialog = () => (
         <>
-            <Dialog open={eventTypesOpen} onOpenChange={setEventTypesOpen}>
-                <DialogTrigger asChild>
-                    <Button variant="outline" className="justify-between">
-                        <span className="truncate">{getEventTypesText()}</span>
-                        <Filter className="ml-2 h-4 w-4" />
-                    </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Seleccionar Tipos de Evento</DialogTitle>
-                        <DialogDescription>
-                            Marca los tipos de evento que deseas filtrar
-                        </DialogDescription>
-                    </DialogHeader>
-                    <ScrollArea className="h-64">
-                        <div className="space-y-3 p-2">
-                            {Object.entries(options.event_types).map(([key, label]) => (
-                                <div key={key} className="flex items-center space-x-3">
-                                    <Checkbox
-                                        id={`event-${key}`}
-                                        checked={localFilters.event_types.includes(key)}
-                                        onCheckedChange={(checked) =>
-                                            handleEventTypeChange(key, checked as boolean)
-                                        }
-                                    />
-                                    <Label htmlFor={`event-${key}`} className="text-sm cursor-pointer">
-                                        {label}
-                                    </Label>
-                                </div>
-                            ))}
-                        </div>
-                    </ScrollArea>
-                </DialogContent>
-            </Dialog>
+            <FilterDialog
+                placeholder="Seleccionar tipos..."
+                icon={Filter}
+                title="Seleccionar Tipos de Evento"
+                description="Marca los tipos de evento que deseas filtrar"
+                options={Object.entries(options.event_types).map(([key, label]) => ({
+                    id: key,
+                    label: label as string
+                }))}
+                selectedIds={localFilters.event_types}
+                onSelectionChange={(ids) =>
+                    setLocalFilters(prev => ({ ...prev, event_types: ids as string[] }))
+                }
+                isOpen={eventTypesOpen}
+                onOpenChange={setEventTypesOpen}
+            />
 
-            <Dialog open={usersOpen} onOpenChange={setUsersOpen}>
-                <DialogTrigger asChild>
-                    <Button variant="outline" className="justify-between">
-                        <span className="truncate">{getUsersText()}</span>
-                        <Users className="ml-2 h-4 w-4" />
-                    </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Seleccionar Usuarios</DialogTitle>
-                        <DialogDescription>
-                            Marca los usuarios que deseas filtrar
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="mb-4">
-                        <Input
-                            placeholder="Buscar usuarios..."
-                            value={userSearchTerm}
-                            onChange={(e) => setUserSearchTerm(e.target.value)}
-                        />
-                    </div>
-                    <ScrollArea className="h-64">
-                        <div className="space-y-3 p-2">
-                            {filteredUsers.map((user) => (
-                                <div key={user.id} className="flex items-center space-x-3">
-                                    <Checkbox
-                                        id={`user-${user.id}`}
-                                        checked={localFilters.user_ids.includes(user.id.toString())}
-                                        onCheckedChange={(checked) =>
-                                            handleUserChange(user.id.toString(), checked as boolean)
-                                        }
-                                    />
-                                    <Label htmlFor={`user-${user.id}`} className="text-sm cursor-pointer">
-                                        <div>
-                                            <div className="font-medium">{user.name}</div>
-                                            <div className="text-xs text-muted-foreground">{user.email}</div>
-                                        </div>
-                                    </Label>
-                                </div>
-                            ))}
-                        </div>
-                    </ScrollArea>
-                </DialogContent>
-            </Dialog>
+            <FilterDialog
+                placeholder="Seleccionar usuarios..."
+                icon={Users}
+                title="Seleccionar Usuarios"
+                description="Marca los usuarios que deseas filtrar"
+                options={options.users.map(user => ({
+                    id: user.id.toString(),
+                    label: user.name,
+                    subtitle: user.email
+                }))}
+                selectedIds={localFilters.user_ids}
+                onSelectionChange={(ids) =>
+                    setLocalFilters(prev => ({ ...prev, user_ids: ids as string[] }))
+                }
+                isOpen={usersOpen}
+                onOpenChange={setUsersOpen}
+                searchEnabled={true}
+                searchPlaceholder="Buscar usuarios..."
+                searchTerm={userSearchTerm}
+                onSearchChange={setUserSearchTerm}
+            />
 
-            <Dialog open={dateRangeOpen} onOpenChange={setDateRangeOpen}>
-                <DialogTrigger asChild>
-                    <Button variant="outline" className="justify-between">
-                        <span className="truncate">
-                            {localFilters.dateRange?.from && localFilters.dateRange?.to
-                                ? `${format(localFilters.dateRange.from, "dd/MM/yyyy", { locale: es })} - ${format(localFilters.dateRange.to, "dd/MM/yyyy", { locale: es })}`
-                                : "Seleccionar fechas..."
-                            }
-                        </span>
-                        <CalendarIcon className="ml-2 h-4 w-4" />
-                    </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Seleccionar Rango de Fechas</DialogTitle>
-                        <DialogDescription>
-                            Selecciona el período de fechas para filtrar los eventos
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 p-4">
-                        <div className="space-y-2">
-                            <Label>Fecha de inicio</Label>
-                            <Input
-                                type="date"
-                                value={localFilters.dateRange?.from ? format(localFilters.dateRange.from, 'yyyy-MM-dd') : ''}
-                                onChange={(e) => {
-                                    const date = e.target.value ? new Date(e.target.value) : undefined;
-                                    setLocalFilters(prev => ({
-                                        ...prev,
-                                        dateRange: {
-                                            from: date,
-                                            to: prev.dateRange?.to && date && date > prev.dateRange.to ? undefined : prev.dateRange?.to
-                                        }
-                                    }));
-                                }}
-                                max={localFilters.dateRange?.to ? format(localFilters.dateRange.to, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Fecha de fin</Label>
-                            <Input
-                                type="date"
-                                value={localFilters.dateRange?.to ? format(localFilters.dateRange.to, 'yyyy-MM-dd') : ''}
-                                onChange={(e) => {
-                                    const date = e.target.value ? new Date(e.target.value) : undefined;
-                                    setLocalFilters(prev => ({
-                                        ...prev,
-                                        dateRange: {
-                                            from: prev.dateRange?.from,
-                                            to: date
-                                        }
-                                    }));
-                                }}
-                                min={localFilters.dateRange?.from ? format(localFilters.dateRange.from, 'yyyy-MM-dd') : undefined}
-                                max={format(new Date(), 'yyyy-MM-dd')}
-                            />
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
+            <DateRangeFilterDialog
+                isOpen={dateRangeOpen}
+                onOpenChange={setDateRangeOpen}
+                dateRange={localFilters.dateRange}
+                onDateRangeChange={(range) =>
+                    setLocalFilters(prev => ({ ...prev, dateRange: range }))
+                }
+                formatButtonText={(range) => {
+                    if (range?.from && range?.to) {
+                        return `${format(range.from, "dd/MM/yyyy", { locale: es })} - ${format(range.to, "dd/MM/yyyy", { locale: es })}`;
+                    }
+                    return "Seleccionar fechas...";
+                }}
+                icon={CalendarIcon}
+                title="Seleccionar Rango de Fechas"
+                description="Selecciona el período de fechas para filtrar los eventos"
+            />
         </>
     );
 

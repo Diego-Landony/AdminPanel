@@ -1,16 +1,18 @@
 import { type BreadcrumbItem } from '@/types';
-import { Head, router, Link } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 
 import AppLayout from '@/layouts/app-layout';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 
-import { Shield, Users, Clock, Circle, Trash2 } from 'lucide-react';
+import { Users, Clock, Circle } from 'lucide-react';
+import { EntityInfoCell } from '@/components/EntityInfoCell';
+import { StatusBadge, USER_STATUS_CONFIGS } from '@/components/status-badge';
+import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { UsersSkeleton } from '@/components/skeletons';
-import { ActionsMenu } from '@/components/ActionsMenu';
+import { TableActions } from '@/components/TableActions';
 import { DataTable } from '@/components/DataTable';
 import {
   ResponsiveCard,
@@ -84,48 +86,6 @@ interface UsersPageProps {
   };
 }
 
-/**
- * Obtiene el color del badge según el estado del usuario
- */
-const getStatusColor = (status: string): string => {
-  switch (status) {
-    case 'online':
-      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-700';
-    case 'recent':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-700';
-    case 'offline':
-      return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600';
-    case 'never':
-      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-700';
-    default:
-      return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600';
-  }
-};
-
-/**
- * Obtiene el texto del estado
- */
-const getStatusText = (status: string): string => {
-  switch (status) {
-    case 'online': return 'En línea';
-    case 'recent': return 'Reciente';
-    case 'offline': return 'Desconectado';
-    case 'never': return 'Nunca conectado';
-    default: return 'Desconocido';
-  }
-};
-
-/**
- * Obtiene el icono del estado
- */
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case 'online': return <Circle className="w-2 h-2 fill-current" />;
-    case 'recent': return <Clock className="w-3 h-3" />;
-    case 'offline': return <Circle className="w-2 h-2 fill-muted-foreground" />;
-    default: return <Circle className="w-2 h-2" />;
-  }
-};
 
 /**
  * Formatea una fecha
@@ -142,19 +102,11 @@ const formatDate = (dateString: string): string => {
  * Componente para renderizar la columna de usuario
  */
 const UserCell: React.FC<{ user: User }> = ({ user }) => (
-  <div className="flex items-center gap-3">
-    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-      <Users className="w-5 h-5 text-primary" />
-    </div>
-    <div className="min-w-0">
-      <div className="font-medium text-sm text-foreground">
-        {user.name}
-      </div>
-      <div className="text-sm text-muted-foreground">
-        {user.email}
-      </div>
-    </div>
-  </div>
+  <EntityInfoCell
+    icon={Users}
+    primaryText={user.name}
+    secondaryText={user.email}
+  />
 );
 
 /**
@@ -186,11 +138,8 @@ const RoleBadges: React.FC<{ roles: Role[] }> = ({ roles }) => (
 /**
  * Componente para renderizar el estado del usuario
  */
-const StatusBadge: React.FC<{ status: string }> = ({ status }) => (
-  <Badge className={`${getStatusColor(status)} px-3 py-1 text-xs font-medium`}>
-    <span className="mr-2">{getStatusIcon(status)}</span>
-    {getStatusText(status)}
-  </Badge>
+const UserStatusBadge: React.FC<{ status: string }> = ({ status }) => (
+  <StatusBadge status={status} configs={USER_STATUS_CONFIGS} />
 );
 
 /**
@@ -210,32 +159,23 @@ const UserMobileCard: React.FC<{ user: User }> = ({ user }) => {
           toast.error('Error al eliminar el usuario');
         }
       });
-    } catch (error) {
+    } catch {
       toast.error('Error al eliminar el usuario');
     }
   }, []);
 
   return (
-    <ResponsiveCard>
-      <ResponsiveCardHeader
-        icon={<Users className="w-4 h-4 text-primary" />}
-        title={user.name}
-        subtitle={user.email}
-        badge={{
-          children: (
-            <>
-              <span className="mr-2">{getStatusIcon(user.status)}</span>
-              {getStatusText(user.status)}
-            </>
-          ),
-          className: getStatusColor(user.status)
-        }}
-      />
-
-      <ResponsiveCardContent>
-        <DataField
-          label="Roles"
-          value={
+    <StandardMobileCard
+      icon={Users}
+      title={user.name}
+      subtitle={user.email}
+      badge={{
+        children: <StatusBadge status={user.status} configs={USER_STATUS_CONFIGS} />
+      }}
+      dataFields={[
+        {
+          label: "Roles",
+          value: (
             <BadgeGroup>
               {user.roles.length > 0 ? (
                 user.roles.map((role) => (
@@ -251,81 +191,50 @@ const UserMobileCard: React.FC<{ user: User }> = ({ user }) => {
                 <span className="text-xs text-muted-foreground">Sin roles</span>
               )}
             </BadgeGroup>
-          }
-        />
-
-        <DataField
-          label="Verificación"
-          value={
+          )
+        },
+        {
+          label: "Verificación",
+          value: (
             <Badge variant={user.email_verified_at ? "default" : "destructive"} className="text-xs">
               {user.email_verified_at ? 'Verificado' : 'Sin verificar'}
             </Badge>
-          }
-        />
-
-        <DataField
-          label="Última actividad"
-          value={user.last_activity ? formatDate(user.last_activity) : 'Nunca'}
-        />
-
-        <DataField
-          label="Creado"
-          value={formatDate(user.created_at)}
-        />
-      </ResponsiveCardContent>
-
-      <CardActions>
-        <ActionsMenu
-          editHref={`/users/${user.id}/edit`}
-          onDelete={() => setDeletingUser(user.id)}
+          )
+        },
+        {
+          label: "Última actividad",
+          value: user.last_activity ? formatDate(user.last_activity) : 'Nunca'
+        },
+        {
+          label: "Creado",
+          value: formatDate(user.created_at)
+        }
+      ]}
+      actions={{
+        editHref: `/users/${user.id}/edit`,
+        onDelete: () => setDeletingUser(user.id),
+        isDeleting: deletingUser === user.id,
+        editTooltip: "Editar usuario",
+        deleteTooltip: "Eliminar usuario"
+      }}
+      additionalContent={
+        <DeleteConfirmationDialog
+          isOpen={deletingUser === user.id}
+          onClose={() => setDeletingUser(null)}
+          onConfirm={() => handleDelete(user.id)}
           isDeleting={deletingUser === user.id}
-          editTitle="Editar usuario"
-          deleteTitle="Eliminar usuario"
+          entityName={user.name}
+          entityType="usuario"
         />
-
-        <Dialog open={deletingUser === user.id} onOpenChange={(open) => !open && setDeletingUser(null)}>
-          <DialogTrigger asChild>
-            <div style={{ display: 'none' }} />
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Confirmar eliminación</DialogTitle>
-              <DialogDescription>
-                ¿Estás seguro de que quieres eliminar al usuario "{user.name}"?
-                Esta acción no se puede deshacer.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setDeletingUser(null)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => handleDelete(user.id)}
-                disabled={deletingUser === user.id}
-              >
-                {deletingUser === user.id ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />
-                ) : (
-                  <Trash2 className="h-4 w-4 mr-2" />
-                )}
-                Eliminar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </CardActions>
-    </ResponsiveCard>
+      }
+    />
   );
 };
 
 /**
  * Página principal de usuarios
  */
-export default function UsersIndex({ users, total_users, verified_users, online_users, filters }: UsersPageProps) {
+export default function UsersIndex({ users, total_users, online_users, filters }: UsersPageProps) {
   const [deletingUser, setDeletingUser] = useState<number | null>(null);
 
   const handleDelete = useCallback(async (userId: number) => {
@@ -339,7 +248,7 @@ export default function UsersIndex({ users, total_users, verified_users, online_
           toast.error('Error al eliminar el usuario');
         }
       });
-    } catch (error) {
+    } catch {
       toast.error('Error al eliminar el usuario');
     }
   }, []);
@@ -386,7 +295,7 @@ export default function UsersIndex({ users, total_users, verified_users, online_
       width: 'sm' as const,
       textAlign: 'center' as const,
       sortable: true,
-      render: (user: User) => <StatusBadge status={user.status} />
+      render: (user: User) => <UserStatusBadge status={user.status} />
     },
     {
       key: 'actions',
@@ -395,48 +304,22 @@ export default function UsersIndex({ users, total_users, verified_users, online_
       textAlign: 'right' as const,
       render: (user: User) => (
         <>
-          <ActionsMenu
+          <TableActions
             editHref={`/users/${user.id}/edit`}
             onDelete={() => setDeletingUser(user.id)}
             isDeleting={deletingUser === user.id}
-            editTitle="Editar usuario"
-            deleteTitle="Eliminar usuario"
+            editTooltip="Editar usuario"
+            deleteTooltip="Eliminar usuario"
           />
 
-          <Dialog open={deletingUser === user.id} onOpenChange={(open) => !open && setDeletingUser(null)}>
-            <DialogTrigger asChild>
-              <div style={{ display: 'none' }} />
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Confirmar eliminación</DialogTitle>
-                <DialogDescription>
-                  ¿Estás seguro de que quieres eliminar al usuario "{user.name}"?
-                  Esta acción no se puede deshacer.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setDeletingUser(null)}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => handleDelete(user.id)}
-                  disabled={deletingUser === user.id}
-                >
-                  {deletingUser === user.id ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />
-                  ) : (
-                    <Trash2 className="h-4 w-4 mr-2" />
-                  )}
-                  Eliminar
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <DeleteConfirmationDialog
+            isOpen={deletingUser === user.id}
+            onClose={() => setDeletingUser(null)}
+            onConfirm={() => handleDelete(user.id)}
+            isDeleting={deletingUser === user.id}
+            entityName={user.name}
+            entityType="usuario"
+          />
         </>
       )
     }

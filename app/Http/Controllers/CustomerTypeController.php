@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\CustomerType;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -13,19 +13,49 @@ class CustomerTypeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $customerTypes = CustomerType::query()
-            ->withCount('customers')
-            ->ordered()
-            ->get();
+        $search = $request->get('search');
+        $perPage = (int) $request->get('per_page', 10);
+        $sortField = $request->get('sort_field', 'created_at');
+        $sortDirection = $request->get('sort_direction', 'desc');
+
+        $query = CustomerType::query()
+            ->withCount('customers');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('display_name', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply sorting
+        if ($sortField === 'type') {
+            $query->orderBy('display_name', $sortDirection);
+        } elseif (in_array($sortField, ['points_required', 'multiplier', 'customers_count', 'is_active', 'created_at'])) {
+            $query->orderBy($sortField, $sortDirection);
+        } else {
+            $query->ordered();
+        }
+
+        $customerTypes = $query->paginate($perPage);
+
+        // Get stats from the base query (without pagination)
+        $allCustomerTypes = CustomerType::query()->withCount('customers')->get();
 
         return Inertia::render('customers/types/index', [
             'customer_types' => $customerTypes,
             'stats' => [
-                'total_types' => $customerTypes->count(),
-                'active_types' => $customerTypes->where('is_active', true)->count(),
-            ]
+                'total_types' => $allCustomerTypes->count(),
+                'active_types' => $allCustomerTypes->where('is_active', true)->count(),
+            ],
+            'filters' => [
+                'search' => $search,
+                'per_page' => $perPage,
+                'sort_field' => $sortField,
+                'sort_direction' => $sortDirection,
+            ],
         ]);
     }
 
@@ -88,7 +118,7 @@ class CustomerTypeController extends Controller
     public function update(Request $request, CustomerType $customerType): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:50|unique:customer_types,name,' . $customerType->id,
+            'name' => 'required|string|max:50|unique:customer_types,name,'.$customerType->id,
             'display_name' => 'required|string|max:100',
             'points_required' => 'required|integer|min:0',
             'multiplier' => 'required|numeric|min:1|max:10',

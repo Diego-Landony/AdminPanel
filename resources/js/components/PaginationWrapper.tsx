@@ -20,7 +20,7 @@ interface PaginatedData {
 interface PaginationWrapperProps {
     data: PaginatedData;
     routeName: string;
-    filters?: Record<string, any>;
+    filters?: Record<string, unknown>;
     className?: string;
     showInfo?: boolean;
 }

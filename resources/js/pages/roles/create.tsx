@@ -1,6 +1,6 @@
 import React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { toast } from 'sonner';
+import { showNotification } from '@/hooks/useNotifications';
 import AppLayout from '@/layouts/app-layout';
 
 import { Button } from '@/components/ui/button';
@@ -10,26 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { FormField } from '@/components/ui/form-field';
 import { FormError } from '@/components/ui/form-error';
-import { BreadcrumbItem } from '@/types';
 import { ArrowLeft, Save } from 'lucide-react';
-
-/**
- * Breadcrumbs para la navegación de creación de roles
- */
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Usuarios',
-        href: '/users',
-    },
-    {
-        title: 'Roles',
-        href: '/roles',
-    },
-    {
-        title: 'Crear Rol',
-        href: '/roles/create',
-    },
-];
 
 /**
  * Interfaz para los permisos agrupados
@@ -72,7 +53,7 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
                 // Los errores de validación se muestran automáticamente
                 // Los errores del servidor se manejan por el layout
                 if (Object.keys(errors).length === 0) {
-                    toast.error('Error del servidor al crear el rol. Inténtalo de nuevo.');
+                    showNotification.error('Error del servidor al crear el rol. Inténtalo de nuevo.');
                 }
             }
         });
@@ -111,7 +92,7 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout>
             <Head title="Crear Rol" />
             
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">

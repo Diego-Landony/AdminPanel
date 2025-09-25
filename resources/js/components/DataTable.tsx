@@ -136,6 +136,48 @@ const TruncatedText: React.FC<TruncatedTextProps> = ({
   );
 };
 
+/**
+ * Professional data table with unified mobile/desktop experience
+ *
+ * Features:
+ * - Responsive design with mobile card fallback
+ * - Server-side sorting, filtering, and pagination
+ * - Professional column system with truncation
+ * - Real-time stats display with icons
+ * - Debounced search with URL state management
+ * - Loading states and skeleton support
+ * - Customizable breakpoints and theming
+ *
+ * @template T - Entity type with required `id` field for row identification
+ *
+ * @param title - Page/table title displayed in header
+ * @param description - Descriptive text below title
+ * @param data - Paginated data from Laravel backend
+ * @param columns - Column configuration with render functions
+ * @param stats - Optional statistics to display above table
+ * @param filters - Current filter state from backend
+ * @param createUrl - URL for create new entity button
+ * @param createLabel - Text for create button (default: "Create New")
+ * @param searchPlaceholder - Placeholder text for search input
+ * @param loadingSkeleton - Component to show during loading
+ * @param renderMobileCard - Function to render mobile card for each item
+ * @param onRefresh - Optional custom refresh handler
+ * @param routeName - Route name for Inertia navigation
+ * @param breakpoint - Responsive breakpoint for mobile/desktop switch
+ *
+ * @example
+ * ```tsx
+ * <DataTable
+ *   title="Users"
+ *   description="Manage system users"
+ *   data={users}
+ *   columns={userColumns}
+ *   stats={userStats}
+ *   renderMobileCard={(user) => <UserCard user={user} />}
+ *   routeName="/users"
+ * />
+ * ```
+ */
 export function DataTable<T extends { id: number | string }>({
   title,
   description,
@@ -273,15 +315,15 @@ export function DataTable<T extends { id: number | string }>({
             <div className="flex items-start justify-between flex-wrap gap-4">
               {/* Statistics */}
               {stats && stats.length > 0 && (
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground min-w-0">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground min-w-0">
                   {stats.map((stat, index) => (
-                    <div key={index} className="flex items-center gap-2 flex-shrink-0">
+                    <div key={index} className="flex items-center gap-2 flex-shrink-0 min-w-0 max-w-[200px]">
                       {React.cloneElement(stat.icon as React.ReactElement<{ className?: string }>, {
                         className: "h-4 w-4 flex-shrink-0"
                       })}
-                      <span className="whitespace-nowrap">
-                        <span className="lowercase">{stat.title}</span>{' '}
-                        <span className="font-medium text-foreground tabular-nums">{stat.value}</span>
+                      <span className="flex items-center gap-1 min-w-0 overflow-hidden">
+                        <span className="lowercase truncate text-ellipsis overflow-hidden" title={stat.title}>{stat.title}</span>
+                        <span className="font-medium text-foreground tabular-nums whitespace-nowrap" title={String(stat.value)}>{stat.value}</span>
                       </span>
                     </div>
                   ))}

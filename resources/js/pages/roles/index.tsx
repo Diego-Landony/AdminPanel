@@ -1,13 +1,12 @@
-import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
+import { showNotification } from '@/hooks/useNotifications';
 
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { Shield, UserCheck } from 'lucide-react';
@@ -16,27 +15,7 @@ import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { RolesSkeleton } from '@/components/skeletons';
 import { TableActions } from '@/components/TableActions';
 import { DataTable } from '@/components/DataTable';
-import {
-  ResponsiveCard,
-  ResponsiveCardHeader,
-  ResponsiveCardContent,
-  DataField,
-  CardActions,
-} from '@/components/CardLayout';
 
-/**
- * Breadcrumbs para la navegación de roles
- */
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    title: 'Roles',
-    href: '/roles',
-  },
-  {
-    title: 'Roles del Sistema',
-    href: '/roles',
-  },
-];
 
 interface Permission {
   id: number;
@@ -121,104 +100,62 @@ const RoleInfoCell: React.FC<{ role: Role }> = ({ role }) => {
 /**
  * Componente para la mobile card del rol
  */
-const RoleMobileCard: React.FC<{ role: Role; onDelete: (role: Role) => void; isDeleting: boolean }> = ({ role, onDelete, isDeleting }) => {
-  const [showUsersModal, setShowUsersModal] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
-
-  const openUsersModal = (role: Role) => {
-    setSelectedRole(role);
-    setShowUsersModal(true);
-  };
-
-  const closeUsersModal = () => {
-    setShowUsersModal(false);
-    setSelectedRole(null);
-  };
+const RoleMobileCard: React.FC<{ role: Role; onDelete: (role: Role) => void; isDeleting: boolean; onShowUsers: (role: Role) => void }> = ({ role, onDelete, isDeleting, onShowUsers }) => {
 
   return (
-    <>
-      <StandardMobileCard
-        icon={Shield}
-        title={
-          <div className="flex items-center gap-2">
-            <span>{role.name}</span>
-            {role.is_system && (
-              <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                Sistema
-              </Badge>
-            )}
-          </div>
+    <StandardMobileCard
+      icon={Shield}
+      title={
+        <div className="flex items-center gap-2">
+          <span>{role.name}</span>
+          {role.is_system && (
+            <Badge variant="secondary" className="text-xs px-2 py-0.5">
+              Sistema
+            </Badge>
+          )}
+        </div>
+      }
+      subtitle={
+        <span className="text-xs">
+          {role.permissions.length} permiso(s) • {role.users_count} usuario(s)
+        </span>
+      }
+      dataFields={[
+        {
+          label: "Descripción",
+          value: role.description || 'Sin descripción'
+        },
+        {
+          label: "Usuarios con este rol",
+          value: role.users_count > 0 ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onShowUsers(role)}
+              className="h-7 px-3 text-xs"
+            >
+              <UserCheck className="w-3 h-3 mr-1" />
+              Ver {role.users_count} usuario(s)
+            </Button>
+          ) : (
+            <span className="text-xs text-muted-foreground">Ningún usuario asignado</span>
+          )
+        },
+        {
+          label: "Fecha de Creación",
+          value: formatDate(role.created_at)
         }
-        subtitle={
-          <span className="text-xs">
-            {role.permissions.length} permiso(s) • {role.users_count} usuario(s)
-          </span>
-        }
-        dataFields={[
-          {
-            label: "Descripción",
-            value: role.description || 'Sin descripción'
-          },
-          {
-            label: "Usuarios con este rol",
-            value: role.users_count > 0 ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => openUsersModal(role)}
-                className="h-7 px-3 text-xs"
-              >
-                <UserCheck className="w-3 h-3 mr-1" />
-                Ver {role.users_count} usuario(s)
-              </Button>
-            ) : (
-              <span className="text-xs text-muted-foreground">Ningún usuario asignado</span>
-            )
-          },
-          {
-            label: "Fecha de Creación",
-            value: formatDate(role.created_at)
-          }
-        ]}
-        actions={{
-          editHref: route('roles.edit', role.id),
-          onDelete: () => onDelete(role),
-          isDeleting,
-          editTooltip: "Editar rol",
-          deleteTooltip: "Eliminar rol",
-          canDelete: !role.is_system,
-          showDelete: !role.is_system
-        }}
-      />
-
-      {/* Modal para mostrar usuarios */}
-      <Dialog open={showUsersModal} onOpenChange={closeUsersModal}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              Usuarios con rol "{selectedRole?.name}"
-            </DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="max-h-96">
-            <div className="space-y-3">
-              {selectedRole?.users?.map((user) => (
-                <div key={user.id} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div>
-                    <div className="font-medium">{user.name}</div>
-                    <div className="text-sm text-muted-foreground">{user.email}</div>
-                  </div>
-                </div>
-              ))}
-              {(!selectedRole?.users || selectedRole.users.length === 0) && (
-                <div className="text-center text-muted-foreground py-8">
-                  No hay usuarios con este rol
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
-    </>
+      ]}
+      actions={{
+        editHref: route('roles.edit', role.id),
+        onDelete: () => onDelete(role),
+        isDeleting,
+        editTooltip: "Editar rol",
+        deleteTooltip: "Eliminar rol",
+        canDelete: !role.is_system,
+        showDelete: !role.is_system
+      }}
+    />
   );
 };
 
@@ -260,12 +197,12 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
     router.delete(route('roles.destroy', roleToDelete.id), {
       onSuccess: () => {
         closeDeleteDialog();
-        toast.success('Rol eliminado correctamente');
+        showNotification.success('Rol eliminado correctamente');
       },
       onError: (error) => {
         setDeletingRole(null);
         if (error.message) {
-          toast.error(error.message);
+          showNotification.error(error.message);
         }
       }
     });
@@ -362,7 +299,7 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
   ] : undefined;
 
   return (
-    <AppLayout breadcrumbs={breadcrumbs}>
+    <AppLayout>
       <Head title="Roles" />
 
       <DataTable
@@ -380,6 +317,7 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
           <RoleMobileCard
             role={role}
             onDelete={openDeleteDialog}
+            onShowUsers={openUsersModal}
             isDeleting={deletingRole === role.id}
           />
         )}
@@ -389,33 +327,34 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
 
       {/* Modal para mostrar usuarios del rol */}
       <Dialog open={showUsersModal} onOpenChange={closeUsersModal}>
-        <DialogTrigger asChild>
-          <div style={{ display: 'none' }} />
-        </DialogTrigger>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               Usuarios con rol "{selectedRole?.name}"
             </DialogTitle>
+            <DialogDescription>
+              Lista de usuarios que tienen asignado este rol
+            </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-96">
             <div className="space-y-3">
-              {selectedRole?.users?.map((user) => (
-                <div key={user.id} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div>
-                    <div className="font-medium">{user.name}</div>
-                    <div className="text-sm text-muted-foreground">{user.email}</div>
+              {selectedRole && selectedRole.users && selectedRole.users.length > 0 ? (
+                selectedRole.users.map((user) => (
+                  <div key={user.id} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div>
+                      <div className="font-medium">{user.name}</div>
+                      <div className="text-sm text-muted-foreground">{user.email}</div>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {user.roles && user.roles.map((role) => (
+                        <Badge key={role.id} variant="outline" className="text-xs">
+                          {role.name}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    {user.roles.map((role) => (
-                      <Badge key={role.id} variant="outline" className="text-xs">
-                        {role.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              {(!selectedRole?.users || selectedRole.users.length === 0) && (
+                ))
+              ) : (
                 <div className="text-center text-muted-foreground py-8">
                   No hay usuarios con este rol
                 </div>

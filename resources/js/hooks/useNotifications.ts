@@ -2,9 +2,62 @@ import { useEffect, useRef } from 'react';
 import { usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
 
+// Cache global para evitar duplicados entre diferentes instancias
+const globalNotificationCache = new Map<string, number>();
+const CACHE_DURATION = 5000; // 5 segundos
+
+/**
+ * Configuración centralizada de notificaciones
+ */
+const NOTIFICATION_CONFIG = {
+    position: 'top-center' as const,
+    durations: {
+        success: 4000,
+        error: 5000,
+        warning: 4000,
+        info: 3000,
+        loading: Infinity,
+    }
+};
+
+/**
+ * Genera un ID único para la notificación basado en tipo y mensaje
+ */
+function generateNotificationId(type: string, message: string): string {
+    return `${type}:${message.slice(0, 50)}`;
+}
+
+/**
+ * Verifica si una notificación ya fue mostrada recientemente
+ */
+function isNotificationRecent(id: string): boolean {
+    const timestamp = globalNotificationCache.get(id);
+    if (!timestamp) return false;
+
+    const now = Date.now();
+    if (now - timestamp > CACHE_DURATION) {
+        globalNotificationCache.delete(id);
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Marca una notificación como mostrada
+ */
+function markNotificationAsShown(id: string): void {
+    globalNotificationCache.set(id, Date.now());
+
+    // Limpieza automática del cache
+    setTimeout(() => {
+        globalNotificationCache.delete(id);
+    }, CACHE_DURATION);
+}
+
 /**
  * Hook personalizado para manejar notificaciones globales
- * Solo maneja mensajes flash del servidor, NO errores de validación
+ * Sistema centralizado que previene duplicados de manera robusta
  */
 export function useNotifications() {
     const { props } = usePage();
@@ -12,119 +65,154 @@ export function useNotifications() {
     const processedMessages = useRef<Set<string>>(new Set());
 
     useEffect(() => {
-        // Solo manejar mensajes flash del servidor (NO errores de validación)
-        // Prevenir duplicación usando un Set de mensajes procesados
-        
-        if (flash?.success && !processedMessages.current.has(`success:${flash.success}`)) {
-            toast.success(flash.success, {
-                duration: 4000,
-                position: 'top-right',
-            });
-            processedMessages.current.add(`success:${flash.success}`);
+        // Limpiar mensajes procesados en cada renderizado para permitir nuevas notificaciones
+        processedMessages.current.clear();
+
+        if (flash?.success) {
+            const id = generateNotificationId('success', flash.success);
+            if (!isNotificationRecent(id)) {
+                toast.success(flash.success, {
+                    duration: NOTIFICATION_CONFIG.durations.success,
+                    position: NOTIFICATION_CONFIG.position,
+                });
+                markNotificationAsShown(id);
+            }
         }
 
-        if (flash?.error && !processedMessages.current.has(`error:${flash.error}`)) {
-            toast.error(flash.error, {
-                duration: 5000,
-                position: 'top-right',
-            });
-            processedMessages.current.add(`error:${flash.error}`);
+        if (flash?.error) {
+            const id = generateNotificationId('error', flash.error);
+            if (!isNotificationRecent(id)) {
+                toast.error(flash.error, {
+                    duration: NOTIFICATION_CONFIG.durations.error,
+                    position: NOTIFICATION_CONFIG.position,
+                });
+                markNotificationAsShown(id);
+            }
         }
 
-        if (flash?.warning && !processedMessages.current.has(`warning:${flash.warning}`)) {
-            toast.warning(flash.warning, {
-                duration: 4000,
-                position: 'top-right',
-            });
-            processedMessages.current.add(`warning:${flash.warning}`);
+        if (flash?.warning) {
+            const id = generateNotificationId('warning', flash.warning);
+            if (!isNotificationRecent(id)) {
+                toast.warning(flash.warning, {
+                    duration: NOTIFICATION_CONFIG.durations.warning,
+                    position: NOTIFICATION_CONFIG.position,
+                });
+                markNotificationAsShown(id);
+            }
         }
 
-        if (flash?.info && !processedMessages.current.has(`info:${flash.info}`)) {
-            toast.info(flash.info, {
-                duration: 3000,
-                position: 'top-right',
-            });
-            processedMessages.current.add(`info:${flash.info}`);
+        if (flash?.info) {
+            const id = generateNotificationId('info', flash.info);
+            if (!isNotificationRecent(id)) {
+                toast.info(flash.info, {
+                    duration: NOTIFICATION_CONFIG.durations.info,
+                    position: NOTIFICATION_CONFIG.position,
+                });
+                markNotificationAsShown(id);
+            }
         }
 
         // Manejo de mensajes específicos del servidor
-        if (flash?.message && !processedMessages.current.has(`message:${flash.message}`)) {
-            toast.info(flash.message, {
-                duration: 4000,
-                position: 'top-right',
-            });
-            processedMessages.current.add(`message:${flash.message}`);
+        if (flash?.message) {
+            const id = generateNotificationId('message', flash.message);
+            if (!isNotificationRecent(id)) {
+                toast.info(flash.message, {
+                    duration: NOTIFICATION_CONFIG.durations.info,
+                    position: NOTIFICATION_CONFIG.position,
+                });
+                markNotificationAsShown(id);
+            }
         }
 
         // Manejo de estados específicos del servidor
-        if (flash?.status && !processedMessages.current.has(`status:${flash.status}`)) {
-            switch (flash.status) {
-                case 'verification-link-sent':
-                    toast.success('Enlace de verificación enviado', {
-                        description: 'Revisa tu correo electrónico',
-                        duration: 5000,
-                        position: 'top-right',
-                    });
-                    break;
-                case 'password-updated':
-                    toast.success('Contraseña actualizada exitosamente', {
-                        duration: 4000,
-                        position: 'top-right',
-                    });
-                    break;
-                case 'profile-updated':
-                    toast.success('Perfil actualizado exitosamente', {
-                        duration: 4000,
-                        position: 'top-right',
-                    });
-                    break;
-                default:
-                    if (flash.status) {
-                        toast.info(flash.status, {
-                            duration: 4000,
-                            position: 'top-right',
+        if (flash?.status) {
+            const id = generateNotificationId('status', flash.status);
+            if (!isNotificationRecent(id)) {
+                switch (flash.status) {
+                    case 'verification-link-sent':
+                        toast.success('Enlace de verificación enviado', {
+                            description: 'Revisa tu correo electrónico',
+                            duration: NOTIFICATION_CONFIG.durations.success,
+                            position: NOTIFICATION_CONFIG.position,
                         });
-                    }
-                    break;
+                        break;
+                    case 'password-updated':
+                        toast.success('Contraseña actualizada exitosamente', {
+                            duration: NOTIFICATION_CONFIG.durations.success,
+                            position: NOTIFICATION_CONFIG.position,
+                        });
+                        break;
+                    case 'profile-updated':
+                        toast.success('Perfil actualizado exitosamente', {
+                            duration: NOTIFICATION_CONFIG.durations.success,
+                            position: NOTIFICATION_CONFIG.position,
+                        });
+                        break;
+                    default:
+                        if (flash.status) {
+                            toast.info(flash.status, {
+                                duration: NOTIFICATION_CONFIG.durations.info,
+                                position: NOTIFICATION_CONFIG.position,
+                            });
+                        }
+                        break;
+                }
+                markNotificationAsShown(id);
             }
-            processedMessages.current.add(`status:${flash.status}`);
         }
 
     }, [flash]);
 
-    // Funciones de utilidad para mostrar notificaciones programáticamente
+    // Funciones de utilidad para mostrar notificaciones programáticamente con deduplicación
     const notify = {
         success: (message: string, description?: string) => {
-            toast.success(message, {
-                description,
-                duration: 4000,
-                position: 'top-right',
-            });
+            const id = generateNotificationId('success', message);
+            if (!isNotificationRecent(id)) {
+                toast.success(message, {
+                    description,
+                    duration: NOTIFICATION_CONFIG.durations.success,
+                    position: NOTIFICATION_CONFIG.position,
+                });
+                markNotificationAsShown(id);
+            }
         },
         error: (message: string, description?: string) => {
-            toast.error(message, {
-                description,
-                duration: 5000,
-                position: 'top-right',
-            });
+            const id = generateNotificationId('error', message);
+            if (!isNotificationRecent(id)) {
+                toast.error(message, {
+                    description,
+                    duration: NOTIFICATION_CONFIG.durations.error,
+                    position: NOTIFICATION_CONFIG.position,
+                });
+                markNotificationAsShown(id);
+            }
         },
         warning: (message: string, description?: string) => {
-            toast.warning(message, {
-                description,
-                duration: 4000,
-                position: 'top-right',
-            });
+            const id = generateNotificationId('warning', message);
+            if (!isNotificationRecent(id)) {
+                toast.warning(message, {
+                    description,
+                    duration: NOTIFICATION_CONFIG.durations.warning,
+                    position: NOTIFICATION_CONFIG.position,
+                });
+                markNotificationAsShown(id);
+            }
         },
         info: (message: string, description?: string) => {
-            toast.info(message, {
-                description,
-                duration: 3000,
-                position: 'top-right',
-            });
+            const id = generateNotificationId('info', message);
+            if (!isNotificationRecent(id)) {
+                toast.info(message, {
+                    description,
+                    duration: NOTIFICATION_CONFIG.durations.info,
+                    position: NOTIFICATION_CONFIG.position,
+                });
+                markNotificationAsShown(id);
+            }
         },
         loading: (message: string) => {
+            // Loading notifications should not be deduplicated as they serve different purposes
             return toast.loading(message, {
-                position: 'top-right',
+                position: NOTIFICATION_CONFIG.position,
             });
         },
         promise: <T,>(
@@ -137,13 +225,82 @@ export function useNotifications() {
                 loading,
                 success,
                 error,
-                position: 'top-right',
+                position: NOTIFICATION_CONFIG.position,
             });
         }
     };
 
     return { notify };
 }
+
+/**
+ * Función standalone para mostrar notificaciones sin necesidad del hook
+ * Útil para ser importada directamente en componentes
+ */
+export const showNotification = {
+    success: (message: string, description?: string) => {
+        const id = generateNotificationId('success', message);
+        if (!isNotificationRecent(id)) {
+            toast.success(message, {
+                description,
+                duration: NOTIFICATION_CONFIG.durations.success,
+                position: NOTIFICATION_CONFIG.position,
+            });
+            markNotificationAsShown(id);
+        }
+    },
+    error: (message: string, description?: string) => {
+        const id = generateNotificationId('error', message);
+        if (!isNotificationRecent(id)) {
+            toast.error(message, {
+                description,
+                duration: NOTIFICATION_CONFIG.durations.error,
+                position: NOTIFICATION_CONFIG.position,
+            });
+            markNotificationAsShown(id);
+        }
+    },
+    warning: (message: string, description?: string) => {
+        const id = generateNotificationId('warning', message);
+        if (!isNotificationRecent(id)) {
+            toast.warning(message, {
+                description,
+                duration: NOTIFICATION_CONFIG.durations.warning,
+                position: NOTIFICATION_CONFIG.position,
+            });
+            markNotificationAsShown(id);
+        }
+    },
+    info: (message: string, description?: string) => {
+        const id = generateNotificationId('info', message);
+        if (!isNotificationRecent(id)) {
+            toast.info(message, {
+                description,
+                duration: NOTIFICATION_CONFIG.durations.info,
+                position: NOTIFICATION_CONFIG.position,
+            });
+            markNotificationAsShown(id);
+        }
+    },
+    loading: (message: string) => {
+        return toast.loading(message, {
+            position: NOTIFICATION_CONFIG.position,
+        });
+    },
+    promise: <T,>(
+        promise: Promise<T>,
+        loading: string,
+        success: string | ((data: T) => string),
+        error: string | ((error: unknown) => string)
+    ) => {
+        return toast.promise(promise, {
+            loading,
+            success,
+            error,
+            position: NOTIFICATION_CONFIG.position,
+        });
+    }
+};
 
 /**
  * Hook para manejar notificaciones específicas de formularios

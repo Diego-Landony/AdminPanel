@@ -45,11 +45,11 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                 isActive={item.href ? page.url.startsWith(item.href) : false}
                                 tooltip={state === 'collapsed' ? { children: item.title } : undefined}
                             >
-                                <Link href={item.href || '#'} prefetch>
+                                <Link href={item.href || '#'} prefetch className="flex items-center min-w-0">
                                     {item.icon && (
-                                        <item.icon className="mr-2 h-4 w-4" />
+                                        <item.icon className="mr-2 h-4 w-4 flex-shrink-0" />
                                     )}
-                                    <span>{item.title}</span>
+                                    <span className="truncate overflow-hidden text-ellipsis whitespace-nowrap">{item.title}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
@@ -118,9 +118,10 @@ function GroupItem({
                     isActive={!!isSubItemActive}
                     onClick={handleItemClick}
                     tooltip={state === 'collapsed' ? { children: item.title } : undefined}
+                    className="flex items-center min-w-0"
                 >
-                    {item.icon && <item.icon className="mr-2 h-4 w-4" />}
-                    <span>{item.title}</span>
+                    {item.icon && <item.icon className="mr-2 h-4 w-4 flex-shrink-0" />}
+                    <span className="truncate overflow-hidden text-ellipsis whitespace-nowrap flex-1">{item.title}</span>
                 </SidebarMenuButton>
 
                 <SidebarMenuAction aria-expanded={open} onClick={handleItemClick}>
@@ -132,8 +133,8 @@ function GroupItem({
                         {item.items?.map((subItem) => (
                             <SidebarMenuSubItem key={subItem.title}>
                                 <SidebarMenuSubButton asChild isActive={subItem.href ? page.url.startsWith(subItem.href) : false}>
-                                    <Link href={subItem.href || '#'} prefetch>
-                                        <span>{subItem.title}</span>
+                                    <Link href={subItem.href || '#'} prefetch className="flex items-center min-w-0">
+                                        <span className="truncate overflow-hidden text-ellipsis whitespace-nowrap">{subItem.title}</span>
                                     </Link>
                                 </SidebarMenuSubButton>
                             </SidebarMenuSubItem>

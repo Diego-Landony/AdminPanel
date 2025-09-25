@@ -1,4 +1,3 @@
-import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -49,20 +48,6 @@ interface FormData {
  * Página para editar un tipo de cliente
  */
 export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
-    const breadcrumbs: BreadcrumbItem[] = [
-        {
-            title: 'Clientes',
-            href: '/customers',
-        },
-        {
-            title: 'Tipos de Cliente',
-            href: '/customer-types',
-        },
-        {
-            title: `Editar ${customer_type.display_name}`,
-            href: `/customer-types/${customer_type.id}/edit`,
-        },
-    ];
 
     const [formData, setFormData] = useState<FormData>({
         name: customer_type.name,
@@ -120,7 +105,7 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
     ];
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout>
             <Head title={`Editar ${customer_type.display_name}`} />
             
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6">

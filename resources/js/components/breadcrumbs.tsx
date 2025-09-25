@@ -2,8 +2,16 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
 import { Link } from '@inertiajs/react';
 import { Fragment } from 'react';
+import { useBreadcrumbs } from '@/hooks/useBreadcrumbs';
 
-export function Breadcrumbs({ breadcrumbs }: { breadcrumbs: BreadcrumbItemType[] }) {
+export function Breadcrumbs({ breadcrumbs: manualBreadcrumbs }: { breadcrumbs?: BreadcrumbItemType[] }) {
+    // Si se proporcionan breadcrumbs manuales, usarlos; sino, generar automáticamente
+    const autoBreadcrumbs = useBreadcrumbs({
+        override: manualBreadcrumbs,
+        autoGenerate: !manualBreadcrumbs
+    });
+
+    const breadcrumbs = manualBreadcrumbs || autoBreadcrumbs;
     return (
         <>
             {breadcrumbs.length > 0 && (

@@ -12,27 +12,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { FormField } from '@/components/ui/form-field';
 import { FormError } from '@/components/ui/form-error';
-import { BreadcrumbItem } from '@/types';
 import { ArrowLeft, Save, Users } from 'lucide-react';
-import { toast } from 'sonner';
-
-/**
- * Breadcrumbs para la navegación de edición de roles
- */
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Usuarios',
-        href: '/users',
-    },
-    {
-        title: 'Roles',
-        href: '/roles',
-    },
-    {
-        title: 'Editar Rol',
-        href: '#',
-    },
-];
+import { showNotification } from '@/hooks/useNotifications';
 
 /**
  * Interfaz para los permisos agrupados
@@ -108,7 +89,7 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                 // Los errores de validación se muestran automáticamente
                 // Los errores del servidor se manejan por el layout
                 if (Object.keys(errors).length === 0) {
-                    toast.error('Error del servidor al actualizar el rol. Inténtalo de nuevo.');
+                    showNotification.error('Error del servidor al actualizar el rol. Inténtalo de nuevo.');
                 }
             }
         });
@@ -170,21 +151,21 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
 
             if (response.ok) {
                 if (checked) {
-                    toast.success('Usuario agregado al rol');
+                    showNotification.success('Usuario agregado al rol');
                 } else {
-                    toast.success('Usuario removido del rol');
+                    showNotification.success('Usuario removido del rol');
                 }
             } else {
                 // Revertir el cambio si falla
                 setSelectedUsers(selectedUsers);
                 const errorData = await response.json();
-                toast.error(errorData.error || 'Error al actualizar usuarios del rol');
+                showNotification.error(errorData.error || 'Error al actualizar usuarios del rol');
             }
         } catch (error) {
             // Revertir el cambio si falla
             setSelectedUsers(selectedUsers);
             console.error('Error saving users:', error);
-            toast.error('Error de conexión al actualizar usuarios');
+            showNotification.error('Error de conexión al actualizar usuarios');
         }
     };
 
@@ -197,7 +178,7 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
     );
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout>
             <Head title={`Editar Rol - ${role.name}`} />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">

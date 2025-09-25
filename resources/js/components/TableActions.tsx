@@ -27,7 +27,39 @@ interface TableActionsProps {
 
 /**
  * Professional table actions component with direct Edit/Delete buttons
- * Replaces the complex ActionsMenu with simple, clear actions
+ *
+ * Provides consistent action interface across all data tables. Replaces complex
+ * dropdown menus with clear, accessible button actions.
+ *
+ * Features:
+ * - Direct edit/delete buttons with tooltips
+ * - Permission-based action visibility
+ * - Loading states with spinner indicators
+ * - Accessible keyboard navigation
+ * - Consistent hover states and theming
+ * - Integration with Inertia.js routing
+ *
+ * @param editHref - URL for edit action (if provided, shows edit button)
+ * @param onDelete - Callback function for delete action
+ * @param isDeleting - Whether delete operation is in progress
+ * @param canDelete - Whether delete action should be enabled
+ * @param editTooltip - Tooltip text for edit button
+ * @param deleteTooltip - Tooltip text for delete button
+ * @param showEdit - Whether to display edit button
+ * @param showDelete - Whether to display delete button
+ * @param className - Additional CSS classes
+ *
+ * @example
+ * ```tsx
+ * <TableActions
+ *   editHref={`/users/${user.id}/edit`}
+ *   onDelete={() => handleDelete(user.id)}
+ *   isDeleting={deletingUserId === user.id}
+ *   canDelete={!user.is_system}
+ *   editTooltip="Edit user"
+ *   deleteTooltip="Delete user"
+ * />
+ * ```
  */
 export const TableActions: React.FC<TableActionsProps> = ({
     editHref,

@@ -72,8 +72,9 @@ export function PaginationWrapper({
                                         e.preventDefault();
                                         goToPage(1);
                                     }}
+                                    className="min-w-[2.5rem] max-w-[4rem] overflow-hidden text-ellipsis"
                                 >
-                                    1
+                                    <span className="tabular-nums">1</span>
                                 </PaginationLink>
                             </PaginationItem>
                             {data.current_page > 4 && (
@@ -98,8 +99,9 @@ export function PaginationWrapper({
                                         goToPage(page);
                                     }}
                                     isActive={page === data.current_page}
+                                    className="min-w-[2.5rem] max-w-[4rem] overflow-hidden text-ellipsis"
                                 >
-                                    {page}
+                                    <span className="tabular-nums">{page}</span>
                                 </PaginationLink>
                             </PaginationItem>
                         );
@@ -120,8 +122,9 @@ export function PaginationWrapper({
                                         e.preventDefault();
                                         goToPage(data.last_page);
                                     }}
+                                    className="min-w-[2.5rem] max-w-[4rem] overflow-hidden text-ellipsis"
                                 >
-                                    {data.last_page}
+                                    <span className="tabular-nums">{data.last_page}</span>
                                 </PaginationLink>
                             </PaginationItem>
                         </>
@@ -143,7 +146,11 @@ export function PaginationWrapper({
             {/* Información opcional de paginación */}
             {showInfo && data.from && data.to && data.total && (
                 <div className="mt-4 text-center text-sm text-muted-foreground">
-                    Página {data.current_page} de {data.last_page} - Mostrando {data.from} a {data.to} de {data.total} elementos
+                    <span className="break-words inline-block max-w-full overflow-hidden text-ellipsis">
+                        <span className="tabular-nums">Página {data.current_page} de {data.last_page}</span>
+                        {' - '}
+                        <span className="tabular-nums">Mostrando {data.from} a {data.to} de {data.total} elementos</span>
+                    </span>
                 </div>
             )}
         </div>

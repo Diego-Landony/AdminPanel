@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
 import { ArrowLeft, Save, User, Mail, Lock, Eye, EyeOff, CreditCard, Phone, MapPin, Calendar, Hash } from 'lucide-react';
-import { toast } from 'sonner';
+import { showNotification } from '@/hooks/useNotifications';
 
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
@@ -9,21 +9,6 @@ import { Input } from '@/components/ui/input';
 import { FormField } from '@/components/ui/form-field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { BreadcrumbItem } from '@/types';
-
-/**
- * Breadcrumbs para la navegación
- */
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Clientes',
-        href: '/customers',
-    },
-    {
-        title: 'Crear Cliente',
-        href: '/customers/create',
-    },
-];
 
 /**
  * Página para crear un nuevo cliente
@@ -55,12 +40,12 @@ export default function CreateCustomer() {
         post(route('customers.store'), {
             onSuccess: () => {
                 reset();
-                toast.success('Cliente creado exitosamente');
+                showNotification.success('Cliente creado exitosamente');
             },
             onError: (errors) => {
                 const firstError = Object.values(errors)[0];
                 if (typeof firstError === 'string') {
-                    toast.error(firstError);
+                    showNotification.error(firstError);
                 }
             },
         });
@@ -68,7 +53,6 @@ export default function CreateCustomer() {
 
     return (
         <AppLayout
-            breadcrumbs={breadcrumbs}
         >
             <Head title="Crear Cliente" />
 

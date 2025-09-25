@@ -1,30 +1,19 @@
-import React from 'react';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import React, { useState, useCallback } from 'react';
+import { Head, router } from '@inertiajs/react';
 import { Users, Clock, CreditCard, MapPin, Phone, Check, X, Award } from 'lucide-react';
+import { showNotification } from '@/hooks/useNotifications';
 
 import AppLayout from '@/layouts/app-layout';
 import { EntityInfoCell } from '@/components/EntityInfoCell';
 import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { DataTable } from '@/components/DataTable';
 import { StatusBadge, CONNECTION_STATUS_CONFIGS, CUSTOMER_TYPE_COLORS } from '@/components/status-badge';
+import { TableActions } from '@/components/TableActions';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, calculateAge, daysSince, formatPoints } from '@/utils/format';
 import { CustomersSkeleton } from '@/components/skeletons';
 
-/**
- * Breadcrumbs para la navegación de clientes
- */
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Clientes',
-        href: '/customers',
-    },
-    {
-        title: 'Gestión de clientes',
-        href: '/customers',
-    },
-];
 
 /**
  * Interfaz para los datos del cliente
@@ -142,6 +131,25 @@ export default function CustomersIndex({
     customer_type_stats,
     filters,
 }: CustomersPageProps) {
+    const [deletingCustomer, setDeletingCustomer] = useState<number | null>(null);
+
+    const handleDelete = useCallback((customerId: number) => {
+        setDeletingCustomer(customerId);
+        router.delete(`/customers/${customerId}`, {
+            onSuccess: () => {
+                showNotification.success('Cliente eliminado correctamente');
+                setDeletingCustomer(null);
+            },
+            onError: (error) => {
+                setDeletingCustomer(null);
+                if (error.message) {
+                    showNotification.error(error.message);
+                } else {
+                    showNotification.error('Error al eliminar el cliente');
+                }
+            }
+        });
+    }, []);
     // Generar estadísticas dinámicas basadas en los tipos de cliente reales
     const stats = [
         {
@@ -306,6 +314,21 @@ export default function CustomersIndex({
                 </div>
             )
         },
+        {
+            key: 'actions',
+            title: 'Acciones',
+            width: 'xs' as const,
+            textAlign: 'right' as const,
+            render: (customer: Customer) => (
+                <TableActions
+                    editHref={`/customers/${customer.id}/edit`}
+                    onDelete={() => setDeletingCustomer(customer.id)}
+                    isDeleting={deletingCustomer === customer.id}
+                    editTooltip="Editar cliente"
+                    deleteTooltip="Eliminar cliente"
+                />
+            )
+        },
     ];
 
     const CustomerMobileCard = ({ customer }: { customer: Customer }) => (
@@ -315,6 +338,13 @@ export default function CustomersIndex({
             subtitle={customer.email}
             badge={{
                 children: <StatusBadge status={customer.status} configs={CONNECTION_STATUS_CONFIGS} className="text-xs" />
+            }}
+            actions={{
+                editHref: `/customers/${customer.id}/edit`,
+                onDelete: () => setDeletingCustomer(customer.id),
+                isDeleting: deletingCustomer === customer.id,
+                editTooltip: "Editar cliente",
+                deleteTooltip: "Eliminar cliente"
             }}
             dataFields={[
                 {
@@ -414,7 +444,7 @@ export default function CustomersIndex({
     );
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout>
             <Head title="Gestión de Clientes" />
 
             <DataTable
@@ -431,6 +461,19 @@ export default function CustomersIndex({
                 renderMobileCard={(customer) => <CustomerMobileCard customer={customer} />}
                 routeName="/customers"
                 breakpoint="md"
+            />
+
+            <DeleteConfirmationDialog
+                isOpen={deletingCustomer !== null}
+                onClose={() => setDeletingCustomer(null)}
+                onConfirm={() => {
+                    if (deletingCustomer) {
+                        handleDelete(deletingCustomer);
+                    }
+                }}
+                isDeleting={deletingCustomer !== null}
+                entityName={customers.data.find(c => c.id === deletingCustomer)?.full_name || ''}
+                entityType="cliente"
             />
         </AppLayout>
     );

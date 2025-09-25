@@ -48,15 +48,46 @@ export interface StandardMobileCardProps {
 }
 
 /**
- * Professional standardized mobile card component
- * Unifies the ResponsiveCard + DataFields pattern used across all mobile cards
+ * Professional standardized mobile card component for entity display
+ *
+ * Unifies the ResponsiveCard + DataFields pattern used across all mobile interfaces.
+ * Provides consistent layout and interaction patterns for all entity types.
  *
  * Features:
- * - Consistent header with icon, title, subtitle, and badge
- * - Flexible data fields with conditional rendering
- * - Integrated TableActions for edit/delete operations
- * - Support for additional custom content
- * - Professional styling and responsive design
+ * - Standardized header with icon, title, subtitle, and status badge
+ * - Flexible data fields with conditional rendering support
+ * - Integrated TableActions for CRUD operations
+ * - Professional spacing, typography, and responsive behavior
+ * - Support for additional custom content and interactions
+ * - Consistent theming with dark mode support
+ *
+ * @param icon - Lucide icon component for entity type identification
+ * @param title - Primary entity name/title (supports React nodes for complex content)
+ * @param subtitle - Secondary information (e.g., email, description)
+ * @param badge - Optional status badge configuration
+ * @param dataFields - Array of labeled data fields with conditional rendering
+ * @param actions - Edit/delete action configuration with permissions
+ * @param additionalContent - Custom content rendered after actions
+ * @param className - Additional CSS classes for customization
+ *
+ * @example
+ * ```tsx
+ * <StandardMobileCard
+ *   icon={Users}
+ *   title="John Doe"
+ *   subtitle="john@example.com"
+ *   badge={{ children: <StatusBadge status="active" /> }}
+ *   dataFields={[
+ *     { label: "Role", value: "Admin" },
+ *     { label: "Phone", value: user.phone, condition: !!user.phone }
+ *   ]}
+ *   actions={{
+ *     editHref: `/users/${user.id}/edit`,
+ *     onDelete: () => handleDelete(user.id),
+ *     canDelete: !user.is_system
+ *   }}
+ * />
+ * ```
  */
 export const StandardMobileCard: React.FC<StandardMobileCardProps> = ({
     icon: IconComponent,
@@ -77,7 +108,7 @@ export const StandardMobileCard: React.FC<StandardMobileCardProps> = ({
                 badge={badge}
             />
 
-            <ResponsiveCardContent>
+            <ResponsiveCardContent layout="stack">
                 {dataFields.map((field, index) => {
                     // Skip field if condition is provided and false
                     if (field.condition !== undefined && !field.condition) {
@@ -89,6 +120,7 @@ export const StandardMobileCard: React.FC<StandardMobileCardProps> = ({
                             key={`${field.label}-${index}`}
                             label={field.label}
                             value={field.value}
+                            truncate={false}
                         />
                     );
                 })}

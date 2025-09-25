@@ -17,7 +17,7 @@ Route::get('/', function () {
     }
 
     return redirect()->route('login');
-})->name('home');
+})->name('root');
 
 // Rutas para el manejo del tema
 Route::post('/theme/update', [ThemeController::class, 'update'])->name('theme.update');
@@ -28,11 +28,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('home', function () {
         return Inertia::render('home');
     })->name('home')->middleware('permission:home.view');
-
-    // Dashboard - requiere permisos específicos
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard')->middleware('permission:dashboard.view');
 
     // Página de sin acceso
     Route::get('no-access', function () {

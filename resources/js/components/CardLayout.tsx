@@ -61,7 +61,7 @@ export const ResponsiveCardHeader: React.FC<ResponsiveCardHeaderProps> = ({
         <div className="flex items-start gap-4 flex-1 min-w-0">
           {/* Avatar or Icon */}
           {avatar ? (
-            <Avatar className={`w-10 h-10 flex-shrink-0 ${avatar.className || ''}`}>
+            <Avatar className={`w-10 h-10 flex-shrink-0 overflow-hidden ${avatar.className || ''}`}>
               {avatar.src && <AvatarImage src={avatar.src} />}
               <AvatarFallback className="text-sm font-medium">
                 {avatar.fallback}
@@ -102,23 +102,37 @@ export const ResponsiveCardHeader: React.FC<ResponsiveCardHeaderProps> = ({
 
 interface ResponsiveCardContentProps {
   children: React.ReactNode;
-  columns?: 1 | 2;
+  layout?: 'stack' | 'flexible' | 'grid';
   className?: string;
 }
 
 /**
- * Professional card content with responsive grid layout
+ * Professional card content with flexible responsive layouts
+ * Based on shadcn/ui best practices for mobile overflow prevention
+ *
+ * - stack: Single column, items stack vertically (best for mobile-first)
+ * - flexible: Adaptive layout that prevents overflow (default, recommended)
+ * - grid: Traditional grid layout (legacy, can cause overflow)
  */
 export const ResponsiveCardContent: React.FC<ResponsiveCardContentProps> = ({
   children,
-  columns = 2,
+  layout = 'flexible',
   className = ""
 }) => {
-  const gridClass = columns === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1';
+  const layoutClasses = {
+    // Single column stack - prevents all overflow issues
+    stack: 'space-y-4',
+
+    // Flexible layout - adapts to content size, prevents overflow
+    flexible: 'space-y-4 sm:grid sm:grid-cols-2 sm:gap-4 sm:space-y-0',
+
+    // Traditional grid - can cause overflow on long content
+    grid: 'grid grid-cols-1 sm:grid-cols-2 gap-4'
+  };
 
   return (
     <CardContent className={`pt-0 ${className}`}>
-      <div className={`grid ${gridClass} gap-4 text-sm`}>
+      <div className={`${layoutClasses[layout]} text-sm`}>
         {children}
       </div>
     </CardContent>
@@ -129,22 +143,25 @@ interface DataFieldProps {
   label: string;
   value: React.ReactNode;
   className?: string;
+  truncate?: boolean;
 }
 
 /**
  * Professional data field component for label/value display
+ * With overflow protection for long content
  */
 export const DataField: React.FC<DataFieldProps> = ({
   label,
   value,
-  className = ""
+  className = "",
+  truncate = false
 }) => {
   return (
-    <div className={`space-y-1 ${className}`}>
-      <dt className="font-medium text-muted-foreground text-sm">
+    <div className={`space-y-1 min-w-0 ${className}`}>
+      <dt className="font-medium text-muted-foreground text-sm truncate">
         {label}
       </dt>
-      <dd className="text-foreground">
+      <dd className={`text-foreground break-words ${truncate ? 'line-clamp-2' : ''}`}>
         {value}
       </dd>
     </div>

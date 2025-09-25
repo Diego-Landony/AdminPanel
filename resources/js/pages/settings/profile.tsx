@@ -1,4 +1,4 @@
-import { type BreadcrumbItem, type SharedData } from '@/types';
+import { type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
@@ -9,16 +9,6 @@ import { Input } from '@/components/ui/input';
 import { FormField } from '@/components/ui/form-field';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
-
-/**
- * Breadcrumbs para la navegación de configuración de perfil
- */
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Configuración de Perfil',
-        href: '/settings/profile',
-    },
-];
 
 /**
  * Formulario de perfil del usuario
@@ -53,7 +43,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout>
             <Head title="Configuración de Perfil" />
 
             <SettingsLayout>

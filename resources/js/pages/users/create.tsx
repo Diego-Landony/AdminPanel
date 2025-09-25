@@ -1,28 +1,13 @@
 import React, { useState } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
 import { ArrowLeft, Save, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { toast } from 'sonner';
+import { showNotification } from '@/hooks/useNotifications';
 
 
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormField } from '@/components/ui/form-field';
-import { BreadcrumbItem } from '@/types';
-
-/**
- * Breadcrumbs para la navegación
- */
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Usuarios',
-        href: '/users',
-    },
-    {
-        title: 'Crear Usuario',
-        href: '/users/create',
-    },
-];
 
 
 
@@ -53,47 +38,47 @@ export default function CreateUser() {
                 // Los errores de validación se muestran automáticamente
                 // Los errores del servidor se manejan por el layout
                 if (Object.keys(errors).length === 0) {
-                    toast.error('Error del servidor al crear el usuario. Inténtalo de nuevo.');
+                    showNotification.error('Error del servidor al crear el usuario. Inténtalo de nuevo.');
                 }
             }
         });
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout>
             <Head title="Crear Usuario" />
             
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6">
                 {/* Encabezado */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Crear Usuario</h1>
-                        <p className="text-muted-foreground">
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight truncate">Crear Usuario</h1>
+                        <p className="text-muted-foreground break-words">
                             Agrega un nuevo usuario al sistema con los datos básicos
                         </p>
                     </div>
-                    <Link href={route('users.index')}>
-                        <Button variant="outline">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Volver a Usuarios
+                    <Link href={route('users.index')} className="flex-shrink-0 w-full sm:w-auto">
+                        <Button variant="outline" className="w-full sm:w-auto">
+                            <ArrowLeft className="mr-2 h-4 w-4 flex-shrink-0" />
+                            <span className="truncate">Volver a Usuarios</span>
                         </Button>
                     </Link>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="max-w-2xl mx-auto">
+                    <div className="w-full max-w-2xl mx-auto min-w-0 px-1">
                         {/* Información del Usuario */}
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <h2 className="text-lg font-semibold flex items-center gap-2">
-                                    <User className="h-5 w-5" />
-                                    Información del Usuario
+                                <h2 className="text-lg font-semibold flex items-center gap-2 truncate">
+                                    <User className="h-5 w-5 flex-shrink-0" />
+                                    <span className="truncate">Información del Usuario</span>
                                 </h2>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-muted-foreground break-words">
                                     Datos básicos del nuevo usuario
                                 </p>
                             </div>
-                            <div className="space-y-4">
+                            <div className="space-y-4 overflow-hidden">
                                 {/* Nombre */}
                                 <FormField
                                     label="Nombre Completo"
@@ -184,15 +169,15 @@ export default function CreateUser() {
                     </div>
 
                     {/* Botones de Acción */}
-                    <div className="flex items-center justify-end space-x-4">
-                        <Link href={route('users.index')}>
-                            <Button variant="outline" type="button">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 mt-8 px-1">
+                        <Link href={route('users.index')} className="w-full sm:w-auto">
+                            <Button variant="outline" type="button" className="w-full sm:w-auto">
                                 Cancelar
                             </Button>
                         </Link>
-                        <Button type="submit" disabled={processing}>
-                            <Save className="mr-2 h-4 w-4" />
-                            {processing ? 'Creando...' : 'Crear Usuario'}
+                        <Button type="submit" disabled={processing} className="w-full sm:w-auto">
+                            <Save className="mr-2 h-4 w-4 flex-shrink-0" />
+                            <span className="truncate">{processing ? 'Creando...' : 'Crear Usuario'}</span>
                         </Button>
                     </div>
                 </form>

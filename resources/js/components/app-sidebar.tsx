@@ -2,7 +2,7 @@ import { NavMain } from '@/components/nav-main';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Users, UserCog, Activity, Shield, LucideIcon, Home, Star, UserCircle, Settings, Building } from 'lucide-react';
+import { Users, UserCog, Activity, Shield, LucideIcon, Home, Star, UserCircle, Settings, Building } from 'lucide-react';
 import { usePermissions } from '@/hooks/use-permissions';
 import AppLogo from './app-logo';
 
@@ -26,13 +26,6 @@ const systemPages: PageConfig[] = [
         href: '/home',
         icon: Home,
         permission: 'home.view',
-    },
-    {
-        name: 'dashboard',
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutGrid,
-        permission: 'dashboard.view',
     },
     {
         name: 'users',
@@ -163,7 +156,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/dashboard" prefetch>
+                            <Link href="/home" prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

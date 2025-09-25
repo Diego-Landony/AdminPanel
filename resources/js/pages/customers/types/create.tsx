@@ -1,4 +1,3 @@
-import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -10,24 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Shield, ArrowLeft } from 'lucide-react';
-
-/**
- * Breadcrumbs para la navegación
- */
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Clientes',
-        href: '/customers',
-    },
-    {
-        title: 'Tipos de Cliente',
-        href: '/customer-types',
-    },
-    {
-        title: 'Crear Tipo',
-        href: '/customer-types/create',
-    },
-];
 
 /**
  * Interfaz para el formulario
@@ -116,7 +97,7 @@ export default function CustomerTypeCreate() {
     ];
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout>
             <Head title="Crear Tipo de Cliente" />
             
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6">

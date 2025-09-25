@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
 import { ArrowLeft, Save, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { toast } from 'sonner';
+import { showNotification } from '@/hooks/useNotifications';
 
 
 import AppLayout from '@/layouts/app-layout';
@@ -13,21 +13,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { FormField } from '@/components/ui/form-field';
-import { BreadcrumbItem } from '@/types';
-
-/**
- * Breadcrumbs para la navegación
- */
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Usuarios',
-        href: '/users',
-    },
-    {
-        title: 'Editar Usuario',
-        href: '#',
-    },
-];
 
 /**
  * Interfaz para el usuario a editar
@@ -68,7 +53,7 @@ export default function EditUser({ user }: EditUserPageProps) {
     if (!user || typeof user !== 'object' || !user.name || !user.email || !user.id) {
         console.error('Usuario inválido recibido:', user);
         return (
-            <AppLayout breadcrumbs={breadcrumbs}>
+            <AppLayout>
                 <Head title="Error - Editar Usuario" />
                 <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6">
                     <div className="text-center">
@@ -111,7 +96,7 @@ export default function EditUser({ user }: EditUserPageProps) {
                 // Los errores de validación se muestran automáticamente
                 // Los errores del servidor se manejan por el layout
                 if (Object.keys(errors).length === 0) {
-                    toast.error('Error del servidor al actualizar el usuario. Inténtalo de nuevo.');
+                    showNotification.error('Error del servidor al actualizar el usuario. Inténtalo de nuevo.');
                 }
             }
         });
@@ -136,7 +121,7 @@ export default function EditUser({ user }: EditUserPageProps) {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout>
             <Head title={`Editar Usuario - ${user.name}`} />
             
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6">

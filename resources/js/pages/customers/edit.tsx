@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
 import { ArrowLeft, Save, User, Mail, Lock, Eye, EyeOff, CreditCard, Phone, MapPin, Calendar, Hash, Check, X } from 'lucide-react';
-import { toast } from 'sonner';
+import { showNotification } from '@/hooks/useNotifications';
 
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,6 @@ import { FormField } from '@/components/ui/form-field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { BreadcrumbItem } from '@/types';
 
 /**
  * Interfaz para los datos del cliente
@@ -62,16 +61,6 @@ const formatDate = (dateString: string | null): string => {
 export default function EditCustomer({ customer }: EditCustomerProps) {
     const [showPassword, setShowPassword] = useState(false);
     
-    const breadcrumbs: BreadcrumbItem[] = [
-        {
-            title: 'Clientes',
-            href: '/customers',
-        },
-        {
-            title: customer.full_name,
-            href: `/customers/${customer.id}/edit`,
-        },
-    ];
     
     const { data, setData, put, processing, errors, reset, isDirty } = useForm({
         full_name: customer.full_name || '',
@@ -96,7 +85,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
         
         put(route('customers.update', customer.id), {
             onSuccess: () => {
-                toast.success('Cliente actualizado exitosamente');
+                showNotification.success('Cliente actualizado exitosamente');
                 // Limpiar los campos de contraseña
                 setData('password', '');
                 setData('password_confirmation', '');
@@ -104,7 +93,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
             onError: (errors) => {
                 const firstError = Object.values(errors)[0];
                 if (typeof firstError === 'string') {
-                    toast.error(firstError);
+                    showNotification.error(firstError);
                 }
             },
         });
@@ -133,7 +122,6 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
 
     return (
         <AppLayout
-            breadcrumbs={breadcrumbs}
         >
             <Head title={`Editar Cliente - ${customer.full_name}`} />
 

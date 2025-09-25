@@ -1,30 +1,18 @@
-import React from 'react';
-import { type BreadcrumbItem } from "@/types";
-import { Head } from "@inertiajs/react";
+import React, { useState, useCallback } from 'react';
+import { Head, router } from "@inertiajs/react";
 import { MapPin, Phone, Clock, Star, Truck, ShoppingBag, Building2, CheckCircle, XCircle, Badge as BadgeIcon } from 'lucide-react';
+import { showNotification } from '@/hooks/useNotifications';
 
 import AppLayout from "@/layouts/app-layout";
 import { EntityInfoCell } from '@/components/EntityInfoCell';
 import { DataTable } from '@/components/DataTable';
 import { StatusBadge, ACTIVE_STATUS_CONFIGS, SERVICE_STATUS_CONFIGS } from '@/components/status-badge';
 import { StandardMobileCard } from '@/components/StandardMobileCard';
+import { TableActions } from '@/components/TableActions';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, formatNumber } from '@/utils/format';
 import { RestaurantsSkeleton } from '@/components/skeletons';
-
-/**
- * Breadcrumbs para la navegación de restaurantes
- */
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Restaurantes',
-        href: '/restaurants',
-    },
-    {
-        title: 'Gestión de restaurantes',
-        href: '/restaurants',
-    },
-];
 
 interface Restaurant {
     id: number;
@@ -132,6 +120,25 @@ export default function RestaurantsIndex({
     pickup_restaurants,
     filters,
 }: RestaurantsPageProps) {
+    const [deletingRestaurant, setDeletingRestaurant] = useState<number | null>(null);
+
+    const handleDelete = useCallback((restaurantId: number) => {
+        setDeletingRestaurant(restaurantId);
+        router.delete(`/restaurants/${restaurantId}`, {
+            onSuccess: () => {
+                showNotification.success('Restaurante eliminado correctamente');
+                setDeletingRestaurant(null);
+            },
+            onError: (error) => {
+                setDeletingRestaurant(null);
+                if (error.message) {
+                    showNotification.error(error.message);
+                } else {
+                    showNotification.error('Error al eliminar el restaurante');
+                }
+            }
+        });
+    }, []);
 
     const stats = [
         {
@@ -269,6 +276,21 @@ export default function RestaurantsIndex({
                 </div>
             )
         },
+        {
+            key: 'actions',
+            title: 'Acciones',
+            width: 'xs' as const,
+            textAlign: 'right' as const,
+            render: (restaurant: Restaurant) => (
+                <TableActions
+                    editHref={`/restaurants/${restaurant.id}/edit`}
+                    onDelete={() => setDeletingRestaurant(restaurant.id)}
+                    isDeleting={deletingRestaurant === restaurant.id}
+                    editTooltip="Editar restaurante"
+                    deleteTooltip="Eliminar restaurante"
+                />
+            )
+        },
     ];
 
     const RestaurantMobileCard = ({ restaurant }: { restaurant: Restaurant }) => (
@@ -283,6 +305,13 @@ export default function RestaurantsIndex({
                     showIcon={false}
                     className="text-xs"
                 />
+            }}
+            actions={{
+                editHref: `/restaurants/${restaurant.id}/edit`,
+                onDelete: () => setDeletingRestaurant(restaurant.id),
+                isDeleting: deletingRestaurant === restaurant.id,
+                editTooltip: "Editar restaurante",
+                deleteTooltip: "Eliminar restaurante"
             }}
             dataFields={[
                 {
@@ -368,7 +397,7 @@ export default function RestaurantsIndex({
     );
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout>
             <Head title="Gestión de Restaurantes" />
 
             <DataTable
@@ -385,6 +414,19 @@ export default function RestaurantsIndex({
                 renderMobileCard={(restaurant) => <RestaurantMobileCard restaurant={restaurant} />}
                 routeName="/restaurants"
                 breakpoint="md"
+            />
+
+            <DeleteConfirmationDialog
+                isOpen={deletingRestaurant !== null}
+                onClose={() => setDeletingRestaurant(null)}
+                onConfirm={() => {
+                    if (deletingRestaurant) {
+                        handleDelete(deletingRestaurant);
+                    }
+                }}
+                isDeleting={deletingRestaurant !== null}
+                entityName={restaurants.data.find(r => r.id === deletingRestaurant)?.name || ''}
+                entityType="restaurante"
             />
         </AppLayout>
     );

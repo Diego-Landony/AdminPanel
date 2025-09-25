@@ -1,7 +1,6 @@
-import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
+import { showNotification } from '@/hooks/useNotifications';
 
 import AppLayout from '@/layouts/app-layout';
 import { Badge } from '@/components/ui/badge';
@@ -14,17 +13,6 @@ import { TableActions } from '@/components/TableActions';
 import { CustomerTypesSkeleton } from '@/components/skeletons';
 import { DataTable } from '@/components/DataTable';
 import { ResponsiveCard, ResponsiveCardHeader, ResponsiveCardContent, DataField, CardActions } from '@/components/CardLayout';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Clientes',
-        href: '/customers',
-    },
-    {
-        title: 'Tipos de Cliente',
-        href: '/customer-types',
-    },
-];
 
 interface CustomerType {
     id: number;
@@ -144,12 +132,12 @@ export default function CustomerTypesIndex({ customer_types, stats, filters }: C
         router.delete(`/customer-types/${selectedType.id}`, {
             onSuccess: () => {
                 closeDeleteDialog();
-                toast.success('Tipo de cliente eliminado correctamente');
+                showNotification.success('Tipo de cliente eliminado correctamente');
             },
             onError: (error) => {
                 setDeletingType(null);
                 if (error.message) {
-                    toast.error(error.message);
+                    showNotification.error(error.message);
                 }
             }
         });
@@ -249,7 +237,7 @@ export default function CustomerTypesIndex({ customer_types, stats, filters }: C
     ];
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout>
             <Head title="Tipos de Cliente" />
 
             <DataTable

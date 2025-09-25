@@ -15,12 +15,30 @@ interface EntityInfoCellProps {
 }
 
 /**
- * Professional reusable entity info cell component
- * Used consistently across all table rows to display:
- * - Icon in circular container
- * - Primary text (name/title)
- * - Secondary text (subtitle/description)
- * - Optional badges
+ * Professional reusable entity info cell component for table rows
+ *
+ * Provides consistent display pattern across all entity tables including:
+ * - Circular icon container with brand theming
+ * - Primary text with proper truncation
+ * - Secondary text for additional context
+ * - Optional badge support for status indicators
+ * - Professional spacing and typography
+ *
+ * @param icon - Lucide icon component to display in circular container
+ * @param primaryText - Main entity name/title (e.g., user name, product title)
+ * @param secondaryText - Subtitle/description (e.g., email, category)
+ * @param badges - Optional React nodes for status badges or indicators
+ * @param className - Additional CSS classes for customization
+ *
+ * @example
+ * ```tsx
+ * <EntityInfoCell
+ *   icon={Users}
+ *   primaryText="John Doe"
+ *   secondaryText="john@example.com"
+ *   badges={<Badge variant="success">Active</Badge>}
+ * />
+ * ```
  */
 export const EntityInfoCell: React.FC<EntityInfoCellProps> = ({
     icon: IconComponent,

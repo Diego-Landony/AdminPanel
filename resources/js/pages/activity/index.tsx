@@ -1,4 +1,3 @@
-import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { type DateRange } from 'react-day-picker';
@@ -21,17 +20,6 @@ import { Filter, Calendar as CalendarIcon, Users } from 'lucide-react';
 import { EntityInfoCell } from '@/components/EntityInfoCell';
 import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { FilterDialog, DateRangeFilterDialog } from '@/components/FilterDialog';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Usuarios',
-        href: '/users',
-    },
-    {
-        title: 'Actividad',
-        href: '/activity',
-    },
-];
 
 interface ActivityData {
     id: string;
@@ -434,7 +422,7 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
     );
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout>
             <Head title="Actividad" />
 
             <DataTable

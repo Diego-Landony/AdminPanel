@@ -16,19 +16,11 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ActivitySkeleton } from '@/components/skeletons';
+import { PaginationWrapper } from '@/components/PaginationWrapper';
 
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Search, X, Filter, Calendar as CalendarIcon, Users, Inbox } from 'lucide-react';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationEllipsis,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from '@/components/ui/pagination';
 
 /**
  * Breadcrumbs para la navegación de actividad
@@ -1168,177 +1160,13 @@ export default function ActivityIndex({ activities, filters, options }: Activity
                             </div>
                         )}
 
-                        {/* Paginación */}
-                        {activities.last_page > 1 && (
-                            <div className="mt-8">
-                                <Pagination>
-                                    <PaginationContent>
-                                        <PaginationItem>
-                                            <PaginationPrevious
-                                                href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    const pageParams = {
-                                                        page: activities.current_page - 1,
-                                                        search: filters.search || '',
-                                                        event_type: filters.event_type || '',
-                                                        user_id: filters.user_id || '',
-                                                        start_date: filters.start_date || '',
-                                                        end_date: filters.end_date || '',
-                                                        per_page: filters.per_page || 10,
-                                                    };
-
-                                                    router.get('/activity', pageParams, {
-                                                        preserveState: true,
-                                                        preserveScroll: true,
-                                                    });
-                                                }}
-                                                className={activities.current_page <= 1 ? 'pointer-events-none opacity-50' : ''}
-                                            />
-                                        </PaginationItem>
-
-                                        {/* Primera página */}
-                                        {activities.current_page > 3 && (
-                                            <>
-                                                <PaginationItem>
-                                                    <PaginationLink
-                                                        href="#"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            router.get(
-                                                                '/activity',
-                                                                {
-                                                                    page: 1,
-                                                                    search: filters.search,
-                                                                    event_type: filters.event_type,
-                                                                    user_id: filters.user_id,
-                                                                    start_date: filters.start_date,
-                                                                    end_date: filters.end_date,
-                                                                    per_page: filters.per_page,
-                                                                },
-                                                                {
-                                                                    preserveState: true,
-                                                                    preserveScroll: true,
-                                                                },
-                                                            );
-                                                        }}
-                                                    >
-                                                        1
-                                                    </PaginationLink>
-                                                </PaginationItem>
-                                                {activities.current_page > 4 && (
-                                                    <PaginationItem>
-                                                        <PaginationEllipsis />
-                                                    </PaginationItem>
-                                                )}
-                                            </>
-                                        )}
-
-                                        {/* Páginas alrededor de la actual */}
-                                        {Array.from({ length: Math.min(3, activities.last_page) }, (_, i) => {
-                                            const page = activities.current_page - 1 + i;
-                                            if (page < 1 || page > activities.last_page) return null;
-
-                                            return (
-                                                <PaginationItem key={page}>
-                                                    <PaginationLink
-                                                        href="#"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            const pageParams = {
-                                                                page: page,
-                                                                search: filters.search || '',
-                                                                event_type: filters.event_type || '',
-                                                                user_id: filters.user_id || '',
-                                                                start_date: filters.start_date || '',
-                                                                end_date: filters.end_date || '',
-                                                                per_page: filters.per_page || 10,
-                                                            };
-
-                                                            router.get('/activity', pageParams, {
-                                                                preserveState: true,
-                                                                preserveScroll: true,
-                                                            });
-                                                        }}
-                                                        isActive={page === activities.current_page}
-                                                    >
-                                                        {page}
-                                                    </PaginationLink>
-                                                </PaginationItem>
-                                            );
-                                        })}
-
-                                        {/* Última página */}
-                                        {activities.current_page < activities.last_page - 2 && (
-                                            <>
-                                                {activities.current_page < activities.last_page - 3 && (
-                                                    <PaginationItem>
-                                                        <PaginationEllipsis />
-                                                    </PaginationItem>
-                                                )}
-                                                <PaginationItem>
-                                                    <PaginationLink
-                                                        href="#"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            router.get(
-                                                                '/activity',
-                                                                {
-                                                                    page: activities.last_page,
-                                                                    search: filters.search,
-                                                                    event_type: filters.event_type,
-                                                                    user_id: filters.user_id,
-                                                                    start_date: filters.start_date,
-                                                                    end_date: filters.end_date,
-                                                                    per_page: filters.per_page,
-                                                                },
-                                                                {
-                                                                    preserveState: true,
-                                                                    preserveScroll: true,
-                                                                },
-                                                            );
-                                                        }}
-                                                    >
-                                                        {activities.last_page}
-                                                    </PaginationLink>
-                                                </PaginationItem>
-                                            </>
-                                        )}
-
-                                        <PaginationItem>
-                                            <PaginationNext
-                                                href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    router.get(
-                                                        '/activity',
-                                                        {
-                                                            page: activities.current_page + 1,
-                                                            search: filters.search,
-                                                            event_type: filters.event_type,
-                                                            user_id: filters.user_id,
-                                                            start_date: filters.start_date,
-                                                            end_date: filters.end_date,
-                                                            per_page: filters.per_page,
-                                                        },
-                                                        {
-                                                            preserveState: true,
-                                                            preserveScroll: true,
-                                                        },
-                                                    );
-                                                }}
-                                                className={activities.current_page >= activities.last_page ? 'pointer-events-none opacity-50' : ''}
-                                            />
-                                        </PaginationItem>
-                                    </PaginationContent>
-                                </Pagination>
-
-                                <div className="mt-6 text-center text-sm text-muted-foreground">
-                                    Página {activities.current_page} de {activities.last_page} - Mostrando {activities.from} a {activities.to} de{' '}
-                                    {activities.total} eventos
-                                </div>
-                            </div>
-                        )}
+                        <PaginationWrapper
+                            data={activities}
+                            routeName='/activity'
+                            filters={filters}
+                            className="mt-8"
+                            showInfo={true}
+                        />
                     </CardContent>
                 </Card>
             </div>

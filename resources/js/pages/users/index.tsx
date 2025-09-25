@@ -15,17 +15,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 
 
 import { Shield, Plus, Search, Users, Clock, Circle, X, RefreshCw, Trash2, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationEllipsis,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from "@/components/ui/pagination";
 import { UsersSkeleton } from '@/components/skeletons';
 import { ActionsMenu } from '@/components/ActionsMenu';
+import { PaginationWrapper } from '@/components/PaginationWrapper';
 
 /**
  * Breadcrumbs para la navegación de usuarios
@@ -310,23 +302,6 @@ export default function UsersIndex({ users, total_users, online_users, filters }
             );
         }
     }, [perPage, filters.per_page, filters.search]);
-
-    // Función helper para paginación
-    const goToPage = (page: number) => {
-        router.get(route('users.index'), { 
-            page: page,
-            search: searchValue,
-            per_page: perPage,
-            sort_field: sortField,
-            sort_direction: sortDirection
-        }, { 
-            preserveState: true,
-            preserveScroll: true
-        });
-    };
-
-
-
 
     /**
      * Función para eliminar usuario
@@ -845,101 +820,16 @@ export default function UsersIndex({ users, total_users, online_users, filters }
                                     </div>
                                 </div>
                                 
-                                {/* Paginación */}
-                                {users.last_page > 1 && (
-                                    <div className="mt-6">
-                                        <Pagination>
-                                            <PaginationContent>
-                                                <PaginationItem>
-                                                    <PaginationPrevious 
-                                                        href="#" 
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            goToPage(users.current_page - 1);
-                                                        }}
-                                                        className={users.current_page <= 1 ? 'pointer-events-none opacity-50' : ''}
-                                                    />
-                                                </PaginationItem>
-                                                
-                                                {/* Primera página */}
-                                                {users.current_page > 3 && (
-                                                    <>
-                                                        <PaginationItem>
-                                                            <PaginationLink 
-                                                                href="#" 
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    goToPage(1);
-                                                                }}
-                                                            >
-                                                                1
-                                                            </PaginationLink>
-                                                        </PaginationItem>
-                                                        {users.current_page > 4 && (
-                                                            <PaginationItem>
-                                                                <PaginationEllipsis />
-                                                            </PaginationItem>
-                                                        )}
-                                                    </>
-                                                )}
-                                                
-                                                {/* Páginas alrededor de la actual */}
-                                                {Array.from({ length: Math.min(3, users.last_page) }, (_, i) => {
-                                                    const page = users.current_page - 1 + i;
-                                                    if (page < 1 || page > users.last_page) return null;
-                                                    
-                                                    return (
-                                                        <PaginationItem key={page}>
-                                                            <PaginationLink 
-                                                                href="#" 
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    goToPage(page);
-                                                                }}
-                                                                isActive={page === users.current_page}
-                                                            >
-                                                                {page}
-                                                            </PaginationLink>
-                                                        </PaginationItem>
-                                                    );
-                                                })}
-                                                
-                                                {/* Última página */}
-                                                {users.current_page < users.last_page - 2 && (
-                                                    <>
-                                                        {users.current_page < users.last_page - 3 && (
-                                                            <PaginationItem>
-                                                                <PaginationEllipsis />
-                                                            </PaginationItem>
-                                                        )}
-                                                        <PaginationItem>
-                                                            <PaginationLink 
-                                                                href="#" 
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    goToPage(users.last_page);
-                                                                }}
-                                                            >
-                                                                {users.last_page}
-                                                            </PaginationLink>
-                                                        </PaginationItem>
-                                                    </>
-                                                )}
-                                                
-                                                <PaginationItem>
-                                                    <PaginationNext 
-                                                        href="#" 
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            goToPage(users.current_page + 1);
-                                                        }}
-                                                        className={users.current_page >= users.last_page ? 'pointer-events-none opacity-50' : ''}
-                                                    />
-                                                </PaginationItem>
-                                            </PaginationContent>
-                                        </Pagination>
-                                    </div>
-                                )}
+                                <PaginationWrapper
+                                    data={users}
+                                    routeName={route('users.index')}
+                                    filters={{
+                                        search: searchValue,
+                                        per_page: perPage,
+                                        sort_field: sortField,
+                                        sort_direction: sortDirection
+                                    }}
+                                />
                             </>
                         )}
                             </>

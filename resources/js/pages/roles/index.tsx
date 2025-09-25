@@ -13,18 +13,10 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationEllipsis,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from "@/components/ui/pagination";
 import { Shield, Plus, Search, Users, UserCheck, X, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { RolesSkeleton } from '@/components/skeletons';
 import { ActionsMenu } from '@/components/ActionsMenu';
+import { PaginationWrapper } from '@/components/PaginationWrapper';
 
 
 /**
@@ -198,20 +190,6 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
 
     // Auto-actualizar perPage eliminado para evitar conflictos con paginación
     // El cambio de perPage se maneja directamente en el onChange del Select
-
-    // Función helper para paginación
-    const goToPage = (page: number) => {
-        router.get(route('roles.index'), { 
-            page: page,
-            search: filters.search,
-            per_page: filters.per_page,
-            sort_field: sortField,
-            sort_direction: sortDirection
-        }, { 
-            preserveState: true,
-            preserveScroll: true
-        });
-    };
 
     const openDeleteDialog = (role: Role) => {
         setSelectedRole(role);
@@ -594,101 +572,16 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                             </div>
                         )}
                         
-                        {/* Paginación */}
-                        {roles.last_page > 1 && (
-                            <div className="mt-6">
-                                <Pagination>
-                                    <PaginationContent>
-                                        <PaginationItem>
-                                            <PaginationPrevious 
-                                                href="#" 
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    goToPage(roles.current_page - 1);
-                                                }}
-                                                className={roles.current_page <= 1 ? 'pointer-events-none opacity-50' : ''}
-                                            />
-                                        </PaginationItem>
-                                        
-                                        {/* Primera página */}
-                                        {roles.current_page > 3 && (
-                                            <>
-                                                <PaginationItem>
-                                                    <PaginationLink
-                                                        href="#"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            goToPage(1);
-                                                        }}
-                                                    >
-                                                        1
-                                                    </PaginationLink>
-                                                </PaginationItem>
-                                                {roles.current_page > 4 && (
-                                                    <PaginationItem>
-                                                        <PaginationEllipsis />
-                                                    </PaginationItem>
-                                                )}
-                                            </>
-                                        )}
-
-                                        {/* Páginas alrededor de la actual */}
-                                        {Array.from({ length: Math.min(3, roles.last_page) }, (_, i) => {
-                                            const page = roles.current_page - 1 + i;
-                                            if (page < 1 || page > roles.last_page) return null;
-
-                                            return (
-                                                <PaginationItem key={page}>
-                                                    <PaginationLink 
-                                                        href="#" 
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            goToPage(page);
-                                                        }}
-                                                        isActive={page === roles.current_page}
-                                                    >
-                                                        {page}
-                                                    </PaginationLink>
-                                                </PaginationItem>
-                                            );
-                                        })}
-
-                                        {/* Última página */}
-                                        {roles.current_page < roles.last_page - 2 && (
-                                            <>
-                                                {roles.current_page < roles.last_page - 3 && (
-                                                    <PaginationItem>
-                                                        <PaginationEllipsis />
-                                                    </PaginationItem>
-                                                )}
-                                                <PaginationItem>
-                                                    <PaginationLink
-                                                        href="#"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            goToPage(roles.last_page);
-                                                        }}
-                                                    >
-                                                        {roles.last_page}
-                                                    </PaginationLink>
-                                                </PaginationItem>
-                                            </>
-                                        )}
-                                        
-                                        <PaginationItem>
-                                            <PaginationNext 
-                                                href="#" 
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    goToPage(roles.current_page + 1);
-                                                }}
-                                                className={roles.current_page >= roles.last_page ? 'pointer-events-none opacity-50' : ''}
-                                            />
-                                        </PaginationItem>
-                                    </PaginationContent>
-                                </Pagination>
-                            </div>
-                        )}
+                        <PaginationWrapper
+                            data={roles}
+                            routeName={route('roles.index')}
+                            filters={{
+                                search: filters.search,
+                                per_page: filters.per_page,
+                                sort_field: sortField,
+                                sort_direction: sortDirection
+                            }}
+                        />
                     </CardContent>
                 </Card>
 

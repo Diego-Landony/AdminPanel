@@ -25,7 +25,6 @@ class CustomerFactory extends Factory
             'subway_card' => fake()->unique()->numerify('##########'),
             'birth_date' => fake()->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),
             'gender' => fake()->randomElement(['masculino', 'femenino', 'otro']),
-            'client_type' => fake()->randomElement(['regular', 'premium', 'vip']),
             'customer_type_id' => CustomerType::factory(),
             'phone' => fake()->phoneNumber(),
             'address' => fake()->address(),
@@ -48,7 +47,6 @@ class CustomerFactory extends Factory
     public function regular(): static
     {
         return $this->state(fn (array $attributes) => [
-            'client_type' => 'regular',
             'customer_type_id' => CustomerType::factory()->regular(),
             'puntos' => fake()->numberBetween(0, 49),
         ]);
@@ -60,7 +58,6 @@ class CustomerFactory extends Factory
     public function bronze(): static
     {
         return $this->state(fn (array $attributes) => [
-            'client_type' => 'bronze',
             'customer_type_id' => CustomerType::factory()->bronze(),
             'puntos' => fake()->numberBetween(50, 124),
         ]);
@@ -72,7 +69,6 @@ class CustomerFactory extends Factory
     public function silver(): static
     {
         return $this->state(fn (array $attributes) => [
-            'client_type' => 'silver',
             'customer_type_id' => CustomerType::factory()->silver(),
             'puntos' => fake()->numberBetween(125, 324),
         ]);
@@ -84,7 +80,6 @@ class CustomerFactory extends Factory
     public function gold(): static
     {
         return $this->state(fn (array $attributes) => [
-            'client_type' => 'gold',
             'customer_type_id' => CustomerType::factory()->gold(),
             'puntos' => fake()->numberBetween(325, 999),
         ]);
@@ -96,7 +91,6 @@ class CustomerFactory extends Factory
     public function platinum(): static
     {
         return $this->state(fn (array $attributes) => [
-            'client_type' => 'platinum',
             'customer_type_id' => CustomerType::factory()->platinum(),
             'puntos' => fake()->numberBetween(1000, 5000),
         ]);

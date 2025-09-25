@@ -136,10 +136,20 @@ export const defaultPageTitles = {
 };
 
 /**
+ * Normaliza una ruta para asegurar que empiece con / y elimina query parameters
+ */
+function normalizePath(path: string): string {
+    // Eliminar query parameters y hash
+    const cleanPath = path.split('?')[0].split('#')[0];
+    return cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
+}
+
+/**
  * Genera breadcrumbs automáticamente basándose en la configuración de rutas
  */
 export function generateBreadcrumbs(currentPath: string): BreadcrumbItem[] {
     const breadcrumbs: BreadcrumbItem[] = [];
+    const normalizedPath = normalizePath(currentPath);
 
     // Función recursiva para construir la jerarquía
     function buildHierarchy(path: string): void {
@@ -160,12 +170,12 @@ export function generateBreadcrumbs(currentPath: string): BreadcrumbItem[] {
     }
 
     // Intentar encontrar configuración exacta
-    let config = routeConfig[currentPath];
+    let config = routeConfig[normalizedPath];
 
     // Si no se encuentra configuración exacta, intentar detectar patrones
     if (!config) {
         // Detectar páginas create/edit/show
-        const pathSegments = currentPath.split('/').filter(Boolean);
+        const pathSegments = normalizedPath.split('/').filter(Boolean);
 
         if (pathSegments.length >= 2) {
             const lastSegment = pathSegments[pathSegments.length - 1];
@@ -179,7 +189,7 @@ export function generateBreadcrumbs(currentPath: string): BreadcrumbItem[] {
                         parent: basePath,
                         includeParent: true
                     };
-                } else if (pageTypePatterns.edit.test(currentPath)) {
+                } else if (pageTypePatterns.edit.test(normalizedPath)) {
                     config = {
                         title: `Editar ${baseConfig.title.slice(0, -1)}`,
                         parent: basePath,
@@ -204,18 +214,18 @@ export function generateBreadcrumbs(currentPath: string): BreadcrumbItem[] {
 
         breadcrumbs.push({
             title: config.title,
-            href: currentPath
+            href: normalizedPath
         });
     } else {
         // Fallback: generar breadcrumb básico basándose en la URL
-        const pathSegments = currentPath.split('/').filter(Boolean);
+        const pathSegments = normalizedPath.split('/').filter(Boolean);
         const title = pathSegments[pathSegments.length - 1]
             ?.replace(/-/g, ' ')
             ?.replace(/\b\w/g, l => l.toUpperCase()) || 'Página';
 
         breadcrumbs.push({
             title,
-            href: currentPath
+            href: normalizedPath
         });
     }
 

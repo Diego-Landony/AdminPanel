@@ -5,13 +5,16 @@ import { Fragment } from 'react';
 import { useBreadcrumbs } from '@/hooks/useBreadcrumbs';
 
 export function Breadcrumbs({ breadcrumbs: manualBreadcrumbs }: { breadcrumbs?: BreadcrumbItemType[] }) {
-    // Si se proporcionan breadcrumbs manuales, usarlos; sino, generar automáticamente
+    // Si se proporcionan breadcrumbs manuales y no están vacíos, usarlos; sino, generar automáticamente
+    const hasManualBreadcrumbs = manualBreadcrumbs && manualBreadcrumbs.length > 0;
+
     const autoBreadcrumbs = useBreadcrumbs({
-        override: manualBreadcrumbs,
-        autoGenerate: !manualBreadcrumbs
+        override: hasManualBreadcrumbs ? manualBreadcrumbs : undefined,
+        autoGenerate: !hasManualBreadcrumbs
     });
 
-    const breadcrumbs = manualBreadcrumbs || autoBreadcrumbs;
+    const breadcrumbs = hasManualBreadcrumbs ? manualBreadcrumbs : autoBreadcrumbs;
+
     return (
         <>
             {breadcrumbs.length > 0 && (

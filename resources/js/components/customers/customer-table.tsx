@@ -1,9 +1,9 @@
 import React from 'react';
 import { Users, Clock, CreditCard, MapPin, Phone, Check, X, Award } from 'lucide-react';
 
-import { DataTable } from '@/components/data-table';
+import { DataTable } from '@/components/DataTable';
 import { StatusBadge, CONNECTION_STATUS_CONFIGS, CUSTOMER_TYPE_COLORS } from '@/components/status-badge';
-import { AvatarColumn } from '@/components/table-columns/avatar-column';
+import { ResponsiveCard, ResponsiveCardHeader, ResponsiveCardContent, DataField, BadgeGroup } from '@/components/CardLayout';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, calculateAge, daysSince, formatPoints } from '@/utils/format';
 import { CustomersSkeleton } from '@/components/skeletons';
@@ -133,6 +133,7 @@ export function CustomerTable({
         {
             key: 'customer',
             title: 'Cliente',
+            width: 'lg' as const,
             sortable: true,
             render: (customer: Customer) => {
                 const badges = [];
@@ -168,18 +169,29 @@ export function CustomerTable({
                 );
 
                 return (
-                    <AvatarColumn
-                        icon={<Users className="w-5 h-5 text-primary" />}
-                        title={customer.full_name}
-                        subtitle={customer.email}
-                        badges={badges}
-                    />
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <Users className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <div className="font-medium text-sm text-foreground break-words">
+                                {customer.full_name}
+                            </div>
+                            <div className="text-sm text-muted-foreground break-words">
+                                {customer.email}
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                                {badges}
+                            </div>
+                        </div>
+                    </div>
                 );
             }
         },
         {
             key: 'subway_card',
             title: 'Tarjeta Subway',
+            width: 'md' as const,
             render: (customer: Customer) => (
                 <div>
                     <div className="flex items-center gap-2">
@@ -209,6 +221,7 @@ export function CustomerTable({
         {
             key: 'status',
             title: 'Estatus',
+            width: 'sm' as const,
             sortable: true,
             render: (customer: Customer) => (
                 <div>
@@ -225,6 +238,7 @@ export function CustomerTable({
         {
             key: 'phone',
             title: 'Teléfono',
+            width: 'md' as const,
             render: (customer: Customer) => (
                 <div>
                     <div className="text-sm">
@@ -242,6 +256,7 @@ export function CustomerTable({
         {
             key: 'last_purchase',
             title: 'Última Compra',
+            width: 'md' as const,
             render: (customer: Customer) => (
                 <div>
                     <div className="text-sm">
@@ -258,6 +273,7 @@ export function CustomerTable({
         {
             key: 'puntos',
             title: 'Puntos',
+            width: 'sm' as const,
             render: (customer: Customer) => (
                 <div>
                     <div className="text-sm font-medium text-blue-600">
@@ -273,113 +289,125 @@ export function CustomerTable({
         },
     ];
 
-    const renderMobileCard = (customer: Customer) => (
-        <div className="space-y-3 rounded-lg border border-border bg-card p-4 sm:p-5 transition-colors hover:bg-muted/50 hover:shadow-sm">
-            {/* Header del card - Nombre y estado */}
-            <div className="flex flex-col space-y-2 sm:flex-row sm:items-start sm:justify-between sm:space-y-0">
-                <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-foreground truncate mb-1">
-                        {customer.full_name}
-                    </h3>
-                    <p className="text-sm text-muted-foreground truncate">
-                        {customer.email}
-                    </p>
-                </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                    <StatusBadge 
-                        status={customer.status} 
-                        configs={CONNECTION_STATUS_CONFIGS} 
-                        className="text-xs"
+    const CustomerMobileCard = ({ customer }: { customer: Customer }) => (
+        <ResponsiveCard>
+            <ResponsiveCardHeader
+                icon={<Users className="w-4 h-4 text-primary" />}
+                title={customer.full_name}
+                subtitle={customer.email}
+                badge={{
+                    children: <StatusBadge status={customer.status} configs={CONNECTION_STATUS_CONFIGS} className="text-xs" />
+                }}
+            />
+
+            <ResponsiveCardContent>
+
+                <DataField
+                    label="Tarjeta Subway"
+                    value={
+                        <div className="flex items-center gap-2">
+                            <CreditCard className="h-3 w-3 text-muted-foreground" />
+                            <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                                {customer.subway_card}
+                            </code>
+                        </div>
+                    }
+                />
+
+                <DataField
+                    label="Puntos"
+                    value={
+                        <div className="font-medium text-blue-600">
+                            {formatPoints(customer.puntos || 0)}
+                        </div>
+                    }
+                />
+
+                {customer.customer_type && (
+                    <DataField
+                        label="Tipo de Cliente"
+                        value={
+                            <div className="flex items-center gap-2">
+                                {getCustomerTypeIcon(customer.customer_type.color, "h-4 w-4")}
+                                <Badge className={getClientTypeColor(customer.customer_type, customer.client_type)}>
+                                    {customer.customer_type.display_name}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                    {customer.customer_type.multiplier}x
+                                </span>
+                            </div>
+                        }
                     />
-                </div>
-            </div>
+                )}
 
-            {/* Información básica */}
-            <div className="grid grid-cols-2 gap-3 text-sm">
-                {/* Tarjeta Subway */}
-                <div className="space-y-1">
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                        <CreditCard className="h-3 w-3" />
-                        <span className="text-xs">Tarjeta</span>
-                    </div>
-                    <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
-                        {customer.subway_card}
-                    </code>
-                </div>
-
-                {/* Puntos */}
-                <div className="space-y-1">
-                    <div className="text-xs text-muted-foreground">Puntos</div>
-                    <div className="font-medium text-blue-600">
-                        {formatPoints(customer.puntos || 0)}
-                    </div>
-                </div>
-            </div>
-
-            {/* Tipo de cliente */}
-            {customer.customer_type && (
-                <div className="flex items-center gap-2">
-                    {getCustomerTypeIcon(customer.customer_type.color, "h-4 w-4")}
-                    <Badge className={getClientTypeColor(customer.customer_type, customer.client_type)}>
-                        {customer.customer_type.display_name}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                        {customer.customer_type.multiplier}x
-                    </span>
-                </div>
-            )}
-
-            {/* Información de contacto */}
-            <div className="grid grid-cols-1 gap-2 text-sm">
                 {customer.phone && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                        <Phone className="h-3 w-3" />
-                        <span>{customer.phone}</span>
-                    </div>
+                    <DataField
+                        label="Teléfono"
+                        value={
+                            <div className="flex items-center gap-2">
+                                <Phone className="h-3 w-3 text-muted-foreground" />
+                                <span>{customer.phone}</span>
+                            </div>
+                        }
+                    />
                 )}
+
                 {customer.location && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                        <MapPin className="h-3 w-3" />
-                        <span>{customer.location}</span>
-                    </div>
+                    <DataField
+                        label="Ubicación"
+                        value={
+                            <div className="flex items-center gap-2">
+                                <MapPin className="h-3 w-3 text-muted-foreground" />
+                                <span>{customer.location}</span>
+                            </div>
+                        }
+                    />
                 )}
-            </div>
 
-            {/* Verificación de email */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    {customer.email_verified_at ? (
-                        <Badge variant="outline" className="text-xs px-2 py-0.5 bg-green-50 text-green-700 border-green-200">
-                            <Check className="h-3 w-3 mr-1" />
-                            Verificado
-                        </Badge>
-                    ) : (
-                        <Badge variant="outline" className="text-xs px-2 py-0.5 bg-red-50 text-red-700 border-red-200">
-                            <X className="h-3 w-3 mr-1" />
-                            No verificado
-                        </Badge>
-                    )}
-                </div>
-                
-                {/* Última actividad */}
+                <DataField
+                    label="Verificación Email"
+                    value={
+                        customer.email_verified_at ? (
+                            <Badge variant="outline" className="text-xs px-2 py-0.5 bg-green-50 text-green-700 border-green-200">
+                                <Check className="h-3 w-3 mr-1" />
+                                Verificado
+                            </Badge>
+                        ) : (
+                            <Badge variant="outline" className="text-xs px-2 py-0.5 bg-red-50 text-red-700 border-red-200">
+                                <X className="h-3 w-3 mr-1" />
+                                No verificado
+                            </Badge>
+                        )
+                    }
+                />
+
                 {customer.last_activity && (
-                    <div className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span>{formatDate(customer.last_activity)}</span>
-                    </div>
+                    <DataField
+                        label="Última Actividad"
+                        value={
+                            <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3 text-muted-foreground" />
+                                <span>{formatDate(customer.last_activity)}</span>
+                            </div>
+                        }
+                    />
                 )}
-            </div>
 
-            {/* Última compra */}
-            {customer.last_purchase && (
-                <div className="text-xs text-muted-foreground">
-                    <span className="font-medium">Última compra:</span> {formatDate(customer.last_purchase)}
-                    <span className="ml-2">
-                        ({daysSince(customer.last_purchase)} días)
-                    </span>
-                </div>
-            )}
-        </div>
+                {customer.last_purchase && (
+                    <DataField
+                        label="Última Compra"
+                        value={
+                            <div>
+                                {formatDate(customer.last_purchase)}
+                                <span className="ml-2 text-xs text-muted-foreground">
+                                    ({daysSince(customer.last_purchase)} días)
+                                </span>
+                            </div>
+                        }
+                    />
+                )}
+            </ResponsiveCardContent>
+        </ResponsiveCard>
     );
 
     return (
@@ -395,7 +423,9 @@ export function CustomerTable({
             searchPlaceholder="Buscar por nombre, email, tarjeta subway o teléfono..."
             loadingSkeleton={CustomersSkeleton}
             renderMobileCard={renderMobileCard}
-            route="customers.index"
+            routeName="/customers"
+            renderMobileCard={(customer) => <CustomerMobileCard customer={customer} />}
+            breakpoint="md"
         />
     );
 }

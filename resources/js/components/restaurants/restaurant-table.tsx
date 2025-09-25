@@ -1,9 +1,9 @@
 import React from 'react';
 import { MapPin, Phone, Clock, Star, Truck, ShoppingBag, Building2, CheckCircle, XCircle, Badge as BadgeIcon } from 'lucide-react';
 
-import { DataTable } from '@/components/data-table';
+import { DataTable } from '@/components/DataTable';
 import { StatusBadge } from '@/components/status-badge';
-import { AvatarColumn } from '@/components/table-columns/avatar-column';
+import { ResponsiveCard, ResponsiveCardHeader, ResponsiveCardContent, DataField, BadgeGroup } from '@/components/CardLayout';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, formatNumber } from '@/utils/format';
 import { RestaurantsSkeleton } from '@/components/skeletons';
@@ -183,6 +183,7 @@ export function RestaurantTable({
         {
             key: 'restaurant',
             title: 'Restaurante',
+            width: 'lg' as const,
             sortable: true,
             render: (restaurant: Restaurant) => {
                 const badges = [];
@@ -206,23 +207,34 @@ export function RestaurantTable({
                 }
 
                 return (
-                    <AvatarColumn
-                        icon={<Building2 className="w-5 h-5 text-primary" />}
-                        title={restaurant.name}
-                        subtitle={restaurant.email || 'Sin email'}
-                        badges={badges}
-                    />
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <Building2 className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <div className="font-medium text-sm text-foreground break-words">
+                                {restaurant.name}
+                            </div>
+                            <div className="text-sm text-muted-foreground break-words">
+                                {restaurant.email || 'Sin email'}
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                                {badges}
+                            </div>
+                        </div>
+                    </div>
                 );
             }
         },
         {
             key: 'location',
             title: 'Ubicación',
+            width: 'xl' as const,
             render: (restaurant: Restaurant) => (
                 <div>
                     <div className="flex items-center gap-2 mb-1">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm truncate">{restaurant.address}</span>
+                        <span className="text-sm break-words">{restaurant.address}</span>
                     </div>
                     {restaurant.phone && (
                         <div className="flex items-center gap-2">
@@ -236,6 +248,7 @@ export function RestaurantTable({
         {
             key: 'services',
             title: 'Servicios',
+            width: 'md' as const,
             render: (restaurant: Restaurant) => {
                 const serviceType = getServiceType(restaurant.delivery_active, restaurant.pickup_active);
                 
@@ -263,6 +276,7 @@ export function RestaurantTable({
         {
             key: 'status',
             title: 'Estado',
+            width: 'sm' as const,
             sortable: true,
             render: (restaurant: Restaurant) => (
                 <div className="space-y-1">
@@ -280,6 +294,7 @@ export function RestaurantTable({
         {
             key: 'created_at',
             title: 'Creado',
+            width: 'sm' as const,
             sortable: true,
             render: (restaurant: Restaurant) => (
                 <div className="text-sm text-muted-foreground">
@@ -289,88 +304,115 @@ export function RestaurantTable({
         },
     ];
 
-    const renderMobileCard = (restaurant: Restaurant) => (
-        <div className="space-y-3 rounded-lg border border-border bg-card p-4 sm:p-5 transition-colors hover:bg-muted/50 hover:shadow-sm">
-            {/* Header */}
-            <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Building2 className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <h3 className="font-medium text-foreground truncate">
-                            {restaurant.name}
-                        </h3>
-                        {restaurant.email && (
-                            <p className="text-sm text-muted-foreground truncate">
-                                {restaurant.email}
-                            </p>
-                        )}
-                    </div>
-                </div>
-                <StatusBadge 
-                    status={restaurant.is_active ? 'active' : 'inactive'} 
-                    configs={RESTAURANT_STATUS_CONFIGS} 
-                    className="text-xs flex-shrink-0"
-                />
-            </div>
+    const RestaurantMobileCard = ({ restaurant }: { restaurant: Restaurant }) => (
+        <ResponsiveCard>
+            <ResponsiveCardHeader
+                icon={<Building2 className="w-4 h-4 text-primary" />}
+                title={restaurant.name}
+                subtitle={restaurant.email || 'Sin email'}
+                badge={{
+                    children: restaurant.is_active ? 'Activo' : 'Inactivo',
+                    variant: restaurant.is_active ? "default" : "destructive"
+                }}
+            />
 
-            {/* Rating y manager */}
-            <div className="flex items-center justify-between">
-                {restaurant.rating > 0 && renderStars(restaurant.rating, restaurant.total_reviews)}
+            <ResponsiveCardContent>
+
+                {restaurant.rating > 0 && (
+                    <DataField
+                        label="Rating"
+                        value={renderStars(restaurant.rating, restaurant.total_reviews)}
+                    />
+                )}
+
                 {restaurant.manager_name && (
-                    <Badge variant="outline" className="text-xs px-2 py-0.5">
-                        Mgr: {restaurant.manager_name}
-                    </Badge>
+                    <DataField
+                        label="Manager"
+                        value={
+                            <Badge variant="outline" className="text-xs px-2 py-0.5">
+                                {restaurant.manager_name}
+                            </Badge>
+                        }
+                    />
                 )}
-            </div>
 
-            {/* Ubicación */}
-            <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                    <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                    <span className="text-sm text-muted-foreground">{restaurant.address}</span>
-                </div>
-                {restaurant.phone && (
-                    <div className="flex items-center gap-2">
-                        <Phone className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">{restaurant.phone}</span>
-                    </div>
-                )}
-            </div>
-
-            {/* Servicios */}
-            <div className="space-y-2">
-                <StatusBadge 
-                    status={getServiceType(restaurant.delivery_active, restaurant.pickup_active)} 
-                    configs={SERVICE_STATUS_CONFIGS} 
-                    className="text-xs"
+                <DataField
+                    label="Dirección"
+                    value={
+                        <div className="flex items-center gap-2">
+                            <MapPin className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm">{restaurant.address}</span>
+                        </div>
+                    }
                 />
-                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                    <div>Min. orden: Q{formatNumber(restaurant.minimum_order_amount)}</div>
-                    {restaurant.delivery_active && (
-                        <div>Envío: Q{formatNumber(restaurant.delivery_fee)}</div>
-                    )}
-                    <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {restaurant.estimated_delivery_time}min
-                    </div>
-                    <div>Orden: {restaurant.sort_order}</div>
-                </div>
-            </div>
 
-            {/* Descripción si existe */}
-            {restaurant.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                    {restaurant.description}
-                </p>
-            )}
+                {restaurant.phone && (
+                    <DataField
+                        label="Teléfono"
+                        value={
+                            <div className="flex items-center gap-2">
+                                <Phone className="h-3 w-3 text-muted-foreground" />
+                                <span>{restaurant.phone}</span>
+                            </div>
+                        }
+                    />
+                )}
 
-            {/* Fecha de creación */}
-            <div className="text-xs text-muted-foreground border-t pt-2">
-                Creado: {formatDate(restaurant.created_at)}
-            </div>
-        </div>
+                <DataField
+                    label="Servicios"
+                    value={
+                        <StatusBadge
+                            status={getServiceType(restaurant.delivery_active, restaurant.pickup_active)}
+                            configs={SERVICE_STATUS_CONFIGS}
+                            className="text-xs"
+                        />
+                    }
+                />
+
+                <DataField
+                    label="Pedido Mínimo"
+                    value={`Q${formatNumber(restaurant.minimum_order_amount)}`}
+                />
+
+                {restaurant.delivery_active && (
+                    <DataField
+                        label="Costo Envío"
+                        value={`Q${formatNumber(restaurant.delivery_fee)}`}
+                    />
+                )}
+
+                <DataField
+                    label="Tiempo Entrega"
+                    value={
+                        <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3 text-muted-foreground" />
+                            <span>{restaurant.estimated_delivery_time} min</span>
+                        </div>
+                    }
+                />
+
+                {restaurant.description && (
+                    <DataField
+                        label="Descripción"
+                        value={
+                            <p className="text-sm line-clamp-2">
+                                {restaurant.description}
+                            </p>
+                        }
+                    />
+                )}
+
+                <DataField
+                    label="Orden"
+                    value={restaurant.sort_order}
+                />
+
+                <DataField
+                    label="Creado"
+                    value={formatDate(restaurant.created_at)}
+                />
+            </ResponsiveCardContent>
+        </ResponsiveCard>
     );
 
     return (
@@ -385,8 +427,9 @@ export function RestaurantTable({
             createLabel="Nuevo Restaurante"
             searchPlaceholder="Buscar por nombre, dirección, teléfono o manager..."
             loadingSkeleton={RestaurantsSkeleton}
-            renderMobileCard={renderMobileCard}
-            route="restaurants.index"
+            renderMobileCard={(restaurant) => <RestaurantMobileCard restaurant={restaurant} />}
+            routeName="/restaurants"
+            breakpoint="md"
         />
     );
 }

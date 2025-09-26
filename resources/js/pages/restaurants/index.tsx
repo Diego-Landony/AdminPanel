@@ -1,6 +1,7 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { Head, router } from '@inertiajs/react';
 import { Building2, CheckCircle, Clock, MapPin, Phone, ShoppingBag, Star, Truck } from 'lucide-react';
+import { NOTIFICATIONS } from '@/constants/ui-constants';
 import { useCallback, useState } from 'react';
 
 import { DataTable } from '@/components/DataTable';
@@ -140,7 +141,7 @@ export default function RestaurantsIndex({
                 if (error.message) {
                     showNotification.error(error.message);
                 } else {
-                    showNotification.error('Error al eliminar el restaurante');
+                    showNotification.error(NOTIFICATIONS.error.deleteRestaurant);
                 }
             },
         });

@@ -14,6 +14,7 @@ import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { StatusBadge, USER_STATUS_CONFIGS } from '@/components/status-badge';
 import { TableActions } from '@/components/TableActions';
 import { Clock, Users } from 'lucide-react';
+import { NOTIFICATIONS } from '@/constants/ui-constants';
 
 /**
  * Interfaz para los roles
@@ -196,7 +197,7 @@ export default function UsersIndex({ users, total_users, online_users, filters }
                 if (error.message) {
                     showNotification.error(error.message);
                 } else {
-                    showNotification.error('Error al eliminar el usuario');
+                    showNotification.error(NOTIFICATIONS.error.deleteUser);
                 }
             },
         });

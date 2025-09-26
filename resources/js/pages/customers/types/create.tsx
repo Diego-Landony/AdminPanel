@@ -1,6 +1,6 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { useForm } from '@inertiajs/react';
-import { Hash, Shield, Star } from 'lucide-react';
+import { Hash, Star } from 'lucide-react';
 import React from 'react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
@@ -11,6 +11,8 @@ import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ENTITY_ICONS } from '@/constants/section-icons';
+import { NOTIFICATIONS } from '@/constants/ui-constants';
 
 /**
  * Página para crear un tipo de cliente
@@ -53,7 +55,7 @@ export default function CustomerTypeCreate() {
                 // Los errores de validación se muestran automáticamente
                 // Los errores del servidor se manejan por el layout
                 if (Object.keys(errors).length === 0) {
-                    showNotification.error('Error del servidor al crear el tipo de cliente. Inténtalo de nuevo.');
+                    showNotification.error(NOTIFICATIONS.error.serverCustomerType);
                 }
             },
         });
@@ -83,7 +85,7 @@ export default function CustomerTypeCreate() {
             loading={processing}
             loadingSkeleton={CreateCustomerTypesSkeleton}
         >
-            <FormSection icon={Shield} title="Información del Tipo" description="Complete los datos del nuevo tipo de cliente">
+            <FormSection icon={ENTITY_ICONS.customerType.info} title="Información del Tipo" description="Complete los datos del nuevo tipo de cliente">
                 {/* Nombre para mostrar */}
                 <FormField label="Nombre para mostrar" error={errors.display_name} required>
                     <Input

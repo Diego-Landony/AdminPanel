@@ -60,7 +60,7 @@ class CustomerController extends Controller
                     ->orWhere('phone', 'like', "%{$search}%")
                     ->orWhereHas('customerType', function ($subQuery) use ($search) {
                         $subQuery->where('name', 'like', "%{$search}%")
-                                 ->orWhere('display_name', 'like', "%{$search}%");
+                            ->orWhere('display_name', 'like', "%{$search}%");
                     });
             });
         }
@@ -194,7 +194,7 @@ class CustomerController extends Controller
             $request->validate([
                 'full_name' => 'required|string|max:255',
                 'email' => 'required|email|max:255|unique:customers',
-                'password' => 'required|string|min:8|confirmed',
+                'password' => 'required|string|min:6|confirmed',
                 'subway_card' => 'required|string|max:255|unique:customers',
                 'birth_date' => 'required|date|before:today',
                 'gender' => 'nullable|string|max:50',
@@ -301,7 +301,7 @@ class CustomerController extends Controller
 
             // Solo validar contraseña si se proporciona
             if ($request->filled('password')) {
-                $rules['password'] = 'string|min:8|confirmed';
+                $rules['password'] = 'string|min:6|confirmed';
             }
 
             $request->validate($rules);

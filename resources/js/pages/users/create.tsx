@@ -9,6 +9,7 @@ import { CreateUsersSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
+import { PLACEHOLDERS, AUTOCOMPLETE, FIELD_DESCRIPTIONS, NOTIFICATIONS } from '@/constants/ui-constants';
 
 /**
  * Página para crear un nuevo usuario
@@ -37,7 +38,7 @@ export default function CreateUser() {
                 // Los errores de validación se muestran automáticamente
                 // Los errores del servidor se manejan por el layout
                 if (Object.keys(errors).length === 0) {
-                    showNotification.error('Error del servidor al crear el usuario. Inténtalo de nuevo.');
+                    showNotification.error(NOTIFICATIONS.error.serverUserCreate);
                 }
             },
         });
@@ -56,7 +57,14 @@ export default function CreateUser() {
         >
             <FormSection icon={User} title="Información del Usuario" description="Datos básicos del nuevo usuario">
                 <FormField label="Nombre Completo" error={errors.name} required>
-                    <Input id="name" type="text" placeholder="Ej: Juan Pérez" value={data.name} onChange={(e) => setData('name', e.target.value)} />
+                    <Input
+                        id="name"
+                        type="text"
+                        placeholder={PLACEHOLDERS.name}
+                        value={data.name}
+                        onChange={(e) => setData('name', e.target.value)}
+                        autoComplete={AUTOCOMPLETE.name}
+                    />
                 </FormField>
 
                 <FormField label="Correo Electrónico" error={errors.email} required>
@@ -65,24 +73,26 @@ export default function CreateUser() {
                         <Input
                             id="email"
                             type="email"
-                            placeholder="usuario@ejemplo.com"
+                            placeholder={PLACEHOLDERS.email}
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
                             className="pl-10"
+                            autoComplete={AUTOCOMPLETE.email}
                         />
                     </div>
                 </FormField>
 
-                <FormField label="Contraseña" error={errors.password} description="Mínimo 6 caracteres" required>
+                <FormField label="Contraseña" error={errors.password} description={FIELD_DESCRIPTIONS.password} required>
                     <div className="relative">
                         <Lock className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                         <Input
                             id="password"
                             type={showPassword ? 'text' : 'password'}
-                            placeholder="Mínimo 6 caracteres"
+                            placeholder={PLACEHOLDERS.password}
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
                             className="pr-10 pl-10"
+                            autoComplete={AUTOCOMPLETE.newPassword}
                         />
                         <Button
                             type="button"
@@ -102,10 +112,11 @@ export default function CreateUser() {
                         <Input
                             id="password_confirmation"
                             type={showPassword ? 'text' : 'password'}
-                            placeholder="Repite la contraseña"
+                            placeholder={PLACEHOLDERS.password}
                             value={data.password_confirmation}
                             onChange={(e) => setData('password_confirmation', e.target.value)}
                             className="pl-10"
+                            autoComplete={AUTOCOMPLETE.newPassword}
                         />
                     </div>
                 </FormField>

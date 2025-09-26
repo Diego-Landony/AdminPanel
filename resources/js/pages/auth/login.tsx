@@ -10,6 +10,7 @@ import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
+import { PLACEHOLDERS, AUTOCOMPLETE } from '@/constants/ui-constants';
 
 /**
  * Tipo para el formulario de login
@@ -71,7 +72,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     type="email"
                                     autoFocus
                                     tabIndex={1}
-                                    autoComplete="email"
+                                    autoComplete={AUTOCOMPLETE.email}
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
                                     onKeyDown={(e) => {
@@ -80,7 +81,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                             submit(e);
                                         }
                                     }}
-                                    placeholder="usuario@email.com"
+                                    placeholder={PLACEHOLDERS.authEmail}
                                 />
                             </FormField>
 
@@ -91,7 +92,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                         id="password"
                                         type={showPassword ? 'text' : 'password'}
                                         tabIndex={2}
-                                        autoComplete="current-password"
+                                        autoComplete={AUTOCOMPLETE.currentPassword}
                                         value={data.password}
                                         onChange={(e) => setData('password', e.target.value)}
                                         onKeyDown={(e) => {
@@ -100,7 +101,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                                 submit(e);
                                             }
                                         }}
-                                        placeholder="Tu contraseña"
+                                        placeholder={PLACEHOLDERS.authPassword}
                                         className="pr-10"
                                     />
                                     <Button

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import AuthLayout from '@/layouts/auth-layout';
+import { PLACEHOLDERS, FIELD_DESCRIPTIONS } from '@/constants/ui-constants';
 
 /**
  * Props de la página de restablecimiento de contraseña
@@ -73,7 +74,7 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                     </FormField>
 
                     {/* Campo de nueva contraseña */}
-                    <FormField label="Nueva contraseña" error={errors.password} description="Mínimo 6 caracteres" required>
+                    <FormField label="Nueva contraseña" error={errors.password} description={FIELD_DESCRIPTIONS.passwordMinimum6} required>
                         <div className="relative">
                             <Input
                                 id="password"
@@ -84,7 +85,7 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                                 className="pr-10 pl-10"
                                 autoFocus
                                 onChange={(e) => setData('password', e.target.value)}
-                                placeholder="Mínimo 6 caracteres"
+                                placeholder={PLACEHOLDERS.authPasswordMinimum}
                             />
                             <Button
                                 type="button"
@@ -109,7 +110,7 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                                 value={data.password_confirmation}
                                 className="pr-10 pl-10"
                                 onChange={(e) => setData('password_confirmation', e.target.value)}
-                                placeholder="Confirma tu nueva contraseña"
+                                placeholder={PLACEHOLDERS.authPasswordNew}
                             />
                             <Button
                                 type="button"

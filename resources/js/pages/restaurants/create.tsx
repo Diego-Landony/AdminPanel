@@ -10,6 +10,7 @@ import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { PLACEHOLDERS, AUTOCOMPLETE } from '@/constants/ui-constants';
 
 interface RestaurantFormData {
     name: string;
@@ -92,7 +93,7 @@ export default function RestaurantCreate() {
         >
             <FormSection icon={Building2} title="Información Básica" description="Datos principales del restaurante">
                 <FormField label="Nombre" error={errors.name} required>
-                    <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder="Nombre del restaurante" />
+                    <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder={PLACEHOLDERS.restaurantName} autoComplete={AUTOCOMPLETE.organizationName} />
                 </FormField>
 
                 <FormField label="Descripción" error={errors.description}>
@@ -100,7 +101,7 @@ export default function RestaurantCreate() {
                         id="description"
                         value={data.description}
                         onChange={(e) => setData('description', e.target.value)}
-                        placeholder="Descripción del restaurante"
+                        placeholder={PLACEHOLDERS.description}
                         rows={3}
                     />
                 </FormField>
@@ -112,8 +113,9 @@ export default function RestaurantCreate() {
                             id="address"
                             value={data.address}
                             onChange={(e) => setData('address', e.target.value)}
-                            placeholder="Dirección del restaurante"
+                            placeholder={PLACEHOLDERS.address}
                             className="pl-10"
+                            autoComplete={AUTOCOMPLETE.address}
                         />
                     </div>
                 </FormField>
@@ -125,8 +127,9 @@ export default function RestaurantCreate() {
                             id="phone"
                             value={data.phone}
                             onChange={(e) => setData('phone', e.target.value)}
-                            placeholder="+502 1234 5678"
+                            placeholder={PLACEHOLDERS.phone}
                             className="pl-10"
+                            autoComplete={AUTOCOMPLETE.phone}
                         />
                     </div>
                 </FormField>
@@ -139,8 +142,9 @@ export default function RestaurantCreate() {
                             type="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            placeholder="email@restaurante.com"
+                            placeholder={PLACEHOLDERS.email}
                             className="pl-10"
+                            autoComplete={AUTOCOMPLETE.email}
                         />
                     </div>
                 </FormField>
@@ -152,8 +156,9 @@ export default function RestaurantCreate() {
                             id="manager_name"
                             value={data.manager_name}
                             onChange={(e) => setData('manager_name', e.target.value)}
-                            placeholder="Nombre del encargado"
+                            placeholder={PLACEHOLDERS.managerName}
                             className="pl-10"
+                            autoComplete={AUTOCOMPLETE.name}
                         />
                     </div>
                 </FormField>

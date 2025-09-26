@@ -11,7 +11,8 @@ import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import { Shield } from 'lucide-react';
+import { ENTITY_ICONS } from '@/constants/section-icons';
+import { PLACEHOLDERS, NOTIFICATIONS } from '@/constants/ui-constants';
 
 /**
  * Interfaz para los permisos agrupados
@@ -54,7 +55,7 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
                 // Los errores de validación se muestran automáticamente
                 // Los errores del servidor se manejan por el layout
                 if (Object.keys(errors).length === 0) {
-                    showNotification.error('Error del servidor al crear el rol. Inténtalo de nuevo.');
+                    showNotification.error(NOTIFICATIONS.error.serverRoleCreate);
                 }
             },
         });
@@ -106,9 +107,9 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
             loading={processing}
             loadingSkeleton={CreateRolesSkeleton}
         >
-            <FormSection icon={Shield} title="Información del Rol" description="Datos básicos del nuevo rol">
+            <FormSection icon={ENTITY_ICONS.role.info} title="Información del Rol" description="Datos básicos del nuevo rol">
                 <FormField label="Nombre del Rol" error={errors.name} required>
-                    <Input id="name" type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder="Ej: usuario" />
+                    <Input id="name" type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder={PLACEHOLDERS.roleName} />
                 </FormField>
 
                 <FormField label="Descripción" error={errors.description}>
@@ -116,13 +117,13 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
                         id="description"
                         value={data.description}
                         onChange={(e) => setData('description', e.target.value)}
-                        placeholder="Describe las responsabilidades y alcance de este rol..."
+                        placeholder={PLACEHOLDERS.description}
                         className="min-h-[100px]"
                     />
                 </FormField>
             </FormSection>
 
-            <FormSection icon={Shield} title="Permisos del Rol" description="Selecciona las acciones que este rol puede realizar en cada página">
+            <FormSection icon={ENTITY_ICONS.role.permissions} title="Permisos del Rol" description="Selecciona las acciones que este rol puede realizar en cada página">
                 {/* Tabla compacta de permisos */}
                 <div className="overflow-x-auto">
                     <Table>

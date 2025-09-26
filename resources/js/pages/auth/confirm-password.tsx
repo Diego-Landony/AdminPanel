@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import AuthLayout from '@/layouts/auth-layout';
+import { PLACEHOLDERS } from '@/constants/ui-constants';
 
 /**
  * Página de confirmación de contraseña
@@ -47,7 +48,7 @@ export default function ConfirmPassword() {
                                 id="password"
                                 type={showPassword ? 'text' : 'password'}
                                 name="password"
-                                placeholder="Tu contraseña actual"
+                                placeholder={PLACEHOLDERS.authPasswordCurrent}
                                 autoComplete="current-password"
                                 value={data.password}
                                 autoFocus

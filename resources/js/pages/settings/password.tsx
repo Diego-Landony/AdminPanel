@@ -9,6 +9,7 @@ import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
+import { PLACEHOLDERS, AUTOCOMPLETE, FIELD_DESCRIPTIONS } from '@/constants/ui-constants';
 
 /**
  * Página de configuración de contraseña
@@ -58,7 +59,7 @@ export default function Password() {
                 <div className="space-y-6">
                     <HeadingSmall
                         title="Actualizar Contraseña"
-                        description="Asegúrate de que tu cuenta use una contraseña de al menos 6 caracteres para mantener la seguridad"
+                        description={FIELD_DESCRIPTIONS.passwordSecurity6}
                     />
 
                     <form onSubmit={updatePassword} className="space-y-6">
@@ -70,8 +71,8 @@ export default function Password() {
                                     value={data.current_password}
                                     onChange={(e) => setData('current_password', e.target.value)}
                                     type={showCurrentPassword ? 'text' : 'password'}
-                                    autoComplete="current-password"
-                                    placeholder="Contraseña actual"
+                                    autoComplete={AUTOCOMPLETE.currentPassword}
+                                    placeholder={PLACEHOLDERS.settingsPassword}
                                     className="pr-10"
                                 />
                                 <Button
@@ -86,7 +87,7 @@ export default function Password() {
                             </div>
                         </FormField>
 
-                        <FormField label="Nueva Contraseña" error={errors.password} description="Mínimo 6 caracteres" required>
+                        <FormField label="Nueva Contraseña" error={errors.password} description={FIELD_DESCRIPTIONS.passwordMinimum6} required>
                             <div className="relative">
                                 <Input
                                     id="password"
@@ -94,8 +95,8 @@ export default function Password() {
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
                                     type={showPassword ? 'text' : 'password'}
-                                    autoComplete="new-password"
-                                    placeholder="Mínimo 6 caracteres"
+                                    autoComplete={AUTOCOMPLETE.newPassword}
+                                    placeholder={PLACEHOLDERS.settingsPasswordMinimum}
                                     className="pr-10"
                                 />
                                 <Button
@@ -117,8 +118,8 @@ export default function Password() {
                                     value={data.password_confirmation}
                                     onChange={(e) => setData('password_confirmation', e.target.value)}
                                     type={showPasswordConfirmation ? 'text' : 'password'}
-                                    autoComplete="new-password"
-                                    placeholder="Confirmar nueva contraseña"
+                                    autoComplete={AUTOCOMPLETE.newPassword}
+                                    placeholder={PLACEHOLDERS.settingsPasswordConfirm}
                                     className="pr-10"
                                 />
                                 <Button

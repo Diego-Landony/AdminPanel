@@ -1,6 +1,7 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { Head, router } from '@inertiajs/react';
 import { Award, Check, Clock, CreditCard, MapPin, Phone, Users, X } from 'lucide-react';
+import { NOTIFICATIONS } from '@/constants/ui-constants';
 import React, { useCallback, useState } from 'react';
 
 import { DataTable } from '@/components/DataTable';
@@ -162,7 +163,7 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
                 if (error.message) {
                     showNotification.error(error.message);
                 } else {
-                    showNotification.error('Error al eliminar el cliente');
+                    showNotification.error(NOTIFICATIONS.error.deleteCustomer);
                 }
             },
         });

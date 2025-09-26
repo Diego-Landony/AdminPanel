@@ -16,6 +16,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { showNotification } from '@/hooks/useNotifications';
+import { ENTITY_ICONS } from '@/constants/section-icons';
+import { PLACEHOLDERS, NOTIFICATIONS } from '@/constants/ui-constants';
 
 /**
  * Interfaz para los permisos agrupados
@@ -88,7 +90,7 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                 // Los errores de validación se muestran automáticamente
                 // Los errores del servidor se manejan por el layout
                 if (Object.keys(errors).length === 0) {
-                    showNotification.error('Error del servidor al actualizar el rol. Inténtalo de nuevo.');
+                    showNotification.error(NOTIFICATIONS.error.serverRole);
                 }
             },
         });
@@ -151,21 +153,21 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
 
             if (response.ok) {
                 if (checked) {
-                    showNotification.success('Usuario agregado al rol');
+                    showNotification.success(NOTIFICATIONS.success.userAdded);
                 } else {
-                    showNotification.success('Usuario removido del rol');
+                    showNotification.success(NOTIFICATIONS.success.userRemoved);
                 }
             } else {
                 // Revertir el cambio si falla
                 setSelectedUsers(selectedUsers);
                 const errorData = await response.json();
-                showNotification.error(errorData.error || 'Error al actualizar usuarios del rol');
+                showNotification.error(errorData.error || NOTIFICATIONS.error.updateUsers);
             }
         } catch (error) {
             // Revertir el cambio si falla
             setSelectedUsers(selectedUsers);
             console.error('Error saving users:', error);
-            showNotification.error('Error de conexión al actualizar usuarios');
+            showNotification.error(NOTIFICATIONS.error.connectionUsers);
         }
     };
 
@@ -186,17 +188,17 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
             processing={processing}
             disabled={isAdminRole}
             pageTitle={`Editar Rol - ${role.name}`}
-            loading={false}
+            loading={processing}
             loadingSkeleton={EditRolesSkeleton}
         >
-            <FormSection title="Información Básica" description="Datos principales del rol">
+            <FormSection icon={ENTITY_ICONS.role.info} title="Información Básica" description="Datos principales del rol">
                 <FormField label="Nombre del Rol" error={errors.name}>
                     <Input
                         id="name"
                         type="text"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-                        placeholder="ej: Gerente"
+                        placeholder={PLACEHOLDERS.roleNameEdit}
                         disabled={isAdminRole}
                         className={isAdminRole ? 'cursor-not-allowed opacity-50' : ''}
                     />
@@ -207,7 +209,7 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                         id="description"
                         value={data.description}
                         onChange={(e) => setData('description', e.target.value)}
-                        placeholder="Describe las responsabilidades y alcance de este rol..."
+                        placeholder={PLACEHOLDERS.description}
                         className={`min-h-[100px] ${isAdminRole ? 'cursor-not-allowed opacity-50' : ''}`}
                         disabled={isAdminRole}
                     />
@@ -237,7 +239,7 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                             <div className="relative">
                                 <Input
                                     type="text"
-                                    placeholder="Buscar usuarios..."
+                                    placeholder={PLACEHOLDERS.searchUsers}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="h-9 text-sm"
@@ -283,7 +285,7 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                 </Sheet>
             </div>
 
-            <FormSection title="Permisos del Rol" description={role.name === 'admin' ? 'Este rol tiene automáticamente todos los permisos del sistema' : 'Selecciona las acciones que este rol puede realizar en cada página'}>
+            <FormSection icon={ENTITY_ICONS.role.permissions} title="Permisos del Rol" description={role.name === 'admin' ? 'Este rol tiene automáticamente todos los permisos del sistema' : 'Selecciona las acciones que este rol puede realizar en cada página'}>
 
                 {role.name === 'admin' && (
                     <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-3">

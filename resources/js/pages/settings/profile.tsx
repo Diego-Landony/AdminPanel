@@ -9,6 +9,7 @@ import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { PLACEHOLDERS, AUTOCOMPLETE } from '@/constants/ui-constants';
 
 /**
  * Formulario de perfil del usuario
@@ -56,8 +57,8 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                 id="name"
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                autoComplete="name"
-                                placeholder="Nombre completo"
+                                autoComplete={AUTOCOMPLETE.name}
+                                placeholder={PLACEHOLDERS.settingsProfileName}
                             />
                         </FormField>
 
@@ -67,8 +68,8 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                 type="email"
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
-                                autoComplete="username"
-                                placeholder="Dirección de correo electrónico"
+                                autoComplete={AUTOCOMPLETE.email}
+                                placeholder={PLACEHOLDERS.settingsProfileEmail}
                             />
                         </FormField>
 

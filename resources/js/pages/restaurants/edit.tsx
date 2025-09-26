@@ -10,6 +10,7 @@ import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { PLACEHOLDERS, AUTOCOMPLETE } from '@/constants/ui-constants';
 
 interface Restaurant {
     id: number;
@@ -116,7 +117,7 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
             onSubmit={handleSubmit}
             processing={processing}
             pageTitle={`Editar Restaurante - ${restaurant.name}`}
-            loading={false}
+            loading={processing}
             loadingSkeleton={EditRestaurantsSkeleton}
         >
             <FormSection icon={Building2} title="Información Básica" description="Datos principales del restaurante">
@@ -125,7 +126,8 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                         id="name"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-                        placeholder="Nombre del restaurante"
+                        placeholder={PLACEHOLDERS.restaurantName}
+                        autoComplete={AUTOCOMPLETE.organizationName}
                     />
                 </FormField>
 
@@ -134,7 +136,7 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                         id="description"
                         value={data.description}
                         onChange={(e) => setData('description', e.target.value)}
-                        placeholder="Descripción del restaurante"
+                        placeholder={PLACEHOLDERS.description}
                         rows={3}
                     />
                 </FormField>
@@ -146,8 +148,9 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                             id="address"
                             value={data.address}
                             onChange={(e) => setData('address', e.target.value)}
-                            placeholder="Dirección del restaurante"
+                            placeholder={PLACEHOLDERS.address}
                             className="pl-10"
+                            autoComplete={AUTOCOMPLETE.address}
                         />
                     </div>
                 </FormField>
@@ -159,8 +162,9 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                             id="phone"
                             value={data.phone}
                             onChange={(e) => setData('phone', e.target.value)}
-                            placeholder="+502 1234 5678"
+                            placeholder={PLACEHOLDERS.phone}
                             className="pl-10"
+                            autoComplete={AUTOCOMPLETE.phone}
                         />
                     </div>
                 </FormField>
@@ -173,8 +177,9 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                             type="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            placeholder="email@restaurante.com"
+                            placeholder={PLACEHOLDERS.email}
                             className="pl-10"
+                            autoComplete={AUTOCOMPLETE.email}
                         />
                     </div>
                 </FormField>
@@ -186,8 +191,9 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                             id="manager_name"
                             value={data.manager_name}
                             onChange={(e) => setData('manager_name', e.target.value)}
-                            placeholder="Nombre del encargado"
+                            placeholder={PLACEHOLDERS.managerName}
                             className="pl-10"
+                            autoComplete={AUTOCOMPLETE.name}
                         />
                     </div>
                 </FormField>

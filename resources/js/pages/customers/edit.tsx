@@ -12,6 +12,7 @@ import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { PLACEHOLDERS, AUTOCOMPLETE, FIELD_DESCRIPTIONS, NOTIFICATIONS } from '@/constants/ui-constants';
 
 /**
  * Interfaz para los datos del cliente
@@ -86,7 +87,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
 
         put(route('customers.update', customer.id), {
             onSuccess: () => {
-                showNotification.success('Cliente actualizado exitosamente');
+                showNotification.success(NOTIFICATIONS.success.customerUpdated);
                 // Limpiar los campos de contraseña
                 setData('password', '');
                 setData('password_confirmation', '');
@@ -129,7 +130,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
             onSubmit={handleSubmit}
             processing={processing}
             pageTitle={`Editar Cliente - ${customer.full_name}`}
-            loading={false}
+            loading={processing}
             loadingSkeleton={EditCustomersSkeleton}
             isDirty={isDirty}
             onReset={handleReset}
@@ -141,8 +142,8 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                         type="text"
                         value={data.full_name}
                         onChange={(e) => setData('full_name', e.target.value)}
-                        placeholder="Ingrese el nombre completo"
-                        autoComplete="name"
+                        placeholder={PLACEHOLDERS.name}
+                        autoComplete={AUTOCOMPLETE.name}
                     />
                 </FormField>
 
@@ -153,21 +154,21 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                             type="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            placeholder="cliente@ejemplo.com"
-                            autoComplete="email"
+                            placeholder={PLACEHOLDERS.email}
+                            autoComplete={AUTOCOMPLETE.email}
                             className="pl-10"
                         />
                     </div>
                 </FormField>
 
-                <FormField label="Tarjeta Subway" error={errors.subway_card} required description="Número único de identificación del cliente">
+                <FormField label="Tarjeta Subway" error={errors.subway_card} required description={FIELD_DESCRIPTIONS.subwayCard}>
                     <div className="relative">
                         <CreditCard className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                         <Input
                             type="text"
                             value={data.subway_card}
                             onChange={(e) => setData('subway_card', e.target.value)}
-                            placeholder="1234567890"
+                            placeholder={PLACEHOLDERS.subwayCard}
                             className="pl-10"
                         />
                     </div>
@@ -221,7 +222,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                             type="tel"
                             value={data.phone}
                             onChange={(e) => setData('phone', e.target.value)}
-                            placeholder="+502 1234-5678"
+                            placeholder={PLACEHOLDERS.phone}
                             className="pl-10"
                         />
                     </div>
@@ -234,20 +235,20 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                             type="text"
                             value={data.location}
                             onChange={(e) => setData('location', e.target.value)}
-                            placeholder="Ciudad, Departamento"
+                            placeholder={PLACEHOLDERS.location}
                             className="pl-10"
                         />
                     </div>
                 </FormField>
 
-                <FormField label="NIT" error={errors.nit} description="Número de Identificación Tributaria (opcional)">
+                <FormField label="NIT" error={errors.nit} description={FIELD_DESCRIPTIONS.nit}>
                     <div className="relative">
                         <Hash className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                         <Input
                             type="text"
                             value={data.nit}
                             onChange={(e) => setData('nit', e.target.value)}
-                            placeholder="12345678-9"
+                            placeholder={PLACEHOLDERS.nit}
                             className="pl-10"
                         />
                     </div>
@@ -257,22 +258,22 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                     <Textarea
                         value={data.address}
                         onChange={(e) => setData('address', e.target.value)}
-                        placeholder="Dirección completa del cliente"
+                        placeholder={PLACEHOLDERS.address}
                         rows={3}
                     />
                 </FormField>
             </FormSection>
 
             <FormSection icon={Lock} title="Seguridad" description="Configuración de acceso del cliente">
-                <FormField label="Contraseña" error={errors.password} description="Mínimo 8 caracteres">
+                <FormField label="Contraseña" error={errors.password} description={FIELD_DESCRIPTIONS.password}>
                     <div className="relative">
                         <Lock className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                         <Input
                             type={showPassword ? 'text' : 'password'}
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
-                            placeholder="••••••••"
-                            autoComplete="new-password"
+                            placeholder={PLACEHOLDERS.password}
+                            autoComplete={AUTOCOMPLETE.newPassword}
                             className="pr-10 pl-10"
                         />
                         <Button
@@ -294,8 +295,8 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                             type={showPassword ? 'text' : 'password'}
                             value={data.password_confirmation}
                             onChange={(e) => setData('password_confirmation', e.target.value)}
-                            placeholder="••••••••"
-                            autoComplete="new-password"
+                            placeholder={PLACEHOLDERS.password}
+                            autoComplete={AUTOCOMPLETE.newPassword}
                             className="pl-10"
                         />
                     </div>

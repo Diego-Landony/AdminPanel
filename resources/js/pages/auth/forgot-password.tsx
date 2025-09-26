@@ -9,6 +9,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import AuthLayout from '@/layouts/auth-layout';
+import { PLACEHOLDERS } from '@/constants/ui-constants';
 
 /**
  * Página de recuperación de contraseña
@@ -58,7 +59,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
                                 value={data.email}
                                 autoFocus
                                 onChange={(e) => setData('email', e.target.value)}
-                                placeholder="correo@ejemplo.com"
+                                placeholder={PLACEHOLDERS.email}
                             />
                         </FormField>
                     </form>

@@ -8,6 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import AuthLayout from '@/layouts/auth-layout';
+import { PLACEHOLDERS, AUTOCOMPLETE } from '@/constants/ui-constants';
 
 /**
  * Tipo para el formulario de registro
@@ -64,11 +65,11 @@ export default function Register() {
                                     type="text"
                                     autoFocus
                                     tabIndex={1}
-                                    autoComplete="name"
+                                    autoComplete={AUTOCOMPLETE.name}
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
                                     disabled={processing}
-                                    placeholder="Tu nombre completo"
+                                    placeholder={PLACEHOLDERS.authName}
                                 />
                             </FormField>
 
@@ -78,11 +79,11 @@ export default function Register() {
                                     id="email"
                                     type="email"
                                     tabIndex={2}
-                                    autoComplete="email"
+                                    autoComplete={AUTOCOMPLETE.email}
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
                                     disabled={processing}
-                                    placeholder="correo@ejemplo.com"
+                                    placeholder={PLACEHOLDERS.email}
                                 />
                             </FormField>
 
@@ -93,11 +94,11 @@ export default function Register() {
                                         id="password"
                                         type={showPassword ? 'text' : 'password'}
                                         tabIndex={3}
-                                        autoComplete="new-password"
+                                        autoComplete={AUTOCOMPLETE.newPassword}
                                         value={data.password}
                                         onChange={(e) => setData('password', e.target.value)}
                                         disabled={processing}
-                                        placeholder="Tu contraseña"
+                                        placeholder={PLACEHOLDERS.authPassword}
                                         className="pr-10"
                                     />
                                     <Button
@@ -119,11 +120,11 @@ export default function Register() {
                                         id="password_confirmation"
                                         type={showPasswordConfirmation ? 'text' : 'password'}
                                         name="password_confirmation"
-                                        autoComplete="new-password"
+                                        autoComplete={AUTOCOMPLETE.newPassword}
                                         value={data.password_confirmation}
                                         onChange={(e) => setData('password_confirmation', e.target.value)}
                                         disabled={processing}
-                                        placeholder="Confirma tu contraseña"
+                                        placeholder={PLACEHOLDERS.authPasswordConfirm}
                                         className="pr-10"
                                     />
                                     <Button

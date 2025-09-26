@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Hash, Shield, Star } from 'lucide-react';
+import { Hash, Star } from 'lucide-react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
@@ -10,6 +10,7 @@ import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ENTITY_ICONS } from '@/constants/section-icons';
 
 /**
  * Interfaz para el tipo de cliente
@@ -130,7 +131,7 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
             loading={false}
             loadingSkeleton={EditCustomerTypesSkeleton}
         >
-            <FormSection icon={Shield} title="Información del Tipo" description="Modifica los datos del tipo de cliente">
+            <FormSection icon={ENTITY_ICONS.customerType.info} title="Información del Tipo" description="Modifica los datos del tipo de cliente">
                 {/* Nombre para mostrar */}
                 <FormField label="Nombre para mostrar" error={errors.display_name} required>
                     <Input

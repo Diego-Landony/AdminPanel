@@ -70,8 +70,13 @@ class CustomerTypeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|\Inertia\Response
     {
+        // If request contains search/filter parameters, redirect to index method
+        if ($request->hasAny(['search', 'per_page', 'sort_field', 'sort_direction', 'page'])) {
+            return $this->index($request);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:50|unique:customer_types',
             'display_name' => 'required|string|max:100',

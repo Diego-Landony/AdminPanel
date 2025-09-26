@@ -98,7 +98,7 @@ export default function CreateUser() {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="absolute top-1 right-1 h-8 w-8 p-0"
+                            className="absolute top-1 right-1 h-11 w-11 md:h-8 md:w-8 p-0"
                             onClick={() => setShowPassword(!showPassword)}
                         >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

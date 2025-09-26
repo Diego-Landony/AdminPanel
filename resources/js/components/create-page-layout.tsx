@@ -70,8 +70,12 @@ export function CreatePageLayout({
                                         Cancelar
                                     </Button>
                                 </Link>
-                                <Button type="submit" disabled={processing} className="w-full sm:w-auto">
-                                    <Save className="mr-2 h-4 w-4 flex-shrink-0" />
+                                <Button type="submit" disabled={processing} className={`w-full sm:w-auto ${processing ? 'cursor-not-allowed' : ''}`}>
+                                    {processing ? (
+                                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent flex-shrink-0" />
+                                    ) : (
+                                        <Save className="mr-2 h-4 w-4 flex-shrink-0" />
+                                    )}
                                     <span className="truncate">{processing ? 'Guardando...' : submitLabel}</span>
                                 </Button>
                             </div>

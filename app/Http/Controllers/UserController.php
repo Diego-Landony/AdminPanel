@@ -57,27 +57,27 @@ class UserController extends Controller
         }
 
         // Aplicar ordenamiento
-        if ($sortField === 'name') {
+        if ($sortField === 'user' || $sortField === 'name') {
             $query->orderBy('name', $sortDirection);
         } elseif ($sortField === 'status') {
             // Sintaxis compatible con MariaDB/MySQL
-            $query->orderByRaw("
+            $query->orderByRaw('
                 CASE
                     WHEN last_activity_at IS NULL THEN 4
                     WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
                     WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
                     ELSE 3
-                END " . ($sortDirection === 'asc' ? 'ASC' : 'DESC'));
+                END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
         } else {
             // Ordenamiento por defecto: usuarios en línea primero, luego por fecha de creación
-            $query->orderByRaw("
+            $query->orderByRaw('
                 CASE
                     WHEN last_activity_at IS NULL THEN 4
                     WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
                     WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
                     ELSE 3
                 END ASC
-            ")->orderBy('created_at', 'desc');
+            ')->orderBy('created_at', 'desc');
         }
 
         // Paginar y obtener usuarios
@@ -162,8 +162,13 @@ class UserController extends Controller
     /**
      * Almacena un nuevo usuario (solo datos básicos)
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|\Inertia\Response
     {
+        // If request contains search/filter parameters, redirect to index method
+        if ($request->hasAny(['search', 'per_page', 'sort_field', 'sort_direction', 'page'])) {
+            return $this->index($request);
+        }
+
         try {
             $request->validate([
                 'name' => 'required|string|max:255',

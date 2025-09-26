@@ -66,7 +66,7 @@ class CustomerController extends Controller
         }
 
         // Aplicar ordenamiento
-        if ($sortField === 'full_name') {
+        if ($sortField === 'customer' || $sortField === 'full_name') {
             $query->orderBy('full_name', $sortDirection);
         } elseif ($sortField === 'status') {
             // Sintaxis compatible con MariaDB/MySQL
@@ -77,6 +77,10 @@ class CustomerController extends Controller
                     WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
                     ELSE 3
                 END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
+        } elseif ($sortField === 'puntos') {
+            $query->orderBy('puntos', $sortDirection);
+        } elseif ($sortField === 'last_purchase') {
+            $query->orderBy('last_purchase_at', $sortDirection);
         } else {
             $query->orderBy($sortField, $sortDirection);
         }
@@ -188,8 +192,13 @@ class CustomerController extends Controller
     /**
      * Almacena un nuevo cliente
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|\Inertia\Response
     {
+        // If request contains search/filter parameters, redirect to index method
+        if ($request->hasAny(['search', 'per_page', 'sort_field', 'sort_direction', 'page'])) {
+            return $this->index($request);
+        }
+
         try {
             $request->validate([
                 'full_name' => 'required|string|max:255',

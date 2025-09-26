@@ -16,13 +16,13 @@ export function FormSectionSkeleton({
     hasTable = false
 }: FormSectionSkeletonProps) {
     return (
-        <div className="space-y-6 rounded-lg border border-border bg-card p-6">
+        <div className="space-y-6 rounded-lg border border-border bg-card p-6 animate-pulse">
             {/* Section Header */}
             <div className="flex items-center gap-3 border-b border-border pb-4">
-                <Skeleton className="h-5 w-5" />
+                <Skeleton className="h-5 w-5 rounded-full" />
                 <div className="space-y-1">
-                    <Skeleton className="h-5 w-32" />
-                    <Skeleton className="h-3 w-48" />
+                    <Skeleton className="h-5 w-32 rounded-md" />
+                    <Skeleton className="h-3 w-48 rounded-sm" />
                 </div>
             </div>
 

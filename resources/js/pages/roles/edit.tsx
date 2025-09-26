@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
-import { Save, Users } from 'lucide-react';
+import { Users } from 'lucide-react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';

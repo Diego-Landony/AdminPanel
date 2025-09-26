@@ -287,6 +287,7 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
             key: 'last_purchase',
             title: 'Última Compra',
             width: 'md' as const,
+            sortable: true,
             render: (customer: Customer) => (
                 <div>
                     <div className="text-sm">{customer.last_purchase ? formatDate(customer.last_purchase) : 'Sin compras'}</div>
@@ -298,6 +299,7 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
             key: 'puntos',
             title: 'Puntos',
             width: 'sm' as const,
+            sortable: true,
             render: (customer: Customer) => (
                 <div>
                     <div className="text-sm font-medium text-blue-600">{formatPoints(customer.puntos || 0)}</div>
@@ -306,6 +308,13 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
                     )}
                 </div>
             ),
+        },
+        {
+            key: 'created_at',
+            title: 'Registro',
+            width: 'sm' as const,
+            sortable: true,
+            render: (customer: Customer) => <div className="text-sm text-muted-foreground">{formatDate(customer.created_at)}</div>,
         },
         {
             key: 'actions',

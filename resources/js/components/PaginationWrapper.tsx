@@ -27,7 +27,7 @@ interface PaginationWrapperProps {
 
 export function PaginationWrapper({ data, routeName, filters = {}, className = 'mt-6', showInfo = false }: PaginationWrapperProps) {
     const goToPage = (page: number) => {
-        router.get(
+        router.post(
             routeName,
             {
                 page,

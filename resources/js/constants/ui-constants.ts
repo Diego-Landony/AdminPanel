@@ -62,6 +62,14 @@ export const NOTIFICATIONS = {
         deleteUser: 'Error al eliminar el usuario',
         deleteRestaurant: 'Error al eliminar el restaurante',
         deleteCustomer: 'Error al eliminar el cliente',
+        // Network and data loading errors
+        networkConnection: 'Error de conexión. Verifica tu conexión a internet.',
+        dataLoading: 'Error al cargar los datos. Intenta recargar la página.',
+        serverTimeout: 'El servidor no responde. Inténtalo de nuevo en unos momentos.',
+        invalidData: 'Los datos recibidos no son válidos.',
+        permissionDenied: 'No tienes permisos para realizar esta acción.',
+        sessionExpired: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
+        rateLimited: 'Demasiadas solicitudes. Espera unos momentos antes de intentar de nuevo.',
     }
 } as const;
 

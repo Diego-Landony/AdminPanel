@@ -1,7 +1,8 @@
 import { Link, router } from '@inertiajs/react';
-import { ArrowDown, ArrowUp, ArrowUpDown, Plus, RefreshCw, Search } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Plus, RefreshCw, Search, X } from 'lucide-react';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { PaginationWrapper } from '@/components/PaginationWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -80,24 +81,6 @@ interface DataTableProps<T> {
     breakpoint?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-/**
- * Custom hook for debouncing input values
- */
-const useDebounce = (value: string, delay: number): string => {
-    const [debouncedValue, setDebouncedValue] = useState(value);
-
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedValue(value);
-        }, delay);
-
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [value, delay]);
-
-    return debouncedValue;
-};
 
 /**
  * Truncated text component with tooltip for overflow content
@@ -197,7 +180,6 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
-    const debouncedSearch = useDebounce(search, 500);
     const breakpointClass = breakpoint === 'md' ? 'md:' : `${breakpoint}:`;
 
     /**
@@ -206,7 +188,7 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
     const updateFilters = useCallback(
         (newFilters: Record<string, string | number | undefined>) => {
             setIsLoading(true);
-            router.get(routeName, newFilters, {
+            router.post(routeName, newFilters, {
                 preserveState: true,
                 replace: true,
                 onFinish: () => setIsLoading(false),
@@ -216,16 +198,35 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
     );
 
     /**
-     * Effect for handling debounced search and filter updates
+     * Apply filters manually when search button is clicked
      */
-    useEffect(() => {
+    const applyFilters = useCallback(() => {
         updateFilters({
-            search: debouncedSearch || undefined,
+            search: search || undefined,
             per_page: perPage,
             sort_field: sortField,
             sort_direction: sortDirection,
         });
-    }, [debouncedSearch, perPage, sortField, sortDirection, updateFilters]);
+    }, [search, perPage, sortField, sortDirection, updateFilters]);
+
+    /**
+     * Clear search input
+     */
+    const clearSearch = useCallback(() => {
+        setSearch('');
+    }, []);
+
+    /**
+     * Effect for handling per_page and sorting changes (apply automatically)
+     */
+    useEffect(() => {
+        updateFilters({
+            search: search || undefined,
+            per_page: perPage,
+            sort_field: sortField,
+            sort_direction: sortDirection,
+        });
+    }, [search, perPage, sortField, sortDirection, updateFilters]);
 
     /**
      * Handles column sorting with direction toggle
@@ -257,10 +258,10 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
             onRefresh();
         } else {
             setIsRefreshing(true);
-            router.get(
+            router.post(
                 routeName,
                 {
-                    search: search,
+                    search: search || undefined,
                     per_page: perPage,
                     sort_field: sortField,
                     sort_direction: sortDirection,
@@ -291,7 +292,8 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
     };
 
     return (
-        <div className="flex h-full flex-1 flex-col gap-6 p-6">
+        <ErrorBoundary context="tabla de datos" showRetry={true}>
+            <div className="flex h-full flex-1 flex-col gap-6 p-6">
             {/* Page Header */}
             <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -350,8 +352,7 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                                         hour: '2-digit',
                                         minute: '2-digit',
                                         second: '2-digit',
-                                        day: '2-digit',
-                                        month: '2-digit',
+                                        hour12: true,
                                     })}
                                 </span>
                             </div>
@@ -362,21 +363,46 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                 <CardContent>
                     {/* Search and Filters */}
                     <div className="mb-6 flex flex-col gap-4 sm:flex-row">
-                        <div className="flex-1">
-                            <Label htmlFor="search" className="sr-only">
-                                Search
-                            </Label>
-                            <div className="relative">
-                                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                <Input
-                                    id="search"
-                                    placeholder={searchPlaceholder}
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    className="pl-10"
-                                    disabled={isLoading}
-                                />
+                        <div className="flex gap-2 flex-1">
+                            <div className="flex-1">
+                                <Label htmlFor="search" className="sr-only">
+                                    Search
+                                </Label>
+                                <div className="relative">
+                                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <Input
+                                        id="search"
+                                        placeholder={searchPlaceholder}
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        className="pl-10 pr-10"
+                                        disabled={isLoading}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                applyFilters();
+                                            }
+                                        }}
+                                    />
+                                    {search && (
+                                        <button
+                                            type="button"
+                                            onClick={clearSearch}
+                                            className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                            disabled={isLoading}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    )}
+                                </div>
                             </div>
+                            <Button
+                                onClick={applyFilters}
+                                disabled={isLoading}
+                                className="flex-shrink-0"
+                            >
+                                <Search className="mr-2 h-4 w-4" />
+                                Buscar
+                            </Button>
                         </div>
 
                         <div className="flex gap-2">
@@ -430,7 +456,7 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                                         <TableBody>
                                             {data.data.length === 0 ? (
                                                 <TableRow>
-                                                    <TableCell colSpan={columns.length} className="h-32 text-center">
+                                                    <TableCell colSpan={columns.length} className="h-40 md:h-32 text-center">
                                                         <div className="flex flex-col items-center justify-center space-y-2">
                                                             <p className="text-sm text-muted-foreground">No se encontraron resultados</p>
                                                             {search && (
@@ -447,7 +473,7 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                                                         {columns.map((column) => (
                                                             <TableCell
                                                                 key={column.key}
-                                                                className={` ${column.align ? textAlignmentConfig[column.align] : textAlignmentConfig.left} ${column.className || ''} py-4 leading-relaxed break-words whitespace-normal`}
+                                                                className={` ${column.align ? textAlignmentConfig[column.align] : textAlignmentConfig.left} ${column.className || ''} py-5 md:py-4 leading-relaxed break-words whitespace-normal`}
                                                                 style={{
                                                                     wordWrap: 'break-word',
                                                                     overflowWrap: 'break-word',
@@ -470,7 +496,7 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                                 <div className={`${breakpointClass}hidden`}>
                                     <div className="grid gap-4">
                                         {data.data.length === 0 ? (
-                                            <div className="flex flex-col items-center justify-center space-y-3 py-12">
+                                            <div className="flex flex-col items-center justify-center space-y-3 py-16 md:py-12">
                                                 <p className="text-base text-muted-foreground">No se encontraron resultados</p>
                                                 {search && (
                                                     <p className="text-center text-sm text-muted-foreground">
@@ -501,7 +527,8 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                     )}
                 </CardContent>
             </Card>
-        </div>
+            </div>
+        </ErrorBoundary>
     );
 };
 

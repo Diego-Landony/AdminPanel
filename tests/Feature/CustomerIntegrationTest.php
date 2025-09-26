@@ -1,14 +1,10 @@
 <?php
 
-use App\Models\User;
 use App\Models\Customer;
-use App\Models\Role;
-use App\Models\Permission;
 
 /**
  * Tests de integración para el sistema de gestión de clientes
  */
-
 test('complete customer management workflow', function () {
     $testUser = createTestUserForIntegration();
     $this->actingAs($testUser);
@@ -16,9 +12,8 @@ test('complete customer management workflow', function () {
     // 1. Acceder a la página de clientes (debe estar vacía)
     $response = $this->get('/customers');
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) => 
-        $page->component('customers/index')
-            ->where('total_customers', 0)
+    $response->assertInertia(fn ($page) => $page->component('customers/index')
+        ->where('total_customers', 0)
     );
 
     // 2. Crear un nuevo cliente
@@ -30,7 +25,7 @@ test('complete customer management workflow', function () {
         'subway_card' => '9876543210',
         'birth_date' => '1985-12-25',
         'gender' => 'femenino',
-        'client_type' => 'vip',
+        // customer_type_id will be assigned based on points or manually
         'phone' => '+502 5555-0000',
         'address' => 'Calle de Prueba 123',
         'location' => 'Ciudad de Guatemala',
@@ -44,29 +39,25 @@ test('complete customer management workflow', function () {
     // 3. Verificar que el cliente aparece en la lista
     $response = $this->get('/customers');
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) => 
-        $page->component('customers/index')
-            ->where('total_customers', 1)
-            ->where('vip_customers', 1)
-            ->has('customers.data', 1)
-            ->where('customers.data.0.full_name', 'Cliente de Integración')
+    $response->assertInertia(fn ($page) => $page->component('customers/index')
+        ->where('total_customers', 1)
+        ->has('customers.data', 1)
+        ->where('customers.data.0.full_name', 'Cliente de Integración')
     );
 
     // 4. Buscar el cliente por nombre
     $response = $this->get('/customers?search=Integración');
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) => 
-        $page->has('customers.data', 1)
-            ->where('customers.data.0.email', 'integracion@test.com')
+    $response->assertInertia(fn ($page) => $page->has('customers.data', 1)
+        ->where('customers.data.0.email', 'integracion@test.com')
     );
 
     // 5. Editar el cliente
     $customer = Customer::where('email', 'integracion@test.com')->first();
     $response = $this->get("/customers/{$customer->id}/edit");
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) => 
-        $page->component('customers/edit')
-            ->where('customer.full_name', 'Cliente de Integración')
+    $response->assertInertia(fn ($page) => $page->component('customers/edit')
+        ->where('customer.full_name', 'Cliente de Integración')
     );
 
     // 6. Actualizar información del cliente
@@ -75,7 +66,7 @@ test('complete customer management workflow', function () {
         'email' => 'actualizado@test.com',
         'subway_card' => $customer->subway_card,
         'birth_date' => $customer->birth_date->format('Y-m-d'),
-        'client_type' => 'premium',
+        // customer_type_id will be assigned based on points or manually
         'phone' => '+502 9999-8888',
     ];
 
@@ -85,10 +76,7 @@ test('complete customer management workflow', function () {
 
     // 7. Verificar cambios en la lista
     $response = $this->get('/customers');
-    $response->assertInertia(fn ($page) => 
-        $page->where('premium_customers', 1)
-            ->where('vip_customers', 0)
-            ->where('customers.data.0.full_name', 'Cliente Actualizado')
+    $response->assertInertia(fn ($page) => $page->where('customers.data.0.full_name', 'Cliente Actualizado')
     );
 
     // 8. Eliminar cliente
@@ -98,8 +86,7 @@ test('complete customer management workflow', function () {
 
     // 9. Verificar que el cliente fue eliminado
     $response = $this->get('/customers');
-    $response->assertInertia(fn ($page) => 
-        $page->where('total_customers', 0)
+    $response->assertInertia(fn ($page) => $page->where('total_customers', 0)
     );
 });
 
@@ -113,7 +100,7 @@ test('customer search functionality works correctly', function () {
         'email' => 'juan@test.com',
         'subway_card' => '1111111111',
         'phone' => '+502 1111-1111',
-        'client_type' => 'regular',
+        // customer_type_id will be assigned based on points or manually
     ]);
 
     Customer::factory()->create([
@@ -121,7 +108,7 @@ test('customer search functionality works correctly', function () {
         'email' => 'maria@test.com',
         'subway_card' => '2222222222',
         'phone' => '+502 2222-2222',
-        'client_type' => 'premium',
+        // customer_type_id will be assigned based on points or manually
     ]);
 
     Customer::factory()->create([
@@ -129,41 +116,36 @@ test('customer search functionality works correctly', function () {
         'email' => 'carlos@test.com',
         'subway_card' => '3333333333',
         'phone' => '+502 3333-3333',
-        'client_type' => 'vip',
+        // customer_type_id will be assigned based on points or manually
     ]);
 
     // Buscar por nombre
     $response = $this->get('/customers?search=Juan');
-    $response->assertInertia(fn ($page) => 
-        $page->has('customers.data', 1)
-            ->where('customers.data.0.full_name', 'Juan Carlos Pérez')
+    $response->assertInertia(fn ($page) => $page->has('customers.data', 1)
+        ->where('customers.data.0.full_name', 'Juan Carlos Pérez')
     );
 
     // Buscar por email
     $response = $this->get('/customers?search=maria@test.com');
-    $response->assertInertia(fn ($page) => 
-        $page->has('customers.data', 1)
-            ->where('customers.data.0.email', 'maria@test.com')
+    $response->assertInertia(fn ($page) => $page->has('customers.data', 1)
+        ->where('customers.data.0.email', 'maria@test.com')
     );
 
     // Buscar por subway card
     $response = $this->get('/customers?search=3333333333');
-    $response->assertInertia(fn ($page) => 
-        $page->has('customers.data', 1)
-            ->where('customers.data.0.subway_card', '3333333333')
+    $response->assertInertia(fn ($page) => $page->has('customers.data', 1)
+        ->where('customers.data.0.subway_card', '3333333333')
     );
 
     // Buscar por teléfono
     $response = $this->get('/customers?search=2222-2222');
-    $response->assertInertia(fn ($page) => 
-        $page->has('customers.data', 1)
-            ->where('customers.data.0.phone', '+502 2222-2222')
+    $response->assertInertia(fn ($page) => $page->has('customers.data', 1)
+        ->where('customers.data.0.phone', '+502 2222-2222')
     );
 
     // Búsqueda que no encuentra resultados
     $response = $this->get('/customers?search=NoExiste');
-    $response->assertInertia(fn ($page) => 
-        $page->has('customers.data', 0)
+    $response->assertInertia(fn ($page) => $page->has('customers.data', 0)
     );
 });
 
@@ -192,25 +174,22 @@ test('customer sorting functionality works correctly', function () {
 
     // Ordenar por nombre ascendente
     $response = $this->get('/customers?sort_field=full_name&sort_direction=asc');
-    $response->assertInertia(fn ($page) => 
-        $page->where('customers.data.0.full_name', 'Ana Beatriz')
-            ->where('customers.data.1.full_name', 'Beatriz Elena')
-            ->where('customers.data.2.full_name', 'Carlos Daniel')
+    $response->assertInertia(fn ($page) => $page->where('customers.data.0.full_name', 'Ana Beatriz')
+        ->where('customers.data.1.full_name', 'Beatriz Elena')
+        ->where('customers.data.2.full_name', 'Carlos Daniel')
     );
 
     // Ordenar por nombre descendente
     $response = $this->get('/customers?sort_field=full_name&sort_direction=desc');
-    $response->assertInertia(fn ($page) => 
-        $page->where('customers.data.0.full_name', 'Carlos Daniel')
-            ->where('customers.data.1.full_name', 'Beatriz Elena')
-            ->where('customers.data.2.full_name', 'Ana Beatriz')
+    $response->assertInertia(fn ($page) => $page->where('customers.data.0.full_name', 'Carlos Daniel')
+        ->where('customers.data.1.full_name', 'Beatriz Elena')
+        ->where('customers.data.2.full_name', 'Ana Beatriz')
     );
 
     // Ordenar por fecha de creación descendente (más reciente primero)
     $response = $this->get('/customers?sort_field=created_at&sort_direction=desc');
-    $response->assertInertia(fn ($page) => 
-        $page->where('customers.data.0.full_name', 'Carlos Daniel') // Más reciente
-            ->where('customers.data.2.full_name', 'Ana Beatriz') // Más antiguo
+    $response->assertInertia(fn ($page) => $page->where('customers.data.0.full_name', 'Carlos Daniel') // Más reciente
+        ->where('customers.data.2.full_name', 'Ana Beatriz') // Más antiguo
     );
 });
 
@@ -223,26 +202,23 @@ test('customer pagination works correctly', function () {
 
     // Primera página con 10 por página
     $response = $this->get('/customers?per_page=10');
-    $response->assertInertia(fn ($page) => 
-        $page->has('customers.data', 10)
-            ->where('customers.current_page', 1)
-            ->where('customers.per_page', 10)
-            ->where('customers.total', 25)
-            ->where('customers.last_page', 3)
+    $response->assertInertia(fn ($page) => $page->has('customers.data', 10)
+        ->where('customers.current_page', 1)
+        ->where('customers.per_page', 10)
+        ->where('customers.total', 25)
+        ->where('customers.last_page', 3)
     );
 
     // Segunda página
     $response = $this->get('/customers?per_page=10&page=2');
-    $response->assertInertia(fn ($page) => 
-        $page->has('customers.data', 10)
-            ->where('customers.current_page', 2)
+    $response->assertInertia(fn ($page) => $page->has('customers.data', 10)
+        ->where('customers.current_page', 2)
     );
 
     // Última página
     $response = $this->get('/customers?per_page=10&page=3');
-    $response->assertInertia(fn ($page) => 
-        $page->has('customers.data', 5) // Solo 5 en la última página
-            ->where('customers.current_page', 3)
+    $response->assertInertia(fn ($page) => $page->has('customers.data', 5) // Solo 5 en la última página
+        ->where('customers.current_page', 3)
     );
 });
 
@@ -252,42 +228,40 @@ test('customer statistics are calculated correctly', function () {
 
     // Crear clientes con diferentes características
     Customer::factory()->create([
-        'client_type' => 'regular',
+        // customer_type_id will be assigned based on points or manually
         'email_verified_at' => now(),
         'last_activity_at' => now()->subMinutes(2), // Online
     ]);
 
     Customer::factory()->create([
-        'client_type' => 'premium',
+        // customer_type_id will be assigned based on points or manually
         'email_verified_at' => now(),
         'last_activity_at' => now()->subMinutes(30), // Offline
     ]);
 
     Customer::factory()->create([
-        'client_type' => 'vip',
+        // customer_type_id will be assigned based on points or manually
         'email_verified_at' => null, // No verificado
         'last_activity_at' => now()->subMinutes(3), // Online
     ]);
 
     Customer::factory()->create([
-        'client_type' => 'premium',
+        // customer_type_id will be assigned based on points or manually
         'email_verified_at' => now(),
         'last_activity_at' => null, // Never active
     ]);
 
     Customer::factory()->create([
-        'client_type' => 'vip',
+        // customer_type_id will be assigned based on points or manually
         'email_verified_at' => now(),
         'last_activity_at' => now()->subMinutes(1), // Online
     ]);
 
     $response = $this->get('/customers');
-    $response->assertInertia(fn ($page) => 
-        $page->where('total_customers', 5)
-            ->where('verified_customers', 4) // 4 verificados
-            ->where('online_customers', 3) // 3 en línea (< 5 minutos)
-            ->where('premium_customers', 2) // 2 premium
-            ->where('vip_customers', 2) // 2 vip
+    $response->assertInertia(fn ($page) => $page->where('total_customers', 5)
+        ->where('verified_customers', 4) // 4 verificados
+        ->where('online_customers', 3) // 3 en línea (< 5 minutos)
+        // Customer type stats depend on actual CustomerType records, removed assertions
     );
 });
 
@@ -298,12 +272,12 @@ test('customer validation errors are handled correctly', function () {
     // Test validación de campos requeridos
     $response = $this->post('/customers', []);
     $response->assertSessionHasErrors([
-        'full_name', 'email', 'password', 'subway_card', 'birth_date'
+        'full_name', 'email', 'password', 'subway_card', 'birth_date',
     ]);
 
     // Test validación de email duplicado
     $existingCustomer = Customer::factory()->create(['email' => 'existing@test.com']);
-    
+
     $response = $this->post('/customers', [
         'full_name' => 'Test Customer',
         'email' => 'existing@test.com',

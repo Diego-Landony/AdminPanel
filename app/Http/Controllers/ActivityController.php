@@ -200,14 +200,14 @@ class ActivityController extends Controller
                 'user_force_deleted' => 'Usuario eliminado permanentemente',
                 'role_restored' => 'Rol restaurado',
                 'role_force_deleted' => 'Rol eliminado permanentemente',
-                
+
                 // Eventos de clientes
                 'customer_created' => 'Cliente creado',
                 'customer_updated' => 'Cliente actualizado',
                 'customer_deleted' => 'Cliente eliminado',
                 'customer_restored' => 'Cliente restaurado',
                 'customer_force_deleted' => 'Cliente eliminado permanentemente',
-                
+
                 // Eventos de tipos de cliente
                 'customer_type_created' => 'Tipo de cliente creado',
                 'customer_type_updated' => 'Tipo de cliente actualizado',
@@ -252,6 +252,20 @@ class ActivityController extends Controller
                 'per_page_options' => [10, 25, 50, 100],
             ],
         ]);
+    }
+
+    /**
+     * Handle POST requests for search/filter (same as index but for POST method)
+     */
+    public function store(Request $request): \Inertia\Response
+    {
+        // If request contains search/filter parameters, redirect to index method
+        if ($request->hasAny(['search', 'per_page', 'event_type', 'user_id', 'start_date', 'end_date'])) {
+            return $this->index($request);
+        }
+
+        // If it's not a search/filter request, redirect to index
+        return $this->index($request);
     }
 
     /**

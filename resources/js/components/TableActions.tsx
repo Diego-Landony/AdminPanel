@@ -79,7 +79,7 @@ export const TableActions: React.FC<TableActionsProps> = ({
                 {showEdit && editHref && (
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground" asChild>
+                            <Button variant="ghost" size="sm" className="h-11 w-11 md:h-8 md:w-8 p-0 text-muted-foreground hover:text-foreground" asChild>
                                 <Link href={editHref} aria-label={editTooltip}>
                                     <Edit className="h-4 w-4" alt="Editar" />
                                 </Link>
@@ -98,7 +98,7 @@ export const TableActions: React.FC<TableActionsProps> = ({
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive disabled:opacity-50"
+                                className="h-11 w-11 md:h-8 md:w-8 p-0 text-muted-foreground hover:text-destructive disabled:opacity-50"
                                 onClick={onDelete}
                                 disabled={isDeleting || !canDelete}
                                 aria-label={canDelete ? deleteTooltip : 'No se puede eliminar'}

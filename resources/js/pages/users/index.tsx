@@ -219,9 +219,10 @@ export default function UsersIndex({ users, total_users, online_users, filters }
             render: (user: User) => <RoleBadges roles={user.roles} />,
         },
         {
-            key: 'info',
+            key: 'created_at',
             title: 'Información',
             width: 'lg' as const,
+            sortable: true,
             render: (user: User) => (
                 <div className="space-y-1 text-sm">
                     <div className="flex items-center gap-2">

@@ -51,7 +51,7 @@ class RoleController extends Controller
         }
 
         // Aplicar ordenamiento
-        if ($sortField === 'name') {
+        if ($sortField === 'role' || $sortField === 'name') {
             $query->orderBy('name', $sortDirection);
         } elseif ($sortField === 'created_at') {
             $query->orderBy('created_at', $sortDirection);
@@ -123,8 +123,13 @@ class RoleController extends Controller
     /**
      * Almacena un nuevo rol
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse|\Inertia\Response
     {
+        // If request contains search/filter parameters, redirect to index method
+        if ($request->hasAny(['search', 'per_page', 'sort_field', 'sort_direction', 'page'])) {
+            return $this->index($request);
+        }
+
         try {
             $request->validate([
                 'name' => 'required|string|max:255|unique:roles,name',
@@ -259,7 +264,7 @@ class RoleController extends Controller
                 'description' => $role->description,
                 'permissions' => $role->permissions()->pluck('name')->toArray(),
             ];
-            
+
             $newValues = $request->only(['name', 'description']);
             $permissionNames = $request->input('permissions', []);
 
@@ -502,27 +507,27 @@ class RoleController extends Controller
             if (isset($oldValues['permissions']) && isset($newValues['permissions'])) {
                 $oldPermissions = array_values($oldValues['permissions']);
                 $newPermissions = array_values($newValues['permissions']);
-                
+
                 sort($oldPermissions);
                 sort($newPermissions);
-                
+
                 if ($oldPermissions !== $newPermissions) {
                     $addedPermissions = array_diff($newPermissions, $oldPermissions);
                     $removedPermissions = array_diff($oldPermissions, $newPermissions);
-                    
-                    if (!empty($addedPermissions)) {
-                        $changes[] = "permisos agregados: " . implode(', ', $addedPermissions);
+
+                    if (! empty($addedPermissions)) {
+                        $changes[] = 'permisos agregados: '.implode(', ', $addedPermissions);
                     }
-                    
-                    if (!empty($removedPermissions)) {
-                        $changes[] = "permisos removidos: " . implode(', ', $removedPermissions);
+
+                    if (! empty($removedPermissions)) {
+                        $changes[] = 'permisos removidos: '.implode(', ', $removedPermissions);
                     }
                 }
             }
 
             // Si hay cambios, agregar al descripción
-            if (!empty($changes)) {
-                $description .= " - " . implode(', ', $changes);
+            if (! empty($changes)) {
+                $description .= ' - '.implode(', ', $changes);
             }
 
             ActivityLog::create([

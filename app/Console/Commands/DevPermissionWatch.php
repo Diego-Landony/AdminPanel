@@ -2,10 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Services\PermissionDiscoveryService;
 use App\Models\Role;
+use App\Services\PermissionDiscoveryService;
 use Illuminate\Console\Command;
-use Symfony\Component\Console\Output\ConsoleOutput;
 
 /**
  * Comando de desarrollo para sincronizar permisos automáticamente
@@ -32,8 +31,8 @@ class DevPermissionWatch extends Command
         $this->info('   Úsala durante el desarrollo para no tener que ejecutar comandos manualmente.');
         $this->newLine();
 
-        if (!$this->option('force') && !$this->confirm('¿Continuar con la sincronización automática?', true)) {
-            return Command::CANCELLED;
+        if (! $this->option('force') && ! $this->confirm('¿Continuar con la sincronización automática?', true)) {
+            return Command::FAILURE;
         }
 
         return $this->runSync();
@@ -45,9 +44,9 @@ class DevPermissionWatch extends Command
     private function syncOnce(): int
     {
         $this->info('🔄 Ejecutando sincronización única...');
-        
+
         $result = $this->performSync();
-        
+
         if ($result['hasChanges']) {
             $this->info('✅ Sincronización completada con éxito');
             $this->displayResults($result);
@@ -64,7 +63,7 @@ class DevPermissionWatch extends Command
     private function runSync(): int
     {
         $result = $this->performSync();
-        
+
         if ($result['hasChanges']) {
             $this->info('🎉 ¡Sincronización inicial completada!');
             $this->displayResults($result);
@@ -87,17 +86,17 @@ class DevPermissionWatch extends Command
     private function performSync(): array
     {
         $discoveryService = new PermissionDiscoveryService;
-        
+
         // Obtener estado antes de sincronizar
         $permissionsBefore = \App\Models\Permission::count();
-        
+
         // Ejecutar sincronización
         $syncResult = $discoveryService->syncPermissions(false);
-        
+
         // Actualizar rol admin automáticamente
         $adminRole = Role::where('name', 'admin')->first();
         $adminUpdated = false;
-        
+
         if ($adminRole) {
             $currentAdminPermissions = $adminRole->permissions()->count();
             $allPermissionIds = \App\Models\Permission::pluck('id');
@@ -120,15 +119,15 @@ class DevPermissionWatch extends Command
     {
         $this->newLine();
         $this->info('📊 Resultados:');
-        
+
         $syncResult = $result['syncResult'];
         $this->line("   📄 Páginas descubiertas: {$syncResult['discovered_pages']}");
         $this->line("   🔑 Permisos totales: {$syncResult['total_permissions']}");
-        
+
         if ($syncResult['created'] > 0) {
             $this->line("   ➕ Permisos creados: {$syncResult['created']}");
         }
-        
+
         if ($syncResult['updated'] > 0) {
             $this->line("   ✏️  Permisos actualizados: {$syncResult['updated']}");
         }

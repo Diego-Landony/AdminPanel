@@ -49,12 +49,14 @@ class RestaurantController extends Controller
             });
         }
 
-        if ($sortField === 'status') {
-            $query->orderByRaw("
+        if ($sortField === 'restaurant') {
+            $query->orderBy('name', $sortDirection);
+        } elseif ($sortField === 'status') {
+            $query->orderByRaw('
                 CASE
                     WHEN is_active = 1 THEN 1
                     ELSE 2
-                END " . ($sortDirection === 'asc' ? 'ASC' : 'DESC'));
+                END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
         } else {
             $query->orderBy($sortField, $sortDirection);
         }
@@ -114,8 +116,13 @@ class RestaurantController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|\Inertia\Response
     {
+        // If request contains search/filter parameters, redirect to index method
+        if ($request->hasAny(['search', 'per_page', 'sort_field', 'sort_direction', 'page'])) {
+            return $this->index($request);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',

@@ -1,6 +1,6 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { useForm } from '@inertiajs/react';
-import { Calendar, Check, CreditCard, Eye, EyeOff, Hash, Lock, Mail, MapPin, Phone, User, X } from 'lucide-react';
+import { Calendar, CreditCard, Eye, EyeOff, Hash, Lock, Mail, MapPin, Phone, User } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';

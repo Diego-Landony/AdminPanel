@@ -1,12 +1,10 @@
 <?php
 
-use App\Models\User;
 use App\Models\Customer;
 
 /**
  * Test suite para CustomerController
  */
-
 test('customers index page displays customers list', function () {
     $testUser = createTestUser();
     $this->actingAs($testUser);
@@ -17,14 +15,14 @@ test('customers index page displays customers list', function () {
     $response = $this->get('/customers');
 
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) => 
-        $page->component('customers/index')
-            ->has('customers.data', 3)
-            ->has('total_customers')
-            ->has('verified_customers')
-            ->has('online_customers')
-            ->has('premium_customers')
-            ->has('vip_customers')
+    $response->assertInertia(fn ($page) => $page->component('customers/index')
+        ->has('customers.data', 3)
+        ->has('total_customers')
+        ->has('verified_customers')
+        ->has('online_customers')
+        ->has('premium_customers')
+        ->has('vip_customers')
+        ->has('customer_type_stats')
     );
 });
 
@@ -40,10 +38,9 @@ test('customers index can search customers', function () {
     $response = $this->get('/customers?search=Juan');
 
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) => 
-        $page->component('customers/index')
-            ->has('customers.data', 1)
-            ->where('customers.data.0.full_name', 'Juan Pérez')
+    $response->assertInertia(fn ($page) => $page->component('customers/index')
+        ->has('customers.data', 1)
+        ->where('customers.data.0.full_name', 'Juan Pérez')
     );
 });
 
@@ -59,11 +56,10 @@ test('customers index can sort customers', function () {
     $response = $this->get('/customers?sort_field=full_name&sort_direction=asc');
 
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) => 
-        $page->component('customers/index')
-            ->where('customers.data.0.full_name', 'Ana López')
-            ->where('customers.data.1.full_name', 'Beatriz Silva')
-            ->where('customers.data.2.full_name', 'Carlos Ruiz')
+    $response->assertInertia(fn ($page) => $page->component('customers/index')
+        ->where('customers.data.0.full_name', 'Ana López')
+        ->where('customers.data.1.full_name', 'Beatriz Silva')
+        ->where('customers.data.2.full_name', 'Carlos Ruiz')
     );
 });
 
@@ -74,8 +70,7 @@ test('customers create page renders correctly', function () {
     $response = $this->get('/customers/create');
 
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) => 
-        $page->component('customers/create')
+    $response->assertInertia(fn ($page) => $page->component('customers/create')
     );
 });
 
@@ -91,7 +86,7 @@ test('can create a new customer', function () {
         'subway_card' => '1234567890',
         'birth_date' => '1990-05-15',
         'gender' => 'masculino',
-        'client_type' => 'premium',
+        // Customer type assigned automatically
         'phone' => '+502 1234-5678',
         'address' => 'Dirección de prueba',
         'location' => 'Guatemala',
@@ -108,7 +103,7 @@ test('can create a new customer', function () {
         'full_name' => 'Nuevo Cliente',
         'email' => 'nuevo@test.com',
         'subway_card' => '1234567890',
-        'client_type' => 'premium',
+        // Customer type assigned automatically
     ]);
 
     // Verificar que la contraseña fue hasheada
@@ -184,11 +179,10 @@ test('customers edit page renders with customer data', function () {
     $response = $this->get("/customers/{$customer->id}/edit");
 
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) => 
-        $page->component('customers/edit')
-            ->has('customer')
-            ->where('customer.full_name', 'Cliente Test')
-            ->where('customer.email', 'cliente@test.com')
+    $response->assertInertia(fn ($page) => $page->component('customers/edit')
+        ->has('customer')
+        ->where('customer.full_name', 'Cliente Test')
+        ->where('customer.email', 'cliente@test.com')
     );
 });
 
@@ -207,7 +201,7 @@ test('can update customer information', function () {
         'email' => 'actualizado@test.com',
         'subway_card' => $customer->subway_card,
         'birth_date' => $customer->birth_date->format('Y-m-d'),
-        'client_type' => 'premium',
+        // Customer type assigned automatically
         'phone' => '+502 9876-5432',
     ];
 
@@ -220,7 +214,7 @@ test('can update customer information', function () {
     $customer->refresh();
     expect($customer->full_name)->toBe('Cliente Actualizado');
     expect($customer->email)->toBe('actualizado@test.com');
-    expect($customer->client_type)->toBe('premium');
+    // Customer type is managed through relationships, not direct field
     expect($customer->phone)->toBe('+502 9876-5432');
 });
 

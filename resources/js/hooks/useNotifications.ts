@@ -1,6 +1,8 @@
 import { usePage } from '@inertiajs/react';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
+
+import { NOTIFICATIONS } from '@/constants/ui-constants';
 
 // Cache global para evitar duplicados entre diferentes instancias
 const globalNotificationCache = new Map<string, number>();
@@ -56,111 +58,86 @@ function markNotificationAsShown(id: string): void {
 }
 
 /**
- * Hook personalizado para manejar notificaciones globales
- * Sistema centralizado que previene duplicados de manera robusta
+ * Mapeo de tipos de flash messages para optimización
+ */
+const FLASH_TYPE_MAP = {
+    success: { method: 'success' as const, duration: NOTIFICATION_CONFIG.durations.success },
+    error: { method: 'error' as const, duration: NOTIFICATION_CONFIG.durations.error },
+    warning: { method: 'warning' as const, duration: NOTIFICATION_CONFIG.durations.warning },
+    info: { method: 'info' as const, duration: NOTIFICATION_CONFIG.durations.info },
+    message: { method: 'info' as const, duration: NOTIFICATION_CONFIG.durations.info },
+} as const;
+
+/**
+ * Mapeo de estados específicos del servidor
+ */
+const STATUS_MESSAGES = {
+    'verification-link-sent': {
+        message: 'Enlace de verificación enviado',
+        description: 'Revisa tu correo electrónico',
+        type: 'success' as const,
+    },
+    'password-updated': {
+        message: 'Contraseña actualizada exitosamente',
+        type: 'success' as const,
+    },
+    'profile-updated': {
+        message: 'Perfil actualizado exitosamente',
+        type: 'success' as const,
+    },
+} as const;
+
+/**
+ * Hook personalizado para manejar notificaciones globales optimizado
+ * Sistema centralizado que previene duplicados de manera robusta con mejor rendimiento
  */
 export function useNotifications() {
     const { props } = usePage();
     const { flash } = props as { flash?: { success?: string; error?: string; warning?: string; info?: string; message?: string; status?: string } };
-    const processedMessages = useRef<Set<string>>(new Set());
 
+    // Función memoizada para mostrar notificaciones
+    const showNotification = useCallback((type: string, message: string, description?: string) => {
+        const id = generateNotificationId(type, message);
+        if (!isNotificationRecent(id)) {
+            const config = FLASH_TYPE_MAP[type as keyof typeof FLASH_TYPE_MAP];
+            if (config) {
+                toast[config.method](message, {
+                    description,
+                    duration: config.duration,
+                    position: NOTIFICATION_CONFIG.position,
+                });
+                markNotificationAsShown(id);
+            }
+        }
+    }, []);
+
+    // Efecto optimizado que procesa todos los flash messages
     useEffect(() => {
-        // Limpiar mensajes procesados en cada renderizado para permitir nuevas notificaciones
-        processedMessages.current.clear();
+        if (!flash) return;
 
-        if (flash?.success) {
-            const id = generateNotificationId('success', flash.success);
-            if (!isNotificationRecent(id)) {
-                toast.success(flash.success, {
-                    duration: NOTIFICATION_CONFIG.durations.success,
-                    position: NOTIFICATION_CONFIG.position,
-                });
-                markNotificationAsShown(id);
+        // Procesar flash messages básicos
+        Object.entries(FLASH_TYPE_MAP).forEach(([key]) => {
+            const message = flash[key as keyof typeof flash];
+            if (message) {
+                showNotification(key, message);
+            }
+        });
+
+        // Procesar estados específicos del servidor
+        if (flash.status) {
+            const statusConfig = STATUS_MESSAGES[flash.status as keyof typeof STATUS_MESSAGES];
+            if (statusConfig) {
+                showNotification(
+                    statusConfig.type,
+                    statusConfig.message,
+                    statusConfig.description
+                );
+            } else {
+                // Status no reconocido, mostrar como info
+                showNotification('info', flash.status);
             }
         }
-
-        if (flash?.error) {
-            const id = generateNotificationId('error', flash.error);
-            if (!isNotificationRecent(id)) {
-                toast.error(flash.error, {
-                    duration: NOTIFICATION_CONFIG.durations.error,
-                    position: NOTIFICATION_CONFIG.position,
-                });
-                markNotificationAsShown(id);
-            }
-        }
-
-        if (flash?.warning) {
-            const id = generateNotificationId('warning', flash.warning);
-            if (!isNotificationRecent(id)) {
-                toast.warning(flash.warning, {
-                    duration: NOTIFICATION_CONFIG.durations.warning,
-                    position: NOTIFICATION_CONFIG.position,
-                });
-                markNotificationAsShown(id);
-            }
-        }
-
-        if (flash?.info) {
-            const id = generateNotificationId('info', flash.info);
-            if (!isNotificationRecent(id)) {
-                toast.info(flash.info, {
-                    duration: NOTIFICATION_CONFIG.durations.info,
-                    position: NOTIFICATION_CONFIG.position,
-                });
-                markNotificationAsShown(id);
-            }
-        }
-
-        // Manejo de mensajes específicos del servidor
-        if (flash?.message) {
-            const id = generateNotificationId('message', flash.message);
-            if (!isNotificationRecent(id)) {
-                toast.info(flash.message, {
-                    duration: NOTIFICATION_CONFIG.durations.info,
-                    position: NOTIFICATION_CONFIG.position,
-                });
-                markNotificationAsShown(id);
-            }
-        }
-
-        // Manejo de estados específicos del servidor
-        if (flash?.status) {
-            const id = generateNotificationId('status', flash.status);
-            if (!isNotificationRecent(id)) {
-                switch (flash.status) {
-                    case 'verification-link-sent':
-                        toast.success('Enlace de verificación enviado', {
-                            description: 'Revisa tu correo electrónico',
-                            duration: NOTIFICATION_CONFIG.durations.success,
-                            position: NOTIFICATION_CONFIG.position,
-                        });
-                        break;
-                    case 'password-updated':
-                        toast.success('Contraseña actualizada exitosamente', {
-                            duration: NOTIFICATION_CONFIG.durations.success,
-                            position: NOTIFICATION_CONFIG.position,
-                        });
-                        break;
-                    case 'profile-updated':
-                        toast.success('Perfil actualizado exitosamente', {
-                            duration: NOTIFICATION_CONFIG.durations.success,
-                            position: NOTIFICATION_CONFIG.position,
-                        });
-                        break;
-                    default:
-                        if (flash.status) {
-                            toast.info(flash.status, {
-                                duration: NOTIFICATION_CONFIG.durations.info,
-                                position: NOTIFICATION_CONFIG.position,
-                            });
-                        }
-                        break;
-                }
-                markNotificationAsShown(id);
-            }
-        }
-    }, [flash]);
+    }, [flash, showNotification]);
 
     // Funciones de utilidad para mostrar notificaciones programáticamente con deduplicación
     const notify = {
@@ -221,6 +198,52 @@ export function useNotifications() {
                 error,
                 position: NOTIFICATION_CONFIG.position,
             });
+        },
+        // Network-specific notifications
+        networkError: (error?: string) => {
+            const message = error || NOTIFICATIONS.error.networkConnection;
+            const id = generateNotificationId('network', message);
+            if (!isNotificationRecent(id)) {
+                toast.error(message, {
+                    description: 'Verifica tu conexión a internet',
+                    duration: NOTIFICATION_CONFIG.durations.error,
+                    position: NOTIFICATION_CONFIG.position,
+                });
+                markNotificationAsShown(id);
+            }
+        },
+        serverTimeout: () => {
+            const id = generateNotificationId('timeout', NOTIFICATIONS.error.serverTimeout);
+            if (!isNotificationRecent(id)) {
+                toast.error(NOTIFICATIONS.error.serverTimeout, {
+                    description: 'Intenta nuevamente en unos momentos',
+                    duration: NOTIFICATION_CONFIG.durations.error,
+                    position: NOTIFICATION_CONFIG.position,
+                });
+                markNotificationAsShown(id);
+            }
+        },
+        sessionExpired: () => {
+            const id = generateNotificationId('session', NOTIFICATIONS.error.sessionExpired);
+            if (!isNotificationRecent(id)) {
+                toast.error(NOTIFICATIONS.error.sessionExpired, {
+                    description: 'Redirigiendo al login...',
+                    duration: NOTIFICATION_CONFIG.durations.error,
+                    position: NOTIFICATION_CONFIG.position,
+                });
+                markNotificationAsShown(id);
+            }
+        },
+        rateLimited: () => {
+            const id = generateNotificationId('rate', NOTIFICATIONS.error.rateLimited);
+            if (!isNotificationRecent(id)) {
+                toast.warning(NOTIFICATIONS.error.rateLimited, {
+                    description: 'Por favor, reduce la frecuencia de solicitudes',
+                    duration: NOTIFICATION_CONFIG.durations.warning,
+                    position: NOTIFICATION_CONFIG.position,
+                });
+                markNotificationAsShown(id);
+            }
         },
     };
 

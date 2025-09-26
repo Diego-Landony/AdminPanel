@@ -15,8 +15,12 @@ pest()->extend(Tests\TestCase::class)
     ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
     ->in('Feature');
 
+// Unit tests also need the application context but without database refreshing
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit');
+
 // Cargar helpers de tests
-require_once __DIR__ . '/Feature/helpers.php';
+require_once __DIR__.'/Feature/helpers.php';
 
 /*
 |--------------------------------------------------------------------------

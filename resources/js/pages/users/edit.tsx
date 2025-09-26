@@ -8,12 +8,10 @@ import { FormSection } from '@/components/form-section';
 import { EditUsersSkeleton } from '@/components/skeletons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { PLACEHOLDERS, AUTOCOMPLETE, FIELD_DESCRIPTIONS, NOTIFICATIONS } from '@/constants/ui-constants';
 
 /**
@@ -190,7 +188,7 @@ export default function EditUser({ user }: EditUserPageProps) {
                                         type="button"
                                         variant="ghost"
                                         size="sm"
-                                        className="absolute top-1 right-1 h-8 w-8 p-0"
+                                        className="absolute top-1 right-1 h-11 w-11 md:h-8 md:w-8 p-0"
                                         onClick={() => setShowPassword(!showPassword)}
                                     >
                                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

@@ -40,9 +40,9 @@ interface ResponsiveCardHeaderProps {
  */
 export const ResponsiveCardHeader: React.FC<ResponsiveCardHeaderProps> = ({ avatar, icon, title, subtitle, badge, className = '' }) => {
     return (
-        <CardHeader className={`pb-4 ${className}`}>
+        <CardHeader className={`pb-5 md:pb-4 ${className}`}>
             {/* Main content row */}
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-5 md:gap-4">
                 {/* Avatar or Icon */}
                 {avatar ? (
                     <Avatar className={`h-10 w-10 flex-shrink-0 overflow-hidden ${avatar.className || ''}`}>
@@ -83,13 +83,13 @@ interface ResponsiveCardContentProps {
 export const ResponsiveCardContent: React.FC<ResponsiveCardContentProps> = ({ children, layout = 'flexible', className = '' }) => {
     const layoutClasses = {
         // Single column stack - prevents all overflow issues
-        stack: 'space-y-4',
+        stack: 'space-y-5 md:space-y-4',
 
         // Flexible layout - adapts to content size, prevents overflow
-        flexible: 'space-y-4 sm:grid sm:grid-cols-2 sm:gap-4 sm:space-y-0',
+        flexible: 'space-y-5 md:space-y-4 sm:grid sm:grid-cols-2 sm:gap-5 md:sm:gap-4 sm:space-y-0',
 
         // Traditional grid - can cause overflow on long content
-        grid: 'grid grid-cols-1 sm:grid-cols-2 gap-4',
+        grid: 'grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-4',
     };
 
     return (
@@ -128,7 +128,7 @@ interface CardActionsProps {
  * Professional card actions area
  */
 export const CardActions: React.FC<CardActionsProps> = ({ children, className = '' }) => {
-    return <div className={`flex items-center justify-end border-t border-border pt-4 ${className}`}>{children}</div>;
+    return <div className={`flex items-center justify-end border-t border-border pt-5 md:pt-4 ${className}`}>{children}</div>;
 };
 
 interface BadgeGroupProps {

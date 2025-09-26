@@ -1,18 +1,24 @@
-import { Head } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, router } from '@inertiajs/react';
+import { useState, useCallback } from 'react';
 import { type DateRange } from 'react-day-picker';
 
-import { DataTable } from '@/components/DataTable';
 import { ActivitySkeleton } from '@/components/skeletons';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 
 import { EntityInfoCell } from '@/components/EntityInfoCell';
 import { DateRangeFilterDialog, FilterDialog } from '@/components/FilterDialog';
+import { PaginationWrapper } from '@/components/PaginationWrapper';
 import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Calendar as CalendarIcon, Filter, Users } from 'lucide-react';
+import { Calendar as CalendarIcon, Filter, RefreshCw, Search, Users, X } from 'lucide-react';
 
 interface ActivityData {
     id: string;
@@ -278,13 +284,84 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
     const [localFilters, setLocalFilters] = useState({
         event_types: filters.event_type ? filters.event_type.split(',').filter(Boolean) : ([] as string[]),
         user_ids: filters.user_id ? filters.user_id.split(',').filter(Boolean) : ([] as string[]),
-        dateRange: undefined as DateRange | undefined,
+        dateRange: (() => {
+            if (filters.start_date && filters.end_date) {
+                return {
+                    from: new Date(filters.start_date),
+                    to: new Date(filters.end_date),
+                } as DateRange;
+            }
+            return undefined;
+        })(),
     });
 
     const [eventTypesOpen, setEventTypesOpen] = useState(false);
     const [usersOpen, setUsersOpen] = useState(false);
     const [dateRangeOpen, setDateRangeOpen] = useState(false);
     const [userSearchTerm, setUserSearchTerm] = useState('');
+
+    // Estado para la búsqueda y filtros
+    const [search, setSearch] = useState<string>(filters.search || '');
+    const [perPage, setPerPage] = useState<number>(filters.per_page);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+    // Apply filters function - only called when search button is clicked
+    const applyFilters = useCallback(() => {
+        setIsLoading(true);
+        router.post('/activity', {
+            search: search || undefined,
+            per_page: perPage,
+            event_type: localFilters.event_types.join(',') || undefined,
+            user_id: localFilters.user_ids.join(',') || undefined,
+            start_date: localFilters.dateRange?.from ? format(localFilters.dateRange.from, 'yyyy-MM-dd') : undefined,
+            end_date: localFilters.dateRange?.to ? format(localFilters.dateRange.to, 'yyyy-MM-dd') : undefined,
+        }, {
+            preserveState: true,
+            replace: true,
+            onFinish: () => setIsLoading(false),
+        });
+    }, [search, perPage, localFilters.event_types, localFilters.user_ids, localFilters.dateRange]);
+
+    // Clear all filters function
+    const clearFilters = useCallback(() => {
+        setSearch('');
+        setPerPage(10);
+        setLocalFilters({
+            event_types: [],
+            user_ids: [],
+            dateRange: undefined,
+        });
+
+        // Apply cleared filters immediately
+        setIsLoading(true);
+        router.post('/activity', {
+            per_page: 10,
+        }, {
+            preserveState: true,
+            replace: true,
+            onFinish: () => setIsLoading(false),
+        });
+    }, []);
+
+    // Check if any filters are active
+    const hasActiveFilters = search || localFilters.event_types.length > 0 || localFilters.user_ids.length > 0 || localFilters.dateRange || perPage !== 10;
+
+    const refreshData = () => {
+        setIsRefreshing(true);
+        router.post('/activity', {
+            search: search || undefined,
+            per_page: perPage,
+            event_type: localFilters.event_types.join(',') || undefined,
+            user_id: localFilters.user_ids.join(',') || undefined,
+            start_date: localFilters.dateRange?.from ? format(localFilters.dateRange.from, 'yyyy-MM-dd') : undefined,
+            end_date: localFilters.dateRange?.to ? format(localFilters.dateRange.to, 'yyyy-MM-dd') : undefined,
+        }, {
+            preserveState: true,
+            replace: true,
+            onFinish: () => setIsRefreshing(false),
+        });
+    };
 
     const columns = [
         {
@@ -339,80 +416,288 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
         },
     ];
 
-    const FiltersDialog = () => (
-        <>
-            <FilterDialog
-                placeholder="Seleccionar tipos..."
-                icon={Filter}
-                title="Seleccionar Tipos de Evento"
-                description="Marca los tipos de evento que deseas filtrar"
-                options={Object.entries(options.event_types).map(([key, label]) => ({
-                    id: key,
-                    label: label as string,
-                }))}
-                selectedIds={localFilters.event_types}
-                onSelectionChange={(ids) => setLocalFilters((prev) => ({ ...prev, event_types: ids as string[] }))}
-                isOpen={eventTypesOpen}
-                onOpenChange={setEventTypesOpen}
-            />
-
-            <FilterDialog
-                placeholder="Seleccionar usuarios..."
-                icon={Users}
-                title="Seleccionar Usuarios"
-                description="Marca los usuarios que deseas filtrar"
-                options={options.users.map((user) => ({
-                    id: user.id.toString(),
-                    label: user.name,
-                    subtitle: user.email,
-                }))}
-                selectedIds={localFilters.user_ids}
-                onSelectionChange={(ids) => setLocalFilters((prev) => ({ ...prev, user_ids: ids as string[] }))}
-                isOpen={usersOpen}
-                onOpenChange={setUsersOpen}
-                searchEnabled={true}
-                searchPlaceholder="Buscar usuarios..."
-                searchTerm={userSearchTerm}
-                onSearchChange={setUserSearchTerm}
-            />
-
-            <DateRangeFilterDialog
-                isOpen={dateRangeOpen}
-                onOpenChange={setDateRangeOpen}
-                dateRange={localFilters.dateRange}
-                onDateRangeChange={(range) => setLocalFilters((prev) => ({ ...prev, dateRange: range }))}
-                formatButtonText={(range) => {
-                    if (range?.from && range?.to) {
-                        return `${format(range.from, 'dd/MM/yyyy', { locale: es })} - ${format(range.to, 'dd/MM/yyyy', { locale: es })}`;
-                    }
-                    return 'Seleccionar fechas...';
-                }}
-                icon={CalendarIcon}
-                title="Seleccionar Rango de Fechas"
-                description="Selecciona el período de fechas para filtrar los eventos"
-            />
-        </>
-    );
-
     return (
         <AppLayout>
             <Head title="Actividad" />
 
-            <DataTable
-                title="Actividad del Sistema"
-                description="Registro completo de todas las actividades y eventos del sistema."
-                data={activities}
-                columns={columns}
-                stats={activityStats}
-                filters={filters}
-                searchPlaceholder="Buscar por nombre, descripción, tipo de evento..."
-                loadingSkeleton={ActivitySkeleton}
-                renderMobileCard={(activity) => <ActivityMobileCard activity={activity} />}
-                routeName="/activity"
-                breakpoint="lg"
-            />
+            <div className="flex h-full flex-1 flex-col gap-6 p-6">
+                {/* Page Header */}
+                <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                        <h1 className="text-3xl font-bold tracking-tight">Actividad del Sistema</h1>
+                        <p className="text-muted-foreground">Registro completo de todas las actividades y eventos del sistema.</p>
+                    </div>
+                </div>
 
-            <FiltersDialog />
+                {/* Data Table Card with Integrated Filters */}
+                <Card>
+                    <CardHeader className="pb-6">
+                        <div className="flex flex-col space-y-4">
+                            {/* Stats Row */}
+                            <div className="flex flex-wrap items-start justify-between gap-4">
+                                {/* Statistics */}
+                                <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                                    {activityStats.map((stat, index) => (
+                                        <div key={index} className="flex max-w-[200px] min-w-0 flex-shrink-0 items-center gap-2">
+                                            {stat.icon}
+                                            <span className="flex min-w-0 items-center gap-1 overflow-hidden">
+                                                <span className="truncate overflow-hidden text-ellipsis lowercase" title={stat.title}>
+                                                    {stat.title}
+                                                </span>
+                                                <span className="font-medium whitespace-nowrap text-foreground tabular-nums" title={String(stat.value)}>
+                                                    {stat.value}
+                                                </span>
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Refresh Button */}
+                                <div className="flex flex-shrink-0 flex-col items-end gap-1">
+                                    <Button variant="ghost" size="sm" onClick={refreshData} disabled={isRefreshing} className="h-8 px-2">
+                                        <RefreshCw className={`mr-1 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                        {isRefreshing ? 'Sincronizando...' : 'Sincronizar'}
+                                    </Button>
+                                    <span className="text-xs text-muted-foreground">
+                                        Última:{' '}
+                                        {new Date().toLocaleString('es-GT', {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                            second: '2-digit',
+                                            hour12: true,
+                                        })}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Integrated Filters Section */}
+                            <div className="space-y-4">
+                                {/* Search Bar */}
+                                <div className="flex gap-2">
+                                    <div className="flex-1">
+                                        <Label htmlFor="search" className="sr-only">
+                                            Buscar
+                                        </Label>
+                                        <div className="relative">
+                                            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                id="search"
+                                                placeholder="Buscar por usuario, evento, descripción..."
+                                                value={search}
+                                                onChange={(e) => setSearch(e.target.value)}
+                                                className="pl-10 pr-10"
+                                                disabled={isLoading}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        applyFilters();
+                                                    }
+                                                }}
+                                            />
+                                            {search && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSearch('')}
+                                                    className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                                    disabled={isLoading}
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <Button
+                                        onClick={applyFilters}
+                                        disabled={isLoading}
+                                        className="flex-shrink-0"
+                                    >
+                                        <Search className="mr-2 h-4 w-4" />
+                                        Buscar
+                                    </Button>
+                                    {hasActiveFilters && (
+                                        <Button
+                                            variant="outline"
+                                            onClick={clearFilters}
+                                            disabled={isLoading}
+                                            className="flex-shrink-0"
+                                        >
+                                            <X className="mr-2 h-4 w-4" />
+                                            Limpiar
+                                        </Button>
+                                    )}
+                                </div>
+
+                                {/* Advanced Filters Row */}
+                                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                                    <FilterDialog
+                                        placeholder="Tipos de evento..."
+                                        icon={Filter}
+                                        title="Seleccionar Tipos de Evento"
+                                        description="Marca los tipos de evento que deseas filtrar"
+                                        options={Object.entries(options.event_types).map(([key, label]) => ({
+                                            id: key,
+                                            label: label as string,
+                                        }))}
+                                        selectedIds={localFilters.event_types}
+                                        onSelectionChange={(ids) => {
+                                            setLocalFilters((prev) => ({ ...prev, event_types: ids as string[] }));
+                                        }}
+                                        isOpen={eventTypesOpen}
+                                        onOpenChange={setEventTypesOpen}
+                                        buttonVariant="outline"
+                                    />
+
+                                    <FilterDialog
+                                        placeholder="Usuarios..."
+                                        icon={Users}
+                                        title="Seleccionar Usuarios"
+                                        description="Marca los usuarios que deseas filtrar"
+                                        options={options.users.map((user) => ({
+                                            id: user.id.toString(),
+                                            label: user.name,
+                                            subtitle: user.email,
+                                        }))}
+                                        selectedIds={localFilters.user_ids}
+                                        onSelectionChange={(ids) => {
+                                            setLocalFilters((prev) => ({ ...prev, user_ids: ids as string[] }));
+                                        }}
+                                        isOpen={usersOpen}
+                                        onOpenChange={setUsersOpen}
+                                        searchEnabled={true}
+                                        searchPlaceholder="Buscar usuarios..."
+                                        searchTerm={userSearchTerm}
+                                        onSearchChange={setUserSearchTerm}
+                                        buttonVariant="outline"
+                                    />
+
+                                    <DateRangeFilterDialog
+                                        isOpen={dateRangeOpen}
+                                        onOpenChange={setDateRangeOpen}
+                                        dateRange={localFilters.dateRange}
+                                        onDateRangeChange={(range) => {
+                                            setLocalFilters((prev) => ({ ...prev, dateRange: range }));
+                                        }}
+                                        formatButtonText={(range) => {
+                                            if (range?.from && range?.to) {
+                                                return `${format(range.from, 'dd/MM/yyyy', { locale: es })} - ${format(range.to, 'dd/MM/yyyy', { locale: es })}`;
+                                            }
+                                            return 'Fechas...';
+                                        }}
+                                        icon={CalendarIcon}
+                                        title="Seleccionar Rango de Fechas"
+                                        description="Selecciona el período de fechas para filtrar los eventos"
+                                        buttonVariant="outline"
+                                    />
+
+                                    <Select value={perPage.toString()} onValueChange={(value) => setPerPage(parseInt(value))}>
+                                        <SelectTrigger className="w-[120px]">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="25">25</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                            <SelectItem value="100">100</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        </div>
+                    </CardHeader>
+
+                    <CardContent>
+                        {/* Table Content */}
+                        {isLoading ? (
+                            <ActivitySkeleton rows={perPage} />
+                        ) : (
+                            <>
+                                {/* Desktop Table View */}
+                                <div className="hidden lg:block">
+                                    <div className="rounded-md border">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    {columns.map((column) => (
+                                                        <TableHead key={column.key} className="break-words whitespace-normal">
+                                                            {column.title}
+                                                        </TableHead>
+                                                    ))}
+                                                </TableRow>
+                                            </TableHeader>
+
+                                            <TableBody>
+                                                {activities.data.length === 0 ? (
+                                                    <TableRow>
+                                                        <TableCell colSpan={columns.length} className="h-40 md:h-32 text-center">
+                                                            <div className="flex flex-col items-center justify-center space-y-2">
+                                                                <p className="text-sm text-muted-foreground">No se encontraron resultados</p>
+                                                                {search && (
+                                                                    <p className="text-xs text-muted-foreground">
+                                                                        Intenta con términos de búsqueda diferentes
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ) : (
+                                                    activities.data.map((activity) => (
+                                                        <TableRow key={activity.id}>
+                                                            {columns.map((column) => (
+                                                                <TableCell
+                                                                    key={column.key}
+                                                                    className="py-5 md:py-4 leading-relaxed break-words whitespace-normal"
+                                                                >
+                                                                    {column.render ? column.render(activity) : (activity as Record<string, unknown>)[column.key]}
+                                                                </TableCell>
+                                                            ))}
+                                                        </TableRow>
+                                                    ))
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                </div>
+
+                                {/* Mobile Card View */}
+                                <div className="lg:hidden">
+                                    <div className="grid gap-4">
+                                        {activities.data.length === 0 ? (
+                                            <div className="flex flex-col items-center justify-center space-y-3 py-16 md:py-12">
+                                                <p className="text-base text-muted-foreground">No se encontraron resultados</p>
+                                                {search && (
+                                                    <p className="text-center text-sm text-muted-foreground">
+                                                        Intenta con términos de búsqueda diferentes
+                                                    </p>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            activities.data.map((activity) => (
+                                                <div key={activity.id}>
+                                                    <ActivityMobileCard activity={activity} />
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Pagination */}
+                                <PaginationWrapper
+                                    data={activities}
+                                    routeName="/activity"
+                                    filters={{
+                                        search,
+                                        per_page: perPage,
+                                        event_type: localFilters.event_types.join(',') || undefined,
+                                        user_id: localFilters.user_ids.join(',') || undefined,
+                                        start_date: localFilters.dateRange?.from ? format(localFilters.dateRange.from, 'yyyy-MM-dd') : undefined,
+                                        end_date: localFilters.dateRange?.to ? format(localFilters.dateRange.to, 'yyyy-MM-dd') : undefined,
+                                    }}
+                                    className="mt-8"
+                                />
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
         </AppLayout>
     );
 }

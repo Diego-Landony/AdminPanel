@@ -104,6 +104,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Actividad - requiere permiso específico
     Route::get('activity', [ActivityController::class, 'index'])->name('activity.index')
         ->middleware('permission:activity.view');
+    Route::post('activity', [ActivityController::class, 'store'])
+        ->middleware('permission:activity.view');
 
     // Gestión de roles - requiere permisos específicos
     Route::get('roles', [RoleController::class, 'index'])->name('roles.index')

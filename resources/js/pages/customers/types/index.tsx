@@ -146,7 +146,6 @@ export default function CustomerTypesIndex({ customer_types, stats, filters }: C
             key: 'multiplier',
             title: 'Multiplicador',
             width: 'sm' as const,
-            sortable: true,
             render: (type: CustomerType) => <ColorBadge color={type.color}>{type.multiplier}x</ColorBadge>,
         },
         {
@@ -154,7 +153,6 @@ export default function CustomerTypesIndex({ customer_types, stats, filters }: C
             title: 'Clientes',
             width: 'sm' as const,
             textAlign: 'center' as const,
-            sortable: true,
             render: (type: CustomerType) => (
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                     <Users className="h-4 w-4" />
@@ -171,6 +169,22 @@ export default function CustomerTypesIndex({ customer_types, stats, filters }: C
             render: (type: CustomerType) => (
                 <StatusBadge status={type.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />
             ),
+        },
+        {
+            key: 'created_at',
+            title: 'Creado',
+            width: 'sm' as const,
+            sortable: true,
+            render: (type: CustomerType) => {
+                const formatDate = (dateString: string): string => {
+                    return new Date(dateString).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                    });
+                };
+                return <div className="text-sm text-muted-foreground">{formatDate(type.created_at)}</div>;
+            },
         },
         {
             key: 'actions',

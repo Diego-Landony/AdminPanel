@@ -88,7 +88,7 @@ class SyncPermissions extends Command
             if (! $this->confirm('¿Proceder con la sincronización de permisos?', true)) {
                 $this->comment('Operación cancelada.');
 
-                return Command::CANCELLED;
+                return Command::FAILURE;
             }
         }
 

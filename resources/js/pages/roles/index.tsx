@@ -197,7 +197,6 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
     router.delete(route('roles.destroy', roleToDelete.id), {
       onSuccess: () => {
         closeDeleteDialog();
-        showNotification.success('Rol eliminado correctamente');
       },
       onError: (error) => {
         setDeletingRole(null);

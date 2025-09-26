@@ -132,7 +132,6 @@ export default function CustomerTypesIndex({ customer_types, stats, filters }: C
         router.delete(`/customer-types/${selectedType.id}`, {
             onSuccess: () => {
                 closeDeleteDialog();
-                showNotification.success('Tipo de cliente eliminado correctamente');
             },
             onError: (error) => {
                 setDeletingType(null);

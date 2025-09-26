@@ -132,13 +132,27 @@ export default function CustomersIndex({
     filters,
 }: CustomersPageProps) {
     const [deletingCustomer, setDeletingCustomer] = useState<number | null>(null);
+    const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-    const handleDelete = useCallback((customerId: number) => {
-        setDeletingCustomer(customerId);
-        router.delete(`/customers/${customerId}`, {
+    const openDeleteDialog = useCallback((customer: Customer) => {
+        setCustomerToDelete(customer);
+        setShowDeleteDialog(true);
+    }, []);
+
+    const closeDeleteDialog = useCallback(() => {
+        setCustomerToDelete(null);
+        setShowDeleteDialog(false);
+        setDeletingCustomer(null);
+    }, []);
+
+    const handleDeleteCustomer = async () => {
+        if (!customerToDelete) return;
+
+        setDeletingCustomer(customerToDelete.id);
+        router.delete(`/customers/${customerToDelete.id}`, {
             onSuccess: () => {
-                showNotification.success('Cliente eliminado correctamente');
-                setDeletingCustomer(null);
+                closeDeleteDialog();
             },
             onError: (error) => {
                 setDeletingCustomer(null);
@@ -149,7 +163,7 @@ export default function CustomersIndex({
                 }
             }
         });
-    }, []);
+    };
     // Generar estadísticas dinámicas basadas en los tipos de cliente reales
     const stats = [
         {
@@ -322,7 +336,7 @@ export default function CustomersIndex({
             render: (customer: Customer) => (
                 <TableActions
                     editHref={`/customers/${customer.id}/edit`}
-                    onDelete={() => setDeletingCustomer(customer.id)}
+                    onDelete={() => openDeleteDialog(customer)}
                     isDeleting={deletingCustomer === customer.id}
                     editTooltip="Editar cliente"
                     deleteTooltip="Eliminar cliente"
@@ -341,7 +355,7 @@ export default function CustomersIndex({
             }}
             actions={{
                 editHref: `/customers/${customer.id}/edit`,
-                onDelete: () => setDeletingCustomer(customer.id),
+                onDelete: () => openDeleteDialog(customer),
                 isDeleting: deletingCustomer === customer.id,
                 editTooltip: "Editar cliente",
                 deleteTooltip: "Eliminar cliente"
@@ -464,15 +478,11 @@ export default function CustomersIndex({
             />
 
             <DeleteConfirmationDialog
-                isOpen={deletingCustomer !== null}
-                onClose={() => setDeletingCustomer(null)}
-                onConfirm={() => {
-                    if (deletingCustomer) {
-                        handleDelete(deletingCustomer);
-                    }
-                }}
+                isOpen={showDeleteDialog}
+                onClose={closeDeleteDialog}
+                onConfirm={handleDeleteCustomer}
                 isDeleting={deletingCustomer !== null}
-                entityName={customers.data.find(c => c.id === deletingCustomer)?.full_name || ''}
+                entityName={customerToDelete?.full_name || ''}
                 entityType="cliente"
             />
         </AppLayout>

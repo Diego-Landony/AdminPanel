@@ -131,7 +131,7 @@ const UserStatusBadge: React.FC<{ status: string }> = ({ status }) => (
 /**
  * Componente para la mobile card del usuario
  */
-const UserMobileCard: React.FC<{ user: User; onDelete: (userId: number) => void; isDeleting: boolean }> = ({
+const UserMobileCard: React.FC<{ user: User; onDelete: (user: User) => void; isDeleting: boolean }> = ({
   user,
   onDelete,
   isDeleting
@@ -185,7 +185,7 @@ const UserMobileCard: React.FC<{ user: User; onDelete: (userId: number) => void;
       ]}
       actions={{
         editHref: `/users/${user.id}/edit`,
-        onDelete: () => onDelete(user.id),
+        onDelete: () => onDelete(user),
         isDeleting,
         editTooltip: "Editar usuario",
         deleteTooltip: "Eliminar usuario"
@@ -199,13 +199,27 @@ const UserMobileCard: React.FC<{ user: User; onDelete: (userId: number) => void;
  */
 export default function UsersIndex({ users, total_users, online_users, filters }: UsersPageProps) {
   const [deletingUser, setDeletingUser] = useState<number | null>(null);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const handleDelete = useCallback((userId: number) => {
-    setDeletingUser(userId);
-    router.delete(`/users/${userId}`, {
+  const openDeleteDialog = useCallback((user: User) => {
+    setUserToDelete(user);
+    setShowDeleteDialog(true);
+  }, []);
+
+  const closeDeleteDialog = useCallback(() => {
+    setUserToDelete(null);
+    setShowDeleteDialog(false);
+    setDeletingUser(null);
+  }, []);
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    setDeletingUser(userToDelete.id);
+    router.delete(`/users/${userToDelete.id}`, {
       onSuccess: () => {
-        showNotification.success('Usuario eliminado correctamente');
-        setDeletingUser(null);
+        closeDeleteDialog();
       },
       onError: (error) => {
         setDeletingUser(null);
@@ -216,7 +230,7 @@ export default function UsersIndex({ users, total_users, online_users, filters }
         }
       }
     });
-  }, []);
+  };
 
   // Definición de columnas para la tabla
   const columns = [
@@ -270,7 +284,7 @@ export default function UsersIndex({ users, total_users, online_users, filters }
       render: (user: User) => (
         <TableActions
           editHref={`/users/${user.id}/edit`}
-          onDelete={() => setDeletingUser(user.id)}
+          onDelete={() => openDeleteDialog(user)}
           isDeleting={deletingUser === user.id}
           editTooltip="Editar usuario"
           deleteTooltip="Eliminar usuario"
@@ -316,7 +330,7 @@ export default function UsersIndex({ users, total_users, online_users, filters }
         renderMobileCard={(user) => (
           <UserMobileCard
             user={user}
-            onDelete={setDeletingUser}
+            onDelete={openDeleteDialog}
             isDeleting={deletingUser === user.id}
           />
         )}
@@ -325,15 +339,11 @@ export default function UsersIndex({ users, total_users, online_users, filters }
       />
 
       <DeleteConfirmationDialog
-        isOpen={deletingUser !== null}
-        onClose={() => setDeletingUser(null)}
-        onConfirm={() => {
-          if (deletingUser) {
-            handleDelete(deletingUser);
-          }
-        }}
+        isOpen={showDeleteDialog}
+        onClose={closeDeleteDialog}
+        onConfirm={handleDeleteUser}
         isDeleting={deletingUser !== null}
-        entityName={users.data.find(u => u.id === deletingUser)?.name || ''}
+        entityName={userToDelete?.name || ''}
         entityType="usuario"
       />
     </AppLayout>

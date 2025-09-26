@@ -121,13 +121,27 @@ export default function RestaurantsIndex({
     filters,
 }: RestaurantsPageProps) {
     const [deletingRestaurant, setDeletingRestaurant] = useState<number | null>(null);
+    const [restaurantToDelete, setRestaurantToDelete] = useState<Restaurant | null>(null);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-    const handleDelete = useCallback((restaurantId: number) => {
-        setDeletingRestaurant(restaurantId);
-        router.delete(`/restaurants/${restaurantId}`, {
+    const openDeleteDialog = useCallback((restaurant: Restaurant) => {
+        setRestaurantToDelete(restaurant);
+        setShowDeleteDialog(true);
+    }, []);
+
+    const closeDeleteDialog = useCallback(() => {
+        setRestaurantToDelete(null);
+        setShowDeleteDialog(false);
+        setDeletingRestaurant(null);
+    }, []);
+
+    const handleDeleteRestaurant = async () => {
+        if (!restaurantToDelete) return;
+
+        setDeletingRestaurant(restaurantToDelete.id);
+        router.delete(`/restaurants/${restaurantToDelete.id}`, {
             onSuccess: () => {
-                showNotification.success('Restaurante eliminado correctamente');
-                setDeletingRestaurant(null);
+                closeDeleteDialog();
             },
             onError: (error) => {
                 setDeletingRestaurant(null);
@@ -138,7 +152,7 @@ export default function RestaurantsIndex({
                 }
             }
         });
-    }, []);
+    };
 
     const stats = [
         {
@@ -284,7 +298,7 @@ export default function RestaurantsIndex({
             render: (restaurant: Restaurant) => (
                 <TableActions
                     editHref={`/restaurants/${restaurant.id}/edit`}
-                    onDelete={() => setDeletingRestaurant(restaurant.id)}
+                    onDelete={() => openDeleteDialog(restaurant)}
                     isDeleting={deletingRestaurant === restaurant.id}
                     editTooltip="Editar restaurante"
                     deleteTooltip="Eliminar restaurante"
@@ -308,7 +322,7 @@ export default function RestaurantsIndex({
             }}
             actions={{
                 editHref: `/restaurants/${restaurant.id}/edit`,
-                onDelete: () => setDeletingRestaurant(restaurant.id),
+                onDelete: () => openDeleteDialog(restaurant),
                 isDeleting: deletingRestaurant === restaurant.id,
                 editTooltip: "Editar restaurante",
                 deleteTooltip: "Eliminar restaurante"
@@ -417,15 +431,11 @@ export default function RestaurantsIndex({
             />
 
             <DeleteConfirmationDialog
-                isOpen={deletingRestaurant !== null}
-                onClose={() => setDeletingRestaurant(null)}
-                onConfirm={() => {
-                    if (deletingRestaurant) {
-                        handleDelete(deletingRestaurant);
-                    }
-                }}
+                isOpen={showDeleteDialog}
+                onClose={closeDeleteDialog}
+                onConfirm={handleDeleteRestaurant}
                 isDeleting={deletingRestaurant !== null}
-                entityName={restaurants.data.find(r => r.id === deletingRestaurant)?.name || ''}
+                entityName={restaurantToDelete?.name || ''}
                 entityType="restaurante"
             />
         </AppLayout>

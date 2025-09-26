@@ -1,14 +1,15 @@
 import { PageProps } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import { useForm } from '@inertiajs/react';
+import { Building2, Clock, Mail, MapPin, Phone, Settings, User } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { EditPageLayout } from '@/components/edit-page-layout';
+import { FormSection } from '@/components/form-section';
+import { EditRestaurantsSkeleton } from '@/components/skeletons';
 import { Checkbox } from '@/components/ui/checkbox';
+import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import AppLayout from '@/layouts/app-layout';
 
 interface Restaurant {
     id: number;
@@ -108,280 +109,221 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
     };
 
     return (
-        <AppLayout>
-            <Head title={`Editar Restaurante - ${restaurant.name}`} />
+        <EditPageLayout
+            title="Editar Restaurante"
+            description={`Actualiza la información de ${restaurant.name}`}
+            backHref={route('restaurants.index')}
+            onSubmit={handleSubmit}
+            processing={processing}
+            pageTitle={`Editar Restaurante - ${restaurant.name}`}
+            loading={false}
+            loadingSkeleton={EditRestaurantsSkeleton}
+        >
+            <FormSection icon={Building2} title="Información Básica" description="Datos principales del restaurante">
+                <FormField label="Nombre" error={errors.name} required>
+                    <Input
+                        id="name"
+                        value={data.name}
+                        onChange={(e) => setData('name', e.target.value)}
+                        placeholder="Nombre del restaurante"
+                    />
+                </FormField>
 
-            <div className="space-y-6">
-                <div className="flex items-center space-x-4">
-                    <Link href={route('restaurants.index')}>
-                        <Button variant="outline" size="icon">
-                            <ArrowLeft className="h-4 w-4" />
-                        </Button>
-                    </Link>
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Editar Restaurante</h1>
-                        <p className="text-muted-foreground">Actualiza la información de {restaurant.name}</p>
+                <FormField label="Descripción" error={errors.description}>
+                    <Textarea
+                        id="description"
+                        value={data.description}
+                        onChange={(e) => setData('description', e.target.value)}
+                        placeholder="Descripción del restaurante"
+                        rows={3}
+                    />
+                </FormField>
+
+                <FormField label="Dirección" error={errors.address} required>
+                    <div className="relative">
+                        <MapPin className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            id="address"
+                            value={data.address}
+                            onChange={(e) => setData('address', e.target.value)}
+                            placeholder="Dirección del restaurante"
+                            className="pl-10"
+                        />
+                    </div>
+                </FormField>
+
+                <FormField label="Teléfono" error={errors.phone}>
+                    <div className="relative">
+                        <Phone className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            id="phone"
+                            value={data.phone}
+                            onChange={(e) => setData('phone', e.target.value)}
+                            placeholder="+502 1234 5678"
+                            className="pl-10"
+                        />
+                    </div>
+                </FormField>
+
+                <FormField label="Email" error={errors.email}>
+                    <div className="relative">
+                        <Mail className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            id="email"
+                            type="email"
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                            placeholder="email@restaurante.com"
+                            className="pl-10"
+                        />
+                    </div>
+                </FormField>
+
+                <FormField label="Nombre del Encargado" error={errors.manager_name}>
+                    <div className="relative">
+                        <User className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            id="manager_name"
+                            value={data.manager_name}
+                            onChange={(e) => setData('manager_name', e.target.value)}
+                            placeholder="Nombre del encargado"
+                            className="pl-10"
+                        />
+                    </div>
+                </FormField>
+            </FormSection>
+
+            <FormSection icon={Settings} title="Configuración de Servicios" description="Servicios y configuración operativa">
+                <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            id="is_active"
+                            checked={data.is_active}
+                            onCheckedChange={(checked) => setData('is_active', checked as boolean)}
+                        />
+                        <Label htmlFor="is_active">Restaurante Activo</Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            id="delivery_active"
+                            checked={data.delivery_active}
+                            onCheckedChange={(checked) => setData('delivery_active', checked as boolean)}
+                        />
+                        <Label htmlFor="delivery_active">Servicio de Delivery</Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            id="pickup_active"
+                            checked={data.pickup_active}
+                            onCheckedChange={(checked) => setData('pickup_active', checked as boolean)}
+                        />
+                        <Label htmlFor="pickup_active">Servicio de Pickup</Label>
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid gap-6 md:grid-cols-2">
-                        {/* Información Básica */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Información Básica</CardTitle>
-                                <CardDescription>Datos principales del restaurante</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="name">Nombre *</Label>
-                                    <Input
-                                        id="name"
-                                        value={data.name}
-                                        onChange={(e) => setData('name', e.target.value)}
-                                        placeholder="Nombre del restaurante"
-                                        className={errors.name ? 'border-destructive' : ''}
-                                    />
-                                    {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
-                                </div>
+                <div className="grid gap-4">
+                    <FormField label="Monto Mínimo de Pedido (Q)" error={errors.minimum_order_amount}>
+                        <Input
+                            id="minimum_order_amount"
+                            type="number"
+                            step="0.01"
+                            value={data.minimum_order_amount}
+                            onChange={(e) => setData('minimum_order_amount', e.target.value)}
+                            placeholder="50.00"
+                        />
+                    </FormField>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="description">Descripción</Label>
-                                    <Textarea
-                                        id="description"
-                                        value={data.description}
-                                        onChange={(e) => setData('description', e.target.value)}
-                                        placeholder="Descripción del restaurante"
-                                        className={errors.description ? 'border-destructive' : ''}
-                                        rows={3}
-                                    />
-                                    {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
-                                </div>
+                    <FormField label="Tarifa de Delivery (Q)" error={errors.delivery_fee}>
+                        <Input
+                            id="delivery_fee"
+                            type="number"
+                            step="0.01"
+                            value={data.delivery_fee}
+                            onChange={(e) => setData('delivery_fee', e.target.value)}
+                            placeholder="25.00"
+                        />
+                    </FormField>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="address">Dirección *</Label>
-                                    <Input
-                                        id="address"
-                                        value={data.address}
-                                        onChange={(e) => setData('address', e.target.value)}
-                                        placeholder="Dirección del restaurante"
-                                        className={errors.address ? 'border-destructive' : ''}
-                                    />
-                                    {errors.address && <p className="text-sm text-destructive">{errors.address}</p>}
-                                </div>
+                    <FormField label="Tiempo Estimado de Entrega (min)" error={errors.estimated_delivery_time}>
+                        <Input
+                            id="estimated_delivery_time"
+                            type="number"
+                            value={data.estimated_delivery_time}
+                            onChange={(e) => setData('estimated_delivery_time', e.target.value)}
+                            placeholder="30"
+                        />
+                    </FormField>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="phone">Teléfono</Label>
-                                    <Input
-                                        id="phone"
-                                        value={data.phone}
-                                        onChange={(e) => setData('phone', e.target.value)}
-                                        placeholder="+502 1234 5678"
-                                        className={errors.phone ? 'border-destructive' : ''}
-                                    />
-                                    {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
-                                </div>
+                    <FormField label="Orden de Visualización" error={errors.sort_order}>
+                        <Input
+                            id="sort_order"
+                            type="number"
+                            value={data.sort_order}
+                            onChange={(e) => setData('sort_order', e.target.value)}
+                            placeholder="100"
+                        />
+                    </FormField>
+                </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="email">Email</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        value={data.email}
-                                        onChange={(e) => setData('email', e.target.value)}
-                                        placeholder="email@restaurante.com"
-                                        className={errors.email ? 'border-destructive' : ''}
-                                    />
-                                    {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="manager_name">Nombre del Encargado</Label>
-                                    <Input
-                                        id="manager_name"
-                                        value={data.manager_name}
-                                        onChange={(e) => setData('manager_name', e.target.value)}
-                                        placeholder="Nombre del encargado"
-                                        className={errors.manager_name ? 'border-destructive' : ''}
-                                    />
-                                    {errors.manager_name && <p className="text-sm text-destructive">{errors.manager_name}</p>}
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Configuración de Servicios */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Configuración de Servicios</CardTitle>
-                                <CardDescription>Servicios y configuración operativa</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-3">
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id="is_active"
-                                            checked={data.is_active}
-                                            onCheckedChange={(checked) => setData('is_active', checked as boolean)}
-                                        />
-                                        <Label htmlFor="is_active">Restaurante Activo</Label>
-                                    </div>
-
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id="delivery_active"
-                                            checked={data.delivery_active}
-                                            onCheckedChange={(checked) => setData('delivery_active', checked as boolean)}
-                                        />
-                                        <Label htmlFor="delivery_active">Servicio de Delivery</Label>
-                                    </div>
-
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id="pickup_active"
-                                            checked={data.pickup_active}
-                                            onCheckedChange={(checked) => setData('pickup_active', checked as boolean)}
-                                        />
-                                        <Label htmlFor="pickup_active">Servicio de Pickup</Label>
-                                    </div>
-                                </div>
-
-                                <div className="grid gap-4 md:grid-cols-2">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="minimum_order_amount">Monto Mínimo de Pedido (Q)</Label>
-                                        <Input
-                                            id="minimum_order_amount"
-                                            type="number"
-                                            step="0.01"
-                                            value={data.minimum_order_amount}
-                                            onChange={(e) => setData('minimum_order_amount', e.target.value)}
-                                            placeholder="50.00"
-                                            className={errors.minimum_order_amount ? 'border-destructive' : ''}
-                                        />
-                                        {errors.minimum_order_amount && <p className="text-sm text-destructive">{errors.minimum_order_amount}</p>}
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="delivery_fee">Tarifa de Delivery (Q)</Label>
-                                        <Input
-                                            id="delivery_fee"
-                                            type="number"
-                                            step="0.01"
-                                            value={data.delivery_fee}
-                                            onChange={(e) => setData('delivery_fee', e.target.value)}
-                                            placeholder="25.00"
-                                            className={errors.delivery_fee ? 'border-destructive' : ''}
-                                        />
-                                        {errors.delivery_fee && <p className="text-sm text-destructive">{errors.delivery_fee}</p>}
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="estimated_delivery_time">Tiempo Estimado de Entrega (min)</Label>
-                                        <Input
-                                            id="estimated_delivery_time"
-                                            type="number"
-                                            value={data.estimated_delivery_time}
-                                            onChange={(e) => setData('estimated_delivery_time', e.target.value)}
-                                            placeholder="30"
-                                            className={errors.estimated_delivery_time ? 'border-destructive' : ''}
-                                        />
-                                        {errors.estimated_delivery_time && (
-                                            <p className="text-sm text-destructive">{errors.estimated_delivery_time}</p>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="sort_order">Orden de Visualización</Label>
-                                        <Input
-                                            id="sort_order"
-                                            type="number"
-                                            value={data.sort_order}
-                                            onChange={(e) => setData('sort_order', e.target.value)}
-                                            placeholder="100"
-                                            className={errors.sort_order ? 'border-destructive' : ''}
-                                        />
-                                        {errors.sort_order && <p className="text-sm text-destructive">{errors.sort_order}</p>}
-                                    </div>
-                                </div>
-
-                                {/* Información del Rating */}
-                                <div className="border-t pt-4">
-                                    <div className="grid gap-4 md:grid-cols-2">
-                                        <div className="space-y-2">
-                                            <Label>Rating Actual</Label>
-                                            <div className="text-2xl font-bold">
-                                                {restaurant.rating ? Number(restaurant.rating).toFixed(1) : '0.0'}
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Total de Reseñas</Label>
-                                            <div className="text-2xl font-bold">{restaurant.total_reviews || 0}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* Horarios */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Horarios de Atención</CardTitle>
-                            <CardDescription>Define los horarios de atención para cada día de la semana</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                {Object.entries(dayLabels).map(([day, label]) => (
-                                    <div key={day} className="flex items-center space-x-4">
-                                        <div className="w-24">
-                                            <Label>{label}</Label>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <Checkbox
-                                                checked={data.schedule[day].is_open}
-                                                onCheckedChange={(checked) => handleScheduleChange(day, 'is_open', checked as boolean)}
-                                            />
-                                            <Label className="text-sm">Abierto</Label>
-                                        </div>
-                                        {data.schedule[day].is_open && (
-                                            <>
-                                                <div className="flex items-center space-x-2">
-                                                    <Label className="text-sm">De:</Label>
-                                                    <Input
-                                                        type="time"
-                                                        value={data.schedule[day].open}
-                                                        onChange={(e) => handleScheduleChange(day, 'open', e.target.value)}
-                                                        className="w-32"
-                                                    />
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <Label className="text-sm">A:</Label>
-                                                    <Input
-                                                        type="time"
-                                                        value={data.schedule[day].close}
-                                                        onChange={(e) => handleScheduleChange(day, 'close', e.target.value)}
-                                                        className="w-32"
-                                                    />
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                ))}
+                <div className="border-t pt-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label>Rating Actual</Label>
+                            <div className="text-2xl font-bold">
+                                {restaurant.rating ? Number(restaurant.rating).toFixed(1) : '0.0'}
                             </div>
-                        </CardContent>
-                    </Card>
-
-                    <div className="flex items-center space-x-4">
-                        <Button type="submit" disabled={processing}>
-                            {processing ? 'Guardando...' : 'Actualizar Restaurante'}
-                        </Button>
-                        <Link href={route('restaurants.index')}>
-                            <Button type="button" variant="outline">
-                                Cancelar
-                            </Button>
-                        </Link>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Total de Reseñas</Label>
+                            <div className="text-2xl font-bold">{restaurant.total_reviews || 0}</div>
+                        </div>
                     </div>
-                </form>
-            </div>
-        </AppLayout>
+                </div>
+            </FormSection>
+
+            <FormSection icon={Clock} title="Horarios de Atención" description="Define los horarios de atención para cada día de la semana">
+                <div className="space-y-4">
+                    {Object.entries(dayLabels).map(([day, label]) => (
+                        <div key={day} className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
+                            <div className="w-24 flex-shrink-0">
+                                <Label className="font-medium">{label}</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    checked={data.schedule[day].is_open}
+                                    onCheckedChange={(checked) => handleScheduleChange(day, 'is_open', checked as boolean)}
+                                />
+                                <Label className="text-sm">Abierto</Label>
+                            </div>
+                            {data.schedule[day].is_open && (
+                                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
+                                    <div className="flex items-center space-x-2">
+                                        <Label className="text-sm font-medium">De:</Label>
+                                        <Input
+                                            type="time"
+                                            value={data.schedule[day].open}
+                                            onChange={(e) => handleScheduleChange(day, 'open', e.target.value)}
+                                            className="w-32"
+                                        />
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <Label className="text-sm font-medium">A:</Label>
+                                        <Input
+                                            type="time"
+                                            value={data.schedule[day].close}
+                                            onChange={(e) => handleScheduleChange(day, 'close', e.target.value)}
+                                            className="w-32"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </FormSection>
+
+        </EditPageLayout>
     );
 }

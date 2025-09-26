@@ -48,9 +48,7 @@ export default function CreateUser() {
             title="Crear Usuario"
             description="Agrega un nuevo usuario al sistema con los datos básicos"
             backHref={route('users.index')}
-            backLabel="Volver a Usuarios"
             onSubmit={handleSubmit}
-            submitLabel="Crear Usuario"
             processing={processing}
             pageTitle="Crear Usuario"
             loading={processing}

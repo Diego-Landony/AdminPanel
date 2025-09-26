@@ -58,9 +58,7 @@ export default function CreateCustomer() {
             title="Crear Nuevo Cliente"
             description="Completa la información para registrar un nuevo cliente"
             backHref={route('customers.index')}
-            backLabel="Volver a Clientes"
             onSubmit={handleSubmit}
-            submitLabel="Crear Cliente"
             processing={processing}
             pageTitle="Crear Cliente"
             loading={processing}

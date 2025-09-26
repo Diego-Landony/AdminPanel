@@ -5,7 +5,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 
-interface CreatePageLayoutProps {
+interface EditPageLayoutProps {
     title: string;
     description: string;
     backHref: string;
@@ -13,29 +13,38 @@ interface CreatePageLayoutProps {
     onSubmit: (e: React.FormEvent) => void;
     submitLabel?: string;
     processing: boolean;
+    disabled?: boolean;
     cancelHref?: string;
     pageTitle?: string;
     children: React.ReactNode;
     loading?: boolean;
     loadingSkeleton?: React.ComponentType;
+    isDirty?: boolean;
+    onReset?: () => void;
+    showResetButton?: boolean;
 }
 
-export function CreatePageLayout({
+export function EditPageLayout({
     title,
     description,
     backHref,
     backLabel = 'Volver',
     onSubmit,
-    submitLabel = 'Crear',
+    submitLabel = 'Actualizar',
     processing,
+    disabled = false,
     cancelHref,
     pageTitle,
     children,
     loading = false,
     loadingSkeleton: LoadingSkeleton,
-}: CreatePageLayoutProps) {
+    isDirty = false,
+    onReset,
+    showResetButton = false,
+}: EditPageLayoutProps) {
     const finalCancelHref = cancelHref || backHref;
     const finalPageTitle = pageTitle || title;
+    const isSubmitDisabled = processing || disabled || (!isDirty && showResetButton);
 
     return (
         <AppLayout>
@@ -65,14 +74,41 @@ export function CreatePageLayout({
 
                             {/* Botones de Acción */}
                             <div className="mt-8 flex flex-col items-stretch justify-end gap-3 px-1 sm:flex-row sm:items-center sm:gap-4">
+                                {/* Indicador de estado si se usa isDirty */}
+                                {showResetButton && (
+                                    <div className="hidden text-sm text-muted-foreground sm:block">
+                                        {isDirty ? 'Tienes cambios sin guardar' : 'Sin cambios'}
+                                    </div>
+                                )}
+
+                                {/* Botón de resetear cambios (opcional) */}
+                                {showResetButton && onReset && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={onReset}
+                                        disabled={processing || !isDirty}
+                                        className="w-full sm:w-auto"
+                                    >
+                                        Descartar Cambios
+                                    </Button>
+                                )}
+
                                 <Link href={finalCancelHref} className="w-full sm:w-auto">
                                     <Button variant="outline" type="button" className="w-full sm:w-auto">
                                         Cancelar
                                     </Button>
                                 </Link>
-                                <Button type="submit" disabled={processing} className="w-full sm:w-auto">
+
+                                <Button
+                                    type="submit"
+                                    disabled={isSubmitDisabled}
+                                    className="w-full sm:w-auto"
+                                >
                                     <Save className="mr-2 h-4 w-4 flex-shrink-0" />
-                                    <span className="truncate">{processing ? 'Guardando...' : submitLabel}</span>
+                                    <span className="truncate">
+                                        {processing ? 'Guardando...' : disabled ? 'No Editable' : submitLabel}
+                                    </span>
                                 </Button>
                             </div>
                         </form>

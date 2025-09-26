@@ -84,9 +84,7 @@ export default function RestaurantCreate() {
             title="Crear Nuevo Restaurante"
             description="Completa la información del restaurante"
             backHref={route('restaurants.index')}
-            backLabel="Volver a Restaurantes"
             onSubmit={handleSubmit}
-            submitLabel="Crear Restaurante"
             processing={processing}
             pageTitle="Crear Restaurante"
             loading={processing}

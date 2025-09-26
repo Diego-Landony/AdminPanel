@@ -100,9 +100,7 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
             title="Crear Nuevo Rol"
             description="Define un nuevo rol con permisos específicos para los usuarios"
             backHref="/roles"
-            backLabel="Volver a Roles"
             onSubmit={handleSubmit}
-            submitLabel="Crear Rol"
             processing={processing}
             pageTitle="Crear Rol"
             loading={processing}

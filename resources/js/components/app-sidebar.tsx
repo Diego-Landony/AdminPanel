@@ -2,7 +2,7 @@ import { NavMain } from '@/components/nav-main';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Users, UserCog, Activity, Shield, LucideIcon, Home, Star, UserCircle, Settings, Building } from 'lucide-react';
+import { Users, UserCog, Activity, Shield, LucideIcon, Home, Star, UserCircle, Settings, ChefHat } from 'lucide-react';
 import { usePermissions } from '@/hooks/use-permissions';
 import AppLogo from './app-logo';
 
@@ -55,7 +55,7 @@ const systemPages: PageConfig[] = [
         name: 'restaurants',
         title: 'Gestión de restaurantes',
         href: '/restaurants',
-        icon: Building,
+        icon: ChefHat,
         group: 'Restaurantes',
         permission: 'restaurants.view',
     },
@@ -128,6 +128,8 @@ export function AppSidebar() {
                     groupIcon = UserCog;
                 } else if (groupName === 'Clientes') {
                     groupIcon = UserCircle;
+                } else if (groupName === 'Restaurantes') {
+                    groupIcon = ChefHat;
                 }
                 
                 items.push({

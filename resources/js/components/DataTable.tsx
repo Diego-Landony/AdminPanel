@@ -1,6 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { ArrowDown, ArrowUp, ArrowUpDown, Plus, RefreshCw, Search } from 'lucide-react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 
 import { PaginationWrapper } from '@/components/PaginationWrapper';
 import { Button } from '@/components/ui/button';
@@ -174,7 +174,7 @@ const TruncatedText: React.FC<TruncatedTextProps> = ({ children, maxLength, clas
  * />
  * ```
  */
-export function DataTable<T extends { id: number | string }>({
+const DataTableComponent = function DataTable<T extends { id: number | string }>({
     title,
     description,
     data,
@@ -503,4 +503,19 @@ export function DataTable<T extends { id: number | string }>({
             </Card>
         </div>
     );
-}
+};
+
+// Memoized export with custom comparison for better performance
+export const DataTable = memo(DataTableComponent, (prevProps, nextProps) => {
+    // Deep compare data arrays and key props for optimal re-rendering
+    return (
+        prevProps.title === nextProps.title &&
+        prevProps.description === nextProps.description &&
+        prevProps.data.current_page === nextProps.data.current_page &&
+        prevProps.data.total === nextProps.data.total &&
+        prevProps.filters.search === nextProps.filters.search &&
+        prevProps.filters.per_page === nextProps.filters.per_page &&
+        prevProps.routeName === nextProps.routeName &&
+        JSON.stringify(prevProps.data.data) === JSON.stringify(nextProps.data.data)
+    );
+}) as <T extends { id: number | string }>(props: DataTableProps<T>) => JSX.Element;

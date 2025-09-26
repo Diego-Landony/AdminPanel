@@ -1,7 +1,7 @@
 import { CardActions, DataField, ResponsiveCard, ResponsiveCardContent, ResponsiveCardHeader } from '@/components/CardLayout';
 import { TableActions } from '@/components/TableActions';
 import { LucideIcon } from 'lucide-react';
-import React from 'react';
+import React, { memo } from 'react';
 
 export interface DataFieldConfig {
     label: string;
@@ -83,7 +83,7 @@ export interface StandardMobileCardProps {
  * />
  * ```
  */
-export const StandardMobileCard: React.FC<StandardMobileCardProps> = ({
+const StandardMobileCardComponent: React.FC<StandardMobileCardProps> = ({
     icon: IconComponent,
     title,
     subtitle,
@@ -128,3 +128,6 @@ export const StandardMobileCard: React.FC<StandardMobileCardProps> = ({
         </ResponsiveCard>
     );
 };
+
+// Memoized export for performance optimization
+export const StandardMobileCard = memo(StandardMobileCardComponent);

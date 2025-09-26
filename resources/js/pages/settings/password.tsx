@@ -135,7 +135,10 @@ export default function Password() {
                         </FormField>
 
                         <div className="flex items-center gap-4">
-                            <Button disabled={processing}>{processing ? 'Guardando...' : 'Guardar Contraseña'}</Button>
+                            <Button disabled={processing} className={processing ? 'cursor-not-allowed' : ''}>
+                                {processing && <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+                                {processing ? 'Guardando...' : 'Guardar Contraseña'}
+                            </Button>
 
                             <Transition
                                 show={recentlySuccessful}

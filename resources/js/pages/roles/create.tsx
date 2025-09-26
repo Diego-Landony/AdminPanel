@@ -105,7 +105,7 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
             submitLabel="Crear Rol"
             processing={processing}
             pageTitle="Crear Rol"
-            loading={false} // Set to true during initial loading
+            loading={processing}
             loadingSkeleton={CreateRolesSkeleton}
         >
             <FormSection icon={Shield} title="Información del Rol" description="Datos básicos del nuevo rol">

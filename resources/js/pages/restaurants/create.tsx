@@ -89,7 +89,7 @@ export default function RestaurantCreate() {
             submitLabel="Crear Restaurante"
             processing={processing}
             pageTitle="Crear Restaurante"
-            loading={false} // Set to true during initial loading
+            loading={processing}
             loadingSkeleton={CreateRestaurantsSkeleton}
         >
             <FormSection icon={Building2} title="Información Básica" description="Datos principales del restaurante">

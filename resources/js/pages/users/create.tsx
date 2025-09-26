@@ -53,7 +53,7 @@ export default function CreateUser() {
             submitLabel="Crear Usuario"
             processing={processing}
             pageTitle="Crear Usuario"
-            loading={false} // Set to true during initial loading
+            loading={processing}
             loadingSkeleton={CreateUsersSkeleton}
         >
             <FormSection icon={User} title="Información del Usuario" description="Datos básicos del nuevo usuario">

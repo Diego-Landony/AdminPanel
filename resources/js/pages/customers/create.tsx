@@ -63,7 +63,7 @@ export default function CreateCustomer() {
             submitLabel="Crear Cliente"
             processing={processing}
             pageTitle="Crear Cliente"
-            loading={false} // Set to true during initial loading
+            loading={processing}
             loadingSkeleton={CreateCustomersSkeleton}
         >
             <FormSection icon={User} title="Información Personal" description="Datos básicos del cliente">

@@ -80,7 +80,7 @@ export default function CustomerTypeCreate() {
             submitLabel="Crear Tipo"
             processing={processing}
             pageTitle="Crear Tipo de Cliente"
-            loading={false} // Set to true during initial loading
+            loading={processing}
             loadingSkeleton={CreateCustomerTypesSkeleton}
         >
             <FormSection icon={Shield} title="Información del Tipo" description="Complete los datos del nuevo tipo de cliente">

@@ -4,6 +4,7 @@ import React from 'react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
+import { CreateRestaurantsSkeleton } from '@/components/skeletons';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
@@ -88,6 +89,8 @@ export default function RestaurantCreate() {
             submitLabel="Crear Restaurante"
             processing={processing}
             pageTitle="Crear Restaurante"
+            loading={false} // Set to true during initial loading
+            loadingSkeleton={CreateRestaurantsSkeleton}
         >
             <FormSection icon={Building2} title="Información Básica" description="Datos principales del restaurante">
                 <FormField label="Nombre" error={errors.name} required>

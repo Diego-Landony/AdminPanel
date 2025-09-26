@@ -4,6 +4,7 @@ import React from 'react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
+import { CreateRolesSkeleton } from '@/components/skeletons';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormError } from '@/components/ui/form-error';
 import { FormField } from '@/components/ui/form-field';
@@ -104,6 +105,8 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
             submitLabel="Crear Rol"
             processing={processing}
             pageTitle="Crear Rol"
+            loading={false} // Set to true during initial loading
+            loadingSkeleton={CreateRolesSkeleton}
         >
             <FormSection icon={Shield} title="Información del Rol" description="Datos básicos del nuevo rol">
                 <FormField label="Nombre del Rol" error={errors.name} required>

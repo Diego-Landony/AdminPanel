@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
+import { CreateUsersSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
@@ -52,6 +53,8 @@ export default function CreateUser() {
             submitLabel="Crear Usuario"
             processing={processing}
             pageTitle="Crear Usuario"
+            loading={false} // Set to true during initial loading
+            loadingSkeleton={CreateUsersSkeleton}
         >
             <FormSection icon={User} title="Información del Usuario" description="Datos básicos del nuevo usuario">
                 <FormField label="Nombre Completo" error={errors.name} required>

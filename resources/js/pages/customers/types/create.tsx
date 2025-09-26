@@ -5,6 +5,7 @@ import React from 'react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
+import { CreateCustomerTypesSkeleton } from '@/components/skeletons';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
@@ -79,6 +80,8 @@ export default function CustomerTypeCreate() {
             submitLabel="Crear Tipo"
             processing={processing}
             pageTitle="Crear Tipo de Cliente"
+            loading={false} // Set to true during initial loading
+            loadingSkeleton={CreateCustomerTypesSkeleton}
         >
             <FormSection icon={Shield} title="Información del Tipo" description="Complete los datos del nuevo tipo de cliente">
                 {/* Nombre para mostrar */}

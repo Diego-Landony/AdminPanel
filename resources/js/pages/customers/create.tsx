@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
+import { CreateCustomersSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
@@ -62,6 +63,8 @@ export default function CreateCustomer() {
             submitLabel="Crear Cliente"
             processing={processing}
             pageTitle="Crear Cliente"
+            loading={false} // Set to true during initial loading
+            loadingSkeleton={CreateCustomersSkeleton}
         >
             <FormSection icon={User} title="Información Personal" description="Datos básicos del cliente">
                 <FormField label="Nombre Completo" error={errors.full_name} required>

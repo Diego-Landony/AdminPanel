@@ -235,6 +235,14 @@ export default function UsersIndex({ users, total_users, online_users, filters }
             ),
         },
         {
+            key: 'status',
+            title: 'Estado',
+            width: 'sm' as const,
+            textAlign: 'center' as const,
+            sortable: true,
+            render: (user: User) => <UserStatusBadge status={user.status} />,
+        },
+        {
             key: 'actions',
             title: 'Acciones',
             width: 'xs' as const,
@@ -248,14 +256,6 @@ export default function UsersIndex({ users, total_users, online_users, filters }
                     deleteTooltip="Eliminar usuario"
                 />
             ),
-        },
-        {
-            key: 'status',
-            title: 'Estado',
-            width: 'sm' as const,
-            textAlign: 'center' as const,
-            sortable: true,
-            render: (user: User) => <UserStatusBadge status={user.status} />,
         },
     ];
 

@@ -28,13 +28,13 @@ function applyTheme(theme: Theme) {
 export function changeTheme(theme: Theme) {
     // 1. Guardar en localStorage (fuente de verdad del cliente)
     localStorage.setItem(THEME_KEY, theme);
-    
+
     // 2. Aplicar al DOM
     applyTheme(theme);
-    
+
     // 3. Notificar al servidor para persistir en la cookie (para la próxima sesión)
     document.cookie = `${THEME_KEY}=${theme}; path=/; max-age=31536000; SameSite=Lax`;
-    
+
     // Opcional: Enviar una petición silenciosa si se necesita una acción inmediata del servidor.
     // En este caso, la cookie es suficiente.
 }

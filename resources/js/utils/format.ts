@@ -15,7 +15,7 @@ export const formatDate = (dateString: string | null): string => {
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
-            timeZone: 'America/Guatemala'
+            timeZone: 'America/Guatemala',
         });
     } catch {
         return 'Fecha inválida';
@@ -33,7 +33,7 @@ export const formatDateOnly = (dateString: string | null): string => {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
-            timeZone: 'America/Guatemala'
+            timeZone: 'America/Guatemala',
         });
     } catch {
         return 'Fecha inválida';

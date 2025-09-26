@@ -1,14 +1,14 @@
-import { PageProps } from "@/types";
-import { Head, Link, useForm } from "@inertiajs/react";
-import { ArrowLeft } from "lucide-react";
+import { PageProps } from '@/types';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
-import AppLayout from "@/layouts/app-layout";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import AppLayout from '@/layouts/app-layout';
 
 interface Restaurant {
     id: number;
@@ -56,43 +56,39 @@ interface RestaurantEditPageProps extends PageProps {
 
 export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) {
     const defaultSchedule = {
-        monday: { is_open: true, open: "08:00", close: "22:00" },
-        tuesday: { is_open: true, open: "08:00", close: "22:00" },
-        wednesday: { is_open: true, open: "08:00", close: "22:00" },
-        thursday: { is_open: true, open: "08:00", close: "22:00" },
-        friday: { is_open: true, open: "08:00", close: "22:00" },
-        saturday: { is_open: true, open: "08:00", close: "22:00" },
-        sunday: { is_open: true, open: "08:00", close: "22:00" },
+        monday: { is_open: true, open: '08:00', close: '22:00' },
+        tuesday: { is_open: true, open: '08:00', close: '22:00' },
+        wednesday: { is_open: true, open: '08:00', close: '22:00' },
+        thursday: { is_open: true, open: '08:00', close: '22:00' },
+        friday: { is_open: true, open: '08:00', close: '22:00' },
+        saturday: { is_open: true, open: '08:00', close: '22:00' },
+        sunday: { is_open: true, open: '08:00', close: '22:00' },
     };
 
     const { data, setData, put, processing, errors } = useForm<RestaurantFormData>({
         name: restaurant.name,
-        description: restaurant.description || "",
+        description: restaurant.description || '',
         address: restaurant.address,
         is_active: restaurant.is_active,
         delivery_active: restaurant.delivery_active,
         pickup_active: restaurant.pickup_active,
-        phone: restaurant.phone || "",
+        phone: restaurant.phone || '',
         schedule: restaurant.schedule || defaultSchedule,
         minimum_order_amount: restaurant.minimum_order_amount.toString(),
         delivery_fee: restaurant.delivery_fee.toString(),
-        estimated_delivery_time: restaurant.estimated_delivery_time?.toString() || "",
-        email: restaurant.email || "",
-        manager_name: restaurant.manager_name || "",
+        estimated_delivery_time: restaurant.estimated_delivery_time?.toString() || '',
+        email: restaurant.email || '',
+        manager_name: restaurant.manager_name || '',
         sort_order: restaurant.sort_order.toString(),
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(route("restaurants.update", restaurant.id));
+        put(route('restaurants.update', restaurant.id));
     };
 
-    const handleScheduleChange = (
-        day: string,
-        field: string,
-        value: boolean | string
-    ) => {
-        setData("schedule", {
+    const handleScheduleChange = (day: string, field: string, value: boolean | string) => {
+        setData('schedule', {
             ...data.schedule,
             [day]: {
                 ...data.schedule[day],
@@ -102,13 +98,13 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
     };
 
     const dayLabels = {
-        monday: "Lunes",
-        tuesday: "Martes",
-        wednesday: "Miércoles",
-        thursday: "Jueves",
-        friday: "Viernes",
-        saturday: "Sábado",
-        sunday: "Domingo",
+        monday: 'Lunes',
+        tuesday: 'Martes',
+        wednesday: 'Miércoles',
+        thursday: 'Jueves',
+        friday: 'Viernes',
+        saturday: 'Sábado',
+        sunday: 'Domingo',
     };
 
     return (
@@ -117,18 +113,14 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
 
             <div className="space-y-6">
                 <div className="flex items-center space-x-4">
-                    <Link href={route("restaurants.index")}>
+                    <Link href={route('restaurants.index')}>
                         <Button variant="outline" size="icon">
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                     </Link>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">
-                            Editar Restaurante
-                        </h1>
-                        <p className="text-muted-foreground">
-                            Actualiza la información de {restaurant.name}
-                        </p>
+                        <h1 className="text-3xl font-bold tracking-tight">Editar Restaurante</h1>
+                        <p className="text-muted-foreground">Actualiza la información de {restaurant.name}</p>
                     </div>
                 </div>
 
@@ -138,9 +130,7 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                         <Card>
                             <CardHeader>
                                 <CardTitle>Información Básica</CardTitle>
-                                <CardDescription>
-                                    Datos principales del restaurante
-                                </CardDescription>
+                                <CardDescription>Datos principales del restaurante</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="space-y-2">
@@ -148,13 +138,11 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                                     <Input
                                         id="name"
                                         value={data.name}
-                                        onChange={(e) => setData("name", e.target.value)}
+                                        onChange={(e) => setData('name', e.target.value)}
                                         placeholder="Nombre del restaurante"
-                                        className={errors.name ? "border-destructive" : ""}
+                                        className={errors.name ? 'border-destructive' : ''}
                                     />
-                                    {errors.name && (
-                                        <p className="text-sm text-destructive">{errors.name}</p>
-                                    )}
+                                    {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                                 </div>
 
                                 <div className="space-y-2">
@@ -162,14 +150,12 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                                     <Textarea
                                         id="description"
                                         value={data.description}
-                                        onChange={(e) => setData("description", e.target.value)}
+                                        onChange={(e) => setData('description', e.target.value)}
                                         placeholder="Descripción del restaurante"
-                                        className={errors.description ? "border-destructive" : ""}
+                                        className={errors.description ? 'border-destructive' : ''}
                                         rows={3}
                                     />
-                                    {errors.description && (
-                                        <p className="text-sm text-destructive">{errors.description}</p>
-                                    )}
+                                    {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
                                 </div>
 
                                 <div className="space-y-2">
@@ -177,13 +163,11 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                                     <Input
                                         id="address"
                                         value={data.address}
-                                        onChange={(e) => setData("address", e.target.value)}
+                                        onChange={(e) => setData('address', e.target.value)}
                                         placeholder="Dirección del restaurante"
-                                        className={errors.address ? "border-destructive" : ""}
+                                        className={errors.address ? 'border-destructive' : ''}
                                     />
-                                    {errors.address && (
-                                        <p className="text-sm text-destructive">{errors.address}</p>
-                                    )}
+                                    {errors.address && <p className="text-sm text-destructive">{errors.address}</p>}
                                 </div>
 
                                 <div className="space-y-2">
@@ -191,13 +175,11 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                                     <Input
                                         id="phone"
                                         value={data.phone}
-                                        onChange={(e) => setData("phone", e.target.value)}
+                                        onChange={(e) => setData('phone', e.target.value)}
                                         placeholder="+502 1234 5678"
-                                        className={errors.phone ? "border-destructive" : ""}
+                                        className={errors.phone ? 'border-destructive' : ''}
                                     />
-                                    {errors.phone && (
-                                        <p className="text-sm text-destructive">{errors.phone}</p>
-                                    )}
+                                    {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                                 </div>
 
                                 <div className="space-y-2">
@@ -206,13 +188,11 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                                         id="email"
                                         type="email"
                                         value={data.email}
-                                        onChange={(e) => setData("email", e.target.value)}
+                                        onChange={(e) => setData('email', e.target.value)}
                                         placeholder="email@restaurante.com"
-                                        className={errors.email ? "border-destructive" : ""}
+                                        className={errors.email ? 'border-destructive' : ''}
                                     />
-                                    {errors.email && (
-                                        <p className="text-sm text-destructive">{errors.email}</p>
-                                    )}
+                                    {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                                 </div>
 
                                 <div className="space-y-2">
@@ -220,13 +200,11 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                                     <Input
                                         id="manager_name"
                                         value={data.manager_name}
-                                        onChange={(e) => setData("manager_name", e.target.value)}
+                                        onChange={(e) => setData('manager_name', e.target.value)}
                                         placeholder="Nombre del encargado"
-                                        className={errors.manager_name ? "border-destructive" : ""}
+                                        className={errors.manager_name ? 'border-destructive' : ''}
                                     />
-                                    {errors.manager_name && (
-                                        <p className="text-sm text-destructive">{errors.manager_name}</p>
-                                    )}
+                                    {errors.manager_name && <p className="text-sm text-destructive">{errors.manager_name}</p>}
                                 </div>
                             </CardContent>
                         </Card>
@@ -235,9 +213,7 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                         <Card>
                             <CardHeader>
                                 <CardTitle>Configuración de Servicios</CardTitle>
-                                <CardDescription>
-                                    Servicios y configuración operativa
-                                </CardDescription>
+                                <CardDescription>Servicios y configuración operativa</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="space-y-3">
@@ -245,9 +221,7 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                                         <Checkbox
                                             id="is_active"
                                             checked={data.is_active}
-                                            onCheckedChange={(checked) =>
-                                                setData("is_active", checked as boolean)
-                                            }
+                                            onCheckedChange={(checked) => setData('is_active', checked as boolean)}
                                         />
                                         <Label htmlFor="is_active">Restaurante Activo</Label>
                                     </div>
@@ -256,9 +230,7 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                                         <Checkbox
                                             id="delivery_active"
                                             checked={data.delivery_active}
-                                            onCheckedChange={(checked) =>
-                                                setData("delivery_active", checked as boolean)
-                                            }
+                                            onCheckedChange={(checked) => setData('delivery_active', checked as boolean)}
                                         />
                                         <Label htmlFor="delivery_active">Servicio de Delivery</Label>
                                     </div>
@@ -267,9 +239,7 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                                         <Checkbox
                                             id="pickup_active"
                                             checked={data.pickup_active}
-                                            onCheckedChange={(checked) =>
-                                                setData("pickup_active", checked as boolean)
-                                            }
+                                            onCheckedChange={(checked) => setData('pickup_active', checked as boolean)}
                                         />
                                         <Label htmlFor="pickup_active">Servicio de Pickup</Label>
                                     </div>
@@ -277,52 +247,42 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
 
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <div className="space-y-2">
-                                        <Label htmlFor="minimum_order_amount">
-                                            Monto Mínimo de Pedido (Q)
-                                        </Label>
+                                        <Label htmlFor="minimum_order_amount">Monto Mínimo de Pedido (Q)</Label>
                                         <Input
                                             id="minimum_order_amount"
                                             type="number"
                                             step="0.01"
                                             value={data.minimum_order_amount}
-                                            onChange={(e) => setData("minimum_order_amount", e.target.value)}
+                                            onChange={(e) => setData('minimum_order_amount', e.target.value)}
                                             placeholder="50.00"
-                                            className={errors.minimum_order_amount ? "border-destructive" : ""}
+                                            className={errors.minimum_order_amount ? 'border-destructive' : ''}
                                         />
-                                        {errors.minimum_order_amount && (
-                                            <p className="text-sm text-destructive">{errors.minimum_order_amount}</p>
-                                        )}
+                                        {errors.minimum_order_amount && <p className="text-sm text-destructive">{errors.minimum_order_amount}</p>}
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="delivery_fee">
-                                            Tarifa de Delivery (Q)
-                                        </Label>
+                                        <Label htmlFor="delivery_fee">Tarifa de Delivery (Q)</Label>
                                         <Input
                                             id="delivery_fee"
                                             type="number"
                                             step="0.01"
                                             value={data.delivery_fee}
-                                            onChange={(e) => setData("delivery_fee", e.target.value)}
+                                            onChange={(e) => setData('delivery_fee', e.target.value)}
                                             placeholder="25.00"
-                                            className={errors.delivery_fee ? "border-destructive" : ""}
+                                            className={errors.delivery_fee ? 'border-destructive' : ''}
                                         />
-                                        {errors.delivery_fee && (
-                                            <p className="text-sm text-destructive">{errors.delivery_fee}</p>
-                                        )}
+                                        {errors.delivery_fee && <p className="text-sm text-destructive">{errors.delivery_fee}</p>}
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="estimated_delivery_time">
-                                            Tiempo Estimado de Entrega (min)
-                                        </Label>
+                                        <Label htmlFor="estimated_delivery_time">Tiempo Estimado de Entrega (min)</Label>
                                         <Input
                                             id="estimated_delivery_time"
                                             type="number"
                                             value={data.estimated_delivery_time}
-                                            onChange={(e) => setData("estimated_delivery_time", e.target.value)}
+                                            onChange={(e) => setData('estimated_delivery_time', e.target.value)}
                                             placeholder="30"
-                                            className={errors.estimated_delivery_time ? "border-destructive" : ""}
+                                            className={errors.estimated_delivery_time ? 'border-destructive' : ''}
                                         />
                                         {errors.estimated_delivery_time && (
                                             <p className="text-sm text-destructive">{errors.estimated_delivery_time}</p>
@@ -335,30 +295,26 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                                             id="sort_order"
                                             type="number"
                                             value={data.sort_order}
-                                            onChange={(e) => setData("sort_order", e.target.value)}
+                                            onChange={(e) => setData('sort_order', e.target.value)}
                                             placeholder="100"
-                                            className={errors.sort_order ? "border-destructive" : ""}
+                                            className={errors.sort_order ? 'border-destructive' : ''}
                                         />
-                                        {errors.sort_order && (
-                                            <p className="text-sm text-destructive">{errors.sort_order}</p>
-                                        )}
+                                        {errors.sort_order && <p className="text-sm text-destructive">{errors.sort_order}</p>}
                                     </div>
                                 </div>
 
                                 {/* Información del Rating */}
-                                <div className="pt-4 border-t">
+                                <div className="border-t pt-4">
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <div className="space-y-2">
                                             <Label>Rating Actual</Label>
                                             <div className="text-2xl font-bold">
-                                                {restaurant.rating.toFixed(1)}
+                                                {restaurant.rating ? Number(restaurant.rating).toFixed(1) : '0.0'}
                                             </div>
                                         </div>
                                         <div className="space-y-2">
                                             <Label>Total de Reseñas</Label>
-                                            <div className="text-2xl font-bold">
-                                                {restaurant.total_reviews}
-                                            </div>
+                                            <div className="text-2xl font-bold">{restaurant.total_reviews || 0}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -370,9 +326,7 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                     <Card>
                         <CardHeader>
                             <CardTitle>Horarios de Atención</CardTitle>
-                            <CardDescription>
-                                Define los horarios de atención para cada día de la semana
-                            </CardDescription>
+                            <CardDescription>Define los horarios de atención para cada día de la semana</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
@@ -384,9 +338,7 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                                         <div className="flex items-center space-x-2">
                                             <Checkbox
                                                 checked={data.schedule[day].is_open}
-                                                onCheckedChange={(checked) =>
-                                                    handleScheduleChange(day, "is_open", checked as boolean)
-                                                }
+                                                onCheckedChange={(checked) => handleScheduleChange(day, 'is_open', checked as boolean)}
                                             />
                                             <Label className="text-sm">Abierto</Label>
                                         </div>
@@ -397,9 +349,7 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                                                     <Input
                                                         type="time"
                                                         value={data.schedule[day].open}
-                                                        onChange={(e) =>
-                                                            handleScheduleChange(day, "open", e.target.value)
-                                                        }
+                                                        onChange={(e) => handleScheduleChange(day, 'open', e.target.value)}
                                                         className="w-32"
                                                     />
                                                 </div>
@@ -408,9 +358,7 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                                                     <Input
                                                         type="time"
                                                         value={data.schedule[day].close}
-                                                        onChange={(e) =>
-                                                            handleScheduleChange(day, "close", e.target.value)
-                                                        }
+                                                        onChange={(e) => handleScheduleChange(day, 'close', e.target.value)}
                                                         className="w-32"
                                                     />
                                                 </div>
@@ -424,9 +372,9 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
 
                     <div className="flex items-center space-x-4">
                         <Button type="submit" disabled={processing}>
-                            {processing ? "Guardando..." : "Actualizar Restaurante"}
+                            {processing ? 'Guardando...' : 'Actualizar Restaurante'}
                         </Button>
-                        <Link href={route("restaurants.index")}>
+                        <Link href={route('restaurants.index')}>
                             <Button type="button" variant="outline">
                                 Cancelar
                             </Button>

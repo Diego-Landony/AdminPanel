@@ -2,13 +2,13 @@ import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { Transition } from '@headlessui/react';
 import { Head, useForm } from '@inertiajs/react';
-import { FormEventHandler, useRef, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { FormEventHandler, useRef, useState } from 'react';
 
 import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
 
 /**
  * Página de configuración de contraseña
@@ -56,17 +56,13 @@ export default function Password() {
 
             <SettingsLayout>
                 <div className="space-y-6">
-                    <HeadingSmall 
-                        title="Actualizar Contraseña" 
-                        description="Asegúrate de que tu cuenta use una contraseña de al menos 6 caracteres para mantener la seguridad" 
+                    <HeadingSmall
+                        title="Actualizar Contraseña"
+                        description="Asegúrate de que tu cuenta use una contraseña de al menos 6 caracteres para mantener la seguridad"
                     />
 
                     <form onSubmit={updatePassword} className="space-y-6">
-                        <FormField
-                            label="Contraseña Actual"
-                            error={errors.current_password}
-                            required
-                        >
+                        <FormField label="Contraseña Actual" error={errors.current_password} required>
                             <div className="relative">
                                 <Input
                                     id="current_password"
@@ -82,24 +78,15 @@ export default function Password() {
                                     type="button"
                                     variant="ghost"
                                     size="sm"
-                                    className="absolute right-1 top-1 h-8 w-8 p-0"
+                                    className="absolute top-1 right-1 h-8 w-8 p-0"
                                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                                 >
-                                    {showCurrentPassword ? (
-                                        <EyeOff className="h-4 w-4" />
-                                    ) : (
-                                        <Eye className="h-4 w-4" />
-                                    )}
+                                    {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </Button>
                             </div>
                         </FormField>
 
-                        <FormField
-                            label="Nueva Contraseña"
-                            error={errors.password}
-                            description="Mínimo 6 caracteres"
-                            required
-                        >
+                        <FormField label="Nueva Contraseña" error={errors.password} description="Mínimo 6 caracteres" required>
                             <div className="relative">
                                 <Input
                                     id="password"
@@ -115,23 +102,15 @@ export default function Password() {
                                     type="button"
                                     variant="ghost"
                                     size="sm"
-                                    className="absolute right-1 top-1 h-8 w-8 p-0"
+                                    className="absolute top-1 right-1 h-8 w-8 p-0"
                                     onClick={() => setShowPassword(!showPassword)}
                                 >
-                                    {showPassword ? (
-                                        <EyeOff className="h-4 w-4" />
-                                    ) : (
-                                        <Eye className="h-4 w-4" />
-                                    )}
+                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </Button>
                             </div>
                         </FormField>
 
-                        <FormField
-                            label="Confirmar Contraseña"
-                            error={errors.password_confirmation}
-                            required
-                        >
+                        <FormField label="Confirmar Contraseña" error={errors.password_confirmation} required>
                             <div className="relative">
                                 <Input
                                     id="password_confirmation"
@@ -146,22 +125,16 @@ export default function Password() {
                                     type="button"
                                     variant="ghost"
                                     size="sm"
-                                    className="absolute right-1 top-1 h-8 w-8 p-0"
+                                    className="absolute top-1 right-1 h-8 w-8 p-0"
                                     onClick={() => setShowPasswordConfirmation(!showPasswordConfirmation)}
                                 >
-                                    {showPasswordConfirmation ? (
-                                        <EyeOff className="h-4 w-4" />
-                                    ) : (
-                                        <Eye className="h-4 w-4" />
-                                    )}
+                                    {showPasswordConfirmation ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </Button>
                             </div>
                         </FormField>
 
                         <div className="flex items-center gap-4">
-                            <Button disabled={processing}>
-                                {processing ? 'Guardando...' : 'Guardar Contraseña'}
-                            </Button>
+                            <Button disabled={processing}>{processing ? 'Guardando...' : 'Guardar Contraseña'}</Button>
 
                             <Transition
                                 show={recentlySuccessful}

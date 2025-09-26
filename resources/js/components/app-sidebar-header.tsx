@@ -1,9 +1,18 @@
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
+import { ChevronDown, LogOut, Settings } from 'lucide-react';
 
 interface PageProps {
     auth?: {
@@ -13,9 +22,6 @@ interface PageProps {
         } | null;
     };
 }
-import { Link } from '@inertiajs/react';
-import { usePage } from '@inertiajs/react';
-import { ChevronDown, Settings, LogOut } from 'lucide-react';
 
 /**
  * Header del sidebar con breadcrumbs, selector de tema y opciones de usuario
@@ -36,52 +42,60 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
             <div className="flex items-center gap-3">
                 {/* Selector de tema */}
                 <ThemeToggle />
-                
+
                 {/* Dropdown del usuario */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="flex items-center gap-2 px-3 py-2 h-auto">
+                        <Button variant="ghost" className="flex h-auto items-center gap-2 px-3 py-2">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-medium">
-                                    {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'U'}
+                                    {user?.name
+                                        ? user.name
+                                              .split(' ')
+                                              .map((n: string) => n[0])
+                                              .join('')
+                                              .toUpperCase()
+                                        : 'U'}
                                 </div>
-                                <div className="hidden md:block text-left">
+                                <div className="hidden text-left md:block">
                                     <p className="text-sm font-medium">{user?.name || 'Usuario'}</p>
-                                    <p className="text-xs text-muted-foreground truncate max-w-[150px]">
-                                        {user?.email || 'usuario@ejemplo.com'}
-                                    </p>
+                                    <p className="max-w-[150px] truncate text-xs text-muted-foreground">{user?.email || 'usuario@ejemplo.com'}</p>
                                 </div>
                             </div>
                             <ChevronDown className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
-                    
+
                     <DropdownMenuContent align="end" className="w-56">
                         <DropdownMenuLabel>
                             <div className="flex items-center gap-2">
                                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-medium">
-                                    {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'U'}
+                                    {user?.name
+                                        ? user.name
+                                              .split(' ')
+                                              .map((n: string) => n[0])
+                                              .join('')
+                                              .toUpperCase()
+                                        : 'U'}
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium">{user?.name || 'Usuario'}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {user?.email || 'usuario@ejemplo.com'}
-                                    </p>
+                                    <p className="text-xs text-muted-foreground">{user?.email || 'usuario@ejemplo.com'}</p>
                                 </div>
                             </div>
                         </DropdownMenuLabel>
-                        
+
                         <DropdownMenuSeparator />
-                        
+
                         <DropdownMenuItem asChild>
                             <Link href={route('profile.edit')} className="flex items-center gap-2">
                                 <Settings className="h-4 w-4" />
                                 Configuración
                             </Link>
                         </DropdownMenuItem>
-                        
+
                         <DropdownMenuItem asChild>
-                            <Link href={route('logout')} method="post" as="button" className="flex items-center gap-2 w-full">
+                            <Link href={route('logout')} method="post" as="button" className="flex w-full items-center gap-2">
                                 <LogOut className="h-4 w-4" />
                                 Cerrar Sesión
                             </Link>

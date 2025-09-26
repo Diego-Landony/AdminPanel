@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useTheme } from '@/hooks/use-theme';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Monitor, Moon, Sun } from 'lucide-react';
 
 /**
  * Componente de toggle de tema

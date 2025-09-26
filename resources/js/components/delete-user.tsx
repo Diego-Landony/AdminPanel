@@ -1,10 +1,10 @@
 import { useForm } from '@inertiajs/react';
-import { FormEventHandler, useRef, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { FormEventHandler, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
 
 import HeadingSmall from '@/components/heading-small';
 
@@ -43,10 +43,7 @@ export default function DeleteUser() {
 
     return (
         <div className="space-y-6">
-            <HeadingSmall 
-                title="Eliminar Cuenta" 
-                description="Elimina tu cuenta y todos sus recursos" 
-            />
+            <HeadingSmall title="Eliminar Cuenta" description="Elimina tu cuenta y todos sus recursos" />
             <div className="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10">
                 <div className="relative space-y-0.5 text-red-600 dark:text-red-100">
                     <p className="font-medium">Advertencia</p>
@@ -60,16 +57,11 @@ export default function DeleteUser() {
                     <DialogContent>
                         <DialogTitle>¿Estás seguro de que quieres eliminar tu cuenta?</DialogTitle>
                         <DialogDescription>
-                            Una vez que tu cuenta sea eliminada, todos sus recursos y datos también serán eliminados permanentemente. Por favor ingresa tu contraseña
-                            para confirmar que deseas eliminar tu cuenta permanentemente.
+                            Una vez que tu cuenta sea eliminada, todos sus recursos y datos también serán eliminados permanentemente. Por favor
+                            ingresa tu contraseña para confirmar que deseas eliminar tu cuenta permanentemente.
                         </DialogDescription>
                         <form className="space-y-6" onSubmit={deleteUser}>
-                            <FormField
-                                label="Contraseña"
-                                error={errors.password}
-                                required
-                                className="sr-only"
-                            >
+                            <FormField label="Contraseña" error={errors.password} required className="sr-only">
                                 <div className="relative">
                                     <Input
                                         id="password"
@@ -86,14 +78,10 @@ export default function DeleteUser() {
                                         type="button"
                                         variant="ghost"
                                         size="sm"
-                                        className="absolute right-1 top-1 h-8 w-8 p-0"
+                                        className="absolute top-1 right-1 h-8 w-8 p-0"
                                         onClick={() => setShowPassword(!showPassword)}
                                     >
-                                        {showPassword ? (
-                                            <EyeOff className="h-4 w-4" />
-                                        ) : (
-                                            <Eye className="h-4 w-4" />
-                                        )}
+                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                     </Button>
                                 </div>
                             </FormField>
@@ -106,9 +94,7 @@ export default function DeleteUser() {
                                 </DialogClose>
 
                                 <Button variant="destructive" disabled={processing} asChild>
-                                    <button type="submit">
-                                        {processing ? 'Eliminando...' : 'Eliminar Cuenta'}
-                                    </button>
+                                    <button type="submit">{processing ? 'Eliminando...' : 'Eliminar Cuenta'}</button>
                                 </Button>
                             </DialogFooter>
                         </form>

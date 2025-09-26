@@ -1,18 +1,17 @@
-import React, { useState } from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
-import { ArrowLeft, Save, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { showNotification } from '@/hooks/useNotifications';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { ArrowLeft, Eye, EyeOff, Lock, Mail, Save, User } from 'lucide-react';
+import React, { useState } from 'react';
 
-
-import AppLayout from '@/layouts/app-layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { FormField } from '@/components/ui/form-field';
+import AppLayout from '@/layouts/app-layout';
 
 /**
  * Interfaz para el usuario a editar
@@ -76,14 +75,14 @@ export default function EditUser({ user }: EditUserPageProps) {
      */
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Si no se va a cambiar la contraseña, no enviar los campos de password
         const submitData: Record<string, string> = { ...data };
         if (!changePassword) {
             delete submitData.password;
             delete submitData.password_confirmation;
         }
-        
+
         patch(route('users.update', user.id), {
             onSuccess: () => {
                 if (changePassword) {
@@ -98,7 +97,7 @@ export default function EditUser({ user }: EditUserPageProps) {
                 if (Object.keys(errors).length === 0) {
                     showNotification.error('Error del servidor al actualizar el usuario. Inténtalo de nuevo.');
                 }
-            }
+            },
         });
     };
 
@@ -113,7 +112,7 @@ export default function EditUser({ user }: EditUserPageProps) {
                 month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
-                minute: '2-digit'
+                minute: '2-digit',
             });
         } catch {
             return 'Fecha inválida';
@@ -123,15 +122,13 @@ export default function EditUser({ user }: EditUserPageProps) {
     return (
         <AppLayout>
             <Head title={`Editar Usuario - ${user.name}`} />
-            
+
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6">
                 {/* Encabezado */}
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Editar Usuario</h1>
-                        <p className="text-muted-foreground">
-                            Modifica la información y contraseña de {user.name}
-                        </p>
+                        <p className="text-muted-foreground">Modifica la información y contraseña de {user.name}</p>
                     </div>
                     <Link href={route('users.index')}>
                         <Button variant="outline">
@@ -148,39 +145,28 @@ export default function EditUser({ user }: EditUserPageProps) {
                             {/* Información del Usuario */}
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                                    <h2 className="flex items-center gap-2 text-lg font-semibold">
                                         <User className="h-5 w-5" />
                                         Información del Usuario
                                     </h2>
-                                    <p className="text-sm text-muted-foreground">
-                                        Datos básicos del usuario
-                                    </p>
+                                    <p className="text-sm text-muted-foreground">Datos básicos del usuario</p>
                                 </div>
                                 <div className="space-y-4">
                                     {/* Nombre */}
-                                    <FormField
-                                        label="Nombre Completo"
-                                        error={errors.name}
-                                        required
-                                    >
+                                    <FormField label="Nombre Completo" error={errors.name} required>
                                         <Input
                                             id="name"
                                             type="text"
                                             placeholder="Ej: Juan Pérez"
                                             value={data.name}
                                             onChange={(e) => setData('name', e.target.value)}
-
                                         />
                                     </FormField>
 
                                     {/* Email */}
-                                    <FormField
-                                        label="Correo Electrónico"
-                                        error={errors.email}
-                                        required
-                                    >
+                                    <FormField label="Correo Electrónico" error={errors.email} required>
                                         <div className="relative">
-                                            <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                            <Mail className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                                             <Input
                                                 id="email"
                                                 type="email"
@@ -195,15 +181,13 @@ export default function EditUser({ user }: EditUserPageProps) {
                             </div>
 
                             {/* Cambio de Contraseña */}
-                            <div className="space-y-4 pt-6 border-t border-border">
+                            <div className="space-y-4 border-t border-border pt-6">
                                 <div className="space-y-2">
-                                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                                    <h2 className="flex items-center gap-2 text-lg font-semibold">
                                         <Lock className="h-5 w-5" />
                                         Cambiar Contraseña
                                     </h2>
-                                    <p className="text-sm text-muted-foreground">
-                                        Opcional: Cambiar la contraseña del usuario
-                                    </p>
+                                    <p className="text-sm text-muted-foreground">Opcional: Cambiar la contraseña del usuario</p>
                                 </div>
                                 <div className="space-y-4">
                                     <div className="flex items-center space-x-2">
@@ -212,52 +196,39 @@ export default function EditUser({ user }: EditUserPageProps) {
                                             checked={changePassword}
                                             onCheckedChange={(checked) => setChangePassword(checked as boolean)}
                                         />
-                                        <Label htmlFor="change-password">
-                                            Cambiar contraseña
-                                        </Label>
+                                        <Label htmlFor="change-password">Cambiar contraseña</Label>
                                     </div>
 
                                     {changePassword && (
                                         <div className="space-y-4">
                                             {/* Nueva Contraseña */}
-                                            <FormField
-                                                label="Nueva Contraseña"
-                                                error={errors.password}
-                                                description="Mínimo 6 caracteres"
-                                            >
+                                            <FormField label="Nueva Contraseña" error={errors.password} description="Mínimo 6 caracteres">
                                                 <div className="relative">
-                                                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                    <Lock className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                                                     <Input
                                                         id="password"
                                                         type={showPassword ? 'text' : 'password'}
                                                         placeholder="Mínimo 6 caracteres"
                                                         value={data.password}
                                                         onChange={(e) => setData('password', e.target.value)}
-                                                        className="pl-10 pr-10"
+                                                        className="pr-10 pl-10"
                                                     />
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
                                                         size="sm"
-                                                        className="absolute right-1 top-1 h-8 w-8 p-0"
+                                                        className="absolute top-1 right-1 h-8 w-8 p-0"
                                                         onClick={() => setShowPassword(!showPassword)}
                                                     >
-                                                        {showPassword ? (
-                                                            <EyeOff className="h-4 w-4" />
-                                                        ) : (
-                                                            <Eye className="h-4 w-4" />
-                                                        )}
+                                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                                     </Button>
                                                 </div>
                                             </FormField>
 
                                             {/* Confirmar Nueva Contraseña */}
-                                            <FormField
-                                                label="Confirmar Nueva Contraseña"
-                                                error={errors.password_confirmation}
-                                            >
+                                            <FormField label="Confirmar Nueva Contraseña" error={errors.password_confirmation}>
                                                 <div className="relative">
-                                                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                    <Lock className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                                                     <Input
                                                         id="password_confirmation"
                                                         type={showPassword ? 'text' : 'password'}
@@ -284,7 +255,7 @@ export default function EditUser({ user }: EditUserPageProps) {
                                 <CardContent className="space-y-3">
                                     <div>
                                         <Label className="text-xs text-muted-foreground">ID</Label>
-                                        <p className="text-sm font-mono">#{user.id || 'N/A'}</p>
+                                        <p className="font-mono text-sm">#{user.id || 'N/A'}</p>
                                     </div>
                                     <Separator />
                                     <div>

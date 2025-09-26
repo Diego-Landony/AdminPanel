@@ -1,7 +1,7 @@
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Trash2 } from 'lucide-react';
+import React from 'react';
 
 interface DeleteConfirmationDialogProps {
     isOpen: boolean;
@@ -28,7 +28,7 @@ export const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> =
     entityType,
     customMessage,
     canDelete = true,
-    deleteBlockedReason
+    deleteBlockedReason,
 }) => {
     const defaultMessage = `¿Estás seguro de que quieres eliminar ${entityType.toLowerCase()} "${entityName}"? Esta acción no se puede deshacer.`;
 
@@ -39,34 +39,22 @@ export const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> =
                     <DialogTitle>Confirmar eliminación</DialogTitle>
                     <DialogDescription>
                         {customMessage || defaultMessage}
-                        {!canDelete && deleteBlockedReason && (
-                            <span className="text-destructive block mt-2">
-                                {deleteBlockedReason}
-                            </span>
-                        )}
+                        {!canDelete && deleteBlockedReason && <span className="mt-2 block text-destructive">{deleteBlockedReason}</span>}
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <Button
-                        variant="outline"
-                        onClick={onClose}
-                        disabled={isDeleting}
-                    >
+                    <Button variant="outline" onClick={onClose} disabled={isDeleting}>
                         Cancelar
                     </Button>
-                    <Button
-                        variant="destructive"
-                        onClick={onConfirm}
-                        disabled={isDeleting || !canDelete}
-                    >
+                    <Button variant="destructive" onClick={onConfirm} disabled={isDeleting || !canDelete}>
                         {isDeleting ? (
                             <>
-                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />
+                                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                                 Eliminando...
                             </>
                         ) : (
                             <>
-                                <Trash2 className="h-4 w-4 mr-2" />
+                                <Trash2 className="mr-2 h-4 w-4" />
                                 Eliminar
                             </>
                         )}

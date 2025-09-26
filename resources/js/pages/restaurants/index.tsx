@@ -1,18 +1,18 @@
-import React, { useState, useCallback } from 'react';
-import { Head, router } from "@inertiajs/react";
-import { MapPin, Phone, Clock, Star, Truck, ShoppingBag, Building2, CheckCircle, XCircle, Badge as BadgeIcon } from 'lucide-react';
 import { showNotification } from '@/hooks/useNotifications';
+import { Head, router } from '@inertiajs/react';
+import { Building2, CheckCircle, Clock, MapPin, Phone, ShoppingBag, Star, Truck } from 'lucide-react';
+import { useCallback, useState } from 'react';
 
-import AppLayout from "@/layouts/app-layout";
-import { EntityInfoCell } from '@/components/EntityInfoCell';
 import { DataTable } from '@/components/DataTable';
-import { StatusBadge, ACTIVE_STATUS_CONFIGS, SERVICE_STATUS_CONFIGS } from '@/components/status-badge';
-import { StandardMobileCard } from '@/components/StandardMobileCard';
-import { TableActions } from '@/components/TableActions';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
-import { Badge } from '@/components/ui/badge';
-import { formatDate, formatNumber } from '@/utils/format';
+import { EntityInfoCell } from '@/components/EntityInfoCell';
 import { RestaurantsSkeleton } from '@/components/skeletons';
+import { StandardMobileCard } from '@/components/StandardMobileCard';
+import { ACTIVE_STATUS_CONFIGS, SERVICE_STATUS_CONFIGS, StatusBadge } from '@/components/status-badge';
+import { TableActions } from '@/components/TableActions';
+import { Badge } from '@/components/ui/badge';
+import AppLayout from '@/layouts/app-layout';
+import { formatDate, formatNumber } from '@/utils/format';
 
 interface Restaurant {
     id: number;
@@ -84,26 +84,18 @@ const renderStars = (rating: number, total_reviews: number = 0) => {
 
     for (let i = 0; i < 5; i++) {
         if (i < fullStars) {
-            stars.push(
-                <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-            );
+            stars.push(<Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />);
         } else if (i === fullStars && hasHalfStar) {
-            stars.push(
-                <Star key={i} className="h-3 w-3 fill-yellow-400/50 text-yellow-400" />
-            );
+            stars.push(<Star key={i} className="h-3 w-3 fill-yellow-400/50 text-yellow-400" />);
         } else {
-            stars.push(
-                <Star key={i} className="h-3 w-3 text-gray-300" />
-            );
+            stars.push(<Star key={i} className="h-3 w-3 text-gray-300" />);
         }
     }
 
     return (
         <div className="flex items-center gap-1">
             <div className="flex">{stars}</div>
-            <span className="text-xs text-muted-foreground ml-1">
-                ({total_reviews})
-            </span>
+            <span className="ml-1 text-xs text-muted-foreground">({total_reviews})</span>
         </div>
     );
 };
@@ -150,7 +142,7 @@ export default function RestaurantsIndex({
                 } else {
                     showNotification.error('Error al eliminar el restaurante');
                 }
-            }
+            },
         });
     };
 
@@ -191,16 +183,16 @@ export default function RestaurantsIndex({
                     badges.push(
                         <div key="rating" className="flex items-center gap-1">
                             {renderStars(restaurant.rating, restaurant.total_reviews)}
-                        </div>
+                        </div>,
                     );
                 }
 
                 // Manager badge si existe
                 if (restaurant.manager_name) {
                     badges.push(
-                        <Badge key="manager" variant="outline" className="text-xs px-2 py-0.5">
+                        <Badge key="manager" variant="outline" className="px-2 py-0.5 text-xs">
                             Mgr: {restaurant.manager_name}
-                        </Badge>
+                        </Badge>,
                     );
                 }
 
@@ -212,7 +204,7 @@ export default function RestaurantsIndex({
                         badges={<>{badges}</>}
                     />
                 );
-            }
+            },
         },
         {
             key: 'location',
@@ -220,7 +212,7 @@ export default function RestaurantsIndex({
             width: 'xl' as const,
             render: (restaurant: Restaurant) => (
                 <div>
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="mb-1 flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm break-words">{restaurant.address}</span>
                     </div>
@@ -231,7 +223,7 @@ export default function RestaurantsIndex({
                         </div>
                     )}
                 </div>
-            )
+            ),
         },
         {
             key: 'services',
@@ -242,24 +234,18 @@ export default function RestaurantsIndex({
 
                 return (
                     <div className="space-y-2">
-                        <StatusBadge
-                            status={serviceType}
-                            configs={SERVICE_STATUS_CONFIGS}
-                            className="text-xs"
-                        />
+                        <StatusBadge status={serviceType} configs={SERVICE_STATUS_CONFIGS} className="text-xs" />
                         <div className="text-xs text-muted-foreground">
                             <div>Min. orden: Q{formatNumber(restaurant.minimum_order_amount)}</div>
-                            {restaurant.delivery_active && (
-                                <div>Envío: Q{formatNumber(restaurant.delivery_fee)}</div>
-                            )}
-                            <div className="flex items-center gap-1 mt-1">
+                            {restaurant.delivery_active && <div>Envío: Q{formatNumber(restaurant.delivery_fee)}</div>}
+                            <div className="mt-1 flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 {restaurant.estimated_delivery_time}min
                             </div>
                         </div>
                     </div>
                 );
-            }
+            },
         },
         {
             key: 'status',
@@ -268,27 +254,17 @@ export default function RestaurantsIndex({
             sortable: true,
             render: (restaurant: Restaurant) => (
                 <div className="space-y-1">
-                    <StatusBadge
-                        status={restaurant.is_active ? 'active' : 'inactive'}
-                        configs={ACTIVE_STATUS_CONFIGS}
-                        className="text-xs"
-                    />
-                    <div className="text-xs text-muted-foreground">
-                        Orden: {restaurant.sort_order}
-                    </div>
+                    <StatusBadge status={restaurant.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} className="text-xs" />
+                    <div className="text-xs text-muted-foreground">Orden: {restaurant.sort_order}</div>
                 </div>
-            )
+            ),
         },
         {
             key: 'created_at',
             title: 'Creado',
             width: 'sm' as const,
             sortable: true,
-            render: (restaurant: Restaurant) => (
-                <div className="text-sm text-muted-foreground">
-                    {formatDate(restaurant.created_at)}
-                </div>
-            )
+            render: (restaurant: Restaurant) => <div className="text-sm text-muted-foreground">{formatDate(restaurant.created_at)}</div>,
         },
         {
             key: 'actions',
@@ -303,7 +279,7 @@ export default function RestaurantsIndex({
                     editTooltip="Editar restaurante"
                     deleteTooltip="Eliminar restaurante"
                 />
-            )
+            ),
         },
     ];
 
@@ -313,99 +289,97 @@ export default function RestaurantsIndex({
             title={restaurant.name}
             subtitle={restaurant.email || 'Sin email'}
             badge={{
-                children: <StatusBadge
-                    status={restaurant.is_active ? 'active' : 'inactive'}
-                    configs={ACTIVE_STATUS_CONFIGS}
-                    showIcon={false}
-                    className="text-xs"
-                />
+                children: (
+                    <StatusBadge
+                        status={restaurant.is_active ? 'active' : 'inactive'}
+                        configs={ACTIVE_STATUS_CONFIGS}
+                        showIcon={false}
+                        className="text-xs"
+                    />
+                ),
             }}
             actions={{
                 editHref: `/restaurants/${restaurant.id}/edit`,
                 onDelete: () => openDeleteDialog(restaurant),
                 isDeleting: deletingRestaurant === restaurant.id,
-                editTooltip: "Editar restaurante",
-                deleteTooltip: "Eliminar restaurante"
+                editTooltip: 'Editar restaurante',
+                deleteTooltip: 'Eliminar restaurante',
             }}
             dataFields={[
                 {
-                    label: "Rating",
+                    label: 'Rating',
                     value: renderStars(restaurant.rating, restaurant.total_reviews),
-                    condition: restaurant.rating > 0
+                    condition: restaurant.rating > 0,
                 },
                 {
-                    label: "Manager",
+                    label: 'Manager',
                     value: (
-                        <Badge variant="outline" className="text-xs px-2 py-0.5">
+                        <Badge variant="outline" className="px-2 py-0.5 text-xs">
                             {restaurant.manager_name}
                         </Badge>
                     ),
-                    condition: !!restaurant.manager_name
+                    condition: !!restaurant.manager_name,
                 },
                 {
-                    label: "Dirección",
+                    label: 'Dirección',
                     value: (
                         <div className="flex items-center gap-2">
                             <MapPin className="h-3 w-3 text-muted-foreground" />
                             <span className="text-sm">{restaurant.address}</span>
                         </div>
-                    )
+                    ),
                 },
                 {
-                    label: "Teléfono",
+                    label: 'Teléfono',
                     value: (
                         <div className="flex items-center gap-2">
                             <Phone className="h-3 w-3 text-muted-foreground" />
                             <span>{restaurant.phone}</span>
                         </div>
                     ),
-                    condition: !!restaurant.phone
+                    condition: !!restaurant.phone,
                 },
                 {
-                    label: "Servicios",
+                    label: 'Servicios',
                     value: (
                         <StatusBadge
                             status={getServiceType(restaurant.delivery_active, restaurant.pickup_active)}
                             configs={SERVICE_STATUS_CONFIGS}
                             className="text-xs"
                         />
-                    )
+                    ),
                 },
                 {
-                    label: "Pedido Mínimo",
-                    value: `Q${formatNumber(restaurant.minimum_order_amount)}`
+                    label: 'Pedido Mínimo',
+                    value: `Q${formatNumber(restaurant.minimum_order_amount)}`,
                 },
                 {
-                    label: "Costo Envío",
+                    label: 'Costo Envío',
                     value: `Q${formatNumber(restaurant.delivery_fee)}`,
-                    condition: restaurant.delivery_active
+                    condition: restaurant.delivery_active,
                 },
                 {
-                    label: "Tiempo Entrega",
+                    label: 'Tiempo Entrega',
                     value: (
                         <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3 text-muted-foreground" />
                             <span>{restaurant.estimated_delivery_time} min</span>
                         </div>
-                    )
-                },
-                {
-                    label: "Descripción",
-                    value: (
-                        <p className="text-sm line-clamp-2">
-                            {restaurant.description}
-                        </p>
                     ),
-                    condition: !!restaurant.description
                 },
                 {
-                    label: "Orden",
-                    value: restaurant.sort_order
+                    label: 'Descripción',
+                    value: <p className="line-clamp-2 text-sm">{restaurant.description}</p>,
+                    condition: !!restaurant.description,
                 },
                 {
-                    label: "Creado",
-                    value: formatDate(restaurant.created_at)
-                }
+                    label: 'Orden',
+                    value: restaurant.sort_order,
+                },
+                {
+                    label: 'Creado',
+                    value: formatDate(restaurant.created_at),
+                },
             ]}
         />
     );

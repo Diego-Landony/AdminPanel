@@ -1,4 +1,3 @@
-import { router } from '@inertiajs/react';
 import {
     Pagination,
     PaginationContent,
@@ -8,6 +7,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from '@/components/ui/pagination';
+import { router } from '@inertiajs/react';
 
 interface PaginatedData {
     current_page: number;
@@ -25,21 +25,19 @@ interface PaginationWrapperProps {
     showInfo?: boolean;
 }
 
-export function PaginationWrapper({
-    data,
-    routeName,
-    filters = {},
-    className = "mt-6",
-    showInfo = false
-}: PaginationWrapperProps) {
+export function PaginationWrapper({ data, routeName, filters = {}, className = 'mt-6', showInfo = false }: PaginationWrapperProps) {
     const goToPage = (page: number) => {
-        router.get(routeName, {
-            page,
-            ...filters
-        }, {
-            preserveState: true,
-            preserveScroll: true
-        });
+        router.get(
+            routeName,
+            {
+                page,
+                ...filters,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
     };
 
     // No mostrar paginación si solo hay una página
@@ -72,7 +70,7 @@ export function PaginationWrapper({
                                         e.preventDefault();
                                         goToPage(1);
                                     }}
-                                    className="min-w-[2.5rem] max-w-[4rem] overflow-hidden text-ellipsis"
+                                    className="max-w-[4rem] min-w-[2.5rem] overflow-hidden text-ellipsis"
                                 >
                                     <span className="tabular-nums">1</span>
                                 </PaginationLink>
@@ -99,7 +97,7 @@ export function PaginationWrapper({
                                         goToPage(page);
                                     }}
                                     isActive={page === data.current_page}
-                                    className="min-w-[2.5rem] max-w-[4rem] overflow-hidden text-ellipsis"
+                                    className="max-w-[4rem] min-w-[2.5rem] overflow-hidden text-ellipsis"
                                 >
                                     <span className="tabular-nums">{page}</span>
                                 </PaginationLink>
@@ -122,7 +120,7 @@ export function PaginationWrapper({
                                         e.preventDefault();
                                         goToPage(data.last_page);
                                     }}
-                                    className="min-w-[2.5rem] max-w-[4rem] overflow-hidden text-ellipsis"
+                                    className="max-w-[4rem] min-w-[2.5rem] overflow-hidden text-ellipsis"
                                 >
                                     <span className="tabular-nums">{data.last_page}</span>
                                 </PaginationLink>
@@ -146,10 +144,14 @@ export function PaginationWrapper({
             {/* Información opcional de paginación */}
             {showInfo && data.from && data.to && data.total && (
                 <div className="mt-4 text-center text-sm text-muted-foreground">
-                    <span className="break-words inline-block max-w-full overflow-hidden text-ellipsis">
-                        <span className="tabular-nums">Página {data.current_page} de {data.last_page}</span>
+                    <span className="inline-block max-w-full overflow-hidden break-words text-ellipsis">
+                        <span className="tabular-nums">
+                            Página {data.current_page} de {data.last_page}
+                        </span>
                         {' - '}
-                        <span className="tabular-nums">Mostrando {data.from} a {data.to} de {data.total} elementos</span>
+                        <span className="tabular-nums">
+                            Mostrando {data.from} a {data.to} de {data.total} elementos
+                        </span>
                     </span>
                 </div>
             )}

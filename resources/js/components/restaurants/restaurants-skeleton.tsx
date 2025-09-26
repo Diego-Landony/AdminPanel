@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function RestaurantsSkeleton() {
     return (
@@ -37,7 +37,7 @@ export function RestaurantsSkeleton() {
             {/* Desktop Table Skeleton */}
             <div className="hidden lg:block">
                 <div className="rounded-md border">
-                    <div className="p-4 border-b">
+                    <div className="border-b p-4">
                         <div className="grid grid-cols-9 gap-4">
                             <Skeleton className="h-4 w-16" />
                             <Skeleton className="h-4 w-20" />
@@ -51,8 +51,8 @@ export function RestaurantsSkeleton() {
                         </div>
                     </div>
                     {Array.from({ length: 10 }).map((_, i) => (
-                        <div key={i} className="p-4 border-b last:border-b-0">
-                            <div className="grid grid-cols-9 gap-4 items-center">
+                        <div key={i} className="border-b p-4 last:border-b-0">
+                            <div className="grid grid-cols-9 items-center gap-4">
                                 <div className="space-y-1">
                                     <Skeleton className="h-4 w-32" />
                                     <Skeleton className="h-3 w-20" />
@@ -78,7 +78,7 @@ export function RestaurantsSkeleton() {
                                     <Skeleton className="h-4 w-8" />
                                 </div>
                                 <Skeleton className="h-4 w-6" />
-                                <Skeleton className="h-8 w-8 ml-auto" />
+                                <Skeleton className="ml-auto h-8 w-8" />
                             </div>
                         </div>
                     ))}
@@ -86,7 +86,7 @@ export function RestaurantsSkeleton() {
             </div>
 
             {/* Mobile/Tablet Cards Skeleton */}
-            <div className="lg:hidden space-y-4">
+            <div className="space-y-4 lg:hidden">
                 {Array.from({ length: 5 }).map((_, i) => (
                     <Card key={i}>
                         <CardHeader>
@@ -100,7 +100,7 @@ export function RestaurantsSkeleton() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <Skeleton className="h-4 w-full" />
-                            
+
                             <div className="space-y-3">
                                 {Array.from({ length: 4 }).map((_, j) => (
                                     <div key={j} className="flex items-center space-x-2">
@@ -109,7 +109,7 @@ export function RestaurantsSkeleton() {
                                     </div>
                                 ))}
                             </div>
-                            
+
                             <div className="flex items-center justify-between">
                                 <Skeleton className="h-6 w-24" />
                                 <Skeleton className="h-4 w-16" />

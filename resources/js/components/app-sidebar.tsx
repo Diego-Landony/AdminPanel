@@ -1,9 +1,9 @@
 import { NavMain } from '@/components/nav-main';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { usePermissions } from '@/hooks/use-permissions';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Users, UserCog, Activity, Shield, LucideIcon, Home, Star, UserCircle, Settings, Utensils } from 'lucide-react';
-import { usePermissions } from '@/hooks/use-permissions';
+import { Activity, Home, LucideIcon, Settings, Shield, Star, UserCircle, UserCog, Users, Utensils } from 'lucide-react';
 import AppLogo from './app-logo';
 
 /**
@@ -89,7 +89,7 @@ export function AppSidebar() {
         const groupedItems: Record<string, NavItem[]> = {};
 
         // Procesar cada página del sistema
-        systemPages.forEach(page => {
+        systemPages.forEach((page) => {
             // Verificar si el usuario tiene permisos para esta página
             if (!hasPermission(page.permission)) {
                 return;
@@ -131,7 +131,7 @@ export function AppSidebar() {
                 } else if (groupName === 'Restaurantes') {
                     groupIcon = Utensils;
                 }
-                
+
                 items.push({
                     title: groupName,
                     icon: groupIcon,

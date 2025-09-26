@@ -1,10 +1,10 @@
 import { Head, useForm } from '@inertiajs/react';
+import { Eye, EyeOff, Key, Loader2 } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
-import { Loader2, Key, Eye, EyeOff } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
 import AuthLayout from '@/layouts/auth-layout';
 
 /**
@@ -32,7 +32,7 @@ type ResetPasswordForm = {
 export default function ResetPassword({ token, email }: ResetPasswordProps) {
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
-    
+
     // Hook de Inertia para manejar el formulario
     const { data, setData, post, processing, errors, reset } = useForm<Required<ResetPasswordForm>>({
         token: token,
@@ -53,19 +53,13 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
     };
 
     return (
-        <AuthLayout 
-            title="Restablecer contraseña" 
-            description="Ingresa tu nueva contraseña a continuación"
-        >
+        <AuthLayout title="Restablecer contraseña" description="Ingresa tu nueva contraseña a continuación">
             <Head title="Restablecer Contraseña" />
 
             <form onSubmit={submit}>
                 <div className="grid gap-6">
                     {/* Campo de email (solo lectura) */}
-                    <FormField
-                        label="Correo electrónico"
-                        error={errors.email}
-                    >
+                    <FormField label="Correo electrónico" error={errors.email}>
                         <Input
                             id="email"
                             type="email"
@@ -79,12 +73,7 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                     </FormField>
 
                     {/* Campo de nueva contraseña */}
-                    <FormField
-                        label="Nueva contraseña"
-                        error={errors.password}
-                        description="Mínimo 6 caracteres"
-                        required
-                    >
+                    <FormField label="Nueva contraseña" error={errors.password} description="Mínimo 6 caracteres" required>
                         <div className="relative">
                             <Input
                                 id="password"
@@ -92,7 +81,7 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                                 name="password"
                                 autoComplete="new-password"
                                 value={data.password}
-                                className="pl-10 pr-10"
+                                className="pr-10 pl-10"
                                 autoFocus
                                 onChange={(e) => setData('password', e.target.value)}
                                 placeholder="Mínimo 6 caracteres"
@@ -101,24 +90,16 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                                 type="button"
                                 variant="ghost"
                                 size="sm"
-                                className="absolute right-1 top-1 h-8 w-8 p-0"
+                                className="absolute top-1 right-1 h-8 w-8 p-0"
                                 onClick={() => setShowPassword(!showPassword)}
                             >
-                                {showPassword ? (
-                                    <EyeOff className="h-4 w-4" />
-                                ) : (
-                                    <Eye className="h-4 w-4" />
-                                )}
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </Button>
                         </div>
                     </FormField>
 
                     {/* Campo de confirmación de contraseña */}
-                    <FormField
-                        label="Confirmar nueva contraseña"
-                        error={errors.password_confirmation}
-                        required
-                    >
+                    <FormField label="Confirmar nueva contraseña" error={errors.password_confirmation} required>
                         <div className="relative">
                             <Input
                                 id="password_confirmation"
@@ -126,7 +107,7 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                                 name="password_confirmation"
                                 autoComplete="new-password"
                                 value={data.password_confirmation}
-                                className="pl-10 pr-10"
+                                className="pr-10 pl-10"
                                 onChange={(e) => setData('password_confirmation', e.target.value)}
                                 placeholder="Confirma tu nueva contraseña"
                             />
@@ -134,25 +115,17 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                                 type="button"
                                 variant="ghost"
                                 size="sm"
-                                className="absolute right-1 top-1 h-8 w-8 p-0"
+                                className="absolute top-1 right-1 h-8 w-8 p-0"
                                 onClick={() => setShowPasswordConfirmation(!showPasswordConfirmation)}
                             >
-                                {showPasswordConfirmation ? (
-                                    <EyeOff className="h-4 w-4" />
-                                ) : (
-                                    <Eye className="h-4 w-4" />
-                                )}
+                                {showPasswordConfirmation ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </Button>
                         </div>
                     </FormField>
 
                     {/* Botón de envío */}
                     <Button type="submit" className="mt-4 w-full" disabled={processing}>
-                        {processing ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Key className="mr-2 h-4 w-4" />
-                        )}
+                        {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Key className="mr-2 h-4 w-4" />}
                         {processing ? 'Restableciendo...' : 'Restablecer contraseña'}
                     </Button>
                 </div>

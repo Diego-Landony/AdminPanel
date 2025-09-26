@@ -17,7 +17,7 @@ interface PageProps {
 
 /**
  * Hook para verificar permisos del usuario
- * 
+ *
  * Sistema dinámico que detecta automáticamente páginas y permisos
  */
 export function usePermissions() {
@@ -37,9 +37,7 @@ export function usePermissions() {
         }
 
         // Verificar si alguno de sus roles tiene el permiso
-        return user.roles.some((role: UserRole) => 
-            role.permissions && role.permissions.includes(permission)
-        );
+        return user.roles.some((role: UserRole) => role.permissions && role.permissions.includes(permission));
     };
 
     /**
@@ -62,10 +60,10 @@ export function usePermissions() {
      */
     const getAllPermissions = (): string[] => {
         if (!user || !user.roles) return ['dashboard.view'];
-        
+
         const permissions = new Set<string>();
         permissions.add('dashboard.view'); // Siempre incluir dashboard
-        
+
         user.roles.forEach((role: UserRole) => {
             if (role.permissions) {
                 role.permissions.forEach((permission: string) => {
@@ -73,7 +71,7 @@ export function usePermissions() {
                 });
             }
         });
-        
+
         return Array.from(permissions);
     };
 
@@ -82,7 +80,7 @@ export function usePermissions() {
      */
     const hasAnyPermissionInGroup = (group: string): boolean => {
         const permissions = getAllPermissions();
-        return permissions.some(permission => permission.startsWith(`${group}.`));
+        return permissions.some((permission) => permission.startsWith(`${group}.`));
     };
 
     /**
@@ -91,15 +89,15 @@ export function usePermissions() {
     const getGroupedPermissions = (): Record<string, string[]> => {
         const permissions = getAllPermissions();
         const grouped: Record<string, string[]> = {};
-        
-        permissions.forEach(permission => {
+
+        permissions.forEach((permission) => {
             const [group] = permission.split('.');
             if (!grouped[group]) {
                 grouped[group] = [];
             }
             grouped[group].push(permission);
         });
-        
+
         return grouped;
     };
 
@@ -118,7 +116,6 @@ export function usePermissions() {
         hasAnyPermissionInGroup,
         getGroupedPermissions,
         canPerformAction,
-        user
+        user,
     };
 }
-

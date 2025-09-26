@@ -1,13 +1,13 @@
 // Components
 import { Head, useForm } from '@inertiajs/react';
+import { CheckCircle, Loader2, Send } from 'lucide-react';
 import { FormEventHandler } from 'react';
-import { Loader2, Send, CheckCircle } from 'lucide-react';
 
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
 import AuthLayout from '@/layouts/auth-layout';
 
 /**
@@ -30,10 +30,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
     };
 
     return (
-        <AuthLayout 
-            title="Recuperar contraseña" 
-            description="Recibe un enlace de recuperación"
-        >
+        <AuthLayout title="Recuperar contraseña" description="Recibe un enlace de recuperación">
             <Head title="Recuperar Contraseña" />
 
             <Card className="w-full max-w-sm">
@@ -52,11 +49,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
                     <form onSubmit={submit}>
                         {/* Campo de email */}
-                        <FormField
-                            label="Correo electrónico"
-                            error={errors.email}
-                            required
-                        >
+                        <FormField label="Correo electrónico" error={errors.email} required>
                             <Input
                                 id="email"
                                 type="email"
@@ -74,11 +67,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
                 <CardFooter className="flex-col gap-4">
                     {/* Botón de envío */}
                     <Button className="w-full" onClick={submit} disabled={processing}>
-                        {processing ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Send className="mr-2 h-4 w-4" />
-                        )}
+                        {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                         {processing ? 'Enviando...' : 'Enviar enlace'}
                     </Button>
 

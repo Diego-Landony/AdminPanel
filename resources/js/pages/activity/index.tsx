@@ -2,24 +2,17 @@ import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { type DateRange } from 'react-day-picker';
 
-import AppLayout from '@/layouts/app-layout';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ActivitySkeleton } from '@/components/skeletons';
 import { DataTable } from '@/components/DataTable';
-import { ResponsiveCard, ResponsiveCardHeader, ResponsiveCardContent, DataField } from '@/components/CardLayout';
+import { ActivitySkeleton } from '@/components/skeletons';
+import { Badge } from '@/components/ui/badge';
+import AppLayout from '@/layouts/app-layout';
 
+import { EntityInfoCell } from '@/components/EntityInfoCell';
+import { DateRangeFilterDialog, FilterDialog } from '@/components/FilterDialog';
+import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Filter, Calendar as CalendarIcon, Users } from 'lucide-react';
-import { EntityInfoCell } from '@/components/EntityInfoCell';
-import { StandardMobileCard } from '@/components/StandardMobileCard';
-import { FilterDialog, DateRangeFilterDialog } from '@/components/FilterDialog';
+import { Calendar as CalendarIcon, Filter, Users } from 'lucide-react';
 
 interface ActivityData {
     id: string;
@@ -118,33 +111,60 @@ const getActivityTypeColor = (type: string): string => {
 
 const getActivityTypeText = (type: string): string => {
     switch (type) {
-        case 'login': return 'Inicio de sesión';
-        case 'logout': return 'Cierre de sesión';
-        case 'page_view': return 'Vista de página';
-        case 'heartbeat': return 'Actividad';
-        case 'action': return 'Acción';
-        case 'user_created': return 'Usuario creado';
-        case 'user_updated': return 'Usuario actualizado';
-        case 'user_deleted': return 'Usuario eliminado';
-        case 'user_restored': return 'Usuario restaurado';
-        case 'user_force_deleted': return 'Usuario eliminado permanentemente';
-        case 'role_created': return 'Rol creado';
-        case 'role_updated': return 'Rol actualizado';
-        case 'role_deleted': return 'Rol eliminado';
-        case 'role_restored': return 'Rol restaurado';
-        case 'role_force_deleted': return 'Rol eliminado permanentemente';
-        case 'role_users_updated': return 'Usuarios de rol actualizados';
-        case 'theme_changed': return 'Tema cambiado';
-        case 'customer_created': return 'Cliente creado';
-        case 'customer_updated': return 'Cliente actualizado';
-        case 'customer_deleted': return 'Cliente eliminado';
-        case 'customer_restored': return 'Cliente restaurado';
-        case 'customer_force_deleted': return 'Cliente eliminado permanentemente';
-        case 'customer_type_created': return 'Tipo de cliente creado';
-        case 'customer_type_updated': return 'Tipo de cliente actualizado';
-        case 'customer_type_deleted': return 'Tipo de cliente eliminado';
-        case 'customer_type_restored': return 'Tipo de cliente restaurado';
-        case 'customer_type_force_deleted': return 'Tipo de cliente eliminado permanentemente';
+        case 'login':
+            return 'Inicio de sesión';
+        case 'logout':
+            return 'Cierre de sesión';
+        case 'page_view':
+            return 'Vista de página';
+        case 'heartbeat':
+            return 'Actividad';
+        case 'action':
+            return 'Acción';
+        case 'user_created':
+            return 'Usuario creado';
+        case 'user_updated':
+            return 'Usuario actualizado';
+        case 'user_deleted':
+            return 'Usuario eliminado';
+        case 'user_restored':
+            return 'Usuario restaurado';
+        case 'user_force_deleted':
+            return 'Usuario eliminado permanentemente';
+        case 'role_created':
+            return 'Rol creado';
+        case 'role_updated':
+            return 'Rol actualizado';
+        case 'role_deleted':
+            return 'Rol eliminado';
+        case 'role_restored':
+            return 'Rol restaurado';
+        case 'role_force_deleted':
+            return 'Rol eliminado permanentemente';
+        case 'role_users_updated':
+            return 'Usuarios de rol actualizados';
+        case 'theme_changed':
+            return 'Tema cambiado';
+        case 'customer_created':
+            return 'Cliente creado';
+        case 'customer_updated':
+            return 'Cliente actualizado';
+        case 'customer_deleted':
+            return 'Cliente eliminado';
+        case 'customer_restored':
+            return 'Cliente restaurado';
+        case 'customer_force_deleted':
+            return 'Cliente eliminado permanentemente';
+        case 'customer_type_created':
+            return 'Tipo de cliente creado';
+        case 'customer_type_updated':
+            return 'Tipo de cliente actualizado';
+        case 'customer_type_deleted':
+            return 'Tipo de cliente eliminado';
+        case 'customer_type_restored':
+            return 'Tipo de cliente restaurado';
+        case 'customer_type_force_deleted':
+            return 'Tipo de cliente eliminado permanentemente';
         default:
             return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
     }
@@ -229,11 +249,7 @@ const getEnhancedDescription = (activity: ActivityData): React.ReactElement => {
 };
 
 const UserInfoCell: React.FC<{ activity: ActivityData }> = ({ activity }) => (
-    <EntityInfoCell
-        icon={Users}
-        primaryText={activity.user.name}
-        secondaryText={activity.user.email}
-    />
+    <EntityInfoCell icon={Users} primaryText={activity.user.name} secondaryText={activity.user.email} />
 );
 
 const ActivityMobileCard: React.FC<{ activity: ActivityData }> = ({ activity }) => (
@@ -243,17 +259,17 @@ const ActivityMobileCard: React.FC<{ activity: ActivityData }> = ({ activity }) 
         subtitle={activity.user.email}
         badge={{
             children: getActivityTypeText(activity.event_type),
-            className: getActivityTypeColor(activity.event_type)
+            className: getActivityTypeColor(activity.event_type),
         }}
         dataFields={[
             {
-                label: "Descripción",
-                value: <div className="text-sm">{getEnhancedDescription(activity)}</div>
+                label: 'Descripción',
+                value: <div className="text-sm">{getEnhancedDescription(activity)}</div>,
             },
             {
-                label: "Fecha",
-                value: formatDate(activity.created_at)
-            }
+                label: 'Fecha',
+                value: formatDate(activity.created_at),
+            },
         ]}
     />
 );
@@ -270,42 +286,13 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
     const [dateRangeOpen, setDateRangeOpen] = useState(false);
     const [userSearchTerm, setUserSearchTerm] = useState('');
 
-    const handleEventTypeChange = (eventType: string, checked: boolean) => {
-        if (checked) {
-            setLocalFilters(prev => ({
-                ...prev,
-                event_types: [...prev.event_types, eventType],
-            }));
-        } else {
-            setLocalFilters(prev => ({
-                ...prev,
-                event_types: prev.event_types.filter(type => type !== eventType),
-            }));
-        }
-    };
-
-    const handleUserChange = (userId: string, checked: boolean) => {
-        if (checked) {
-            setLocalFilters(prev => ({
-                ...prev,
-                user_ids: [...prev.user_ids, userId],
-            }));
-        } else {
-            setLocalFilters(prev => ({
-                ...prev,
-                user_ids: prev.user_ids.filter(id => id !== userId),
-            }));
-        }
-    };
-
-
     const columns = [
         {
             key: 'user',
             title: 'Usuario',
             width: 'lg' as const,
             sortable: true,
-            render: (activity: ActivityData) => <UserInfoCell activity={activity} />
+            render: (activity: ActivityData) => <UserInfoCell activity={activity} />,
         },
         {
             key: 'event_type',
@@ -316,48 +303,40 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
                 <Badge className={`${getActivityTypeColor(activity.event_type)} px-3 py-1 text-xs font-medium`}>
                     {getActivityTypeText(activity.event_type)}
                 </Badge>
-            )
+            ),
         },
         {
             key: 'description',
             title: 'Descripción',
             width: 'xl' as const,
             truncate: 60,
-            render: (activity: ActivityData) => (
-                <div className="text-sm text-muted-foreground">
-                    {getEnhancedDescription(activity)}
-                </div>
-            )
+            render: (activity: ActivityData) => <div className="text-sm text-muted-foreground">{getEnhancedDescription(activity)}</div>,
         },
         {
             key: 'created_at',
             title: 'Fecha',
             width: 'md' as const,
             sortable: true,
-            render: (activity: ActivityData) => (
-                <span className="text-sm text-muted-foreground">
-                    {formatDate(activity.created_at)}
-                </span>
-            )
-        }
+            render: (activity: ActivityData) => <span className="text-sm text-muted-foreground">{formatDate(activity.created_at)}</span>,
+        },
     ];
 
     const activityStats = [
         {
             title: 'actividades',
             value: stats.total_events,
-            icon: <Users className="h-3 w-3 text-primary" />
+            icon: <Users className="h-3 w-3 text-primary" />,
         },
         {
             title: 'usuarios únicos',
             value: stats.unique_users,
-            icon: <Users className="h-3 w-3 text-blue-600" />
+            icon: <Users className="h-3 w-3 text-blue-600" />,
         },
         {
             title: 'eventos hoy',
             value: stats.today_events,
-            icon: <CalendarIcon className="h-3 w-3 text-green-600" />
-        }
+            icon: <CalendarIcon className="h-3 w-3 text-green-600" />,
+        },
     ];
 
     const FiltersDialog = () => (
@@ -369,12 +348,10 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
                 description="Marca los tipos de evento que deseas filtrar"
                 options={Object.entries(options.event_types).map(([key, label]) => ({
                     id: key,
-                    label: label as string
+                    label: label as string,
                 }))}
                 selectedIds={localFilters.event_types}
-                onSelectionChange={(ids) =>
-                    setLocalFilters(prev => ({ ...prev, event_types: ids as string[] }))
-                }
+                onSelectionChange={(ids) => setLocalFilters((prev) => ({ ...prev, event_types: ids as string[] }))}
                 isOpen={eventTypesOpen}
                 onOpenChange={setEventTypesOpen}
             />
@@ -384,15 +361,13 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
                 icon={Users}
                 title="Seleccionar Usuarios"
                 description="Marca los usuarios que deseas filtrar"
-                options={options.users.map(user => ({
+                options={options.users.map((user) => ({
                     id: user.id.toString(),
                     label: user.name,
-                    subtitle: user.email
+                    subtitle: user.email,
                 }))}
                 selectedIds={localFilters.user_ids}
-                onSelectionChange={(ids) =>
-                    setLocalFilters(prev => ({ ...prev, user_ids: ids as string[] }))
-                }
+                onSelectionChange={(ids) => setLocalFilters((prev) => ({ ...prev, user_ids: ids as string[] }))}
                 isOpen={usersOpen}
                 onOpenChange={setUsersOpen}
                 searchEnabled={true}
@@ -405,14 +380,12 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
                 isOpen={dateRangeOpen}
                 onOpenChange={setDateRangeOpen}
                 dateRange={localFilters.dateRange}
-                onDateRangeChange={(range) =>
-                    setLocalFilters(prev => ({ ...prev, dateRange: range }))
-                }
+                onDateRangeChange={(range) => setLocalFilters((prev) => ({ ...prev, dateRange: range }))}
                 formatButtonText={(range) => {
                     if (range?.from && range?.to) {
-                        return `${format(range.from, "dd/MM/yyyy", { locale: es })} - ${format(range.to, "dd/MM/yyyy", { locale: es })}`;
+                        return `${format(range.from, 'dd/MM/yyyy', { locale: es })} - ${format(range.to, 'dd/MM/yyyy', { locale: es })}`;
                     }
-                    return "Seleccionar fechas...";
+                    return 'Seleccionar fechas...';
                 }}
                 icon={CalendarIcon}
                 title="Seleccionar Rango de Fechas"

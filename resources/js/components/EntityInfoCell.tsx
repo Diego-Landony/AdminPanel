@@ -1,5 +1,5 @@
-import React from 'react';
 import { LucideIcon } from 'lucide-react';
+import React from 'react';
 
 interface EntityInfoCellProps {
     /** Icon component to display */
@@ -40,30 +40,16 @@ interface EntityInfoCellProps {
  * />
  * ```
  */
-export const EntityInfoCell: React.FC<EntityInfoCellProps> = ({
-    icon: IconComponent,
-    primaryText,
-    secondaryText,
-    badges,
-    className = ""
-}) => {
+export const EntityInfoCell: React.FC<EntityInfoCellProps> = ({ icon: IconComponent, primaryText, secondaryText, badges, className = '' }) => {
     return (
         <div className={`flex items-center gap-3 ${className}`}>
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <IconComponent className="w-5 h-5 text-primary" />
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
+                <IconComponent className="h-5 w-5 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
-                <div className="font-medium text-sm text-foreground break-words line-clamp-2">
-                    {primaryText}
-                </div>
-                <div className="text-sm text-muted-foreground break-words line-clamp-1">
-                    {secondaryText}
-                </div>
-                {badges && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                        {badges}
-                    </div>
-                )}
+                <div className="line-clamp-2 text-sm font-medium break-words text-foreground">{primaryText}</div>
+                <div className="line-clamp-1 text-sm break-words text-muted-foreground">{secondaryText}</div>
+                {badges && <div className="mt-2 flex flex-wrap gap-1">{badges}</div>}
             </div>
         </div>
     );

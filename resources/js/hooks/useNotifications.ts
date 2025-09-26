@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
 import { usePage } from '@inertiajs/react';
+import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 
 // Cache global para evitar duplicados entre diferentes instancias
@@ -17,7 +17,7 @@ const NOTIFICATION_CONFIG = {
         warning: 4000,
         info: 3000,
         loading: Infinity,
-    }
+    },
 };
 
 /**
@@ -160,7 +160,6 @@ export function useNotifications() {
                 markNotificationAsShown(id);
             }
         }
-
     }, [flash]);
 
     // Funciones de utilidad para mostrar notificaciones programáticamente con deduplicación
@@ -215,19 +214,14 @@ export function useNotifications() {
                 position: NOTIFICATION_CONFIG.position,
             });
         },
-        promise: <T,>(
-            promise: Promise<T>,
-            loading: string,
-            success: string | ((data: T) => string),
-            error: string | ((error: unknown) => string)
-        ) => {
+        promise: <T>(promise: Promise<T>, loading: string, success: string | ((data: T) => string), error: string | ((error: unknown) => string)) => {
             return toast.promise(promise, {
                 loading,
                 success,
                 error,
                 position: NOTIFICATION_CONFIG.position,
             });
-        }
+        },
     };
 
     return { notify };
@@ -287,19 +281,14 @@ export const showNotification = {
             position: NOTIFICATION_CONFIG.position,
         });
     },
-    promise: <T,>(
-        promise: Promise<T>,
-        loading: string,
-        success: string | ((data: T) => string),
-        error: string | ((error: unknown) => string)
-    ) => {
+    promise: <T>(promise: Promise<T>, loading: string, success: string | ((data: T) => string), error: string | ((error: unknown) => string)) => {
         return toast.promise(promise, {
             loading,
             success,
             error,
             position: NOTIFICATION_CONFIG.position,
         });
-    }
+    },
 };
 
 /**
@@ -323,4 +312,3 @@ export function useFormNotifications() {
         showFormError,
     };
 }
-

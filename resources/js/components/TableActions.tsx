@@ -1,8 +1,8 @@
-import React from 'react';
-import { Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Link } from '@inertiajs/react';
 import { Edit, Trash2 } from 'lucide-react';
+import React from 'react';
 
 interface TableActionsProps {
     /** URL for edit action */
@@ -66,11 +66,11 @@ export const TableActions: React.FC<TableActionsProps> = ({
     onDelete,
     isDeleting = false,
     canDelete = true,
-    editTooltip = "Editar",
-    deleteTooltip = "Eliminar",
+    editTooltip = 'Editar',
+    deleteTooltip = 'Eliminar',
     showEdit = true,
     showDelete = true,
-    className = ""
+    className = '',
 }) => {
     return (
         <TooltipProvider>
@@ -79,12 +79,7 @@ export const TableActions: React.FC<TableActionsProps> = ({
                 {showEdit && editHref && (
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                                asChild
-                            >
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground" asChild>
                                 <Link href={editHref}>
                                     <Edit className="h-4 w-4" />
                                 </Link>
@@ -115,7 +110,7 @@ export const TableActions: React.FC<TableActionsProps> = ({
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                            <p>{canDelete ? deleteTooltip : "No se puede eliminar"}</p>
+                            <p>{canDelete ? deleteTooltip : 'No se puede eliminar'}</p>
                         </TooltipContent>
                     </Tooltip>
                 )}

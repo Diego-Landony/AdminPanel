@@ -1,22 +1,20 @@
-import React, { useState } from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
-import { ArrowLeft, Save, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { showNotification } from '@/hooks/useNotifications';
+import { useForm } from '@inertiajs/react';
+import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
+import React, { useState } from 'react';
 
-
-import AppLayout from '@/layouts/app-layout';
+import { CreatePageLayout } from '@/components/create-page-layout';
+import { FormSection } from '@/components/form-section';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { FormField } from '@/components/ui/form-field';
-
-
+import { Input } from '@/components/ui/input';
 
 /**
  * Página para crear un nuevo usuario
  */
 export default function CreateUser() {
     const [showPassword, setShowPassword] = useState(false);
-    
+
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: '',
@@ -29,7 +27,7 @@ export default function CreateUser() {
      */
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         post(route('users.store'), {
             onSuccess: () => {
                 reset();
@@ -40,148 +38,77 @@ export default function CreateUser() {
                 if (Object.keys(errors).length === 0) {
                     showNotification.error('Error del servidor al crear el usuario. Inténtalo de nuevo.');
                 }
-            }
+            },
         });
     };
 
     return (
-        <AppLayout>
-            <Head title="Crear Usuario" />
-            
-            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6">
-                {/* Encabezado */}
-                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight truncate">Crear Usuario</h1>
-                        <p className="text-muted-foreground break-words">
-                            Agrega un nuevo usuario al sistema con los datos básicos
-                        </p>
+        <CreatePageLayout
+            title="Crear Usuario"
+            description="Agrega un nuevo usuario al sistema con los datos básicos"
+            backHref={route('users.index')}
+            backLabel="Volver a Usuarios"
+            onSubmit={handleSubmit}
+            submitLabel="Crear Usuario"
+            processing={processing}
+            pageTitle="Crear Usuario"
+        >
+            <FormSection icon={User} title="Información del Usuario" description="Datos básicos del nuevo usuario">
+                <FormField label="Nombre Completo" error={errors.name} required>
+                    <Input id="name" type="text" placeholder="Ej: Juan Pérez" value={data.name} onChange={(e) => setData('name', e.target.value)} />
+                </FormField>
+
+                <FormField label="Correo Electrónico" error={errors.email} required>
+                    <div className="relative">
+                        <Mail className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            id="email"
+                            type="email"
+                            placeholder="usuario@ejemplo.com"
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                            className="pl-10"
+                        />
                     </div>
-                    <Link href={route('users.index')} className="flex-shrink-0 w-full sm:w-auto">
-                        <Button variant="outline" className="w-full sm:w-auto">
-                            <ArrowLeft className="mr-2 h-4 w-4 flex-shrink-0" />
-                            <span className="truncate">Volver a Usuarios</span>
-                        </Button>
-                    </Link>
-                </div>
+                </FormField>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="w-full max-w-2xl mx-auto min-w-0 px-1">
-                        {/* Información del Usuario */}
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <h2 className="text-lg font-semibold flex items-center gap-2 truncate">
-                                    <User className="h-5 w-5 flex-shrink-0" />
-                                    <span className="truncate">Información del Usuario</span>
-                                </h2>
-                                <p className="text-sm text-muted-foreground break-words">
-                                    Datos básicos del nuevo usuario
-                                </p>
-                            </div>
-                            <div className="space-y-4 overflow-hidden">
-                                {/* Nombre */}
-                                <FormField
-                                    label="Nombre Completo"
-                                    error={errors.name}
-                                    required
-                                >
-                                    <Input
-                                        id="name"
-                                        type="text"
-                                        placeholder="Ej: Juan Pérez"
-                                        value={data.name}
-                                        onChange={(e) => setData('name', e.target.value)}
-                                    />
-                                </FormField>
-
-                                {/* Email */}
-                                <FormField
-                                    label="Correo Electrónico"
-                                    error={errors.email}
-                                    required
-                                >
-                                    <div className="relative">
-                                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            id="email"
-                                            type="email"
-                                            placeholder="usuario@ejemplo.com"
-                                            value={data.email}
-                                            onChange={(e) => setData('email', e.target.value)}
-                                            className="pl-10"
-                                        />
-                                    </div>
-                                </FormField>
-
-                                {/* Contraseña */}
-                                <FormField
-                                    label="Contraseña"
-                                    error={errors.password}
-                                    description="Mínimo 6 caracteres"
-                                    required
-                                >
-                                    <div className="relative">
-                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            id="password"
-                                            type={showPassword ? 'text' : 'password'}
-                                            placeholder="Mínimo 6 caracteres"
-                                            value={data.password}
-                                            onChange={(e) => setData('password', e.target.value)}
-                                            className="pl-10 pr-10"
-                                        />
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            className="absolute right-1 top-1 h-8 w-8 p-0"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                        >
-                                            {showPassword ? (
-                                                <EyeOff className="h-4 w-4" />
-                                            ) : (
-                                                <Eye className="h-4 w-4" />
-                                            )}
-                                        </Button>
-                                    </div>
-                                </FormField>
-
-                                {/* Confirmar Contraseña */}
-                                <FormField
-                                    label="Confirmar Contraseña"
-                                    error={errors.password_confirmation}
-                                    required
-                                >
-                                    <div className="relative">
-                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            id="password_confirmation"
-                                            type={showPassword ? 'text' : 'password'}
-                                            placeholder="Repite la contraseña"
-                                            value={data.password_confirmation}
-                                            onChange={(e) => setData('password_confirmation', e.target.value)}
-                                            className="pl-10"
-                                        />
-                                    </div>
-                                </FormField>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Botones de Acción */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 mt-8 px-1">
-                        <Link href={route('users.index')} className="w-full sm:w-auto">
-                            <Button variant="outline" type="button" className="w-full sm:w-auto">
-                                Cancelar
-                            </Button>
-                        </Link>
-                        <Button type="submit" disabled={processing} className="w-full sm:w-auto">
-                            <Save className="mr-2 h-4 w-4 flex-shrink-0" />
-                            <span className="truncate">{processing ? 'Creando...' : 'Crear Usuario'}</span>
+                <FormField label="Contraseña" error={errors.password} description="Mínimo 6 caracteres" required>
+                    <div className="relative">
+                        <Lock className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            id="password"
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="Mínimo 6 caracteres"
+                            value={data.password}
+                            onChange={(e) => setData('password', e.target.value)}
+                            className="pr-10 pl-10"
+                        />
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute top-1 right-1 h-8 w-8 p-0"
+                            onClick={() => setShowPassword(!showPassword)}
+                        >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
                     </div>
-                </form>
-            </div>
-        </AppLayout>
+                </FormField>
+
+                <FormField label="Confirmar Contraseña" error={errors.password_confirmation} required>
+                    <div className="relative">
+                        <Lock className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            id="password_confirmation"
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="Repite la contraseña"
+                            value={data.password_confirmation}
+                            onChange={(e) => setData('password_confirmation', e.target.value)}
+                            className="pl-10"
+                        />
+                    </div>
+                </FormField>
+            </FormSection>
+        </CreatePageLayout>
     );
 }

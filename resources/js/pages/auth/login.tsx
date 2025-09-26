@@ -1,14 +1,14 @@
 import { Head, useForm } from '@inertiajs/react';
+import { CheckCircle, Eye, EyeOff, Loader2, LogIn } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
-import { LogIn, Loader2, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { FormField } from '@/components/ui/form-field';
 import AuthLayout from '@/layouts/auth-layout';
 
 /**
@@ -33,7 +33,7 @@ interface LoginProps {
  */
 export default function Login({ status, canResetPassword }: LoginProps) {
     const [showPassword, setShowPassword] = useState(false);
-    
+
     // Hook de Inertia para manejar el formulario
     const { data, setData, post, processing, errors, reset } = useForm<Required<LoginForm>>({
         email: '',
@@ -53,10 +53,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     };
 
     return (
-        <AuthLayout 
-            title="Inicia sesión" 
-            description="Accede a tu cuenta"
-        >
+        <AuthLayout title="Inicia sesión" description="Accede a tu cuenta">
             <Head title="Iniciar Sesión" />
 
             <Card className="w-full max-w-sm">
@@ -68,11 +65,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     <form onSubmit={submit}>
                         <div className="flex flex-col gap-6">
                             {/* Campo de correo electrónico */}
-                            <FormField
-                                label="Correo electrónico"
-                                error={errors.email}
-                                required
-                            >
+                            <FormField label="Correo electrónico" error={errors.email} required>
                                 <Input
                                     id="email"
                                     type="email"
@@ -92,11 +85,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             </FormField>
 
                             {/* Campo de contraseña */}
-                            <FormField
-                                label="Contraseña"
-                                error={errors.password}
-                                required
-                            >
+                            <FormField label="Contraseña" error={errors.password} required>
                                 <div className="relative">
                                     <Input
                                         id="password"
@@ -118,14 +107,10 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                         type="button"
                                         variant="ghost"
                                         size="sm"
-                                        className="absolute right-1 top-1 h-8 w-8 p-0"
+                                        className="absolute top-1 right-1 h-8 w-8 p-0"
                                         onClick={() => setShowPassword(!showPassword)}
                                     >
-                                        {showPassword ? (
-                                            <EyeOff className="h-4 w-4" />
-                                        ) : (
-                                            <Eye className="h-4 w-4" />
-                                        )}
+                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                     </Button>
                                 </div>
                             </FormField>
@@ -148,11 +133,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                 <CardFooter className="flex-col gap-4">
                     {/* Botón de envío */}
                     <Button type="submit" className="w-full" onClick={submit} disabled={processing}>
-                        {processing ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <LogIn className="mr-2 h-4 w-4" />
-                        )}
+                        {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
                         {processing ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                     </Button>
 

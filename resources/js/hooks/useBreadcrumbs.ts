@@ -1,7 +1,7 @@
+import { generateBreadcrumbs } from '@/config/routes';
+import { type BreadcrumbItem } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { useMemo } from 'react';
-import { type BreadcrumbItem } from '@/types';
-import { generateBreadcrumbs } from '@/config/routes';
 
 /**
  * Opciones para el hook useBreadcrumbs
@@ -41,12 +41,7 @@ interface UseBreadcrumbsOptions {
  */
 export function useBreadcrumbs(options: UseBreadcrumbsOptions = {}): BreadcrumbItem[] {
     const { url } = usePage();
-    const {
-        override,
-        append = [],
-        prepend = [],
-        autoGenerate = true
-    } = options;
+    const { override, append = [], prepend = [], autoGenerate = true } = options;
 
     const breadcrumbs = useMemo(() => {
         let result: BreadcrumbItem[] = [];
@@ -90,7 +85,7 @@ export function useBreadcrumbs(options: UseBreadcrumbsOptions = {}): BreadcrumbI
 export function useManualBreadcrumbs(breadcrumbs: BreadcrumbItem[]): BreadcrumbItem[] {
     return useBreadcrumbs({
         override: breadcrumbs,
-        autoGenerate: false
+        autoGenerate: false,
     });
 }
 
@@ -110,7 +105,7 @@ export function useManualBreadcrumbs(breadcrumbs: BreadcrumbItem[]): BreadcrumbI
  */
 export function useBreadcrumbsWithAppend(additionalBreadcrumb: BreadcrumbItem): BreadcrumbItem[] {
     return useBreadcrumbs({
-        append: [additionalBreadcrumb]
+        append: [additionalBreadcrumb],
     });
 }
 

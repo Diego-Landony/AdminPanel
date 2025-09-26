@@ -1,13 +1,7 @@
-import React from 'react';
-import { LucideIcon } from 'lucide-react';
-import {
-    ResponsiveCard,
-    ResponsiveCardHeader,
-    ResponsiveCardContent,
-    DataField,
-    CardActions
-} from '@/components/CardLayout';
+import { CardActions, DataField, ResponsiveCard, ResponsiveCardContent, ResponsiveCardHeader } from '@/components/CardLayout';
 import { TableActions } from '@/components/TableActions';
+import { LucideIcon } from 'lucide-react';
+import React from 'react';
 
 export interface DataFieldConfig {
     label: string;
@@ -97,16 +91,11 @@ export const StandardMobileCard: React.FC<StandardMobileCardProps> = ({
     dataFields,
     actions,
     additionalContent,
-    className = ""
+    className = '',
 }) => {
     return (
         <ResponsiveCard className={className}>
-            <ResponsiveCardHeader
-                icon={<IconComponent className="w-4 h-4 text-primary" />}
-                title={title}
-                subtitle={subtitle}
-                badge={badge}
-            />
+            <ResponsiveCardHeader icon={<IconComponent className="h-4 w-4 text-primary" />} title={title} subtitle={subtitle} badge={badge} />
 
             <ResponsiveCardContent layout="stack">
                 {dataFields.map((field, index) => {
@@ -115,14 +104,7 @@ export const StandardMobileCard: React.FC<StandardMobileCardProps> = ({
                         return null;
                     }
 
-                    return (
-                        <DataField
-                            key={`${field.label}-${index}`}
-                            label={field.label}
-                            value={field.value}
-                            truncate={false}
-                        />
-                    );
+                    return <DataField key={`${field.label}-${index}`} label={field.label} value={field.value} truncate={false} />;
                 })}
             </ResponsiveCardContent>
 
@@ -134,8 +116,8 @@ export const StandardMobileCard: React.FC<StandardMobileCardProps> = ({
                             onDelete={actions.onDelete}
                             isDeleting={actions.isDeleting ?? false}
                             canDelete={actions.canDelete ?? true}
-                            editTooltip={actions.editTooltip ?? "Editar"}
-                            deleteTooltip={actions.deleteTooltip ?? "Eliminar"}
+                            editTooltip={actions.editTooltip ?? 'Editar'}
+                            deleteTooltip={actions.deleteTooltip ?? 'Eliminar'}
                             showEdit={actions.showEdit ?? true}
                             showDelete={actions.showDelete ?? true}
                         />

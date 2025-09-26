@@ -21,100 +21,100 @@ export interface RouteConfig {
 export const routeConfig: Record<string, RouteConfig> = {
     // Página principal
     '/home': {
-        title: 'Home'
+        title: 'Home',
     },
 
     // === GESTIÓN DE USUARIOS ===
     '/users': {
         title: 'Usuarios',
         parent: '/home',
-        includeParent: false
+        includeParent: false,
     },
     '/users/create': {
         title: 'Crear Usuario',
         parent: '/users',
-        includeParent: true
+        includeParent: true,
     },
     '/users/edit': {
         title: 'Editar Usuario',
         parent: '/users',
-        includeParent: true
+        includeParent: true,
     },
 
     // === GESTIÓN DE ROLES ===
     '/roles': {
         title: 'Roles',
         parent: '/home',
-        includeParent: false
+        includeParent: false,
     },
     '/roles/create': {
         title: 'Crear Rol',
         parent: '/roles',
-        includeParent: true
+        includeParent: true,
     },
     '/roles/edit': {
         title: 'Editar Rol',
         parent: '/roles',
-        includeParent: true
+        includeParent: true,
     },
 
     // === GESTIÓN DE CLIENTES ===
     '/customers': {
         title: 'Clientes',
         parent: '/home',
-        includeParent: false
+        includeParent: false,
     },
     '/customers/create': {
         title: 'Crear Cliente',
         parent: '/customers',
-        includeParent: true
+        includeParent: true,
     },
     '/customers/edit': {
         title: 'Editar Cliente',
         parent: '/customers',
-        includeParent: true
+        includeParent: true,
     },
 
     // === TIPOS DE CLIENTE ===
     '/customer-types': {
         title: 'Tipos de Cliente',
         parent: '/customers',
-        includeParent: true
+        includeParent: true,
     },
     '/customer-types/create': {
         title: 'Crear Tipo de Cliente',
         parent: '/customer-types',
-        includeParent: true
+        includeParent: true,
     },
     '/customer-types/edit': {
         title: 'Editar Tipo de Cliente',
         parent: '/customer-types',
-        includeParent: true
+        includeParent: true,
     },
 
     // === GESTIÓN DE RESTAURANTES ===
     '/restaurants': {
         title: 'Restaurantes',
         parent: '/home',
-        includeParent: false
+        includeParent: false,
     },
     '/restaurants/create': {
         title: 'Crear Restaurante',
         parent: '/restaurants',
-        includeParent: true
+        includeParent: true,
     },
     '/restaurants/edit': {
         title: 'Editar Restaurante',
         parent: '/restaurants',
-        includeParent: true
+        includeParent: true,
     },
 
     // === ACTIVIDAD ===
     '/activity': {
         title: 'Actividad',
         parent: '/home',
-        includeParent: false
-    }
+        includeParent: false,
+    },
 };
 
 /**
@@ -123,7 +123,7 @@ export const routeConfig: Record<string, RouteConfig> = {
 export const pageTypePatterns = {
     create: /\/create$/,
     edit: /\/(\d+)\/edit$/,
-    show: /\/(\d+)$/
+    show: /\/(\d+)$/,
 };
 
 /**
@@ -132,7 +132,7 @@ export const pageTypePatterns = {
 export const defaultPageTitles = {
     create: 'Crear',
     edit: 'Editar',
-    show: 'Ver'
+    show: 'Ver',
 };
 
 /**
@@ -165,7 +165,7 @@ export function generateBreadcrumbs(currentPath: string): BreadcrumbItem[] {
         // Agregar el breadcrumb actual
         breadcrumbs.push({
             title: config.title,
-            href: path
+            href: path,
         });
     }
 
@@ -187,19 +187,19 @@ export function generateBreadcrumbs(currentPath: string): BreadcrumbItem[] {
                     config = {
                         title: `Crear ${baseConfig.title.slice(0, -1)}`,
                         parent: basePath,
-                        includeParent: true
+                        includeParent: true,
                     };
                 } else if (pageTypePatterns.edit.test(normalizedPath)) {
                     config = {
                         title: `Editar ${baseConfig.title.slice(0, -1)}`,
                         parent: basePath,
-                        includeParent: true
+                        includeParent: true,
                     };
                 } else if (/^\d+$/.test(lastSegment)) {
                     config = {
                         title: `Ver ${baseConfig.title.slice(0, -1)}`,
                         parent: basePath,
-                        includeParent: true
+                        includeParent: true,
                     };
                 }
             }
@@ -214,18 +214,16 @@ export function generateBreadcrumbs(currentPath: string): BreadcrumbItem[] {
 
         breadcrumbs.push({
             title: config.title,
-            href: normalizedPath
+            href: normalizedPath,
         });
     } else {
         // Fallback: generar breadcrumb básico basándose en la URL
         const pathSegments = normalizedPath.split('/').filter(Boolean);
-        const title = pathSegments[pathSegments.length - 1]
-            ?.replace(/-/g, ' ')
-            ?.replace(/\b\w/g, l => l.toUpperCase()) || 'Página';
+        const title = pathSegments[pathSegments.length - 1]?.replace(/-/g, ' ')?.replace(/\b\w/g, (l) => l.toUpperCase()) || 'Página';
 
         breadcrumbs.push({
             title,
-            href: normalizedPath
+            href: normalizedPath,
         });
     }
 
@@ -243,7 +241,5 @@ export function getRouteTitle(path: string): string {
 
     // Fallback
     const pathSegments = path.split('/').filter(Boolean);
-    return pathSegments[pathSegments.length - 1]
-        ?.replace(/-/g, ' ')
-        ?.replace(/\b\w/g, l => l.toUpperCase()) || 'Página';
+    return pathSegments[pathSegments.length - 1]?.replace(/-/g, ' ')?.replace(/\b\w/g, (l) => l.toUpperCase()) || 'Página';
 }

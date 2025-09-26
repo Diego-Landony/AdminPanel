@@ -1,16 +1,16 @@
-import React from 'react';
-import { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { LucideIcon } from 'lucide-react';
+import React from 'react';
 
 export interface FilterOption {
     id: string | number;
     label: string;
-    value?: any;
+    value?: unknown;
     subtitle?: string;
 }
 
@@ -72,24 +72,24 @@ export const FilterDialog: React.FC<FilterDialogProps> = ({
     isOpen,
     onOpenChange,
     searchEnabled = false,
-    searchPlaceholder = "Buscar...",
-    searchTerm = "",
+    searchPlaceholder = 'Buscar...',
+    searchTerm = '',
     onSearchChange,
-    buttonVariant = "outline",
-    maxWidth = "md",
-    maxHeight = "h-64"
+    buttonVariant = 'outline',
+    maxWidth = 'md',
+    maxHeight = 'h-64',
 }) => {
     const getButtonText = () => {
         if (selectedIds.length === 0) return placeholder;
 
         if (selectedIds.length === 1) {
-            const option = options.find(opt => opt.id === selectedIds[0]);
+            const option = options.find((opt) => opt.id === selectedIds[0]);
             return option ? option.label : placeholder;
         }
 
         if (selectedIds.length <= 3) {
             return selectedIds
-                .map(id => options.find(opt => opt.id === id)?.label)
+                .map((id) => options.find((opt) => opt.id === id)?.label)
                 .filter(Boolean)
                 .join(', ');
         }
@@ -101,22 +101,24 @@ export const FilterDialog: React.FC<FilterDialogProps> = ({
         if (checked) {
             onSelectionChange([...selectedIds, optionId]);
         } else {
-            onSelectionChange(selectedIds.filter(id => id !== optionId));
+            onSelectionChange(selectedIds.filter((id) => id !== optionId));
         }
     };
 
-    const filteredOptions = searchEnabled && searchTerm
-        ? options.filter(option =>
-            option.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (option.subtitle && option.subtitle.toLowerCase().includes(searchTerm.toLowerCase()))
-          )
-        : options;
+    const filteredOptions =
+        searchEnabled && searchTerm
+            ? options.filter(
+                  (option) =>
+                      option.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      (option.subtitle && option.subtitle.toLowerCase().includes(searchTerm.toLowerCase())),
+              )
+            : options;
 
     const maxWidthClasses = {
         sm: 'max-w-sm',
         md: 'max-w-md',
         lg: 'max-w-lg',
-        xl: 'max-w-xl'
+        xl: 'max-w-xl',
     };
 
     return (
@@ -130,18 +132,12 @@ export const FilterDialog: React.FC<FilterDialogProps> = ({
             <DialogContent className={maxWidthClasses[maxWidth]}>
                 <DialogHeader>
                     <DialogTitle>{title}</DialogTitle>
-                    <DialogDescription>
-                        {description}
-                    </DialogDescription>
+                    <DialogDescription>{description}</DialogDescription>
                 </DialogHeader>
 
                 {searchEnabled && (
                     <div className="mb-4">
-                        <Input
-                            placeholder={searchPlaceholder}
-                            value={searchTerm}
-                            onChange={(e) => onSearchChange?.(e.target.value)}
-                        />
+                        <Input placeholder={searchPlaceholder} value={searchTerm} onChange={(e) => onSearchChange?.(e.target.value)} />
                     </div>
                 )}
 
@@ -152,17 +148,13 @@ export const FilterDialog: React.FC<FilterDialogProps> = ({
                                 <Checkbox
                                     id={`filter-${option.id}`}
                                     checked={selectedIds.includes(option.id)}
-                                    onCheckedChange={(checked) =>
-                                        handleSelectionToggle(option.id, checked as boolean)
-                                    }
+                                    onCheckedChange={(checked) => handleSelectionToggle(option.id, checked as boolean)}
                                 />
-                                <Label htmlFor={`filter-${option.id}`} className="text-sm cursor-pointer">
+                                <Label htmlFor={`filter-${option.id}`} className="cursor-pointer text-sm">
                                     {option.subtitle ? (
                                         <div>
                                             <div className="font-medium">{option.label}</div>
-                                            <div className="text-xs text-muted-foreground">
-                                                {option.subtitle}
-                                            </div>
+                                            <div className="text-xs text-muted-foreground">{option.subtitle}</div>
                                         </div>
                                     ) : (
                                         option.label
@@ -171,11 +163,7 @@ export const FilterDialog: React.FC<FilterDialogProps> = ({
                             </div>
                         ))}
 
-                        {filteredOptions.length === 0 && (
-                            <div className="text-center text-muted-foreground py-8">
-                                No se encontraron resultados
-                            </div>
-                        )}
+                        {filteredOptions.length === 0 && <div className="py-8 text-center text-muted-foreground">No se encontraron resultados</div>}
                     </div>
                 </ScrollArea>
             </DialogContent>
@@ -217,14 +205,14 @@ export const DateRangeFilterDialog: React.FC<DateRangeFilterDialogProps> = ({
     onDateRangeChange,
     formatButtonText,
     icon: IconComponent,
-    title = "Seleccionar Rango de Fechas",
-    description = "Selecciona el período de fechas para filtrar"
+    title = 'Seleccionar Rango de Fechas',
+    description = 'Selecciona el período de fechas para filtrar',
 }) => {
     const defaultFormatButtonText = (range?: DateRange) => {
         if (range?.from && range?.to) {
             return `${range.from.toLocaleDateString()} - ${range.to.toLocaleDateString()}`;
         }
-        return "Seleccionar fechas...";
+        return 'Seleccionar fechas...';
     };
 
     const buttonText = formatButtonText ? formatButtonText(dateRange) : defaultFormatButtonText(dateRange);
@@ -233,7 +221,7 @@ export const DateRangeFilterDialog: React.FC<DateRangeFilterDialogProps> = ({
         const date = dateString ? new Date(dateString) : undefined;
         onDateRangeChange({
             from: date,
-            to: dateRange?.to && date && date > dateRange.to ? undefined : dateRange?.to
+            to: dateRange?.to && date && date > dateRange.to ? undefined : dateRange?.to,
         });
     };
 
@@ -241,7 +229,7 @@ export const DateRangeFilterDialog: React.FC<DateRangeFilterDialogProps> = ({
         const date = dateString ? new Date(dateString) : undefined;
         onDateRangeChange({
             from: dateRange?.from,
-            to: date
+            to: date,
         });
     };
 

@@ -10,23 +10,11 @@ interface AvatarColumnProps {
 export function AvatarColumn({ icon, title, subtitle, badges }: AvatarColumnProps) {
     return (
         <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                {icon}
-            </div>
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">{icon}</div>
             <div className="min-w-0">
-                <div className="font-medium text-sm text-foreground truncate">
-                    {title}
-                </div>
-                {subtitle && (
-                    <div className="text-sm text-muted-foreground truncate">
-                        {subtitle}
-                    </div>
-                )}
-                {badges && badges.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                        {badges}
-                    </div>
-                )}
+                <div className="truncate text-sm font-medium text-foreground">{title}</div>
+                {subtitle && <div className="truncate text-sm text-muted-foreground">{subtitle}</div>}
+                {badges && badges.length > 0 && <div className="mt-1 flex flex-wrap items-center gap-2">{badges}</div>}
             </div>
         </div>
     );

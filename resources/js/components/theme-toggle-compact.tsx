@@ -1,6 +1,6 @@
-import { Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/use-theme';
+import { Moon, Sun } from 'lucide-react';
 
 /**
  * Componente de toggle de tema compacto
@@ -32,13 +32,7 @@ export function ThemeToggleCompact() {
     };
 
     return (
-        <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={toggleTheme}
-            title={getThemeText()}
-        >
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={toggleTheme} title={getThemeText()}>
             <span className="sr-only">{getThemeText()}</span>
             {getThemeIcon()}
         </Button>

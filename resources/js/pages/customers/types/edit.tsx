@@ -1,14 +1,14 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
-import AppLayout from '@/layouts/app-layout';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Shield, ArrowLeft } from 'lucide-react';
+import AppLayout from '@/layouts/app-layout';
+import { ArrowLeft, Shield } from 'lucide-react';
 
 /**
  * Interfaz para el tipo de cliente
@@ -48,7 +48,6 @@ interface FormData {
  * Página para editar un tipo de cliente
  */
 export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
-
     const [formData, setFormData] = useState<FormData>({
         name: customer_type.name,
         display_name: customer_type.display_name,
@@ -63,14 +62,14 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleInputChange = (field: keyof FormData, value: string | number | boolean) => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
-            [field]: value
+            [field]: value,
         }));
 
         // Clear error when user starts typing
         if (errors[field]) {
-            setErrors(prev => {
+            setErrors((prev) => {
                 const newErrors = { ...prev };
                 delete newErrors[field];
                 return newErrors;
@@ -89,7 +88,7 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
             onError: (errors) => {
                 setErrors(errors as Record<string, string>);
                 setIsSubmitting(false);
-            }
+            },
         });
     };
 
@@ -107,37 +106,30 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
     return (
         <AppLayout>
             <Head title={`Editar ${customer_type.display_name}`} />
-            
+
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6">
                 {/* Encabezado */}
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Editar Tipo de Cliente</h1>
-                        <p className="text-muted-foreground">
-                            Modifica los datos del tipo "{customer_type.display_name}"
-                        </p>
+                        <p className="text-muted-foreground">Modifica los datos del tipo "{customer_type.display_name}"</p>
                     </div>
-                    <Button
-                        variant="outline"
-                        onClick={() => router.get('/customer-types')}
-                    >
+                    <Button variant="outline" onClick={() => router.get('/customer-types')}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Volver
                     </Button>
                 </div>
 
                 {/* Formulario */}
-                <Card className="border border-muted/50 shadow-sm max-w-2xl">
+                <Card className="max-w-2xl border border-muted/50 shadow-sm">
                     <CardHeader className="pb-6">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                <Shield className="w-5 h-5 text-primary" />
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                                <Shield className="h-5 w-5 text-primary" />
                             </div>
                             <div>
                                 <h2 className="text-xl font-semibold">Información del Tipo</h2>
-                                <p className="text-sm text-muted-foreground">
-                                    Modifica los datos del tipo de cliente
-                                </p>
+                                <p className="text-sm text-muted-foreground">Modifica los datos del tipo de cliente</p>
                             </div>
                         </div>
                     </CardHeader>
@@ -155,9 +147,7 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
                                     placeholder="ej: Bronce, Plata, Oro"
                                     className={errors.display_name ? 'border-destructive' : ''}
                                 />
-                                {errors.display_name && (
-                                    <p className="text-sm text-destructive">{errors.display_name}</p>
-                                )}
+                                {errors.display_name && <p className="text-sm text-destructive">{errors.display_name}</p>}
                             </div>
 
                             {/* Nombre interno */}
@@ -171,12 +161,10 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
                                     placeholder="ej: bronze, silver, gold"
                                     className={errors.name ? 'border-destructive' : ''}
                                 />
-                                {errors.name && (
-                                    <p className="text-sm text-destructive">{errors.name}</p>
-                                )}
+                                {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 {/* Puntos requeridos */}
                                 <div className="space-y-2">
                                     <Label htmlFor="points_required">Puntos requeridos *</Label>
@@ -188,9 +176,7 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
                                         onChange={(e) => handleInputChange('points_required', parseInt(e.target.value) || 0)}
                                         className={errors.points_required ? 'border-destructive' : ''}
                                     />
-                                    {errors.points_required && (
-                                        <p className="text-sm text-destructive">{errors.points_required}</p>
-                                    )}
+                                    {errors.points_required && <p className="text-sm text-destructive">{errors.points_required}</p>}
                                 </div>
 
                                 {/* Multiplicador */}
@@ -206,13 +192,11 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
                                         onChange={(e) => handleInputChange('multiplier', parseFloat(e.target.value) || 1.0)}
                                         className={errors.multiplier ? 'border-destructive' : ''}
                                     />
-                                    {errors.multiplier && (
-                                        <p className="text-sm text-destructive">{errors.multiplier}</p>
-                                    )}
+                                    {errors.multiplier && <p className="text-sm text-destructive">{errors.multiplier}</p>}
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 {/* Color */}
                                 <div className="space-y-2">
                                     <Label htmlFor="color">Color</Label>
@@ -224,7 +208,7 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
                                             {colorOptions.map((color) => (
                                                 <SelectItem key={color.value} value={color.value}>
                                                     <div className="flex items-center gap-2">
-                                                        <div className={`w-4 h-4 rounded ${color.class}`}></div>
+                                                        <div className={`h-4 w-4 rounded ${color.class}`}></div>
                                                         {color.label}
                                                     </div>
                                                 </SelectItem>
@@ -243,9 +227,7 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
                                         value={formData.sort_order}
                                         onChange={(e) => handleInputChange('sort_order', parseInt(e.target.value) || 0)}
                                     />
-                                    <p className="text-xs text-muted-foreground">
-                                        Número menor aparece primero
-                                    </p>
+                                    <p className="text-xs text-muted-foreground">Número menor aparece primero</p>
                                 </div>
                             </div>
 
@@ -256,7 +238,10 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
                                     checked={formData.is_active}
                                     onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)}
                                 />
-                                <Label htmlFor="is_active" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                <Label
+                                    htmlFor="is_active"
+                                    className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                >
                                     Tipo activo
                                 </Label>
                             </div>
@@ -266,12 +251,7 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
                                 <Button type="submit" disabled={isSubmitting} className="flex-1">
                                     {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
                                 </Button>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => router.get('/customer-types')}
-                                    disabled={isSubmitting}
-                                >
+                                <Button type="button" variant="outline" onClick={() => router.get('/customer-types')} disabled={isSubmitting}>
                                     Cancelar
                                 </Button>
                             </div>

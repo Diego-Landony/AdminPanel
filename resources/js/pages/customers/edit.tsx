@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
-import { ArrowLeft, Save, User, Mail, Lock, Eye, EyeOff, CreditCard, Phone, MapPin, Calendar, Hash, Check, X } from 'lucide-react';
 import { showNotification } from '@/hooks/useNotifications';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { ArrowLeft, Calendar, Check, CreditCard, Eye, EyeOff, Hash, Lock, Mail, MapPin, Phone, Save, User, X } from 'lucide-react';
+import React, { useState } from 'react';
 
-import AppLayout from '@/layouts/app-layout';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import AppLayout from '@/layouts/app-layout';
 
 /**
  * Interfaz para los datos del cliente
@@ -44,14 +44,14 @@ interface EditCustomerProps {
  */
 const formatDate = (dateString: string | null): string => {
     if (!dateString) return 'N/A';
-    
+
     return new Date(dateString).toLocaleDateString('es-GT', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-        timeZone: 'America/Guatemala'
+        timeZone: 'America/Guatemala',
     });
 };
 
@@ -60,8 +60,7 @@ const formatDate = (dateString: string | null): string => {
  */
 export default function EditCustomer({ customer }: EditCustomerProps) {
     const [showPassword, setShowPassword] = useState(false);
-    
-    
+
     const { data, setData, put, processing, errors, reset, isDirty } = useForm({
         full_name: customer.full_name || '',
         email: customer.email || '',
@@ -82,7 +81,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
      */
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         put(route('customers.update', customer.id), {
             onSuccess: () => {
                 showNotification.success('Cliente actualizado exitosamente');
@@ -121,38 +120,35 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
     };
 
     return (
-        <AppLayout
-        >
+        <AppLayout>
             <Head title={`Editar Cliente - ${customer.full_name}`} />
 
-            <div className="max-w-4xl mx-auto">
-                <div className="bg-background rounded-lg border shadow-sm">
+            <div className="mx-auto max-w-4xl">
+                <div className="rounded-lg border bg-background shadow-sm">
                     {/* Header */}
-                    <div className="flex items-center justify-between p-6 border-b">
+                    <div className="flex items-center justify-between border-b p-6">
                         <div className="flex items-center gap-4">
                             <Link
                                 href="/customers"
-                                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
+                                className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
                             >
-                                <ArrowLeft className="h-4 w-4 mr-2" />
+                                <ArrowLeft className="mr-2 h-4 w-4" />
                                 Volver
                             </Link>
                             <div>
                                 <h1 className="text-2xl font-bold">Editar Cliente</h1>
-                                <p className="text-muted-foreground">
-                                    Modifica la información del cliente
-                                </p>
+                                <p className="text-muted-foreground">Modifica la información del cliente</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
                             {customer.email_verified_at ? (
-                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                    <Check className="h-3 w-3 mr-1" />
+                                <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
+                                    <Check className="mr-1 h-3 w-3" />
                                     Email Verificado
                                 </Badge>
                             ) : (
-                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                                    <X className="h-3 w-3 mr-1" />
+                                <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">
+                                    <X className="mr-1 h-3 w-3" />
                                     Email No Verificado
                                 </Badge>
                             )}
@@ -160,8 +156,8 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                     </div>
 
                     {/* Información del cliente */}
-                    <div className="p-6 bg-muted/30 border-b">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="border-b bg-muted/30 p-6">
+                        <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
                             <div>
                                 <span className="text-muted-foreground">ID:</span>
                                 <span className="ml-2 font-mono">#{customer.id}</span>
@@ -178,25 +174,19 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                     </div>
 
                     {/* Formulario */}
-                    <form onSubmit={handleSubmit} className="p-6 space-y-8">
+                    <form onSubmit={handleSubmit} className="space-y-8 p-6">
                         {/* Información Personal */}
                         <div className="space-y-6">
                             <div className="border-b pb-4">
-                                <h2 className="text-lg font-semibold flex items-center gap-2">
+                                <h2 className="flex items-center gap-2 text-lg font-semibold">
                                     <User className="h-5 w-5" />
                                     Información Personal
                                 </h2>
-                                <p className="text-sm text-muted-foreground">
-                                    Datos básicos del cliente
-                                </p>
+                                <p className="text-sm text-muted-foreground">Datos básicos del cliente</p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField
-                                    label="Nombre Completo"
-                                    error={errors.full_name}
-                                    required
-                                >
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <FormField label="Nombre Completo" error={errors.full_name} required>
                                     <Input
                                         type="text"
                                         value={data.full_name}
@@ -211,10 +201,10 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                                     label="Email"
                                     error={errors.email}
                                     required
-                                    description={customer.email !== data.email ? "Cambiar el email requerirá nueva verificación" : ""}
+                                    description={customer.email !== data.email ? 'Cambiar el email requerirá nueva verificación' : ''}
                                 >
                                     <div className="relative">
-                                        <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                        <Mail className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                         <Input
                                             type="email"
                                             value={data.email}
@@ -233,7 +223,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                                     description="Número único de identificación del cliente"
                                 >
                                     <div className="relative">
-                                        <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                        <CreditCard className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                         <Input
                                             type="text"
                                             value={data.subway_card}
@@ -244,13 +234,9 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                                     </div>
                                 </FormField>
 
-                                <FormField
-                                    label="Fecha de Nacimiento"
-                                    error={errors.birth_date}
-                                    required
-                                >
+                                <FormField label="Fecha de Nacimiento" error={errors.birth_date} required>
                                     <div className="relative">
-                                        <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                        <Calendar className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                         <Input
                                             type="date"
                                             value={data.birth_date}
@@ -261,10 +247,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                                     </div>
                                 </FormField>
 
-                                <FormField
-                                    label="Género"
-                                    error={errors.gender}
-                                >
+                                <FormField label="Género" error={errors.gender}>
                                     <Select value={data.gender} onValueChange={(value) => setData('gender', value)}>
                                         <SelectTrigger className={errors.gender ? 'border-red-500' : ''}>
                                             <SelectValue placeholder="Selecciona el género" />
@@ -277,10 +260,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                                     </Select>
                                 </FormField>
 
-                                <FormField
-                                    label="Tipo de Cliente"
-                                    error={errors.client_type}
-                                >
+                                <FormField label="Tipo de Cliente" error={errors.client_type}>
                                     <Select value={data.client_type} onValueChange={(value) => setData('client_type', value)}>
                                         <SelectTrigger className={errors.client_type ? 'border-red-500' : ''}>
                                             <SelectValue placeholder="Selecciona el tipo de cliente" />
@@ -298,22 +278,17 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                         {/* Información de Contacto */}
                         <div className="space-y-6">
                             <div className="border-b pb-4">
-                                <h2 className="text-lg font-semibold flex items-center gap-2">
+                                <h2 className="flex items-center gap-2 text-lg font-semibold">
                                     <Phone className="h-5 w-5" />
                                     Información de Contacto
                                 </h2>
-                                <p className="text-sm text-muted-foreground">
-                                    Datos de contacto y ubicación del cliente
-                                </p>
+                                <p className="text-sm text-muted-foreground">Datos de contacto y ubicación del cliente</p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField
-                                    label="Teléfono"
-                                    error={errors.phone}
-                                >
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <FormField label="Teléfono" error={errors.phone}>
                                     <div className="relative">
-                                        <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                        <Phone className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                         <Input
                                             type="tel"
                                             value={data.phone}
@@ -324,12 +299,9 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                                     </div>
                                 </FormField>
 
-                                <FormField
-                                    label="Ubicación"
-                                    error={errors.location}
-                                >
+                                <FormField label="Ubicación" error={errors.location}>
                                     <div className="relative">
-                                        <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                        <MapPin className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                         <Input
                                             type="text"
                                             value={data.location}
@@ -340,13 +312,9 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                                     </div>
                                 </FormField>
 
-                                <FormField
-                                    label="NIT"
-                                    error={errors.nit}
-                                    description="Número de Identificación Tributaria (opcional)"
-                                >
+                                <FormField label="NIT" error={errors.nit} description="Número de Identificación Tributaria (opcional)">
                                     <div className="relative">
-                                        <Hash className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                        <Hash className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                         <Input
                                             type="text"
                                             value={data.nit}
@@ -358,10 +326,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                                 </FormField>
                             </div>
 
-                            <FormField
-                                label="Dirección"
-                                error={errors.address}
-                            >
+                            <FormField label="Dirección" error={errors.address}>
                                 <Textarea
                                     value={data.address}
                                     onChange={(e) => setData('address', e.target.value)}
@@ -375,51 +340,38 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                         {/* Seguridad */}
                         <div className="space-y-6">
                             <div className="border-b pb-4">
-                                <h2 className="text-lg font-semibold flex items-center gap-2">
+                                <h2 className="flex items-center gap-2 text-lg font-semibold">
                                     <Lock className="h-5 w-5" />
                                     Cambiar Contraseña
                                 </h2>
-                                <p className="text-sm text-muted-foreground">
-                                    Deja en blanco si no deseas cambiar la contraseña
-                                </p>
+                                <p className="text-sm text-muted-foreground">Deja en blanco si no deseas cambiar la contraseña</p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField
-                                    label="Nueva Contraseña"
-                                    error={errors.password}
-                                    description="Mínimo 8 caracteres"
-                                >
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <FormField label="Nueva Contraseña" error={errors.password} description="Mínimo 8 caracteres">
                                     <div className="relative">
-                                        <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                        <Lock className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                         <Input
                                             type={showPassword ? 'text' : 'password'}
                                             value={data.password}
                                             onChange={(e) => setData('password', e.target.value)}
                                             placeholder="••••••••"
                                             autoComplete="new-password"
-                                            className={`pl-10 pr-10 ${errors.password ? 'border-red-500' : ''}`}
+                                            className={`pr-10 pl-10 ${errors.password ? 'border-red-500' : ''}`}
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                            className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                         >
-                                            {showPassword ? (
-                                                <EyeOff className="h-4 w-4" />
-                                            ) : (
-                                                <Eye className="h-4 w-4" />
-                                            )}
+                                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                         </button>
                                     </div>
                                 </FormField>
 
-                                <FormField
-                                    label="Confirmar Nueva Contraseña"
-                                    error={errors.password_confirmation}
-                                >
+                                <FormField label="Confirmar Nueva Contraseña" error={errors.password_confirmation}>
                                     <div className="relative">
-                                        <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                        <Lock className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                         <Input
                                             type={showPassword ? 'text' : 'password'}
                                             value={data.password_confirmation}
@@ -434,24 +386,13 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                         </div>
 
                         {/* Botones de acción */}
-                        <div className="flex justify-between items-center pt-6 border-t">
-                            <div className="text-sm text-muted-foreground">
-                                {isDirty ? 'Tienes cambios sin guardar' : 'Sin cambios'}
-                            </div>
+                        <div className="flex items-center justify-between border-t pt-6">
+                            <div className="text-sm text-muted-foreground">{isDirty ? 'Tienes cambios sin guardar' : 'Sin cambios'}</div>
                             <div className="flex gap-4">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={handleReset}
-                                    disabled={processing || !isDirty}
-                                >
+                                <Button type="button" variant="outline" onClick={handleReset} disabled={processing || !isDirty}>
                                     Descartar Cambios
                                 </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={processing || !isDirty}
-                                    className="min-w-[120px]"
-                                >
+                                <Button type="submit" disabled={processing || !isDirty} className="min-w-[120px]">
                                     {processing ? (
                                         <div className="flex items-center gap-2">
                                             <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />

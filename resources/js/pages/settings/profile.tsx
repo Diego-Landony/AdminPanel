@@ -5,8 +5,8 @@ import { FormEventHandler } from 'react';
 
 import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 
@@ -48,17 +48,10 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
             <SettingsLayout>
                 <div className="space-y-6">
-                    <HeadingSmall 
-                        title="Información del Perfil" 
-                        description="Actualiza tu nombre y dirección de correo electrónico" 
-                    />
+                    <HeadingSmall title="Información del Perfil" description="Actualiza tu nombre y dirección de correo electrónico" />
 
                     <form onSubmit={submit} className="space-y-6">
-                        <FormField
-                            label="Nombre"
-                            error={errors.name}
-                            required
-                        >
+                        <FormField label="Nombre" error={errors.name} required>
                             <Input
                                 id="name"
                                 value={data.name}
@@ -68,11 +61,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             />
                         </FormField>
 
-                        <FormField
-                            label="Dirección de Correo"
-                            error={errors.email}
-                            required
-                        >
+                        <FormField label="Dirección de Correo" error={errors.email} required>
                             <Input
                                 id="email"
                                 type="email"
@@ -106,9 +95,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                         )}
 
                         <div className="flex items-center gap-4">
-                            <Button disabled={processing}>
-                                {processing ? 'Guardando...' : 'Guardar'}
-                            </Button>
+                            <Button disabled={processing}>{processing ? 'Guardando...' : 'Guardar'}</Button>
 
                             <Transition
                                 show={recentlySuccessful}

@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
+import { Head, Link, useForm } from '@inertiajs/react';
+import React, { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { FormError } from '@/components/ui/form-error';
+import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FormField } from '@/components/ui/form-field';
-import { FormError } from '@/components/ui/form-error';
-import { ArrowLeft, Save, Users } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { showNotification } from '@/hooks/useNotifications';
+import { ArrowLeft, Save, Users } from 'lucide-react';
 
 /**
  * Interfaz para los permisos agrupados
@@ -62,16 +62,13 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
         permissions: role.permissions,
     });
 
-    const [selectedUsers, setSelectedUsers] = useState<number[]>(
-        role.users.map(user => user.id)
-    );
+    const [selectedUsers, setSelectedUsers] = useState<number[]>(role.users.map((user) => user.id));
 
     const [isUserSheetOpen, setIsUserSheetOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    
+
     // Verificar si es el rol de administrador
     const isAdminRole = role.name === 'admin';
-
 
     // Solo manejar notificaciones del servidor (NO errores de validación)
     // Las notificaciones flash se manejan automáticamente por el layout
@@ -91,7 +88,7 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                 if (Object.keys(errors).length === 0) {
                     showNotification.error('Error del servidor al actualizar el rol. Inténtalo de nuevo.');
                 }
-            }
+            },
         });
     };
 
@@ -102,7 +99,10 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
         if (checked) {
             setData('permissions', [...data.permissions, permissionName]);
         } else {
-            setData('permissions', data.permissions.filter(p => p !== permissionName));
+            setData(
+                'permissions',
+                data.permissions.filter((p) => p !== permissionName),
+            );
         }
     };
 
@@ -118,11 +118,11 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
      */
     const getGroupDisplayName = (group: string): string => {
         const groupNames: Record<string, string> = {
-            'dashboard': 'Dashboard',
-            'users': 'Usuarios',
-            'activity': 'Actividad',
-            'roles': 'Roles y Permisos',
-            'settings': 'Configuración',
+            dashboard: 'Dashboard',
+            users: 'Usuarios',
+            activity: 'Actividad',
+            roles: 'Roles y Permisos',
+            settings: 'Configuración',
         };
         return groupNames[group] || group.charAt(0).toUpperCase() + group.slice(1);
     };
@@ -132,10 +132,8 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
      */
     const handleUserChange = async (userId: number, checked: boolean): Promise<void> => {
         // Actualizar el estado local inmediatamente para feedback visual
-        const newSelectedUsers = checked 
-            ? [...selectedUsers, userId]
-            : selectedUsers.filter(id => id !== userId);
-        
+        const newSelectedUsers = checked ? [...selectedUsers, userId] : selectedUsers.filter((id) => id !== userId);
+
         setSelectedUsers(newSelectedUsers);
 
         // Guardar automáticamente en el servidor
@@ -172,9 +170,8 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
     /**
      * Filtra usuarios basado en el término de búsqueda
      */
-    const filteredUsers = all_users.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredUsers = all_users.filter(
+        (user) => user.name.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
     return (
@@ -419,4 +416,3 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
         </AppLayout>
     );
 }
-

@@ -33,14 +33,25 @@ export default function CustomerTypeCreate() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Validar que los campos numéricos no estén vacíos
+        if (!data.points_required || data.points_required === '') {
+            showNotification.error('El campo Puntos requeridos es obligatorio');
+            return;
+        }
+
+        if (!data.multiplier || data.multiplier === '') {
+            showNotification.error('El campo Multiplicador es obligatorio');
+            return;
+        }
+
         // Convertir valores string a números antes de enviar
         const submitData = {
             ...data,
             points_required: typeof data.points_required === 'string'
-                ? (parseInt(data.points_required) || 0)
+                ? parseInt(data.points_required)
                 : data.points_required,
             multiplier: typeof data.multiplier === 'string'
-                ? (parseFloat(data.multiplier) || 1.0)
+                ? parseFloat(data.multiplier)
                 : data.multiplier,
         };
 

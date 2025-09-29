@@ -77,14 +77,27 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
         e.preventDefault();
         setIsSubmitting(true);
 
+        // Validar que los campos numéricos no estén vacíos
+        if (!formData.points_required || formData.points_required === '') {
+            setErrors({ points_required: 'El campo Puntos requeridos es obligatorio' });
+            setIsSubmitting(false);
+            return;
+        }
+
+        if (!formData.multiplier || formData.multiplier === '') {
+            setErrors({ multiplier: 'El campo Multiplicador es obligatorio' });
+            setIsSubmitting(false);
+            return;
+        }
+
         // Convertir valores string a números antes de enviar
         const submitData = {
             ...formData,
             points_required: typeof formData.points_required === 'string'
-                ? (parseInt(formData.points_required) || 0)
+                ? parseInt(formData.points_required)
                 : formData.points_required,
             multiplier: typeof formData.multiplier === 'string'
-                ? (parseFloat(formData.multiplier) || 1.0)
+                ? parseFloat(formData.multiplier)
                 : formData.multiplier,
         };
 

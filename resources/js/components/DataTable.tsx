@@ -57,11 +57,17 @@ interface PaginatedData<T> {
     to: number;
 }
 
+interface SortCriteria {
+    field: string;
+    direction: 'asc' | 'desc';
+}
+
 interface DataTableFilters {
     search?: string | null;
     per_page: number;
     sort_field?: string;
     sort_direction?: 'asc' | 'desc';
+    sort_criteria?: SortCriteria[];
 }
 
 interface DataTableProps<T> {
@@ -177,6 +183,9 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
     const [perPage, setPerPage] = useState<number>(filters.per_page);
     const [sortField, setSortField] = useState<string>(filters.sort_field || 'created_at');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(filters.sort_direction || 'desc');
+    const [sortCriteria, setSortCriteria] = useState<SortCriteria[]>(
+        filters.sort_criteria || [{ field: filters.sort_field || 'created_at', direction: filters.sort_direction || 'desc' }]
+    );
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
@@ -201,13 +210,19 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
      * Apply filters manually when search button is clicked
      */
     const applyFilters = useCallback(() => {
-        updateFilters({
-            search: search || undefined,
+        const payload: Record<string, string | number | undefined> = {
             per_page: perPage,
             sort_field: sortField,
             sort_direction: sortDirection,
-        });
-    }, [search, perPage, sortField, sortDirection, updateFilters]);
+            sort_criteria: JSON.stringify(sortCriteria),
+        };
+
+        if (search && search.trim()) {
+            payload.search = search.trim();
+        }
+
+        updateFilters(payload);
+    }, [search, perPage, sortField, sortDirection, sortCriteria, updateFilters]);
 
     /**
      * Clear search input
@@ -220,20 +235,46 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
      * Effect for handling per_page and sorting changes (apply automatically)
      */
     useEffect(() => {
-        updateFilters({
-            search: search || undefined,
+        const payload: Record<string, string | number | undefined> = {
             per_page: perPage,
             sort_field: sortField,
             sort_direction: sortDirection,
-        });
-    }, [search, perPage, sortField, sortDirection, updateFilters]);
+            sort_criteria: JSON.stringify(sortCriteria),
+        };
+
+        if (search && search.trim()) {
+            payload.search = search.trim();
+        }
+
+        updateFilters(payload);
+    }, [search, perPage, sortField, sortDirection, sortCriteria, updateFilters]);
 
     /**
-     * Handles column sorting with direction toggle
+     * Handles column sorting with multiple criteria support
      */
     const handleSort = (field: string) => {
-        if (field === sortField) {
-            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        setSortCriteria(prevCriteria => {
+            // Check if this field is already in the criteria
+            const existingIndex = prevCriteria.findIndex(criteria => criteria.field === field);
+
+            if (existingIndex >= 0) {
+                // Field exists, toggle its direction
+                const newCriteria = [...prevCriteria];
+                newCriteria[existingIndex] = {
+                    field,
+                    direction: newCriteria[existingIndex].direction === 'asc' ? 'desc' : 'asc'
+                };
+                return newCriteria;
+            } else {
+                // Field doesn't exist, add it with 'asc' direction
+                return [...prevCriteria, { field, direction: 'asc' }];
+            }
+        });
+
+        // Also update single field state for backward compatibility
+        const existingCriteria = sortCriteria.find(criteria => criteria.field === field);
+        if (existingCriteria) {
+            setSortDirection(existingCriteria.direction === 'asc' ? 'desc' : 'asc');
         } else {
             setSortField(field);
             setSortDirection('asc');
@@ -244,10 +285,30 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
      * Returns appropriate sort icon based on current sort state
      */
     const getSortIcon = (field: string) => {
-        if (field !== sortField) {
+        const criteria = sortCriteria.find(c => c.field === field);
+        const criteriaIndex = sortCriteria.findIndex(c => c.field === field);
+
+        if (!criteria) {
             return <ArrowUpDown className="h-4 w-4 text-muted-foreground/50" />;
         }
-        return sortDirection === 'asc' ? <ArrowUp className="h-4 w-4 text-primary" /> : <ArrowDown className="h-4 w-4 text-primary" />;
+
+        const icon = criteria.direction === 'asc' ?
+            <ArrowUp className="h-4 w-4 text-primary" /> :
+            <ArrowDown className="h-4 w-4 text-primary" />;
+
+        // Show order number if there are multiple criteria
+        if (sortCriteria.length > 1) {
+            return (
+                <div className="flex items-center gap-1">
+                    {icon}
+                    <span className="text-xs text-primary font-semibold min-w-[1rem] text-center">
+                        {criteriaIndex + 1}
+                    </span>
+                </div>
+            );
+        }
+
+        return icon;
     };
 
     /**
@@ -258,14 +319,18 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
             onRefresh();
         } else {
             setIsRefreshing(true);
-            router.post(
-                routeName,
-                {
-                    search: search || undefined,
-                    per_page: perPage,
-                    sort_field: sortField,
-                    sort_direction: sortDirection,
-                },
+            const payload: Record<string, string | number | undefined> = {
+                per_page: perPage,
+                sort_field: sortField,
+                sort_direction: sortDirection,
+                sort_criteria: JSON.stringify(sortCriteria),
+            };
+
+            if (search && search.trim()) {
+                payload.search = search.trim();
+            }
+
+            router.post(routeName, payload,
                 {
                     preserveState: true,
                     replace: true,
@@ -545,4 +610,4 @@ export const DataTable = memo(DataTableComponent, (prevProps, nextProps) => {
         prevProps.routeName === nextProps.routeName &&
         JSON.stringify(prevProps.data.data) === JSON.stringify(nextProps.data.data)
     );
-}) as <T extends { id: number | string }>(props: DataTableProps<T>) => JSX.Element;
+}) as <T extends { id: number | string }>(props: DataTableProps<T>) => React.ReactElement;

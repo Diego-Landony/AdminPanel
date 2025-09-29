@@ -19,6 +19,16 @@ class CustomerTypeController extends Controller
         $perPage = (int) $request->get('per_page', 10);
         $sortField = $request->get('sort_field', 'created_at');
         $sortDirection = $request->get('sort_direction', 'desc');
+        $sortCriteria = $request->get('sort_criteria');
+
+        // Parse multiple sort criteria if provided
+        $multipleSortCriteria = [];
+        if ($sortCriteria) {
+            $decoded = json_decode($sortCriteria, true);
+            if (is_array($decoded)) {
+                $multipleSortCriteria = $decoded;
+            }
+        }
 
         $query = CustomerType::query()
             ->withCount('customers');
@@ -30,13 +40,29 @@ class CustomerTypeController extends Controller
             });
         }
 
-        // Apply sorting
-        if ($sortField === 'type') {
-            $query->orderBy('display_name', $sortDirection);
-        } elseif (in_array($sortField, ['points_required', 'multiplier', 'customers_count', 'is_active', 'created_at'])) {
-            $query->orderBy($sortField, $sortDirection);
+        // Aplicar ordenamiento múltiple si está disponible
+        if (!empty($multipleSortCriteria)) {
+            foreach ($multipleSortCriteria as $criteria) {
+                $field = $criteria['field'] ?? 'created_at';
+                $direction = $criteria['direction'] ?? 'desc';
+
+                if ($field === 'type') {
+                    $query->orderBy('display_name', $direction);
+                } elseif (in_array($field, ['points_required', 'multiplier', 'customers_count', 'is_active', 'created_at'])) {
+                    $query->orderBy($field, $direction);
+                } else {
+                    $query->orderBy($field, $direction);
+                }
+            }
         } else {
-            $query->ordered();
+            // Fallback a ordenamiento único
+            if ($sortField === 'type') {
+                $query->orderBy('display_name', $sortDirection);
+            } elseif (in_array($sortField, ['points_required', 'multiplier', 'customers_count', 'is_active', 'created_at'])) {
+                $query->orderBy($sortField, $sortDirection);
+            } else {
+                $query->ordered();
+            }
         }
 
         $customerTypes = $query->paginate($perPage);
@@ -55,6 +81,7 @@ class CustomerTypeController extends Controller
                 'per_page' => $perPage,
                 'sort_field' => $sortField,
                 'sort_direction' => $sortDirection,
+                'sort_criteria' => $multipleSortCriteria,
             ],
         ]);
     }

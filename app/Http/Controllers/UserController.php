@@ -30,6 +30,16 @@ class UserController extends Controller
         $perPage = $request->get('per_page', 10);
         $sortField = $request->get('sort_field', 'created_at');
         $sortDirection = $request->get('sort_direction', 'desc');
+        $sortCriteria = $request->get('sort_criteria');
+
+        // Parse multiple sort criteria if provided
+        $multipleSortCriteria = [];
+        if ($sortCriteria) {
+            $decoded = json_decode($sortCriteria, true);
+            if (is_array($decoded)) {
+                $multipleSortCriteria = $decoded;
+            }
+        }
 
         // Query base con eager loading optimizado
         $query = User::with(['roles' => function ($query) {
@@ -56,28 +66,48 @@ class UserController extends Controller
             });
         }
 
-        // Aplicar ordenamiento
-        if ($sortField === 'user' || $sortField === 'name') {
-            $query->orderBy('name', $sortDirection);
-        } elseif ($sortField === 'status') {
-            // Sintaxis compatible con MariaDB/MySQL
-            $query->orderByRaw('
-                CASE
-                    WHEN last_activity_at IS NULL THEN 4
-                    WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
-                    WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
-                    ELSE 3
-                END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
+        // Aplicar ordenamiento múltiple si está disponible
+        if (!empty($multipleSortCriteria)) {
+            foreach ($multipleSortCriteria as $criteria) {
+                $field = $criteria['field'] ?? 'created_at';
+                $direction = $criteria['direction'] ?? 'desc';
+
+                if ($field === 'user' || $field === 'name') {
+                    $query->orderBy('name', $direction);
+                } elseif ($field === 'status') {
+                    $query->orderByRaw('
+                        CASE
+                            WHEN last_activity_at IS NULL THEN 4
+                            WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
+                            WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
+                            ELSE 3
+                        END '.($direction === 'asc' ? 'ASC' : 'DESC'));
+                } else {
+                    $query->orderBy($field, $direction);
+                }
+            }
         } else {
-            // Ordenamiento por defecto: usuarios en línea primero, luego por fecha de creación
-            $query->orderByRaw('
-                CASE
-                    WHEN last_activity_at IS NULL THEN 4
-                    WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
-                    WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
-                    ELSE 3
-                END ASC
-            ')->orderBy('created_at', 'desc');
+            // Fallback a ordenamiento único
+            if ($sortField === 'user' || $sortField === 'name') {
+                $query->orderBy('name', $sortDirection);
+            } elseif ($sortField === 'status') {
+                $query->orderByRaw('
+                    CASE
+                        WHEN last_activity_at IS NULL THEN 4
+                        WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
+                        WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
+                        ELSE 3
+                    END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
+            } else {
+                $query->orderByRaw('
+                    CASE
+                        WHEN last_activity_at IS NULL THEN 4
+                        WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
+                        WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
+                        ELSE 3
+                    END ASC
+                ')->orderBy('created_at', 'desc');
+            }
         }
 
         // Paginar y obtener usuarios
@@ -127,6 +157,7 @@ class UserController extends Controller
                 'per_page' => (int) $perPage,
                 'sort_field' => $sortField,
                 'sort_direction' => $sortDirection,
+                'sort_criteria' => $multipleSortCriteria,
             ],
         ]);
     }

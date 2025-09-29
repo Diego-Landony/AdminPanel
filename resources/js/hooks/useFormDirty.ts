@@ -141,6 +141,7 @@ export function useFormDirty<T extends Record<string, unknown>>(
                     return false;
                 }
             }
+            return true;
         };
 
         // Listen for Inertia before navigation events

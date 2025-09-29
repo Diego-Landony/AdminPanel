@@ -29,6 +29,16 @@ class CustomerController extends Controller
         $perPage = $request->get('per_page', 10);
         $sortField = $request->get('sort_field', 'created_at');
         $sortDirection = $request->get('sort_direction', 'desc');
+        $sortCriteria = $request->get('sort_criteria');
+
+        // Parse multiple sort criteria if provided
+        $multipleSortCriteria = [];
+        if ($sortCriteria) {
+            $decoded = json_decode($sortCriteria, true);
+            if (is_array($decoded)) {
+                $multipleSortCriteria = $decoded;
+            }
+        }
 
         // Query base con relación de tipo de cliente
         $query = Customer::with('customerType')
@@ -65,24 +75,49 @@ class CustomerController extends Controller
             });
         }
 
-        // Aplicar ordenamiento
-        if ($sortField === 'customer' || $sortField === 'full_name') {
-            $query->orderBy('full_name', $sortDirection);
-        } elseif ($sortField === 'status') {
-            // Sintaxis compatible con MariaDB/MySQL
-            $query->orderByRaw('
-                CASE
-                    WHEN last_activity_at IS NULL THEN 4
-                    WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
-                    WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
-                    ELSE 3
-                END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
-        } elseif ($sortField === 'puntos') {
-            $query->orderBy('puntos', $sortDirection);
-        } elseif ($sortField === 'last_purchase') {
-            $query->orderBy('last_purchase_at', $sortDirection);
+        // Aplicar ordenamiento múltiple si está disponible
+        if (!empty($multipleSortCriteria)) {
+            foreach ($multipleSortCriteria as $criteria) {
+                $field = $criteria['field'] ?? 'created_at';
+                $direction = $criteria['direction'] ?? 'desc';
+
+                if ($field === 'customer' || $field === 'full_name') {
+                    $query->orderBy('full_name', $direction);
+                } elseif ($field === 'status') {
+                    $query->orderByRaw('
+                        CASE
+                            WHEN last_activity_at IS NULL THEN 4
+                            WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
+                            WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
+                            ELSE 3
+                        END '.($direction === 'asc' ? 'ASC' : 'DESC'));
+                } elseif ($field === 'puntos') {
+                    $query->orderBy('puntos', $direction);
+                } elseif ($field === 'last_purchase') {
+                    $query->orderBy('last_purchase_at', $direction);
+                } else {
+                    $query->orderBy($field, $direction);
+                }
+            }
         } else {
-            $query->orderBy($sortField, $sortDirection);
+            // Fallback a ordenamiento único
+            if ($sortField === 'customer' || $sortField === 'full_name') {
+                $query->orderBy('full_name', $sortDirection);
+            } elseif ($sortField === 'status') {
+                $query->orderByRaw('
+                    CASE
+                        WHEN last_activity_at IS NULL THEN 4
+                        WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
+                        WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
+                        ELSE 3
+                    END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
+            } elseif ($sortField === 'puntos') {
+                $query->orderBy('puntos', $sortDirection);
+            } elseif ($sortField === 'last_purchase') {
+                $query->orderBy('last_purchase_at', $sortDirection);
+            } else {
+                $query->orderBy($sortField, $sortDirection);
+            }
         }
 
         // Paginar y obtener clientes
@@ -173,6 +208,7 @@ class CustomerController extends Controller
                 'per_page' => (int) $perPage,
                 'sort_field' => $sortField,
                 'sort_direction' => $sortDirection,
+                'sort_criteria' => $multipleSortCriteria,
             ],
         ]);
     }

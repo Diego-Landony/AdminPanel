@@ -130,7 +130,7 @@ export function useNotifications() {
                 showNotification(
                     statusConfig.type,
                     statusConfig.message,
-                    statusConfig.description
+                    'description' in statusConfig ? statusConfig.description : undefined
                 );
             } else {
                 // Status no reconocido, mostrar como info

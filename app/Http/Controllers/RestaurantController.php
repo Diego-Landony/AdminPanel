@@ -19,6 +19,16 @@ class RestaurantController extends Controller
         $perPage = $request->get('per_page', 10);
         $sortField = $request->get('sort_field', 'sort_order');
         $sortDirection = $request->get('sort_direction', 'asc');
+        $sortCriteria = $request->get('sort_criteria');
+
+        // Parse multiple sort criteria if provided
+        $multipleSortCriteria = [];
+        if ($sortCriteria) {
+            $decoded = json_decode($sortCriteria, true);
+            if (is_array($decoded)) {
+                $multipleSortCriteria = $decoded;
+            }
+        }
 
         $query = Restaurant::query()
             ->select([
@@ -49,16 +59,37 @@ class RestaurantController extends Controller
             });
         }
 
-        if ($sortField === 'restaurant') {
-            $query->orderBy('name', $sortDirection);
-        } elseif ($sortField === 'status') {
-            $query->orderByRaw('
-                CASE
-                    WHEN is_active = 1 THEN 1
-                    ELSE 2
-                END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
+        // Aplicar ordenamiento múltiple si está disponible
+        if (!empty($multipleSortCriteria)) {
+            foreach ($multipleSortCriteria as $criteria) {
+                $field = $criteria['field'] ?? 'sort_order';
+                $direction = $criteria['direction'] ?? 'asc';
+
+                if ($field === 'restaurant') {
+                    $query->orderBy('name', $direction);
+                } elseif ($field === 'status') {
+                    $query->orderByRaw('
+                        CASE
+                            WHEN is_active = 1 THEN 1
+                            ELSE 2
+                        END '.($direction === 'asc' ? 'ASC' : 'DESC'));
+                } else {
+                    $query->orderBy($field, $direction);
+                }
+            }
         } else {
-            $query->orderBy($sortField, $sortDirection);
+            // Fallback a ordenamiento único
+            if ($sortField === 'restaurant') {
+                $query->orderBy('name', $sortDirection);
+            } elseif ($sortField === 'status') {
+                $query->orderByRaw('
+                    CASE
+                        WHEN is_active = 1 THEN 1
+                        ELSE 2
+                    END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
+            } else {
+                $query->orderBy($sortField, $sortDirection);
+            }
         }
 
         $restaurants = $query->paginate($perPage)
@@ -101,6 +132,7 @@ class RestaurantController extends Controller
                 'per_page' => (int) $perPage,
                 'sort_field' => $sortField,
                 'sort_direction' => $sortDirection,
+                'sort_criteria' => $multipleSortCriteria,
             ],
         ]);
     }

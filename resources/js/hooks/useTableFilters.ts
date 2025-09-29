@@ -82,7 +82,7 @@ export function useTableFilters<T extends Record<string, unknown> = Record<strin
         setIsLoading(true);
         const payload = buildFilterPayload(filters, search, perPage);
 
-        router.post(endpoint, payload, {
+        router.post(endpoint, payload as Record<string, unknown>, {
             preserveState,
             replace,
             onFinish: () => setIsLoading(false),
@@ -98,7 +98,7 @@ export function useTableFilters<T extends Record<string, unknown> = Record<strin
         setIsLoading(true);
         const payload = buildFilterPayload(initialFilters, '', defaultPerPage);
 
-        router.post(endpoint, payload, {
+        router.post(endpoint, payload as Record<string, unknown>, {
             preserveState,
             replace,
             onFinish: () => setIsLoading(false),
@@ -110,7 +110,7 @@ export function useTableFilters<T extends Record<string, unknown> = Record<strin
         setIsRefreshing(true);
         const payload = buildFilterPayload(filters, search, perPage);
 
-        router.post(endpoint, payload, {
+        router.post(endpoint, payload as Record<string, unknown>, {
             preserveState,
             replace,
             onFinish: () => setIsRefreshing(false),
@@ -158,7 +158,7 @@ export function useTableFilters<T extends Record<string, unknown> = Record<strin
 /**
  * Specialized hook for activity filters with type safety
  */
-export interface ActivityFilters {
+export interface ActivityFilters extends Record<string, unknown> {
     event_types: string[];
     user_ids: string[];
     dateRange?: {
@@ -184,7 +184,7 @@ export function useActivityFilters(initialPerPage: number = 10) {
 /**
  * Specialized hook for user management filters
  */
-export interface UserFilters {
+export interface UserFilters extends Record<string, unknown> {
     roles: string[];
     status: string[];
     sort_field?: string;
@@ -205,7 +205,7 @@ export function useUserFilters(initialPerPage: number = 10) {
 /**
  * Specialized hook for customer filters
  */
-export interface CustomerFilters {
+export interface CustomerFilters extends Record<string, unknown> {
     customer_types: string[];
     status: string[];
     sort_field?: string;

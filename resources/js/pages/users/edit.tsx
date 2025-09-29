@@ -215,7 +215,7 @@ export default function EditUser({ user }: EditUserPageProps) {
                 </div>
             </FormSection>
 
-            <FormSection title="Información del Sistema" description="Datos del sistema y metadatos">
+            <FormSection icon={User} title="Información del Sistema" description="Datos del sistema y metadatos">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
                         <Label className="text-xs text-muted-foreground">ID</Label>

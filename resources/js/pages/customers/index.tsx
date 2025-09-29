@@ -29,7 +29,6 @@ interface Customer {
     customer_type: {
         id: number;
         name: string;
-        display_name: string;
         color: string | null;
         multiplier: number;
     } | null;
@@ -51,7 +50,7 @@ interface Customer {
  */
 interface CustomerTypeStat {
     id: number;
-    display_name: string;
+    name: string;
     color: string;
     customer_count: number;
 }
@@ -177,7 +176,7 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
             description: `${customers.total} cliente${customers.total !== 1 ? 's' : ''} registrados`,
         },
         ...customer_type_stats.map((stat) => ({
-            title: stat.display_name,
+            title: stat.name,
             value: stat.customer_count,
             icon: getCustomerTypeIcon(stat.color, 'h-4 w-4'),
             description: `${stat.customer_count} cliente${stat.customer_count !== 1 ? 's' : ''}`,
@@ -438,8 +437,7 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
             <Head title="Gestión de Clientes" />
 
             <DataTable
-                title="Gestión de Clientes"
-                description="Administra los clientes del sistema."
+                title="Clientes"
                 data={customers}
                 columns={columns}
                 stats={stats}

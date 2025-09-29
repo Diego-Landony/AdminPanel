@@ -191,7 +191,7 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
             loading={processing}
             loadingSkeleton={EditRolesSkeleton}
         >
-            <FormSection icon={ENTITY_ICONS.role.info} title="Información Básica" description="Datos principales del rol">
+            <FormSection icon={ENTITY_ICONS.role.info} title="Información Básica">
                 <FormField label="Nombre del Rol" error={errors.name}>
                     <Input
                         id="name"

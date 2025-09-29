@@ -1,7 +1,8 @@
-import { PageProps } from '@/types';
 import { useForm } from '@inertiajs/react';
-import { Building2, Clock, Mail, MapPin, Phone, Settings, User } from 'lucide-react';
+import { Building2, Clock, Mail, MapPin, Phone, Settings, Navigation, FileText } from 'lucide-react';
+import React from 'react';
 
+import { Button } from '@/components/ui/button';
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
 import { EditRestaurantsSkeleton } from '@/components/skeletons';
@@ -9,79 +10,69 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { PLACEHOLDERS, AUTOCOMPLETE } from '@/constants/ui-constants';
 
 interface Restaurant {
     id: number;
     name: string;
-    description: string;
     address: string;
+    latitude: number | null;
+    longitude: number | null;
     is_active: boolean;
     delivery_active: boolean;
     pickup_active: boolean;
-    phone: string;
+    phone: string | null;
+    email: string | null;
     schedule: Record<string, { is_open: boolean; open: string; close: string }> | null;
     minimum_order_amount: number;
-    delivery_fee: number;
     estimated_delivery_time: number;
-    image: string;
-    email: string;
-    manager_name: string;
-    rating: number;
-    total_reviews: number;
-    sort_order: number;
+    geofence_kml: string | null;
     created_at: string;
     updated_at: string;
 }
 
+interface EditPageProps {
+    restaurant: Restaurant;
+}
+
 interface RestaurantFormData {
     name: string;
-    description: string;
     address: string;
+    latitude: string;
+    longitude: string;
     is_active: boolean;
     delivery_active: boolean;
     pickup_active: boolean;
     phone: string;
+    email: string;
     schedule: Record<string, { is_open: boolean; open: string; close: string }>;
     minimum_order_amount: string;
-    delivery_fee: string;
     estimated_delivery_time: string;
-    email: string;
-    manager_name: string;
-    sort_order: string;
 }
 
-interface RestaurantEditPageProps extends PageProps {
-    restaurant: Restaurant;
-}
-
-export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) {
-    const defaultSchedule = {
-        monday: { is_open: true, open: '08:00', close: '22:00' },
-        tuesday: { is_open: true, open: '08:00', close: '22:00' },
-        wednesday: { is_open: true, open: '08:00', close: '22:00' },
-        thursday: { is_open: true, open: '08:00', close: '22:00' },
-        friday: { is_open: true, open: '08:00', close: '22:00' },
-        saturday: { is_open: true, open: '08:00', close: '22:00' },
-        sunday: { is_open: true, open: '08:00', close: '22:00' },
-    };
-
+export default function RestaurantEdit({ restaurant }: EditPageProps) {
     const { data, setData, put, processing, errors } = useForm<RestaurantFormData>({
         name: restaurant.name,
-        description: restaurant.description || '',
         address: restaurant.address,
+        latitude: restaurant.latitude?.toString() || '',
+        longitude: restaurant.longitude?.toString() || '',
         is_active: restaurant.is_active,
         delivery_active: restaurant.delivery_active,
         pickup_active: restaurant.pickup_active,
         phone: restaurant.phone || '',
-        schedule: restaurant.schedule || defaultSchedule,
-        minimum_order_amount: restaurant.minimum_order_amount.toString(),
-        delivery_fee: restaurant.delivery_fee.toString(),
-        estimated_delivery_time: restaurant.estimated_delivery_time?.toString() || '',
         email: restaurant.email || '',
-        manager_name: restaurant.manager_name || '',
-        sort_order: restaurant.sort_order.toString(),
+        schedule: restaurant.schedule || {
+            monday: { is_open: true, open: '08:00', close: '22:00' },
+            tuesday: { is_open: true, open: '08:00', close: '22:00' },
+            wednesday: { is_open: true, open: '08:00', close: '22:00' },
+            thursday: { is_open: true, open: '08:00', close: '22:00' },
+            friday: { is_open: true, open: '08:00', close: '22:00' },
+            saturday: { is_open: true, open: '08:00', close: '22:00' },
+            sunday: { is_open: true, open: '08:00', close: '22:00' },
+        },
+        minimum_order_amount: restaurant.minimum_order_amount.toString(),
+        estimated_delivery_time: restaurant.estimated_delivery_time.toString(),
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -109,18 +100,20 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
         sunday: 'Domingo',
     };
 
+    const hasGeofence = !!restaurant.geofence_kml;
+
     return (
         <EditPageLayout
             title="Editar Restaurante"
-            description={`Actualiza la información de ${restaurant.name}`}
+            description={`Modifica los datos de "${restaurant.name}"`}
             backHref={route('restaurants.index')}
             onSubmit={handleSubmit}
             processing={processing}
-            pageTitle={`Editar Restaurante - ${restaurant.name}`}
-            loading={processing}
+            pageTitle={`Editar ${restaurant.name}`}
+            loading={false}
             loadingSkeleton={EditRestaurantsSkeleton}
         >
-            <FormSection icon={Building2} title="Información Básica" description="Datos principales del restaurante">
+            <FormSection icon={Building2} title="Información Básica">
                 <FormField label="Nombre" error={errors.name} required>
                     <Input
                         id="name"
@@ -128,16 +121,6 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                         onChange={(e) => setData('name', e.target.value)}
                         placeholder={PLACEHOLDERS.restaurantName}
                         autoComplete={AUTOCOMPLETE.organizationName}
-                    />
-                </FormField>
-
-                <FormField label="Descripción" error={errors.description}>
-                    <Textarea
-                        id="description"
-                        value={data.description}
-                        onChange={(e) => setData('description', e.target.value)}
-                        placeholder={PLACEHOLDERS.description}
-                        rows={3}
                     />
                 </FormField>
 
@@ -154,6 +137,38 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                         />
                     </div>
                 </FormField>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <FormField label="Latitud" error={errors.latitude}>
+                        <div className="relative">
+                            <Navigation className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="latitude"
+                                type="number"
+                                step="any"
+                                value={data.latitude}
+                                onChange={(e) => setData('latitude', e.target.value)}
+                                placeholder="14.634915"
+                                className="pl-10"
+                            />
+                        </div>
+                    </FormField>
+
+                    <FormField label="Longitud" error={errors.longitude}>
+                        <div className="relative">
+                            <Navigation className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="longitude"
+                                type="number"
+                                step="any"
+                                value={data.longitude}
+                                onChange={(e) => setData('longitude', e.target.value)}
+                                placeholder="-90.506882"
+                                className="pl-10"
+                            />
+                        </div>
+                    </FormField>
+                </div>
 
                 <FormField label="Teléfono" error={errors.phone}>
                     <div className="relative">
@@ -183,23 +198,42 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                         />
                     </div>
                 </FormField>
-
-                <FormField label="Nombre del Encargado" error={errors.manager_name}>
-                    <div className="relative">
-                        <User className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            id="manager_name"
-                            value={data.manager_name}
-                            onChange={(e) => setData('manager_name', e.target.value)}
-                            placeholder={PLACEHOLDERS.managerName}
-                            className="pl-10"
-                            autoComplete={AUTOCOMPLETE.name}
-                        />
-                    </div>
-                </FormField>
             </FormSection>
 
-            <FormSection icon={Settings} title="Configuración de Servicios" description="Servicios y configuración operativa">
+            <FormSection icon={FileText} title="Geocerca KML" description="Administrar archivo KML para definir zona de entrega">
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                        <div className="flex items-center gap-3">
+                            <FileText className="h-5 w-5 text-gray-500" />
+                            <div>
+                                <p className="font-medium">Estado de Geocerca</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    {hasGeofence ? 'KML cargado y configurado' : 'Sin geocerca definida'}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {hasGeofence && (
+                                <Badge className="bg-green-100 text-green-800 border-green-200">
+                                    <FileText className="h-3 w-3 mr-1" />
+                                    KML Activo
+                                </Badge>
+                            )}
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => window.open(route('restaurants.kml.show', restaurant.id), '_blank')}
+                                className="flex items-center gap-2"
+                            >
+                                <FileText className="h-4 w-4" />
+                                Gestionar KML
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </FormSection>
+
+            <FormSection icon={Settings} title="Configuración de Servicios">
                 <div className="space-y-3">
                     <div className="flex items-center space-x-2">
                         <Checkbox
@@ -229,7 +263,7 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                     </div>
                 </div>
 
-                <div className="grid gap-4">
+                <div className="grid gap-4 md:grid-cols-2">
                     <FormField label="Monto Mínimo de Pedido (Q)" error={errors.minimum_order_amount}>
                         <Input
                             id="minimum_order_amount"
@@ -238,17 +272,6 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                             value={data.minimum_order_amount}
                             onChange={(e) => setData('minimum_order_amount', e.target.value)}
                             placeholder="50.00"
-                        />
-                    </FormField>
-
-                    <FormField label="Tarifa de Delivery (Q)" error={errors.delivery_fee}>
-                        <Input
-                            id="delivery_fee"
-                            type="number"
-                            step="0.01"
-                            value={data.delivery_fee}
-                            onChange={(e) => setData('delivery_fee', e.target.value)}
-                            placeholder="25.00"
                         />
                     </FormField>
 
@@ -261,31 +284,6 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                             placeholder="30"
                         />
                     </FormField>
-
-                    <FormField label="Orden de Visualización" error={errors.sort_order}>
-                        <Input
-                            id="sort_order"
-                            type="number"
-                            value={data.sort_order}
-                            onChange={(e) => setData('sort_order', e.target.value)}
-                            placeholder="100"
-                        />
-                    </FormField>
-                </div>
-
-                <div className="border-t pt-4">
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label>Rating Actual</Label>
-                            <div className="text-2xl font-bold">
-                                {restaurant.rating ? Number(restaurant.rating).toFixed(1) : '0.0'}
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Total de Reseñas</Label>
-                            <div className="text-2xl font-bold">{restaurant.total_reviews || 0}</div>
-                        </div>
-                    </div>
                 </div>
             </FormSection>
 
@@ -298,18 +296,18 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                             </div>
                             <div className="flex items-center space-x-2">
                                 <Checkbox
-                                    checked={data.schedule[day].is_open}
+                                    checked={data.schedule[day]?.is_open || false}
                                     onCheckedChange={(checked) => handleScheduleChange(day, 'is_open', checked as boolean)}
                                 />
                                 <Label className="text-sm">Abierto</Label>
                             </div>
-                            {data.schedule[day].is_open && (
+                            {data.schedule[day]?.is_open && (
                                 <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
                                     <div className="flex items-center space-x-2">
                                         <Label className="text-sm font-medium">De:</Label>
                                         <Input
                                             type="time"
-                                            value={data.schedule[day].open}
+                                            value={data.schedule[day]?.open || '08:00'}
                                             onChange={(e) => handleScheduleChange(day, 'open', e.target.value)}
                                             className="w-32"
                                         />
@@ -318,7 +316,7 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                                         <Label className="text-sm font-medium">A:</Label>
                                         <Input
                                             type="time"
-                                            value={data.schedule[day].close}
+                                            value={data.schedule[day]?.close || '22:00'}
                                             onChange={(e) => handleScheduleChange(day, 'close', e.target.value)}
                                             className="w-32"
                                         />
@@ -329,7 +327,6 @@ export default function RestaurantEdit({ restaurant }: RestaurantEditPageProps) 
                     ))}
                 </div>
             </FormSection>
-
         </EditPageLayout>
     );
 }

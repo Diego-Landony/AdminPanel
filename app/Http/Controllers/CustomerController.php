@@ -139,7 +139,6 @@ class CustomerController extends Controller
                     'customer_type' => $customer->customerType ? [
                         'id' => $customer->customerType->id,
                         'name' => $customer->customerType->name,
-                        'display_name' => $customer->customerType->display_name,
                         'color' => $customer->customerType->color,
                         'multiplier' => $customer->customerType->multiplier,
                     ] : null,
@@ -178,7 +177,6 @@ class CustomerController extends Controller
             return [
                 'id' => $type->id,
                 'name' => $type->name,
-                'display_name' => $type->display_name,
                 'color' => $type->color,
                 'customer_count' => $count,
             ];

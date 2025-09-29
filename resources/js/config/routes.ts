@@ -109,6 +109,13 @@ export const routeConfig: Record<string, RouteConfig> = {
         includeParent: true,
     },
 
+    // === GEOCERCAS ===
+    '/restaurants-geofences': {
+        title: 'Geocercas',
+        parent: '/home',
+        includeParent: false,
+    },
+
     // === ACTIVIDAD ===
     '/activity': {
         title: 'Actividad',

@@ -289,8 +289,7 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
             <Head title="Roles" />
 
             <DataTable
-                title="Roles del Sistema"
-                description="Administra los roles y permisos de los usuarios."
+                title="Roles"
                 data={roles}
                 columns={columns}
                 stats={stats}

@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { Building2, Clock, Mail, MapPin, Phone, Settings, User } from 'lucide-react';
+import { Building2, Clock, Mail, MapPin, Phone, Settings, Navigation, FileText } from 'lucide-react';
 import React from 'react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
@@ -9,35 +9,34 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { PLACEHOLDERS, AUTOCOMPLETE } from '@/constants/ui-constants';
 
 interface RestaurantFormData {
     name: string;
-    description: string;
     address: string;
+    latitude: string;
+    longitude: string;
     is_active: boolean;
     delivery_active: boolean;
     pickup_active: boolean;
     phone: string;
+    email: string;
     schedule: Record<string, { is_open: boolean; open: string; close: string }>;
     minimum_order_amount: string;
-    delivery_fee: string;
     estimated_delivery_time: string;
-    email: string;
-    manager_name: string;
-    sort_order: string;
 }
 
 export default function RestaurantCreate() {
     const { data, setData, post, processing, errors } = useForm<RestaurantFormData>({
         name: '',
-        description: '',
         address: '',
+        latitude: '',
+        longitude: '',
         is_active: true,
         delivery_active: true,
         pickup_active: true,
         phone: '',
+        email: '',
         schedule: {
             monday: { is_open: true, open: '08:00', close: '22:00' },
             tuesday: { is_open: true, open: '08:00', close: '22:00' },
@@ -48,11 +47,7 @@ export default function RestaurantCreate() {
             sunday: { is_open: true, open: '08:00', close: '22:00' },
         },
         minimum_order_amount: '50.00',
-        delivery_fee: '25.00',
         estimated_delivery_time: '30',
-        email: '',
-        manager_name: '',
-        sort_order: '100',
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -82,8 +77,7 @@ export default function RestaurantCreate() {
 
     return (
         <CreatePageLayout
-            title="Crear Nuevo Restaurante"
-            description="Completa la información del restaurante"
+            title="Nuevo Restaurante"
             backHref={route('restaurants.index')}
             onSubmit={handleSubmit}
             processing={processing}
@@ -91,20 +85,11 @@ export default function RestaurantCreate() {
             loading={processing}
             loadingSkeleton={CreateRestaurantsSkeleton}
         >
-            <FormSection icon={Building2} title="Información Básica" description="Datos principales del restaurante">
+            <FormSection icon={Building2} title="Información Básica">
                 <FormField label="Nombre" error={errors.name} required>
                     <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder={PLACEHOLDERS.restaurantName} autoComplete={AUTOCOMPLETE.organizationName} />
                 </FormField>
 
-                <FormField label="Descripción" error={errors.description}>
-                    <Textarea
-                        id="description"
-                        value={data.description}
-                        onChange={(e) => setData('description', e.target.value)}
-                        placeholder={PLACEHOLDERS.description}
-                        rows={3}
-                    />
-                </FormField>
 
                 <FormField label="Dirección" error={errors.address} required>
                     <div className="relative">
@@ -119,6 +104,38 @@ export default function RestaurantCreate() {
                         />
                     </div>
                 </FormField>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <FormField label="Latitud" error={errors.latitude}>
+                        <div className="relative">
+                            <Navigation className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="latitude"
+                                type="number"
+                                step="any"
+                                value={data.latitude}
+                                onChange={(e) => setData('latitude', e.target.value)}
+                                placeholder="14.634915"
+                                className="pl-10"
+                            />
+                        </div>
+                    </FormField>
+
+                    <FormField label="Longitud" error={errors.longitude}>
+                        <div className="relative">
+                            <Navigation className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="longitude"
+                                type="number"
+                                step="any"
+                                value={data.longitude}
+                                onChange={(e) => setData('longitude', e.target.value)}
+                                placeholder="-90.506882"
+                                className="pl-10"
+                            />
+                        </div>
+                    </FormField>
+                </div>
 
                 <FormField label="Teléfono" error={errors.phone}>
                     <div className="relative">
@@ -149,22 +166,23 @@ export default function RestaurantCreate() {
                     </div>
                 </FormField>
 
-                <FormField label="Nombre del Encargado" error={errors.manager_name}>
-                    <div className="relative">
-                        <User className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            id="manager_name"
-                            value={data.manager_name}
-                            onChange={(e) => setData('manager_name', e.target.value)}
-                            placeholder={PLACEHOLDERS.managerName}
-                            className="pl-10"
-                            autoComplete={AUTOCOMPLETE.name}
-                        />
-                    </div>
-                </FormField>
             </FormSection>
 
-            <FormSection icon={Settings} title="Configuración de Servicios" description="Servicios y configuración operativa">
+            <FormSection icon={FileText} title="Geocerca KML" description="Información sobre archivo KML para zona de entrega">
+                <div className="p-4 border rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                    <div className="flex items-center gap-3">
+                        <FileText className="h-5 w-5 text-blue-600" />
+                        <div>
+                            <p className="font-medium text-blue-900 dark:text-blue-100">Configuración de Geocerca</p>
+                            <p className="text-sm text-blue-700 dark:text-blue-300">
+                                Después de crear el restaurante, ve a edición para cargar el KML de la geocerca y definir el área de entrega.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </FormSection>
+
+            <FormSection icon={Settings} title="Configuración de Servicios">
                 <div className="space-y-3">
                     <div className="flex items-center space-x-2">
                         <Checkbox id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked as boolean)} />
@@ -202,16 +220,6 @@ export default function RestaurantCreate() {
                         />
                     </FormField>
 
-                    <FormField label="Tarifa de Delivery (Q)" error={errors.delivery_fee}>
-                        <Input
-                            id="delivery_fee"
-                            type="number"
-                            step="0.01"
-                            value={data.delivery_fee}
-                            onChange={(e) => setData('delivery_fee', e.target.value)}
-                            placeholder="25.00"
-                        />
-                    </FormField>
 
                     <FormField label="Tiempo Estimado de Entrega (min)" error={errors.estimated_delivery_time}>
                         <Input
@@ -223,15 +231,6 @@ export default function RestaurantCreate() {
                         />
                     </FormField>
 
-                    <FormField label="Orden de Visualización" error={errors.sort_order}>
-                        <Input
-                            id="sort_order"
-                            type="number"
-                            value={data.sort_order}
-                            onChange={(e) => setData('sort_order', e.target.value)}
-                            placeholder="100"
-                        />
-                    </FormField>
                 </div>
             </FormSection>
 

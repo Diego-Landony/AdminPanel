@@ -56,8 +56,7 @@ export default function CreateCustomer() {
 
     return (
         <CreatePageLayout
-            title="Crear Nuevo Cliente"
-            description="Completa la información para registrar un nuevo cliente"
+            title="Nuevo Cliente"
             backHref={route('customers.index')}
             onSubmit={handleSubmit}
             processing={processing}
@@ -65,7 +64,7 @@ export default function CreateCustomer() {
             loading={processing}
             loadingSkeleton={CreateCustomersSkeleton}
         >
-            <FormSection icon={User} title="Información Personal" description="Datos básicos del cliente">
+            <FormSection icon={User} title="Información Personal">
                 <FormField label="Nombre Completo" error={errors.full_name} required>
                     <Input
                         type="text"
@@ -143,7 +142,7 @@ export default function CreateCustomer() {
                 </FormField>
             </FormSection>
 
-            <FormSection icon={Phone} title="Información de Contacto" description="Datos de contacto y ubicación del cliente">
+            <FormSection icon={Phone} title="Información de Contacto">
                 <FormField label="Teléfono" error={errors.phone}>
                     <div className="relative">
                         <Phone className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
@@ -193,7 +192,7 @@ export default function CreateCustomer() {
                 </FormField>
             </FormSection>
 
-            <FormSection icon={Lock} title="Seguridad" description="Configuración de acceso del cliente">
+            <FormSection icon={Lock} title="Seguridad">
                 <FormField label="Contraseña" error={errors.password} required description={FIELD_DESCRIPTIONS.password}>
                     <div className="relative">
                         <Lock className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />

@@ -98,8 +98,7 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
 
     return (
         <CreatePageLayout
-            title="Crear Nuevo Rol"
-            description="Define un nuevo rol con permisos específicos para los usuarios"
+            title="Nuevo Rol"
             backHref="/roles"
             onSubmit={handleSubmit}
             processing={processing}
@@ -107,7 +106,7 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
             loading={processing}
             loadingSkeleton={CreateRolesSkeleton}
         >
-            <FormSection icon={ENTITY_ICONS.role.info} title="Información del Rol" description="Datos básicos del nuevo rol">
+            <FormSection icon={ENTITY_ICONS.role.info} title="Información del Rol">
                 <FormField label="Nombre del Rol" error={errors.name} required>
                     <Input id="name" type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder={PLACEHOLDERS.roleName} />
                 </FormField>
@@ -123,7 +122,7 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
                 </FormField>
             </FormSection>
 
-            <FormSection icon={ENTITY_ICONS.role.permissions} title="Permisos del Rol" description="Selecciona las acciones que este rol puede realizar en cada página">
+            <FormSection icon={ENTITY_ICONS.role.permissions} title="Permisos del Rol" description="Selecciona las acciones que este rol puede realizar">
                 {/* Tabla compacta de permisos */}
                 <div className="overflow-x-auto">
                     <Table>

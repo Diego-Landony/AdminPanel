@@ -15,9 +15,9 @@ class Restaurant extends Model
      */
     protected $fillable = [
         'name',
-        'description', 
         'latitude',
         'longitude',
+        'geofence_kml',
         'address',
         'is_active',
         'delivery_active',
@@ -25,15 +25,8 @@ class Restaurant extends Model
         'phone',
         'schedule',
         'minimum_order_amount',
-        'delivery_area',
-        'image',
         'email',
-        'manager_name',
-        'delivery_fee',
         'estimated_delivery_time',
-        'rating',
-        'total_reviews',
-        'sort_order',
     ];
 
     /**
@@ -44,15 +37,10 @@ class Restaurant extends Model
         'delivery_active' => 'boolean',
         'pickup_active' => 'boolean',
         'schedule' => 'array',
-        'delivery_area' => 'array',
         'latitude' => 'decimal:7',
         'longitude' => 'decimal:7',
         'minimum_order_amount' => 'decimal:2',
-        'delivery_fee' => 'decimal:2',
-        'rating' => 'decimal:2',
         'estimated_delivery_time' => 'integer',
-        'total_reviews' => 'integer',
-        'sort_order' => 'integer',
     ];
 
     /**
@@ -80,11 +68,11 @@ class Restaurant extends Model
     }
 
     /**
-     * Scope para ordenar por sort_order
+     * Scope para ordenar por nombre
      */
     public function scopeOrdered($query)
     {
-        return $query->orderBy('sort_order')->orderBy('name');
+        return $query->orderBy('name');
     }
 
     /**
@@ -92,13 +80,17 @@ class Restaurant extends Model
      */
     public function getStatusTextAttribute(): string
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return 'Inactivo';
         }
 
         $statuses = [];
-        if ($this->delivery_active) $statuses[] = 'Delivery';
-        if ($this->pickup_active) $statuses[] = 'Pickup';
+        if ($this->delivery_active) {
+            $statuses[] = 'Delivery';
+        }
+        if ($this->pickup_active) {
+            $statuses[] = 'Pickup';
+        }
 
         return empty($statuses) ? 'Solo presencial' : implode(' + ', $statuses);
     }
@@ -108,14 +100,14 @@ class Restaurant extends Model
      */
     public function getTodayScheduleAttribute(): ?string
     {
-        if (!$this->schedule) {
+        if (! $this->schedule) {
             return null;
         }
 
         $today = strtolower(now()->format('l')); // monday, tuesday, etc.
         $todaySchedule = $this->schedule[$today] ?? null;
 
-        if (!$todaySchedule || !$todaySchedule['is_open']) {
+        if (! $todaySchedule || ! $todaySchedule['is_open']) {
             return 'Cerrado hoy';
         }
 
@@ -127,56 +119,42 @@ class Restaurant extends Model
      */
     public function isOpenNow(): bool
     {
-        if (!$this->is_active || !$this->schedule) {
+        if (! $this->is_active || ! $this->schedule) {
             return false;
         }
 
         $today = strtolower(now()->format('l'));
         $todaySchedule = $this->schedule[$today] ?? null;
 
-        if (!$todaySchedule || !$todaySchedule['is_open']) {
+        if (! $todaySchedule || ! $todaySchedule['is_open']) {
             return false;
         }
 
         $currentTime = now()->format('H:i');
+
         return $currentTime >= $todaySchedule['open'] && $currentTime <= $todaySchedule['close'];
     }
 
     /**
-     * Obtiene la calificación como estrellas
+     * Verifica si el restaurante tiene geofence KML definido
      */
-    public function getRatingStarsAttribute(): array
+    public function hasGeofence(): bool
     {
-        $rating = $this->rating;
-        $stars = [];
-
-        for ($i = 1; $i <= 5; $i++) {
-            if ($rating >= $i) {
-                $stars[] = 'full';
-            } elseif ($rating >= $i - 0.5) {
-                $stars[] = 'half';
-            } else {
-                $stars[] = 'empty';
-            }
-        }
-
-        return $stars;
+        return ! empty($this->geofence_kml);
     }
 
     /**
-     * Actualiza el rating basado en nuevas reseñas
+     * Obtiene las coordenadas como array para mapas
      */
-    public function updateRating(float $newRating): void
+    public function getCoordinatesAttribute(): ?array
     {
-        $totalReviews = $this->total_reviews;
-        $currentRating = $this->rating;
-        
-        $newTotalRating = ($currentRating * $totalReviews) + $newRating;
-        $newTotalReviews = $totalReviews + 1;
-        
-        $this->update([
-            'rating' => $newTotalRating / $newTotalReviews,
-            'total_reviews' => $newTotalReviews,
-        ]);
+        if (! $this->latitude || ! $this->longitude) {
+            return null;
+        }
+
+        return [
+            'lat' => (float) $this->latitude,
+            'lng' => (float) $this->longitude,
+        ];
     }
 }

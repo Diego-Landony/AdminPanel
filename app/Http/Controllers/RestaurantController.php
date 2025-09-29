@@ -34,18 +34,18 @@ class RestaurantController extends Controller
             ->select([
                 'id',
                 'name',
-                'description',
                 'address',
+                'latitude',
+                'longitude',
                 'is_active',
                 'delivery_active',
                 'pickup_active',
                 'phone',
+                'email',
+                'schedule',
                 'minimum_order_amount',
-                'delivery_fee',
                 'estimated_delivery_time',
-                'rating',
-                'total_reviews',
-                'sort_order',
+                'geofence_kml',
                 'created_at',
                 'updated_at',
             ]);
@@ -53,16 +53,16 @@ class RestaurantController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
                     ->orWhere('address', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%");
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
         // Aplicar ordenamiento múltiple si está disponible
-        if (!empty($multipleSortCriteria)) {
+        if (! empty($multipleSortCriteria)) {
             foreach ($multipleSortCriteria as $criteria) {
-                $field = $criteria['field'] ?? 'sort_order';
+                $field = $criteria['field'] ?? 'name';
                 $direction = $criteria['direction'] ?? 'asc';
 
                 if ($field === 'restaurant') {
@@ -88,7 +88,7 @@ class RestaurantController extends Controller
                         ELSE 2
                     END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
             } else {
-                $query->orderBy($sortField, $sortDirection);
+                $query->ordered();
             }
         }
 
@@ -98,22 +98,22 @@ class RestaurantController extends Controller
                 return [
                     'id' => $restaurant->id,
                     'name' => $restaurant->name,
-                    'description' => $restaurant->description,
                     'address' => $restaurant->address,
+                    'latitude' => $restaurant->latitude,
+                    'longitude' => $restaurant->longitude,
                     'is_active' => $restaurant->is_active,
                     'delivery_active' => $restaurant->delivery_active,
                     'pickup_active' => $restaurant->pickup_active,
                     'phone' => $restaurant->phone,
+                    'email' => $restaurant->email,
                     'minimum_order_amount' => $restaurant->minimum_order_amount,
-                    'delivery_fee' => $restaurant->delivery_fee,
                     'estimated_delivery_time' => $restaurant->estimated_delivery_time,
-                    'rating' => $restaurant->rating,
-                    'total_reviews' => $restaurant->total_reviews,
-                    'sort_order' => $restaurant->sort_order,
+                    'geofence_kml' => $restaurant->geofence_kml,
                     'status_text' => $restaurant->status_text,
                     'today_schedule' => $restaurant->today_schedule,
                     'is_open_now' => $restaurant->isOpenNow(),
-                    'rating_stars' => $restaurant->rating_stars,
+                    'has_geofence' => $restaurant->hasGeofence(),
+                    'coordinates' => $restaurant->coordinates,
                     'created_at' => $restaurant->created_at,
                     'updated_at' => $restaurant->updated_at,
                 ];
@@ -157,19 +157,17 @@ class RestaurantController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
             'address' => 'required|string|max:255',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'is_active' => 'boolean',
             'delivery_active' => 'boolean',
             'pickup_active' => 'boolean',
             'phone' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
             'schedule' => 'nullable|array',
             'minimum_order_amount' => 'nullable|numeric|min:0',
-            'delivery_fee' => 'nullable|numeric|min:0',
             'estimated_delivery_time' => 'nullable|integer|min:1',
-            'email' => 'nullable|email|max:255',
-            'manager_name' => 'nullable|string|max:255',
-            'sort_order' => 'nullable|integer|min:0',
         ]);
 
         Restaurant::create($request->all());
@@ -195,22 +193,18 @@ class RestaurantController extends Controller
             'restaurant' => [
                 'id' => $restaurant->id,
                 'name' => $restaurant->name,
-                'description' => $restaurant->description,
                 'address' => $restaurant->address,
+                'latitude' => $restaurant->latitude,
+                'longitude' => $restaurant->longitude,
                 'is_active' => $restaurant->is_active,
                 'delivery_active' => $restaurant->delivery_active,
                 'pickup_active' => $restaurant->pickup_active,
                 'phone' => $restaurant->phone,
+                'email' => $restaurant->email,
                 'schedule' => $restaurant->schedule,
                 'minimum_order_amount' => $restaurant->minimum_order_amount,
-                'delivery_fee' => $restaurant->delivery_fee,
                 'estimated_delivery_time' => $restaurant->estimated_delivery_time,
-                'image' => $restaurant->image,
-                'email' => $restaurant->email,
-                'manager_name' => $restaurant->manager_name,
-                'rating' => $restaurant->rating,
-                'total_reviews' => $restaurant->total_reviews,
-                'sort_order' => $restaurant->sort_order,
+                'geofence_kml' => $restaurant->geofence_kml,
                 'created_at' => $restaurant->created_at,
                 'updated_at' => $restaurant->updated_at,
             ],
@@ -224,19 +218,17 @@ class RestaurantController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
             'address' => 'required|string|max:255',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'is_active' => 'boolean',
             'delivery_active' => 'boolean',
             'pickup_active' => 'boolean',
             'phone' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
             'schedule' => 'nullable|array',
             'minimum_order_amount' => 'nullable|numeric|min:0',
-            'delivery_fee' => 'nullable|numeric|min:0',
             'estimated_delivery_time' => 'nullable|integer|min:1',
-            'email' => 'nullable|email|max:255',
-            'manager_name' => 'nullable|string|max:255',
-            'sort_order' => 'nullable|integer|min:0',
         ]);
 
         $restaurant->update($request->all());

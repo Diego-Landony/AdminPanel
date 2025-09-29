@@ -424,8 +424,8 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
                 {/* Page Header */}
                 <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                        <h1 className="text-3xl font-bold tracking-tight">Actividad del Sistema</h1>
-                        <p className="text-muted-foreground">Registro completo de todas las actividades y eventos del sistema.</p>
+                        <h1 className="text-3xl font-bold tracking-tight">Actividad</h1>
+                        <p className="text-muted-foreground">Registro de eventos del sistema.</p>
                     </div>
                 </div>
 

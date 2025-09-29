@@ -46,8 +46,7 @@ export default function CreateUser() {
 
     return (
         <CreatePageLayout
-            title="Crear Usuario"
-            description="Agrega un nuevo usuario al sistema con los datos básicos"
+            title="Nuevo Usuario"
             backHref={route('users.index')}
             onSubmit={handleSubmit}
             processing={processing}
@@ -55,7 +54,7 @@ export default function CreateUser() {
             loading={processing}
             loadingSkeleton={CreateUsersSkeleton}
         >
-            <FormSection icon={User} title="Información del Usuario" description="Datos básicos del nuevo usuario">
+            <FormSection icon={User} title="Información del Usuario">
                 <FormField label="Nombre Completo" error={errors.name} required>
                     <Input
                         id="name"

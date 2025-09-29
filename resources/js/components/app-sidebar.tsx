@@ -3,7 +3,7 @@ import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton,
 import { usePermissions } from '@/hooks/use-permissions';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Activity, Home, LucideIcon, Settings, Shield, Star, UserCircle, UserCog, Users, Utensils } from 'lucide-react';
+import { Activity, Home, LucideIcon, MapPin, Settings, Shield, Star, UserCircle, UserCog, Users, Utensils } from 'lucide-react';
 import AppLogo from './app-logo';
 
 /**
@@ -56,6 +56,14 @@ const systemPages: PageConfig[] = [
         title: 'Gestión de restaurantes',
         href: '/restaurants',
         icon: Utensils,
+        group: 'Restaurantes',
+        permission: 'restaurants.view',
+    },
+    {
+        name: 'restaurants-geofences',
+        title: 'Geocercas restaurantes',
+        href: '/restaurants-geofences',
+        icon: MapPin,
         group: 'Restaurantes',
         permission: 'restaurants.view',
     },
@@ -140,7 +148,7 @@ export function AppSidebar() {
             }
         });
 
-        // ✅ Si no hay items de navegación, mostrar mensaje de "sin acceso"
+        // Si no hay items de navegación, mostrar mensaje de "sin acceso"
         if (items.length === 0) {
             items.push({
                 title: 'Sin Acceso',

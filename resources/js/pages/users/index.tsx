@@ -285,8 +285,7 @@ export default function UsersIndex({ users, total_users, online_users, filters }
             <Head title="Usuarios" />
 
             <DataTable
-                title="Gestión de Usuarios"
-                description="Administra los usuarios del sistema."
+                title="Usuarios"
                 data={users}
                 columns={columns}
                 stats={stats}

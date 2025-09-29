@@ -1,6 +1,6 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { Head, router } from '@inertiajs/react';
-import { Building2, CheckCircle, Clock, MapPin, Phone, ShoppingBag, Star, Truck } from 'lucide-react';
+import { Building2, CheckCircle, Clock, MapPin, Phone, ShoppingBag, Truck, FileText } from 'lucide-react';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
 import { useCallback, useState } from 'react';
 
@@ -18,25 +18,23 @@ import { formatDate, formatNumber } from '@/utils/format';
 interface Restaurant {
     id: number;
     name: string;
-    description: string | null;
-    latitude: number;
-    longitude: number;
     address: string;
+    latitude: number | null;
+    longitude: number | null;
     is_active: boolean;
     delivery_active: boolean;
     pickup_active: boolean;
     phone: string | null;
+    email: string | null;
     schedule: Record<string, unknown>; // JSON
     minimum_order_amount: number;
-    delivery_area: Record<string, unknown>; // JSON
-    image: string | null;
-    email: string | null;
-    manager_name: string | null;
-    delivery_fee: number;
     estimated_delivery_time: number;
-    rating: number;
-    total_reviews: number;
-    sort_order: number;
+    geofence_kml: string | null;
+    status_text: string;
+    today_schedule: string | null;
+    is_open_now: boolean;
+    has_geofence: boolean;
+    coordinates: { lat: number; lng: number } | null;
     created_at: string;
     updated_at: string;
 }
@@ -75,31 +73,6 @@ const getServiceType = (delivery_active: boolean, pickup_active: boolean): strin
     return 'none';
 };
 
-/**
- * Renderiza las estrellas de rating
- */
-const renderStars = (rating: number, total_reviews: number = 0) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-
-    for (let i = 0; i < 5; i++) {
-        if (i < fullStars) {
-            stars.push(<Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />);
-        } else if (i === fullStars && hasHalfStar) {
-            stars.push(<Star key={i} className="h-3 w-3 fill-yellow-400/50 text-yellow-400" />);
-        } else {
-            stars.push(<Star key={i} className="h-3 w-3 text-gray-300" />);
-        }
-    }
-
-    return (
-        <div className="flex items-center gap-1">
-            <div className="flex">{stars}</div>
-            <span className="ml-1 text-xs text-muted-foreground">({total_reviews})</span>
-        </div>
-    );
-};
 
 /**
  * Página principal de gestión de restaurantes
@@ -179,23 +152,16 @@ export default function RestaurantsIndex({
             render: (restaurant: Restaurant) => {
                 const badges = [];
 
-                // Rating badge
-                if (restaurant.rating > 0) {
+                // Geofence badge si existe
+                if (restaurant.has_geofence) {
                     badges.push(
-                        <div key="rating" className="flex items-center gap-1">
-                            {renderStars(restaurant.rating, restaurant.total_reviews)}
-                        </div>,
-                    );
-                }
-
-                // Manager badge si existe
-                if (restaurant.manager_name) {
-                    badges.push(
-                        <Badge key="manager" variant="outline" className="px-2 py-0.5 text-xs">
-                            Mgr: {restaurant.manager_name}
+                        <Badge key="geofence" variant="outline" className="px-2 py-0.5 text-xs bg-green-50 text-green-700 border-green-200">
+                            <FileText className="h-3 w-3 mr-1" />
+                            KML
                         </Badge>,
                     );
                 }
+
 
                 return (
                     <EntityInfoCell
@@ -238,7 +204,6 @@ export default function RestaurantsIndex({
                         <StatusBadge status={serviceType} configs={SERVICE_STATUS_CONFIGS} className="text-xs" />
                         <div className="text-xs text-muted-foreground">
                             <div>Min. orden: Q{formatNumber(restaurant.minimum_order_amount)}</div>
-                            {restaurant.delivery_active && <div>Envío: Q{formatNumber(restaurant.delivery_fee)}</div>}
                             <div className="mt-1 flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 {restaurant.estimated_delivery_time}min
@@ -256,7 +221,9 @@ export default function RestaurantsIndex({
             render: (restaurant: Restaurant) => (
                 <div className="space-y-1">
                     <StatusBadge status={restaurant.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} className="text-xs" />
-                    <div className="text-xs text-muted-foreground">Orden: {restaurant.sort_order}</div>
+                    <div className="text-xs text-muted-foreground">
+                        {restaurant.is_open_now ? 'Abierto ahora' : 'Cerrado'}
+                    </div>
                 </div>
             ),
         },
@@ -308,20 +275,6 @@ export default function RestaurantsIndex({
             }}
             dataFields={[
                 {
-                    label: 'Rating',
-                    value: renderStars(restaurant.rating, restaurant.total_reviews),
-                    condition: restaurant.rating > 0,
-                },
-                {
-                    label: 'Manager',
-                    value: (
-                        <Badge variant="outline" className="px-2 py-0.5 text-xs">
-                            {restaurant.manager_name}
-                        </Badge>
-                    ),
-                    condition: !!restaurant.manager_name,
-                },
-                {
                     label: 'Dirección',
                     value: (
                         <div className="flex items-center gap-2">
@@ -341,6 +294,16 @@ export default function RestaurantsIndex({
                     condition: !!restaurant.phone,
                 },
                 {
+                    label: 'Geocerca',
+                    value: (
+                        <Badge variant="outline" className="px-2 py-0.5 text-xs bg-green-50 text-green-700 border-green-200">
+                            <FileText className="h-3 w-3 mr-1" />
+                            KML Cargado
+                        </Badge>
+                    ),
+                    condition: restaurant.has_geofence,
+                },
+                {
                     label: 'Servicios',
                     value: (
                         <StatusBadge
@@ -355,11 +318,6 @@ export default function RestaurantsIndex({
                     value: `Q${formatNumber(restaurant.minimum_order_amount)}`,
                 },
                 {
-                    label: 'Costo Envío',
-                    value: `Q${formatNumber(restaurant.delivery_fee)}`,
-                    condition: restaurant.delivery_active,
-                },
-                {
                     label: 'Tiempo Entrega',
                     value: (
                         <div className="flex items-center gap-1">
@@ -369,13 +327,12 @@ export default function RestaurantsIndex({
                     ),
                 },
                 {
-                    label: 'Descripción',
-                    value: <p className="line-clamp-2 text-sm">{restaurant.description}</p>,
-                    condition: !!restaurant.description,
+                    label: 'Estado Actual',
+                    value: restaurant.is_open_now ? 'Abierto ahora' : 'Cerrado',
                 },
                 {
-                    label: 'Orden',
-                    value: restaurant.sort_order,
+                    label: 'Horario Hoy',
+                    value: restaurant.today_schedule || 'No definido',
                 },
                 {
                     label: 'Creado',
@@ -390,15 +347,14 @@ export default function RestaurantsIndex({
             <Head title="Gestión de Restaurantes" />
 
             <DataTable
-                title="Gestión de Restaurantes"
-                description="Administra los restaurantes y sus servicios."
+                title="Restaurantes"
                 data={restaurants}
                 columns={columns}
                 stats={stats}
                 filters={filters}
                 createUrl="/restaurants/create"
                 createLabel="Nuevo Restaurante"
-                searchPlaceholder="Buscar por nombre, dirección, teléfono o manager..."
+                searchPlaceholder="Buscar por nombre, dirección, teléfono o email..."
                 loadingSkeleton={RestaurantsSkeleton}
                 renderMobileCard={(restaurant) => <RestaurantMobileCard restaurant={restaurant} />}
                 routeName="/restaurants"

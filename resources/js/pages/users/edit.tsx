@@ -131,7 +131,7 @@ export default function EditUser({ user }: EditUserPageProps) {
             loading={processing}
             loadingSkeleton={EditUsersSkeleton}
         >
-            <FormSection icon={User} title="Información del Usuario" description="Datos básicos del usuario">
+            <FormSection icon={User} title="Información del Usuario">
                 <FormField label="Nombre Completo" error={errors.name} required>
                     <Input
                         id="name"
@@ -215,7 +215,7 @@ export default function EditUser({ user }: EditUserPageProps) {
                 </div>
             </FormSection>
 
-            <FormSection icon={User} title="Información del Sistema" description="Datos del sistema y metadatos">
+            <FormSection icon={User} title="Información del Sistema">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
                         <Label className="text-xs text-muted-foreground">ID</Label>

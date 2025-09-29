@@ -225,7 +225,6 @@ export default function CustomerTypesIndex({ customer_types, stats, filters }: C
 
             <DataTable
                 title="Tipos de Cliente"
-                description="Gestiona los diferentes tipos de clientes y sus multiplicadores."
                 data={customer_types}
                 columns={columns}
                 stats={customerTypeStats}

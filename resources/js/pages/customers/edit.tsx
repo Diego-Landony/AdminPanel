@@ -136,7 +136,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
             onReset={handleReset}
             showResetButton={true}
         >
-            <FormSection icon={User} title="Información Personal" description="Datos básicos del cliente">
+            <FormSection icon={User} title="Información Personal">
                 <FormField label="Nombre Completo" error={errors.full_name} required>
                     <Input
                         type="text"
@@ -214,7 +214,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                 </FormField>
             </FormSection>
 
-            <FormSection icon={Phone} title="Información de Contacto" description="Datos de contacto y ubicación del cliente">
+            <FormSection icon={Phone} title="Información de Contacto">
                 <FormField label="Teléfono" error={errors.phone}>
                     <div className="relative">
                         <Phone className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
@@ -264,7 +264,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                 </FormField>
             </FormSection>
 
-            <FormSection icon={Lock} title="Seguridad" description="Configuración de acceso del cliente">
+            <FormSection icon={Lock} title="Seguridad">
                 <FormField label="Contraseña" error={errors.password} description={FIELD_DESCRIPTIONS.password}>
                     <div className="relative">
                         <Lock className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
@@ -303,7 +303,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                 </FormField>
             </FormSection>
 
-            <FormSection icon={User} title="Información del Sistema" description="Datos del sistema y metadatos">
+            <FormSection icon={User} title="Información del Sistema">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
                         <span className="text-xs text-muted-foreground">ID</span>

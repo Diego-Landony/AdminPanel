@@ -83,8 +83,7 @@ export default function CustomerTypeCreate() {
 
     return (
         <CreatePageLayout
-            title="Crear Tipo de Cliente"
-            description="Crea un nuevo tipo de cliente con sus multiplicadores y requisitos"
+            title="Nuevo Tipo de Cliente"
             backHref={route('customer-types.index')}
             backLabel="Volver a Tipos de Cliente"
             onSubmit={handleSubmit}
@@ -94,7 +93,7 @@ export default function CustomerTypeCreate() {
             loading={processing}
             loadingSkeleton={CreateCustomerTypesSkeleton}
         >
-            <FormSection icon={ENTITY_ICONS.customerType.info} title="Información del Tipo" description="Complete los datos del nuevo tipo de cliente">
+            <FormSection icon={ENTITY_ICONS.customerType.info} title="Información del Tipo">
                 {/* Nombre */}
                 <FormField label="Nombre" error={errors.name} required>
                     <Input

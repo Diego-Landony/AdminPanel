@@ -137,7 +137,7 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
             loading={false}
             loadingSkeleton={EditCustomerTypesSkeleton}
         >
-            <FormSection icon={ENTITY_ICONS.customerType.info} title="Información del Tipo" description="Modifica los datos del tipo de cliente">
+            <FormSection icon={ENTITY_ICONS.customerType.info} title="Información del Tipo">
                 {/* Nombre */}
                 <FormField label="Nombre" error={errors.name} required>
                     <Input

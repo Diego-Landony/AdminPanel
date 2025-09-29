@@ -1,6 +1,6 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { useForm } from '@inertiajs/react';
-import { Hash, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
 import React from 'react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';

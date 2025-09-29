@@ -232,6 +232,82 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
     }, []);
 
     /**
+     * Clear all filters and return to default state
+     */
+    const clearAllFilters = useCallback(() => {
+        setSearch('');
+        setPerPage(filters.per_page || 10);
+        setSortField('created_at');
+        setSortDirection('desc');
+        setSortCriteria([{ field: 'created_at', direction: 'desc' }]);
+
+        // Navigate to clean state
+        router.post(routeName, {
+            per_page: filters.per_page || 10,
+            sort_field: 'created_at',
+            sort_direction: 'desc'
+        }, {
+            preserveState: true,
+            replace: true,
+        });
+    }, [routeName, filters.per_page]);
+
+    /**
+     * Get active filters for display
+     */
+    const getActiveFilters = useCallback(() => {
+        const activeFilters = [];
+
+        // Add search filter
+        if (search && search.trim()) {
+            activeFilters.push({
+                key: 'search',
+                label: `Búsqueda: "${search.trim()}"`,
+                onRemove: () => setSearch('')
+            });
+        }
+
+        // Add sorting filters (only if not default)
+        if (sortCriteria.length > 0) {
+            sortCriteria.forEach((criteria, index) => {
+                if (!(criteria.field === 'created_at' && criteria.direction === 'desc' && sortCriteria.length === 1)) {
+                    activeFilters.push({
+                        key: `sort_${criteria.field}_${index}`,
+                        label: `Ordenar: ${criteria.field} ${criteria.direction === 'asc' ? '↑' : '↓'}${sortCriteria.length > 1 ? ` #${index + 1}` : ''}`,
+                        onRemove: () => {
+                            const newCriteria = sortCriteria.filter((_, i) => i !== index);
+                            if (newCriteria.length === 0) {
+                                // Reset to default
+                                setSortCriteria([{ field: 'created_at', direction: 'desc' }]);
+                                setSortField('created_at');
+                                setSortDirection('desc');
+                            } else {
+                                setSortCriteria(newCriteria);
+                                setSortField(newCriteria[0].field);
+                                setSortDirection(newCriteria[0].direction);
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        // Add per_page filter (only if not default)
+        if (perPage !== (filters.per_page || 10)) {
+            activeFilters.push({
+                key: 'per_page',
+                label: `Mostrar: ${perPage} por página`,
+                onRemove: () => setPerPage(filters.per_page || 10)
+            });
+        }
+
+        return activeFilters;
+    }, [search, sortCriteria, perPage, filters.per_page]);
+
+    const activeFilters = getActiveFilters();
+    const hasActiveFilters = activeFilters.length > 0;
+
+    /**
      * Effect for handling per_page and sorting changes (apply automatically)
      */
     useEffect(() => {
@@ -426,6 +502,35 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                 </CardHeader>
 
                 <CardContent>
+                    {/* Active Filters Chips */}
+                    {hasActiveFilters && (
+                        <div className="mb-4 flex flex-wrap items-center gap-2">
+                            {activeFilters.map((filter) => (
+                                <div
+                                    key={filter.key}
+                                    className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800"
+                                >
+                                    <span>{filter.label}</span>
+                                    <button
+                                        type="button"
+                                        onClick={filter.onRemove}
+                                        className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                                        aria-label={`Remover filtro: ${filter.label}`}
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={clearAllFilters}
+                                className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                <X className="h-3 w-3" />
+                                Limpiar todo
+                            </button>
+                        </div>
+                    )}
                     {/* Search and Filters */}
                     <div className="mb-6 flex flex-col gap-4 sm:flex-row">
                         <div className="flex gap-2 flex-1">

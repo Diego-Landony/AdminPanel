@@ -20,26 +20,12 @@ import { NOTIFICATIONS } from '@/constants/ui-constants';
 export default function CustomerTypeCreate() {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
-        display_name: '',
-        points_required: 0,
-        multiplier: 1.0,
+        points_required: '',
+        multiplier: '',
         color: 'blue',
         is_active: true,
-        sort_order: 0,
     });
 
-    const handleDisplayNameChange = (value: string) => {
-        setData('display_name', value);
-
-        // Auto-generate name from display_name
-        const generatedName = value
-            .toLowerCase()
-            .replace(/[^a-z0-9\s]/g, '')
-            .replace(/\s+/g, '_')
-            .trim();
-
-        setData('name', generatedName);
-    };
 
     /**
      * Maneja el envío del formulario
@@ -47,7 +33,19 @@ export default function CustomerTypeCreate() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Convertir valores string a números antes de enviar
+        const submitData = {
+            ...data,
+            points_required: typeof data.points_required === 'string'
+                ? (parseInt(data.points_required) || 0)
+                : data.points_required,
+            multiplier: typeof data.multiplier === 'string'
+                ? (parseFloat(data.multiplier) || 1.0)
+                : data.multiplier,
+        };
+
         post(route('customer-types.store'), {
+            data: submitData,
             onSuccess: () => {
                 reset();
             },
@@ -86,30 +84,15 @@ export default function CustomerTypeCreate() {
             loadingSkeleton={CreateCustomerTypesSkeleton}
         >
             <FormSection icon={ENTITY_ICONS.customerType.info} title="Información del Tipo" description="Complete los datos del nuevo tipo de cliente">
-                {/* Nombre para mostrar */}
-                <FormField label="Nombre para mostrar" error={errors.display_name} required>
+                {/* Nombre */}
+                <FormField label="Nombre" error={errors.name} required>
                     <Input
-                        id="display_name"
+                        id="name"
                         type="text"
-                        value={data.display_name}
-                        onChange={(e) => handleDisplayNameChange(e.target.value)}
+                        value={data.name}
+                        onChange={(e) => setData('name', e.target.value)}
                         placeholder="ej: Bronce, Plata, Oro"
                     />
-                </FormField>
-
-                {/* Nombre interno */}
-                <FormField label="Nombre interno" error={errors.name} description="Se genera automáticamente pero puede editarse" required>
-                    <div className="relative">
-                        <Hash className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            id="name"
-                            type="text"
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                            placeholder="ej: bronze, silver, gold"
-                            className="pl-10"
-                        />
-                    </div>
                 </FormField>
 
                 <div className="grid grid-cols-1 gap-6">
@@ -122,7 +105,7 @@ export default function CustomerTypeCreate() {
                                 type="number"
                                 min="0"
                                 value={data.points_required}
-                                onChange={(e) => setData('points_required', parseInt(e.target.value) || 0)}
+                                onChange={(e) => setData('points_required', e.target.value)}
                                 className="pl-10"
                             />
                         </div>
@@ -137,7 +120,7 @@ export default function CustomerTypeCreate() {
                             max="10"
                             step="0.01"
                             value={data.multiplier}
-                            onChange={(e) => setData('multiplier', parseFloat(e.target.value) || 1.0)}
+                            onChange={(e) => setData('multiplier', e.target.value)}
                         />
                     </FormField>
                 </div>
@@ -162,16 +145,6 @@ export default function CustomerTypeCreate() {
                         </Select>
                     </FormField>
 
-                    {/* Orden */}
-                    <FormField label="Orden de clasificación" error={errors.sort_order} description="Número menor aparece primero">
-                        <Input
-                            id="sort_order"
-                            type="number"
-                            min="0"
-                            value={data.sort_order}
-                            onChange={(e) => setData('sort_order', parseInt(e.target.value) || 0)}
-                        />
-                    </FormField>
                 </div>
 
                 {/* Estado activo */}

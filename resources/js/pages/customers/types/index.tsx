@@ -15,12 +15,10 @@ import { Shield, Star, Users } from 'lucide-react';
 interface CustomerType {
     id: number;
     name: string;
-    display_name: string;
     points_required: number;
     multiplier: number;
     color: string | null;
     is_active: boolean;
-    sort_order: number;
     customers_count: number;
     created_at: string;
     updated_at: string;
@@ -49,7 +47,7 @@ interface CustomerTypesPageProps {
 }
 
 const CustomerTypeInfoCell: React.FC<{ type: CustomerType }> = ({ type }) => (
-    <EntityInfoCell icon={Shield} primaryText={type.display_name} secondaryText={type.name} />
+    <EntityInfoCell icon={Shield} primaryText={type.name} />
 );
 
 const CustomerTypeMobileCard: React.FC<{ type: CustomerType; onDelete: (type: CustomerType) => void; isDeleting: boolean }> = ({
@@ -59,8 +57,7 @@ const CustomerTypeMobileCard: React.FC<{ type: CustomerType; onDelete: (type: Cu
 }) => (
     <StandardMobileCard
         icon={Shield}
-        title={type.display_name}
-        subtitle={type.name}
+        title={type.name}
         badge={{
             children: <StatusBadge status={type.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />,
         }}

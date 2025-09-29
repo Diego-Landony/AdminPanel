@@ -12,19 +12,16 @@ class CustomerType extends Model
 
     protected $fillable = [
         'name',
-        'display_name',
         'points_required',
         'multiplier',
         'color',
         'is_active',
-        'sort_order',
     ];
 
     protected $casts = [
         'points_required' => 'integer',
         'multiplier' => 'decimal:2',
         'is_active' => 'boolean',
-        'sort_order' => 'integer',
     ];
 
     public function customers(): HasMany
@@ -39,7 +36,7 @@ class CustomerType extends Model
 
     public function scopeOrdered($query)
     {
-        return $query->orderBy('sort_order')->orderBy('points_required');
+        return $query->orderBy('points_required')->orderBy('name');
     }
 
     public static function getTypeForPoints(int $points): ?self

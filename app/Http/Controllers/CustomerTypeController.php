@@ -35,8 +35,7 @@ class CustomerTypeController extends Controller
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('display_name', 'like', "%{$search}%");
+                $q->where('name', 'like', "%{$search}%");
             });
         }
 
@@ -47,7 +46,7 @@ class CustomerTypeController extends Controller
                 $direction = $criteria['direction'] ?? 'desc';
 
                 if ($field === 'type') {
-                    $query->orderBy('display_name', $direction);
+                    $query->orderBy('name', $direction);
                 } elseif (in_array($field, ['points_required', 'multiplier', 'customers_count', 'is_active', 'created_at'])) {
                     $query->orderBy($field, $direction);
                 } else {
@@ -57,7 +56,7 @@ class CustomerTypeController extends Controller
         } else {
             // Fallback a ordenamiento único
             if ($sortField === 'type') {
-                $query->orderBy('display_name', $sortDirection);
+                $query->orderBy('name', $sortDirection);
             } elseif (in_array($sortField, ['points_required', 'multiplier', 'customers_count', 'is_active', 'created_at'])) {
                 $query->orderBy($sortField, $sortDirection);
             } else {
@@ -105,13 +104,11 @@ class CustomerTypeController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:50|unique:customer_types',
-            'display_name' => 'required|string|max:100',
+            'name' => 'required|string|max:100|unique:customer_types',
             'points_required' => 'required|integer|min:0',
             'multiplier' => 'required|numeric|min:1|max:10',
             'color' => 'nullable|string|max:20',
             'is_active' => 'boolean',
-            'sort_order' => 'integer|min:0',
         ]);
 
         CustomerType::create($validated);
@@ -150,13 +147,11 @@ class CustomerTypeController extends Controller
     public function update(Request $request, CustomerType $customerType): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:50|unique:customer_types,name,'.$customerType->id,
-            'display_name' => 'required|string|max:100',
+            'name' => 'required|string|max:100|unique:customer_types,name,'.$customerType->id,
             'points_required' => 'required|integer|min:0',
             'multiplier' => 'required|numeric|min:1|max:10',
             'color' => 'nullable|string|max:20',
             'is_active' => 'boolean',
-            'sort_order' => 'integer|min:0',
         ]);
 
         $customerType->update($validated);

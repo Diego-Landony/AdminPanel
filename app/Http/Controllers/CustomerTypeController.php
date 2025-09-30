@@ -156,8 +156,7 @@ class CustomerTypeController extends Controller
 
         $customerType->update($validated);
 
-        return redirect()->route('customer-types.index')
-            ->with('success', 'Tipo de cliente actualizado exitosamente.');
+        return back()->with('success', 'Tipo de cliente actualizado exitosamente.');
     }
 
     /**

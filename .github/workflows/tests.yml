@@ -14,6 +14,18 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: subwayapp_test
+          MYSQL_USER: lima
+          MYSQL_PASSWORD: lima
+        ports:
+          - 3306:3306
+        options: --health-cmd="mariadb-admin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,6 +57,16 @@ jobs:
 
       - name: Generate Application Key
         run: php artisan key:generate
+
+      - name: Run Migrations
+        run: php artisan migrate --force
+        env:
+          DB_CONNECTION: mariadb_testing
+          DB_TEST_HOST: 127.0.0.1
+          DB_TEST_PORT: 3306
+          DB_TEST_DATABASE: subwayapp_test
+          DB_TEST_USERNAME: lima
+          DB_TEST_PASSWORD: lima
 
       - name: Tests
         run: ./vendor/bin/pest

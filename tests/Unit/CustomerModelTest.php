@@ -11,6 +11,7 @@ test('customer has fillable attributes', function () {
     $expectedFillable = [
         'full_name',
         'email',
+        'email_verified_at',
         'password',
         'subway_card',
         'birth_date',

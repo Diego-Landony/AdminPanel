@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ActivityLog;
+use App\Http\Controllers\Concerns\{HandlesExceptions, HasDataTableFeatures};
+use App\Http\Requests\Role\{StoreRoleRequest, UpdateRoleRequest};
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
-use App\Services\PermissionDiscoveryService;
+use App\Services\{ActivityLogService, PermissionDiscoveryService};
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,26 +19,24 @@ use Inertia\Response;
  */
 class RoleController extends Controller
 {
+    use HandlesExceptions, HasDataTableFeatures;
+
+    /**
+     * Campos permitidos para ordenamiento
+     */
+    protected array $allowedSortFields = ['name', 'created_at'];
+
+    public function __construct(
+        protected ActivityLogService $activityLog,
+        protected PermissionDiscoveryService $permissionDiscovery
+    ) {}
     /**
      * Muestra la lista de roles
      */
     public function index(Request $request): Response
     {
-        // Obtener parámetros de paginación y ordenamiento
-        $perPage = $request->get('per_page', 10);
-        $search = $request->get('search', '');
-        $sortField = $request->get('sort_field', 'name');
-        $sortDirection = $request->get('sort_direction', 'asc');
-        $sortCriteria = $request->get('sort_criteria');
-
-        // Parse multiple sort criteria if provided
-        $multipleSortCriteria = [];
-        if ($sortCriteria) {
-            $decoded = json_decode($sortCriteria, true);
-            if (is_array($decoded)) {
-                $multipleSortCriteria = $decoded;
-            }
-        }
+        // Obtener parámetros usando trait
+        $params = $this->getPaginationParams($request);
 
         // Query base con eager loading optimizado
         $query = Role::with([
@@ -45,49 +44,39 @@ class RoleController extends Controller
             'users:id,name,email',
         ]);
 
-        // Aplicar búsqueda si existe
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhereHas('permissions', function ($permissionQuery) use ($search) {
-                        $permissionQuery->where('name', 'like', "%{$search}%");
-                    })
-                    ->orWhereHas('users', function ($userQuery) use ($search) {
-                        $userQuery->where('name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%");
-                    });
-            });
-        }
+        // Aplicar búsqueda usando trait
+        $query = $this->applySearch($query, $params['search'], [
+            'name',
+            'description',
+            'permissions' => function ($permissionQuery, $search) {
+                $permissionQuery->where('name', 'like', "%{$search}%");
+            },
+            'users' => function ($userQuery, $search) {
+                $userQuery->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            },
+        ]);
 
-        // Aplicar ordenamiento múltiple si está disponible
-        if (!empty($multipleSortCriteria)) {
-            foreach ($multipleSortCriteria as $criteria) {
-                $field = $criteria['field'] ?? 'name';
-                $direction = $criteria['direction'] ?? 'asc';
+        // Aplicar ordenamiento usando trait
+        $fieldMappings = [
+            'role' => 'name',
+        ];
 
-                if ($field === 'role' || $field === 'name') {
-                    $query->orderBy('name', $direction);
-                } elseif ($field === 'created_at') {
-                    $query->orderBy('created_at', $direction);
-                } else {
-                    $query->orderBy($field, $direction);
-                }
-            }
+        if (! empty($params['multiple_sort_criteria'])) {
+            $query = $this->applyMultipleSorting($query, $params['multiple_sort_criteria'], $fieldMappings);
         } else {
-            // Fallback a ordenamiento único
-            if ($sortField === 'role' || $sortField === 'name') {
-                $query->orderBy('name', $sortDirection);
-            } elseif ($sortField === 'created_at') {
-                $query->orderBy('created_at', $sortDirection);
-            } else {
-                $query->orderBy('is_system', 'desc')->orderBy('name', 'asc');
-            }
+            $query = $this->applySorting(
+                $query,
+                $params['sort_field'],
+                $params['sort_direction'],
+                $fieldMappings,
+                'is_system DESC, name ASC'
+            );
         }
 
         // Paginar y obtener roles
-        $roles = $query->paginate($perPage)
-            ->appends($request->all()) // ✅ SOLUCIÓN: Preservar filtros en paginación
+        $roles = $query->paginate($params['per_page'])
+            ->appends($request->all())
             ->through(function ($role) {
                 return [
                     'id' => $role->id,
@@ -120,13 +109,7 @@ class RoleController extends Controller
         return Inertia::render('roles/index', [
             'roles' => $roles,
             'permissions' => $permissions,
-            'filters' => [
-                'search' => $search,
-                'per_page' => $perPage,
-                'sort_field' => $sortField,
-                'sort_direction' => $sortDirection,
-                'sort_criteria' => $multipleSortCriteria,
-            ],
+            'filters' => $this->buildFiltersResponse($params),
             'roleStats' => $roleStats,
         ]);
     }
@@ -139,65 +122,39 @@ class RoleController extends Controller
         // Sincronizar permisos automáticamente si hay nuevas páginas
         $this->syncPermissionsIfNeeded();
 
-        $permissions = Permission::getGrouped();
-
         return Inertia::render('roles/create', [
-            'permissions' => $permissions,
+            'permissions' => Permission::getGrouped(),
         ]);
     }
 
     /**
      * Almacena un nuevo rol
      */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse|\Inertia\Response
+    public function store(StoreRoleRequest $request): \Illuminate\Http\RedirectResponse|\Inertia\Response
     {
         // If request contains search/filter parameters, redirect to index method
         if ($request->hasAny(['search', 'per_page', 'sort_field', 'sort_direction', 'page'])) {
             return $this->index($request);
         }
 
-        try {
-            $request->validate([
-                'name' => 'required|string|max:255|unique:roles,name',
-                'description' => 'nullable|string',
-                'permissions' => 'required|array|min:1',
-                'permissions.*' => 'exists:permissions,name',
-            ], [
-                'permissions.required' => 'Debes seleccionar al menos un permiso para el rol.',
-                'permissions.min' => 'Debes seleccionar al menos un permiso para el rol.',
-            ]);
+        return $this->executeWithExceptionHandling(
+            operation: function () use ($request) {
+                $role = Role::create([
+                    'name' => $request->name,
+                    'description' => $request->description,
+                    'is_system' => false,
+                ]);
 
-            $role = Role::create([
-                'name' => $request->name,
-                'description' => $request->description,
-                'is_system' => false,
-            ]);
+                if ($request->has('permissions')) {
+                    $permissionIds = Permission::whereIn('name', $request->permissions)->pluck('id');
+                    $role->permissions()->sync($permissionIds);
+                }
 
-            if ($request->has('permissions')) {
-                $permissionIds = Permission::whereIn('name', $request->permissions)->pluck('id');
-                $role->permissions()->sync($permissionIds);
-            }
-
-            return redirect()->route('roles.index')->with('success', 'Rol creado exitosamente');
-        } catch (\Illuminate\Database\QueryException $e) {
-            \Log::error('Error de base de datos al crear rol: '.$e->getMessage());
-
-            // Verificar si es error de duplicado
-            if (str_contains($e->getMessage(), 'UNIQUE constraint failed') ||
-                str_contains($e->getMessage(), 'Duplicate entry') ||
-                str_contains($e->getMessage(), 'UNIQUE constraint')) {
-                return back()->with('error', 'El nombre del rol ya existe en el sistema. Usa un nombre diferente.');
-            }
-
-            return back()->with('error', 'Error de base de datos al crear el rol. Verifica que los datos sean correctos.');
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            // Los errores de validación se manejan automáticamente por Laravel
-            throw $e;
-        } catch (\Exception $e) {
-            \Log::error('Error inesperado al crear rol: '.$e->getMessage());
-
-            return back()->with('error', 'Error inesperado al crear el rol. Inténtalo de nuevo o contacta al administrador.');
-        }
+                return redirect()->route('roles.index')->with('success', 'Rol creado exitosamente');
+            },
+            context: 'crear',
+            entity: 'rol'
+        );
     }
 
     /**
@@ -258,80 +215,42 @@ class RoleController extends Controller
     /**
      * Actualiza un rol existente
      */
-    public function update(Request $request, Role $role): RedirectResponse
+    public function update(UpdateRoleRequest $request, Role $role): RedirectResponse
     {
-        try {
-            // Verificar si el usuario actual es administrador
-            $currentUser = auth()->user();
-            $isCurrentUserAdmin = $currentUser && $currentUser->hasRole('admin');
+        return $this->executeWithExceptionHandling(
+            operation: function () use ($request, $role) {
+                // Capturar valores anteriores para el log de actividad
+                $oldValues = [
+                    'name' => $role->name,
+                    'description' => $role->description,
+                    'permissions' => $role->permissions()->pluck('name')->toArray(),
+                ];
 
-            // Verificar si es un rol del sistema
-            if ($role->is_system && $role->name !== 'admin') {
-                // Solo administradores pueden editar roles del sistema
-                if (! $isCurrentUserAdmin) {
-                    abort(403, 'No tienes permisos para editar este rol del sistema');
+                $newValues = $request->only(['name', 'description']);
+                $permissionNames = $request->input('permissions', []);
+
+                // Si es el rol "admin", asegurar que tenga todos los permisos
+                if ($role->name === 'admin') {
+                    $permissionNames = Permission::pluck('name')->toArray();
                 }
-            }
 
-            // Para el rol "admin", solo usuarios administradores pueden editarlo
-            if ($role->name === 'admin' && ! $isCurrentUserAdmin) {
-                abort(403, 'Solo los administradores pueden editar el rol Administrador');
-            }
+                $role->update($newValues);
 
-            $request->validate([
-                'name' => 'required|string|max:255|unique:roles,name,'.$role->id,
-                'description' => 'nullable|string|max:500',
-                'permissions' => 'array',
-            ]);
+                // Sincronizar permisos - convertir nombres a IDs
+                $permissionIds = Permission::whereIn('name', $permissionNames)->pluck('id')->toArray();
+                $role->permissions()->sync($permissionIds);
 
-            // Capturar valores anteriores para el log de actividad
-            $oldValues = [
-                'name' => $role->name,
-                'description' => $role->description,
-                'permissions' => $role->permissions()->pluck('name')->toArray(),
-            ];
+                // Preparar nuevos valores para el log
+                $newValues['permissions'] = $permissionNames;
 
-            $newValues = $request->only(['name', 'description']);
-            $permissionNames = $request->input('permissions', []);
+                // Log de la actividad usando servicio
+                $this->activityLog->logUpdated($role, $oldValues, $newValues);
 
-            // Si es el rol "admin", asegurar que tenga todos los permisos
-            if ($role->name === 'admin') {
-                $allPermissions = Permission::pluck('name')->toArray();
-                $permissionNames = $allPermissions;
-            }
-
-            $role->update($newValues);
-
-            // Sincronizar permisos - convertir nombres a IDs
-            $permissionIds = Permission::whereIn('name', $permissionNames)->pluck('id')->toArray();
-            $role->permissions()->sync($permissionIds);
-
-            // Preparar nuevos valores para el log
-            $newValues['permissions'] = $permissionNames;
-
-            // Log de la actividad
-            $this->logRoleUpdate($role, $oldValues, $newValues);
-
-            return back()->with('success', 'Rol actualizado exitosamente');
-        } catch (\Illuminate\Database\QueryException $e) {
-            \Log::error('Error de base de datos al actualizar rol: '.$e->getMessage());
-
-            // Verificar si es error de duplicado
-            if (str_contains($e->getMessage(), 'UNIQUE constraint failed') ||
-                str_contains($e->getMessage(), 'Duplicate entry') ||
-                str_contains($e->getMessage(), 'UNIQUE constraint')) {
-                return back()->with('error', 'El nombre del rol ya existe en el sistema. Usa un nombre diferente.');
-            }
-
-            return back()->with('error', 'Error de base de datos al actualizar el rol. Verifica que los datos sean correctos.');
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            // Los errores de validación se manejan automáticamente por Laravel
-            throw $e;
-        } catch (\Exception $e) {
-            \Log::error('Error inesperado al actualizar rol: '.$e->getMessage());
-
-            return back()->with('error', 'Error inesperado al actualizar el rol. Inténtalo de nuevo o contacta al administrador.');
-        }
+                return back()->with('success', 'Rol actualizado exitosamente');
+            },
+            context: 'actualizar',
+            entity: 'rol'
+        );
     }
 
     /**
@@ -339,29 +258,12 @@ class RoleController extends Controller
      */
     public function updateUsers(Request $request, Role $role): JsonResponse
     {
+        $request->validate([
+            'users' => 'array',
+            'users.*' => 'exists:users,id',
+        ]);
+
         try {
-            // Verificar si el usuario actual es administrador
-            $currentUser = auth()->user();
-            $isCurrentUserAdmin = $currentUser && $currentUser->hasRole('admin');
-
-            // Verificar si es un rol del sistema
-            if ($role->is_system && $role->name !== 'admin') {
-                // Solo administradores pueden editar usuarios de roles del sistema
-                if (! $isCurrentUserAdmin) {
-                    return response()->json(['error' => 'No tienes permisos para editar usuarios de este rol del sistema'], 403);
-                }
-            }
-
-            // Para el rol "admin", solo usuarios administradores pueden gestionar usuarios
-            if ($role->name === 'admin' && ! $isCurrentUserAdmin) {
-                return response()->json(['error' => 'Solo los administradores pueden gestionar usuarios del rol Administrador'], 403);
-            }
-
-            $request->validate([
-                'users' => 'array',
-                'users.*' => 'exists:users,id',
-            ]);
-
             $oldUserIds = $role->users()->pluck('users.id')->toArray();
             $newUserIds = $request->input('users', []);
 
@@ -375,26 +277,14 @@ class RoleController extends Controller
 
             $role->users()->sync($newUserIds);
 
-            // Log de la acción para actividad
-            $this->logRoleUsersUpdate($role, $oldUserIds, $newUserIds);
-
-            // Log adicional para debug
-            \Log::info("Usuarios del rol '{$role->name}' actualizados", [
-                'role_id' => $role->id,
-                'old_users' => $oldUserIds,
-                'new_users' => $newUserIds,
-                'user_id' => auth()->id(),
-            ]);
+            // Log de la acción usando servicio
+            $this->activityLog->logRoleUsersUpdate($role, $oldUserIds, $newUserIds);
 
             return response()->json(['success' => 'Usuarios del rol actualizados exitosamente']);
-        } catch (\Illuminate\Database\QueryException $e) {
-            \Log::error('Error de base de datos al actualizar usuarios del rol: '.$e->getMessage());
-
-            return response()->json(['error' => 'Error de base de datos al actualizar usuarios del rol. Verifica que los usuarios existan.'], 500);
         } catch (\Exception $e) {
-            \Log::error('Error inesperado al actualizar usuarios del rol: '.$e->getMessage());
+            \Log::error('Error al actualizar usuarios del rol: '.$e->getMessage());
 
-            return response()->json(['error' => 'Error inesperado al actualizar usuarios del rol. Inténtalo de nuevo o contacta al administrador.'], 500);
+            return response()->json(['error' => 'Error al actualizar usuarios del rol'], 500);
         }
     }
 
@@ -403,43 +293,22 @@ class RoleController extends Controller
      */
     public function destroy(Role $role): RedirectResponse
     {
-        try {
-            // Verificar si el usuario actual es administrador
-            $currentUser = auth()->user();
-            $isCurrentUserAdmin = $currentUser && $currentUser->hasRole('admin');
+        return $this->executeWithExceptionHandling(
+            operation: function () use ($role) {
+                $userCount = $role->users()->count();
+                $roleName = $role->name;
 
-            // Verificar si es un rol del sistema
-            if ($role->is_system) {
-                // Solo administradores pueden eliminar roles del sistema
-                if (! $isCurrentUserAdmin) {
-                    abort(403, 'No tienes permisos para eliminar este rol del sistema');
-                }
-            }
+                $role->delete();
 
-            // Verificar si tiene usuarios asignados
-            $userCount = $role->users()->count();
-            $successMessage = $userCount > 0
-                ? "Rol eliminado exitosamente. {$userCount} usuarios perdieron este rol."
-                : 'Rol eliminado exitosamente';
+                $successMessage = $userCount > 0
+                    ? "Rol '{$roleName}' eliminado exitosamente. {$userCount} usuarios perdieron este rol."
+                    : "Rol '{$roleName}' eliminado exitosamente";
 
-            $role->delete();
-
-            return back()->with('success', $successMessage);
-        } catch (\Illuminate\Database\QueryException $e) {
-            \Log::error('Error de base de datos al eliminar rol: '.$e->getMessage());
-
-            // Verificar si es error de restricción de clave foránea
-            if (str_contains($e->getMessage(), 'FOREIGN KEY constraint failed') ||
-                str_contains($e->getMessage(), 'Cannot delete or update a parent row')) {
-                return back()->with('error', 'No se puede eliminar el rol porque tiene usuarios asignados. Primero remueve todos los usuarios del rol.');
-            }
-
-            return back()->with('error', 'Error de base de datos al eliminar el rol. Verifica que no tenga dependencias.');
-        } catch (\Exception $e) {
-            \Log::error('Error inesperado al eliminar rol: '.$e->getMessage());
-
-            return back()->with('error', 'Error inesperado al eliminar el rol. Inténtalo de nuevo o contacta al administrador.');
-        }
+                return back()->with('success', $successMessage);
+            },
+            context: 'eliminar',
+            entity: 'rol'
+        );
     }
 
     /**
@@ -449,11 +318,8 @@ class RoleController extends Controller
     private function syncPermissionsIfNeeded(): void
     {
         try {
-            $discoveryService = new PermissionDiscoveryService;
-
             // Verificar si hay páginas nuevas detectadas
-            $currentPages = $discoveryService->discoverPages();
-            $currentPermissionNames = collect($discoveryService->generatePermissions())->pluck('name');
+            $currentPermissionNames = collect($this->permissionDiscovery->generatePermissions())->pluck('name');
             $existingPermissionNames = Permission::pluck('name');
 
             // Si hay permisos nuevos, sincronizar automáticamente
@@ -461,7 +327,7 @@ class RoleController extends Controller
 
             if ($newPermissions->count() > 0) {
                 \Log::info('Auto-sincronizando permisos: '.$newPermissions->join(', '));
-                $discoveryService->syncPermissions();
+                $this->permissionDiscovery->syncPermissions();
 
                 // Actualizar rol admin con nuevos permisos
                 $adminRole = Role::where('name', 'admin')->first();
@@ -472,101 +338,6 @@ class RoleController extends Controller
             }
         } catch (\Exception $e) {
             \Log::error('Error en auto-sincronización de permisos: '.$e->getMessage());
-        }
-    }
-
-    /**
-     * Registra cambios en usuarios de roles
-     */
-    private function logRoleUsersUpdate(Role $role, array $oldUserIds, array $newUserIds): void
-    {
-        try {
-            $addedUsers = array_diff($newUserIds, $oldUserIds);
-            $removedUsers = array_diff($oldUserIds, $newUserIds);
-
-            $description = "Usuarios actualizados para el rol '{$role->name}'";
-            if (! empty($addedUsers)) {
-                $addedUserNames = User::whereIn('id', $addedUsers)->pluck('name')->join(', ');
-                $description .= " - Agregados: {$addedUserNames}";
-            }
-            if (! empty($removedUsers)) {
-                $removedUserNames = User::whereIn('id', $removedUsers)->pluck('name')->join(', ');
-                $description .= " - Removidos: {$removedUserNames}";
-            }
-
-            ActivityLog::create([
-                'user_id' => auth()->id(),
-                'event_type' => 'role_users_updated',
-                'target_model' => 'Role',
-                'target_id' => $role->id,
-                'description' => $description,
-                'old_values' => ['user_ids' => $oldUserIds],
-                'new_values' => ['user_ids' => $newUserIds],
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Error al registrar actividad de usuarios de rol: '.$e->getMessage());
-        }
-    }
-
-    /**
-     * Registra la actividad de actualización de un rol
-     */
-    private function logRoleUpdate(Role $role, array $oldValues, array $newValues): void
-    {
-        try {
-            $changes = [];
-            $description = "Rol '{$role->name}' actualizado";
-
-            // Detectar cambios en nombre
-            if (isset($oldValues['name']) && isset($newValues['name']) && $oldValues['name'] !== $newValues['name']) {
-                $changes[] = "nombre: '{$oldValues['name']}' → '{$newValues['name']}'";
-            }
-
-            // Detectar cambios en descripción
-            if (isset($oldValues['description']) && isset($newValues['description']) && $oldValues['description'] !== $newValues['description']) {
-                $oldDesc = $oldValues['description'] ?: '(sin descripción)';
-                $newDesc = $newValues['description'] ?: '(sin descripción)';
-                $changes[] = "descripción: '{$oldDesc}' → '{$newDesc}'";
-            }
-
-            // Detectar cambios en permisos
-            if (isset($oldValues['permissions']) && isset($newValues['permissions'])) {
-                $oldPermissions = array_values($oldValues['permissions']);
-                $newPermissions = array_values($newValues['permissions']);
-
-                sort($oldPermissions);
-                sort($newPermissions);
-
-                if ($oldPermissions !== $newPermissions) {
-                    $addedPermissions = array_diff($newPermissions, $oldPermissions);
-                    $removedPermissions = array_diff($oldPermissions, $newPermissions);
-
-                    if (! empty($addedPermissions)) {
-                        $changes[] = 'permisos agregados: '.implode(', ', $addedPermissions);
-                    }
-
-                    if (! empty($removedPermissions)) {
-                        $changes[] = 'permisos removidos: '.implode(', ', $removedPermissions);
-                    }
-                }
-            }
-
-            // Si hay cambios, agregar al descripción
-            if (! empty($changes)) {
-                $description .= ' - '.implode(', ', $changes);
-            }
-
-            ActivityLog::create([
-                'user_id' => auth()->id(),
-                'event_type' => 'role_updated',
-                'target_model' => 'Role',
-                'target_id' => $role->id,
-                'description' => $description,
-                'old_values' => $oldValues,
-                'new_values' => $newValues,
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Error al registrar actividad de actualización de rol: '.$e->getMessage());
         }
     }
 }

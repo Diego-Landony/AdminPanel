@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Models\Permission;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -14,6 +16,10 @@ use Illuminate\Support\Str;
  */
 class PermissionDiscoveryService
 {
+    /**
+     * Tiempo de cache en minutos
+     */
+    private const CACHE_TTL = 60;
     /**
      * Páginas que deben ser excluidas del sistema de permisos
      */
@@ -77,10 +83,19 @@ class PermissionDiscoveryService
     /**
      * Descubre automáticamente todas las páginas del sistema
      *
+     * @param  bool  $useCache  Si debe usar cache
      * @return array Array de configuraciones de páginas
      */
-    public function discoverPages(): array
+    public function discoverPages(bool $useCache = true): array
     {
+        // Intentar obtener desde cache
+        if ($useCache) {
+            $cached = Cache::get('permission_discovery.pages');
+            if ($cached !== null) {
+                return $cached;
+            }
+        }
+
         $pagesPath = resource_path('js/pages');
         $discoveredPages = [];
 
@@ -124,6 +139,11 @@ class PermissionDiscoveryService
             }
         }
 
+        // Guardar en cache si está habilitado
+        if ($useCache) {
+            Cache::put('permission_discovery.pages', $discoveredPages, now()->addMinutes(self::CACHE_TTL));
+        }
+
         return $discoveredPages;
     }
 
@@ -164,11 +184,20 @@ class PermissionDiscoveryService
     /**
      * Genera todos los permisos basado en las páginas descubiertas
      *
+     * @param  bool  $useCache  Si debe usar cache
      * @return array Array de permisos a crear
      */
-    public function generatePermissions(): array
+    public function generatePermissions(bool $useCache = true): array
     {
-        $pages = $this->discoverPages();
+        // Intentar obtener desde cache
+        if ($useCache) {
+            $cached = Cache::get('permission_discovery.permissions');
+            if ($cached !== null) {
+                return $cached;
+            }
+        }
+
+        $pages = $this->discoverPages($useCache);
         $permissions = [];
 
         foreach ($pages as $pageName => $config) {
@@ -180,6 +209,11 @@ class PermissionDiscoveryService
                     'group' => $pageName,
                 ];
             }
+        }
+
+        // Guardar en cache si está habilitado
+        if ($useCache) {
+            Cache::put('permission_discovery.permissions', $permissions, now()->addMinutes(self::CACHE_TTL));
         }
 
         return $permissions;
@@ -211,7 +245,15 @@ class PermissionDiscoveryService
      */
     public function syncPermissions(bool $removeObsolete = false): array
     {
-        $discoveredPermissions = $this->generatePermissions();
+        Log::info('Iniciando sincronización de permisos', [
+            'remove_obsolete' => $removeObsolete,
+            'user_id' => auth()->id(),
+        ]);
+
+        // Limpiar cache antes de sincronizar
+        $this->clearCache();
+
+        $discoveredPermissions = $this->generatePermissions(false); // Sin cache durante sync
         $created = 0;
         $updated = 0;
         $deleted = 0;
@@ -245,14 +287,31 @@ class PermissionDiscoveryService
             }
         }
 
-        return [
-            'discovered_pages' => count($this->discoverPages()),
+        $result = [
+            'discovered_pages' => count($this->discoverPages(false)),
             'total_permissions' => count($discoveredPermissions),
             'created' => $created,
             'updated' => $updated,
             'deleted' => $deleted,
             'permissions' => $discoveredPermissions,
         ];
+
+        Log::info('Sincronización de permisos completada', $result);
+
+        return $result;
+    }
+
+    /**
+     * Limpia el cache de permisos descubiertos
+     *
+     * @return void
+     */
+    public function clearCache(): void
+    {
+        Cache::forget('permission_discovery.pages');
+        Cache::forget('permission_discovery.permissions');
+
+        Log::info('Cache de permisos limpiado');
     }
 
     /**

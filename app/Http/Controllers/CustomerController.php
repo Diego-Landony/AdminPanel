@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\{HandlesExceptions, HasDataTableFeatures};
+use App\Http\Requests\Customer\{StoreCustomerRequest, UpdateCustomerRequest};
 use App\Models\Customer;
 use App\Models\CustomerType;
 use Illuminate\Http\RedirectResponse;
@@ -16,32 +18,25 @@ use Inertia\Response;
  */
 class CustomerController extends Controller
 {
+    use HandlesExceptions, HasDataTableFeatures;
+
+    /**
+     * Campos permitidos para ordenamiento
+     */
+    protected array $allowedSortFields = ['full_name', 'email', 'created_at', 'last_activity_at', 'puntos', 'last_purchase_at'];
+
     /**
      * Muestra la lista de todos los clientes del sistema
-     *
-     * @param  Request  $request  - Request actual
-     * @return \Inertia\Response - Vista de Inertia con la lista de clientes
      */
     public function index(Request $request): Response
     {
-        // Obtener parámetros de búsqueda, paginación y ordenamiento
-        $search = $request->get('search', '');
-        $perPage = $request->get('per_page', 10);
-        $sortField = $request->get('sort_field', 'created_at');
-        $sortDirection = $request->get('sort_direction', 'desc');
-        $sortCriteria = $request->get('sort_criteria');
+        // Obtener parámetros usando trait
+        $params = $this->getPaginationParams($request);
 
-        // Parse multiple sort criteria if provided
-        $multipleSortCriteria = [];
-        if ($sortCriteria) {
-            $decoded = json_decode($sortCriteria, true);
-            if (is_array($decoded)) {
-                $multipleSortCriteria = $decoded;
-            }
-        }
-
-        // Query base con relación de tipo de cliente
-        $query = Customer::with('customerType')
+        // Query base con eager loading optimizado
+        $query = Customer::with(['customerType' => function ($query) {
+            $query->select('id', 'name', 'color', 'multiplier', 'points_required');
+        }])
             ->select([
                 'id',
                 'full_name',
@@ -61,67 +56,38 @@ class CustomerController extends Controller
                 'puntos_updated_at',
             ]);
 
-        // Aplicar búsqueda global si existe
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('full_name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('subway_card', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhereHas('customerType', function ($subQuery) use ($search) {
-                        $subQuery->where('name', 'like', "%{$search}%");
-                    });
-            });
-        }
+        // Aplicar búsqueda usando trait
+        $query = $this->applySearch($query, $params['search'], [
+            'full_name',
+            'email',
+            'subway_card',
+            'phone',
+            'customerType' => function ($roleQuery, $search) {
+                $roleQuery->where('name', 'like', "%{$search}%");
+            },
+        ]);
 
-        // Aplicar ordenamiento múltiple si está disponible
-        if (! empty($multipleSortCriteria)) {
-            foreach ($multipleSortCriteria as $criteria) {
-                $field = $criteria['field'] ?? 'created_at';
-                $direction = $criteria['direction'] ?? 'desc';
+        // Aplicar ordenamiento usando trait
+        $fieldMappings = [
+            'customer' => 'full_name',
+            'status' => $this->getStatusSortExpression('asc'),
+            'last_purchase' => 'last_purchase_at',
+        ];
 
-                if ($field === 'customer' || $field === 'full_name') {
-                    $query->orderBy('full_name', $direction);
-                } elseif ($field === 'status') {
-                    $query->orderByRaw('
-                        CASE
-                            WHEN last_activity_at IS NULL THEN 4
-                            WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
-                            WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
-                            ELSE 3
-                        END '.($direction === 'asc' ? 'ASC' : 'DESC'));
-                } elseif ($field === 'puntos') {
-                    $query->orderBy('puntos', $direction);
-                } elseif ($field === 'last_purchase') {
-                    $query->orderBy('last_purchase_at', $direction);
-                } else {
-                    $query->orderBy($field, $direction);
-                }
-            }
+        if (! empty($params['multiple_sort_criteria'])) {
+            $query = $this->applyMultipleSorting($query, $params['multiple_sort_criteria'], $fieldMappings);
         } else {
-            // Fallback a ordenamiento único
-            if ($sortField === 'customer' || $sortField === 'full_name') {
-                $query->orderBy('full_name', $sortDirection);
-            } elseif ($sortField === 'status') {
-                $query->orderByRaw('
-                    CASE
-                        WHEN last_activity_at IS NULL THEN 4
-                        WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
-                        WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
-                        ELSE 3
-                    END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
-            } elseif ($sortField === 'puntos') {
-                $query->orderBy('puntos', $sortDirection);
-            } elseif ($sortField === 'last_purchase') {
-                $query->orderBy('last_purchase_at', $sortDirection);
-            } else {
-                $query->orderBy($sortField, $sortDirection);
-            }
+            $query = $this->applySorting(
+                $query,
+                $params['sort_field'],
+                $params['sort_direction'],
+                $fieldMappings
+            );
         }
 
         // Paginar y obtener clientes
-        $customers = $query->paginate($perPage)
-            ->appends($request->all()) // Preservar filtros en paginación
+        $customers = $query->paginate($params['per_page'])
+            ->appends($request->all())
             ->through(function ($customer) {
                 // Actualizar tipo de cliente basado en puntos
                 if ($customer->puntos !== null) {
@@ -141,7 +107,6 @@ class CustomerController extends Controller
                         'color' => $customer->customerType->color,
                         'multiplier' => $customer->customerType->multiplier,
                     ] : null,
-                    // ✅ Legacy compatibility: provide client_type as computed field
                     'client_type' => $customer->customerType?->name ?? 'regular',
                     'phone' => $customer->phone,
                     'location' => $customer->location,
@@ -152,8 +117,8 @@ class CustomerController extends Controller
                     'last_purchase' => $customer->last_purchase_at,
                     'puntos' => $customer->puntos ?? 0,
                     'puntos_updated_at' => $customer->puntos_updated_at,
-                    'is_online' => $customer->is_online, // ✅ Usar accessor del modelo
-                    'status' => $customer->status, // ✅ Usar accessor del modelo
+                    'is_online' => $customer->is_online,
+                    'status' => $customer->status,
                 ];
             });
 
@@ -194,19 +159,11 @@ class CustomerController extends Controller
             'customers' => $customers,
             'total_customers' => $totalStats->count(),
             'verified_customers' => $totalStats->where('email_verified_at', '!=', null)->count(),
-            'online_customers' => $totalStats->filter(function ($customer) {
-                return $customer->is_online; // ✅ Usar accessor del modelo
-            })->count(),
+            'online_customers' => $totalStats->filter(fn ($customer) => $customer->is_online)->count(),
             'premium_customers' => $premiumCount,
             'vip_customers' => $vipCount,
             'customer_type_stats' => $customerTypeStats,
-            'filters' => [
-                'search' => $search,
-                'per_page' => (int) $perPage,
-                'sort_field' => $sortField,
-                'sort_direction' => $sortDirection,
-                'sort_criteria' => $multipleSortCriteria,
-            ],
+            'filters' => $this->buildFiltersResponse($params),
         ]);
     }
 
@@ -225,68 +182,43 @@ class CustomerController extends Controller
     /**
      * Almacena un nuevo cliente
      */
-    public function store(Request $request): RedirectResponse|\Inertia\Response
+    public function store(StoreCustomerRequest $request): RedirectResponse|\Inertia\Response
     {
         // If request contains search/filter parameters, redirect to index method
         if ($request->hasAny(['search', 'per_page', 'sort_field', 'sort_direction', 'page'])) {
             return $this->index($request);
         }
 
-        try {
-            $request->validate([
-                'full_name' => 'required|string|max:255',
-                'email' => 'required|email|max:255|unique:customers',
-                'password' => 'required|string|min:6|confirmed',
-                'subway_card' => 'required|string|max:255|unique:customers',
-                'birth_date' => 'required|date|before:today',
-                'gender' => 'nullable|string|max:50',
-                'customer_type_id' => 'nullable|exists:customer_types,id',
-                'phone' => 'nullable|string|max:255',
-                'address' => 'nullable|string|max:1000',
-                'location' => 'nullable|string|max:255',
-                'nit' => 'nullable|string|max:255',
-            ]);
+        return $this->executeWithExceptionHandling(
+            operation: function () use ($request) {
+                // Get default customer type if not provided
+                $customerTypeId = $request->customer_type_id ?? CustomerType::getDefault()?->id;
 
-            // Get default customer type if not provided
-            $customerTypeId = $request->customer_type_id ?? CustomerType::getDefault()?->id;
+                $customer = Customer::create([
+                    'full_name' => $request->full_name,
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                    'subway_card' => $request->subway_card,
+                    'birth_date' => $request->birth_date,
+                    'gender' => $request->gender,
+                    'customer_type_id' => $customerTypeId,
+                    'phone' => $request->phone,
+                    'address' => $request->address,
+                    'location' => $request->location,
+                    'nit' => $request->nit,
+                    'email_verified_at' => now(),
+                    'timezone' => 'America/Guatemala',
+                ]);
 
-            $customer = Customer::create([
-                'full_name' => $request->full_name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'subway_card' => $request->subway_card,
-                'birth_date' => $request->birth_date,
-                'gender' => $request->gender,
-                'customer_type_id' => $customerTypeId,
-                'phone' => $request->phone,
-                'address' => $request->address,
-                'location' => $request->location,
-                'nit' => $request->nit,
-                'email_verified_at' => now(),
-                'timezone' => 'America/Guatemala',
-            ]);
+                // Actualizar tipo de cliente automáticamente basado en puntos
+                $customer->updateCustomerType();
 
-            // Actualizar tipo de cliente automáticamente basado en puntos
-            $customer->updateCustomerType();
-
-            return redirect()->route('customers.index')->with('success', 'Cliente creado exitosamente');
-        } catch (\Illuminate\Database\QueryException $e) {
-            \Log::error('Error de base de datos al crear cliente: '.$e->getMessage());
-
-            if (str_contains($e->getMessage(), 'UNIQUE constraint failed') ||
-                str_contains($e->getMessage(), 'Duplicate entry') ||
-                str_contains($e->getMessage(), 'UNIQUE constraint')) {
-                return back()->with('error', 'El email o tarjeta subway ya están registrados en el sistema. Usa datos diferentes.');
-            }
-
-            return back()->with('error', 'Error de base de datos al crear el cliente. Verifica que los datos sean correctos.');
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            throw $e;
-        } catch (\Exception $e) {
-            \Log::error('Error inesperado al crear cliente: '.$e->getMessage());
-
-            return back()->with('error', 'Error inesperado al crear el cliente. Inténtalo de nuevo o contacta al administrador.');
-        }
+                return redirect()->route('customers.index')
+                    ->with('success', 'Cliente creado exitosamente');
+            },
+            context: 'crear',
+            entity: 'cliente'
+        );
     }
 
     /**
@@ -324,76 +256,54 @@ class CustomerController extends Controller
     /**
      * Actualiza un cliente existente
      */
-    public function update(Request $request, Customer $customer): RedirectResponse
+    public function update(UpdateCustomerRequest $request, Customer $customer): RedirectResponse
     {
-        try {
-            $rules = [
-                'full_name' => 'required|string|max:255',
-                'email' => 'required|string|lowercase|email|max:255|unique:customers,email,'.$customer->id,
-                'subway_card' => 'required|string|max:255|unique:customers,subway_card,'.$customer->id,
-                'birth_date' => 'required|date|before:today',
-                'gender' => 'nullable|string|max:50',
-                'customer_type_id' => 'nullable|exists:customer_types,id',
-                'phone' => 'nullable|string|max:255',
-                'address' => 'nullable|string|max:1000',
-                'location' => 'nullable|string|max:255',
-                'nit' => 'nullable|string|max:255',
-            ];
+        return $this->executeWithExceptionHandling(
+            operation: function () use ($request, $customer) {
+                $customerData = [
+                    'full_name' => $request->full_name,
+                    'email' => $request->email,
+                    'subway_card' => $request->subway_card,
+                    'birth_date' => $request->birth_date,
+                ];
 
-            // Solo validar contraseña si se proporciona
-            if ($request->filled('password')) {
-                $rules['password'] = 'string|min:6|confirmed';
-            }
+                // Campos opcionales
+                if ($request->has('gender')) {
+                    $customerData['gender'] = $request->gender;
+                }
+                if ($request->has('customer_type_id')) {
+                    $customerData['customer_type_id'] = $request->customer_type_id;
+                }
+                if ($request->has('phone')) {
+                    $customerData['phone'] = $request->phone;
+                }
+                if ($request->has('address')) {
+                    $customerData['address'] = $request->address;
+                }
+                if ($request->has('location')) {
+                    $customerData['location'] = $request->location;
+                }
+                if ($request->has('nit')) {
+                    $customerData['nit'] = $request->nit;
+                }
 
-            $request->validate($rules);
+                // Solo actualizar contraseña si se proporciona
+                if ($request->filled('password')) {
+                    $customerData['password'] = Hash::make($request->password);
+                }
 
-            // Si el email cambió, marcar como no verificado
-            $emailChanged = $customer->email !== $request->email;
+                // Si el email cambió, marcar como no verificado
+                if ($customer->email !== $request->email) {
+                    $customerData['email_verified_at'] = null;
+                }
 
-            $customerData = [
-                'full_name' => $request->full_name,
-                'email' => $request->email,
-                'subway_card' => $request->subway_card,
-                'birth_date' => $request->birth_date,
-                'gender' => $request->gender,
-                'customer_type_id' => $request->customer_type_id,
-                'phone' => $request->phone,
-                'address' => $request->address,
-                'location' => $request->location,
-                'nit' => $request->nit,
-            ];
+                $customer->update($customerData);
 
-            // Solo actualizar contraseña si se proporciona
-            if ($request->filled('password')) {
-                $customerData['password'] = Hash::make($request->password);
-            }
-
-            $customer->update($customerData);
-
-            // Resetear verificación de email si cambió (después del update)
-            if ($emailChanged) {
-                $customer->email_verified_at = null;
-                $customer->save();
-            }
-
-            return back()->with('success', 'Cliente actualizado exitosamente');
-        } catch (\Illuminate\Database\QueryException $e) {
-            \Log::error('Error de base de datos al actualizar cliente: '.$e->getMessage());
-
-            if (str_contains($e->getMessage(), 'UNIQUE constraint failed') ||
-                str_contains($e->getMessage(), 'Duplicate entry') ||
-                str_contains($e->getMessage(), 'UNIQUE constraint')) {
-                return back()->with('error', 'El email o tarjeta subway ya están registrados por otro cliente. Usa datos diferentes.');
-            }
-
-            return back()->with('error', 'Error de base de datos al actualizar el cliente. Verifica que los datos sean correctos.');
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            throw $e;
-        } catch (\Exception $e) {
-            \Log::error('Error inesperado al actualizar cliente: '.$e->getMessage());
-
-            return back()->with('error', 'Error inesperado al actualizar el cliente. Inténtalo de nuevo o contacta al administrador.');
-        }
+                return back()->with('success', 'Cliente actualizado exitosamente');
+            },
+            context: 'actualizar',
+            entity: 'cliente'
+        );
     }
 
     /**
@@ -401,24 +311,15 @@ class CustomerController extends Controller
      */
     public function destroy(Customer $customer): RedirectResponse
     {
-        try {
-            $customerName = $customer->full_name;
-            $customer->delete();
+        return $this->executeWithExceptionHandling(
+            operation: function () use ($customer) {
+                $customerName = $customer->full_name;
+                $customer->delete();
 
-            return back()->with('success', "Cliente '{$customerName}' eliminado exitosamente");
-        } catch (\Illuminate\Database\QueryException $e) {
-            \Log::error('Error de base de datos al eliminar cliente: '.$e->getMessage());
-
-            if (str_contains($e->getMessage(), 'FOREIGN KEY constraint failed') ||
-                str_contains($e->getMessage(), 'Cannot delete or update a parent row')) {
-                return back()->with('error', 'No se puede eliminar el cliente porque tiene registros asociados.');
-            }
-
-            return back()->with('error', 'Error de base de datos al eliminar el cliente. Verifica que no tenga dependencias.');
-        } catch (\Exception $e) {
-            \Log::error('Error inesperado al eliminar cliente: '.$e->getMessage());
-
-            return back()->with('error', 'Error inesperado al eliminar el cliente. Inténtalo de nuevo o contacta al administrador.');
-        }
+                return back()->with('success', "Cliente '{$customerName}' eliminado exitosamente");
+            },
+            context: 'eliminar',
+            entity: 'cliente'
+        );
     }
 }

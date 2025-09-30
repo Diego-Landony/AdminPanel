@@ -68,6 +68,30 @@ class Restaurant extends Model
     }
 
     /**
+     * Scope para restaurantes con geofence definido
+     */
+    public function scopeWithGeofence($query)
+    {
+        return $query->whereNotNull('geofence_kml');
+    }
+
+    /**
+     * Scope para restaurantes sin geofence
+     */
+    public function scopeWithoutGeofence($query)
+    {
+        return $query->whereNull('geofence_kml');
+    }
+
+    /**
+     * Scope para restaurantes con coordenadas definidas
+     */
+    public function scopeWithCoordinates($query)
+    {
+        return $query->whereNotNull('latitude')->whereNotNull('longitude');
+    }
+
+    /**
      * Scope para ordenar por nombre
      */
     public function scopeOrdered($query)

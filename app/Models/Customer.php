@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TracksUserStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,7 +12,7 @@ use Illuminate\Notifications\Notifiable;
 class Customer extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\CustomerFactory> */
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, TracksUserStatus;
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +22,7 @@ class Customer extends Authenticatable
     protected $fillable = [
         'full_name',
         'email',
+        'email_verified_at',
         'password',
         'subway_card',
         'birth_date',
@@ -76,23 +78,6 @@ class Customer extends Authenticatable
     protected $appends = ['status', 'is_online'];
 
     /**
-     * Actualiza el timestamp del último acceso del cliente
-     */
-    public function updateLastLogin(): void
-    {
-        $this->update(['last_login_at' => now()]);
-    }
-
-    /**
-     * Actualiza el timestamp de la última actividad del cliente
-     */
-    public function updateLastActivity(): void
-    {
-        $this->last_activity_at = now();
-        $this->saveQuietly();
-    }
-
-    /**
      * Relación con el tipo de cliente
      */
     public function customerType(): BelongsTo
@@ -119,65 +104,5 @@ class Customer extends Authenticatable
     public function scopeOfType($query, $typeId)
     {
         return $query->where('customer_type_id', $typeId);
-    }
-
-    /**
-     * Determina si el cliente está en línea basado en su última actividad
-     * En línea: Última actividad dentro de los últimos 5 minutos
-     */
-    public function isOnline(): bool
-    {
-        return $this->last_activity_at &&
-               $this->last_activity_at->diffInMinutes(now()) < 5;
-    }
-
-    /**
-     * Accessor para el atributo is_online
-     */
-    public function getIsOnlineAttribute(): bool
-    {
-        return $this->isOnline();
-    }
-
-    /**
-     * Obtiene el estado del cliente basado en su última actividad
-     * Estados: 'never', 'online', 'recent', 'offline'
-     */
-    public function getStatusAttribute(): string
-    {
-        if (! $this->last_activity_at) {
-            return 'never';
-        }
-
-        $minutes = $this->last_activity_at->diffInMinutes(now());
-
-        return match (true) {
-            $minutes < 5 => 'online',
-            $minutes < 15 => 'recent',
-            default => 'offline'
-        };
-    }
-
-    /**
-     * Scope para filtrar clientes en línea
-     */
-    public function scopeOnline($query)
-    {
-        return $query->where('last_activity_at', '>=', now()->subMinutes(5));
-    }
-
-    /**
-     * Scope para filtrar clientes por estado
-     */
-    public function scopeWithStatus($query, string $status)
-    {
-        return match ($status) {
-            'never' => $query->whereNull('last_activity_at'),
-            'online' => $query->where('last_activity_at', '>=', now()->subMinutes(5)),
-            'recent' => $query->whereBetween('last_activity_at', [now()->subMinutes(15), now()->subMinutes(5)]),
-            'offline' => $query->where('last_activity_at', '<', now()->subMinutes(15))
-                ->whereNotNull('last_activity_at'),
-            default => $query
-        };
     }
 }

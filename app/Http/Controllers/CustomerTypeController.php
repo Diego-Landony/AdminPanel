@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\{HandlesExceptions, HasDataTableFeatures};
+use App\Http\Requests\CustomerType\{StoreCustomerTypeRequest, UpdateCustomerTypeRequest};
 use App\Models\CustomerType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -10,64 +12,51 @@ use Inertia\Response;
 
 class CustomerTypeController extends Controller
 {
+    use HandlesExceptions, HasDataTableFeatures;
+
+    /**
+     * Campos permitidos para ordenamiento
+     */
+    protected array $allowedSortFields = ['name', 'points_required', 'multiplier', 'customers_count', 'is_active', 'created_at'];
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): Response
     {
-        $search = $request->get('search');
-        $perPage = (int) $request->get('per_page', 10);
-        $sortField = $request->get('sort_field', 'created_at');
-        $sortDirection = $request->get('sort_direction', 'desc');
-        $sortCriteria = $request->get('sort_criteria');
+        // Obtener parámetros usando trait
+        $params = $this->getPaginationParams($request);
 
-        // Parse multiple sort criteria if provided
-        $multipleSortCriteria = [];
-        if ($sortCriteria) {
-            $decoded = json_decode($sortCriteria, true);
-            if (is_array($decoded)) {
-                $multipleSortCriteria = $decoded;
-            }
-        }
+        // Query base
+        $query = CustomerType::query()->withCount('customers');
 
-        $query = CustomerType::query()
-            ->withCount('customers');
+        // Aplicar búsqueda usando trait
+        $query = $this->applySearch($query, $params['search'], ['name']);
 
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
-            });
-        }
+        // Aplicar ordenamiento usando trait
+        $fieldMappings = [
+            'type' => 'name',
+        ];
 
-        // Aplicar ordenamiento múltiple si está disponible
-        if (!empty($multipleSortCriteria)) {
-            foreach ($multipleSortCriteria as $criteria) {
-                $field = $criteria['field'] ?? 'created_at';
-                $direction = $criteria['direction'] ?? 'desc';
-
-                if ($field === 'type') {
-                    $query->orderBy('name', $direction);
-                } elseif (in_array($field, ['points_required', 'multiplier', 'customers_count', 'is_active', 'created_at'])) {
-                    $query->orderBy($field, $direction);
-                } else {
-                    $query->orderBy($field, $direction);
-                }
-            }
+        if (! empty($params['multiple_sort_criteria'])) {
+            $query = $this->applyMultipleSorting($query, $params['multiple_sort_criteria'], $fieldMappings);
         } else {
-            // Fallback a ordenamiento único
-            if ($sortField === 'type') {
-                $query->orderBy('name', $sortDirection);
-            } elseif (in_array($sortField, ['points_required', 'multiplier', 'customers_count', 'is_active', 'created_at'])) {
-                $query->orderBy($sortField, $sortDirection);
-            } else {
+            // Si no hay sort específico, usar el scope ordered() del modelo
+            if ($params['sort_field'] === 'sort_order' || empty($params['sort_field'])) {
                 $query->ordered();
+            } else {
+                $query = $this->applySorting(
+                    $query,
+                    $params['sort_field'],
+                    $params['sort_direction'],
+                    $fieldMappings
+                );
             }
         }
 
-        $customerTypes = $query->paginate($perPage);
+        $customerTypes = $query->paginate($params['per_page'])->appends($request->all());
 
         // Get stats from the base query (without pagination)
-        $allCustomerTypes = CustomerType::query()->withCount('customers')->get();
+        $allCustomerTypes = CustomerType::select(['id', 'is_active'])->get();
 
         return Inertia::render('customers/types/index', [
             'customer_types' => $customerTypes,
@@ -75,13 +64,7 @@ class CustomerTypeController extends Controller
                 'total_types' => $allCustomerTypes->count(),
                 'active_types' => $allCustomerTypes->where('is_active', true)->count(),
             ],
-            'filters' => [
-                'search' => $search,
-                'per_page' => $perPage,
-                'sort_field' => $sortField,
-                'sort_direction' => $sortDirection,
-                'sort_criteria' => $multipleSortCriteria,
-            ],
+            'filters' => $this->buildFiltersResponse($params),
         ]);
     }
 
@@ -96,25 +79,23 @@ class CustomerTypeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse|\Inertia\Response
+    public function store(StoreCustomerTypeRequest $request): RedirectResponse|\Inertia\Response
     {
         // If request contains search/filter parameters, redirect to index method
         if ($request->hasAny(['search', 'per_page', 'sort_field', 'sort_direction', 'page'])) {
             return $this->index($request);
         }
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'points_required' => 'required|integer|min:0',
-            'multiplier' => 'required|numeric|min:1|max:10',
-            'color' => 'nullable|string|max:20',
-            'is_active' => 'boolean',
-        ]);
+        return $this->executeWithExceptionHandling(
+            operation: function () use ($request) {
+                CustomerType::create($request->validated());
 
-        CustomerType::create($validated);
-
-        return redirect()->route('customer-types.index')
-            ->with('success', 'Tipo de cliente creado exitosamente.');
+                return redirect()->route('customer-types.index')
+                    ->with('success', 'Tipo de cliente creado exitosamente');
+            },
+            context: 'crear',
+            entity: 'tipo de cliente'
+        );
     }
 
     /**
@@ -144,20 +125,17 @@ class CustomerTypeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, CustomerType $customerType): RedirectResponse
+    public function update(UpdateCustomerTypeRequest $request, CustomerType $customerType): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'points_required' => 'required|integer|min:0',
-            'multiplier' => 'required|numeric|min:1|max:10',
-            'color' => 'nullable|string|max:20',
-            'is_active' => 'boolean',
-        ]);
+        return $this->executeWithExceptionHandling(
+            operation: function () use ($request, $customerType) {
+                $customerType->update($request->validated());
 
-        $customerType->update($validated);
-
-        return redirect()->route('customer-types.index')
-            ->with('success', 'Tipo de cliente actualizado exitosamente.');
+                return back()->with('success', 'Tipo de cliente actualizado exitosamente');
+            },
+            context: 'actualizar',
+            entity: 'tipo de cliente'
+        );
     }
 
     /**
@@ -165,15 +143,20 @@ class CustomerTypeController extends Controller
      */
     public function destroy(CustomerType $customerType): RedirectResponse
     {
-        // Check if there are customers using this type
-        if ($customerType->customers()->exists()) {
-            return redirect()->back()
-                ->with('error', 'No se puede eliminar este tipo de cliente porque tiene clientes asignados.');
-        }
+        return $this->executeWithExceptionHandling(
+            operation: function () use ($customerType) {
+                // Check if there are customers using this type
+                if ($customerType->customers()->exists()) {
+                    return back()->with('error', 'No se puede eliminar este tipo de cliente porque tiene clientes asignados');
+                }
 
-        $customerType->delete();
+                $customerTypeName = $customerType->name;
+                $customerType->delete();
 
-        return redirect()->route('customer-types.index')
-            ->with('success', 'Tipo de cliente eliminado exitosamente.');
+                return back()->with('success', "Tipo de cliente '{$customerTypeName}' eliminado exitosamente");
+            },
+            context: 'eliminar',
+            entity: 'tipo de cliente'
+        );
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Concerns\TracksUserStatus;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -13,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, TracksUserStatus;
 
     /**
      * The attributes that are mass assignable.
@@ -55,6 +56,13 @@ class User extends Authenticatable
     }
 
     /**
+     * Attributes that should be appended to the model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = ['status', 'is_online'];
+
+    /**
      * Relación con las actividades del usuario
      */
     public function activities(): HasMany
@@ -76,23 +84,6 @@ class User extends Authenticatable
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class);
-    }
-
-    /**
-     * Actualiza el timestamp del último acceso del usuario
-     */
-    public function updateLastLogin(): void
-    {
-        $this->update(['last_login_at' => now()]);
-    }
-
-    /**
-     * Actualiza el timestamp de la última actividad del usuario
-     */
-    public function updateLastActivity(): void
-    {
-        $this->last_activity_at = now();
-        $this->saveQuietly();
     }
 
     /**

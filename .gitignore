@@ -7,7 +7,7 @@
 /storage/*.key
 /storage/pail
 /vendor
-/web-admin-legacy
+/admin-legacy
 .env
 .env.backup
 .env.production

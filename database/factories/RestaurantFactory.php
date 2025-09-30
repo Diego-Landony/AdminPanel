@@ -65,7 +65,6 @@ class RestaurantFactory extends Factory
 
         return [
             'name' => $this->faker->randomElement($guatemalaNames),
-            'description' => $this->faker->paragraph(2),
             'latitude' => $this->faker->randomFloat(7, 14.5, 15.0),
             'longitude' => $this->faker->randomFloat(7, -91.8, -90.2),
             'address' => $this->faker->randomElement($guatemalaAddresses),
@@ -75,15 +74,8 @@ class RestaurantFactory extends Factory
             'phone' => '+502 ' . $this->faker->numerify('#### ####'),
             'schedule' => $schedule,
             'minimum_order_amount' => $this->faker->randomFloat(2, 50, 200),
-            'delivery_area' => null,
-            'image' => null,
             'email' => $this->faker->companyEmail(),
-            'manager_name' => $this->faker->name(),
-            'delivery_fee' => $deliveryActive ? $this->faker->randomFloat(2, 15, 50) : 0,
             'estimated_delivery_time' => $deliveryActive ? $this->faker->numberBetween(20, 60) : null,
-            'rating' => $this->faker->randomFloat(2, 3.0, 5.0),
-            'total_reviews' => $this->faker->numberBetween(0, 500),
-            'sort_order' => $this->faker->numberBetween(1, 100),
         ];
     }
 }

@@ -21,6 +21,7 @@ trait HasDataTableFeatures
     {
         $search = $request->get('search', '');
         $perPage = $request->get('per_page', 10);
+        $page = $request->get('page', 1);
         $sortField = $request->get('sort_field', 'created_at');
         $sortDirection = $request->get('sort_direction', 'desc');
         $sortCriteria = $request->get('sort_criteria');
@@ -37,6 +38,7 @@ trait HasDataTableFeatures
         return [
             'search' => $search,
             'per_page' => (int) $perPage,
+            'page' => (int) $page,
             'sort_field' => $sortField,
             'sort_direction' => $sortDirection,
             'sort_criteria' => $sortCriteria,
@@ -201,6 +203,7 @@ trait HasDataTableFeatures
         return [
             'search' => $params['search'],
             'per_page' => $params['per_page'],
+            'page' => $params['page'],
             'sort_field' => $params['sort_field'],
             'sort_direction' => $params['sort_direction'],
             'sort_criteria' => $params['multiple_sort_criteria'],

@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Concerns\{HandlesExceptions, HasDataTableFeatures};
-use App\Http\Requests\Restaurant\{StoreRestaurantRequest, UpdateRestaurantRequest};
 use App\Models\Restaurant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,21 +10,26 @@ use Inertia\Response;
 
 class RestaurantController extends Controller
 {
-    use HandlesExceptions, HasDataTableFeatures;
-
-    /**
-     * Campos permitidos para ordenamiento
-     */
-    protected array $allowedSortFields = ['name', 'address', 'sort_order', 'created_at'];
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): Response
     {
-        // Obtener parámetros usando trait
-        $params = $this->getPaginationParams($request);
+        $search = $request->get('search', '');
+        $perPage = $request->get('per_page', 10);
+        $sortField = $request->get('sort_field', 'sort_order');
+        $sortDirection = $request->get('sort_direction', 'asc');
+        $sortCriteria = $request->get('sort_criteria');
 
-        // Query base
+        // Parse multiple sort criteria if provided
+        $multipleSortCriteria = [];
+        if ($sortCriteria) {
+            $decoded = json_decode($sortCriteria, true);
+            if (is_array($decoded)) {
+                $multipleSortCriteria = $decoded;
+            }
+        }
+
         $query = Restaurant::query()
             ->select([
                 'id',
@@ -47,37 +50,49 @@ class RestaurantController extends Controller
                 'updated_at',
             ]);
 
-        // Aplicar búsqueda usando trait
-        $query = $this->applySearch($query, $params['search'], [
-            'name',
-            'address',
-            'phone',
-            'email',
-        ]);
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
 
-        // Aplicar ordenamiento usando trait
-        $fieldMappings = [
-            'restaurant' => 'name',
-            'status' => 'CASE WHEN is_active = 1 THEN 1 ELSE 2 END',
-        ];
+        // Aplicar ordenamiento múltiple si está disponible
+        if (! empty($multipleSortCriteria)) {
+            foreach ($multipleSortCriteria as $criteria) {
+                $field = $criteria['field'] ?? 'name';
+                $direction = $criteria['direction'] ?? 'asc';
 
-        if (! empty($params['multiple_sort_criteria'])) {
-            $query = $this->applyMultipleSorting($query, $params['multiple_sort_criteria'], $fieldMappings);
+                if ($field === 'restaurant') {
+                    $query->orderBy('name', $direction);
+                } elseif ($field === 'status') {
+                    $query->orderByRaw('
+                        CASE
+                            WHEN is_active = 1 THEN 1
+                            ELSE 2
+                        END '.($direction === 'asc' ? 'ASC' : 'DESC'));
+                } else {
+                    $query->orderBy($field, $direction);
+                }
+            }
         } else {
-            // Si no hay sort específico, usar el scope ordered() del modelo
-            if ($params['sort_field'] === 'sort_order' || empty($params['sort_field'])) {
-                $query->ordered();
+            // Fallback a ordenamiento único
+            if ($sortField === 'restaurant') {
+                $query->orderBy('name', $sortDirection);
+            } elseif ($sortField === 'status') {
+                $query->orderByRaw('
+                    CASE
+                        WHEN is_active = 1 THEN 1
+                        ELSE 2
+                    END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
             } else {
-                $query = $this->applySorting(
-                    $query,
-                    $params['sort_field'],
-                    $params['sort_direction'],
-                    $fieldMappings
-                );
+                $query->ordered();
             }
         }
 
-        $restaurants = $query->paginate($params['per_page'])
+        $restaurants = $query->paginate($perPage)
             ->appends($request->all())
             ->through(function ($restaurant) {
                 return [
@@ -112,7 +127,13 @@ class RestaurantController extends Controller
             'active_restaurants' => $totalStats->where('is_active', true)->count(),
             'delivery_restaurants' => $totalStats->where('delivery_active', true)->where('is_active', true)->count(),
             'pickup_restaurants' => $totalStats->where('pickup_active', true)->where('is_active', true)->count(),
-            'filters' => $this->buildFiltersResponse($params),
+            'filters' => [
+                'search' => $search,
+                'per_page' => (int) $perPage,
+                'sort_field' => $sortField,
+                'sort_direction' => $sortDirection,
+                'sort_criteria' => $multipleSortCriteria,
+            ],
         ]);
     }
 
@@ -127,23 +148,32 @@ class RestaurantController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreRestaurantRequest $request): RedirectResponse|\Inertia\Response
+    public function store(Request $request): RedirectResponse|\Inertia\Response
     {
         // If request contains search/filter parameters, redirect to index method
         if ($request->hasAny(['search', 'per_page', 'sort_field', 'sort_direction', 'page'])) {
             return $this->index($request);
         }
 
-        return $this->executeWithExceptionHandling(
-            operation: function () use ($request) {
-                Restaurant::create($request->validated());
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+            'is_active' => 'boolean',
+            'delivery_active' => 'boolean',
+            'pickup_active' => 'boolean',
+            'phone' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'schedule' => 'nullable|array',
+            'minimum_order_amount' => 'nullable|numeric|min:0',
+            'estimated_delivery_time' => 'nullable|integer|min:1',
+        ]);
 
-                return redirect()->route('restaurants.index')
-                    ->with('success', 'Restaurante creado exitosamente');
-            },
-            context: 'crear',
-            entity: 'restaurante'
-        );
+        Restaurant::create($request->all());
+
+        return redirect()->route('restaurants.index')
+            ->with('success', 'Restaurante creado exitosamente.');
     }
 
     /**
@@ -184,17 +214,26 @@ class RestaurantController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateRestaurantRequest $request, Restaurant $restaurant): RedirectResponse
+    public function update(Request $request, Restaurant $restaurant): RedirectResponse
     {
-        return $this->executeWithExceptionHandling(
-            operation: function () use ($request, $restaurant) {
-                $restaurant->update($request->validated());
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+            'is_active' => 'boolean',
+            'delivery_active' => 'boolean',
+            'pickup_active' => 'boolean',
+            'phone' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'schedule' => 'nullable|array',
+            'minimum_order_amount' => 'nullable|numeric|min:0',
+            'estimated_delivery_time' => 'nullable|integer|min:1',
+        ]);
 
-                return back()->with('success', 'Restaurante actualizado exitosamente');
-            },
-            context: 'actualizar',
-            entity: 'restaurante'
-        );
+        $restaurant->update($request->all());
+
+        return back()->with('success', 'Restaurante actualizado exitosamente.');
     }
 
     /**
@@ -202,15 +241,9 @@ class RestaurantController extends Controller
      */
     public function destroy(Restaurant $restaurant): RedirectResponse
     {
-        return $this->executeWithExceptionHandling(
-            operation: function () use ($restaurant) {
-                $restaurantName = $restaurant->name;
-                $restaurant->delete();
+        $restaurantName = $restaurant->name;
+        $restaurant->delete();
 
-                return back()->with('success', "Restaurante '{$restaurantName}' eliminado exitosamente");
-            },
-            context: 'eliminar',
-            entity: 'restaurante'
-        );
+        return back()->with('success', "Restaurante '{$restaurantName}' eliminado exitosamente.");
     }
 }

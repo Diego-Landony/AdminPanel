@@ -543,7 +543,7 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                                     {stats.map((stat, index) => (
                                         <div key={index} className="flex max-w-[200px] min-w-0 flex-shrink-0 items-center gap-2">
                                             {React.cloneElement(stat.icon as React.ReactElement<{ className?: string }>, {
-                                                className: 'h-4 w-4 flex-shrink-0',
+                                                className: `flex-shrink-0 ${(stat.icon as React.ReactElement<{ className?: string }>).props.className || ''}`,
                                             })}
                                             <span className="flex min-w-0 items-center gap-1 overflow-hidden">
                                                 <span className="truncate overflow-hidden text-ellipsis lowercase" title={stat.title}>

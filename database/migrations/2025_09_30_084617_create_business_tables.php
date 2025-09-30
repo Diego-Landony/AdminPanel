@@ -19,7 +19,7 @@ return new class extends Migration
         // Tabla de tipos de cliente
         Schema::create('customer_types', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 100)->unique();
+            $table->string('name', 100);
             $table->integer('points_required')->default(0);
             $table->decimal('multiplier', 4, 2)->default(1.00);
             $table->string('color', 20)->nullable();

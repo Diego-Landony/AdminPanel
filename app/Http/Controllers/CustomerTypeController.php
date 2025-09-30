@@ -104,7 +104,7 @@ class CustomerTypeController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:100|unique:customer_types',
+            'name' => 'required|string|max:100',
             'points_required' => 'required|integer|min:0',
             'multiplier' => 'required|numeric|min:1|max:10',
             'color' => 'nullable|string|max:20',
@@ -147,7 +147,7 @@ class CustomerTypeController extends Controller
     public function update(Request $request, CustomerType $customerType): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:100|unique:customer_types,name,'.$customerType->id,
+            'name' => 'required|string|max:100',
             'points_required' => 'required|integer|min:0',
             'multiplier' => 'required|numeric|min:1|max:10',
             'color' => 'nullable|string|max:20',

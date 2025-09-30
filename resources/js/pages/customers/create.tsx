@@ -13,10 +13,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { PLACEHOLDERS, AUTOCOMPLETE, FIELD_DESCRIPTIONS, NOTIFICATIONS } from '@/constants/ui-constants';
 
+interface CustomerType {
+    id: number;
+    name: string;
+    color: string | null;
+    points_required: number;
+    multiplier: number;
+}
+
+interface CreateCustomerProps {
+    customer_types: CustomerType[];
+}
+
 /**
  * Página para crear un nuevo cliente
  */
-export default function CreateCustomer() {
+export default function CreateCustomer({ customer_types }: CreateCustomerProps) {
     const [showPassword, setShowPassword] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -27,7 +39,7 @@ export default function CreateCustomer() {
         subway_card: '',
         birth_date: '',
         gender: '',
-        client_type: 'regular',
+        customer_type_id: null as number | null,
         phone: '',
         address: '',
         location: '',
@@ -128,15 +140,20 @@ export default function CreateCustomer() {
                     </Select>
                 </FormField>
 
-                <FormField label="Tipo de Cliente" error={errors.client_type}>
-                    <Select value={data.client_type} onValueChange={(value) => setData('client_type', value)}>
+                <FormField label="Tipo de Cliente" error={errors.customer_type_id}>
+                    <Select
+                        value={data.customer_type_id?.toString() || ''}
+                        onValueChange={(value) => setData('customer_type_id', value ? parseInt(value) : null)}
+                    >
                         <SelectTrigger>
-                            <SelectValue placeholder="Selecciona el tipo de cliente" />
+                            <SelectValue placeholder="Selecciona el tipo de cliente (opcional)" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="regular">Regular</SelectItem>
-                            <SelectItem value="premium">Premium</SelectItem>
-                            <SelectItem value="vip">VIP</SelectItem>
+                            {customer_types.map((type) => (
+                                <SelectItem key={type.id} value={type.id.toString()}>
+                                    {type.name}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </FormField>

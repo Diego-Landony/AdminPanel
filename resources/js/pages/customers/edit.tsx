@@ -15,6 +15,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { PLACEHOLDERS, AUTOCOMPLETE, FIELD_DESCRIPTIONS, NOTIFICATIONS } from '@/constants/ui-constants';
 
 /**
+ * Interfaz para el tipo de cliente
+ */
+interface CustomerType {
+    id: number;
+    name: string;
+    color: string | null;
+    points_required: number;
+    multiplier: number;
+}
+
+/**
  * Interfaz para los datos del cliente
  */
 interface Customer {
@@ -24,7 +35,8 @@ interface Customer {
     subway_card: string;
     birth_date: string | null;
     gender: string | null;
-    client_type: string | null;
+    customer_type_id: number | null;
+    customer_type: { id: number; name: string } | null;
     phone: string | null;
     address: string | null;
     location: string | null;
@@ -40,6 +52,7 @@ interface Customer {
  */
 interface EditCustomerProps {
     customer: Customer;
+    customer_types: CustomerType[];
 }
 
 /**
@@ -61,7 +74,7 @@ const formatDate = (dateString: string | null): string => {
 /**
  * Página para editar un cliente existente
  */
-export default function EditCustomer({ customer }: EditCustomerProps) {
+export default function EditCustomer({ customer, customer_types }: EditCustomerProps) {
     const [showPassword, setShowPassword] = useState(false);
 
     const { data, setData, put, processing, errors, reset, isDirty } = useForm({
@@ -72,7 +85,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
         subway_card: customer.subway_card || '',
         birth_date: customer.birth_date || '',
         gender: customer.gender || '',
-        client_type: customer.client_type || 'regular',
+        customer_type_id: customer.customer_type_id,
         phone: customer.phone || '',
         address: customer.address || '',
         location: customer.location || '',
@@ -114,7 +127,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
             subway_card: customer.subway_card || '',
             birth_date: customer.birth_date || '',
             gender: customer.gender || '',
-            client_type: customer.client_type || 'regular',
+            customer_type_id: customer.customer_type_id,
             phone: customer.phone || '',
             address: customer.address || '',
             location: customer.location || '',
@@ -200,15 +213,20 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                     </Select>
                 </FormField>
 
-                <FormField label="Tipo de Cliente" error={errors.client_type}>
-                    <Select value={data.client_type} onValueChange={(value) => setData('client_type', value)}>
+                <FormField label="Tipo de Cliente" error={errors.customer_type_id}>
+                    <Select
+                        value={data.customer_type_id?.toString() || ''}
+                        onValueChange={(value) => setData('customer_type_id', value ? parseInt(value) : null)}
+                    >
                         <SelectTrigger>
-                            <SelectValue placeholder="Selecciona el tipo de cliente" />
+                            <SelectValue placeholder="Selecciona el tipo de cliente (opcional)" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="regular">Regular</SelectItem>
-                            <SelectItem value="premium">Premium</SelectItem>
-                            <SelectItem value="vip">VIP</SelectItem>
+                            {customer_types.map((type) => (
+                                <SelectItem key={type.id} value={type.id.toString()}>
+                                    {type.name}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </FormField>

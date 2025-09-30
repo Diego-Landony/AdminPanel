@@ -4,6 +4,9 @@ declare global {
     const route: typeof routeFn;
 }
 
+// Re-export model types
+export * from './models';
+
 // Extend Inertia core types
 declare module '@inertiajs/core' {
     export interface PageProps {

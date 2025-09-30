@@ -1,6 +1,6 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { useForm } from '@inertiajs/react';
-import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, Shield, User } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
@@ -9,10 +9,21 @@ import { EditUsersSkeleton } from '@/components/skeletons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { PLACEHOLDERS, AUTOCOMPLETE, FIELD_DESCRIPTIONS, NOTIFICATIONS } from '@/constants/ui-constants';
+
+/**
+ * Interfaz para el rol
+ */
+interface Role {
+    id: number;
+    name: string;
+    description: string | null;
+}
 
 /**
  * Interfaz para el usuario a editar
@@ -25,6 +36,7 @@ interface UserData {
     created_at: string;
     updated_at: string;
     last_activity_at: string | null;
+    roles: number[];
 }
 
 /**
@@ -32,14 +44,18 @@ interface UserData {
  */
 interface EditUserPageProps {
     user: UserData;
+    all_roles: Role[];
 }
 
 /**
  * Página para editar un usuario existente
  */
-export default function EditUser({ user }: EditUserPageProps) {
+export default function EditUser({ user, all_roles }: EditUserPageProps) {
     const [showPassword, setShowPassword] = useState(false);
     const [changePassword, setChangePassword] = useState(false);
+    const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+    const [selectedRoles, setSelectedRoles] = useState<number[]>(user?.roles || []);
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Siempre llamar hooks antes de cualquier early return
     const { data, setData, patch, processing, errors } = useForm({
@@ -103,6 +119,51 @@ export default function EditUser({ user }: EditUserPageProps) {
     };
 
     /**
+     * Maneja el cambio de roles del usuario (auto-save)
+     */
+    const handleRoleChange = async (roleId: number, checked: boolean) => {
+        const newSelectedRoles = checked
+            ? [...selectedRoles, roleId]
+            : selectedRoles.filter(id => id !== roleId);
+
+        setSelectedRoles(newSelectedRoles);
+
+        // Auto-save con fetch
+        try {
+            const response = await fetch(`/users/${user.id}/roles`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({ roles: newSelectedRoles }),
+            });
+
+            if (response.ok) {
+                showNotification.success(checked ? 'Rol agregado exitosamente' : 'Rol removido exitosamente');
+            } else {
+                // Revertir el cambio si falla
+                setSelectedRoles(selectedRoles);
+                const errorData = await response.json();
+                showNotification.error(errorData.error || 'Error al actualizar roles');
+            }
+        } catch (error) {
+            // Revertir el cambio si falla
+            setSelectedRoles(selectedRoles);
+            console.error('Error saving roles:', error);
+            showNotification.error('Error de conexión al actualizar roles');
+        }
+    };
+
+    /**
+     * Filtra roles basado en el término de búsqueda
+     */
+    const filteredRoles = all_roles.filter(
+        (role) => role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  (role.description && role.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+    /**
      * Formatea una fecha para mostrar
      */
     const formatDate = (dateString: string | null) => {
@@ -159,9 +220,77 @@ export default function EditUser({ user }: EditUserPageProps) {
                 </FormField>
             </FormSection>
 
-            <FormSection icon={Lock} title="Cambiar Contraseña" description="Opcional: Cambiar la contraseña del usuario">
+            {/* Modal para gestionar roles del usuario */}
+            <div className="flex justify-start py-8">
+                <Dialog open={isRoleModalOpen} onOpenChange={setIsRoleModalOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline">
+                            <Shield className="mr-2 h-4 w-4" />
+                            Gestionar Roles del Usuario
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Gestionar Roles del Usuario</DialogTitle>
+                            <DialogDescription>
+                                Selecciona los roles que tendrá {user.name}. Los cambios se guardan automáticamente.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="space-y-4">
+                            {/* Buscador */}
+                            <div className="relative">
+                                <Input
+                                    type="text"
+                                    placeholder="Buscar roles..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="h-9 text-sm"
+                                />
+                                <Shield className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            </div>
+
+                            {/* Lista de roles con scroll */}
+                            <ScrollArea className="h-[300px] rounded-lg border">
+                                <div className="p-2">
+                                    {filteredRoles.map((role) => (
+                                        <div
+                                            key={role.id}
+                                            className={`flex items-center gap-3 rounded-md p-2 transition-colors ${
+                                                selectedRoles.includes(role.id)
+                                                    ? 'border border-primary/20 bg-primary/5'
+                                                    : 'hover:bg-muted/50'
+                                            }`}
+                                        >
+                                            <Checkbox
+                                                id={`role-${role.id}`}
+                                                checked={selectedRoles.includes(role.id)}
+                                                onCheckedChange={(checked) => handleRoleChange(role.id, checked as boolean)}
+                                                className="data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+                                            />
+                                            <div className="min-w-0 flex-1">
+                                                <Label
+                                                    htmlFor={`role-${role.id}`}
+                                                    className="block cursor-pointer text-sm font-medium"
+                                                >
+                                                    {role.name}
+                                                </Label>
+                                                <p className="truncate text-xs text-muted-foreground">
+                                                    {role.description || 'Sin descripción'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            </div>
+
+            <FormSection icon={Lock} title="Cambiar Contraseña" description="Opcional: Cambiar la contraseña del usuario" className="mt-4">
                 <div className="space-y-4">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 py-2">
                         <Checkbox
                             id="change-password"
                             checked={changePassword}
@@ -215,7 +344,7 @@ export default function EditUser({ user }: EditUserPageProps) {
                 </div>
             </FormSection>
 
-            <FormSection icon={User} title="Información del Sistema">
+            <FormSection icon={User} title="Información del Sistema" className="mt-6">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
                         <Label className="text-xs text-muted-foreground">ID</Label>

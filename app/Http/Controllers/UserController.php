@@ -166,6 +166,9 @@ class UserController extends Controller
      */
     public function edit(User $user): Response
     {
+        // Cargar relaciones necesarias
+        $user->load('roles');
+
         $userData = [
             'id' => $user->id,
             'name' => $user->name,
@@ -174,10 +177,15 @@ class UserController extends Controller
             'created_at' => $user->created_at?->toISOString(),
             'updated_at' => $user->updated_at?->toISOString(),
             'last_activity_at' => $user->last_activity_at?->toISOString(),
+            'roles' => $user->roles->pluck('id')->toArray(),
         ];
+
+        // Obtener todos los roles disponibles para el Sheet
+        $allRoles = \App\Models\Role::orderBy('name')->get();
 
         return Inertia::render('users/edit', [
             'user' => $userData,
+            'all_roles' => $allRoles,
         ]);
     }
 
@@ -237,5 +245,35 @@ class UserController extends Controller
             context: 'eliminar',
             entity: 'usuario'
         );
+    }
+
+    /**
+     * Actualiza los roles asignados a un usuario
+     */
+    public function updateRoles(Request $request, User $user): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'roles' => 'required|array',
+            'roles.*' => 'exists:roles,id',
+        ]);
+
+        try {
+            // Sincronizar roles del usuario
+            $user->roles()->sync($request->roles);
+
+            // Log de actividad usando ActivityLogService
+            $oldRoles = $user->roles()->pluck('id')->toArray();
+            app(\App\Services\ActivityLogService::class)->logCustomEvent(
+                model: $user,
+                eventType: 'roles_updated',
+                description: "Roles actualizados para el usuario {$user->name}",
+                oldValues: ['roles' => $oldRoles],
+                newValues: ['roles' => $request->roles]
+            );
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al actualizar roles'], 500);
+        }
     }
 }

@@ -7,12 +7,12 @@ import { FormSection } from '@/components/form-section';
 import { EditRolesSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { FormError } from '@/components/ui/form-error';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { showNotification } from '@/hooks/useNotifications';
@@ -68,8 +68,9 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
 
     const [selectedUsers, setSelectedUsers] = useState<number[]>(role.users.map((user) => user.id));
 
-    const [isUserSheetOpen, setIsUserSheetOpen] = useState(false);
+    const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [permissionSearch, setPermissionSearch] = useState('');
 
     // Verificar si es el rol de administrador
     const isAdminRole = role.name === 'admin';
@@ -178,6 +179,14 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
         (user) => user.name.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
+    /**
+     * Filtra permisos basado en el término de búsqueda
+     */
+    const filteredPermissions = Object.entries(permissions).filter(([group]) =>
+        group.toLowerCase().includes(permissionSearch.toLowerCase()) ||
+        getGroupDisplayName(group).toLowerCase().includes(permissionSearch.toLowerCase())
+    );
+
     return (
         <EditPageLayout
             title={`Editar Rol: ${role.name}`}
@@ -218,24 +227,23 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
 
             {/* Gestión de usuarios */}
             <div className="flex justify-start py-6">
-                <Sheet open={isUserSheetOpen} onOpenChange={setIsUserSheetOpen}>
-                    <SheetTrigger asChild>
+                <Dialog open={isUserModalOpen} onOpenChange={setIsUserModalOpen}>
+                    <DialogTrigger asChild>
                         <Button variant="outline">
                             <Users className="mr-2 h-4 w-4" />
                             Gestionar Usuarios del Rol
                         </Button>
-                    </SheetTrigger>
-                    <SheetContent className="w-[400px] p-4 sm:w-[540px]">
-                        <SheetHeader className="pb-4">
-                            <SheetTitle className="text-lg">Gestionar Usuarios del Rol</SheetTitle>
-                            <SheetDescription className="text-sm">Selecciona los usuarios que tendrán este rol</SheetDescription>
-                            <div className="mt-2">
-                                <span className="text-xs text-muted-foreground">Los cambios se guardan automáticamente</span>
-                            </div>
-                        </SheetHeader>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Gestionar Usuarios del Rol</DialogTitle>
+                            <DialogDescription>
+                                Selecciona los usuarios que tendrán este rol. Los cambios se guardan automáticamente.
+                            </DialogDescription>
+                        </DialogHeader>
 
                         <div className="space-y-4">
-                            {/* Buscador compacto */}
+                            {/* Buscador */}
                             <div className="relative">
                                 <Input
                                     type="text"
@@ -244,45 +252,43 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="h-9 text-sm"
                                 />
-                                <Users className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
+                                <Users className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             </div>
 
-                            {/* Lista de usuarios compacta */}
-                            <div className="overflow-hidden rounded-lg border">
-                                <ScrollArea className="h-[350px]">
-                                    <div className="p-2">
-                                        {filteredUsers.map((user) => (
-                                            <div
-                                                key={user.id}
-                                                className={`flex items-center gap-3 rounded-md p-2 transition-colors ${
-                                                    selectedUsers.includes(user.id)
-                                                        ? 'border border-primary/20 bg-primary/5'
-                                                        : 'hover:bg-muted/50'
-                                                }`}
-                                            >
-                                                <Checkbox
-                                                    id={`user-${user.id}`}
-                                                    checked={selectedUsers.includes(user.id)}
-                                                    onCheckedChange={(checked) => handleUserChange(user.id, checked as boolean)}
-                                                    className="data-[state=checked]:border-primary data-[state=checked]:bg-primary"
-                                                />
-                                                <div className="min-w-0 flex-1">
-                                                    <Label
-                                                        htmlFor={`user-${user.id}`}
-                                                        className="block cursor-pointer text-sm font-medium"
-                                                    >
-                                                        {user.name}
-                                                    </Label>
-                                                    <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-                                                </div>
+                            {/* Lista de usuarios con scroll */}
+                            <ScrollArea className="h-[300px] rounded-lg border">
+                                <div className="p-2">
+                                    {filteredUsers.map((user) => (
+                                        <div
+                                            key={user.id}
+                                            className={`flex items-center gap-3 rounded-md p-2 transition-colors ${
+                                                selectedUsers.includes(user.id)
+                                                    ? 'border border-primary/20 bg-primary/5'
+                                                    : 'hover:bg-muted/50'
+                                            }`}
+                                        >
+                                            <Checkbox
+                                                id={`user-${user.id}`}
+                                                checked={selectedUsers.includes(user.id)}
+                                                onCheckedChange={(checked) => handleUserChange(user.id, checked as boolean)}
+                                                className="data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+                                            />
+                                            <div className="min-w-0 flex-1">
+                                                <Label
+                                                    htmlFor={`user-${user.id}`}
+                                                    className="block cursor-pointer text-sm font-medium"
+                                                >
+                                                    {user.name}
+                                                </Label>
+                                                <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                                             </div>
-                                        ))}
-                                    </div>
-                                </ScrollArea>
-                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
                         </div>
-                    </SheetContent>
-                </Sheet>
+                    </DialogContent>
+                </Dialog>
             </div>
 
             <FormSection icon={ENTITY_ICONS.role.permissions} title="Permisos del Rol" description={role.name === 'admin' ? 'Este rol tiene automáticamente todos los permisos del sistema' : 'Selecciona las acciones que este rol puede realizar en cada página'}>
@@ -295,6 +301,16 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                         </p>
                     </div>
                 )}
+
+                {/* Buscador de permisos */}
+                <div className="mb-4">
+                    <Input
+                        placeholder="Buscar módulo o permiso..."
+                        value={permissionSearch}
+                        onChange={(e) => setPermissionSearch(e.target.value)}
+                        className="max-w-sm"
+                    />
+                </div>
 
                 {/* Tabla compacta de permisos */}
                 <div className="overflow-x-auto">
@@ -309,7 +325,7 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {Object.entries(permissions).map(([group, groupPermissions]) => {
+                            {filteredPermissions.map(([group, groupPermissions]) => {
                                 // Agrupar permisos por acción
                                 const actions = {
                                     view: groupPermissions.find((p) => p.name.endsWith('.view')),

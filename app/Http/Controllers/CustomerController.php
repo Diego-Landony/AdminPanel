@@ -107,7 +107,6 @@ class CustomerController extends Controller
                         'color' => $customer->customerType->color,
                         'multiplier' => $customer->customerType->multiplier,
                     ] : null,
-                    'client_type' => $customer->customerType?->name ?? 'regular',
                     'phone' => $customer->phone,
                     'location' => $customer->location,
                     'email_verified_at' => $customer->email_verified_at,
@@ -248,8 +247,11 @@ class CustomerController extends Controller
             'last_activity_at' => $customer->last_activity_at ? $customer->last_activity_at->toISOString() : null,
         ];
 
+        $customerTypes = CustomerType::active()->ordered()->get();
+
         return Inertia::render('customers/edit', [
             'customer' => $customerData,
+            'customer_types' => $customerTypes,
         ]);
     }
 

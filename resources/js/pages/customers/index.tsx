@@ -25,7 +25,6 @@ interface Customer {
     subway_card: string;
     birth_date: string;
     gender: string | null;
-    client_type: string | null;
     customer_type: {
         id: number;
         name: string;
@@ -112,21 +111,13 @@ const getCustomerTypeIconColor = (color: string): string => {
 /**
  * Obtiene el color del tipo de cliente basado en el nuevo sistema
  */
-const getClientTypeColor = (customerType: Customer['customer_type'], fallbackType?: string | null): string => {
+const getClientTypeColor = (customerType: Customer['customer_type']): string => {
     if (customerType && customerType.color && CUSTOMER_TYPE_COLORS[customerType.color]) {
         return CUSTOMER_TYPE_COLORS[customerType.color].color;
     }
 
-    // Fallback al sistema anterior si no hay customer_type
-    switch (fallbackType) {
-        case 'premium':
-            return CUSTOMER_TYPE_COLORS.yellow.color;
-        case 'vip':
-            return CUSTOMER_TYPE_COLORS.purple.color;
-        case 'regular':
-        default:
-            return CUSTOMER_TYPE_COLORS.gray.color;
-    }
+    // Fallback por defecto si no hay customer_type o color
+    return CUSTOMER_TYPE_COLORS.gray.color;
 };
 
 /**
@@ -240,8 +231,8 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
                             {customer.customer_type && (
                                 <span className="flex items-center">{getCustomerTypeIcon(customer.customer_type.color || 'gray', 'h-3 w-3')}</span>
                             )}
-                            <Badge className={getClientTypeColor(customer.customer_type, customer.client_type)}>
-                                {customer.customer_type?.display_name || customer.client_type || 'Regular'}
+                            <Badge className={getClientTypeColor(customer.customer_type)}>
+                                {customer.customer_type?.name || 'Sin tipo'}
                             </Badge>
                             {customer.customer_type && <span className="text-xs text-muted-foreground">{customer.customer_type.multiplier}x</span>}
                         </div>
@@ -366,8 +357,8 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
                     value: (
                         <div className="flex items-center gap-2">
                             {getCustomerTypeIcon(customer.customer_type?.color || 'gray', 'h-4 w-4')}
-                            <Badge className={getClientTypeColor(customer.customer_type, customer.client_type)}>
-                                {customer.customer_type?.display_name || customer.client_type || 'Regular'}
+                            <Badge className={getClientTypeColor(customer.customer_type)}>
+                                {customer.customer_type?.name || 'Sin tipo'}
                             </Badge>
                             {customer.customer_type && <span className="text-xs text-muted-foreground">{customer.customer_type.multiplier}x</span>}
                         </div>

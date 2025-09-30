@@ -51,6 +51,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:users.edit');
     Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy')
         ->middleware('permission:users.delete');
+    Route::patch('users/{user}/roles', [UserController::class, 'updateRoles'])->name('users.update-roles')
+        ->middleware('permission:users.edit');
     Route::post('users/keep-alive', [UserController::class, 'keepAlive'])->name('users.keep-alive');
 
     // Gestión de clientes - requiere permisos específicos

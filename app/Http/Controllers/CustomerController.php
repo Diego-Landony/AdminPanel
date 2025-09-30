@@ -69,14 +69,13 @@ class CustomerController extends Controller
                     ->orWhere('subway_card', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%")
                     ->orWhereHas('customerType', function ($subQuery) use ($search) {
-                        $subQuery->where('name', 'like', "%{$search}%")
-                            ->orWhere('display_name', 'like', "%{$search}%");
+                        $subQuery->where('name', 'like', "%{$search}%");
                     });
             });
         }
 
         // Aplicar ordenamiento múltiple si está disponible
-        if (!empty($multipleSortCriteria)) {
+        if (! empty($multipleSortCriteria)) {
             foreach ($multipleSortCriteria as $criteria) {
                 $field = $criteria['field'] ?? 'created_at';
                 $direction = $criteria['direction'] ?? 'desc';
@@ -306,7 +305,6 @@ class CustomerController extends Controller
             'customer_type' => $customer->customerType ? [
                 'id' => $customer->customerType->id,
                 'name' => $customer->customerType->name,
-                'display_name' => $customer->customerType->display_name,
             ] : null,
             'phone' => $customer->phone,
             'address' => $customer->address,
@@ -349,6 +347,9 @@ class CustomerController extends Controller
 
             $request->validate($rules);
 
+            // Si el email cambió, marcar como no verificado
+            $emailChanged = $customer->email !== $request->email;
+
             $customerData = [
                 'full_name' => $request->full_name,
                 'email' => $request->email,
@@ -367,12 +368,13 @@ class CustomerController extends Controller
                 $customerData['password'] = Hash::make($request->password);
             }
 
-            // Si el email cambió, marcar como no verificado
-            if ($customer->email !== $request->email) {
-                $customerData['email_verified_at'] = null;
-            }
-
             $customer->update($customerData);
+
+            // Resetear verificación de email si cambió (después del update)
+            if ($emailChanged) {
+                $customer->email_verified_at = null;
+                $customer->save();
+            }
 
             return back()->with('success', 'Cliente actualizado exitosamente');
         } catch (\Illuminate\Database\QueryException $e) {

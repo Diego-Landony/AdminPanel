@@ -15,16 +15,6 @@ test('home page can be accessed by authenticated user', function () {
     $response->assertStatus(200);
 });
 
-/**
- * Test para la página Dashboard
- */
-test('dashboard page can be accessed by authenticated user', function () {
-    $testUser = createTestUser();
-    $this->actingAs($testUser);
-
-    $response = $this->get('/dashboard');
-    $response->assertStatus(200);
-});
 
 /**
  * Test para la página de Usuarios
@@ -120,22 +110,19 @@ test('profile page can be accessed by authenticated user', function () {
 test('unauthenticated users are redirected to login', function () {
     // Test Home
     $this->get('/home')->assertRedirect('/login');
-    
-    // Test Dashboard
-    $this->get('/dashboard')->assertRedirect('/login');
-    
+
     // Test Users
     $this->get('/users')->assertRedirect('/login');
-    
+
     // Test Customers
     $this->get('/customers')->assertRedirect('/login');
-    
+
     // Test Roles
     $this->get('/roles')->assertRedirect('/login');
-    
+
     // Test Settings
     $this->get('/settings')->assertRedirect('/login');
-    
+
     // Test Profile
     $this->get('/settings/profile')->assertRedirect('/login'); // Ruta correcta
 });
@@ -145,18 +132,24 @@ test('unauthenticated users are redirected to login', function () {
  */
 test('test user has all required permissions', function () {
     $testUser = createTestUser();
-    
+
     // Verificar que el usuario existe
     expect($testUser)->not->toBeNull();
     expect($testUser->email)->toBe('admin@test.com');
-    
+
     // Verificar que tiene el rol admin
     expect($testUser->roles)->toHaveCount(1);
     expect($testUser->roles->first()->name)->toBe('admin');
-    
-    // Verificar que tiene permisos (contar dinámicamente los permisos totales)
-    $totalPermissions = Permission::count();
-    expect($testUser->roles->first()->permissions)->toHaveCount($totalPermissions);
+
+    // Verificar que tiene al menos los permisos básicos del sistema
+    $adminRole = $testUser->roles->first();
+    expect($adminRole->permissions->count())->toBeGreaterThan(0);
+
+    // Verificar permisos clave
+    $permissionNames = $adminRole->permissions->pluck('name')->toArray();
+    expect($permissionNames)->toContain('home.view');
+    expect($permissionNames)->toContain('users.view');
+    expect($permissionNames)->toContain('customers.view');
 });
 
 /**

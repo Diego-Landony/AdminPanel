@@ -193,7 +193,6 @@ test('can update customer information', function () {
     $customer = Customer::factory()->create([
         'full_name' => 'Cliente Original',
         'email' => 'original@test.com',
-        'client_type' => 'regular',
     ]);
 
     $updateData = [
@@ -261,6 +260,8 @@ test('email verification is reset when email is changed', function () {
         'email' => 'newemail@test.com',
         'subway_card' => $customer->subway_card,
         'birth_date' => $customer->birth_date->format('Y-m-d'),
+        'gender' => $customer->gender,
+        'phone' => $customer->phone,
     ];
 
     $response = $this->put("/customers/{$customer->id}", $updateData);

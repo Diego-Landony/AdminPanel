@@ -19,6 +19,7 @@ interface Section {
     allow_multiple: boolean;
     min_selections: number;
     max_selections: number;
+    is_active: boolean;
     sort_order: number;
     created_at: string;
     updated_at: string;
@@ -129,29 +130,26 @@ export default function SectionsIndex({ sections, stats }: SectionsPageProps) {
         {
             key: 'name',
             title: 'Sección',
-            width: 'w-48 min-w-48 max-w-64',
+            width: 'flex-1',
             render: (section: Section) => (
-                <EntityInfoCell
-                    icon={ListChecks}
-                    primaryText={section.title}
-                    secondaryText={`#${section.sort_order}`}
-                    badges={<StatusBadge status={section.is_required ? 'active' : 'inactive'} configs={{ active: { label: 'Requerida', variant: 'green' }, inactive: { label: 'Opcional', variant: 'gray' } }} showIcon={false} />}
-                />
+                <div className="text-sm font-medium text-foreground">{section.title}</div>
             ),
         },
         {
-            key: 'created_at',
-            title: 'Creado',
-            width: 'w-24',
+            key: 'status',
+            title: 'Estado',
+            width: 'w-32',
             textAlign: 'center' as const,
             render: (section: Section) => (
-                <div className="text-sm text-muted-foreground">{formatDate(section.created_at)}</div>
+                <div className="flex justify-center">
+                    <StatusBadge status={section.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />
+                </div>
             ),
         },
         {
             key: 'actions',
             title: 'Acciones',
-            width: 'w-16',
+            width: 'w-24',
             textAlign: 'right' as const,
             render: (section: Section) => (
                 <TableActions
@@ -167,18 +165,8 @@ export default function SectionsIndex({ sections, stats }: SectionsPageProps) {
 
     const renderMobileCard = (section: Section) => (
         <StandardMobileCard
-            icon={ListChecks}
             title={section.title}
-            subtitle={`Orden #${section.sort_order}`}
-            badge={{
-                children: <StatusBadge status={section.is_required ? 'active' : 'inactive'} configs={{ active: { label: 'Requerida', variant: 'green' }, inactive: { label: 'Opcional', variant: 'gray' } }} showIcon={false} />,
-            }}
-            dataFields={[
-                {
-                    label: 'Creado',
-                    value: formatDate(section.created_at),
-                },
-            ]}
+            subtitle={<StatusBadge status={section.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />}
             actions={{
                 editHref: `/menu/sections/${section.id}/edit`,
                 onDelete: () => openDeleteDialog(section),

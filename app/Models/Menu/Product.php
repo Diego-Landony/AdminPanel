@@ -37,6 +37,7 @@ class Product extends Model
         'precio_domicilio_capital',
         'precio_pickup_interior',
         'precio_domicilio_interior',
+        'sort_order',
     ];
 
     /**
@@ -52,6 +53,7 @@ class Product extends Model
         'precio_domicilio_capital' => 'decimal:2',
         'precio_pickup_interior' => 'decimal:2',
         'precio_domicilio_interior' => 'decimal:2',
+        'sort_order' => 'integer',
     ];
 
     /**

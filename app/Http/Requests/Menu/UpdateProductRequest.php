@@ -39,13 +39,14 @@ class UpdateProductRequest extends FormRequest
             'precio_domicilio_interior' => 'required_if:has_variants,false|nullable|numeric|min:0',
 
             // Variantes (requeridas si has_variants = true)
-            'variants' => 'required_if:has_variants,true|nullable|array|min:1',
+            'variants' => 'required_if:has_variants,true|array',
+            'variants.*' => 'required_if:has_variants,true',
             'variants.*.id' => 'nullable|exists:product_variants,id',
-            'variants.*.name' => 'required|string|max:150',
-            'variants.*.precio_pickup_capital' => 'required|numeric|min:0',
-            'variants.*.precio_domicilio_capital' => 'required|numeric|min:0',
-            'variants.*.precio_pickup_interior' => 'required|numeric|min:0',
-            'variants.*.precio_domicilio_interior' => 'required|numeric|min:0',
+            'variants.*.name' => 'required_if:has_variants,true|string|max:150',
+            'variants.*.precio_pickup_capital' => 'required_if:has_variants,true|numeric|min:0',
+            'variants.*.precio_domicilio_capital' => 'required_if:has_variants,true|numeric|min:0',
+            'variants.*.precio_pickup_interior' => 'required_if:has_variants,true|numeric|min:0',
+            'variants.*.precio_domicilio_interior' => 'required_if:has_variants,true|numeric|min:0',
 
             // Secciones de personalización
             'sections' => 'nullable|array',

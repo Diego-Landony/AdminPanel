@@ -129,6 +129,7 @@ export default function SectionCreate() {
         allow_multiple: false,
         min_selections: '1',
         max_selections: '1',
+        is_active: true,
         options: [] as SectionOption[],
     });
 
@@ -265,6 +266,14 @@ export default function SectionCreate() {
                         <Checkbox id="allow_multiple" checked={data.allow_multiple} onCheckedChange={(checked) => setData('allow_multiple', checked as boolean)} />
                         <Label htmlFor="allow_multiple" className="text-sm leading-none font-medium cursor-pointer">
                             Selección múltiple
+                        </Label>
+                    </div>
+
+                    {/* Sección activa */}
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked as boolean)} />
+                        <Label htmlFor="is_active" className="text-sm leading-none font-medium cursor-pointer">
+                            Sección activa
                         </Label>
                     </div>
                 </div>

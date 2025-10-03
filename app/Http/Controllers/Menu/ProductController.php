@@ -27,52 +27,60 @@ use Inertia\Response;
 class ProductController extends Controller
 {
     /**
-     * Listar productos
+     * Listar productos agrupados por categoría
      */
     public function index(Request $request): Response
     {
-        $search = $request->get('search');
-        $perPage = (int) $request->get('per_page', 10);
-        $sortField = $request->get('sort_field', 'created_at');
-        $sortDirection = $request->get('sort_direction', 'desc');
+        // Obtener categorías ordenadas
+        $categories = Category::query()
+            ->orderBy('sort_order')
+            ->get();
 
-        $query = Product::query()
-            ->with('category')
-            ->withCount(['sections', 'variants']);
+        // Transformar a estructura agrupada, cargando productos por category_id
+        $groupedProducts = $categories->map(function ($category) {
+            $products = Product::where('category_id', $category->id)
+                ->with(['variants' => function ($query) {
+                    $query->orderBy('sort_order');
+                }])
+                ->orderBy('sort_order')
+                ->get();
 
-        if ($search) {
-            $query->where('name', 'like', "%{$search}%");
+            return [
+                'category' => [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                ],
+                'products' => $products,
+            ];
+        })->filter(fn ($group) => $group['products']->isNotEmpty())->values();
+
+        // Agregar productos sin categoría al final
+        $productsWithoutCategory = Product::whereNull('category_id')
+            ->with(['variants' => function ($query) {
+                $query->orderBy('sort_order');
+            }])
+            ->orderBy('sort_order')
+            ->get();
+
+        if ($productsWithoutCategory->isNotEmpty()) {
+            $groupedProducts->push([
+                'category' => [
+                    'id' => null,
+                    'name' => 'Sin categoría',
+                ],
+                'products' => $productsWithoutCategory,
+            ]);
         }
-
-        // Ordenamiento
-        if ($sortField === 'product') {
-            $query->orderBy('name', $sortDirection);
-        } elseif (in_array($sortField, ['is_active', 'created_at'])) {
-            $query->orderBy($sortField, $sortDirection);
-        } elseif ($sortField === 'sections_count') {
-            $query->orderBy('sections_count', $sortDirection);
-        } else {
-            $query->orderBy('created_at', 'desc');
-        }
-
-        $products = $query->paginate($perPage);
 
         // Stats
-        $allProducts = Product::all();
+        $totalProducts = Product::count();
+        $activeProducts = Product::where('is_active', true)->count();
 
         return Inertia::render('menu/products/index', [
-            'products' => $products,
+            'groupedProducts' => $groupedProducts,
             'stats' => [
-                'total_products' => $allProducts->count(),
-                'active_products' => $allProducts->where('is_active', true)->count(),
-                'with_customization' => $allProducts->where('is_customizable', true)->count(),
-                'with_variants' => $allProducts->where('has_variants', true)->count(),
-            ],
-            'filters' => [
-                'search' => $search,
-                'per_page' => $perPage,
-                'sort_field' => $sortField,
-                'sort_direction' => $sortDirection,
+                'total_products' => $totalProducts,
+                'active_products' => $activeProducts,
             ],
         ]);
     }
@@ -83,7 +91,7 @@ class ProductController extends Controller
     public function create(): Response
     {
         $categories = Category::active()->ordered()->get(['id', 'name']);
-        $sections = Section::with('options')->orderBy('title')->get();
+        $sections = Section::with('options')->orderBy('sort_order')->get();
 
         return Inertia::render('menu/products/create', [
             'categories' => $categories,
@@ -158,7 +166,7 @@ class ProductController extends Controller
     {
         $product->load(['category', 'sections', 'variants']);
         $categories = Category::active()->ordered()->get(['id', 'name']);
-        $sections = Section::with('options')->orderBy('title')->get();
+        $sections = Section::with('options')->orderBy('sort_order')->get();
 
         return Inertia::render('menu/products/edit', [
             'product' => $product,
@@ -267,5 +275,25 @@ class ProductController extends Controller
             return back()
                 ->withErrors(['error' => 'Error al eliminar el producto: '.$e->getMessage()]);
         }
+    }
+
+    /**
+     * Reordenar productos dentro de su categoría
+     */
+    public function reorder(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'products' => 'required|array',
+            'products.*.id' => 'required|exists:products,id',
+            'products.*.sort_order' => 'required|integer',
+        ]);
+
+        foreach ($request->products as $product) {
+            Product::where('id', $product['id'])
+                ->update(['sort_order' => $product['sort_order']]);
+        }
+
+        return redirect()->back()
+            ->with('success', 'Orden actualizado exitosamente.');
     }
 }

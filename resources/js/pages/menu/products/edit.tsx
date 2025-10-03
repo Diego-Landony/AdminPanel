@@ -355,8 +355,6 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
                     <Textarea id="description" value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} placeholder="Descripción del producto" rows={2} />
                 </FormField>
 
-                <ImageUpload label="Imagen del Producto" currentImage={formData.image} onImageChange={(url) => handleInputChange('image', url || '')} error={errors.image} />
-
                 <div className="flex items-center space-x-2">
                     <Checkbox
                         id="is_active"
@@ -364,9 +362,11 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
                         onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)}
                     />
                     <Label htmlFor="is_active" className="text-sm leading-none font-medium cursor-pointer">
-                        Activo
+                        Producto activo
                     </Label>
                 </div>
+
+                <ImageUpload label="Imagen del Producto" currentImage={formData.image} onImageChange={(url) => handleInputChange('image', url || '')} error={errors.image} />
             </FormSection>
 
             <FormSection

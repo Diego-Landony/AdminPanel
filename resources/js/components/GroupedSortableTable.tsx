@@ -1,0 +1,395 @@
+import { Link } from '@inertiajs/react';
+import { Plus, RefreshCw, Search, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { GripVertical, Save } from 'lucide-react';
+
+interface GroupedSortableTableColumn<T> {
+    key: string;
+    title: string;
+    width?: string;
+    textAlign?: 'left' | 'center' | 'right';
+    render?: (item: T) => React.ReactNode;
+    className?: string;
+}
+
+interface GroupedSortableTableStat {
+    title: string;
+    value: number | string;
+    icon: React.ReactNode;
+}
+
+interface CategoryGroup<T> {
+    category: {
+        id: number | null;
+        name: string;
+    };
+    products: T[];
+}
+
+interface GroupedSortableTableProps<T extends { id: number | string; sort_order?: number }> {
+    title: string;
+    description?: string;
+    groupedData: CategoryGroup<T>[];
+    columns: GroupedSortableTableColumn<T>[];
+    stats?: GroupedSortableTableStat[];
+    createUrl?: string;
+    createLabel?: string;
+    searchable?: boolean;
+    searchPlaceholder?: string;
+    onReorder: (items: T[]) => void;
+    onRefresh?: () => void;
+    isRefreshing?: boolean;
+    isSaving?: boolean;
+    renderMobileCard?: (item: T) => React.ReactNode;
+    breakpoint?: 'sm' | 'md' | 'lg' | 'xl';
+}
+
+interface SortableRowProps<T> {
+    item: T;
+    columns: GroupedSortableTableColumn<T>[];
+}
+
+/**
+ * Fila sortable individual
+ */
+function SortableRow<T extends { id: number | string }>({ item, columns }: SortableRowProps<T>) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: item.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+        <TableRow ref={setNodeRef} style={style} className={isDragging ? 'shadow-lg bg-muted/50' : ''}>
+            <TableCell className="text-center w-16">
+                <button
+                    className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors"
+                    {...attributes}
+                    {...listeners}
+                >
+                    <GripVertical className="h-5 w-5" />
+                </button>
+            </TableCell>
+            {columns.map((column) => (
+                <TableCell
+                    key={column.key}
+                    className={`${column.width || ''} ${column.textAlign ? `text-${column.textAlign}` : 'text-left'} ${column.className || ''}`}
+                >
+                    {column.render ? column.render(item) : (item as any)[column.key]}
+                </TableCell>
+            ))}
+        </TableRow>
+    );
+}
+
+/**
+ * Componente de tabla agrupada con drag & drop independiente por grupo
+ *
+ * Características:
+ * - Drag and drop para reordenar filas DENTRO de cada grupo
+ * - Agrupación por categorías con headers/divisores
+ * - Búsqueda simple (sin filtros complejos)
+ * - Sin paginación (muestra todos los items)
+ * - Estadísticas opcionales
+ * - Botón de creación opcional
+ * - Indicador de cambios sin guardar
+ */
+function GroupedSortableTableComponent<T extends { id: number | string; sort_order?: number }>({
+    title,
+    description,
+    groupedData,
+    columns,
+    stats,
+    createUrl,
+    createLabel = 'Crear',
+    searchable = true,
+    searchPlaceholder = 'Buscar...',
+    onReorder,
+    onRefresh,
+    isRefreshing = false,
+    isSaving = false,
+    renderMobileCard,
+    breakpoint = 'lg',
+}: GroupedSortableTableProps<T>) {
+    const [search, setSearch] = useState('');
+    const [localGroups, setLocalGroups] = useState<CategoryGroup<T>[]>(groupedData);
+    const [hasChanges, setHasChanges] = useState(false);
+
+    const breakpointClass = breakpoint + ':';
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    // Sincronizar cuando cambian los datos externos
+    useEffect(() => {
+        setLocalGroups(groupedData);
+        setHasChanges(false);
+    }, [groupedData]);
+
+    /**
+     * Maneja el drag end para un grupo específico
+     */
+    const handleDragEnd = (event: DragEndEvent, categoryId: number | null) => {
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            setLocalGroups((groups) => {
+                return groups.map((group) => {
+                    if (group.category.id !== categoryId) {
+                        return group;
+                    }
+
+                    const oldIndex = group.products.findIndex((item) => item.id === active.id);
+                    const newIndex = group.products.findIndex((item) => item.id === over.id);
+
+                    return {
+                        ...group,
+                        products: arrayMove(group.products, oldIndex, newIndex),
+                    };
+                });
+            });
+
+            setHasChanges(true);
+        }
+    };
+
+    /**
+     * Guarda el nuevo orden
+     */
+    const handleSaveOrder = () => {
+        // Aplanar todos los productos con su nuevo sort_order
+        const allProducts: T[] = [];
+        localGroups.forEach((group) => {
+            group.products.forEach((product, index) => {
+                allProducts.push({
+                    ...product,
+                    sort_order: index + 1,
+                } as T);
+            });
+        });
+
+        onReorder(allProducts);
+    };
+
+    /**
+     * Filtrar grupos por búsqueda
+     */
+    const filteredGroups = searchable && search
+        ? localGroups.map((group) => ({
+            ...group,
+            products: group.products.filter((item: any) =>
+                item.name?.toLowerCase().includes(search.toLowerCase())
+            ),
+        })).filter((group) => group.products.length > 0)
+        : localGroups;
+
+    return (
+        <ErrorBoundary>
+            <div className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div className="flex-1">
+                                <h2 className="text-2xl font-semibold tracking-tight">{title}</h2>
+                                {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                {onRefresh && (
+                                    <Button variant="outline" size="sm" onClick={onRefresh} disabled={isRefreshing}>
+                                        <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                    </Button>
+                                )}
+                                {createUrl && (
+                                    <Link href={createUrl}>
+                                        <Button size="sm">
+                                            <Plus className="h-4 w-4 mr-2" />
+                                            {createLabel}
+                                        </Button>
+                                    </Link>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Stats */}
+                        {stats && stats.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-6 pt-4 text-sm">
+                                {stats.map((stat, index) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                        {stat.icon}
+                                        <span className="font-medium">{stat.title}</span>
+                                        <span className="text-muted-foreground">{stat.value}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Search */}
+                        {searchable && (
+                            <div className="pt-4">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        type="text"
+                                        placeholder={searchPlaceholder}
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        className="pl-10 pr-10"
+                                    />
+                                    {search && (
+                                        <button
+                                            onClick={() => setSearch('')}
+                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </CardHeader>
+
+                    <CardContent className="p-0">
+                        {/* Desktop view */}
+                        <div className={`hidden ${breakpointClass}block`}>
+                            {filteredGroups.map((group, groupIndex) => (
+                                <div key={group.category.id ?? 'no-category'} className="border-b last:border-b-0">
+                                    {/* Category Header */}
+                                    <div className="bg-muted/50 px-6 py-3 border-b">
+                                        <h3 className="font-semibold text-sm text-foreground">{group.category.name}</h3>
+                                    </div>
+
+                                    {/* Products in this category */}
+                                    <DndContext
+                                        sensors={sensors}
+                                        collisionDetection={closestCenter}
+                                        onDragEnd={(e) => handleDragEnd(e, group.category.id)}
+                                    >
+                                        <Table>
+                                            {groupIndex === 0 && (
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead className="w-16 text-center"></TableHead>
+                                                        {columns.map((column) => (
+                                                            <TableHead
+                                                                key={column.key}
+                                                                className={`${column.width || ''} ${column.textAlign ? `text-${column.textAlign}` : 'text-left'}`}
+                                                            >
+                                                                {column.title}
+                                                            </TableHead>
+                                                        ))}
+                                                    </TableRow>
+                                                </TableHeader>
+                                            )}
+                                            <TableBody>
+                                                <SortableContext items={group.products.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+                                                    {group.products.map((product) => (
+                                                        <SortableRow key={product.id} item={product} columns={columns} />
+                                                    ))}
+                                                </SortableContext>
+                                            </TableBody>
+                                        </Table>
+                                    </DndContext>
+
+                                    {/* Save Button for this group */}
+                                    {hasChanges && (
+                                        <div className="flex items-center justify-end gap-4 px-6 py-3 bg-muted/30">
+                                            <Button onClick={handleSaveOrder} disabled={isSaving} size="sm">
+                                                <Save className="mr-2 h-4 w-4" />
+                                                {isSaving ? 'Guardando...' : 'Guardar Orden'}
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+
+                            {filteredGroups.length === 0 && (
+                                <div className="p-12 text-center text-muted-foreground">
+                                    <p>No se encontraron resultados</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Mobile view */}
+                        {renderMobileCard && (
+                            <div className={`${breakpointClass}hidden space-y-4 p-4`}>
+                                {filteredGroups.map((group) => (
+                                    <div key={group.category.id ?? 'no-category'} className="space-y-3">
+                                        {/* Category Header */}
+                                        <div className="bg-muted/50 px-4 py-2 rounded-md">
+                                            <h3 className="font-semibold text-sm text-foreground">{group.category.name}</h3>
+                                        </div>
+
+                                        {/* Products */}
+                                        {group.products.map((product) => (
+                                            <div key={product.id}>{renderMobileCard(product)}</div>
+                                        ))}
+
+                                        {/* Save Button for this group (mobile) */}
+                                        {hasChanges && (
+                                            <div className="flex justify-end pt-2">
+                                                <Button onClick={handleSaveOrder} disabled={isSaving} size="sm">
+                                                    <Save className="mr-2 h-4 w-4" />
+                                                    {isSaving ? 'Guardando...' : 'Guardar Orden'}
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Info message at bottom */}
+                        <div className="mt-4 px-6 pb-6">
+                            <div className="text-sm text-muted-foreground">
+                                Arrastra y suelta las filas para cambiar el orden dentro de cada categoría
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </ErrorBoundary>
+    );
+}
+
+export function GroupedSortableTable<T extends { id: number | string; sort_order?: number }>(
+    props: GroupedSortableTableProps<T>
+) {
+    return <GroupedSortableTableComponent {...props} />;
+}

@@ -244,6 +244,12 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        console.log('=== INICIO SUBMIT PRODUCTO ===');
+        console.log('1. Evento preventDefault ejecutado');
+        console.log('2. Data actual:', data);
+        console.log('3. Selected sections:', selectedSections);
+        console.log('4. Local variants:', localVariants);
+
         // Limpiar los IDs temporales de las variantes antes de enviar
         const submitData = {
             ...data,
@@ -251,19 +257,35 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
             variants: localVariants.map(({ id, ...rest }) => rest),
         };
 
+        console.log('5. Submit data preparado:', submitData);
+        console.log('6. Route:', route('menu.products.store'));
+        console.log('7. Iniciando POST request...');
+
         post(route('menu.products.store'), {
             data: submitData,
             onSuccess: () => {
+                console.log('✅ POST exitoso - onSuccess ejecutado');
                 reset();
                 setSelectedSections([]);
                 setLocalVariants([]);
             },
             onError: (errors) => {
+                console.error('❌ POST fallido - onError ejecutado');
+                console.error('Errors recibidos:', errors);
                 if (Object.keys(errors).length === 0) {
                     showNotification.error(NOTIFICATIONS.error.server);
                 }
             },
+            onFinish: () => {
+                console.log('🏁 POST finalizado - onFinish ejecutado');
+            },
+            onBefore: () => {
+                console.log('⏳ POST iniciado - onBefore ejecutado');
+            },
         });
+
+        console.log('8. POST request enviado');
+        console.log('=== FIN SUBMIT PRODUCTO ===');
     };
 
     return (
@@ -314,13 +336,6 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                     />
                 </FormField>
 
-                <ImageUpload
-                    label="Imagen del Producto"
-                    currentImage={data.image}
-                    onImageChange={(url) => setData('image', url || '')}
-                    error={errors.image}
-                />
-
                 <div className="flex items-center space-x-2">
                     <Checkbox
                         id="is_active"
@@ -328,9 +343,16 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                         onCheckedChange={(checked) => setData('is_active', checked as boolean)}
                     />
                     <Label htmlFor="is_active" className="text-sm leading-none font-medium cursor-pointer">
-                        Activo
+                        Producto activo
                     </Label>
                 </div>
+
+                <ImageUpload
+                    label="Imagen del Producto"
+                    currentImage={data.image}
+                    onImageChange={(url) => setData('image', url || '')}
+                    error={errors.image}
+                />
             </FormSection>
 
             <FormSection

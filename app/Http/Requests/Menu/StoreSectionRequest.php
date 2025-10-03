@@ -20,6 +20,7 @@ class StoreSectionRequest extends FormRequest
             'allow_multiple' => 'boolean',
             'min_selections' => 'required|integer|min:0',
             'max_selections' => 'required|integer|min:1',
+            'is_active' => 'boolean',
             'options' => 'nullable|array',
             'options.*.name' => 'required|string|max:100',
             'options.*.is_extra' => 'boolean',

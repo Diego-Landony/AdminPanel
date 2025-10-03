@@ -26,8 +26,8 @@ class ImageUploadController extends Controller
             // Guardar en storage/app/public/images
             $path = $image->storeAs('images', $filename, 'public');
 
-            // Retornar URL pública
-            $url = Storage::disk('public')->url($path);
+            // Retornar URL relativa (sin dominio completo)
+            $url = '/storage/'.$path;
 
             return response()->json([
                 'success' => true,

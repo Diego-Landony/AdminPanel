@@ -1,110 +1,98 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { Head, router } from '@inertiajs/react';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 
-import { DataTable } from '@/components/DataTable';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
-import { EntityInfoCell } from '@/components/EntityInfoCell';
+import { GroupedSortableTable } from '@/components/GroupedSortableTable';
 import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { TableActions } from '@/components/TableActions';
-import { ProductsSkeleton } from '@/components/skeletons';
 import { ACTIVE_STATUS_CONFIGS, StatusBadge } from '@/components/status-badge';
 import AppLayout from '@/layouts/app-layout';
-import { Package, Star } from 'lucide-react';
+import { Package } from 'lucide-react';
+
+interface ProductVariant {
+    id: number;
+    name: string;
+    size: string;
+}
 
 interface Product {
     id: number;
     name: string;
     description: string | null;
     image: string | null;
-    is_customizable: boolean;
     is_active: boolean;
-    sections_count: number;
-    created_at: string;
-    updated_at: string;
+    sort_order: number;
+    has_variants: boolean;
+    variants?: ProductVariant[];
+}
+
+interface CategoryGroup {
+    category: {
+        id: number | null;
+        name: string;
+    };
+    products: Product[];
 }
 
 interface ProductsPageProps {
-    products: {
-        data: Product[];
-        current_page: number;
-        last_page: number;
-        per_page: number;
-        total: number;
-        from: number;
-        to: number;
-    };
+    groupedProducts: CategoryGroup[];
     stats: {
         total_products: number;
         active_products: number;
     };
-    filters: {
-        search: string | null;
-        per_page: number;
-        sort_field?: string;
-        sort_direction?: 'asc' | 'desc';
-    };
 }
 
-const ProductInfoCell: React.FC<{ product: Product }> = ({ product }) => (
-    <EntityInfoCell
-        icon={Package}
-        primaryText={product.name}
-        secondaryText={product.description}
-        imageUrl={product.image}
-    />
-);
-
-const ProductMobileCard: React.FC<{ product: Product; onDelete: (product: Product) => void; isDeleting: boolean }> = ({
-    product,
-    onDelete,
-    isDeleting,
-}) => (
-    <StandardMobileCard
-        icon={Package}
-        title={product.name}
-        subtitle={product.description}
-        imageUrl={product.image || undefined}
-        badge={{
-            children: <StatusBadge status={product.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />,
-        }}
-        dataFields={[
-            {
-                label: 'Secciones',
-                value: `${product.sections_count} secciones`,
-            },
-            {
-                label: 'Personalizable',
-                value: product.is_customizable ? 'Sí' : 'No',
-            },
-        ]}
-        actions={{
-            editHref: `/menu/products/${product.id}/edit`,
-            onDelete: () => onDelete(product),
-            isDeleting,
-            editTooltip: 'Editar producto',
-            deleteTooltip: 'Eliminar producto',
-        }}
-    />
-);
-
-export default function ProductsIndex({ products, stats, filters }: ProductsPageProps) {
+export default function ProductsIndex({ groupedProducts, stats }: ProductsPageProps) {
     const [deletingProduct, setDeletingProduct] = useState<number | null>(null);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
-    const openDeleteDialog = useCallback((product: Product) => {
+    const handleReorder = (reorderedProducts: Product[]) => {
+        setIsSaving(true);
+
+        const orderData = reorderedProducts.map((product) => ({
+            id: product.id,
+            sort_order: product.sort_order,
+        }));
+
+        router.post(
+            route('menu.products.reorder'),
+            { products: orderData },
+            {
+                preserveState: true,
+                onSuccess: () => {
+                    showNotification.success('Orden guardado correctamente');
+                },
+                onError: (error) => {
+                    if (error.message) {
+                        showNotification.error(error.message);
+                    }
+                },
+                onFinish: () => {
+                    setIsSaving(false);
+                },
+            }
+        );
+    };
+
+    const handleRefresh = () => {
+        router.reload();
+    };
+
+    const openDeleteDialog = (product: Product) => {
         setSelectedProduct(product);
         setShowDeleteDialog(true);
-    }, []);
+    };
 
-    const closeDeleteDialog = useCallback(() => {
+    const closeDeleteDialog = () => {
         setSelectedProduct(null);
         setShowDeleteDialog(false);
         setDeletingProduct(null);
-    }, []);
+    };
 
-    const handleDeleteProduct = async () => {
+    const handleDeleteProduct = () => {
         if (!selectedProduct) return;
 
         setDeletingProduct(selectedProduct.id);
@@ -123,45 +111,57 @@ export default function ProductsIndex({ products, stats, filters }: ProductsPage
 
     const columns = [
         {
-            key: 'product',
+            key: 'name',
             title: 'Producto',
-            width: 'lg' as const,
-            sortable: true,
-            render: (product: Product) => <ProductInfoCell product={product} />,
-        },
-        {
-            key: 'sections_count',
-            title: 'Secciones',
-            width: 'sm' as const,
-            textAlign: 'center' as const,
+            width: 'flex-1',
             render: (product: Product) => (
-                <span className="text-sm text-muted-foreground">{product.sections_count}</span>
+                <div className="flex items-center gap-3">
+                    {product.image && (
+                        <img
+                            src={product.image}
+                            alt={product.name}
+                            className="h-10 w-10 rounded-md object-cover"
+                        />
+                    )}
+                    <div className="text-sm font-medium text-foreground">{product.name}</div>
+                </div>
             ),
         },
         {
-            key: 'is_customizable',
-            title: 'Personalizable',
-            width: 'sm' as const,
-            textAlign: 'center' as const,
-            sortable: true,
+            key: 'variants',
+            title: 'Variantes',
+            width: 'w-48',
             render: (product: Product) => (
-                <span className="text-sm text-muted-foreground">{product.is_customizable ? 'Sí' : 'No'}</span>
+                <div className="text-sm text-muted-foreground">
+                    {product.has_variants && product.variants && product.variants.length > 0 ? (
+                        <ul className="list-disc list-inside space-y-1">
+                            {product.variants.map((variant) => (
+                                <li key={variant.id} className="text-xs">
+                                    {variant.name}
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <span className="text-muted-foreground/50">—</span>
+                    )}
+                </div>
             ),
         },
         {
-            key: 'is_active',
+            key: 'status',
             title: 'Estado',
-            width: 'sm' as const,
+            width: 'w-32',
             textAlign: 'center' as const,
-            sortable: true,
             render: (product: Product) => (
-                <StatusBadge status={product.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />
+                <div className="flex justify-center">
+                    <StatusBadge status={product.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />
+                </div>
             ),
         },
         {
             key: 'actions',
             title: 'Acciones',
-            width: 'sm' as const,
+            width: 'w-24',
             textAlign: 'right' as const,
             render: (product: Product) => (
                 <TableActions
@@ -175,6 +175,21 @@ export default function ProductsIndex({ products, stats, filters }: ProductsPage
         },
     ];
 
+    const renderMobileCard = (product: Product) => (
+        <StandardMobileCard
+            title={product.name}
+            subtitle={<StatusBadge status={product.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />}
+            imageUrl={product.image || undefined}
+            actions={{
+                editHref: `/menu/products/${product.id}/edit`,
+                onDelete: () => openDeleteDialog(product),
+                isDeleting: deletingProduct === product.id,
+                editTooltip: 'Editar producto',
+                deleteTooltip: 'Eliminar producto',
+            }}
+        />
+    );
+
     const productStats = [
         {
             title: 'productos',
@@ -184,7 +199,7 @@ export default function ProductsIndex({ products, stats, filters }: ProductsPage
         {
             title: 'activos',
             value: stats.active_products,
-            icon: <Star className="h-3 w-3 text-green-600" />,
+            icon: <Package className="h-3 w-3 text-green-600" />,
         },
         {
             title: 'inactivos',
@@ -197,19 +212,20 @@ export default function ProductsIndex({ products, stats, filters }: ProductsPage
         <AppLayout>
             <Head title="Productos" />
 
-            <DataTable
+            <GroupedSortableTable
                 title="Productos de Menú"
-                description="Gestiona los productos de tu menú, define variantes con precios y personaliza con secciones adicionales."
-                data={products}
+                description="Gestiona los productos de tu menú, agrupados por categoría"
+                groupedData={groupedProducts}
                 columns={columns}
                 stats={productStats}
-                filters={filters}
                 createUrl="/menu/products/create"
                 createLabel="Crear Producto"
+                searchable={true}
                 searchPlaceholder="Buscar productos..."
-                loadingSkeleton={ProductsSkeleton}
-                renderMobileCard={(product) => <ProductMobileCard product={product} onDelete={openDeleteDialog} isDeleting={deletingProduct === product.id} />}
-                routeName="/menu/products"
+                onReorder={handleReorder}
+                onRefresh={handleRefresh}
+                isSaving={isSaving}
+                renderMobileCard={renderMobileCard}
                 breakpoint="lg"
             />
 

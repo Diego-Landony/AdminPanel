@@ -122,6 +122,7 @@ interface Section {
     allow_multiple: boolean;
     min_selections: number;
     max_selections: number;
+    is_active: boolean;
     options: Array<{
         id: number;
         name: string;
@@ -142,6 +143,7 @@ interface FormData {
     allow_multiple: boolean;
     min_selections: string | number;
     max_selections: string | number;
+    is_active: boolean;
 }
 
 /**
@@ -155,6 +157,7 @@ export default function SectionEdit({ section }: EditPageProps) {
         allow_multiple: section.allow_multiple,
         min_selections: section.min_selections,
         max_selections: section.max_selections,
+        is_active: section.is_active,
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -309,6 +312,14 @@ export default function SectionEdit({ section }: EditPageProps) {
                         <Checkbox id="allow_multiple" checked={formData.allow_multiple} onCheckedChange={(checked) => handleInputChange('allow_multiple', checked as boolean)} />
                         <Label htmlFor="allow_multiple" className="text-sm leading-none font-medium cursor-pointer">
                             Selección múltiple
+                        </Label>
+                    </div>
+
+                    {/* Sección activa */}
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="is_active" checked={formData.is_active} onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)} />
+                        <Label htmlFor="is_active" className="text-sm leading-none font-medium cursor-pointer">
+                            Sección activa
                         </Label>
                     </div>
                 </div>

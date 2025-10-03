@@ -31,63 +31,95 @@ export function ImageUpload({
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        console.log('=== INICIO IMAGE UPLOAD ===');
         const file = event.target.files?.[0];
-        if (!file) return;
+        console.log('1. Archivo seleccionado:', file);
+
+        if (!file) {
+            console.log('❌ No hay archivo, abortando');
+            return;
+        }
 
         // Validar formato
+        console.log('2. Validando formato. Type:', file.type);
+        console.log('   Formatos aceptados:', acceptedFormats);
         if (!acceptedFormats.includes(file.type)) {
+            console.error('❌ Formato no válido');
             showNotification.error(
                 `Formato no válido. Usa: ${acceptedFormats.map(f => f.split('/')[1]).join(', ')}`
             );
             return;
         }
+        console.log('✅ Formato válido');
 
         // Validar tamaño
         const fileSizeMB = file.size / (1024 * 1024);
+        console.log('3. Validando tamaño. Size:', fileSizeMB.toFixed(2), 'MB. Max:', maxSizeMB, 'MB');
         if (fileSizeMB > maxSizeMB) {
+            console.error('❌ Tamaño excedido');
             showNotification.error(`La imagen debe ser menor a ${maxSizeMB}MB. Tamaño actual: ${fileSizeMB.toFixed(2)}MB`);
             return;
         }
+        console.log('✅ Tamaño válido');
 
         // Crear preview local
+        console.log('4. Creando preview local...');
         const reader = new FileReader();
         reader.onloadend = () => {
+            console.log('✅ Preview creado');
             setPreview(reader.result as string);
         };
         reader.readAsDataURL(file);
 
         // Subir imagen
+        console.log('5. Preparando subida de imagen...');
         setIsUploading(true);
         const formData = new FormData();
         formData.append('image', file);
+        console.log('   FormData creado');
+        console.log('   Upload endpoint:', uploadEndpoint);
 
         try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            console.log('6. CSRF Token:', csrfToken ? 'Presente' : 'NO ENCONTRADO');
+            console.log('7. Enviando fetch request...');
+
             const response = await fetch(uploadEndpoint, {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': csrfToken,
                 },
             });
 
+            console.log('8. Response recibida. Status:', response.status, response.statusText);
+            console.log('   Response OK:', response.ok);
+
             if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Response no OK. Error text:', errorText);
                 throw new Error('Error al subir la imagen');
             }
 
             const data = await response.json();
+            console.log('9. Data parseada:', data);
 
             if (data.url) {
+                console.log('✅ URL recibida:', data.url);
                 onImageChange(data.url);
                 showNotification.success('Imagen subida correctamente');
             } else {
+                console.error('❌ No se recibió URL en la respuesta');
                 throw new Error('No se recibió URL de la imagen');
             }
         } catch (error) {
+            console.error('❌ Error en upload:', error);
             showNotification.error('Error al subir la imagen. Intenta de nuevo.');
             setPreview(currentImage || null);
-            console.error('Upload error:', error);
         } finally {
+            console.log('🏁 Upload finalizado');
             setIsUploading(false);
+            console.log('=== FIN IMAGE UPLOAD ===');
         }
     };
 

@@ -18,6 +18,7 @@ class Section extends Model
         'allow_multiple',
         'min_selections',
         'max_selections',
+        'is_active',
         'sort_order',
     ];
 
@@ -26,6 +27,7 @@ class Section extends Model
         'allow_multiple' => 'boolean',
         'min_selections' => 'integer',
         'max_selections' => 'integer',
+        'is_active' => 'boolean',
         'sort_order' => 'integer',
     ];
 

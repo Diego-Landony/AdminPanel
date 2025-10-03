@@ -164,7 +164,7 @@ return new class extends Migration
             Schema::create('categories', function (Blueprint $table) {
                 $table->id();
                 $table->string('name');
-                $table->string('image')->nullable();
+                // NOTA: image fue eliminado - no lo incluimos
                 $table->boolean('is_active')->default(true);
                 $table->boolean('uses_variants')->default(false);
                 $table->json('variant_definitions')->nullable();
@@ -190,6 +190,7 @@ return new class extends Migration
                 $table->decimal('precio_pickup_interior', 8, 2)->nullable();
                 $table->decimal('precio_domicilio_interior', 8, 2)->nullable();
                 $table->boolean('is_active')->default(true);
+                $table->integer('sort_order')->default(0);
                 $table->timestamps();
 
                 $table->index(['category_id']);
@@ -249,6 +250,8 @@ return new class extends Migration
                 $table->boolean('allow_multiple')->default(false);
                 $table->unsignedTinyInteger('min_selections')->default(0);
                 $table->unsignedTinyInteger('max_selections')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->integer('sort_order')->default(0);
                 $table->timestamps();
 
                 $table->index(['title'], 'idx_title');

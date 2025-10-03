@@ -16,8 +16,6 @@ class ActivityLogService
      * Registra la creación de un modelo
      *
      * @param  mixed  $model
-     * @param  string|null  $description
-     * @return ActivityLog|null
      */
     public function logCreated($model, ?string $description = null): ?ActivityLog
     {
@@ -37,10 +35,6 @@ class ActivityLogService
      * Registra la actualización de un modelo
      *
      * @param  mixed  $model
-     * @param  array  $oldValues
-     * @param  array  $newValues
-     * @param  string|null  $description
-     * @return ActivityLog|null
      */
     public function logUpdated(
         $model,
@@ -72,8 +66,6 @@ class ActivityLogService
      * Registra la eliminación de un modelo
      *
      * @param  mixed  $model
-     * @param  string|null  $description
-     * @return ActivityLog|null
      */
     public function logDeleted($model, ?string $description = null): ?ActivityLog
     {
@@ -93,9 +85,6 @@ class ActivityLogService
      * Registra la actualización de usuarios de un rol
      *
      * @param  \App\Models\Role  $role
-     * @param  array  $oldUserIds
-     * @param  array  $newUserIds
-     * @return ActivityLog|null
      */
     public function logRoleUsersUpdate($role, array $oldUserIds, array $newUserIds): ?ActivityLog
     {
@@ -126,14 +115,6 @@ class ActivityLogService
 
     /**
      * Registra un evento personalizado
-     *
-     * @param  string  $eventType
-     * @param  string  $targetModel
-     * @param  int|null  $targetId
-     * @param  string  $description
-     * @param  array  $oldValues
-     * @param  array  $newValues
-     * @return ActivityLog|null
      */
     public function logCustomEvent(
         string $eventType,
@@ -155,14 +136,6 @@ class ActivityLogService
 
     /**
      * Crea un registro de actividad en la base de datos
-     *
-     * @param  string  $event_type
-     * @param  string  $target_model
-     * @param  int|null  $target_id
-     * @param  string  $description
-     * @param  array  $old_values
-     * @param  array  $new_values
-     * @return ActivityLog|null
      */
     protected function createLog(
         string $event_type,
@@ -196,10 +169,6 @@ class ActivityLogService
 
     /**
      * Detecta cambios entre valores antiguos y nuevos
-     *
-     * @param  array  $oldValues
-     * @param  array  $newValues
-     * @return array
      */
     protected function detectChanges(array $oldValues, array $newValues): array
     {
@@ -226,10 +195,8 @@ class ActivityLogService
     /**
      * Formatea un cambio de forma legible
      *
-     * @param  string  $field
      * @param  mixed  $oldValue
      * @param  mixed  $newValue
-     * @return string
      */
     protected function formatChange(string $field, $oldValue, $newValue): string
     {
@@ -260,7 +227,6 @@ class ActivityLogService
      * Obtiene el log de actividades de un modelo específico
      *
      * @param  mixed  $model
-     * @param  int  $limit
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getModelActivityLog($model, int $limit = 50)
@@ -276,8 +242,6 @@ class ActivityLogService
     /**
      * Obtiene el log de actividades de un usuario específico
      *
-     * @param  int  $userId
-     * @param  int  $limit
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getUserActivityLog(int $userId, int $limit = 50)

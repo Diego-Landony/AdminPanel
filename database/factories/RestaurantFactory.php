@@ -19,10 +19,10 @@ class RestaurantFactory extends Factory
         $deliveryActive = $this->faker->boolean(80);
         $pickupActive = $this->faker->boolean(85);
         $isActive = $this->faker->boolean(90);
-        
+
         $schedule = [];
         $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-        
+
         foreach ($days as $day) {
             $isOpen = $this->faker->boolean(85);
             $schedule[$day] = [
@@ -47,7 +47,7 @@ class RestaurantFactory extends Factory
             'El Fogón de la Abuela',
             'Restaurante Volcán de Agua',
             'La Tradición Guatemalteca',
-            'El Patio Colonial'
+            'El Patio Colonial',
         ];
 
         $guatemalaAddresses = [
@@ -60,7 +60,7 @@ class RestaurantFactory extends Factory
             'Centro Comercial Oakland Mall',
             'Avenida Petapa, Zona 12',
             'Boulevard Rafael Landívar, Zona 16',
-            'Calzada San Juan, Zona 7'
+            'Calzada San Juan, Zona 7',
         ];
 
         return [
@@ -71,7 +71,7 @@ class RestaurantFactory extends Factory
             'is_active' => $isActive,
             'delivery_active' => $deliveryActive,
             'pickup_active' => $pickupActive,
-            'phone' => '+502 ' . $this->faker->numerify('#### ####'),
+            'phone' => '+502 '.$this->faker->numerify('#### ####'),
             'schedule' => $schedule,
             'minimum_order_amount' => $this->faker->randomFloat(2, 50, 200),
             'email' => $this->faker->companyEmail(),

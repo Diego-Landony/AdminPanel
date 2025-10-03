@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Permission;
 use App\Models\Role;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class CustomerTypePermissionsSeeder extends Seeder
@@ -54,7 +53,7 @@ class CustomerTypePermissionsSeeder extends Seeder
         if ($adminRole) {
             $customerTypePermissions = Permission::where('group', 'customer-types')->get();
             foreach ($customerTypePermissions as $permission) {
-                if (!$adminRole->permissions()->where('permission_id', $permission->id)->exists()) {
+                if (! $adminRole->permissions()->where('permission_id', $permission->id)->exists()) {
                     $adminRole->permissions()->attach($permission->id);
                 }
             }

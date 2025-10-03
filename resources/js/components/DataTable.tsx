@@ -184,7 +184,9 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
     const [sortField, setSortField] = useState<string>(filters.sort_field || 'created_at');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(filters.sort_direction || 'desc');
     const [sortCriteria, setSortCriteria] = useState<SortCriteria[]>(
-        filters.sort_criteria || [{ field: filters.sort_field || 'created_at', direction: filters.sort_direction || 'desc' }]
+        filters.sort_criteria || (filters.sort_field && filters.sort_direction
+            ? [{ field: filters.sort_field, direction: filters.sort_direction }]
+            : [])
     );
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -200,7 +202,9 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
         setSortField(filters.sort_field || 'created_at');
         setSortDirection(filters.sort_direction || 'desc');
         setSortCriteria(
-            filters.sort_criteria || [{ field: filters.sort_field || 'created_at', direction: filters.sort_direction || 'desc' }]
+            filters.sort_criteria || (filters.sort_field && filters.sort_direction
+                ? [{ field: filters.sort_field, direction: filters.sort_direction }]
+                : [])
         );
     }, [filters]);
 
@@ -269,16 +273,13 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
     const clearAllFilters = useCallback(() => {
         setSearch('');
         setPerPage(filters.per_page || 10);
-        setSortField('created_at');
+        setSortField('');
         setSortDirection('desc');
-        setSortCriteria([{ field: 'created_at', direction: 'desc' }]);
+        setSortCriteria([]);
 
         // Navigate to clean state
         router.post(routeName, {
-            per_page: filters.per_page || 10,
-            sort_field: 'created_at',
-            sort_direction: 'desc',
-            sort_criteria: JSON.stringify([{ field: 'created_at', direction: 'desc' }])
+            per_page: filters.per_page || 10
         }, {
             preserveState: true,
             replace: true,
@@ -300,59 +301,48 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
             });
         }
 
-        // Add sorting filters (only if not default)
+        // Add sorting filters
         if (sortCriteria.length > 0) {
             sortCriteria.forEach((criteria, index) => {
-                // Skip if it's the default sort (created_at desc with single criterion)
-                const isDefaultSort =
-                    criteria.field === 'created_at' &&
-                    criteria.direction === 'desc' &&
-                    sortCriteria.length === 1;
+                const fieldLabel = getFieldLabel(criteria.field);
+                activeFilters.push({
+                    key: `sort_${criteria.field}_${index}`,
+                    label: `${fieldLabel} ${criteria.direction === 'asc' ? '↑' : '↓'}${sortCriteria.length > 1 ? ` #${index + 1}` : ''}`,
+                    onRemove: () => {
+                        const newCriteria = sortCriteria.filter((_, i) => i !== index);
+                        if (newCriteria.length === 0) {
+                            // Reset to empty (no default)
+                            setSortCriteria([]);
+                            setSortField('');
+                            setSortDirection('desc');
 
-                if (!isDefaultSort) {
-                    const fieldLabel = getFieldLabel(criteria.field);
-                    activeFilters.push({
-                        key: `sort_${criteria.field}_${index}`,
-                        label: `${fieldLabel} ${criteria.direction === 'asc' ? '↑' : '↓'}${sortCriteria.length > 1 ? ` #${index + 1}` : ''}`,
-                        onRemove: () => {
-                            const newCriteria = sortCriteria.filter((_, i) => i !== index);
-                            if (newCriteria.length === 0) {
-                                // Reset to default
-                                setSortCriteria([{ field: 'created_at', direction: 'desc' }]);
-                                setSortField('created_at');
-                                setSortDirection('desc');
+                            // Apply to backend immediately
+                            router.post(routeName, {
+                                per_page: perPage,
+                                ...(search && search.trim() ? { search: search.trim() } : {})
+                            }, {
+                                preserveState: true,
+                                replace: true,
+                            });
+                        } else {
+                            setSortCriteria(newCriteria);
+                            setSortField(newCriteria[0].field);
+                            setSortDirection(newCriteria[0].direction);
 
-                                // Apply to backend immediately
-                                router.post(routeName, {
-                                    per_page: perPage,
-                                    sort_field: 'created_at',
-                                    sort_direction: 'desc',
-                                    sort_criteria: JSON.stringify([{ field: 'created_at', direction: 'desc' }]),
-                                    ...(search && search.trim() ? { search: search.trim() } : {})
-                                }, {
-                                    preserveState: true,
-                                    replace: true,
-                                });
-                            } else {
-                                setSortCriteria(newCriteria);
-                                setSortField(newCriteria[0].field);
-                                setSortDirection(newCriteria[0].direction);
-
-                                // Apply to backend immediately
-                                router.post(routeName, {
-                                    per_page: perPage,
-                                    sort_field: newCriteria[0].field,
-                                    sort_direction: newCriteria[0].direction,
-                                    sort_criteria: JSON.stringify(newCriteria),
-                                    ...(search && search.trim() ? { search: search.trim() } : {})
-                                }, {
-                                    preserveState: true,
-                                    replace: true,
-                                });
-                            }
+                            // Apply to backend immediately
+                            router.post(routeName, {
+                                per_page: perPage,
+                                sort_field: newCriteria[0].field,
+                                sort_direction: newCriteria[0].direction,
+                                sort_criteria: JSON.stringify(newCriteria),
+                                ...(search && search.trim() ? { search: search.trim() } : {})
+                            }, {
+                                preserveState: true,
+                                replace: true,
+                            });
                         }
-                    });
-                }
+                    }
+                });
             });
         }
 

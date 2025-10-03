@@ -14,8 +14,6 @@ trait TracksUserStatus
     /**
      * Determina si el usuario/cliente está en línea basado en su última actividad
      * En línea: Última actividad dentro de los últimos 5 minutos
-     *
-     * @return bool
      */
     public function isOnline(): bool
     {
@@ -32,8 +30,6 @@ trait TracksUserStatus
     /**
      * Accessor para el atributo is_online
      * Permite acceder a $model->is_online
-     *
-     * @return bool
      */
     public function getIsOnlineAttribute(): bool
     {
@@ -47,8 +43,6 @@ trait TracksUserStatus
      * - 'online': Última actividad < 5 minutos
      * - 'recent': Última actividad entre 5-15 minutos
      * - 'offline': Última actividad > 15 minutos
-     *
-     * @return string
      */
     public function getStatusAttribute(): string
     {
@@ -70,8 +64,6 @@ trait TracksUserStatus
     /**
      * Actualiza el timestamp de la última actividad del usuario
      * Usa saveQuietly() para evitar disparar eventos
-     *
-     * @return void
      */
     public function updateLastActivity(): void
     {
@@ -81,8 +73,6 @@ trait TracksUserStatus
 
     /**
      * Actualiza el timestamp del último acceso/login del usuario
-     *
-     * @return void
      */
     public function updateLastLogin(): void
     {
@@ -92,9 +82,6 @@ trait TracksUserStatus
     /**
      * Scope para filtrar usuarios/clientes que están en línea
      * En línea = última actividad en los últimos 5 minutos
-     *
-     * @param  Builder  $query
-     * @return Builder
      */
     public function scopeOnline(Builder $query): Builder
     {
@@ -104,9 +91,7 @@ trait TracksUserStatus
     /**
      * Scope para filtrar usuarios/clientes por estado específico
      *
-     * @param  Builder  $query
      * @param  string  $status  - 'never', 'online', 'recent', 'offline'
-     * @return Builder
      */
     public function scopeWithStatus(Builder $query, string $status): Builder
     {
@@ -126,9 +111,6 @@ trait TracksUserStatus
     /**
      * Scope para filtrar usuarios/clientes activos recientemente
      * Activos = última actividad en la última hora
-     *
-     * @param  Builder  $query
-     * @return Builder
      */
     public function scopeRecentlyActive(Builder $query): Builder
     {
@@ -139,9 +121,7 @@ trait TracksUserStatus
      * Scope para filtrar usuarios/clientes inactivos
      * Inactivos = sin actividad en los últimos X días
      *
-     * @param  Builder  $query
      * @param  int  $days  - Días de inactividad (default: 30)
-     * @return Builder
      */
     public function scopeInactive(Builder $query, int $days = 30): Builder
     {

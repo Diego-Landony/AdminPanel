@@ -16,10 +16,8 @@ trait HandlesExceptions
     /**
      * Maneja excepciones de base de datos de forma consistente
      *
-     * @param  QueryException  $e
      * @param  string  $context  - Contexto de la acción (crear, actualizar, eliminar)
      * @param  string  $entity  - Nombre de la entidad (usuario, cliente, restaurante)
-     * @return RedirectResponse
      */
     protected function handleDatabaseException(
         QueryException $e,
@@ -59,8 +57,6 @@ trait HandlesExceptions
     /**
      * Maneja excepciones de validación
      *
-     * @param  ValidationException  $e
-     * @return never
      *
      * @throws ValidationException
      */
@@ -78,11 +74,6 @@ trait HandlesExceptions
 
     /**
      * Maneja excepciones generales no esperadas
-     *
-     * @param  \Exception  $e
-     * @param  string  $context
-     * @param  string  $entity
-     * @return RedirectResponse
      */
     protected function handleGeneralException(
         \Exception $e,
@@ -103,9 +94,6 @@ trait HandlesExceptions
     /**
      * Wrapper para ejecutar operaciones con manejo automático de excepciones
      *
-     * @param  callable  $operation
-     * @param  string  $context
-     * @param  string  $entity
      * @return mixed
      */
     protected function executeWithExceptionHandling(
@@ -126,10 +114,6 @@ trait HandlesExceptions
 
     /**
      * Obtiene el mensaje apropiado para errores de constraint único
-     *
-     * @param  string  $context
-     * @param  string  $entity
-     * @return string
      */
     private function getUniqueConstraintMessage(string $context, string $entity): string
     {
@@ -142,10 +126,6 @@ trait HandlesExceptions
 
     /**
      * Obtiene el mensaje apropiado para errores de clave foránea
-     *
-     * @param  string  $context
-     * @param  string  $entity
-     * @return string
      */
     private function getForeignKeyMessage(string $context, string $entity): string
     {
@@ -158,9 +138,6 @@ trait HandlesExceptions
 
     /**
      * Redirecciona de vuelta con un mensaje de error
-     *
-     * @param  string  $message
-     * @return RedirectResponse
      */
     private function redirectWithError(string $message): RedirectResponse
     {
@@ -169,9 +146,6 @@ trait HandlesExceptions
 
     /**
      * Redirecciona de vuelta con un mensaje de éxito
-     *
-     * @param  string  $message
-     * @return RedirectResponse
      */
     protected function redirectWithSuccess(string $message): RedirectResponse
     {

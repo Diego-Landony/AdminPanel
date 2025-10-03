@@ -58,7 +58,7 @@ return [
             'options' => [],
         ],
 
-    // 'mysql' connection removed. Use 'mariadb' instead.
+        // 'mysql' connection removed. Use 'mariadb' instead.
 
         'mariadb' => [
             'driver' => 'mariadb',

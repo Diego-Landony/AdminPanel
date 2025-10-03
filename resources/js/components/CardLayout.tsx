@@ -40,23 +40,23 @@ interface ResponsiveCardHeaderProps {
  */
 export const ResponsiveCardHeader: React.FC<ResponsiveCardHeaderProps> = ({ avatar, icon, title, subtitle, badge, className = '' }) => {
     return (
-        <CardHeader className={`pb-5 md:pb-4 ${className}`}>
+        <CardHeader className={`pb-3 ${className}`}>
             {/* Main content row */}
-            <div className="flex items-start gap-5 md:gap-4">
+            <div className="flex items-start gap-3">
                 {/* Avatar or Icon */}
                 {avatar ? (
-                    <Avatar className={`h-10 w-10 flex-shrink-0 overflow-hidden ${avatar.className || ''}`}>
+                    <Avatar className={`h-9 w-9 flex-shrink-0 overflow-hidden ${avatar.className || ''}`}>
                         {avatar.src && <AvatarImage src={avatar.src} />}
                         <AvatarFallback className="text-sm font-medium">{avatar.fallback}</AvatarFallback>
                     </Avatar>
                 ) : icon ? (
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">{icon}</div>
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">{icon}</div>
                 ) : null}
 
                 {/* Title and Subtitle */}
-                <div className="min-w-0 flex-1 space-y-1">
-                    <h3 className="leading-tight font-semibold break-words">{title}</h3>
-                    {subtitle && <p className="text-sm break-words text-muted-foreground">{subtitle}</p>}
+                <div className="min-w-0 flex-1 space-y-0.5">
+                    <h3 className="text-sm leading-tight font-semibold break-words">{title}</h3>
+                    {subtitle && <p className="text-xs break-words text-muted-foreground">{subtitle}</p>}
                 </div>
             </div>
 
@@ -83,13 +83,13 @@ interface ResponsiveCardContentProps {
 export const ResponsiveCardContent: React.FC<ResponsiveCardContentProps> = ({ children, layout = 'flexible', className = '' }) => {
     const layoutClasses = {
         // Single column stack - prevents all overflow issues
-        stack: 'space-y-5 md:space-y-4',
+        stack: 'space-y-2',
 
         // Flexible layout - adapts to content size, prevents overflow
-        flexible: 'space-y-5 md:space-y-4 sm:grid sm:grid-cols-2 sm:gap-5 md:sm:gap-4 sm:space-y-0',
+        flexible: 'space-y-2 sm:grid sm:grid-cols-2 sm:gap-x-4 sm:gap-y-2 sm:space-y-0',
 
         // Traditional grid - can cause overflow on long content
-        grid: 'grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-4',
+        grid: 'grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2',
     };
 
     return (
@@ -112,9 +112,9 @@ interface DataFieldProps {
  */
 export const DataField: React.FC<DataFieldProps> = ({ label, value, className = '', truncate = false }) => {
     return (
-        <div className={`min-w-0 space-y-1 ${className}`}>
-            <dt className="truncate text-sm font-medium text-muted-foreground">{label}</dt>
-            <dd className={`break-words text-foreground ${truncate ? 'line-clamp-2' : ''}`}>{value}</dd>
+        <div className={`min-w-0 flex items-baseline gap-2 ${className}`}>
+            <dt className="flex-shrink-0 text-xs font-medium text-muted-foreground">{label}:</dt>
+            <dd className={`break-words text-xs text-foreground ${truncate ? 'line-clamp-2' : ''}`}>{value}</dd>
         </div>
     );
 };
@@ -128,7 +128,7 @@ interface CardActionsProps {
  * Professional card actions area
  */
 export const CardActions: React.FC<CardActionsProps> = ({ children, className = '' }) => {
-    return <div className={`flex items-center justify-end border-t border-border pt-5 md:pt-4 ${className}`}>{children}</div>;
+    return <div className={`flex items-center justify-end border-t border-border pt-3 ${className}`}>{children}</div>;
 };
 
 interface BadgeGroupProps {

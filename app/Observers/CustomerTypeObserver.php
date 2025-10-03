@@ -6,7 +6,7 @@ use App\Models\ActivityLog;
 use App\Models\CustomerType;
 
 /**
- * Observer para el modelo CustomerType  
+ * Observer para el modelo CustomerType
  * Registra solo las acciones deliberadas del usuario en la interfaz web
  */
 class CustomerTypeObserver
@@ -66,7 +66,7 @@ class CustomerTypeObserver
     {
         try {
             // Solo registrar si hay un usuario autenticado Y es una sesión web
-            if (!auth()->check() || !$this->isWebUserAction()) {
+            if (! auth()->check() || ! $this->isWebUserAction()) {
                 return;
             }
 
@@ -85,7 +85,7 @@ class CustomerTypeObserver
 
             \Log::info("Actividad de tipo de cliente registrada: {$eventType} para tipo '{$customerType->display_name}' por usuario {$user->email}");
         } catch (\Exception $e) {
-            \Log::error('Error al registrar actividad de tipo de cliente: ' . $e->getMessage());
+            \Log::error('Error al registrar actividad de tipo de cliente: '.$e->getMessage());
         }
     }
 
@@ -95,19 +95,27 @@ class CustomerTypeObserver
     private function isWebUserAction(): bool
     {
         $request = request();
-        
+
         // Verificar que hay una request HTTP
-        if (!$request) return false;
-        
+        if (! $request) {
+            return false;
+        }
+
         // Verificar que tiene user agent (navegador web)
-        if (!$request->userAgent()) return false;
-        
+        if (! $request->userAgent()) {
+            return false;
+        }
+
         // Verificar que no es una tarea automática (artisan, queue, etc.)
-        if (app()->runningInConsole() && !app()->runningUnitTests()) return false;
-        
+        if (app()->runningInConsole() && ! app()->runningUnitTests()) {
+            return false;
+        }
+
         // Verificar que es una petición POST/PUT/DELETE (acciones de cambio)
-        if (!in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) return false;
-        
+        if (! in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
+            return false;
+        }
+
         return true;
     }
 
@@ -121,16 +129,19 @@ class CustomerTypeObserver
         switch ($eventType) {
             case 'customer_type_created':
                 $pointsText = $customerType->points_required ? " (requiere {$customerType->points_required} puntos)" : '';
+
                 return "Tipo de cliente '{$typeName}'{$pointsText} fue creado";
-                
+
             case 'customer_type_updated':
                 $changes = [];
                 if ($newValues) {
                     foreach ($newValues as $field => $newValue) {
-                        if ($field === 'updated_at') continue;
-                        
+                        if ($field === 'updated_at') {
+                            continue;
+                        }
+
                         $oldValue = $oldValues[$field] ?? null;
-                        
+
                         $fieldNames = [
                             'name' => 'nombre',
                             'display_name' => 'nombre mostrado',
@@ -140,30 +151,31 @@ class CustomerTypeObserver
                             'is_active' => 'estado',
                             'sort_order' => 'orden',
                         ];
-                        
+
                         $fieldName = $fieldNames[$field] ?? $field;
-                        
+
                         if ($field === 'is_active') {
                             $oldValue = $oldValue ? 'Activo' : 'Inactivo';
                             $newValue = $newValue ? 'Activo' : 'Inactivo';
                         }
-                        
+
                         $changes[] = "{$fieldName}: '{$oldValue}' → '{$newValue}'";
                     }
                 }
-                
-                $changesText = !empty($changes) ? ' - ' . implode(', ', $changes) : '';
+
+                $changesText = ! empty($changes) ? ' - '.implode(', ', $changes) : '';
+
                 return "Tipo de cliente '{$typeName}' fue actualizado{$changesText}";
-                
+
             case 'customer_type_deleted':
                 return "Tipo de cliente '{$typeName}' fue eliminado";
-                
+
             case 'customer_type_restored':
                 return "Tipo de cliente '{$typeName}' fue restaurado";
-                
+
             case 'customer_type_force_deleted':
                 return "Tipo de cliente '{$typeName}' fue eliminado permanentemente";
-                
+
             default:
                 return "Evento {$eventType} en tipo de cliente '{$typeName}'";
         }

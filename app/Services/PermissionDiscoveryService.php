@@ -20,6 +20,7 @@ class PermissionDiscoveryService
      * Tiempo de cache en minutos
      */
     private const CACHE_TTL = 60;
+
     /**
      * Páginas que deben ser excluidas del sistema de permisos
      */
@@ -303,8 +304,6 @@ class PermissionDiscoveryService
 
     /**
      * Limpia el cache de permisos descubiertos
-     *
-     * @return void
      */
     public function clearCache(): void
     {
@@ -346,7 +345,6 @@ class PermissionDiscoveryService
      *
      * @param  string  $parentDirectory  Directorio padre
      * @param  array  &$discoveredPages  Array de páginas descubiertas (por referencia)
-     * @return void
      */
     private function discoverNestedPages(string $parentDirectory, array &$discoveredPages): void
     {
@@ -355,10 +353,10 @@ class PermissionDiscoveryService
 
         foreach ($subdirectories as $subdirectory) {
             $subName = basename($subdirectory);
-            
+
             // Crear nombre de página anidada (ej: customers/types -> customer-types)
-            $nestedPageName = Str::singular($parentName) . '-' . $subName;
-            
+            $nestedPageName = Str::singular($parentName).'-'.$subName;
+
             // Saltar si está excluida o ya existe
             if (in_array($nestedPageName, $this->excludedPages) || isset($discoveredPages[$nestedPageName])) {
                 continue;
@@ -366,7 +364,7 @@ class PermissionDiscoveryService
 
             // Solo procesar si tiene archivos tsx/jsx (páginas React)
             $pageFiles = collect(File::files($subdirectory))
-                ->filter(fn($file) => in_array($file->getExtension(), ['tsx', 'jsx']));
+                ->filter(fn ($file) => in_array($file->getExtension(), ['tsx', 'jsx']));
 
             if ($pageFiles->isNotEmpty()) {
                 // Usar configuración predefinida o detectar automáticamente

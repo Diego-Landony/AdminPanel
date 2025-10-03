@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Customer;
 use App\Models\CustomerType;
-use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
+use Illuminate\Database\Seeder;
 
 class RefreshCustomersSeeder extends Seeder
 {
@@ -15,25 +15,25 @@ class RefreshCustomersSeeder extends Seeder
     public function run(): void
     {
         $this->command->info('🗑️  Eliminando todos los clientes existentes...');
-        
+
         // Eliminar todos los registros de customers
         Customer::query()->forceDelete(); // forceDelete para eliminar también soft deleted
-        
+
         $this->command->info('✅ Clientes eliminados correctamente');
-        
+
         $this->command->info('🌎 Configurando Faker con locale español...');
-        
+
         // Configurar Faker con locale español
         $faker = Faker::create('es_ES');
-        
+
         $this->command->info('👥 Creando 50 nuevos clientes...');
-        
+
         // Obtener tipos de cliente disponibles
         $customerTypes = CustomerType::active()->get();
-        
+
         if ($customerTypes->isEmpty()) {
             $this->command->warn('⚠️  No hay tipos de cliente disponibles. Creando tipos básicos...');
-            
+
             // Crear tipos básicos si no existen
             $regularType = CustomerType::create([
                 'name' => 'regular',
@@ -44,7 +44,7 @@ class RefreshCustomersSeeder extends Seeder
                 'is_active' => true,
                 'sort_order' => 1,
             ]);
-            
+
             $bronzeType = CustomerType::create([
                 'name' => 'bronze',
                 'display_name' => 'Bronce',
@@ -54,7 +54,7 @@ class RefreshCustomersSeeder extends Seeder
                 'is_active' => true,
                 'sort_order' => 2,
             ]);
-            
+
             $silverType = CustomerType::create([
                 'name' => 'silver',
                 'display_name' => 'Plata',
@@ -64,7 +64,7 @@ class RefreshCustomersSeeder extends Seeder
                 'is_active' => true,
                 'sort_order' => 3,
             ]);
-            
+
             $goldType = CustomerType::create([
                 'name' => 'gold',
                 'display_name' => 'Oro',
@@ -74,7 +74,7 @@ class RefreshCustomersSeeder extends Seeder
                 'is_active' => true,
                 'sort_order' => 4,
             ]);
-            
+
             $platinumType = CustomerType::create([
                 'name' => 'platinum',
                 'display_name' => 'Platino',
@@ -84,24 +84,24 @@ class RefreshCustomersSeeder extends Seeder
                 'is_active' => true,
                 'sort_order' => 5,
             ]);
-            
+
             $customerTypes = collect([$regularType, $bronzeType, $silverType, $goldType, $platinumType]);
         }
-        
+
         // Generar 50 clientes con datos en español
         for ($i = 1; $i <= 50; $i++) {
             // Seleccionar tipo de cliente aleatoriamente
             $customerType = $customerTypes->random();
-            
+
             // Generar puntos apropiados para el tipo de cliente
             $puntos = $this->generatePointsForType($customerType, $faker);
-            
+
             // Generar género y nombre apropiado
             $gender = $faker->randomElement(['masculino', 'femenino']);
-            $fullName = $gender === 'femenino' 
-                ? $faker->firstNameFemale() . ' ' . $faker->lastName() . ' ' . $faker->lastName()
-                : $faker->firstNameMale() . ' ' . $faker->lastName() . ' ' . $faker->lastName();
-            
+            $fullName = $gender === 'femenino'
+                ? $faker->firstNameFemale().' '.$faker->lastName().' '.$faker->lastName()
+                : $faker->firstNameMale().' '.$faker->lastName().' '.$faker->lastName();
+
             // Generar datos con localización española
             Customer::create([
                 'full_name' => $fullName,
@@ -114,12 +114,12 @@ class RefreshCustomersSeeder extends Seeder
                 'client_type' => $customerType->name,
                 'customer_type_id' => $customerType->id,
                 'phone' => $this->generateGuatemalaPhone($faker),
-                'address' => $faker->streetAddress() . ', ' . $faker->city(),
+                'address' => $faker->streetAddress().', '.$faker->city(),
                 'location' => $faker->randomElement([
                     'Ciudad de Guatemala', 'Mixco', 'Villa Nueva', 'Petapa', 'San Juan Sacatepéquez',
                     'Villa Canales', 'Fraijanes', 'Amatitlán', 'Santa Catarina Pinula', 'San José Pinula',
                     'Chinautla', 'San Pedro Ayampuc', 'Chuarrancho', 'San Raymundo', 'San Pedro Sacatepéquez',
-                    'San José del Golfo', 'Palencia'
+                    'San José del Golfo', 'Palencia',
                 ]),
                 'nit' => $faker->optional(0.6)->numerify('########-#'),
                 'fcm_token' => $faker->optional(0.3)->sha256(),
@@ -130,26 +130,26 @@ class RefreshCustomersSeeder extends Seeder
                 'puntos_updated_at' => $faker->optional(0.6)->dateTimeBetween('-60 days', 'now'),
                 'timezone' => 'America/Guatemala',
             ]);
-            
+
             // Mostrar progreso cada 10 clientes
             if ($i % 10 === 0) {
                 $this->command->info("   📊 Creados {$i}/50 clientes...");
             }
         }
-        
+
         $this->command->info('🎉 ¡50 clientes creados exitosamente con datos en español!');
         $this->command->line('');
-        
+
         // Mostrar estadísticas finales
         $this->showStatistics();
     }
-    
+
     /**
      * Genera puntos apropiados según el tipo de cliente
      */
     private function generatePointsForType(CustomerType $type, $faker): int
     {
-        return match($type->name) {
+        return match ($type->name) {
             'regular' => $faker->numberBetween(0, 49),
             'bronze' => $faker->numberBetween(50, 124),
             'silver' => $faker->numberBetween(125, 324),
@@ -158,7 +158,7 @@ class RefreshCustomersSeeder extends Seeder
             default => $faker->numberBetween(0, 100),
         };
     }
-    
+
     /**
      * Genera número de teléfono de Guatemala
      */
@@ -172,44 +172,44 @@ class RefreshCustomersSeeder extends Seeder
             '+502 ####-####', // +502 1234-5678
             '+502 #### ####', // +502 1234 5678
         ];
-        
+
         $format = $faker->randomElement($formats);
-        
+
         // Generar número con códigos de área válidos de Guatemala (2, 3, 4, 5, 6, 7)
         $areaCode = $faker->randomElement(['2', '3', '4', '5', '6', '7']);
-        $number = $areaCode . $faker->numerify('#######');
-        
+        $number = $areaCode.$faker->numerify('#######');
+
         // Aplicar formato
         if (strpos($format, '+502') !== false) {
-            return str_replace('####-####', substr($number, 0, 4) . '-' . substr($number, 4, 4), $format);
+            return str_replace('####-####', substr($number, 0, 4).'-'.substr($number, 4, 4), $format);
         } else {
             return $faker->numerify($format);
         }
     }
-    
+
     /**
      * Muestra estadísticas de los clientes creados
      */
     private function showStatistics(): void
     {
         $this->command->info('📊 Estadísticas de clientes creados:');
-        
+
         $customersByType = Customer::join('customer_types', 'customers.customer_type_id', '=', 'customer_types.id')
             ->selectRaw('customer_types.display_name, COUNT(*) as count')
             ->groupBy('customer_types.id', 'customer_types.display_name')
             ->orderBy('customer_types.sort_order')
             ->get();
-            
+
         foreach ($customersByType as $stat) {
             $this->command->line("   • {$stat->display_name}: {$stat->count} clientes");
         }
-        
+
         $avgPoints = Customer::avg('puntos');
-        $this->command->line("   • Promedio de puntos: " . number_format($avgPoints, 0) . " puntos");
-        
+        $this->command->line('   • Promedio de puntos: '.number_format($avgPoints, 0).' puntos');
+
         $withEmail = Customer::whereNotNull('email_verified_at')->count();
         $this->command->line("   • Con email verificado: {$withEmail} clientes");
-        
+
         $this->command->line('');
         $this->command->info('✅ Seeder completado exitosamente');
     }

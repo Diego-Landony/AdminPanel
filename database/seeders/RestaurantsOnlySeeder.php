@@ -53,8 +53,8 @@ class RestaurantsOnlySeeder extends Seeder
                 'address' => $location['address'],
                 'latitude' => $location['lat'],
                 'longitude' => $location['lng'],
-                'phone' => '+502 ' . rand(2200, 2599) . '-' . rand(1000, 9999),
-                'email' => strtolower(str_replace(' ', '.', $location['name'])) . '@subway.com.gt',
+                'phone' => '+502 '.rand(2200, 2599).'-'.rand(1000, 9999),
+                'email' => strtolower(str_replace(' ', '.', $location['name'])).'@subway.com.gt',
                 'is_active' => true,
                 'delivery_active' => rand(0, 10) > 2, // 80% tienen delivery
                 'pickup_active' => true,

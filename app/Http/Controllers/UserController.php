@@ -67,7 +67,7 @@ class UserController extends Controller
         }
 
         // Aplicar ordenamiento múltiple si está disponible
-        if (!empty($multipleSortCriteria)) {
+        if (! empty($multipleSortCriteria)) {
             foreach ($multipleSortCriteria as $criteria) {
                 $field = $criteria['field'] ?? 'created_at';
                 $direction = $criteria['direction'] ?? 'desc';

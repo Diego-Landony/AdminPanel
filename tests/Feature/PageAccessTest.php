@@ -1,9 +1,5 @@
 <?php
 
-use App\Models\User;
-use App\Models\Role;
-use App\Models\Permission;
-
 /**
  * Test para la página Home (Inicio)
  */
@@ -14,7 +10,6 @@ test('home page can be accessed by authenticated user', function () {
     $response = $this->get('/home');
     $response->assertStatus(200);
 });
-
 
 /**
  * Test para la página de Usuarios
@@ -157,14 +152,14 @@ test('test user has all required permissions', function () {
  */
 test('test user can authenticate', function () {
     createTestUser();
-    
+
     $response = $this->post('/login', [
         'email' => 'admin@test.com',
         'password' => 'admintest',
     ]);
-    
+
     $response->assertRedirect('/home'); // Corregido: ahora redirige a home después del login
-    
+
     // Verificar que el usuario está autenticado
     $this->assertAuthenticated();
 });

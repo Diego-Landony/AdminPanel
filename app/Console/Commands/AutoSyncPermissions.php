@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Services\PermissionDiscoveryService;
 use App\Models\Role;
+use App\Services\PermissionDiscoveryService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 
@@ -38,11 +38,11 @@ class AutoSyncPermissions extends Command
     private function watchForChanges(): void
     {
         $interval = (int) $this->option('interval');
-        
+
         while (true) {
             try {
                 if ($this->syncIfNeeded()) {
-                    $this->info('✅ Permisos sincronizados automáticamente a las ' . now()->format('H:i:s'));
+                    $this->info('✅ Permisos sincronizados automáticamente a las '.now()->format('H:i:s'));
                 }
                 sleep($interval);
             } catch (\Exception $e) {
@@ -58,13 +58,13 @@ class AutoSyncPermissions extends Command
     private function syncIfNeeded(): bool
     {
         $currentHash = $this->getPagesHash();
-        
+
         if ($this->lastHash !== null && $this->lastHash === $currentHash) {
             return false; // No hay cambios
         }
 
         $this->lastHash = $currentHash;
-        
+
         // Ejecutar sincronización silenciosa
         $discoveryService = new PermissionDiscoveryService;
         $result = $discoveryService->syncPermissions();
@@ -85,17 +85,17 @@ class AutoSyncPermissions extends Command
     private function getPagesHash(): string
     {
         $pagesPath = resource_path('js/pages');
-        
-        if (!File::exists($pagesPath)) {
+
+        if (! File::exists($pagesPath)) {
             return '';
         }
 
         $files = [];
         $this->collectFiles($pagesPath, $files);
-        
+
         // Crear hash basado en la estructura y fechas de modificación
         $hashData = collect($files)->map(function ($file) {
-            return $file . ':' . filemtime($file);
+            return $file.':'.filemtime($file);
         })->sort()->join('|');
 
         return md5($hashData);

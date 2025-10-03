@@ -66,7 +66,7 @@ class CustomerObserver
     {
         try {
             // Solo registrar si hay un usuario autenticado Y es una sesión web
-            if (!auth()->check() || !$this->isWebUserAction()) {
+            if (! auth()->check() || ! $this->isWebUserAction()) {
                 return;
             }
 
@@ -85,7 +85,7 @@ class CustomerObserver
 
             \Log::info("Actividad de cliente registrada: {$eventType} para cliente '{$customer->full_name}' por usuario {$user->email}");
         } catch (\Exception $e) {
-            \Log::error('Error al registrar actividad de cliente: ' . $e->getMessage());
+            \Log::error('Error al registrar actividad de cliente: '.$e->getMessage());
         }
     }
 
@@ -95,19 +95,27 @@ class CustomerObserver
     private function isWebUserAction(): bool
     {
         $request = request();
-        
+
         // Verificar que hay una request HTTP
-        if (!$request) return false;
-        
+        if (! $request) {
+            return false;
+        }
+
         // Verificar que tiene user agent (navegador web)
-        if (!$request->userAgent()) return false;
-        
+        if (! $request->userAgent()) {
+            return false;
+        }
+
         // Verificar que no es una tarea automática (artisan, queue, etc.)
-        if (app()->runningInConsole() && !app()->runningUnitTests()) return false;
-        
+        if (app()->runningInConsole() && ! app()->runningUnitTests()) {
+            return false;
+        }
+
         // Verificar que es una petición POST/PUT/DELETE (acciones de cambio)
-        if (!in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) return false;
-        
+        if (! in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
+            return false;
+        }
+
         return true;
     }
 
@@ -122,15 +130,17 @@ class CustomerObserver
         switch ($eventType) {
             case 'customer_created':
                 return "Cliente '{$customerName}' ({$customerEmail}) fue creado";
-                
+
             case 'customer_updated':
                 $changes = [];
                 if ($newValues) {
                     foreach ($newValues as $field => $newValue) {
-                        if (in_array($field, ['updated_at', 'last_activity_at', 'last_login_at'])) continue;
-                        
+                        if (in_array($field, ['updated_at', 'last_activity_at', 'last_login_at'])) {
+                            continue;
+                        }
+
                         $oldValue = $oldValues[$field] ?? null;
-                        
+
                         $fieldNames = [
                             'full_name' => 'nombre completo',
                             'email' => 'email',
@@ -141,24 +151,25 @@ class CustomerObserver
                             'customer_type_id' => 'tipo de cliente',
                             'client_type' => 'tipo de cliente',
                         ];
-                        
+
                         $fieldName = $fieldNames[$field] ?? $field;
                         $changes[] = "{$fieldName}: '{$oldValue}' → '{$newValue}'";
                     }
                 }
-                
-                $changesText = !empty($changes) ? ' - ' . implode(', ', $changes) : '';
+
+                $changesText = ! empty($changes) ? ' - '.implode(', ', $changes) : '';
+
                 return "Cliente '{$customerName}' ({$customerEmail}) fue actualizado{$changesText}";
-                
+
             case 'customer_deleted':
                 return "Cliente '{$customerName}' ({$customerEmail}) fue eliminado";
-                
+
             case 'customer_restored':
                 return "Cliente '{$customerName}' ({$customerEmail}) fue restaurado";
-                
+
             case 'customer_force_deleted':
                 return "Cliente '{$customerName}' ({$customerEmail}) fue eliminado permanentemente";
-                
+
             default:
                 return "Evento {$eventType} en cliente '{$customerName}'";
         }
@@ -170,13 +181,13 @@ class CustomerObserver
     private function isOnlyTimestampUpdate(array $changes): bool
     {
         $timestampFields = ['updated_at', 'last_activity_at', 'last_login_at', 'puntos_updated_at'];
-        
+
         foreach ($changes as $field => $value) {
-            if (!in_array($field, $timestampFields)) {
+            if (! in_array($field, $timestampFields)) {
                 return false; // Hay cambios en otros campos
             }
         }
-        
+
         return true; // Solo cambios en timestamps
     }
 }

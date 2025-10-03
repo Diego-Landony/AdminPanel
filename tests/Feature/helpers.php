@@ -1,13 +1,11 @@
 <?php
 
-use App\Models\User;
-use App\Models\Role;
 use App\Models\Permission;
+use App\Models\Role;
+use App\Models\User;
 
 /**
  * Crea un usuario de prueba completo con rol admin y todos los permisos para los tests.
- *
- * @return \App\Models\User
  */
 function createTestUser(): User
 {
@@ -84,14 +82,12 @@ function createTestUser(): User
 
     // Verificar que todo esté correcto
     $testUser->load('roles.permissions');
-    
+
     return $testUser;
 }
 
 /**
  * Alias para createTestUser() para compatibilidad con tests de integración
- *
- * @return \App\Models\User
  */
 function createTestUserForIntegration(): User
 {

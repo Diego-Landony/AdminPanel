@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Role;
-use App\Models\Restaurant;
 use App\Models\Customer;
+use App\Models\Restaurant;
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -36,12 +36,12 @@ class TestDataSeeder extends Seeder
                 ['name' => $roleData['name']],
                 [
                     'description' => $roleData['description'],
-                    'is_system' => $roleData['is_system']
+                    'is_system' => $roleData['is_system'],
                 ]
             );
         }
 
-        $this->command->info('   ✅ ' . count($roles) . ' roles verificados/creados');
+        $this->command->info('   ✅ '.count($roles).' roles verificados/creados');
 
         // 2. Crear 25 usuarios con diferentes estados
         $this->command->info('👥 Creando 25 usuarios de prueba...');
@@ -53,7 +53,7 @@ class TestDataSeeder extends Seeder
             $email = "test{$i}@pagination.com";
 
             // Solo crear si el email no existe
-            if (!User::where('email', $email)->exists()) {
+            if (! User::where('email', $email)->exists()) {
                 $user = User::factory()->create([
                     'name' => "Usuario de Prueba {$i}",
                     'email' => $email,
@@ -99,10 +99,10 @@ class TestDataSeeder extends Seeder
         // 5. Mostrar estadísticas finales
         $this->command->line('');
         $this->command->info('📊 Resumen de datos de prueba creados:');
-        $this->command->line('   👥 Usuarios: ' . User::count() . ' (25 nuevos + existentes)');
-        $this->command->line('   🛡️  Roles: ' . Role::count());
-        $this->command->line('   🍽️  Restaurantes: ' . Restaurant::count() . ' (25 nuevos + existentes)');
-        $this->command->line('   👤 Clientes: ' . Customer::count() . ' (25 nuevos + existentes)');
+        $this->command->line('   👥 Usuarios: '.User::count().' (25 nuevos + existentes)');
+        $this->command->line('   🛡️  Roles: '.Role::count());
+        $this->command->line('   🍽️  Restaurantes: '.Restaurant::count().' (25 nuevos + existentes)');
+        $this->command->line('   👤 Clientes: '.Customer::count().' (25 nuevos + existentes)');
 
         $this->command->line('');
         $this->command->info('🎯 Para probar la paginación:');
@@ -120,7 +120,7 @@ class TestDataSeeder extends Seeder
      */
     private function getRandomActivityTime(int $userNumber): ?\Carbon\Carbon
     {
-        $result = match($userNumber % 4) {
+        $result = match ($userNumber % 4) {
             0 => now()->subMinutes(fake()->numberBetween(1, 5)), // Online
             1 => now()->subMinutes(fake()->numberBetween(6, 60)), // Recent
             2 => now()->subDays(fake()->numberBetween(1, 30)), // Offline

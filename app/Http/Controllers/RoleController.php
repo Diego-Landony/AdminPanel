@@ -61,7 +61,7 @@ class RoleController extends Controller
         }
 
         // Aplicar ordenamiento múltiple si está disponible
-        if (!empty($multipleSortCriteria)) {
+        if (! empty($multipleSortCriteria)) {
             foreach ($multipleSortCriteria as $criteria) {
                 $field = $criteria['field'] ?? 'name';
                 $direction = $criteria['direction'] ?? 'asc';

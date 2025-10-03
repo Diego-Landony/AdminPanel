@@ -24,27 +24,27 @@ class RestaurantGeofencesController extends Controller
             'pickup_active',
             'geofence_kml',
         ])
-        ->get()
-        ->map(function ($restaurant) {
-            $geofenceCoordinates = [];
+            ->get()
+            ->map(function ($restaurant) {
+                $geofenceCoordinates = [];
 
-            // Extract coordinates from KML if exists
-            if ($restaurant->geofence_kml) {
-                $geofenceCoordinates = $this->extractCoordinatesFromKML($restaurant->geofence_kml);
-            }
+                // Extract coordinates from KML if exists
+                if ($restaurant->geofence_kml) {
+                    $geofenceCoordinates = $this->extractCoordinatesFromKML($restaurant->geofence_kml);
+                }
 
-            return [
-                'id' => $restaurant->id,
-                'name' => $restaurant->name,
-                'address' => $restaurant->address,
-                'is_active' => $restaurant->is_active,
-                'delivery_active' => $restaurant->delivery_active,
-                'pickup_active' => $restaurant->pickup_active,
-                'coordinates' => $restaurant->coordinates,
-                'has_geofence' => $restaurant->hasGeofence(),
-                'geofence_coordinates' => $geofenceCoordinates,
-            ];
-        });
+                return [
+                    'id' => $restaurant->id,
+                    'name' => $restaurant->name,
+                    'address' => $restaurant->address,
+                    'is_active' => $restaurant->is_active,
+                    'delivery_active' => $restaurant->delivery_active,
+                    'pickup_active' => $restaurant->pickup_active,
+                    'coordinates' => $restaurant->coordinates,
+                    'has_geofence' => $restaurant->hasGeofence(),
+                    'geofence_coordinates' => $geofenceCoordinates,
+                ];
+            });
 
         // Calculate statistics
         $stats = [

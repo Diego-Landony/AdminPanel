@@ -3,7 +3,13 @@
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerTypeController;
+use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\KMLUploadController;
+use App\Http\Controllers\Menu\CategoryController;
+use App\Http\Controllers\Menu\ProductController;
+use App\Http\Controllers\Menu\ProductVariantController;
+use App\Http\Controllers\Menu\PromotionController;
+use App\Http\Controllers\Menu\SectionController;
 use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\RestaurantGeofencesController;
 use App\Http\Controllers\RoleController;
@@ -24,6 +30,12 @@ Route::get('/', function () {
 // Rutas para el manejo del tema
 Route::post('/theme/update', [ThemeController::class, 'update'])->name('theme.update');
 Route::get('/theme/get', [ThemeController::class, 'get'])->name('theme.get');
+
+// Rutas de subida de imágenes (requieren autenticación)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/api/upload/image', [ImageUploadController::class, 'upload'])->name('upload.image');
+    Route::post('/api/delete/image', [ImageUploadController::class, 'delete'])->name('delete.image');
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Home - página principal después del login
@@ -142,6 +154,124 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:roles.delete');
     Route::patch('roles/{role}/users', [RoleController::class, 'updateUsers'])->name('roles.update-users')
         ->middleware('permission:roles.edit');
+
+    // Gestión de Menú
+    Route::prefix('menu')->name('menu.')->group(function () {
+        // Categories
+        Route::get('categories', [CategoryController::class, 'index'])->name('categories.index')
+            ->middleware('permission:menu.categories.view');
+        Route::get('categories/create', [CategoryController::class, 'create'])->name('categories.create')
+            ->middleware('permission:menu.categories.create');
+        Route::post('categories', [CategoryController::class, 'store'])->name('categories.store')
+            ->middleware('permission:menu.categories.create');
+        Route::get('categories/{category}', [CategoryController::class, 'show'])->name('categories.show')
+            ->middleware('permission:menu.categories.view');
+        Route::get('categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit')
+            ->middleware('permission:menu.categories.edit');
+        Route::put('categories/{category}', [CategoryController::class, 'update'])->name('categories.update')
+            ->middleware('permission:menu.categories.edit');
+        Route::patch('categories/{category}', [CategoryController::class, 'update'])
+            ->middleware('permission:menu.categories.edit');
+        Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy')
+            ->middleware('permission:menu.categories.delete');
+        Route::post('categories/reorder', [CategoryController::class, 'reorder'])->name('categories.reorder')
+            ->middleware('permission:menu.categories.edit');
+
+        // Category Products Management (attach/detach products to categories)
+        Route::post('categories/{category}/products/attach', [CategoryController::class, 'attachProduct'])
+            ->name('categories.products.attach')
+            ->middleware('permission:menu.categories.edit');
+        Route::delete('categories/{category}/products/{product}', [CategoryController::class, 'detachProduct'])
+            ->name('categories.products.detach')
+            ->middleware('permission:menu.categories.edit');
+        Route::patch('categories/{category}/products/{product}/prices', [CategoryController::class, 'updateProductPrices'])
+            ->name('categories.products.update-prices')
+            ->middleware('permission:menu.categories.edit');
+
+        // Products
+        Route::get('products', [ProductController::class, 'index'])->name('products.index')
+            ->middleware('permission:menu.products.view');
+        Route::get('products/create', [ProductController::class, 'create'])->name('products.create')
+            ->middleware('permission:menu.products.create');
+        Route::post('products', [ProductController::class, 'store'])->name('products.store')
+            ->middleware('permission:menu.products.create');
+        Route::get('products/{product}', [ProductController::class, 'show'])->name('products.show')
+            ->middleware('permission:menu.products.view');
+        Route::get('products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit')
+            ->middleware('permission:menu.products.edit');
+        Route::put('products/{product}', [ProductController::class, 'update'])->name('products.update')
+            ->middleware('permission:menu.products.edit');
+        Route::patch('products/{product}', [ProductController::class, 'update'])
+            ->middleware('permission:menu.products.edit');
+        Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy')
+            ->middleware('permission:menu.products.delete');
+        Route::post('products/{product}/clone', [ProductController::class, 'clone'])->name('products.clone')
+            ->middleware('permission:menu.products.create');
+        Route::post('products/reorder', [ProductController::class, 'reorder'])->name('products.reorder')
+            ->middleware('permission:menu.products.edit');
+
+        // Product Variants Management
+        Route::get('products/{product}/variants', [ProductVariantController::class, 'index'])
+            ->name('products.variants.index')
+            ->middleware('permission:menu.products.view');
+        Route::get('products/{product}/variants/{variant}/edit', [ProductVariantController::class, 'edit'])
+            ->name('products.variants.edit')
+            ->middleware('permission:menu.products.edit');
+        Route::patch('products/{product}/variants/{variant}', [ProductVariantController::class, 'update'])
+            ->name('products.variants.update')
+            ->middleware('permission:menu.products.edit');
+        Route::delete('products/{product}/variants/{variant}', [ProductVariantController::class, 'destroy'])
+            ->name('products.variants.destroy')
+            ->middleware('permission:menu.products.delete');
+        Route::post('products/{product}/variants/reorder', [ProductVariantController::class, 'reorder'])
+            ->name('products.variants.reorder')
+            ->middleware('permission:menu.products.edit');
+        Route::patch('products/{product}/variants/{variant}/quick-prices', [ProductVariantController::class, 'quickUpdatePrices'])
+            ->name('products.variants.quick-update-prices')
+            ->middleware('permission:menu.products.edit');
+
+        // Promotions
+        Route::get('promotions', [PromotionController::class, 'index'])->name('promotions.index')
+            ->middleware('permission:menu.promotions.view');
+        Route::get('promotions/create', [PromotionController::class, 'create'])->name('promotions.create')
+            ->middleware('permission:menu.promotions.create');
+        Route::post('promotions', [PromotionController::class, 'store'])->name('promotions.store')
+            ->middleware('permission:menu.promotions.create');
+        Route::get('promotions/{promotion}', [PromotionController::class, 'show'])->name('promotions.show')
+            ->middleware('permission:menu.promotions.view');
+        Route::get('promotions/{promotion}/edit', [PromotionController::class, 'edit'])->name('promotions.edit')
+            ->middleware('permission:menu.promotions.edit');
+        Route::put('promotions/{promotion}', [PromotionController::class, 'update'])->name('promotions.update')
+            ->middleware('permission:menu.promotions.edit');
+        Route::patch('promotions/{promotion}', [PromotionController::class, 'update'])
+            ->middleware('permission:menu.promotions.edit');
+        Route::delete('promotions/{promotion}', [PromotionController::class, 'destroy'])->name('promotions.destroy')
+            ->middleware('permission:menu.promotions.delete');
+        Route::post('promotions/{promotion}/toggle', [PromotionController::class, 'toggle'])->name('promotions.toggle')
+            ->middleware('permission:menu.promotions.edit');
+
+        // Sections
+        Route::get('sections', [SectionController::class, 'index'])->name('sections.index')
+            ->middleware('permission:menu.sections.view');
+        Route::get('sections/create', [SectionController::class, 'create'])->name('sections.create')
+            ->middleware('permission:menu.sections.create');
+        Route::post('sections', [SectionController::class, 'store'])->name('sections.store')
+            ->middleware('permission:menu.sections.create');
+        Route::get('sections/{section}', [SectionController::class, 'show'])->name('sections.show')
+            ->middleware('permission:menu.sections.view');
+        Route::get('sections/{section}/edit', [SectionController::class, 'edit'])->name('sections.edit')
+            ->middleware('permission:menu.sections.edit');
+        Route::put('sections/{section}', [SectionController::class, 'update'])->name('sections.update')
+            ->middleware('permission:menu.sections.edit');
+        Route::patch('sections/{section}', [SectionController::class, 'update'])
+            ->middleware('permission:menu.sections.edit');
+        Route::delete('sections/{section}', [SectionController::class, 'destroy'])->name('sections.destroy')
+            ->middleware('permission:menu.sections.delete');
+        Route::post('sections/reorder', [SectionController::class, 'reorder'])->name('sections.reorder')
+            ->middleware('permission:menu.sections.edit');
+        Route::get('sections/{section}/usage', [SectionController::class, 'usage'])->name('sections.usage')
+            ->middleware('permission:menu.sections.view');
+    });
 });
 
 require __DIR__.'/settings.php';

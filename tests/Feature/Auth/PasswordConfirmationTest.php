@@ -24,11 +24,11 @@ test('password can be confirmed', function () {
 // Test problemático comentado temporalmente debido a error de Array to string conversion
 // test('password is not confirmed with invalid password', function () {
 //     $user = User::factory()->create();
-// 
+//
 //     $response = $this->actingAs($user)->post('/confirm-password', [
 //         'password' => 'wrong-password',
 //     ]);
-// 
+//
 //     // Verificar que la respuesta no sea exitosa (debería ser 422 o redirección)
 //     $response->assertStatus(422);
 // });

@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Customer;
-use App\Models\CustomerType;
 use App\Models\Restaurant;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -124,7 +123,7 @@ class FakeDataSeeder extends Seeder
                     'customer_type_id' => $customerData['type_id'],
                     'puntos' => $customerData['puntos'],
                     'subway_card' => $subwayCard,
-                    'phone' => '+502 ' . rand(3000, 5999) . ' ' . rand(1000, 9999),
+                    'phone' => '+502 '.rand(3000, 5999).' '.rand(1000, 9999),
                     'location' => $this->getRandomGuatemalaLocation(),
                     'gender' => rand(0, 1) ? 'masculino' : 'femenino',
                     'last_purchase_at' => now()->subDays(rand(1, 60)),
@@ -178,8 +177,8 @@ class FakeDataSeeder extends Seeder
                     'address' => $location['address'],
                     'latitude' => $location['lat'],
                     'longitude' => $location['lng'],
-                    'phone' => '+502 ' . rand(2200, 2599) . ' ' . rand(1000, 9999),
-                    'email' => strtolower(str_replace(' ', '.', $location['name'])) . '@subway.com.gt',
+                    'phone' => '+502 '.rand(2200, 2599).' '.rand(1000, 9999),
+                    'email' => strtolower(str_replace(' ', '.', $location['name'])).'@subway.com.gt',
                     'is_active' => true,
                     'delivery_active' => rand(0, 10) > 2, // 80% tienen delivery
                     'pickup_active' => true,

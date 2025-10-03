@@ -13,7 +13,11 @@ import {
     Settings,
     Clock,
     Tag,
-    CreditCard
+    CreditCard,
+    Layers,
+    Package,
+    ListChecks,
+    UtensilsCrossed
 } from 'lucide-react';
 
 // Iconos por tipo de sección
@@ -71,6 +75,13 @@ export const ENTITY_ICONS = {
     },
     customerType: {
         info: Tag,
+    },
+    menu: {
+        category: Layers,
+        product: Package,
+        section: ListChecks,
+        sectionOptions: ListChecks,
+        productInfo: UtensilsCrossed,
     }
 } as const;
 

@@ -18,13 +18,13 @@ class PermissionFactory extends Factory
     {
         $actions = ['view', 'create', 'edit', 'delete'];
         $modules = ['users', 'customers', 'roles', 'activity', 'settings'];
-        
+
         $module = fake()->randomElement($modules);
         $action = fake()->randomElement($actions);
-        
+
         return [
             'name' => "{$module}.{$action}",
-            'display_name' => ucfirst($action) . ' ' . ucfirst($module),
+            'display_name' => ucfirst($action).' '.ucfirst($module),
             'description' => "Permission to {$action} {$module}",
             'group' => $module,
         ];
@@ -50,7 +50,7 @@ class PermissionFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'name' => "users.{$action}",
-            'display_name' => ucfirst($action) . ' Users',
+            'display_name' => ucfirst($action).' Users',
             'description' => "Permission to {$action} users",
             'group' => 'users',
         ]);
@@ -63,7 +63,7 @@ class PermissionFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'name' => "customers.{$action}",
-            'display_name' => ucfirst($action) . ' Customers',
+            'display_name' => ucfirst($action).' Customers',
             'description' => "Permission to {$action} customers",
             'group' => 'customers',
         ]);
@@ -76,7 +76,7 @@ class PermissionFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'name' => "roles.{$action}",
-            'display_name' => ucfirst($action) . ' Roles',
+            'display_name' => ucfirst($action).' Roles',
             'description' => "Permission to {$action} roles",
             'group' => 'roles',
         ]);

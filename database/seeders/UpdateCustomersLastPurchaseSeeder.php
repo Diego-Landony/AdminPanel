@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Customer;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class UpdateCustomersLastPurchaseSeeder extends Seeder
@@ -17,7 +16,7 @@ class UpdateCustomersLastPurchaseSeeder extends Seeder
         Customer::whereNull('last_purchase_at')->get()->each(function ($customer) {
             // Generar una fecha aleatoria de compra entre 60 días atrás y ahora
             $customer->update([
-                'last_purchase_at' => fake()->optional(0.8)->dateTimeBetween('-60 days', 'now')
+                'last_purchase_at' => fake()->optional(0.8)->dateTimeBetween('-60 days', 'now'),
             ]);
         });
 

@@ -3,7 +3,7 @@ import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton,
 import { usePermissions } from '@/hooks/use-permissions';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Activity, Home, LucideIcon, MapPin, Settings, Shield, Star, UserCircle, UserCog, Users, Utensils } from 'lucide-react';
+import { Activity, HandPlatter, Home, Layers, ListChecks, LucideIcon, MapPin, Package, Percent, Settings, Shield, Star, UserCircle, UserCog, Users, Utensils } from 'lucide-react';
 import AppLogo from './app-logo';
 
 /**
@@ -66,6 +66,38 @@ const systemPages: PageConfig[] = [
         icon: MapPin,
         group: 'Restaurantes',
         permission: 'restaurants.view',
+    },
+    {
+        name: 'menu-categories',
+        title: 'Categorías',
+        href: '/menu/categories',
+        icon: Layers,
+        group: 'Menú',
+        permission: 'menu.categories.view',
+    },
+    {
+        name: 'menu-products',
+        title: 'Productos',
+        href: '/menu/products',
+        icon: Package,
+        group: 'Menú',
+        permission: 'menu.products.view',
+    },
+    {
+        name: 'menu-sections',
+        title: 'Secciones',
+        href: '/menu/sections',
+        icon: ListChecks,
+        group: 'Menú',
+        permission: 'menu.sections.view',
+    },
+    {
+        name: 'menu-promotions',
+        title: 'Promociones',
+        href: '/menu/promotions',
+        icon: Percent,
+        group: 'Menú',
+        permission: 'menu.promotions.view',
     },
     {
         name: 'activity',
@@ -138,6 +170,8 @@ export function AppSidebar() {
                     groupIcon = UserCircle;
                 } else if (groupName === 'Restaurantes') {
                     groupIcon = Utensils;
+                } else if (groupName === 'Menú') {
+                    groupIcon = HandPlatter;
                 }
 
                 items.push({

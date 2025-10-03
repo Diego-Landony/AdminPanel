@@ -57,7 +57,7 @@ class RestaurantObserver
     private function logActivityEvent(string $eventType, Restaurant $restaurant, ?array $oldValues, ?array $newValues): void
     {
         try {
-            if (!auth()->check() || !$this->isWebUserAction()) {
+            if (! auth()->check() || ! $this->isWebUserAction()) {
                 return;
             }
 
@@ -76,19 +76,27 @@ class RestaurantObserver
 
             \Log::info("Actividad de restaurante registrada: {$eventType} para restaurante '{$restaurant->name}' por usuario {$user->email}");
         } catch (\Exception $e) {
-            \Log::error('Error al registrar actividad de restaurante: ' . $e->getMessage());
+            \Log::error('Error al registrar actividad de restaurante: '.$e->getMessage());
         }
     }
 
     private function isWebUserAction(): bool
     {
         $request = request();
-        
-        if (!$request) return false;
-        if (!$request->userAgent()) return false;
-        if (app()->runningInConsole() && !app()->runningUnitTests()) return false;
-        if (!in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) return false;
-        
+
+        if (! $request) {
+            return false;
+        }
+        if (! $request->userAgent()) {
+            return false;
+        }
+        if (app()->runningInConsole() && ! app()->runningUnitTests()) {
+            return false;
+        }
+        if (! in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
+            return false;
+        }
+
         return true;
     }
 
@@ -100,15 +108,17 @@ class RestaurantObserver
         switch ($eventType) {
             case 'restaurant_created':
                 return "Restaurante '{$restaurantName}' ({$restaurantAddress}) fue creado";
-                
+
             case 'restaurant_updated':
                 $changes = [];
                 if ($newValues) {
                     foreach ($newValues as $field => $newValue) {
-                        if (in_array($field, ['updated_at'])) continue;
-                        
+                        if (in_array($field, ['updated_at'])) {
+                            continue;
+                        }
+
                         $oldValue = $oldValues[$field] ?? null;
-                        
+
                         $fieldNames = [
                             'name' => 'nombre',
                             'description' => 'descripción',
@@ -125,9 +135,9 @@ class RestaurantObserver
                             'sort_order' => 'orden',
                             'schedule' => 'horario',
                         ];
-                        
+
                         $fieldName = $fieldNames[$field] ?? $field;
-                        
+
                         if ($field === 'is_active') {
                             $oldValue = $oldValue ? 'Activo' : 'Inactivo';
                             $newValue = $newValue ? 'Activo' : 'Inactivo';
@@ -135,23 +145,24 @@ class RestaurantObserver
                             $oldValue = $oldValue ? 'Activo' : 'Inactivo';
                             $newValue = $newValue ? 'Activo' : 'Inactivo';
                         }
-                        
+
                         $changes[] = "{$fieldName}: '{$oldValue}' → '{$newValue}'";
                     }
                 }
-                
-                $changesText = !empty($changes) ? ' - ' . implode(', ', $changes) : '';
+
+                $changesText = ! empty($changes) ? ' - '.implode(', ', $changes) : '';
+
                 return "Restaurante '{$restaurantName}' ({$restaurantAddress}) fue actualizado{$changesText}";
-                
+
             case 'restaurant_deleted':
                 return "Restaurante '{$restaurantName}' ({$restaurantAddress}) fue eliminado";
-                
+
             case 'restaurant_restored':
                 return "Restaurante '{$restaurantName}' ({$restaurantAddress}) fue restaurado";
-                
+
             case 'restaurant_force_deleted':
                 return "Restaurante '{$restaurantName}' ({$restaurantAddress}) fue eliminado permanentemente";
-                
+
             default:
                 return "Evento {$eventType} en restaurante '{$restaurantName}'";
         }
@@ -160,13 +171,13 @@ class RestaurantObserver
     private function isOnlyTimestampUpdate(array $changes): bool
     {
         $timestampFields = ['updated_at'];
-        
+
         foreach ($changes as $field => $value) {
-            if (!in_array($field, $timestampFields)) {
+            if (! in_array($field, $timestampFields)) {
                 return false;
             }
         }
-        
+
         return true;
     }
 }

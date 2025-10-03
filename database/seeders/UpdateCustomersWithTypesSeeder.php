@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Customer;
-use App\Models\CustomerType;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class UpdateCustomersWithTypesSeeder extends Seeder
@@ -26,7 +24,7 @@ class UpdateCustomersWithTypesSeeder extends Seeder
         foreach ($customersWithoutType as $customer) {
             // Actualizar el tipo de cliente basado en puntos
             $customer->updateCustomerType();
-            
+
             if ($customer->customer_type_id) {
                 $updatedCount++;
             }

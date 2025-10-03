@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
-use App\Models\Role;
-use App\Models\Restaurant;
 use App\Models\Customer;
+use App\Models\Restaurant;
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Console\Command;
 
 class TestPaginationCommand extends Command

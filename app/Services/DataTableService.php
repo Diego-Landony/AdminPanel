@@ -14,10 +14,7 @@ class DataTableService
     /**
      * Construye un query completo para DataTable basado en configuración
      *
-     * @param  Builder  $query
      * @param  array  $config  - Configuración del datatable
-     * @param  Request  $request
-     * @return Builder
      *
      * @example
      * $config = [
@@ -54,9 +51,6 @@ class DataTableService
     /**
      * Aplica filtros adicionales a un query
      *
-     * @param  Builder  $query
-     * @param  array  $filters
-     * @return Builder
      *
      * @example
      * $filters = [
@@ -75,6 +69,7 @@ class DataTableService
             // Filtro por array (IN)
             if (is_array($value)) {
                 $query->whereIn($field, $value);
+
                 continue;
             }
 
@@ -88,9 +83,6 @@ class DataTableService
     /**
      * Obtiene estadísticas agregadas para una entidad
      *
-     * @param  string  $modelClass
-     * @param  array  $statsConfig
-     * @return array
      *
      * @example
      * $statsConfig = [
@@ -118,11 +110,6 @@ class DataTableService
 
     /**
      * Aplica búsqueda a un query
-     *
-     * @param  Builder  $query
-     * @param  string  $searchTerm
-     * @param  array  $searchableFields
-     * @return Builder
      */
     protected function applySearch(Builder $query, string $searchTerm, array $searchableFields): Builder
     {
@@ -148,11 +135,6 @@ class DataTableService
 
     /**
      * Aplica ordenamiento múltiple
-     *
-     * @param  Builder  $query
-     * @param  array  $sortCriteria
-     * @param  array  $fieldMappings
-     * @return Builder
      */
     protected function applyMultipleSorting(Builder $query, array $sortCriteria, array $fieldMappings): Builder
     {
@@ -180,12 +162,6 @@ class DataTableService
 
     /**
      * Aplica ordenamiento simple
-     *
-     * @param  Builder  $query
-     * @param  string  $sortField
-     * @param  string  $sortDirection
-     * @param  array  $fieldMappings
-     * @return Builder
      */
     protected function applySorting(
         Builder $query,
@@ -213,8 +189,6 @@ class DataTableService
      * Prepara los datos de paginación para el frontend
      *
      * @param  \Illuminate\Contracts\Pagination\LengthAwarePaginator  $paginator
-     * @param  Request  $request
-     * @return array
      */
     public function preparePaginationResponse($paginator, Request $request): array
     {
@@ -241,7 +215,6 @@ class DataTableService
      * Transforma una colección aplicando un callback de transformación
      *
      * @param  \Illuminate\Support\Collection  $collection
-     * @param  callable  $transformer
      * @return \Illuminate\Support\Collection
      */
     public function transformCollection($collection, callable $transformer)

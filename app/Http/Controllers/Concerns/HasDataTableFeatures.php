@@ -13,9 +13,6 @@ trait HasDataTableFeatures
 {
     /**
      * Obtiene los parámetros de paginación y ordenamiento del request
-     *
-     * @param  Request  $request
-     * @return array
      */
     protected function getPaginationParams(Request $request): array
     {
@@ -49,10 +46,7 @@ trait HasDataTableFeatures
     /**
      * Aplica búsqueda a un query basado en campos searchables
      *
-     * @param  Builder  $query
-     * @param  string  $searchTerm
      * @param  array  $searchableFields  - Array de campos o callbacks
-     * @return Builder
      *
      * @example
      * $this->applySearch($query, 'john', [
@@ -88,10 +82,8 @@ trait HasDataTableFeatures
     /**
      * Aplica ordenamiento múltiple al query
      *
-     * @param  Builder  $query
      * @param  array  $sortCriteria  - Array de criterios [{field, direction}]
      * @param  array  $fieldMappings  - Mapeo de campos virtuales a campos reales
-     * @return Builder
      *
      * @example
      * $this->applyMultipleSorting($query, $criteria, [
@@ -131,12 +123,8 @@ trait HasDataTableFeatures
     /**
      * Aplica ordenamiento simple al query
      *
-     * @param  Builder  $query
-     * @param  string  $sortField
-     * @param  string  $sortDirection
      * @param  array  $fieldMappings  - Mapeo de campos virtuales a campos reales
      * @param  string|null  $defaultSort  - Ordenamiento por defecto si no hay mapeo
-     * @return Builder
      */
     protected function applySorting(
         Builder $query,
@@ -174,9 +162,6 @@ trait HasDataTableFeatures
     /**
      * Construye la expresión SQL para ordenar por status de usuario
      * (online, recent, offline, never)
-     *
-     * @param  string  $direction
-     * @return string
      */
     protected function getStatusSortExpression(string $direction = 'asc'): string
     {
@@ -196,7 +181,6 @@ trait HasDataTableFeatures
      * Construye la respuesta para filtros que se debe enviar al frontend
      *
      * @param  array  $params  - Parámetros de paginación obtenidos con getPaginationParams()
-     * @return array
      */
     protected function buildFiltersResponse(array $params): array
     {

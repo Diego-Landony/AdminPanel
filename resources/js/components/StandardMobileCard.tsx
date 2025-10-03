@@ -11,7 +11,9 @@ export interface DataFieldConfig {
 
 export interface StandardMobileCardProps {
     /** Icon component to display in header */
-    icon: LucideIcon;
+    icon?: LucideIcon;
+    /** Image URL to display instead of icon */
+    image?: string | null;
     /** Primary title (entity name) */
     title: React.ReactNode;
     /** Secondary subtitle text */
@@ -23,7 +25,7 @@ export interface StandardMobileCardProps {
         className?: string;
     };
     /** Array of data fields to display */
-    dataFields: DataFieldConfig[];
+    dataFields?: DataFieldConfig[];
     /** Actions configuration */
     actions?: {
         editHref?: string;
@@ -85,6 +87,7 @@ export interface StandardMobileCardProps {
  */
 const StandardMobileCardComponent: React.FC<StandardMobileCardProps> = ({
     icon: IconComponent,
+    image,
     title,
     subtitle,
     badge,
@@ -93,20 +96,30 @@ const StandardMobileCardComponent: React.FC<StandardMobileCardProps> = ({
     additionalContent,
     className = '',
 }) => {
+    const headerIcon = image ? (
+        <div className="h-8 w-8 rounded-full overflow-hidden">
+            <img src={image} alt={typeof title === 'string' ? title : 'Entity'} className="h-full w-full object-cover" />
+        </div>
+    ) : IconComponent ? (
+        <IconComponent className="h-4 w-4 text-primary" />
+    ) : undefined;
+
     return (
         <ResponsiveCard className={className}>
-            <ResponsiveCardHeader icon={<IconComponent className="h-4 w-4 text-primary" />} title={title} subtitle={subtitle} badge={badge} />
+            <ResponsiveCardHeader icon={headerIcon} title={title} subtitle={subtitle} badge={badge} />
 
-            <ResponsiveCardContent layout="stack">
-                {dataFields.map((field, index) => {
-                    // Skip field if condition is provided and false
-                    if (field.condition !== undefined && !field.condition) {
-                        return null;
-                    }
+            {dataFields && dataFields.length > 0 && (
+                <ResponsiveCardContent layout="stack">
+                    {dataFields.map((field, index) => {
+                        // Skip field if condition is provided and false
+                        if (field.condition !== undefined && !field.condition) {
+                            return null;
+                        }
 
-                    return <DataField key={`${field.label}-${index}`} label={field.label} value={field.value} truncate={false} />;
-                })}
-            </ResponsiveCardContent>
+                        return <DataField key={`${field.label}-${index}`} label={field.label} value={field.value} truncate={false} />;
+                    })}
+                </ResponsiveCardContent>
+            )}
 
             {(actions || additionalContent) && (
                 <CardActions>

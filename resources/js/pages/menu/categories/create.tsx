@@ -4,7 +4,6 @@ import React from 'react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
-import { ImageUpload } from '@/components/ImageUpload';
 import { CreateCategoriesSkeleton } from '@/components/skeletons';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
@@ -20,7 +19,6 @@ import { Layers } from 'lucide-react';
 export default function CategoryCreate() {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
-        image: '',
         is_active: true,
     });
 
@@ -65,14 +63,6 @@ export default function CategoryCreate() {
                         placeholder="ej: Sándwiches, Bebidas, Postres"
                     />
                 </FormField>
-
-                {/* Imagen */}
-                <ImageUpload
-                    label="Imagen de la Categoría"
-                    currentImage={data.image}
-                    onImageChange={(url) => setData('image', url || '')}
-                    error={errors.image}
-                />
 
                 {/* Estado activo */}
                 <div className="flex items-center space-x-2">

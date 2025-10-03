@@ -14,7 +14,6 @@ import { Layers, Package, Star } from 'lucide-react';
 interface Category {
     id: number;
     name: string;
-    image: string | null;
     is_active: boolean;
     sort_order: number;
     created_at: string;
@@ -95,14 +94,6 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
         });
     };
 
-    const formatDate = (dateString: string): string => {
-        return new Date(dateString).toLocaleDateString('es-ES', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        });
-    };
-
     const categoryStats = [
         {
             title: 'categorías',
@@ -125,29 +116,26 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
         {
             key: 'name',
             title: 'Categoría',
-            width: 'w-48 min-w-48 max-w-64',
+            width: 'flex-1',
             render: (category: Category) => (
-                <EntityInfoCell
-                    icon={Layers}
-                    primaryText={category.name}
-                    secondaryText={`#${category.sort_order}`}
-                    badges={<StatusBadge status={category.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />}
-                />
+                <div className="text-sm font-medium text-foreground">{category.name}</div>
             ),
         },
         {
-            key: 'created_at',
-            title: 'Creado',
-            width: 'w-24',
+            key: 'status',
+            title: 'Estado',
+            width: 'w-32',
             textAlign: 'center' as const,
             render: (category: Category) => (
-                <div className="text-sm text-muted-foreground">{formatDate(category.created_at)}</div>
+                <div className="flex justify-center">
+                    <StatusBadge status={category.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />
+                </div>
             ),
         },
         {
             key: 'actions',
             title: 'Acciones',
-            width: 'w-16',
+            width: 'w-24',
             textAlign: 'right' as const,
             render: (category: Category) => (
                 <TableActions
@@ -163,18 +151,10 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
 
     const renderMobileCard = (category: Category) => (
         <StandardMobileCard
-            icon={Layers}
             title={category.name}
-            subtitle={`Orden #${category.sort_order}`}
             badge={{
                 children: <StatusBadge status={category.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />,
             }}
-            dataFields={[
-                {
-                    label: 'Creado',
-                    value: formatDate(category.created_at),
-                },
-            ]}
             actions={{
                 editHref: `/menu/categories/${category.id}/edit`,
                 onDelete: () => openDeleteDialog(category),

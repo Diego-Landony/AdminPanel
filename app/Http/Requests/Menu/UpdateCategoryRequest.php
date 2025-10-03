@@ -23,7 +23,6 @@ class UpdateCategoryRequest extends FormRequest
                 'max:100',
                 Rule::unique('categories', 'name')->ignore($categoryId),
             ],
-            'image' => 'nullable|string|max:255',
             'is_active' => 'boolean',
             'uses_variants' => 'boolean',
             'variant_definitions' => 'nullable|array',

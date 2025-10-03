@@ -3,7 +3,6 @@ import { useState } from 'react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
-import { ImageUpload } from '@/components/ImageUpload';
 import { EditCategoriesSkeleton } from '@/components/skeletons';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
@@ -14,7 +13,6 @@ import { Layers } from 'lucide-react';
 interface Category {
     id: number;
     name: string;
-    image: string | null;
     is_active: boolean;
 }
 
@@ -24,14 +22,12 @@ interface EditPageProps {
 
 interface FormData {
     name: string;
-    image: string;
     is_active: boolean;
 }
 
 export default function CategoryEdit({ category }: EditPageProps) {
     const [formData, setFormData] = useState<FormData>({
         name: category.name,
-        image: category.image || '',
         is_active: category.is_active,
     });
 
@@ -91,13 +87,6 @@ export default function CategoryEdit({ category }: EditPageProps) {
                         placeholder="ej: Sándwiches, Bebidas, Postres"
                     />
                 </FormField>
-
-                <ImageUpload
-                    label="Imagen de la Categoría"
-                    currentImage={formData.image}
-                    onImageChange={(url) => handleInputChange('image', url || '')}
-                    error={errors.image}
-                />
 
                 <div className="flex items-center space-x-2">
                     <Checkbox

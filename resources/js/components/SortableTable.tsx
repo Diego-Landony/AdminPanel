@@ -333,9 +333,18 @@ function SortableTableComponent<T extends { id: number | string; sort_order?: nu
                                 </Table>
                             </div>
 
-                            {/* Info message - Desktop only */}
-                            <div className="mt-4 text-center text-sm text-muted-foreground">
-                                Arrastra y suelta las filas para cambiar el orden
+                            {/* Info message and Save Button */}
+                            <div className="mt-4 flex items-center justify-between gap-4">
+                                <div className="text-sm text-muted-foreground">
+                                    Arrastra y suelta las filas para cambiar el orden
+                                </div>
+
+                                {hasChanges && (
+                                    <Button onClick={handleSaveOrder} disabled={isSaving}>
+                                        <Save className="mr-2 h-4 w-4" />
+                                        {isSaving ? 'Guardando...' : 'Guardar Orden'}
+                                    </Button>
+                                )}
                             </div>
                         </div>
 
@@ -366,16 +375,6 @@ function SortableTableComponent<T extends { id: number | string; sort_order?: nu
                     </CardContent>
                 </Card>
             </div>
-
-            {/* Floating Save Button */}
-            {hasChanges && (
-                <div className="fixed bottom-6 right-6 z-50">
-                    <Button onClick={handleSaveOrder} disabled={isSaving} size="lg" className="shadow-lg">
-                        <Save className="mr-2 h-5 w-5" />
-                        {isSaving ? 'Guardando...' : 'Guardar Orden'}
-                    </Button>
-                </div>
-            )}
         </ErrorBoundary>
     );
 }

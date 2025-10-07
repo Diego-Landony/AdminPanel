@@ -107,7 +107,7 @@ function SortableRow<T extends { id: number | string }>({ item, columns }: Sorta
                     key={column.key}
                     className={`${column.width || ''} ${column.textAlign ? `text-${column.textAlign}` : 'text-left'} ${column.className || ''}`}
                 >
-                    {column.render ? column.render(item) : (item as any)[column.key]}
+                    {column.render ? column.render(item) : (item as Record<string, unknown>)[column.key]}
                 </TableCell>
             ))}
         </TableRow>
@@ -213,56 +213,58 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
     const filteredGroups = searchable && search
         ? localGroups.map((group) => ({
             ...group,
-            products: group.products.filter((item: any) =>
-                item.name?.toLowerCase().includes(search.toLowerCase())
+            products: group.products.filter((item: T) =>
+                (item as { name?: string }).name?.toLowerCase().includes(search.toLowerCase())
             ),
         })).filter((group) => group.products.length > 0)
         : localGroups;
 
     return (
         <ErrorBoundary>
-            <div className="space-y-6">
-                <Card>
-                    <CardHeader>
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div className="flex-1">
-                                <h2 className="text-2xl font-semibold tracking-tight">{title}</h2>
-                                {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                {onRefresh && (
-                                    <Button variant="outline" size="sm" onClick={onRefresh} disabled={isRefreshing}>
-                                        <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                                    </Button>
-                                )}
-                                {createUrl && (
-                                    <Link href={createUrl}>
-                                        <Button size="sm">
-                                            <Plus className="h-4 w-4 mr-2" />
-                                            {createLabel}
-                                        </Button>
-                                    </Link>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Stats */}
-                        {stats && stats.length > 0 && (
-                            <div className="flex flex-wrap items-center gap-6 pt-4 text-sm">
-                                {stats.map((stat, index) => (
-                                    <div key={index} className="flex items-center gap-2">
-                                        {stat.icon}
-                                        <span className="font-medium">{stat.title}</span>
-                                        <span className="text-muted-foreground">{stat.value}</span>
-                                    </div>
-                                ))}
-                            </div>
+            <div className="flex h-full flex-1 flex-col gap-6 p-6">
+                {/* Page Header */}
+                <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                        <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+                        {description && <p className="text-muted-foreground">{description}</p>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {onRefresh && (
+                            <Button variant="outline" size="sm" onClick={onRefresh} disabled={isRefreshing}>
+                                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                            </Button>
                         )}
+                        {createUrl && (
+                            <Link href={createUrl}>
+                                <Button>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    {createLabel}
+                                </Button>
+                            </Link>
+                        )}
+                    </div>
+                </div>
 
-                        {/* Search */}
-                        {searchable && (
-                            <div className="pt-4">
+                {/* Data Table Card */}
+                <Card>
+                    <CardHeader className="pb-6">
+                        <div className="flex flex-col space-y-4">
+
+                            {/* Stats */}
+                            {stats && stats.length > 0 && (
+                                <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
+                                    {stats.map((stat, index) => (
+                                        <div key={index} className="flex items-center gap-2">
+                                            {stat.icon}
+                                            <span className="lowercase">{stat.title}</span>
+                                            <span className="font-medium text-foreground">{stat.value}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Search */}
+                            {searchable && (
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input
@@ -281,8 +283,8 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
                                         </button>
                                     )}
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </CardHeader>
 
                     <CardContent className="p-0">
@@ -302,21 +304,19 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
                                         onDragEnd={(e) => handleDragEnd(e, group.category.id)}
                                     >
                                         <Table>
-                                            {groupIndex === 0 && (
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead className="w-16 text-center"></TableHead>
-                                                        {columns.map((column) => (
-                                                            <TableHead
-                                                                key={column.key}
-                                                                className={`${column.width || ''} ${column.textAlign ? `text-${column.textAlign}` : 'text-left'}`}
-                                                            >
-                                                                {column.title}
-                                                            </TableHead>
-                                                        ))}
-                                                    </TableRow>
-                                                </TableHeader>
-                                            )}
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-16 text-center"></TableHead>
+                                                    {columns.map((column) => (
+                                                        <TableHead
+                                                            key={column.key}
+                                                            className={`${column.width || ''} ${column.textAlign ? `text-${column.textAlign}` : 'text-left'}`}
+                                                        >
+                                                            {column.title}
+                                                        </TableHead>
+                                                    ))}
+                                                </TableRow>
+                                            </TableHeader>
                                             <TableBody>
                                                 <SortableContext items={group.products.map((p) => p.id)} strategy={verticalListSortingStrategy}>
                                                     {group.products.map((product) => (
@@ -348,30 +348,34 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
 
                         {/* Mobile view */}
                         {renderMobileCard && (
-                            <div className={`${breakpointClass}hidden space-y-4 p-4`}>
-                                {filteredGroups.map((group) => (
-                                    <div key={group.category.id ?? 'no-category'} className="space-y-3">
-                                        {/* Category Header */}
-                                        <div className="bg-muted/50 px-4 py-2 rounded-md">
-                                            <h3 className="font-semibold text-sm text-foreground">{group.category.name}</h3>
-                                        </div>
-
-                                        {/* Products */}
-                                        {group.products.map((product) => (
-                                            <div key={product.id}>{renderMobileCard(product)}</div>
-                                        ))}
-
-                                        {/* Save Button for this group (mobile) */}
-                                        {hasChanges && (
-                                            <div className="flex justify-end pt-2">
-                                                <Button onClick={handleSaveOrder} disabled={isSaving} size="sm">
-                                                    <Save className="mr-2 h-4 w-4" />
-                                                    {isSaving ? 'Guardando...' : 'Guardar Orden'}
-                                                </Button>
+                            <div className={`${breakpointClass}hidden`}>
+                                <div className="space-y-6">
+                                    {filteredGroups.map((group) => (
+                                        <div key={group.category.id ?? 'no-category'} className="space-y-4">
+                                            {/* Category Header */}
+                                            <div className="bg-muted/50 px-4 py-2 rounded-md">
+                                                <h3 className="font-semibold text-sm text-foreground">{group.category.name}</h3>
                                             </div>
-                                        )}
-                                    </div>
-                                ))}
+
+                                            {/* Products */}
+                                            <div className="grid gap-4">
+                                                {group.products.map((product) => (
+                                                    <div key={product.id}>{renderMobileCard(product)}</div>
+                                                ))}
+                                            </div>
+
+                                            {/* Save Button for this group (mobile) */}
+                                            {hasChanges && (
+                                                <div className="flex justify-end">
+                                                    <Button onClick={handleSaveOrder} disabled={isSaving} size="sm">
+                                                        <Save className="mr-2 h-4 w-4" />
+                                                        {isSaving ? 'Guardando...' : 'Guardar Orden'}
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
 

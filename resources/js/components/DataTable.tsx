@@ -393,7 +393,7 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
         }
 
         updateFilters(payload);
-    }, [perPage, sortField, sortDirection, sortCriteria, updateFilters]);
+    }, [perPage, sortField, sortDirection, sortCriteria, search, updateFilters]);
 
     /**
      * Handles column sorting with multiple criteria support

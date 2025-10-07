@@ -21,10 +21,7 @@ class SectionOptionFactory extends Factory
             'section_id' => Section::factory(),
             'name' => fake()->word(),
             'is_extra' => fake()->boolean(),
-            'base_price_modifier' => 0,
-            'delivery_price_modifier' => 0,
-            'interior_base_price_modifier' => 0,
-            'interior_delivery_price_modifier' => 0,
+            'price_modifier' => 0.00,
             'sort_order' => fake()->numberBetween(0, 100),
         ];
     }

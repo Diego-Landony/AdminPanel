@@ -1,6 +1,7 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { useForm } from '@inertiajs/react';
-import React, { useState } from 'react';
+import React from 'react';
+import { PLACEHOLDERS } from '@/constants/ui-constants';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
@@ -12,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ENTITY_ICONS } from '@/constants/section-icons';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
-import { Banknote, Layers, Package } from 'lucide-react';
+import { Banknote, Layers } from 'lucide-react';
 
 interface Category {
     id: number;
@@ -92,7 +93,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                 <FormField label="Categoría (Tamaño)" error={errors.category_id} required>
                     <Select value={data.category_id} onValueChange={(value) => setData('category_id', value)}>
                         <SelectTrigger>
-                            <SelectValue placeholder="Selecciona una categoría" />
+                            <SelectValue placeholder={PLACEHOLDERS.selectCategory} />
                         </SelectTrigger>
                         <SelectContent>
                             {categories.map((category) => (
@@ -117,7 +118,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                         type="text"
                         value={data.sku}
                         onChange={(e) => setData('sku', e.target.value)}
-                        placeholder="Se genera automáticamente si se deja vacío"
+                        placeholder={PLACEHOLDERS.variantSku}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                         Identificador único de la variante. Se generará automáticamente combinando el producto y la categoría si no se especifica.
@@ -132,7 +133,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                         min="0"
                         value={data.sort_order}
                         onChange={(e) => setData('sort_order', e.target.value)}
-                        placeholder="0"
+                        placeholder={PLACEHOLDERS.variantSortOrder}
                     />
                 </FormField>
             </FormSection>
@@ -154,7 +155,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                                 value={data.base_price}
                                 onChange={(e) => setData('base_price', e.target.value)}
                                 className="pl-8"
-                                placeholder="0.00"
+                                placeholder={PLACEHOLDERS.variantPrice}
                             />
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -174,7 +175,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                                 value={data.delivery_price}
                                 onChange={(e) => setData('delivery_price', e.target.value)}
                                 className="pl-8"
-                                placeholder="0.00"
+                                placeholder={PLACEHOLDERS.variantPrice}
                             />
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -194,7 +195,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                                 value={data.interior_base_price}
                                 onChange={(e) => setData('interior_base_price', e.target.value)}
                                 className="pl-8"
-                                placeholder="0.00"
+                                placeholder={PLACEHOLDERS.variantPrice}
                             />
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -214,7 +215,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                                 value={data.interior_delivery_price}
                                 onChange={(e) => setData('interior_delivery_price', e.target.value)}
                                 className="pl-8"
-                                placeholder="0.00"
+                                placeholder={PLACEHOLDERS.variantPrice}
                             />
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">

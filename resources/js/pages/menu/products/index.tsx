@@ -178,8 +178,11 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
     const renderMobileCard = (product: Product) => (
         <StandardMobileCard
             title={product.name}
-            subtitle={<StatusBadge status={product.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />}
+            subtitle={product.description || 'Sin descripción'}
             imageUrl={product.image || undefined}
+            badge={{
+                children: <StatusBadge status={product.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />,
+            }}
             actions={{
                 editHref: `/menu/products/${product.id}/edit`,
                 onDelete: () => openDeleteDialog(product),
@@ -194,17 +197,17 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
         {
             title: 'productos',
             value: stats.total_products,
-            icon: <Package className="h-3 w-3 text-primary" />,
+            icon: <Package className="h-4 w-4 text-primary" />,
         },
         {
             title: 'activos',
             value: stats.active_products,
-            icon: <Package className="h-3 w-3 text-green-600" />,
+            icon: <Package className="h-4 w-4 text-green-600" />,
         },
         {
             title: 'inactivos',
             value: stats.total_products - stats.active_products,
-            icon: <Package className="h-3 w-3 text-red-600" />,
+            icon: <Package className="h-4 w-4 text-red-600" />,
         },
     ];
 

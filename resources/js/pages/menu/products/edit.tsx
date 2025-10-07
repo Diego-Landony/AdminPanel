@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
+import { PLACEHOLDERS } from '@/constants/ui-constants';
 import {
     DndContext,
     closestCenter,
@@ -36,7 +37,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ENTITY_ICONS } from '@/constants/section-icons';
 import { generateUniqueId } from '@/utils/generateId';
 import { Banknote, GripVertical, ListChecks, Package, Plus, X } from 'lucide-react';
 
@@ -164,7 +164,7 @@ function SortableVariant({ variant, index, onUpdate, onRemove, errors, canDelete
                     type="text"
                     value={variant.name}
                     onChange={(e) => onUpdate(index, 'name', e.target.value)}
-                    placeholder="ej: 15cm, 30cm"
+                    placeholder={PLACEHOLDERS.productVariantSize}
                 />
             </FormField>
 
@@ -331,11 +331,11 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
             loading={false}
             loadingSkeleton={EditProductsSkeleton}
         >
-            <FormSection icon={Package} title="Información del Producto">
+            <FormSection icon={Package} title="Información Básica" description="Datos principales del producto">
                 <FormField label="Categoría" error={errors.category_id} required>
                     <Select value={formData.category_id} onValueChange={(value) => handleInputChange('category_id', value)}>
                         <SelectTrigger>
-                            <SelectValue placeholder="Selecciona una categoría" />
+                            <SelectValue placeholder={PLACEHOLDERS.selectCategory} />
                         </SelectTrigger>
                         <SelectContent>
                             {categories.map((category) => (
@@ -348,11 +348,11 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
                 </FormField>
 
                 <FormField label="Nombre" error={errors.name} required>
-                    <Input id="name" type="text" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} placeholder="ej: Sub B.M.T., Sub Italiano" />
+                    <Input id="name" type="text" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} placeholder={PLACEHOLDERS.productName} />
                 </FormField>
 
                 <FormField label="Descripción" error={errors.description}>
-                    <Textarea id="description" value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} placeholder="Descripción del producto" rows={2} />
+                    <Textarea id="description" value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} placeholder={PLACEHOLDERS.productDescription} rows={2} />
                 </FormField>
 
                 <div className="flex items-center space-x-2">

@@ -3,7 +3,7 @@ import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton,
 import { usePermissions } from '@/hooks/use-permissions';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Activity, HandPlatter, Home, Layers, ListChecks, LucideIcon, MapPin, Package, Percent, Settings, Shield, Star, UserCircle, UserCog, Users, Utensils } from 'lucide-react';
+import { Activity, HandPlatter, Home, Layers, ListChecks, LucideIcon, MapPin, Package, Percent, Settings, Shield, Star, Tag, UserCircle, UserCog, Users, Utensils } from 'lucide-react';
 import AppLogo from './app-logo';
 
 /**
@@ -92,11 +92,27 @@ const systemPages: PageConfig[] = [
         permission: 'menu.sections.view',
     },
     {
-        name: 'menu-promotions',
-        title: 'Promociones',
-        href: '/menu/promotions',
+        name: 'menu-promotions-daily-special',
+        title: 'Sub del Día',
+        href: '/menu/promotions/daily-special',
+        icon: Tag,
+        group: 'Promociones',
+        permission: 'menu.promotions.view',
+    },
+    {
+        name: 'menu-promotions-two-for-one',
+        title: '2x1',
+        href: '/menu/promotions/two-for-one',
+        icon: Star,
+        group: 'Promociones',
+        permission: 'menu.promotions.view',
+    },
+    {
+        name: 'menu-promotions-percentage',
+        title: 'Porcentaje',
+        href: '/menu/promotions/percentage',
         icon: Percent,
-        group: 'Menú',
+        group: 'Promociones',
         permission: 'menu.promotions.view',
     },
     {
@@ -172,6 +188,8 @@ export function AppSidebar() {
                     groupIcon = Utensils;
                 } else if (groupName === 'Menú') {
                     groupIcon = HandPlatter;
+                } else if (groupName === 'Promociones') {
+                    groupIcon = Percent;
                 }
 
                 items.push({

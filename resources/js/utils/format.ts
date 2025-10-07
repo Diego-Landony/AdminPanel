@@ -79,3 +79,11 @@ export const truncateText = (text: string, maxLength: number): string => {
 export const formatPoints = (points: number): string => {
     return `${formatNumber(points)} pts`;
 };
+
+/**
+ * Formatea moneda con el símbolo de Quetzal
+ */
+export const formatCurrency = (amount: number, showSymbol: boolean = true): string => {
+    const formatted = formatNumber(amount);
+    return showSymbol ? `Q${formatted}` : formatted;
+};

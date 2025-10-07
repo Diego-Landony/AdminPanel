@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
+import { PLACEHOLDERS } from '@/constants/ui-constants';
 import {
     DndContext,
     closestCenter,
@@ -79,7 +80,7 @@ function SortableItem({ option, index, onUpdate, onRemove }: SortableItemProps) 
                 <Input
                     value={option.name}
                     onChange={(e) => onUpdate(index, 'name', e.target.value)}
-                    placeholder="Nombre del item"
+                    placeholder={PLACEHOLDERS.sectionOptionName}
                     className="flex-1"
                 />
                 <Button type="button" variant="ghost" size="icon" onClick={() => onRemove(index)}>
@@ -104,7 +105,7 @@ function SortableItem({ option, index, onUpdate, onRemove }: SortableItemProps) 
                             min="0"
                             value={option.price_modifier}
                             onChange={(e) => onUpdate(index, 'price_modifier', e.target.value)}
-                            placeholder="0.00"
+                            placeholder={PLACEHOLDERS.sectionOptionPrice}
                             className="w-24"
                         />
                     </div>
@@ -281,10 +282,10 @@ export default function SectionEdit({ section }: EditPageProps) {
             loading={false}
             loadingSkeleton={EditSectionsSkeleton}
         >
-            <FormSection icon={ListChecks} title="Información de la Sección">
+            <FormSection icon={ListChecks} title="Información Básica" description="Datos principales de la sección">
                 {/* Título */}
                 <FormField label="Título" error={errors.title} required>
-                    <Input id="title" type="text" value={formData.title} onChange={(e) => handleInputChange('title', e.target.value)} placeholder="ej: Vegetales, Salsas, Quesos" />
+                    <Input id="title" type="text" value={formData.title} onChange={(e) => handleInputChange('title', e.target.value)} placeholder={PLACEHOLDERS.sectionTitle} />
                 </FormField>
 
                 {/* Descripción */}
@@ -293,7 +294,7 @@ export default function SectionEdit({ section }: EditPageProps) {
                         id="description"
                         value={formData.description}
                         onChange={(e) => handleInputChange('description', e.target.value)}
-                        placeholder="Opcional"
+                        placeholder={PLACEHOLDERS.sectionDescription}
                         rows={2}
                     />
                 </FormField>
@@ -350,7 +351,7 @@ export default function SectionEdit({ section }: EditPageProps) {
                 )}
             </FormSection>
 
-            <FormSection icon={ENTITY_ICONS.menu.sectionOptions} title="Items" description="Define los items que pertenecen a esta sección">
+            <FormSection icon={ENTITY_ICONS.menu.sectionOptions} title="Opciones" description="Define las opciones disponibles en esta sección">
                 <div className="space-y-3">
                     {localOptions.length === 0 ? (
                         <p className="text-sm text-muted-foreground">Sin items aún</p>

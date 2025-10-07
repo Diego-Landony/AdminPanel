@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Menu;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Menu\StorePromotionRequest;
+use App\Http\Requests\Menu\UpdatePromotionRequest;
 use App\Models\Menu\Category;
 use App\Models\Menu\Product;
 use App\Models\Menu\Promotion;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,10 +23,15 @@ class PromotionController extends Controller
     /**
      * Muestra listado de promociones con filtros y búsqueda
      */
-    public function index(Request $request): Response
+    public function index(Request $request, ?string $typeFilter = null, ?string $view = null): Response
     {
         $query = Promotion::query()
             ->withCount('items');
+
+        // Filtro por tipo si se proporciona
+        if ($typeFilter) {
+            $query->where('type', $typeFilter);
+        }
 
         // Búsqueda por nombre
         if ($request->filled('search')) {
@@ -66,9 +74,7 @@ class PromotionController extends Controller
         $sortField = $request->input('sort_field', 'created_at');
         $sortDirection = $request->input('sort_direction', 'desc');
 
-        if ($sortField === 'promotion') {
-            $query->orderBy('name', $sortDirection);
-        } elseif (in_array($sortField, ['type', 'is_active', 'applies_to', 'created_at'])) {
+        if (in_array($sortField, ['name', 'type', 'is_active', 'applies_to', 'created_at'])) {
             $query->orderBy($sortField, $sortDirection);
         } elseif ($sortField === 'items_count') {
             $query->orderBy('items_count', $sortDirection);
@@ -88,7 +94,10 @@ class PromotionController extends Controller
             return $promotion->isValidNow();
         });
 
-        return Inertia::render('menu/promotions/index', [
+        // Determinar qué vista renderizar
+        $viewName = $view ?? 'menu/promotions/index';
+
+        return Inertia::render($viewName, [
             'promotions' => $promotions,
             'stats' => [
                 'total_promotions' => $allPromotions->count(),
@@ -97,13 +106,9 @@ class PromotionController extends Controller
             ],
             'filters' => [
                 'search' => $request->input('search'),
-                'type' => $request->input('type'),
-                'is_active' => $request->input('is_active'),
-                'applies_to' => $request->input('applies_to'),
-                'only_valid' => $request->input('only_valid'),
                 'per_page' => $perPage,
-                'sort_field' => $sortField,
-                'sort_direction' => $sortDirection,
+                'sort_field' => $request->filled('sort_field') ? $sortField : null,
+                'sort_direction' => $request->filled('sort_direction') ? $sortDirection : null,
             ],
         ]);
     }
@@ -129,27 +134,9 @@ class PromotionController extends Controller
     /**
      * Almacena una nueva promoción con sus items
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StorePromotionRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'type' => 'required|in:two_for_one,percentage_discount',
-            'discount_value' => 'nullable|numeric|min:0|max:100',
-            'applies_to' => 'required|in:product,category',
-            'is_permanent' => 'boolean',
-            'valid_from' => 'nullable|date',
-            'valid_until' => 'nullable|date|after_or_equal:valid_from',
-            'has_time_restriction' => 'boolean',
-            'time_from' => 'nullable|date_format:H:i',
-            'time_until' => 'nullable|date_format:H:i',
-            'active_days' => 'nullable|array',
-            'active_days.*' => 'integer|min:0|max:6',
-            'is_active' => 'boolean',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'nullable|exists:products,id',
-            'items.*.category_id' => 'nullable|exists:categories,id',
-        ]);
+        $validated = $request->validated();
 
         $items = $validated['items'] ?? [];
         unset($validated['items']);
@@ -162,7 +149,18 @@ class PromotionController extends Controller
                 foreach ($items as $item) {
                     $promotion->items()->create([
                         'product_id' => $item['product_id'] ?? null,
+                        'variant_id' => $item['variant_id'] ?? null,
                         'category_id' => $item['category_id'] ?? null,
+                        // Campos para Sub del Día
+                        'special_price_capital' => $item['special_price_capital'] ?? null,
+                        'special_price_interior' => $item['special_price_interior'] ?? null,
+                        'service_type' => $item['service_type'] ?? null,
+                        'validity_type' => $item['validity_type'] ?? null,
+                        'valid_from' => $item['valid_from'] ?? null,
+                        'valid_until' => $item['valid_until'] ?? null,
+                        'time_from' => $item['time_from'] ?? null,
+                        'time_until' => $item['time_until'] ?? null,
+                        'weekdays' => $item['weekdays'] ?? null,
                     ]);
                 }
             }
@@ -197,7 +195,16 @@ class PromotionController extends Controller
             'items.category',
         ]);
 
-        return Inertia::render('menu/promotions/edit', [
+        // Determinar la vista según el tipo de promoción
+        $viewMap = [
+            'daily_special' => 'menu/promotions/daily-special/edit',
+            'two_for_one' => 'menu/promotions/two-for-one/edit',
+            'percentage_discount' => 'menu/promotions/percentage/edit',
+        ];
+
+        $view = $viewMap[$promotion->type] ?? 'menu/promotions/edit';
+
+        return Inertia::render($view, [
             'promotion' => $promotion,
             'products' => Product::query()
                 ->with('category')
@@ -214,27 +221,9 @@ class PromotionController extends Controller
     /**
      * Actualiza una promoción existente
      */
-    public function update(Request $request, Promotion $promotion): RedirectResponse
+    public function update(UpdatePromotionRequest $request, Promotion $promotion): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'type' => 'required|in:two_for_one,percentage_discount',
-            'discount_value' => 'nullable|numeric|min:0|max:100',
-            'applies_to' => 'required|in:product,category',
-            'is_permanent' => 'boolean',
-            'valid_from' => 'nullable|date',
-            'valid_until' => 'nullable|date|after_or_equal:valid_from',
-            'has_time_restriction' => 'boolean',
-            'time_from' => 'nullable|date_format:H:i',
-            'time_until' => 'nullable|date_format:H:i',
-            'active_days' => 'nullable|array',
-            'active_days.*' => 'integer|min:0|max:6',
-            'is_active' => 'boolean',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'nullable|exists:products,id',
-            'items.*.category_id' => 'nullable|exists:categories,id',
-        ]);
+        $validated = $request->validated();
 
         $items = $validated['items'] ?? [];
         unset($validated['items']);
@@ -249,7 +238,18 @@ class PromotionController extends Controller
                 foreach ($items as $item) {
                     $promotion->items()->create([
                         'product_id' => $item['product_id'] ?? null,
+                        'variant_id' => $item['variant_id'] ?? null,
                         'category_id' => $item['category_id'] ?? null,
+                        // Campos para Sub del Día
+                        'special_price_capital' => $item['special_price_capital'] ?? null,
+                        'special_price_interior' => $item['special_price_interior'] ?? null,
+                        'service_type' => $item['service_type'] ?? null,
+                        'validity_type' => $item['validity_type'] ?? null,
+                        'valid_from' => $item['valid_from'] ?? null,
+                        'valid_until' => $item['valid_until'] ?? null,
+                        'time_from' => $item['time_from'] ?? null,
+                        'time_until' => $item['time_until'] ?? null,
+                        'weekdays' => $item['weekdays'] ?? null,
                     ]);
                 }
             }
@@ -288,5 +288,158 @@ class PromotionController extends Controller
 
         return redirect()->back()
             ->with('success', "Promoción {$status} exitosamente.");
+    }
+
+    /**
+     * Preview de cómo se verá una promoción Sub del Día
+     */
+    public function preview(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'special_price_capital' => 'required|numeric|min:0',
+            'special_price_interior' => 'required|numeric|min:0',
+            'service_type' => 'required|in:both,delivery_only,pickup_only',
+            'weekdays' => 'required|array',
+            'weekdays.*' => 'integer|min:1|max:7',
+        ]);
+
+        $product = Product::with(['variants' => function ($query) {
+            $query->orderBy('sort_order');
+        }])->findOrFail($validated['product_id']);
+
+        // Obtener precios actuales del producto (primera variante como referencia)
+        $variant = $product->variants->first();
+
+        if (! $variant) {
+            return response()->json([
+                'error' => 'El producto no tiene variantes configuradas.',
+            ], 400);
+        }
+
+        $dayNames = [
+            1 => 'Lunes',
+            2 => 'Martes',
+            3 => 'Miércoles',
+            4 => 'Jueves',
+            5 => 'Viernes',
+            6 => 'Sábado',
+            7 => 'Domingo',
+        ];
+
+        $selectedDays = array_map(fn ($day) => $dayNames[$day], $validated['weekdays']);
+
+        return response()->json([
+            'product' => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'image' => $product->image,
+            ],
+            'current_prices' => [
+                'capital' => [
+                    'pickup' => $variant->precio_pickup_capital,
+                    'delivery' => $variant->precio_delivery_capital,
+                ],
+                'interior' => [
+                    'pickup' => $variant->precio_pickup_interior,
+                    'delivery' => $variant->precio_delivery_interior,
+                ],
+            ],
+            'special_prices' => [
+                'capital' => $validated['special_price_capital'],
+                'interior' => $validated['special_price_interior'],
+            ],
+            'savings' => [
+                'capital' => [
+                    'pickup' => max(0, $variant->precio_pickup_capital - $validated['special_price_capital']),
+                    'delivery' => max(0, $variant->precio_delivery_capital - $validated['special_price_capital']),
+                ],
+                'interior' => [
+                    'pickup' => max(0, $variant->precio_pickup_interior - $validated['special_price_interior']),
+                    'delivery' => max(0, $variant->precio_delivery_interior - $validated['special_price_interior']),
+                ],
+            ],
+            'service_type' => $validated['service_type'],
+            'applies_to_days' => $selectedDays,
+            'variants_count' => $product->variants->count(),
+        ]);
+    }
+
+    /**
+     * Muestra listado de promociones Sub del Día
+     */
+    public function dailySpecialIndex(Request $request): Response
+    {
+        return $this->index($request, 'daily_special', 'menu/promotions/daily-special/index');
+    }
+
+    /**
+     * Muestra formulario de creación para Sub del Día
+     */
+    public function createDailySpecial(): Response
+    {
+        return Inertia::render('menu/promotions/daily-special/create', [
+            'products' => Product::query()
+                ->with('category')
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'category_id']),
+            'categories' => Category::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name']),
+        ]);
+    }
+
+    /**
+     * Muestra listado de promociones 2x1
+     */
+    public function twoForOneIndex(Request $request): Response
+    {
+        return $this->index($request, 'two_for_one', 'menu/promotions/two-for-one/index');
+    }
+
+    /**
+     * Muestra formulario de creación para 2x1
+     */
+    public function createTwoForOne(): Response
+    {
+        return Inertia::render('menu/promotions/two-for-one/create', [
+            'products' => Product::query()
+                ->with('category')
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'category_id']),
+            'categories' => Category::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name']),
+        ]);
+    }
+
+    /**
+     * Muestra listado de promociones de Porcentaje
+     */
+    public function percentageIndex(Request $request): Response
+    {
+        return $this->index($request, 'percentage_discount', 'menu/promotions/percentage/index');
+    }
+
+    /**
+     * Muestra formulario de creación para Porcentaje
+     */
+    public function createPercentage(): Response
+    {
+        return Inertia::render('menu/promotions/percentage/create', [
+            'products' => Product::query()
+                ->with('category')
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'category_id']),
+            'categories' => Category::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name']),
+        ]);
     }
 }

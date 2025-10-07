@@ -3,7 +3,6 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
-import { EntityInfoCell } from '@/components/EntityInfoCell';
 import { SortableTable } from '@/components/SortableTable';
 import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { TableActions } from '@/components/TableActions';
@@ -98,17 +97,17 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
         {
             title: 'categorías',
             value: stats.total_categories,
-            icon: <Layers className="h-3 w-3 text-primary" />,
+            icon: <Layers className="h-4 w-4 text-primary" />,
         },
         {
             title: 'activas',
             value: stats.active_categories,
-            icon: <Star className="h-3 w-3 text-green-600" />,
+            icon: <Star className="h-4 w-4 text-green-600" />,
         },
         {
             title: 'inactivas',
             value: stats.total_categories - stats.active_categories,
-            icon: <Package className="h-3 w-3 text-red-600" />,
+            icon: <Package className="h-4 w-4 text-red-600" />,
         },
     ];
 

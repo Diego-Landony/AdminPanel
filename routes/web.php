@@ -230,25 +230,50 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('products.variants.quick-update-prices')
             ->middleware('permission:menu.products.edit');
 
-        // Promotions
-        Route::get('promotions', [PromotionController::class, 'index'])->name('promotions.index')
-            ->middleware('permission:menu.promotions.view');
-        Route::get('promotions/create', [PromotionController::class, 'create'])->name('promotions.create')
-            ->middleware('permission:menu.promotions.create');
-        Route::post('promotions', [PromotionController::class, 'store'])->name('promotions.store')
-            ->middleware('permission:menu.promotions.create');
-        Route::get('promotions/{promotion}', [PromotionController::class, 'show'])->name('promotions.show')
-            ->middleware('permission:menu.promotions.view');
-        Route::get('promotions/{promotion}/edit', [PromotionController::class, 'edit'])->name('promotions.edit')
-            ->middleware('permission:menu.promotions.edit');
-        Route::put('promotions/{promotion}', [PromotionController::class, 'update'])->name('promotions.update')
-            ->middleware('permission:menu.promotions.edit');
-        Route::patch('promotions/{promotion}', [PromotionController::class, 'update'])
-            ->middleware('permission:menu.promotions.edit');
-        Route::delete('promotions/{promotion}', [PromotionController::class, 'destroy'])->name('promotions.destroy')
-            ->middleware('permission:menu.promotions.delete');
-        Route::post('promotions/{promotion}/toggle', [PromotionController::class, 'toggle'])->name('promotions.toggle')
-            ->middleware('permission:menu.promotions.edit');
+        // Promotions - Estructura jerárquica por tipo
+        Route::prefix('promotions')->name('promotions.')->group(function () {
+            // Sub del Día
+            Route::get('/daily-special', [PromotionController::class, 'dailySpecialIndex'])->name('daily-special.index')
+                ->middleware('permission:menu.promotions.view');
+            Route::post('/daily-special', [PromotionController::class, 'dailySpecialIndex'])
+                ->middleware('permission:menu.promotions.view');
+            Route::get('/daily-special/create', [PromotionController::class, 'createDailySpecial'])->name('daily-special.create')
+                ->middleware('permission:menu.promotions.create');
+
+            // 2x1 (preparación futura)
+            Route::get('/two-for-one', [PromotionController::class, 'twoForOneIndex'])->name('two-for-one.index')
+                ->middleware('permission:menu.promotions.view');
+            Route::post('/two-for-one', [PromotionController::class, 'twoForOneIndex'])
+                ->middleware('permission:menu.promotions.view');
+            Route::get('/two-for-one/create', [PromotionController::class, 'createTwoForOne'])->name('two-for-one.create')
+                ->middleware('permission:menu.promotions.create');
+
+            // Porcentaje (preparación futura)
+            Route::get('/percentage', [PromotionController::class, 'percentageIndex'])->name('percentage.index')
+                ->middleware('permission:menu.promotions.view');
+            Route::post('/percentage', [PromotionController::class, 'percentageIndex'])
+                ->middleware('permission:menu.promotions.view');
+            Route::get('/percentage/create', [PromotionController::class, 'createPercentage'])->name('percentage.create')
+                ->middleware('permission:menu.promotions.create');
+
+            // Rutas compartidas (aplican a todos los tipos)
+            Route::post('/preview', [PromotionController::class, 'preview'])->name('preview')
+                ->middleware('permission:menu.promotions.create');
+            Route::post('/', [PromotionController::class, 'store'])->name('store')
+                ->middleware('permission:menu.promotions.create');
+            Route::get('/{promotion}', [PromotionController::class, 'show'])->name('show')
+                ->middleware('permission:menu.promotions.view');
+            Route::get('/{promotion}/edit', [PromotionController::class, 'edit'])->name('edit')
+                ->middleware('permission:menu.promotions.edit');
+            Route::put('/{promotion}', [PromotionController::class, 'update'])->name('update')
+                ->middleware('permission:menu.promotions.edit');
+            Route::patch('/{promotion}', [PromotionController::class, 'update'])
+                ->middleware('permission:menu.promotions.edit');
+            Route::delete('/{promotion}', [PromotionController::class, 'destroy'])->name('destroy')
+                ->middleware('permission:menu.promotions.delete');
+            Route::post('/{promotion}/toggle', [PromotionController::class, 'toggle'])->name('toggle')
+                ->middleware('permission:menu.promotions.edit');
+        });
 
         // Sections
         Route::get('sections', [SectionController::class, 'index'])->name('sections.index')

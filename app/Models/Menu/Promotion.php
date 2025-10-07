@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Promotion extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -17,6 +18,8 @@ class Promotion extends Model
         'type',
         'discount_value',
         'applies_to',
+        'service_type',
+        'validity_type',
         'is_permanent',
         'valid_from',
         'valid_until',
@@ -31,6 +34,8 @@ class Promotion extends Model
         'type' => 'string',
         'discount_value' => 'decimal:2',
         'applies_to' => 'string',
+        'service_type' => 'string',
+        'validity_type' => 'string',
         'is_permanent' => 'boolean',
         'valid_from' => 'datetime',
         'valid_until' => 'datetime',
@@ -151,5 +156,56 @@ class Promotion extends Model
     {
         return $query->orderBy('is_active', 'desc')
             ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Scope: Promociones de Sub del Día
+     */
+    public function scopeDailySpecial($query)
+    {
+        return $query->where('type', 'daily_special');
+    }
+
+    /**
+     * Verifica si la promoción es válida en este momento
+     */
+    public function isValidNow(?\Carbon\Carbon $datetime = null): bool
+    {
+        $datetime = $datetime ?? now();
+
+        // Debe estar activa
+        if (! $this->is_active) {
+            return false;
+        }
+
+        // Verificar vigencia de fechas
+        if (! $this->is_permanent) {
+            if ($this->valid_from && $datetime->lt($this->valid_from)) {
+                return false;
+            }
+            if ($this->valid_until && $datetime->gt($this->valid_until)) {
+                return false;
+            }
+        }
+
+        // Verificar restricción de horario
+        if ($this->has_time_restriction) {
+            $currentTime = $datetime->format('H:i:s');
+            if ($this->time_from && $this->time_until) {
+                if ($currentTime < $this->time_from || $currentTime > $this->time_until) {
+                    return false;
+                }
+            }
+        }
+
+        // Verificar días activos
+        if ($this->active_days && count($this->active_days) > 0) {
+            $dayOfWeek = $datetime->dayOfWeek; // 0=Domingo, 1=Lunes, ...
+            if (! in_array($dayOfWeek, $this->active_days)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

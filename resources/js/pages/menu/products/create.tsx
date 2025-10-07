@@ -1,6 +1,7 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
+import { PLACEHOLDERS } from '@/constants/ui-constants';
 import {
     DndContext,
     closestCenter,
@@ -37,7 +38,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ENTITY_ICONS } from '@/constants/section-icons';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
 import { generateUniqueId } from '@/utils/generateId';
 import { Banknote, GripVertical, ListChecks, Package, Plus, X } from 'lucide-react';
@@ -133,7 +133,7 @@ function SortableVariant({ variant, index, onUpdate, onRemove, errors, canDelete
                     type="text"
                     value={variant.name}
                     onChange={(e) => onUpdate(index, 'name', e.target.value)}
-                    placeholder="ej: 15cm, 30cm"
+                    placeholder={PLACEHOLDERS.productVariantSize}
                 />
             </FormField>
 
@@ -254,7 +254,7 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
         const submitData = {
             ...data,
             sections: selectedSections,
-            variants: localVariants.map(({ id, ...rest }) => rest),
+            variants: localVariants.map(({ id, ...rest }) => ({ ...rest, _tempId: id })),
         };
 
         console.log('5. Submit data preparado:', submitData);
@@ -300,11 +300,11 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
             loading={processing}
             loadingSkeleton={CreateProductsSkeleton}
         >
-            <FormSection icon={Package} title="Información del Producto">
+            <FormSection icon={Package} title="Información Básica" description="Datos principales del producto">
                 <FormField label="Categoría" error={errors.category_id} required>
                     <Select value={data.category_id} onValueChange={(value) => setData('category_id', value)}>
                         <SelectTrigger>
-                            <SelectValue placeholder="Selecciona una categoría" />
+                            <SelectValue placeholder={PLACEHOLDERS.selectCategory} />
                         </SelectTrigger>
                         <SelectContent>
                             {categories.map((category) => (
@@ -322,7 +322,7 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                         type="text"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-                        placeholder="ej: Sub B.M.T., Sub Italiano, Ensalada"
+                        placeholder={PLACEHOLDERS.productName}
                     />
                 </FormField>
 
@@ -331,7 +331,7 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                         id="description"
                         value={data.description}
                         onChange={(e) => setData('description', e.target.value)}
-                        placeholder="Descripción del producto"
+                        placeholder={PLACEHOLDERS.productDescription}
                         rows={2}
                     />
                 </FormField>

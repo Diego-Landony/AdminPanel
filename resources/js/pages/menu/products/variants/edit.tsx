@@ -1,11 +1,12 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
+import { PLACEHOLDERS } from '@/constants/ui-constants';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
 import { EditProductsSkeleton } from '@/components/skeletons';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
@@ -194,7 +195,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                             min="0"
                             value={formData.precio_pickup_capital}
                             onChange={(e) => handleInputChange('precio_pickup_capital', e.target.value)}
-                            placeholder="0.00"
+                            placeholder={PLACEHOLDERS.variantPrice}
                         />
                     </FormField>
 
@@ -205,7 +206,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                             min="0"
                             value={formData.precio_domicilio_capital}
                             onChange={(e) => handleInputChange('precio_domicilio_capital', e.target.value)}
-                            placeholder="0.00"
+                            placeholder={PLACEHOLDERS.variantPrice}
                         />
                     </FormField>
 
@@ -216,7 +217,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                             min="0"
                             value={formData.precio_pickup_interior}
                             onChange={(e) => handleInputChange('precio_pickup_interior', e.target.value)}
-                            placeholder="0.00"
+                            placeholder={PLACEHOLDERS.variantPrice}
                         />
                     </FormField>
 
@@ -227,7 +228,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                             min="0"
                             value={formData.precio_domicilio_interior}
                             onChange={(e) => handleInputChange('precio_domicilio_interior', e.target.value)}
-                            placeholder="0.00"
+                            placeholder={PLACEHOLDERS.variantPrice}
                         />
                     </FormField>
                 </div>
@@ -310,7 +311,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                                             min="0"
                                             value={formData.daily_special_precio_pickup_capital}
                                             onChange={(e) => handleInputChange('daily_special_precio_pickup_capital', e.target.value)}
-                                            placeholder="Dejar vacío para usar precio regular"
+                                            placeholder={PLACEHOLDERS.variantDailySpecialPrice}
                                         />
                                     </FormField>
 
@@ -321,7 +322,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                                             min="0"
                                             value={formData.daily_special_precio_domicilio_capital}
                                             onChange={(e) => handleInputChange('daily_special_precio_domicilio_capital', e.target.value)}
-                                            placeholder="Dejar vacío para usar precio regular"
+                                            placeholder={PLACEHOLDERS.variantDailySpecialPrice}
                                         />
                                     </FormField>
 
@@ -332,7 +333,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                                             min="0"
                                             value={formData.daily_special_precio_pickup_interior}
                                             onChange={(e) => handleInputChange('daily_special_precio_pickup_interior', e.target.value)}
-                                            placeholder="Dejar vacío para usar precio regular"
+                                            placeholder={PLACEHOLDERS.variantDailySpecialPrice}
                                         />
                                     </FormField>
 
@@ -343,7 +344,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                                             min="0"
                                             value={formData.daily_special_precio_domicilio_interior}
                                             onChange={(e) => handleInputChange('daily_special_precio_domicilio_interior', e.target.value)}
-                                            placeholder="Dejar vacío para usar precio regular"
+                                            placeholder={PLACEHOLDERS.variantDailySpecialPrice}
                                         />
                                     </FormField>
                                 </div>

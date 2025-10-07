@@ -1,6 +1,7 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { useForm } from '@inertiajs/react';
 import React from 'react';
+import { PLACEHOLDERS } from '@/constants/ui-constants';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
@@ -9,7 +10,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { SECTION_ICONS } from '@/constants/section-icons';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
 import { Layers } from 'lucide-react';
 
@@ -52,7 +52,7 @@ export default function CategoryCreate() {
             loading={processing}
             loadingSkeleton={CreateCategoriesSkeleton}
         >
-            <FormSection icon={Layers} title="Información de la Categoría">
+            <FormSection icon={Layers} title="Información Básica" description="Datos principales de la categoría">
                 {/* Nombre */}
                 <FormField label="Nombre" error={errors.name} required>
                     <Input
@@ -60,7 +60,7 @@ export default function CategoryCreate() {
                         type="text"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-                        placeholder="ej: Sándwiches, Bebidas, Postres"
+                        placeholder={PLACEHOLDERS.categoryName}
                     />
                 </FormField>
 

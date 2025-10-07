@@ -18,9 +18,9 @@ class CategoryFactory extends Factory
     {
         return [
             'name' => fake()->word(),
-            'image' => null,
             'is_active' => true,
             'sort_order' => fake()->numberBetween(0, 100),
+            'uses_variants' => false,
         ];
     }
 }

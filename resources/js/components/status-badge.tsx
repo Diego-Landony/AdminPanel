@@ -203,3 +203,22 @@ export const SERVICE_STATUS_CONFIGS: Record<string, StatusConfig> = {
         icon: <XCircle className="h-3 w-3" />,
     },
 };
+
+// Configuraciones de estado para promociones
+export const PROMOTION_STATUS_CONFIGS: Record<string, StatusConfig> = {
+    active: {
+        color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-700',
+        text: 'Activo',
+        icon: <CheckCircle className="h-3 w-3" />,
+    },
+    inactive: {
+        color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600',
+        text: 'Inactivo',
+        icon: <XCircle className="h-3 w-3" />,
+    },
+    default: {
+        color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600',
+        text: 'Desconocido',
+        icon: <XCircle className="h-3 w-3" />,
+    },
+};

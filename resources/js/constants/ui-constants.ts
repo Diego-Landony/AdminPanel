@@ -35,6 +35,32 @@ export const PLACEHOLDERS = {
     settingsPasswordConfirm: 'Confirmar nueva contraseña',
     settingsProfileName: 'Nombre completo',
     settingsProfileEmail: 'Dirección de correo electrónico',
+    // Menu - Categories
+    categoryName: 'Ej: Sándwiches, Bebidas, Postres',
+    // Menu - Sections
+    sectionTitle: 'Ej: Vegetales, Salsas, Quesos',
+    sectionDescription: 'Opcional',
+    sectionOptionName: 'Nombre del item',
+    sectionOptionPrice: '0.00',
+    // Menu - Products
+    productName: 'Ej: Sub B.M.T., Sub Italiano, Ensalada',
+    productDescription: 'Descripción del producto',
+    productVariantSize: 'Ej: 15cm, 30cm',
+    // Menu - Promotions
+    promotionName: 'Ej: Sub del Día Lunes, 20% OFF en Combos, 2x1 en Cookies',
+    promotionSlug: 'Se genera automáticamente si se deja vacío',
+    promotionDescription: 'Descripción de la promoción',
+    promotionDiscountValue: '0',
+    promotionSearch: 'Buscar promociones...',
+    promotionSearchDailySpecial: 'Buscar subs del día...',
+    // Menu - Product Variants
+    variantSku: 'Se genera automáticamente si se deja vacío',
+    variantSortOrder: '0',
+    variantPrice: '0.00',
+    variantDailySpecialPrice: 'Dejar vacío para usar precio regular',
+    // Select placeholders
+    selectCategory: 'Selecciona una categoría',
+    selectProduct: 'Selecciona un producto',
 } as const;
 
 // Mensajes de notificación estandarizados
@@ -138,6 +164,11 @@ export const FORM_SECTIONS = {
     }
 } as const;
 
+// Descripciones de páginas estandarizadas
+export const PAGE_DESCRIPTIONS = {
+    dailySpecial: 'Configura precios especiales para productos específicos en días determinados de la semana.',
+} as const;
+
 // AutoComplete values estandarizados
 export const AUTOCOMPLETE = {
     name: 'name',
@@ -149,4 +180,11 @@ export const AUTOCOMPLETE = {
     organizationName: 'organization',
     address: 'address',
     phone: 'tel',
+} as const;
+
+// Símbolos de moneda
+export const CURRENCY = {
+    symbol: 'Q',
+    code: 'GTQ',
+    name: 'Quetzal',
 } as const;

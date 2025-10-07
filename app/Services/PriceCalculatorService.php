@@ -131,7 +131,7 @@ class PriceCalculatorService
     }
 
     /**
-     * Calcula precio usando pivot category_product (para categorías sin variantes)
+     * Calcula precio usando el producto directamente (para categorías sin variantes)
      */
     protected function calculateWithPivot(
         Product $product,
@@ -141,7 +141,7 @@ class PriceCalculatorService
         array $selectedOptionIds,
         Carbon $orderTime
     ): array {
-        // Obtener el pivot con los precios
+        // Verificar que el producto está en la categoría
         $pivot = $product->categories()
             ->where('category_id', $categoryId)
             ->first()
@@ -151,13 +151,13 @@ class PriceCalculatorService
             throw new \InvalidArgumentException('El producto no está en la categoría especificada');
         }
 
-        // Verificar que el precio existe en el pivot
-        if ($pivot->{$priceType} === null) {
-            throw new \InvalidArgumentException('Precio no definido para esta categoría');
+        // Verificar que el precio existe en el producto
+        if ($product->{$priceType} === null) {
+            throw new \InvalidArgumentException('Precio no definido para este producto');
         }
 
-        // 1. Precio base del pivot
-        $unitPrice = (float) $pivot->{$priceType};
+        // 1. Precio base del producto
+        $unitPrice = (float) $product->{$priceType};
 
         // 2. Sumar modificadores de opciones
         $optionsModifier = $this->calculateOptionsModifier($selectedOptionIds);
@@ -313,6 +313,48 @@ class PriceCalculatorService
             })
             ->orderBy('id', 'desc')
             ->first();
+    }
+
+    /**
+     * Aplica promoción 2x1 al carrito
+     * Por cada 2 productos, el más barato es gratis
+     */
+    public function applyTwoForOneToCart(array $cartItems, Promotion $promotion): array
+    {
+        if ($promotion->type !== 'two_for_one') {
+            return $cartItems;
+        }
+
+        $totalQuantity = collect($cartItems)->sum('quantity');
+
+        if ($totalQuantity < 2) {
+            return $cartItems;
+        }
+
+        // Ordenar items por precio de menor a mayor
+        $sorted = collect($cartItems)->sortBy('unit_price')->values();
+
+        // Calcular cantidad de items gratis
+        $freeItems = floor($totalQuantity / 2);
+
+        // Aplicar descuento a los items más baratos
+        $freeCount = 0;
+        $result = $sorted->map(function ($item) use (&$freeCount, $freeItems) {
+            if ($freeCount < $freeItems) {
+                $quantityToDiscount = min($item['quantity'], $freeItems - $freeCount);
+                $discount = $item['unit_price'] * $quantityToDiscount;
+                $freeCount += $quantityToDiscount;
+
+                return array_merge($item, [
+                    'discount' => round($discount, 2),
+                    'subtotal' => round($item['subtotal'] - $discount, 2),
+                ]);
+            }
+
+            return $item;
+        })->all();
+
+        return $result;
     }
 
     /**

@@ -3,7 +3,6 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
-import { EntityInfoCell } from '@/components/EntityInfoCell';
 import { SortableTable } from '@/components/SortableTable';
 import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { TableActions } from '@/components/TableActions';
@@ -100,29 +99,29 @@ export default function SectionsIndex({ sections, stats }: SectionsPageProps) {
         });
     };
 
-    const formatDate = (dateString: string): string => {
-        return new Date(dateString).toLocaleDateString('es-ES', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        });
-    };
+    // const formatDate = (dateString: string): string => {
+    //     return new Date(dateString).toLocaleDateString('es-ES', {
+    //         year: 'numeric',
+    //         month: 'short',
+    //         day: 'numeric',
+    //     });
+    // };
 
     const sectionStats = [
         {
             title: 'secciones',
             value: stats.total_sections,
-            icon: <ListChecks className="h-3 w-3 text-primary" />,
+            icon: <ListChecks className="h-4 w-4 text-primary" />,
         },
         {
             title: 'requeridas',
             value: stats.required_sections,
-            icon: <Star className="h-3 w-3 text-green-600" />,
+            icon: <Star className="h-4 w-4 text-green-600" />,
         },
         {
             title: 'opcionales',
             value: stats.total_sections - stats.required_sections,
-            icon: <Package className="h-3 w-3 text-gray-600" />,
+            icon: <Package className="h-4 w-4 text-gray-600" />,
         },
     ];
 
@@ -166,7 +165,10 @@ export default function SectionsIndex({ sections, stats }: SectionsPageProps) {
     const renderMobileCard = (section: Section) => (
         <StandardMobileCard
             title={section.title}
-            subtitle={<StatusBadge status={section.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />}
+            subtitle={section.description || 'Sin descripción'}
+            badge={{
+                children: <StatusBadge status={section.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />,
+            }}
             actions={{
                 editHref: `/menu/sections/${section.id}/edit`,
                 onDelete: () => openDeleteDialog(section),

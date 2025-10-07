@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
+import { PLACEHOLDERS } from '@/constants/ui-constants';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
@@ -77,14 +78,14 @@ export default function CategoryEdit({ category }: EditPageProps) {
             loading={false}
             loadingSkeleton={EditCategoriesSkeleton}
         >
-            <FormSection icon={Layers} title="Información de la Categoría">
+            <FormSection icon={Layers} title="Información Básica" description="Datos principales de la categoría">
                 <FormField label="Nombre" error={errors.name} required>
                     <Input
                         id="name"
                         type="text"
                         value={formData.name}
                         onChange={(e) => handleInputChange('name', e.target.value)}
-                        placeholder="ej: Sándwiches, Bebidas, Postres"
+                        placeholder={PLACEHOLDERS.categoryName}
                     />
                 </FormField>
 

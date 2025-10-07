@@ -20,28 +20,29 @@ class ProductFactory extends Factory
             'name' => fake()->words(fake()->numberBetween(2, 3), true),
             'description' => fake()->optional()->paragraph(),
             'image' => null,
-            'is_customizable' => fake()->boolean(60), // 60% probabilidad de ser personalizable
             'is_active' => true,
+            'sort_order' => fake()->numberBetween(0, 100),
+            'has_variants' => false,
         ];
     }
 
     /**
-     * Estado para productos personalizables (con secciones)
+     * Estado para productos con variantes
      */
-    public function customizable(): static
+    public function withVariants(): static
     {
         return $this->state(fn (array $attributes) => [
-            'is_customizable' => true,
+            'has_variants' => true,
         ]);
     }
 
     /**
-     * Estado para productos NO personalizables (venta directa)
+     * Estado para productos sin variantes
      */
-    public function simple(): static
+    public function withoutVariants(): static
     {
         return $this->state(fn (array $attributes) => [
-            'is_customizable' => false,
+            'has_variants' => false,
         ]);
     }
 }

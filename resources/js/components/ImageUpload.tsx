@@ -1,6 +1,5 @@
 import { showNotification } from '@/hooks/useNotifications';
-import { router } from '@inertiajs/react';
-import { ImageIcon, Trash2, Upload, X } from 'lucide-react';
+import { ImageIcon, Trash2, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { Label } from './ui/label';

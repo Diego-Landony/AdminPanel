@@ -16,31 +16,15 @@ class Promotion extends Model
         'name',
         'description',
         'type',
-        'discount_value',
-        'applies_to',
         'service_type',
         'validity_type',
-        'is_permanent',
-        'valid_from',
-        'valid_until',
-        'has_time_restriction',
-        'time_from',
-        'time_until',
-        'active_days',
         'is_active',
     ];
 
     protected $casts = [
         'type' => 'string',
-        'discount_value' => 'decimal:2',
-        'applies_to' => 'string',
         'service_type' => 'string',
         'validity_type' => 'string',
-        'is_permanent' => 'boolean',
-        'valid_from' => 'datetime',
-        'valid_until' => 'datetime',
-        'has_time_restriction' => 'boolean',
-        'active_days' => 'array',
         'is_active' => 'boolean',
     ];
 
@@ -87,39 +71,16 @@ class Promotion extends Model
     /**
      * Scope: Promociones activas en un momento específico
      *
+     * NOTA: La lógica de vigencia temporal ahora está en PromotionItem::isValidToday()
+     * Este scope solo verifica que la promoción esté activa.
+     *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  \Illuminate\Support\Carbon|null  $datetime
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeActiveNow($query, $datetime = null)
     {
-        $datetime = $datetime ?? now();
-        $dayOfWeek = $datetime->dayOfWeek; // 0=Domingo, 1=Lunes, ...
-        $currentDate = $datetime->toDateString();
-        $currentTime = $datetime->format('H:i:s');
-
-        return $query->where('is_active', true)
-            // Día de la semana
-            ->where(function ($q) use ($dayOfWeek) {
-                $q->whereNull('active_days')
-                    ->orWhereJsonContains('active_days', $dayOfWeek);
-            })
-            // Vigencia de fechas
-            ->where(function ($q) use ($currentDate) {
-                $q->where('is_permanent', true)
-                    ->orWhere(function ($q2) use ($currentDate) {
-                        $q2->whereDate('valid_from', '<=', $currentDate)
-                            ->whereDate('valid_until', '>=', $currentDate);
-                    });
-            })
-            // Restricción de horas
-            ->where(function ($q) use ($currentTime) {
-                $q->where('has_time_restriction', false)
-                    ->orWhere(function ($q2) use ($currentTime) {
-                        $q2->whereTime('time_from', '<=', $currentTime)
-                            ->whereTime('time_until', '>=', $currentTime);
-                    });
-            });
+        return $query->where('is_active', true);
     }
 
     /**
@@ -168,6 +129,13 @@ class Promotion extends Model
 
     /**
      * Verifica si la promoción es válida en este momento
+     *
+     * NOTA: La vigencia temporal específica ahora está en los items individuales.
+     * Este método solo verifica que la promoción esté activa y que al menos
+     * un item sea válido en este momento.
+     *
+     * @param  \Carbon\Carbon|null  $datetime
+     * @return bool
      */
     public function isValidNow(?\Carbon\Carbon $datetime = null): bool
     {
@@ -178,34 +146,9 @@ class Promotion extends Model
             return false;
         }
 
-        // Verificar vigencia de fechas
-        if (! $this->is_permanent) {
-            if ($this->valid_from && $datetime->lt($this->valid_from)) {
-                return false;
-            }
-            if ($this->valid_until && $datetime->gt($this->valid_until)) {
-                return false;
-            }
-        }
-
-        // Verificar restricción de horario
-        if ($this->has_time_restriction) {
-            $currentTime = $datetime->format('H:i:s');
-            if ($this->time_from && $this->time_until) {
-                if ($currentTime < $this->time_from || $currentTime > $this->time_until) {
-                    return false;
-                }
-            }
-        }
-
-        // Verificar días activos
-        if ($this->active_days && count($this->active_days) > 0) {
-            $dayOfWeek = $datetime->dayOfWeek; // 0=Domingo, 1=Lunes, ...
-            if (! in_array($dayOfWeek, $this->active_days)) {
-                return false;
-            }
-        }
-
-        return true;
+        // Verificar que al menos un item sea válido ahora
+        return $this->items()->get()->contains(function ($item) use ($datetime) {
+            return $item->isValidToday($datetime);
+        });
     }
 }

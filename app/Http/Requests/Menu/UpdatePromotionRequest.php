@@ -21,7 +21,7 @@ class UpdatePromotionRequest extends FormRequest
         return [
             'name' => 'required|string|max:150',
             'description' => 'nullable|string',
-            'type' => 'required|in:fixed_price,percentage_discount,two_for_one,daily_special',
+            'type' => 'required|in:two_for_one,percentage_discount,daily_special',
             'is_active' => 'boolean',
 
             // Para percentage_discount
@@ -120,11 +120,6 @@ class UpdatePromotionRequest extends FormRequest
                 },
             ],
 
-            // Precios promocionales (solo para fixed_price)
-            'items.*.promo_base_price' => 'required_if:type,fixed_price|nullable|numeric|min:0',
-            'items.*.promo_delivery_price' => 'required_if:type,fixed_price|nullable|numeric|min:0',
-            'items.*.promo_interior_base_price' => 'required_if:type,fixed_price|nullable|numeric|min:0',
-            'items.*.promo_interior_delivery_price' => 'required_if:type,fixed_price|nullable|numeric|min:0',
         ];
     }
 
@@ -191,8 +186,6 @@ class UpdatePromotionRequest extends FormRequest
             'items.*.valid_until.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
             'items.*.time_from.date_format' => 'El formato de hora de inicio no es válido.',
             'items.*.time_until.date_format' => 'El formato de hora de fin no es válido.',
-
-            'items.*.promo_base_price.required_if' => 'Los precios promocionales son obligatorios para precio fijo.',
         ];
     }
 }

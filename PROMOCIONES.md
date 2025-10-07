@@ -29,23 +29,42 @@ El sistema de promociones permite crear, gestionar y aplicar automáticamente tr
 
 ## Tipos de Promociones
 
-### 1. 🎁 Promoción 2x1
+### 1. 🎁 Promoción 2x1 (Two for One)
 
 **Descripción**: Por cada 2 productos de la misma categoría, el cliente paga el más caro y el más barato es gratis.
 
 #### Características:
-- **Alcance**: Toda una categoría
-- **Mecánica de Descuento**:
-  - 2 productos → 1 gratis (el más barato)
-  - 4 productos → 2 gratis (los 2 más baratos)
-  - 6 productos → 3 gratis (los 3 más baratos)
-  - **Fórmula**: `cantidad_gratis = floor(cantidad_total / 2)`
+
+**Alcance - Solo Categorías:**
+- Cada **item** representa UNA categoría completa
+- Se aplica a TODOS los productos de esa categoría
+- Los productos NO se mezclan entre categorías
+- Ejemplo:
+  ```
+  Promoción: "2x1 en Bebidas y Postres"
+  Item 1: Categoría "Bebidas"
+  Item 2: Categoría "Postres"
+  ```
+
+**Mecánica de Descuento:**
+- 2 productos de la categoría → 1 gratis (el más barato)
+- 3 productos → 1 gratis (el más barato)
+- 4 productos → 2 gratis (los 2 más baratos)
+- 5 productos → 2 gratis (los 2 más baratos)
+- 6 productos → 3 gratis (los 3 más baratos)
+- Y así sucesivamente...
+
+**IMPORTANTE**: El 2x1 se calcula con los precios YA descontados (si hay descuento de porcentaje).
 
 #### Vigencia Temporal (4 opciones):
-1. **Permanente**: Activa siempre
+
+1. **Permanente**: Activa siempre sin límite de tiempo
 2. **Por rango de fechas**: Del Día X al Día Y (todo el día)
+   - Ejemplo: Del 1 al 31 de Enero
 3. **Por horario permanente**: Todos los días de HH:MM a HH:MM
+   - Ejemplo: 17:00 a 20:00 (Happy Hour)
 4. **Por fecha + horario**: Del Día X al Y, de HH:MM a HH:MM
+   - Ejemplo: Fines de semana de Enero de 12:00 a 18:00
 
 #### Restricción de Servicio:
 - Ambos (Delivery + Pickup)
@@ -54,27 +73,81 @@ El sistema de promociones permite crear, gestionar y aplicar automáticamente tr
 
 #### Reglas Especiales:
 - ✅ Pueden existir múltiples 2x1 en diferentes categorías simultáneamente
-- ⚠️ Cada categoría es independiente (no se mezclan productos de diferentes categorías)
-- ⚠️ Se aplica DESPUÉS de los descuentos por porcentaje
+- ✅ Una promoción puede tener múltiples items (categorías)
+- ⚠️ Cada categoría es independiente (no se mezclan productos)
+- ⚠️ Se calcula sobre precios YA descontados por porcentaje
+- ⚠️ No puede haber dos 2x1 activos en la misma categoría con vigencias solapadas
+
+**Ejemplo de Aplicación:**
+```
+Cliente ordena (categoría Bebidas con 2x1 activo):
+- 1x Coca Cola $30 (con 10% descuento = $27)
+- 1x Pepsi $30 (con 10% descuento = $27)
+
+Cálculo:
+1. Aplica descuento de porcentaje: $27 c/u
+2. Aplica 2x1: Paga solo la más cara = $27
+Total: $27 (ahorro de $33)
+```
 
 ---
 
 ### 2. 💯 Promoción de Porcentaje
 
-**Descripción**: Reduce el precio de productos por un porcentaje definido.
+**Descripción**: Reduce el precio de productos o categorías por un porcentaje definido.
 
 #### Características:
-- **Alcance** (2 niveles):
-  - **Categoría completa**: Todos los productos de una categoría
-  - **Producto individual**: Solo un producto específico
 
-- **Porcentaje**: Valor entre 1% y 100%
+**Alcance - Sistema de Items Flexible:**
+
+El porcentaje puede aplicarse a dos niveles:
+
+1. **Por Categoría Completa:**
+   - Se crea UN item con la categoría
+   - Aplica automáticamente a TODOS los productos de esa categoría
+   - Incluye productos actuales y futuros
+   - Ejemplo:
+     ```
+     Promoción: "Descuento Bebidas"
+     Item 1: Categoría "Bebidas" → 15%
+     ```
+
+2. **Por Productos Individuales:**
+   - Se crea UN item por cada producto
+   - Permite diferentes porcentajes por producto en la misma promoción
+   - Más granular y específico
+   - Ejemplo:
+     ```
+     Promoción: "Descuento Sándwiches Selectos"
+     Item 1: Producto "Club Sandwich" → 10%
+     Item 2: Producto "BLT" → 15%
+     Item 3: Producto "Veggie Wrap" → 20%
+     ```
+
+3. **Combinación (Avanzado):**
+   - Una promoción puede tener items de categoría Y productos
+   - Ejemplo:
+     ```
+     Promoción: "Descuento Fin de Semana"
+     Item 1: Categoría "Pizzas" → 15%
+     Item 2: Producto "Hamburguesa Premium" → 25%
+     Item 3: Producto "Hot Dog Gourmet" → 20%
+     ```
+
+**Porcentaje de Descuento:**
+- Valor entre 1% y 100%
+- Se guarda a nivel de promoción (aplica a todos los items)
+- Si necesitas diferentes porcentajes, crea promociones separadas
 
 #### Vigencia Temporal (4 opciones):
-1. **Permanente**: Activa siempre
+
+1. **Permanente**: Activa siempre sin límite de tiempo
 2. **Por rango de fechas**: Del Día X al Día Y (todo el día)
+   - Ejemplo: Del 1 al 31 de Enero
 3. **Por horario permanente**: Todos los días de HH:MM a HH:MM
+   - Ejemplo: 14:00 a 17:00 (Happy Hour diario)
 4. **Por fecha + horario**: Del Día X al Y, de HH:MM a HH:MM
+   - Ejemplo: Del 1 al 31 de Enero de 14:00 a 17:00
 
 #### Restricción de Servicio:
 - Ambos (Delivery + Pickup)
@@ -82,9 +155,27 @@ El sistema de promociones permite crear, gestionar y aplicar automáticamente tr
 - Solo Pickup
 
 #### Reglas Especiales:
-- ✅ Pueden coexistir múltiples promociones de porcentaje en la misma categoría con diferentes vigencias
-- ⚠️ Si un producto tiene descuento individual Y su categoría tiene descuento → **se aplica el mayor**
+- ✅ Pueden coexistir múltiples promociones de porcentaje simultáneamente
+- ✅ Una promoción puede combinar items de categoría y productos
+- ⚠️ Si un producto tiene descuento individual Y su categoría tiene descuento → **se aplica el MAYOR**
+- ⚠️ Se aplica DESPUÉS del Sub del Día (sobre el precio especial)
 - ⚠️ Se aplica ANTES del 2x1
+
+**Ejemplo de Resolución de Conflictos:**
+```
+Producto: Pizza Margarita
+Precio base: $100
+
+Escenario 1:
+- Descuento individual: 20%
+- Descuento categoría "Pizzas": 15%
+→ Se aplica 20% (el mayor) = $80
+
+Escenario 2:
+- Sub del Día: $80 (reemplaza precio base)
+- Descuento categoría "Pizzas": 10%
+→ Precio final: $80 - ($80 * 10%) = $72
+```
 
 ---
 
@@ -93,16 +184,51 @@ El sistema de promociones permite crear, gestionar y aplicar automáticamente tr
 **Descripción**: Un producto tiene un precio especial fijo en días específicos de la semana.
 
 #### Características:
-- **Alcance**: Un producto específico
-- **Precios Especiales** (montos fijos):
-  - Precio especial para Capital (aplica a pickup y delivery)
-  - Precio especial para Interior (aplica a pickup y delivery)
-  - Los precios aplican a **todas las variantes** del producto
 
-#### Vigencia Temporal:
-- **Días de la semana**: Selección mediante checkboxes
-  - Lunes, Martes, Miércoles, Jueves, Viernes, Sábado, Domingo
-  - Puede ser 1 solo día, varios días, o todos los días
+**Alcance - Sistema de Items:**
+- Cada **item** representa UN producto específico con sus precios especiales
+- Puedes crear **múltiples items** en una sola promoción
+- Ejemplo: Una promoción "Especiales de Lunes" puede tener 3 items:
+  - Item 1: Hamburguesa → $50/$45
+  - Item 2: Hot Dog → $35/$30
+  - Item 3: Sandwich → $40/$35
+
+**Precios Especiales (montos fijos por item):**
+- Cada item requiere DOS precios:
+  - **Precio Capital**: Aplica a zona capital (pickup y delivery)
+  - **Precio Interior**: Aplica a zona interior (pickup y delivery)
+- Los precios aplican a **todas las variantes** del producto
+- El precio especial **reemplaza** el precio base antes de aplicar otros descuentos
+
+#### Vigencia Temporal - Sistema Flexible:
+
+**REQUERIDO:**
+- **Días de la semana** (mínimo 1 día seleccionado):
+  - Formato: 1=Lunes, 2=Martes, ..., 7=Domingo
+  - Puedes seleccionar: 1 día, varios días, o todos los días
+  - Ejemplos: [1,3,5] = Lunes, Miércoles, Viernes
+
+**OPCIONAL** (restricciones adicionales por item):
+
+Cada item puede tener opcionalmente:
+
+1. **Solo días** → Aplica todos esos días sin límite de tiempo
+   - Ejemplo: Lunes a Viernes → Válido siempre
+
+2. **Días + rango de fechas** → Aplica solo entre esas fechas
+   - Ejemplo: Lunes a Viernes del 1 al 31 de Enero
+
+3. **Días + horario** → Aplica solo en ese horario
+   - Ejemplo: Lunes a Viernes de 14:00 a 17:00 (Happy Hour)
+
+4. **Días + fechas + horario** → Combinación completa
+   - Ejemplo: Lunes a Viernes del 1 al 31 de Enero de 14:00 a 17:00
+
+El sistema calcula automáticamente el tipo de vigencia:
+- Solo días → `weekdays`
+- Días + fechas → `date_range`
+- Días + horarios → `time_range`
+- Días + fechas + horarios → `date_time_range`
 
 #### Restricción de Servicio:
 - Ambos (Delivery + Pickup)
@@ -110,10 +236,22 @@ El sistema de promociones permite crear, gestionar y aplicar automáticamente tr
 - Solo Pickup
 
 #### Reglas Especiales:
-- ✅ Pueden existir múltiples "subs del día" en diferentes categorías simultáneamente
-- ⚠️ Un producto solo puede tener UN conjunto de precios especiales (mismo precio para todos los días seleccionados)
-- ⚠️ No puede tener diferentes precios para diferentes días
-- ⚠️ El precio especial **reemplaza** el precio base antes de aplicar otros descuentos
+- ✅ Pueden existir múltiples "subs del día" simultáneamente
+- ✅ Una promoción puede tener múltiples items (productos)
+- ⚠️ Un producto no puede tener dos "Sub del Día" activos en los mismos días
+- ⚠️ Cada item tiene un único conjunto de precios (no varía por día dentro del item)
+- ⚠️ El precio especial reemplaza el precio base antes de otros descuentos
+
+**Ejemplo de Validación de Conflictos:**
+```
+✅ PERMITIDO:
+Promoción A: Hamburguesa - Lunes, Martes
+Promoción B: Hamburguesa - Miércoles, Jueves
+
+❌ PROHIBIDO:
+Promoción A: Hamburguesa - Lunes, Martes, Miércoles
+Promoción B: Hamburguesa - Miércoles, Jueves  ← Conflicto en Miércoles
+```
 
 ---
 
@@ -189,82 +327,140 @@ Una promoción se considera **VIGENTE** cuando:
 
 ## Estructura de Datos
 
-### Entidad: Promotion
+### Arquitectura: Sistema de Dos Niveles
+
+El sistema utiliza una arquitectura **Promoción → Items** que permite máxima flexibilidad y escalabilidad.
+
+#### 📦 Nivel 1: Promoción (Contenedor)
+
+Representa la promoción general con:
+- **Identificación**: Nombre y descripción
+- **Tipo**: 2x1, Porcentaje o Sub del Día
+- **Estado**: Activa/Inactiva
+- **Configuración global**: Restricciones de servicio aplicables a todos los items
 
 ```
-PROMOTION
+PROMOCIÓN
 │
-├─ IDENTIFICACIÓN
-│  ├─ id (PK)
-│  ├─ name (string, requerido)
-│  └─ description (text, opcional)
-│
-├─ TIPO Y ALCANCE
-│  ├─ type (enum: '2x1', 'percentage', 'daily_special')
-│  ├─ scope_type (enum: 'category', 'product')
-│  ├─ category_id (FK, nullable)
-│  └─ product_id (FK, nullable)
-│
-├─ CONFIGURACIÓN POR TIPO
-│  ├─ discount_percentage (decimal, nullable)
-│  │  └─ Solo si type = 'percentage'
-│  │
-│  ├─ special_price_capital (decimal, nullable)
-│  └─ special_price_interior (decimal, nullable)
-│     └─ Solo si type = 'daily_special'
-│
-├─ RESTRICCIONES
-│  └─ service_type (enum: 'both', 'delivery_only', 'pickup_only')
-│
-├─ VIGENCIA TEMPORAL
-│  ├─ validity_type (enum: 'permanent', 'date_range', 'time_range', 'date_time_range', 'weekdays')
-│  ├─ start_date (date, nullable)
-│  ├─ end_date (date, nullable)
-│  ├─ start_time (time, nullable)
-│  ├─ end_time (time, nullable)
-│  └─ weekdays (json, nullable)
-│     └─ Ejemplo: [1,2,3,4,5] para Lunes a Viernes
-│
-├─ ESTADO
-│  └─ is_active (boolean, default: true)
-│
-└─ AUDITORÍA
-   ├─ created_at (timestamp)
-   ├─ updated_at (timestamp)
-   └─ deleted_at (timestamp, nullable)
-      └─ Soft deletes para mantener historial
+├─ Nombre: "Especiales de Lunes"
+├─ Tipo: Sub del Día
+├─ Estado: Activa
+└─ Servicio: Delivery y Pickup
 ```
 
-### Relaciones:
+#### 🎯 Nivel 2: Items de Promoción (Elementos Específicos)
+
+Cada item representa **UN** elemento afectado:
+- UN producto específico, O
+- UNA categoría completa, O
+- UNA variante específica de producto
+
+Cada item contiene:
+- **Alcance**: Qué producto/categoría afecta
+- **Vigencia temporal**: Días, fechas, horarios
+- **Configuración específica**: Precios especiales (Sub del Día), porcentaje (Descuento), etc.
 
 ```
-Promotion ─┬─> Category (belongsTo, nullable)
-           └─> Product (belongsTo, nullable)
+ITEM 1
+├─ Producto: "Hamburguesa Clásica"
+├─ Precio Capital: $50
+├─ Precio Interior: $45
+├─ Días: Lunes, Miércoles, Viernes
+└─ Horario: Todo el día
 
-Category ──> Promotion (hasMany)
-Product ───> Promotion (hasMany)
+ITEM 2
+├─ Producto: "Hot Dog"
+├─ Precio Capital: $35
+├─ Precio Interior: $30
+├─ Días: Lunes, Miércoles, Viernes
+└─ Horario: 14:00 - 17:00
 ```
 
-### Validaciones de Integridad:
+### 🎨 Ejemplo Completo de Arquitectura
 
-1. **Alcance**:
-   - Si `type = '2x1'` → `scope_type` debe ser `'category'`
-   - Si `type = 'percentage'` → `scope_type` puede ser `'category'` o `'product'`
-   - Si `type = 'daily_special'` → `scope_type` debe ser `'product'`
+```
+┌─────────────────────────────────────────────────────┐
+│ PROMOCIÓN: "Especiales de Lunes"                    │
+│ Tipo: Sub del Día                                   │
+│ Estado: Activa                                      │
+│ Servicio: Delivery y Pickup                         │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│ ┌─────────────────────────────────────────────┐   │
+│ │ ITEM 1: Hamburguesa Clásica                 │   │
+│ │ • Capital: $50 | Interior: $45              │   │
+│ │ • Días: Lunes                                │   │
+│ │ • Horario: Todo el día                       │   │
+│ └─────────────────────────────────────────────┘   │
+│                                                     │
+│ ┌─────────────────────────────────────────────┐   │
+│ │ ITEM 2: Hot Dog                              │   │
+│ │ • Capital: $35 | Interior: $30              │   │
+│ │ • Días: Lunes                                │   │
+│ │ • Horario: 14:00 - 17:00 (Happy Hour)       │   │
+│ └─────────────────────────────────────────────┘   │
+│                                                     │
+│ ┌─────────────────────────────────────────────┐   │
+│ │ ITEM 3: Sandwich Veggie                     │   │
+│ │ • Capital: $40 | Interior: $35              │   │
+│ │ • Días: Lunes                                │   │
+│ │ • Horario: Todo el día                       │   │
+│ └─────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────┘
+```
 
-2. **Campos Requeridos por Tipo**:
-   - Si `type = 'percentage'` → `discount_percentage` es requerido
-   - Si `type = 'daily_special'` → `special_price_capital` y `special_price_interior` son requeridos
+### ✅ Ventajas de esta Arquitectura
 
-3. **Vigencia**:
-   - Si `validity_type = 'date_range'` → `start_date` y `end_date` son requeridos
-   - Si `validity_type = 'time_range'` → `start_time` y `end_time` son requeridos
-   - Si `validity_type = 'date_time_range'` → todos los campos de fecha y hora son requeridos
-   - Si `validity_type = 'weekdays'` → `weekdays` es requerido
+- ✅ **Flexibilidad**: Una promoción puede afectar múltiples productos/categorías
+- ✅ **Granularidad**: Cada item puede tener vigencia temporal diferente
+- ✅ **Escalabilidad**: Fácil agregar nuevos tipos de promociones
+- ✅ **Mantenibilidad**: Lógica clara y separada por responsabilidad
+- ✅ **Reutilización**: Mismo producto puede estar en múltiples promociones
 
-4. **Fechas**:
-   - `end_date` debe ser mayor o igual a `start_date`
-   - `end_time` debe ser mayor a `start_time`
+### 📋 Alcances Permitidos por Tipo de Promoción
+
+| Tipo de Promoción | Alcance del Item | Explicación |
+|-------------------|------------------|-------------|
+| **Sub del Día** | `producto` | Un item = un producto con precios especiales |
+| **Porcentaje** | `producto` O `categoría` | Un item puede ser un producto individual O una categoría completa |
+| **2x1** | `categoría` | Un item = una categoría (aplica a todos sus productos) |
+
+### 🔗 Relaciones Conceptuales
+
+```
+UNA Promoción ──tiene──> MUCHOS Items
+UN Item ──pertenece a──> UNA Promoción
+UN Item ──afecta a──> UN Producto O UNA Categoría
+```
+
+### ✏️ Validaciones de Integridad
+
+#### 1. Alcance del Item (Exclusividad):
+- Un item debe afectar **SOLO UNO** de los siguientes:
+  - Un producto, O
+  - Una categoría, O
+  - Una variante
+- ❌ No puede afectar múltiples elementos simultáneamente
+
+#### 2. Tipo de Promoción vs Alcance:
+- **Sub del Día** → Items deben afectar productos individuales
+- **Porcentaje** → Items pueden afectar productos O categorías
+- **2x1** → Items deben afectar categorías completas
+
+#### 3. Campos Requeridos por Tipo:
+- **Sub del Día** requiere en cada item:
+  - Precio especial para Capital
+  - Precio especial para Interior
+  - Al menos 1 día de la semana seleccionado
+- **Porcentaje** requiere a nivel de promoción:
+  - Porcentaje de descuento (1-100%)
+- **2x1** no requiere campos adicionales
+
+#### 4. Vigencia Temporal:
+- **Fechas**: Si especificas fecha fin, debes especificar fecha inicio
+- **Horarios**: Si especificas hora fin, debes especificar hora inicio
+- **Coherencia**: Fecha fin >= Fecha inicio, Hora fin > Hora inicio
+- **Formato días**: Array de números 1-7 (1=Lunes, 7=Domingo)
 
 ---
 

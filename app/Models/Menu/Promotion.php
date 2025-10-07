@@ -16,15 +16,11 @@ class Promotion extends Model
         'name',
         'description',
         'type',
-        'service_type',
-        'validity_type',
         'is_active',
     ];
 
     protected $casts = [
         'type' => 'string',
-        'service_type' => 'string',
-        'validity_type' => 'string',
         'is_active' => 'boolean',
     ];
 
@@ -133,9 +129,6 @@ class Promotion extends Model
      * NOTA: La vigencia temporal específica ahora está en los items individuales.
      * Este método solo verifica que la promoción esté activa y que al menos
      * un item sea válido en este momento.
-     *
-     * @param  \Carbon\Carbon|null  $datetime
-     * @return bool
      */
     public function isValidNow(?\Carbon\Carbon $datetime = null): bool
     {

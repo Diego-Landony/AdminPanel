@@ -295,7 +295,7 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                 stats={stats}
                 filters={filters}
                 createUrl={route('roles.create')}
-                createLabel="Crear Rol"
+                createLabel="Crear"
                 searchPlaceholder="Buscar roles..."
                 loadingSkeleton={RolesSkeleton}
                 renderMobileCard={(role) => (

@@ -53,6 +53,7 @@ export const PLACEHOLDERS = {
     promotionDiscountValue: '0',
     promotionSearch: 'Buscar promociones...',
     promotionSearchDailySpecial: 'Buscar subs del día...',
+    promotionSearchTwoForOne: 'Buscar promociones 2x1...',
     // Menu - Product Variants
     variantSku: 'Se genera automáticamente si se deja vacío',
     variantSortOrder: '0',

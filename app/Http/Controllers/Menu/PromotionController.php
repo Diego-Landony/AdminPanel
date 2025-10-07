@@ -141,6 +141,8 @@ class PromotionController extends Controller
         $items = $validated['items'] ?? [];
         unset($validated['items']);
 
+        $promotion = null;
+
         DB::transaction(function () use ($validated, $items, &$promotion) {
             $promotion = Promotion::create($validated);
 
@@ -166,7 +168,16 @@ class PromotionController extends Controller
             }
         });
 
-        return redirect()->route('menu.promotions.index')
+        // Redirigir según el tipo de promoción
+        $routeMap = [
+            'daily_special' => 'menu.promotions.daily-special.index',
+            'two_for_one' => 'menu.promotions.two-for-one.index',
+            'percentage_discount' => 'menu.promotions.percentage.index',
+        ];
+
+        $route = $routeMap[$promotion->type] ?? 'menu.promotions.index';
+
+        return redirect()->route($route)
             ->with('success', 'Promoción creada exitosamente.');
     }
 
@@ -255,7 +266,16 @@ class PromotionController extends Controller
             }
         });
 
-        return redirect()->route('menu.promotions.index')
+        // Redirigir según el tipo de promoción
+        $routeMap = [
+            'daily_special' => 'menu.promotions.daily-special.index',
+            'two_for_one' => 'menu.promotions.two-for-one.index',
+            'percentage_discount' => 'menu.promotions.percentage.index',
+        ];
+
+        $route = $routeMap[$promotion->type] ?? 'menu.promotions.index';
+
+        return redirect()->route($route)
             ->with('success', 'Promoción actualizada exitosamente.');
     }
 
@@ -405,11 +425,6 @@ class PromotionController extends Controller
     public function createTwoForOne(): Response
     {
         return Inertia::render('menu/promotions/two-for-one/create', [
-            'products' => Product::query()
-                ->with('category')
-                ->where('is_active', true)
-                ->orderBy('name')
-                ->get(['id', 'name', 'category_id']),
             'categories' => Category::query()
                 ->where('is_active', true)
                 ->orderBy('name')

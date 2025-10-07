@@ -206,7 +206,7 @@ export default function DailySpecialIndex({ promotions, stats, filters }: Promot
                 stats={promotionStats}
                 filters={filters}
                 createUrl="/menu/promotions/daily-special/create"
-                createLabel="Crear Sub del Día"
+                createLabel="Crear"
                 searchPlaceholder={PLACEHOLDERS.promotionSearchDailySpecial}
                 loadingSkeleton={DataTableSkeleton}
                 renderMobileCard={(promotion) => (

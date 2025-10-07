@@ -85,9 +85,9 @@ export default function CustomerTypeCreate() {
         <CreatePageLayout
             title="Nuevo Tipo de Cliente"
             backHref={route('customer-types.index')}
-            backLabel="Volver a Tipos de Cliente"
+            backLabel="Volver"
             onSubmit={handleSubmit}
-            submitLabel="Crear Tipo"
+            submitLabel="Guardar"
             processing={processing}
             pageTitle="Crear Tipo de Cliente"
             loading={processing}

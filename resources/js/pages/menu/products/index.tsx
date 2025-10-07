@@ -222,7 +222,7 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
                 columns={columns}
                 stats={productStats}
                 createUrl="/menu/products/create"
-                createLabel="Crear Producto"
+                createLabel="Crear"
                 searchable={true}
                 searchPlaceholder="Buscar productos..."
                 onReorder={handleReorder}

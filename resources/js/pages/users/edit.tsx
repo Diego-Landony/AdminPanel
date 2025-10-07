@@ -73,7 +73,7 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
                 title="Error al cargar usuario"
                 description="Los datos del usuario no están disponibles"
                 backHref={route('users.index')}
-                backLabel="Volver a Usuarios"
+                backLabel="Volver"
                 onSubmit={() => {}}
                 processing={false}
                 pageTitle="Error - Editar Usuario"

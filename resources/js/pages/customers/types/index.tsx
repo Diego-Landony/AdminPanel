@@ -230,7 +230,7 @@ export default function CustomerTypesIndex({ customer_types, stats, filters }: C
                 stats={customerTypeStats}
                 filters={filters}
                 createUrl="/customer-types/create"
-                createLabel="Crear Tipo"
+                createLabel="Crear"
                 searchPlaceholder="Buscar tipos de cliente..."
                 loadingSkeleton={CustomerTypesSkeleton}
                 renderMobileCard={(type) => <CustomerTypeMobileCard type={type} onDelete={openDeleteDialog} isDeleting={deletingType === type.id} />}

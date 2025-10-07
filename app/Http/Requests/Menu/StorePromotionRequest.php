@@ -25,8 +25,8 @@ class StorePromotionRequest extends FormRequest
             // Para percentage_discount
             'discount_percentage' => 'required_if:type,percentage_discount|nullable|numeric|min:0|max:100',
 
-            // Aplicabilidad
-            'applies_to' => 'required_unless:type,daily_special|nullable|in:product,variant,category',
+            // Aplicabilidad - SOLO para percentage_discount
+            'applies_to' => 'required_if:type,percentage_discount|nullable|in:product,variant,category',
             'min_quantity' => 'integer|min:1',
 
             // Items de promoción
@@ -50,15 +50,31 @@ class StorePromotionRequest extends FormRequest
                 },
             ],
             'items.*.variant_id' => 'nullable|exists:product_variants,id',
-            'items.*.category_id' => 'nullable|exists:categories,id',
+            'items.*.category_id' => [
+                'required_if:type,two_for_one',
+                'nullable',
+                'exists:categories,id',
+            ],
 
             // Para Sub del Día - Campos a nivel de item
             'items.*.special_price_capital' => 'required_if:type,daily_special|nullable|numeric|min:0',
             'items.*.special_price_interior' => 'required_if:type,daily_special|nullable|numeric|min:0',
-            'items.*.service_type' => 'required_if:type,daily_special|nullable|in:both,delivery_only,pickup_only',
 
-            // Vigencia temporal
-            'items.*.validity_type' => 'required_if:type,daily_special|nullable|in:permanent,date_range,time_range,date_time_range,weekdays',
+            // Para 2x1 y Sub del Día - service_type
+            'items.*.service_type' => [
+                'required_if:type,daily_special',
+                'required_if:type,two_for_one',
+                'nullable',
+                'in:both,delivery_only,pickup_only',
+            ],
+
+            // Vigencia temporal (2x1 y Sub del Día)
+            'items.*.validity_type' => [
+                'required_if:type,daily_special',
+                'required_if:type,two_for_one',
+                'nullable',
+                'in:permanent,date_range,time_range,date_time_range,weekdays',
+            ],
 
             // Weekdays - SIEMPRE REQUERIDO para daily_special
             'items.*.weekdays' => [
@@ -179,6 +195,11 @@ class StorePromotionRequest extends FormRequest
             'items.*.valid_until.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
             'items.*.time_from.date_format' => 'El formato de hora de inicio no es válido.',
             'items.*.time_until.date_format' => 'El formato de hora de fin no es válido.',
+
+            // 2x1 - Items
+            'items.*.category_id.required_if' => 'La categoría es obligatoria para 2x1.',
+            'items.*.category_id.exists' => 'La categoría seleccionada no existe.',
+            'items.*.validity_type.required_if' => 'El tipo de vigencia es obligatorio.',
         ];
     }
 }

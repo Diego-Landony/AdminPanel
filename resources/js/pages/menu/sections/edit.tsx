@@ -274,9 +274,9 @@ export default function SectionEdit({ section }: EditPageProps) {
             title="Editar Sección"
             description={`Modifica los datos de la sección "${section.title}"`}
             backHref={route('menu.sections.index')}
-            backLabel="Volver a Secciones"
+            backLabel="Volver"
             onSubmit={handleSubmit}
-            submitLabel="Guardar Cambios"
+            submitLabel="Guardar"
             processing={isSubmitting}
             pageTitle={`Editar ${section.title}`}
             loading={false}

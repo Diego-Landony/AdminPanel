@@ -44,9 +44,9 @@ export default function CategoryCreate() {
         <CreatePageLayout
             title="Nueva Categoría"
             backHref={route('menu.categories.index')}
-            backLabel="Volver a Categorías"
+            backLabel="Volver"
             onSubmit={handleSubmit}
-            submitLabel="Crear Categoría"
+            submitLabel="Guardar"
             processing={processing}
             pageTitle="Crear Categoría"
             loading={processing}

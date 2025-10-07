@@ -129,9 +129,9 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
             title="Editar Tipo de Cliente"
             description={`Modifica los datos del tipo "${customer_type.name}"`}
             backHref={route('customer-types.index')}
-            backLabel="Volver a Tipos de Cliente"
+            backLabel="Volver"
             onSubmit={handleSubmit}
-            submitLabel="Guardar Cambios"
+            submitLabel="Guardar"
             processing={isSubmitting}
             pageTitle={`Editar ${customer_type.name}`}
             loading={false}

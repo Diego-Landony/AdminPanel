@@ -27,8 +27,8 @@ class UpdatePromotionRequest extends FormRequest
             // Para percentage_discount
             'discount_percentage' => 'required_if:type,percentage_discount|nullable|numeric|min:0|max:100',
 
-            // Aplicabilidad
-            'applies_to' => 'required_unless:type,daily_special|nullable|in:product,variant,category',
+            // Aplicabilidad - SOLO para percentage_discount
+            'applies_to' => 'required_if:type,percentage_discount|nullable|in:product,variant,category',
             'min_quantity' => 'integer|min:1',
 
             // Items de promoción

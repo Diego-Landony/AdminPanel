@@ -175,7 +175,7 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
                 columns={columns}
                 stats={categoryStats}
                 createUrl="/menu/categories/create"
-                createLabel="Crear Categoría"
+                createLabel="Crear"
                 searchable={true}
                 searchPlaceholder="Buscar categorías..."
                 onReorder={handleReorder}

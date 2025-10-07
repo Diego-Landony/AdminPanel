@@ -234,9 +234,9 @@ export default function SectionCreate() {
         <CreatePageLayout
             title="Nueva Sección"
             backHref={route('menu.sections.index')}
-            backLabel="Volver a Secciones"
+            backLabel="Volver"
             onSubmit={handleSubmit}
-            submitLabel="Crear Sección"
+            submitLabel="Guardar"
             processing={processing}
             pageTitle="Crear Sección"
             loading={processing}

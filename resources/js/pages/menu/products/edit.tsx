@@ -323,9 +323,9 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
             title="Editar Producto"
             description={`Modifica los datos del producto "${product.name}"`}
             backHref={route('menu.products.index')}
-            backLabel="Volver a Productos"
+            backLabel="Volver"
             onSubmit={handleSubmit}
-            submitLabel="Guardar Cambios"
+            submitLabel="Guardar"
             processing={isSubmitting}
             pageTitle={`Editar ${product.name}`}
             loading={false}

@@ -190,7 +190,7 @@ export default function SectionsIndex({ sections, stats }: SectionsPageProps) {
                 columns={columns}
                 stats={sectionStats}
                 createUrl="/menu/sections/create"
-                createLabel="Crear Sección"
+                createLabel="Crear"
                 searchable={true}
                 searchPlaceholder="Buscar secciones..."
                 onReorder={handleReorder}

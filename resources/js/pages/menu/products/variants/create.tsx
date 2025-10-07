@@ -80,9 +80,9 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
         <CreatePageLayout
             title="Nueva Variante"
             backHref={route('menu.products.variants.index', product.id)}
-            backLabel={`Volver a Variantes de ${product.name}`}
+            backLabel="Volver"
             onSubmit={handleSubmit}
-            submitLabel="Crear Variante"
+            submitLabel="Guardar"
             processing={processing}
             pageTitle={`Crear Variante para ${product.name}`}
             loading={processing}

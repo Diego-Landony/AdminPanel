@@ -157,9 +157,9 @@ export default function CreatePromotion({ products, categories }: CreatePromotio
         <CreatePageLayout
             title="Nueva Promoción - Sub del Día"
             backHref={route('menu.promotions.daily-special.index')}
-            backLabel="Volver a Sub del Día"
+            backLabel="Volver"
             onSubmit={handleSubmit}
-            submitLabel="Crear Promoción"
+            submitLabel="Guardar"
             processing={processing}
             pageTitle="Crear Promoción - Sub del Día"
             loading={processing}

@@ -292,9 +292,9 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
         <CreatePageLayout
             title="Nuevo Producto"
             backHref={route('menu.products.index')}
-            backLabel="Volver a Productos"
+            backLabel="Volver"
             onSubmit={handleSubmit}
-            submitLabel="Crear Producto"
+            submitLabel="Guardar"
             processing={processing}
             pageTitle="Crear Producto"
             loading={processing}

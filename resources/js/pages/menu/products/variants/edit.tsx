@@ -164,9 +164,9 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
             title={`Editar Variante: ${variant.size}`}
             description={`Producto: ${product.name} | SKU: ${variant.sku}`}
             backHref={route('menu.products.variants.index', product.id)}
-            backLabel="Volver a Variantes"
+            backLabel="Volver"
             onSubmit={handleSubmit}
-            submitLabel="Guardar Cambios"
+            submitLabel="Guardar"
             processing={isSubmitting}
             pageTitle={`Editar ${variant.size}`}
             loading={false}

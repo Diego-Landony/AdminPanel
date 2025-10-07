@@ -434,7 +434,7 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
                 stats={stats}
                 filters={filters}
                 createUrl="/customers/create"
-                createLabel="Nuevo Cliente"
+                createLabel="Crear"
                 searchPlaceholder="Buscar por nombre, email, tarjeta subway o teléfono..."
                 loadingSkeleton={CustomersSkeleton}
                 renderMobileCard={(customer) => <CustomerMobileCard customer={customer} />}

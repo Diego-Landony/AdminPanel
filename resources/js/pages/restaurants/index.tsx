@@ -353,7 +353,7 @@ export default function RestaurantsIndex({
                 stats={stats}
                 filters={filters}
                 createUrl="/restaurants/create"
-                createLabel="Nuevo Restaurante"
+                createLabel="Crear"
                 searchPlaceholder="Buscar por nombre, dirección, teléfono o email..."
                 loadingSkeleton={RestaurantsSkeleton}
                 renderMobileCard={(restaurant) => <RestaurantMobileCard restaurant={restaurant} />}

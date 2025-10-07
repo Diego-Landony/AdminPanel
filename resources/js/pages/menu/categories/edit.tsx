@@ -70,9 +70,9 @@ export default function CategoryEdit({ category }: EditPageProps) {
             title="Editar Categoría"
             description={`Modifica los datos de la categoría "${category.name}"`}
             backHref={route('menu.categories.index')}
-            backLabel="Volver a Categorías"
+            backLabel="Volver"
             onSubmit={handleSubmit}
-            submitLabel="Guardar Cambios"
+            submitLabel="Guardar"
             processing={isSubmitting}
             pageTitle={`Editar ${category.name}`}
             loading={false}

@@ -181,9 +181,9 @@ export default function EditPromotion({ promotion, products, categories }: EditP
         <EditPageLayout
             title="Editar Promoción - Sub del Día"
             backHref={route('menu.promotions.daily-special.index')}
-            backLabel="Volver a Sub del Día"
+            backLabel="Volver"
             onSubmit={handleSubmit}
-            submitLabel="Actualizar Promoción"
+            submitLabel="Guardar"
             processing={processing}
             pageTitle={`Editar: ${promotion.name}`}
             loading={processing}

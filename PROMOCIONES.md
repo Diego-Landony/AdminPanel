@@ -94,50 +94,24 @@ Total: $27 (ahorro de $33)
 
 ### 2. 💯 Promoción de Porcentaje
 
-**Descripción**: Reduce el precio de productos o categorías por un porcentaje definido.
+**Descripción**: Reduce el precio de productos específicos por un porcentaje definido.
 
 #### Características:
 
-**Alcance - Sistema de Items Flexible:**
+**Alcance - Sistema de Items:**
+- Cada **item** representa UN producto específico con su porcentaje de descuento
+- Puedes crear **múltiples items** en una sola promoción
+- Cada item puede tener un porcentaje diferente
+- Ejemplo: Una promoción "Happy Hour" puede tener 3 items:
+  - Item 1: Hamburguesa Premium → 25%
+  - Item 2: Hot Dog Gourmet → 20%
+  - Item 3: Pizza Margarita → 15%
 
-El porcentaje puede aplicarse a dos niveles:
-
-1. **Por Categoría Completa:**
-   - Se crea UN item con la categoría
-   - Aplica automáticamente a TODOS los productos de esa categoría
-   - Incluye productos actuales y futuros
-   - Ejemplo:
-     ```
-     Promoción: "Descuento Bebidas"
-     Item 1: Categoría "Bebidas" → 15%
-     ```
-
-2. **Por Productos Individuales:**
-   - Se crea UN item por cada producto
-   - Permite diferentes porcentajes por producto en la misma promoción
-   - Más granular y específico
-   - Ejemplo:
-     ```
-     Promoción: "Descuento Sándwiches Selectos"
-     Item 1: Producto "Club Sandwich" → 10%
-     Item 2: Producto "BLT" → 15%
-     Item 3: Producto "Veggie Wrap" → 20%
-     ```
-
-3. **Combinación (Avanzado):**
-   - Una promoción puede tener items de categoría Y productos
-   - Ejemplo:
-     ```
-     Promoción: "Descuento Fin de Semana"
-     Item 1: Categoría "Pizzas" → 15%
-     Item 2: Producto "Hamburguesa Premium" → 25%
-     Item 3: Producto "Hot Dog Gourmet" → 20%
-     ```
-
-**Porcentaje de Descuento:**
+**Porcentaje de Descuento (por item):**
+- Cada item requiere su propio porcentaje
 - Valor entre 1% y 100%
-- Se guarda a nivel de promoción (aplica a todos los items)
-- Si necesitas diferentes porcentajes, crea promociones separadas
+- Se guarda a nivel de item (no de promoción)
+- Permite flexibilidad: diferentes productos con diferentes descuentos en la misma promoción
 
 #### Vigencia Temporal (4 opciones):
 
@@ -156,24 +130,36 @@ El porcentaje puede aplicarse a dos niveles:
 
 #### Reglas Especiales:
 - ✅ Pueden coexistir múltiples promociones de porcentaje simultáneamente
-- ✅ Una promoción puede combinar items de categoría y productos
-- ⚠️ Si un producto tiene descuento individual Y su categoría tiene descuento → **se aplica el MAYOR**
+- ✅ Una promoción puede tener múltiples items (productos) con diferentes porcentajes
+- ⚠️ Si un producto tiene múltiples descuentos de porcentaje vigentes → **se aplica el MAYOR**
 - ⚠️ Se aplica DESPUÉS del Sub del Día (sobre el precio especial)
 - ⚠️ Se aplica ANTES del 2x1
+
+**Ejemplo de Aplicación:**
+```
+Promoción: "Happy Hour"
+Item 1: Hamburguesa → 25% descuento
+Item 2: Hot Dog → 20% descuento
+
+Cliente ordena:
+- 1x Hamburguesa $100 → $75 (25% descuento)
+- 1x Hot Dog $50 → $40 (20% descuento)
+Total: $115 (ahorro de $35)
+```
 
 **Ejemplo de Resolución de Conflictos:**
 ```
 Producto: Pizza Margarita
 Precio base: $100
 
-Escenario 1:
-- Descuento individual: 20%
-- Descuento categoría "Pizzas": 15%
+Escenario 1 (Múltiples descuentos):
+- Promoción A: 15% descuento en Pizza Margarita
+- Promoción B: 20% descuento en Pizza Margarita
 → Se aplica 20% (el mayor) = $80
 
-Escenario 2:
+Escenario 2 (Sub del Día + Porcentaje):
 - Sub del Día: $80 (reemplaza precio base)
-- Descuento categoría "Pizzas": 10%
+- Descuento: 10%
 → Precio final: $80 - ($80 * 10%) = $72
 ```
 
@@ -265,27 +251,24 @@ ORDEN DE APLICACIÓN (de primero a último):
 1. Sub del Día
    └─> Si aplica: REEMPLAZA el precio base del producto
 
-2. Descuento de Porcentaje Individual
+2. Descuento de Porcentaje
    └─> Si aplica: Calcula descuento sobre precio actual
+   └─> Si múltiples descuentos vigentes: Aplica el MAYOR
 
-3. Descuento de Porcentaje de Categoría
-   └─> Compara con descuento individual
-   └─> Aplica el MAYOR de los dos
-
-4. Promoción 2x1
+3. Promoción 2x1
    └─> Ordena productos por precio (ya con descuentos aplicados)
    └─> Descuenta los N más baratos
 ```
 
 ### 2. Resolución de Conflictos
 
-#### Conflicto: Producto con descuento individual + Categoría con descuento
-**Resolución**: Se aplica el descuento MAYOR de los dos, no se suman.
+#### Conflicto: Múltiples descuentos de porcentaje en el mismo producto
+**Resolución**: Se aplica el descuento MAYOR, no se suman.
 
 **Ejemplo**:
-- Producto: 20% de descuento individual
-- Categoría: 15% de descuento
-- **Resultado**: Se aplica 20%
+- Promoción A: 15% en el producto
+- Promoción B: 20% en el mismo producto
+- **Resultado**: Se aplica 20% (el mayor)
 
 #### Conflicto: Sub del Día + Descuento de Porcentaje
 **Resolución**: El Sub del Día reemplaza el precio base, luego se aplica el descuento de porcentaje sobre ese nuevo precio.
@@ -293,16 +276,8 @@ ORDEN DE APLICACIÓN (de primero a último):
 **Ejemplo**:
 - Precio normal: $100
 - Sub del día: $80
-- Descuento de categoría: 10%
+- Descuento de porcentaje: 10%
 - **Cálculo**: $80 - (10% de $80) = $72
-
-#### Conflicto: Múltiples promociones de porcentaje vigentes en la misma categoría
-**Resolución**: Se aplica el porcentaje MAYOR.
-
-**Ejemplo**:
-- Promoción A: 15% vigente todo enero
-- Promoción B: 20% vigente del 10 al 20 de enero
-- **Resultado el 15 de enero**: Se aplica 20% (la mayor)
 
 ### 3. Validación de Vigencia
 
@@ -422,7 +397,7 @@ ITEM 2
 | Tipo de Promoción | Alcance del Item | Explicación |
 |-------------------|------------------|-------------|
 | **Sub del Día** | `producto` | Un item = un producto con precios especiales |
-| **Porcentaje** | `producto` O `categoría` | Un item puede ser un producto individual O una categoría completa |
+| **Porcentaje** | `producto` | Un item = un producto con porcentaje de descuento |
 | **2x1** | `categoría` | Un item = una categoría (aplica a todos sus productos) |
 
 ### 🔗 Relaciones Conceptuales
@@ -444,7 +419,7 @@ UN Item ──afecta a──> UN Producto O UNA Categoría
 
 #### 2. Tipo de Promoción vs Alcance:
 - **Sub del Día** → Items deben afectar productos individuales
-- **Porcentaje** → Items pueden afectar productos O categorías
+- **Porcentaje** → Items deben afectar productos individuales
 - **2x1** → Items deben afectar categorías completas
 
 #### 3. Campos Requeridos por Tipo:
@@ -452,9 +427,11 @@ UN Item ──afecta a──> UN Producto O UNA Categoría
   - Precio especial para Capital
   - Precio especial para Interior
   - Al menos 1 día de la semana seleccionado
-- **Porcentaje** requiere a nivel de promoción:
+- **Porcentaje** requiere en cada item:
+  - Producto (requerido)
   - Porcentaje de descuento (1-100%)
-- **2x1** no requiere campos adicionales
+- **2x1** requiere en cada item:
+  - Categoría (requerido)
 
 #### 4. Vigencia Temporal:
 - **Fechas**: Si especificas fecha fin, debes especificar fecha inicio
@@ -808,20 +785,23 @@ Agrupado por mes/año, cada promoción muestra:
 
 ---
 
-### Caso 2: Happy Hour con 15% en Pizzas
+### Caso 2: Happy Hour con Descuentos en Productos Selectos
 
-**Objetivo**: 15% de descuento en pizzas de 2pm a 5pm todos los días.
+**Objetivo**: Descuentos en productos específicos de 2pm a 5pm todos los días.
 
 **Configuración**:
-- Nombre: "Happy Hour Pizzas"
-- Tipo: Porcentaje (15%)
-- Alcance: Categoría "Pizzas"
+- Nombre: "Happy Hour"
+- Tipo: Porcentaje
+- Items:
+  - Item 1: Pizza Margarita → 15%
+  - Item 2: Hamburguesa Premium → 25%
+  - Item 3: Hot Dog → 20%
 - Vigencia: Por horario permanente (14:00 a 17:00)
 - Servicio: Delivery y Pickup
 
 **Comportamiento**:
 - Cliente ordena Pizza Margarita ($100) a las 3pm
-- Sistema aplica 15% de descuento
+- Sistema aplica 15% de descuento (del item específico)
 - Precio final: $85
 - Ahorro: $15
 
@@ -862,11 +842,11 @@ Agrupado por mes/año, cada promoción muestra:
 
 ---
 
-### Caso 5: Sub del Día + Descuento de Categoría
+### Caso 5: Sub del Día + Descuento de Porcentaje
 
 **Escenario**:
 - Producto "Hamburguesa" es Sub del Día ($50)
-- Categoría "Hamburguesas" tiene 20% de descuento
+- Producto "Hamburguesa" tiene 20% de descuento
 - Cliente ordena un día que aplica ambas
 
 **Flujo de Cálculo**:
@@ -877,11 +857,11 @@ Agrupado por mes/año, cada promoción muestra:
 
 ---
 
-### Caso 6: Múltiples Descuentos de Porcentaje
+### Caso 6: Múltiples Descuentos de Porcentaje en el Mismo Producto
 
 **Escenario**:
-- Promoción A: 15% en categoría "Pizzas" (todo enero)
-- Promoción B: 25% en categoría "Pizzas" (del 10 al 20 de enero)
+- Promoción A: 15% en Pizza Margarita (todo enero)
+- Promoción B: 25% en Pizza Margarita (del 10 al 20 de enero)
 - Cliente ordena el 15 de enero
 
 **Flujo de Cálculo**:

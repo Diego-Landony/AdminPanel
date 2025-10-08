@@ -259,7 +259,13 @@ export default function EditPromotion({ promotion, products, categories }: EditP
                                 label="Producto"
                                 value={item.product_id}
                                 onChange={(value) => updateItem(index, 'product_id', value)}
-                                products={products}
+                                products={products.filter(
+                                    (product) =>
+                                        !localItems.some(
+                                            (i, idx) =>
+                                                idx !== index && i.product_id === product.id,
+                                        ),
+                                )}
                                 placeholder="Buscar producto..."
                                 error={errors[`items.${index}.product_id`]}
                                 required

@@ -22,17 +22,11 @@ class StorePromotionRequest extends FormRequest
             'type' => 'required|in:two_for_one,percentage_discount,daily_special',
             'is_active' => 'boolean',
 
-            // Para percentage_discount
-            'discount_percentage' => 'required_if:type,percentage_discount|nullable|numeric|min:0|max:100',
-
-            // Aplicabilidad - SOLO para percentage_discount
-            'applies_to' => 'required_if:type,percentage_discount|nullable|in:product,variant,category',
-            'min_quantity' => 'integer|min:1',
-
             // Items de promoción
             'items' => 'required|array|min:1',
             'items.*.product_id' => [
                 'required_if:type,daily_special',
+                'required_if:type,percentage_discount',
                 'nullable',
                 'exists:products,id',
                 function ($attribute, $value, $fail) {
@@ -60,18 +54,23 @@ class StorePromotionRequest extends FormRequest
             'items.*.special_price_capital' => 'required_if:type,daily_special|nullable|numeric|min:0',
             'items.*.special_price_interior' => 'required_if:type,daily_special|nullable|numeric|min:0',
 
-            // Para 2x1 y Sub del Día - service_type
+            // Para Percentage - Campos a nivel de item
+            'items.*.discount_percentage' => 'required_if:type,percentage_discount|nullable|numeric|min:1|max:100',
+
+            // Para 2x1, Sub del Día y Percentage - service_type
             'items.*.service_type' => [
                 'required_if:type,daily_special',
                 'required_if:type,two_for_one',
+                'required_if:type,percentage_discount',
                 'nullable',
                 'in:both,delivery_only,pickup_only',
             ],
 
-            // Vigencia temporal (2x1 y Sub del Día)
+            // Vigencia temporal (2x1, Sub del Día y Percentage)
             'items.*.validity_type' => [
                 'required_if:type,daily_special',
                 'required_if:type,two_for_one',
+                'required_if:type,percentage_discount',
                 'nullable',
                 'in:permanent,date_range,time_range,date_time_range,weekdays',
             ],
@@ -175,16 +174,16 @@ class StorePromotionRequest extends FormRequest
             'type.required' => 'El tipo de promoción es obligatorio.',
             'type.in' => 'El tipo de promoción no es válido.',
 
-            // Percentage
-            'discount_percentage.required_if' => 'El porcentaje de descuento es obligatorio para este tipo de promoción.',
-            'discount_percentage.max' => 'El porcentaje no puede ser mayor a 100.',
-
-            'applies_to.required_unless' => 'Debes especificar a qué se aplica la promoción.',
             'items.required' => 'Debes agregar al menos un item a la promoción.',
             'items.min' => 'Debes agregar al menos un item a la promoción.',
 
-            // Sub del Día - Items
-            'items.*.product_id.required_if' => 'El producto es obligatorio para Sub del Día.',
+            // Percentage - Items
+            'items.*.discount_percentage.required_if' => 'El porcentaje de descuento es obligatorio.',
+            'items.*.discount_percentage.min' => 'El porcentaje debe ser al menos 1%.',
+            'items.*.discount_percentage.max' => 'El porcentaje no puede ser mayor a 100%.',
+
+            // Sub del Día y Percentage - Items
+            'items.*.product_id.required_if' => 'El producto es obligatorio.',
             'items.*.special_price_capital.required_if' => 'El precio especial para Capital es obligatorio.',
             'items.*.special_price_interior.required_if' => 'El precio especial para Interior es obligatorio.',
             'items.*.service_type.required_if' => 'El tipo de servicio es obligatorio.',

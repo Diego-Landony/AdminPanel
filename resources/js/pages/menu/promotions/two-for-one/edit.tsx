@@ -225,7 +225,13 @@ export default function EditTwoForOnePromotion({ promotion, categories }: EditPr
                                 label="Categoría"
                                 value={item.category_id}
                                 onChange={(value) => updateItem(index, 'category_id', value)}
-                                categories={categories}
+                                categories={categories.filter(
+                                    (category) =>
+                                        !localItems.some(
+                                            (i, idx) =>
+                                                idx !== index && i.category_id === category.id,
+                                        ),
+                                )}
                                 placeholder="Buscar categoría..."
                                 error={errors[`items.${index}.category_id`]}
                                 required

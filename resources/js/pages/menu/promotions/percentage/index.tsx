@@ -190,7 +190,7 @@ export default function PercentageIndex({ promotions, stats, filters }: Promotio
                 filters={filters}
                 createUrl="/menu/promotions/percentage/create"
                 createLabel="Crear"
-                searchPlaceholder={PLACEHOLDERS.promotionSearchPercentage}
+                searchPlaceholder={PLACEHOLDERS.search}
                 loadingSkeleton={DataTableSkeleton}
                 renderMobileCard={(promotion) => (
                     <PromotionMobileCard

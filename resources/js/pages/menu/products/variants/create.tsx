@@ -93,7 +93,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                 <FormField label="Categoría (Tamaño)" error={errors.category_id} required>
                     <Select value={data.category_id} onValueChange={(value) => setData('category_id', value)}>
                         <SelectTrigger>
-                            <SelectValue placeholder={PLACEHOLDERS.selectCategory} />
+                            <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                             {categories.map((category) => (
@@ -118,7 +118,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                         type="text"
                         value={data.sku}
                         onChange={(e) => setData('sku', e.target.value)}
-                        placeholder={PLACEHOLDERS.variantSku}
+                        placeholder={PLACEHOLDERS.sku}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                         Identificador único de la variante. Se generará automáticamente combinando el producto y la categoría si no se especifica.
@@ -133,7 +133,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                         min="0"
                         value={data.sort_order}
                         onChange={(e) => setData('sort_order', e.target.value)}
-                        placeholder={PLACEHOLDERS.variantSortOrder}
+                        placeholder={PLACEHOLDERS.sortOrder}
                     />
                 </FormField>
             </FormSection>
@@ -155,7 +155,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                                 value={data.base_price}
                                 onChange={(e) => setData('base_price', e.target.value)}
                                 className="pl-8"
-                                placeholder={PLACEHOLDERS.variantPrice}
+                                placeholder={PLACEHOLDERS.price}
                             />
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -175,7 +175,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                                 value={data.delivery_price}
                                 onChange={(e) => setData('delivery_price', e.target.value)}
                                 className="pl-8"
-                                placeholder={PLACEHOLDERS.variantPrice}
+                                placeholder={PLACEHOLDERS.price}
                             />
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -195,7 +195,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                                 value={data.interior_base_price}
                                 onChange={(e) => setData('interior_base_price', e.target.value)}
                                 className="pl-8"
-                                placeholder={PLACEHOLDERS.variantPrice}
+                                placeholder={PLACEHOLDERS.price}
                             />
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -215,7 +215,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                                 value={data.interior_delivery_price}
                                 onChange={(e) => setData('interior_delivery_price', e.target.value)}
                                 className="pl-8"
-                                placeholder={PLACEHOLDERS.variantPrice}
+                                placeholder={PLACEHOLDERS.price}
                             />
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">

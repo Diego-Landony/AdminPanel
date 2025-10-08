@@ -190,7 +190,7 @@ export default function TwoForOneIndex({ promotions, stats, filters }: Promotion
                 filters={filters}
                 createUrl="/menu/promotions/two-for-one/create"
                 createLabel="Crear"
-                searchPlaceholder={PLACEHOLDERS.promotionSearchTwoForOne}
+                searchPlaceholder={PLACEHOLDERS.search}
                 loadingSkeleton={DataTableSkeleton}
                 renderMobileCard={(promotion) => (
                     <PromotionMobileCard

@@ -108,7 +108,7 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
         >
             <FormSection icon={ENTITY_ICONS.role.info} title="Información del Rol">
                 <FormField label="Nombre del Rol" error={errors.name} required>
-                    <Input id="name" type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder={PLACEHOLDERS.roleName} />
+                    <Input id="name" type="text" value={data.name} onChange={(e) => setData('name', e.target.value)}  />
                 </FormField>
 
                 <FormField label="Descripción" error={errors.description}>
@@ -116,7 +116,6 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
                         id="description"
                         value={data.description}
                         onChange={(e) => setData('description', e.target.value)}
-                        placeholder={PLACEHOLDERS.description}
                         className="min-h-[100px]"
                     />
                 </FormField>

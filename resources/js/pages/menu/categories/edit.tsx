@@ -85,7 +85,7 @@ export default function CategoryEdit({ category }: EditPageProps) {
                         type="text"
                         value={formData.name}
                         onChange={(e) => handleInputChange('name', e.target.value)}
-                        placeholder={PLACEHOLDERS.categoryName}
+
                     />
                 </FormField>
 

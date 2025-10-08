@@ -164,7 +164,7 @@ function SortableVariant({ variant, index, onUpdate, onRemove, errors, canDelete
                     type="text"
                     value={variant.name}
                     onChange={(e) => onUpdate(index, 'name', e.target.value)}
-                    placeholder={PLACEHOLDERS.productVariantSize}
+
                 />
             </FormField>
 
@@ -335,7 +335,7 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
                 <FormField label="Categoría" error={errors.category_id} required>
                     <Select value={formData.category_id} onValueChange={(value) => handleInputChange('category_id', value)}>
                         <SelectTrigger>
-                            <SelectValue placeholder={PLACEHOLDERS.selectCategory} />
+                            <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                             {categories.map((category) => (
@@ -348,11 +348,11 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
                 </FormField>
 
                 <FormField label="Nombre" error={errors.name} required>
-                    <Input id="name" type="text" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} placeholder={PLACEHOLDERS.productName} />
+                    <Input id="name" type="text" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} />
                 </FormField>
 
                 <FormField label="Descripción" error={errors.description}>
-                    <Textarea id="description" value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} placeholder={PLACEHOLDERS.productDescription} rows={2} />
+                    <Textarea id="description" value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} rows={2} />
                 </FormField>
 
                 <div className="flex items-center space-x-2">

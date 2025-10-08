@@ -80,7 +80,7 @@ function SortableItem({ option, index, onUpdate, onRemove }: SortableItemProps) 
                 <Input
                     value={option.name}
                     onChange={(e) => onUpdate(index, 'name', e.target.value)}
-                    placeholder={PLACEHOLDERS.sectionOptionName}
+
                     className="flex-1"
                 />
                 <Button type="button" variant="ghost" size="icon" onClick={() => onRemove(index)}>
@@ -105,7 +105,7 @@ function SortableItem({ option, index, onUpdate, onRemove }: SortableItemProps) 
                             min="0"
                             value={option.price_modifier}
                             onChange={(e) => onUpdate(index, 'price_modifier', e.target.value)}
-                            placeholder={PLACEHOLDERS.sectionOptionPrice}
+                            placeholder={PLACEHOLDERS.price}
                             className="w-24"
                         />
                     </div>
@@ -285,7 +285,7 @@ export default function SectionEdit({ section }: EditPageProps) {
             <FormSection icon={ListChecks} title="Información Básica" description="Datos principales de la sección">
                 {/* Título */}
                 <FormField label="Título" error={errors.title} required>
-                    <Input id="title" type="text" value={formData.title} onChange={(e) => handleInputChange('title', e.target.value)} placeholder={PLACEHOLDERS.sectionTitle} />
+                    <Input id="title" type="text" value={formData.title} onChange={(e) => handleInputChange('title', e.target.value)} />
                 </FormField>
 
                 {/* Descripción */}
@@ -294,7 +294,7 @@ export default function SectionEdit({ section }: EditPageProps) {
                         id="description"
                         value={formData.description}
                         onChange={(e) => handleInputChange('description', e.target.value)}
-                        placeholder={PLACEHOLDERS.sectionDescription}
+
                         rows={2}
                     />
                 </FormField>

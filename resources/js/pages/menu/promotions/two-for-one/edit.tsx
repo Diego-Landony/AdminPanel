@@ -181,7 +181,7 @@ export default function EditTwoForOnePromotion({ promotion, categories }: EditPr
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder={PLACEHOLDERS.promotionName}
+
                     />
                 </FormField>
 
@@ -191,7 +191,7 @@ export default function EditTwoForOnePromotion({ promotion, categories }: EditPr
                         onChange={(e) =>
                             setFormData({ ...formData, description: e.target.value })
                         }
-                        placeholder={PLACEHOLDERS.promotionDescription}
+
                         rows={2}
                     />
                 </FormField>

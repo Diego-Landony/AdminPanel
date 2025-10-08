@@ -189,7 +189,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                         type="text"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-                        placeholder={PLACEHOLDERS.promotionName}
+
                     />
                 </FormField>
 

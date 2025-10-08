@@ -19,16 +19,7 @@ class PromotionFactory extends Factory
         return [
             'name' => fake()->sentence(),
             'description' => fake()->optional()->paragraph(),
-            'type' => 'percentage_discount',
-            'discount_value' => fake()->numberBetween(10, 30),
-            'applies_to' => 'product',
-            'is_permanent' => true,
-            'valid_from' => null,
-            'valid_until' => null,
-            'has_time_restriction' => false,
-            'time_from' => null,
-            'time_until' => null,
-            'active_days' => null,
+            'type' => 'daily_special',
             'is_active' => true,
         ];
     }

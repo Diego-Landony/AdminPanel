@@ -298,7 +298,7 @@ class PromotionController extends Controller
     /**
      * Activa o desactiva una promoción
      */
-    public function toggle(Promotion $promotion): RedirectResponse
+    public function toggle(Promotion $promotion): JsonResponse
     {
         $promotion->update([
             'is_active' => ! $promotion->is_active,
@@ -306,8 +306,11 @@ class PromotionController extends Controller
 
         $status = $promotion->is_active ? 'activada' : 'desactivada';
 
-        return redirect()->back()
-            ->with('success', "Promoción {$status} exitosamente.");
+        return response()->json([
+            'success' => true,
+            'message' => "Promoción {$status} exitosamente.",
+            'is_active' => $promotion->is_active,
+        ]);
     }
 
     /**

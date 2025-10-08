@@ -207,7 +207,7 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                         type="text"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-                        placeholder={PLACEHOLDERS.roleNameEdit}
+                        placeholder={Edit}
                         disabled={isAdminRole}
                         className={isAdminRole ? 'cursor-not-allowed opacity-50' : ''}
                     />
@@ -218,7 +218,6 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                         id="description"
                         value={data.description}
                         onChange={(e) => setData('description', e.target.value)}
-                        placeholder={PLACEHOLDERS.description}
                         className={`min-h-[100px] ${isAdminRole ? 'cursor-not-allowed opacity-50' : ''}`}
                         disabled={isAdminRole}
                     />
@@ -247,7 +246,7 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                             <div className="relative">
                                 <Input
                                     type="text"
-                                    placeholder={PLACEHOLDERS.searchUsers}
+                                    placeholder={PLACEHOLDERS.search}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="h-9 text-sm"

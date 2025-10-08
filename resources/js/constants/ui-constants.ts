@@ -2,68 +2,37 @@
  * Constantes de UI para mantener consistencia en toda la aplicación
  */
 
-// Placeholders estandarizados
+// Placeholders estandarizados - Solo valores técnicos o con formato específico
 export const PLACEHOLDERS = {
-    email: 'correo@ejemplo.com',
+    // Autenticación y credenciales
+    email: 'usuario@email.com',
     password: '••••••••',
-    name: 'Ej: Juan Carlos Pérez',
+
+    // Contacto y ubicación (con formato específico)
     phone: '+502 1234-5678',
-    address: 'Ej: 5ta Av. 12-34, Zona 1',
-    description: 'Describe las responsabilidades y alcance del rol...',
-    search: 'Buscar por nombre, email o teléfono...',
-    location: 'Ej: Guatemala, Guatemala',
+    address: '5ta Av. 12-34, Zona 4, Ciudad',
+    location: 'Guatemala, Guatemala',
+    latitude: '14.634915',
+    longitude: '-90.506882',
+
+    // Identificación
     nit: '12345678-9',
-    subwayCard: 'Ej: 1234567890',
-    amount: '50.00',
-    deliveryFee: '25.00',
-    estimatedTime: '30',
-    sortOrder: '100',
-    restaurantName: 'Ej: Restaurante El Buen Sabor',
-    managerName: 'Ej: María González',
-    roleName: 'Ej: editor, administrador',
-    roleNameEdit: 'Ej: Gerente de Ventas',
-    searchUsers: 'Buscar por nombre, email o rol...',
-    authEmail: 'tu-email@ejemplo.com',
-    authPassword: 'Ingresa tu contraseña',
-    authPasswordConfirm: 'Repite tu contraseña',
-    authName: 'Ej: Juan Carlos Pérez',
-    authPasswordMinimum: 'Mínimo 6 caracteres',
-    authPasswordNew: 'Confirma tu nueva contraseña',
-    authPasswordCurrent: 'Tu contraseña actual',
-    settingsPassword: 'Contraseña actual',
-    settingsPasswordMinimum: 'Mínimo 6 caracteres',
-    settingsPasswordConfirm: 'Confirmar nueva contraseña',
-    settingsProfileName: 'Nombre completo',
-    settingsProfileEmail: 'Dirección de correo electrónico',
-    // Menu - Categories
-    categoryName: 'Ej: Sándwiches, Bebidas, Postres',
-    // Menu - Sections
-    sectionTitle: 'Ej: Vegetales, Salsas, Quesos',
-    sectionDescription: 'Opcional',
-    sectionOptionName: 'Nombre del item',
-    sectionOptionPrice: '0.00',
-    // Menu - Products
-    productName: 'Ej: Sub B.M.T., Sub Italiano, Ensalada',
-    productDescription: 'Descripción del producto',
-    productVariantSize: 'Ej: 15cm, 30cm',
-    // Menu - Promotions
-    promotionName: 'Ej: Sub del Día Lunes, 20% OFF en Combos, 2x1 en Cookies',
-    promotionSlug: 'Se genera automáticamente si se deja vacío',
-    promotionDescription: 'Descripción de la promoción',
-    promotionDiscountValue: '0',
-    promotionSearch: 'Buscar promociones...',
-    promotionSearchDailySpecial: 'Buscar subs del día...',
-    promotionSearchTwoForOne: 'Buscar promociones 2x1...',
-    promotionSearchPercentage: 'Buscar promociones de porcentaje...',
-    productSearch: 'Buscar producto...',
-    // Menu - Product Variants
-    variantSku: 'Se genera automáticamente si se deja vacío',
-    variantSortOrder: '0',
-    variantPrice: '0.00',
-    variantDailySpecialPrice: 'Dejar vacío para usar precio regular',
-    // Select placeholders
-    selectCategory: 'Selecciona una categoría',
-    selectProduct: 'Selecciona un producto',
+    subwayCard: '1234567890',
+
+    // Valores numéricos con unidad/formato
+    price: '0.00',
+    percentage: '0',
+    amount: '00.00',
+    deliveryFee: '00.00',
+    estimatedTime: '00',
+
+    // Auto-generados
+    sku: 'Se genera automáticamente',
+    slug: 'Se genera automáticamente',
+    sortOrder: '0',
+
+    // Búsqueda
+    search: 'Buscar...',
 } as const;
 
 // Mensajes de notificación estandarizados
@@ -108,9 +77,9 @@ export const FIELD_DESCRIPTIONS = {
     passwordOptional: 'Deja en blanco si no deseas cambiar la contraseña',
     email: 'Dirección de correo electrónico válida',
     emailVerification: 'Cambiar el email requerirá nueva verificación',
-    nit: 'Número de Identificación Tributaria (opcional)',
-    subwayCard: 'Número único de identificación del cliente',
-    phoneFormat: 'Formato: +502 1234-5678',
+    nit: '(opcional)',
+    subwayCard: '',
+    phoneFormat: '+502 1234-5678',
     passwordMinimum6: 'Mínimo 6 caracteres',
     passwordSecurity6: 'Asegúrate de que tu cuenta use una contraseña de al menos 6 caracteres para mantener la seguridad',
 } as const;

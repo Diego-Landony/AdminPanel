@@ -59,7 +59,6 @@ export default function CreateUser() {
                     <Input
                         id="name"
                         type="text"
-                        placeholder={PLACEHOLDERS.name}
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
                         autoComplete={AUTOCOMPLETE.name}

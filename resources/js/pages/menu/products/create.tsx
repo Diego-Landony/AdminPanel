@@ -133,7 +133,7 @@ function SortableVariant({ variant, index, onUpdate, onRemove, errors, canDelete
                     type="text"
                     value={variant.name}
                     onChange={(e) => onUpdate(index, 'name', e.target.value)}
-                    placeholder={PLACEHOLDERS.productVariantSize}
+
                 />
             </FormField>
 
@@ -304,7 +304,7 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                 <FormField label="Categoría" error={errors.category_id} required>
                     <Select value={data.category_id} onValueChange={(value) => setData('category_id', value)}>
                         <SelectTrigger>
-                            <SelectValue placeholder={PLACEHOLDERS.selectCategory} />
+                            <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                             {categories.map((category) => (
@@ -322,7 +322,7 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                         type="text"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-                        placeholder={PLACEHOLDERS.productName}
+
                     />
                 </FormField>
 
@@ -331,7 +331,7 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                         id="description"
                         value={data.description}
                         onChange={(e) => setData('description', e.target.value)}
-                        placeholder={PLACEHOLDERS.productDescription}
+
                         rows={2}
                     />
                 </FormField>

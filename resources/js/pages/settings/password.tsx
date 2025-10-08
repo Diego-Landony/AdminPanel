@@ -72,7 +72,7 @@ export default function Password() {
                                     onChange={(e) => setData('current_password', e.target.value)}
                                     type={showCurrentPassword ? 'text' : 'password'}
                                     autoComplete={AUTOCOMPLETE.currentPassword}
-                                    placeholder={PLACEHOLDERS.settingsPassword}
+                                    placeholder={PLACEHOLDERS.password}
                                     className="pr-10"
                                 />
                                 <Button
@@ -96,7 +96,7 @@ export default function Password() {
                                     onChange={(e) => setData('password', e.target.value)}
                                     type={showPassword ? 'text' : 'password'}
                                     autoComplete={AUTOCOMPLETE.newPassword}
-                                    placeholder={PLACEHOLDERS.settingsPasswordMinimum}
+                                    placeholder={PLACEHOLDERS.password}
                                     className="pr-10"
                                 />
                                 <Button
@@ -119,7 +119,7 @@ export default function Password() {
                                     onChange={(e) => setData('password_confirmation', e.target.value)}
                                     type={showPasswordConfirmation ? 'text' : 'password'}
                                     autoComplete={AUTOCOMPLETE.newPassword}
-                                    placeholder={PLACEHOLDERS.settingsPasswordConfirm}
+                                    placeholder={PLACEHOLDERS.password}
                                     className="pr-10"
                                 />
                                 <Button

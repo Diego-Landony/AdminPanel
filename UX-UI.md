@@ -61,17 +61,43 @@ Esta guía documenta todos los patrones, estándares y convenciones establecidos
 ### Categorías de Constantes
 
 #### PLACEHOLDERS
-Todos los placeholders de inputs están centralizados:
+
+**Filosofía**: Solo usar placeholders cuando agreguen valor técnico o de formato. Labels autoexplicativos NO necesitan placeholder.
+
+Placeholders están centralizados para **valores técnicos específicos**:
 
 ```typescript
 import { PLACEHOLDERS } from '@/constants/ui-constants';
 
-<Input placeholder={PLACEHOLDERS.categoryName} />
-<Input placeholder={PLACEHOLDERS.email} />
-<Input placeholder={PLACEHOLDERS.phone} />
+// ✅ USAR - Tiene formato específico
+<Input placeholder={PLACEHOLDERS.email} />      // correo@ejemplo.com
+<Input placeholder={PLACEHOLDERS.phone} />      // +502 1234-5678
+<Input placeholder={PLACEHOLDERS.price} />      // 0.00
+<Input placeholder={PLACEHOLDERS.nit} />        // 12345678-9
+
+// ✅ USAR - Valor auto-generado
+<Input placeholder={PLACEHOLDERS.sku} />        // Se genera automáticamente
+<Input placeholder={PLACEHOLDERS.slug} />       // Se genera automáticamente
+
+// ❌ NO USAR - Label es suficiente
+<FormField label="Nombre">
+  <Input />  {/* Sin placeholder - obvio por el label */}
+</FormField>
+
+<FormField label="Descripción">
+  <Textarea />  {/* Sin placeholder - obvio por el label */}
+</FormField>
 ```
 
-**Regla**: NUNCA usar strings hardcodeados en placeholders.
+**Regla de oro**: ¿El label por sí solo es claro? → NO usar placeholder
+
+**Constantes disponibles** (18 total):
+- **Credenciales**: `email`, `password`
+- **Contacto**: `phone`, `address`, `location`, `latitude`, `longitude`
+- **Identificación**: `nit`, `subwayCard`
+- **Numéricos**: `price`, `percentage`, `amount`, `deliveryFee`, `estimatedTime`
+- **Auto-generados**: `sku`, `slug`, `sortOrder`
+- **Búsqueda**: `search` (universal para todos los contextos)
 
 #### NOTIFICATIONS
 Mensajes de notificación estandarizados:

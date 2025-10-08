@@ -48,7 +48,7 @@ export default function ConfirmPassword() {
                                 id="password"
                                 type={showPassword ? 'text' : 'password'}
                                 name="password"
-                                placeholder={PLACEHOLDERS.authPasswordCurrent}
+                                placeholder={PLACEHOLDERS.password}
                                 autoComplete="current-password"
                                 value={data.password}
                                 autoFocus

@@ -155,7 +155,6 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
                         type="text"
                         value={data.full_name}
                         onChange={(e) => setData('full_name', e.target.value)}
-                        placeholder={PLACEHOLDERS.name}
                         autoComplete={AUTOCOMPLETE.name}
                     />
                 </FormField>

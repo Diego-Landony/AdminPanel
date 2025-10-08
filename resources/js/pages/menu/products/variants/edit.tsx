@@ -195,7 +195,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                             min="0"
                             value={formData.precio_pickup_capital}
                             onChange={(e) => handleInputChange('precio_pickup_capital', e.target.value)}
-                            placeholder={PLACEHOLDERS.variantPrice}
+                            placeholder={PLACEHOLDERS.price}
                         />
                     </FormField>
 
@@ -206,7 +206,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                             min="0"
                             value={formData.precio_domicilio_capital}
                             onChange={(e) => handleInputChange('precio_domicilio_capital', e.target.value)}
-                            placeholder={PLACEHOLDERS.variantPrice}
+                            placeholder={PLACEHOLDERS.price}
                         />
                     </FormField>
 
@@ -217,7 +217,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                             min="0"
                             value={formData.precio_pickup_interior}
                             onChange={(e) => handleInputChange('precio_pickup_interior', e.target.value)}
-                            placeholder={PLACEHOLDERS.variantPrice}
+                            placeholder={PLACEHOLDERS.price}
                         />
                     </FormField>
 
@@ -228,7 +228,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                             min="0"
                             value={formData.precio_domicilio_interior}
                             onChange={(e) => handleInputChange('precio_domicilio_interior', e.target.value)}
-                            placeholder={PLACEHOLDERS.variantPrice}
+                            placeholder={PLACEHOLDERS.price}
                         />
                     </FormField>
                 </div>
@@ -311,7 +311,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                                             min="0"
                                             value={formData.daily_special_precio_pickup_capital}
                                             onChange={(e) => handleInputChange('daily_special_precio_pickup_capital', e.target.value)}
-                                            placeholder={PLACEHOLDERS.variantDailySpecialPrice}
+                                            placeholder={PLACEHOLDERS.price}
                                         />
                                     </FormField>
 
@@ -322,7 +322,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                                             min="0"
                                             value={formData.daily_special_precio_domicilio_capital}
                                             onChange={(e) => handleInputChange('daily_special_precio_domicilio_capital', e.target.value)}
-                                            placeholder={PLACEHOLDERS.variantDailySpecialPrice}
+                                            placeholder={PLACEHOLDERS.price}
                                         />
                                     </FormField>
 
@@ -333,7 +333,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                                             min="0"
                                             value={formData.daily_special_precio_pickup_interior}
                                             onChange={(e) => handleInputChange('daily_special_precio_pickup_interior', e.target.value)}
-                                            placeholder={PLACEHOLDERS.variantDailySpecialPrice}
+                                            placeholder={PLACEHOLDERS.price}
                                         />
                                     </FormField>
 
@@ -344,7 +344,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                                             min="0"
                                             value={formData.daily_special_precio_domicilio_interior}
                                             onChange={(e) => handleInputChange('daily_special_precio_domicilio_interior', e.target.value)}
-                                            placeholder={PLACEHOLDERS.variantDailySpecialPrice}
+                                            placeholder={PLACEHOLDERS.price}
                                         />
                                     </FormField>
                                 </div>

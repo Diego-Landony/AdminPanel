@@ -81,7 +81,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                             submit(e);
                                         }
                                     }}
-                                    placeholder={PLACEHOLDERS.authEmail}
+                                    placeholder={PLACEHOLDERS.email}
                                 />
                             </FormField>
 
@@ -101,7 +101,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                                 submit(e);
                                             }
                                         }}
-                                        placeholder={PLACEHOLDERS.authPassword}
+                                        placeholder={PLACEHOLDERS.password}
                                         className="pr-10"
                                     />
                                     <Button

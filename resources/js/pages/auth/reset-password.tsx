@@ -85,7 +85,7 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                                 className="pr-10 pl-10"
                                 autoFocus
                                 onChange={(e) => setData('password', e.target.value)}
-                                placeholder={PLACEHOLDERS.authPasswordMinimum}
+                                placeholder={PLACEHOLDERS.password}
                             />
                             <Button
                                 type="button"
@@ -110,7 +110,7 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                                 value={data.password_confirmation}
                                 className="pr-10 pl-10"
                                 onChange={(e) => setData('password_confirmation', e.target.value)}
-                                placeholder={PLACEHOLDERS.authPasswordNew}
+                                placeholder={PLACEHOLDERS.password}
                             />
                             <Button
                                 type="button"

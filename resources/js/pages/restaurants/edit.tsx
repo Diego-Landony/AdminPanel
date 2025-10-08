@@ -119,7 +119,6 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
                         id="name"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-                        placeholder={PLACEHOLDERS.restaurantName}
                         autoComplete={AUTOCOMPLETE.organizationName}
                     />
                 </FormField>

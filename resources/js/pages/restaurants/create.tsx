@@ -87,7 +87,7 @@ export default function RestaurantCreate() {
         >
             <FormSection icon={Building2} title="Información Básica">
                 <FormField label="Nombre" error={errors.name} required>
-                    <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder={PLACEHOLDERS.restaurantName} autoComplete={AUTOCOMPLETE.organizationName} />
+                    <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)}  autoComplete={AUTOCOMPLETE.organizationName} />
                 </FormField>
 
 

@@ -117,6 +117,6 @@ class DatabaseSeeder extends Seeder
         $this->command->line('   Email: admin@test.com');
         $this->command->line('   Contraseña: admintest');
         $this->command->line('');
-        $this->command->info('✨ El sistema está listo para usar. ¡Bienvenido a Videra!');
+        $this->command->info('✨ El sistema está listo para usar.');
     }
 }

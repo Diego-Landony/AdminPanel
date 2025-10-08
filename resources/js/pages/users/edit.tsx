@@ -197,7 +197,6 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
                     <Input
                         id="name"
                         type="text"
-                        placeholder={PLACEHOLDERS.name}
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
                         autoComplete={AUTOCOMPLETE.name}

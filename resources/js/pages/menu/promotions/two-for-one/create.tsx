@@ -144,7 +144,7 @@ export default function CreateTwoForOnePromotion({ categories }: CreatePromotion
                         type="text"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-                        placeholder={PLACEHOLDERS.promotionName}
+
                     />
                 </FormField>
 
@@ -152,7 +152,7 @@ export default function CreateTwoForOnePromotion({ categories }: CreatePromotion
                     <Textarea
                         value={data.description}
                         onChange={(e) => setData('description', e.target.value)}
-                        placeholder={PLACEHOLDERS.promotionDescription}
+
                         rows={2}
                     />
                 </FormField>

@@ -69,7 +69,6 @@ export default function Register() {
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
                                     disabled={processing}
-                                    placeholder={PLACEHOLDERS.authName}
                                 />
                             </FormField>
 
@@ -98,7 +97,7 @@ export default function Register() {
                                         value={data.password}
                                         onChange={(e) => setData('password', e.target.value)}
                                         disabled={processing}
-                                        placeholder={PLACEHOLDERS.authPassword}
+                                        placeholder={PLACEHOLDERS.password}
                                         className="pr-10"
                                     />
                                     <Button
@@ -124,7 +123,7 @@ export default function Register() {
                                         value={data.password_confirmation}
                                         onChange={(e) => setData('password_confirmation', e.target.value)}
                                         disabled={processing}
-                                        placeholder={PLACEHOLDERS.authPasswordConfirm}
+                                        placeholder={PLACEHOLDERS.password}
                                         className="pr-10"
                                     />
                                     <Button

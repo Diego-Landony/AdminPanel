@@ -58,7 +58,6 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
                                 autoComplete={AUTOCOMPLETE.name}
-                                placeholder={PLACEHOLDERS.settingsProfileName}
                             />
                         </FormField>
 
@@ -69,7 +68,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
                                 autoComplete={AUTOCOMPLETE.email}
-                                placeholder={PLACEHOLDERS.settingsProfileEmail}
+                                placeholder={PLACEHOLDERS.email}
                             />
                         </FormField>
 

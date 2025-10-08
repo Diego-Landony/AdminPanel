@@ -234,7 +234,7 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
                                         onChange={(value) =>
                                             updateItem(item.id, 'product_id', value)
                                         }
-                                        placeholder={PLACEHOLDERS.productSearch}
+                                        placeholder={PLACEHOLDERS.search}
                                     />
                                 </FormField>
 

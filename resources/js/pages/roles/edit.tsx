@@ -4,6 +4,7 @@ import { Users } from 'lucide-react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
+import { PermissionsTable } from '@/components/PermissionsTable';
 import { EditRolesSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -13,22 +14,10 @@ import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { showNotification } from '@/hooks/useNotifications';
 import { ENTITY_ICONS } from '@/constants/section-icons';
 import { PLACEHOLDERS, NOTIFICATIONS } from '@/constants/ui-constants';
-
-/**
- * Interfaz para los permisos agrupados
- */
-interface Permission {
-    id: number;
-    name: string;
-    display_name: string;
-    description: string | null;
-    group: string;
-}
 
 interface User {
     id: number;
@@ -48,18 +37,26 @@ interface Role {
 }
 
 /**
+ * Interfaz para los permisos agrupados
+ */
+interface Permission {
+    id: number;
+    name: string;
+    display_name: string;
+    description: string | null;
+    group: string;
+}
+
+/**
  * Props de la página
  */
 interface EditRolePageProps {
     role: Role;
-    permissions: Record<string, Permission[]>;
     all_users: User[];
+    permissions: Record<string, Permission[]>;
 }
 
-/**
- * Página de edición de roles
- */
-export default function EditRole({ role, permissions, all_users }: EditRolePageProps) {
+export default function EditRole({ role, all_users, permissions }: EditRolePageProps) {
     const { data, setData, patch, processing, errors } = useForm({
         name: role.name,
         description: role.description || '',
@@ -70,7 +67,6 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
 
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [permissionSearch, setPermissionSearch] = useState('');
 
     // Verificar si es el rol de administrador
     const isAdminRole = role.name === 'admin';
@@ -111,26 +107,6 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
         }
     };
 
-    /**
-     * Verifica si un permiso está seleccionado
-     */
-    const isPermissionSelected = (permissionName: string): boolean => {
-        return data.permissions.includes(permissionName);
-    };
-
-    /**
-     * Obtiene el nombre legible del grupo
-     */
-    const getGroupDisplayName = (group: string): string => {
-        const groupNames: Record<string, string> = {
-            dashboard: 'Dashboard',
-            users: 'Usuarios',
-            activity: 'Actividad',
-            roles: 'Roles y Permisos',
-            settings: 'Configuración',
-        };
-        return groupNames[group] || group.charAt(0).toUpperCase() + group.slice(1);
-    };
 
     /**
      * Maneja el cambio de usuarios asignados y guarda automáticamente
@@ -179,13 +155,6 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
         (user) => user.name.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
-    /**
-     * Filtra permisos basado en el término de búsqueda
-     */
-    const filteredPermissions = Object.entries(permissions).filter(([group]) =>
-        group.toLowerCase().includes(permissionSearch.toLowerCase()) ||
-        getGroupDisplayName(group).toLowerCase().includes(permissionSearch.toLowerCase())
-    );
 
     return (
         <EditPageLayout
@@ -207,7 +176,7 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                         type="text"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-                        placeholder={Edit}
+                        placeholder={PLACEHOLDERS.roleName}
                         disabled={isAdminRole}
                         className={isAdminRole ? 'cursor-not-allowed opacity-50' : ''}
                     />
@@ -301,100 +270,12 @@ export default function EditRole({ role, permissions, all_users }: EditRolePageP
                     </div>
                 )}
 
-                {/* Buscador de permisos */}
-                <div className="mb-4">
-                    <Input
-                        placeholder="Buscar módulo o permiso..."
-                        value={permissionSearch}
-                        onChange={(e) => setPermissionSearch(e.target.value)}
-                        className="max-w-sm"
-                    />
-                </div>
-
-                {/* Tabla compacta de permisos */}
-                <div className="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-1/3">Página</TableHead>
-                                <TableHead className="w-16 text-center">Ver</TableHead>
-                                <TableHead className="w-16 text-center">Crear</TableHead>
-                                <TableHead className="w-16 text-center">Editar</TableHead>
-                                <TableHead className="w-16 text-center">Eliminar</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredPermissions.map(([group, groupPermissions]) => {
-                                // Agrupar permisos por acción
-                                const actions = {
-                                    view: groupPermissions.find((p) => p.name.endsWith('.view')),
-                                    create: groupPermissions.find((p) => p.name.endsWith('.create')),
-                                    edit: groupPermissions.find((p) => p.name.endsWith('.edit')),
-                                    delete: groupPermissions.find((p) => p.name.endsWith('.delete')),
-                                };
-
-                                return (
-                                    <TableRow key={group}>
-                                        <TableCell className="font-medium">{getGroupDisplayName(group)}</TableCell>
-                                        <TableCell className="text-center">
-                                            {actions.view && (
-                                                <Checkbox
-                                                    id={actions.view?.name || ''}
-                                                    checked={isPermissionSelected(actions.view?.name || '')}
-                                                    onCheckedChange={(checked) =>
-                                                        handlePermissionChange(actions.view?.name || '', checked as boolean)
-                                                    }
-                                                    disabled={role.name === 'admin'}
-                                                    className={role.name === 'admin' ? 'cursor-not-allowed opacity-50' : ''}
-                                                />
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                            {actions.create && (
-                                                <Checkbox
-                                                    id={actions.create?.name || ''}
-                                                    checked={isPermissionSelected(actions.create?.name || '')}
-                                                    onCheckedChange={(checked) =>
-                                                        handlePermissionChange(actions.create?.name || '', checked as boolean)
-                                                    }
-                                                    disabled={role.name === 'admin'}
-                                                    className={role.name === 'admin' ? 'cursor-not-allowed opacity-50' : ''}
-                                                />
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                            {actions.edit && (
-                                                <Checkbox
-                                                    id={actions.edit?.name || ''}
-                                                    checked={isPermissionSelected(actions.edit?.name || '')}
-                                                    onCheckedChange={(checked) =>
-                                                        handlePermissionChange(actions.edit?.name || '', checked as boolean)
-                                                    }
-                                                    disabled={role.name === 'admin'}
-                                                    className={role.name === 'admin' ? 'cursor-not-allowed opacity-50' : ''}
-                                                />
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                            {actions.delete && (
-                                                <Checkbox
-                                                    id={actions.delete?.name || ''}
-                                                    checked={isPermissionSelected(actions.delete?.name || '')}
-                                                    onCheckedChange={(checked) =>
-                                                        handlePermissionChange(actions.delete?.name || '', checked as boolean)
-                                                    }
-                                                    disabled={role.name === 'admin'}
-                                                    className={role.name === 'admin' ? 'cursor-not-allowed opacity-50' : ''}
-                                                />
-                                            )}
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                        </TableBody>
-                    </Table>
-                </div>
-
+                <PermissionsTable
+                    selectedPermissions={data.permissions}
+                    onPermissionChange={handlePermissionChange}
+                    permissions={permissions}
+                    disabled={isAdminRole}
+                />
                 {errors.permissions && <FormError message={errors.permissions} />}
             </FormSection>
         </EditPageLayout>

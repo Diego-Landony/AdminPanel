@@ -33,6 +33,10 @@ export const PLACEHOLDERS = {
 
     // Búsqueda
     search: 'Buscar...',
+
+    // Campos de texto genéricos
+    name: 'Nombre',
+    description: 'Descripción',
 } as const;
 
 // Mensajes de notificación estandarizados

@@ -4,12 +4,11 @@ import React from 'react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
+import { PermissionsTable } from '@/components/PermissionsTable';
 import { CreateRolesSkeleton } from '@/components/skeletons';
-import { Checkbox } from '@/components/ui/checkbox';
 import { FormError } from '@/components/ui/form-error';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { ENTITY_ICONS } from '@/constants/section-icons';
 import { PLACEHOLDERS, NOTIFICATIONS } from '@/constants/ui-constants';
@@ -32,9 +31,6 @@ interface CreateRolePageProps {
     permissions: Record<string, Permission[]>;
 }
 
-/**
- * Página de creación de roles
- */
 export default function CreateRole({ permissions }: CreateRolePageProps) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
@@ -75,26 +71,6 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
         }
     };
 
-    /**
-     * Verifica si un permiso está seleccionado
-     */
-    const isPermissionSelected = (permissionName: string): boolean => {
-        return data.permissions.includes(permissionName);
-    };
-
-    /**
-     * Obtiene el nombre legible del grupo
-     */
-    const getGroupDisplayName = (group: string): string => {
-        const groupNames: Record<string, string> = {
-            dashboard: 'Dashboard',
-            users: 'Usuarios',
-            activity: 'Actividad',
-            roles: 'Roles y Permisos',
-            settings: 'Configuración',
-        };
-        return groupNames[group] || group.charAt(0).toUpperCase() + group.slice(1);
-    };
 
     return (
         <CreatePageLayout
@@ -121,83 +97,16 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
                 </FormField>
             </FormSection>
 
-            <FormSection icon={ENTITY_ICONS.role.permissions} title="Permisos del Rol" description="Selecciona las acciones que este rol puede realizar">
-                {/* Tabla compacta de permisos */}
-                <div className="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-1/3">Página</TableHead>
-                                <TableHead className="w-16 text-center">Ver</TableHead>
-                                <TableHead className="w-16 text-center">Crear</TableHead>
-                                <TableHead className="w-16 text-center">Editar</TableHead>
-                                <TableHead className="w-16 text-center">Eliminar</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {Object.entries(permissions).map(([group, groupPermissions]) => {
-                                // Agrupar permisos por acción
-                                const actions = {
-                                    view: groupPermissions.find((p) => p.name.endsWith('.view')),
-                                    create: groupPermissions.find((p) => p.name.endsWith('.create')),
-                                    edit: groupPermissions.find((p) => p.name.endsWith('.edit')),
-                                    delete: groupPermissions.find((p) => p.name.endsWith('.delete')),
-                                };
-
-                                return (
-                                    <TableRow key={group}>
-                                        <TableCell className="font-medium">{getGroupDisplayName(group)}</TableCell>
-                                        <TableCell className="text-center">
-                                            {actions.view && (
-                                                <Checkbox
-                                                    id={actions.view?.name || ''}
-                                                    checked={isPermissionSelected(actions.view?.name || '')}
-                                                    onCheckedChange={(checked) =>
-                                                        handlePermissionChange(actions.view?.name || '', checked as boolean)
-                                                    }
-                                                />
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                            {actions.create && (
-                                                <Checkbox
-                                                    id={actions.create?.name || ''}
-                                                    checked={isPermissionSelected(actions.create?.name || '')}
-                                                    onCheckedChange={(checked) =>
-                                                        handlePermissionChange(actions.create?.name || '', checked as boolean)
-                                                    }
-                                                />
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                            {actions.edit && (
-                                                <Checkbox
-                                                    id={actions.edit?.name || ''}
-                                                    checked={isPermissionSelected(actions.edit?.name || '')}
-                                                    onCheckedChange={(checked) =>
-                                                        handlePermissionChange(actions.edit?.name || '', checked as boolean)
-                                                    }
-                                                />
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                            {actions.delete && (
-                                                <Checkbox
-                                                    id={actions.delete?.name || ''}
-                                                    checked={isPermissionSelected(actions.delete?.name || '')}
-                                                    onCheckedChange={(checked) =>
-                                                        handlePermissionChange(actions.delete?.name || '', checked as boolean)
-                                                    }
-                                                />
-                                            )}
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                        </TableBody>
-                    </Table>
-                </div>
-
+            <FormSection
+                icon={ENTITY_ICONS.role.permissions}
+                title="Permisos del Rol"
+                description="Selecciona las acciones que este rol puede realizar"
+            >
+                <PermissionsTable
+                    selectedPermissions={data.permissions}
+                    onPermissionChange={handlePermissionChange}
+                    permissions={permissions}
+                />
                 {errors.permissions && <FormError message={errors.permissions} />}
             </FormSection>
         </CreatePageLayout>

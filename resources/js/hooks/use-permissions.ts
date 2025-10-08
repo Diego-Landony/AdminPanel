@@ -6,6 +6,7 @@ interface UserRole {
 }
 
 interface User {
+    is_admin?: boolean;
     roles?: UserRole[];
 }
 
@@ -26,10 +27,14 @@ export function usePermissions() {
 
     /**
      * Verifica si el usuario tiene un permiso específico
+     * Admin siempre tiene acceso a todo (bypass automático)
      */
     const hasPermission = (permission: string): boolean => {
         // Si no hay usuario, no tiene permisos
         if (!user) return false;
+
+        // Admin siempre tiene todos los permisos (bypass automático)
+        if (user.is_admin) return true;
 
         // Si no tiene roles, solo puede acceder al dashboard
         if (!user.roles || user.roles.length === 0) {
@@ -57,9 +62,15 @@ export function usePermissions() {
 
     /**
      * Obtiene todos los permisos del usuario
+     * Admin tiene wildcard (*) = todos los permisos
      */
     const getAllPermissions = (): string[] => {
-        if (!user || !user.roles) return ['dashboard.view'];
+        if (!user) return ['dashboard.view'];
+
+        // Admin tiene wildcard (todos los permisos)
+        if (user.is_admin) return ['*'];
+
+        if (!user.roles) return ['dashboard.view'];
 
         const permissions = new Set<string>();
         permissions.add('dashboard.view'); // Siempre incluir dashboard

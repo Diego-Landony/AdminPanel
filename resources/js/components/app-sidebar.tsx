@@ -10,7 +10,7 @@ import AppLogo from './app-logo';
  * Configuración dinámica de páginas del sistema
  * Se actualiza automáticamente según las páginas detectadas
  */
-interface PageConfig {
+export interface PageConfig {
     name: string;
     title: string;
     href: string;
@@ -19,7 +19,7 @@ interface PageConfig {
     permission: string;
 }
 
-const systemPages: PageConfig[] = [
+export const systemPages: PageConfig[] = [
     {
         name: 'home',
         title: 'Inicio',
@@ -133,6 +133,17 @@ const systemPages: PageConfig[] = [
 ];
 
 /**
+ * Iconos de grupos para la sidebar
+ */
+export const groupIcons: Record<string, LucideIcon> = {
+    'Usuarios': UserCog,
+    'Clientes': UserCircle,
+    'Restaurantes': Utensils,
+    'Menú': HandPlatter,
+    'Promociones': Percent,
+};
+
+/**
  * Sidebar principal de la aplicación
  * Sistema dinámico basado en permisos escalable
  */
@@ -178,23 +189,9 @@ export function AppSidebar() {
         // Agregar grupos que tienen items
         Object.entries(groupedItems).forEach(([groupName, groupItems]) => {
             if (groupItems.length > 0) {
-                // Asignar iconos específicos para cada grupo
-                let groupIcon = Users; // Icono por defecto
-                if (groupName === 'Usuarios') {
-                    groupIcon = UserCog;
-                } else if (groupName === 'Clientes') {
-                    groupIcon = UserCircle;
-                } else if (groupName === 'Restaurantes') {
-                    groupIcon = Utensils;
-                } else if (groupName === 'Menú') {
-                    groupIcon = HandPlatter;
-                } else if (groupName === 'Promociones') {
-                    groupIcon = Percent;
-                }
-
                 items.push({
                     title: groupName,
-                    icon: groupIcon,
+                    icon: groupIcons[groupName] || Users,
                     items: groupItems,
                 });
             }

@@ -114,15 +114,25 @@ class User extends Authenticatable
     }
 
     /**
+     * Caché de permisos en memoria durante el request
+     */
+    private ?array $cachedPermissions = null;
+
+    /**
      * Verifica si el usuario tiene un permiso específico
+     * Admin siempre tiene todos los permisos (bypass automático)
      */
     public function hasPermission(string $permission): bool
     {
-        return $this->roles()
-            ->whereHas('permissions', function ($query) use ($permission) {
-                $query->where('name', $permission);
-            })
-            ->exists();
+        // Super Admin: bypass automático para todos los permisos
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        // Optimizado: usa relaciones cargadas en vez de query
+        return $this->roles
+            ->flatMap(fn ($role) => $role->permissions)
+            ->contains('name', $permission);
     }
 
     /**
@@ -135,18 +145,30 @@ class User extends Authenticatable
 
     /**
      * Obtiene todos los permisos del usuario
+     * Admin tiene wildcard (*) = todos los permisos
+     * Incluye caché en memoria para evitar múltiples cálculos
      */
     public function getAllPermissions(): array
     {
-        return $this->roles()
-            ->with('permissions')
-            ->get()
-            ->flatMap(function ($role) {
-                return $role->permissions;
-            })
+        // Super Admin: wildcard automático (todos los permisos)
+        if ($this->isAdmin()) {
+            return ['*'];
+        }
+
+        // Retornar caché si ya fue calculado en este request
+        if ($this->cachedPermissions !== null) {
+            return $this->cachedPermissions;
+        }
+
+        // Calcular y cachear permisos
+        $this->cachedPermissions = $this->roles
+            ->flatMap(fn ($role) => $role->permissions)
             ->pluck('name')
             ->unique()
+            ->values()
             ->toArray();
+
+        return $this->cachedPermissions;
     }
 
     /**
@@ -177,6 +199,24 @@ class User extends Authenticatable
 
         // Si no tiene permisos específicos pero tiene roles, puede acceder al dashboard
         return '/dashboard';
+    }
+
+    /**
+     * Verifica si el usuario tiene acceso a una página específica
+     * Alias conveniente para hasPermission con .view
+     */
+    public function hasAccessToPage(string $page): bool
+    {
+        return $this->hasPermission("{$page}.view");
+    }
+
+    /**
+     * Verifica si el usuario puede realizar una acción en una página
+     * Ejemplo: canPerformAction('users', 'create')
+     */
+    public function canPerformAction(string $page, string $action): bool
+    {
+        return $this->hasPermission("{$page}.{$action}");
     }
 
     /**

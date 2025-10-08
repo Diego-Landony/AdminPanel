@@ -27,13 +27,21 @@ class CheckUserPermissions
             return $next($request);
         }
 
+        // Eager load roles y permisos para evitar N+1 queries
+        $user->load('roles.permissions');
+
         // Si no se especifica permiso, continuar
         if (! $permission) {
             return $next($request);
         }
 
+        // Admin siempre tiene acceso (bypass automático)
+        if ($user->isAdmin()) {
+            return $next($request);
+        }
+
         // Si el usuario no tiene roles o no tiene permisos, solo puede acceder a no-access
-        if ($user->roles()->count() === 0 || count($user->getAllPermissions()) === 0) {
+        if ($user->roles->count() === 0 || count($user->getAllPermissions()) === 0) {
             // Si es una petición AJAX, devolver JSON
             if ($request->expectsJson()) {
                 return response()->json([

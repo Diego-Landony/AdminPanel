@@ -42,8 +42,16 @@ class AuthenticatedSessionController extends Controller
         // ✅ Redirección inteligente basada en permisos
         $user = auth()->user();
         if ($user) {
+            // Eager load roles y permisos para evitar N+1 queries
+            $user->load('roles.permissions');
+
+            // Admin siempre va a home (bypass automático)
+            if ($user->isAdmin()) {
+                return redirect()->intended(route('home', absolute: false));
+            }
+
             // Si no tiene roles, ir directamente a no-access
-            if ($user->roles()->count() === 0) {
+            if ($user->roles->count() === 0) {
                 return redirect()->route('no-access');
             }
 

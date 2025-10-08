@@ -145,7 +145,7 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
 }: GroupedSortableTableProps<T>) {
     const [search, setSearch] = useState('');
     const [localGroups, setLocalGroups] = useState<CategoryGroup<T>[]>(groupedData);
-    const [hasChanges, setHasChanges] = useState(false);
+    const [changedCategories, setChangedCategories] = useState<Set<number | null>>(new Set());
 
     const breakpointClass = breakpoint + ':';
 
@@ -159,7 +159,7 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
     // Sincronizar cuando cambian los datos externos
     useEffect(() => {
         setLocalGroups(groupedData);
-        setHasChanges(false);
+        setChangedCategories(new Set());
     }, [groupedData]);
 
     /**
@@ -185,26 +185,34 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
                 });
             });
 
-            setHasChanges(true);
+            // Marcar esta categoría como modificada
+            setChangedCategories((prev) => new Set(prev).add(categoryId));
         }
     };
 
     /**
-     * Guarda el nuevo orden
+     * Guarda el nuevo orden para una categoría específica
      */
-    const handleSaveOrder = () => {
-        // Aplanar todos los productos con su nuevo sort_order
-        const allProducts: T[] = [];
-        localGroups.forEach((group) => {
-            group.products.forEach((product, index) => {
-                allProducts.push({
-                    ...product,
-                    sort_order: index + 1,
-                } as T);
-            });
-        });
+    const handleSaveOrder = (categoryId: number | null) => {
+        // Encontrar la categoría modificada
+        const categoryGroup = localGroups.find((group) => group.category.id === categoryId);
+        if (!categoryGroup) return;
 
-        onReorder(allProducts);
+        // Preparar productos de esta categoría con su nuevo sort_order
+        const productsToSave: T[] = categoryGroup.products.map((product, index) => ({
+            ...product,
+            sort_order: index + 1,
+        } as T));
+
+        // Enviar al backend
+        onReorder(productsToSave);
+
+        // Remover esta categoría de las modificadas
+        setChangedCategories((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(categoryId);
+            return newSet;
+        });
     };
 
     /**
@@ -327,10 +335,10 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
                                         </Table>
                                     </DndContext>
 
-                                    {/* Save Button for this group */}
-                                    {hasChanges && (
+                                    {/* Save Button for this group - solo si esta categoría cambió */}
+                                    {changedCategories.has(group.category.id) && (
                                         <div className="flex items-center justify-end gap-4 px-6 py-3 bg-muted/30">
-                                            <Button onClick={handleSaveOrder} disabled={isSaving} size="sm">
+                                            <Button onClick={() => handleSaveOrder(group.category.id)} disabled={isSaving} size="sm">
                                                 <Save className="mr-2 h-4 w-4" />
                                                 {isSaving ? 'Guardando...' : 'Guardar Orden'}
                                             </Button>
@@ -364,10 +372,10 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
                                                 ))}
                                             </div>
 
-                                            {/* Save Button for this group (mobile) */}
-                                            {hasChanges && (
+                                            {/* Save Button for this group (mobile) - solo si esta categoría cambió */}
+                                            {changedCategories.has(group.category.id) && (
                                                 <div className="flex justify-end">
-                                                    <Button onClick={handleSaveOrder} disabled={isSaving} size="sm">
+                                                    <Button onClick={() => handleSaveOrder(group.category.id)} disabled={isSaving} size="sm">
                                                         <Save className="mr-2 h-4 w-4" />
                                                         {isSaving ? 'Guardando...' : 'Guardar Orden'}
                                                     </Button>

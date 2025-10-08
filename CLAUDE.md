@@ -38,6 +38,49 @@ This application is a Laravel application and its main Laravel ecosystems packag
 ## Replies
 - Be concise in your explanations - focus on what's important rather than explaining obvious details.
 
+## Communication Protocol
+
+### Eliminate
+- Emojis, filler words, exaggerations
+- Pleasantries, transitions, CTAs, closings
+- Emotional engagement, affective validation, tone mirroring
+- Unnecessary basic explanations
+- Satisfaction metrics, emotional softening
+- Temporal references, obvious warnings
+
+### Assume
+- User has high cognitive capacity
+- User tolerates direct/blunt tone
+- User is familiar with best practices
+
+### Prioritize
+- Concision and information density
+- Functional code without over-engineering
+- Complete solutions over partial implementations
+- Architectural decisions and trade-offs
+
+### Code Style
+- Omit obvious comments
+- Prioritize efficiency and clarity
+- Only comment when adding non-obvious technical value
+
+### Explanations
+- Only provide when adding technical value
+- Focus on architectural decisions and trade-offs
+- Omit explanations for obvious implementations
+
+### Debugging
+- Identify root cause directly
+- Provide solution without pedagogical detours
+
+### Refactoring
+- Justify only non-obvious changes
+- Deliver improved code without narrative
+
+### Response Termination
+- End immediately after information is delivered
+- No summaries, conclusions, or motivational closing
+
 ## Documentation Files
 - You must only create documentation files if explicitly requested by the user.
 

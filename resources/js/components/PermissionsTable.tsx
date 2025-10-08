@@ -62,20 +62,17 @@ export function PermissionsTable({ selectedPermissions, onPermissionChange, perm
 
     return (
         <div className="overflow-hidden rounded-lg border">
-            <Table>
-                <TableHeader>
-                    <TableRow className="bg-muted/50">
-                        <TableHead className="w-1/3">Página</TableHead>
-                        <TableHead className="w-16 text-center">Ver</TableHead>
-                        <TableHead className="w-16 text-center">Crear</TableHead>
-                        <TableHead className="w-16 text-center">Editar</TableHead>
-                        <TableHead className="w-16 text-center">Eliminar</TableHead>
-                    </TableRow>
-                </TableHeader>
-            </Table>
-
-            <div className="max-h-[500px] overflow-y-auto">
+            <div className="max-h-[600px] overflow-y-auto">
                 <Table>
+                    <TableHeader className="sticky top-0 z-10 bg-background">
+                        <TableRow className="bg-muted/50">
+                            <TableHead className="w-[40%]">Página</TableHead>
+                            <TableHead className="w-[15%] text-center">Ver</TableHead>
+                            <TableHead className="w-[15%] text-center">Crear</TableHead>
+                            <TableHead className="w-[15%] text-center">Editar</TableHead>
+                            <TableHead className="w-[15%] text-center">Eliminar</TableHead>
+                        </TableRow>
+                    </TableHeader>
                     <TableBody>
                         {/* Páginas individuales (sin grupo) */}
                         {organizedPermissions['__individual__']?.map((item) => {
@@ -84,7 +81,7 @@ export function PermissionsTable({ selectedPermissions, onPermissionChange, perm
 
                             return (
                                 <TableRow key={item.resource} className="hover:bg-muted/20">
-                                    <TableCell className="font-medium">
+                                    <TableCell className="w-[40%] font-medium">
                                         <div className="flex items-center gap-2">
                                             {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
                                             {item.title}
@@ -95,7 +92,7 @@ export function PermissionsTable({ selectedPermissions, onPermissionChange, perm
                                         const permExists = item.permissions.some(p => p.name === permName);
 
                                         return (
-                                            <TableCell key={action} className="text-center">
+                                            <TableCell key={action} className="w-[15%] text-center">
                                                 {permExists ? (
                                                     <Checkbox
                                                         checked={selectedPermissions.includes(permName)}
@@ -135,13 +132,13 @@ export function PermissionsTable({ selectedPermissions, onPermissionChange, perm
                                         {/* Páginas del grupo (sin iconos, como sidebar) */}
                                         {items.map((item) => (
                                             <TableRow key={item.resource} className="hover:bg-muted/20">
-                                                <TableCell className="pl-8">{item.title}</TableCell>
+                                                <TableCell className="w-[40%] pl-8">{item.title}</TableCell>
                                                 {['view', 'create', 'edit', 'delete'].map((action) => {
                                                     const permName = `${item.resource}.${action}`;
                                                     const permExists = item.permissions.some(p => p.name === permName);
 
                                                     return (
-                                                        <TableCell key={action} className="text-center">
+                                                        <TableCell key={action} className="w-[15%] text-center">
                                                             {permExists ? (
                                                                 <Checkbox
                                                                     checked={selectedPermissions.includes(permName)}

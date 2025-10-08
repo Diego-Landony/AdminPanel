@@ -1,7 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
 import { PLACEHOLDERS } from '@/constants/ui-constants';
-import { Plus, Trash2, Store, Truck, Calendar } from 'lucide-react';
+import { Plus, Trash2, Store, Truck } from 'lucide-react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
@@ -77,24 +77,24 @@ export default function CreateTwoForOnePromotion({ categories }: CreatePromotion
         };
         const updated = [...localItems, newItem];
         setLocalItems(updated);
-        setData('items', updated.map(({ id, ...rest }) => rest));
+        setData('items', updated.map(({ id: _id, ...rest }) => rest));
     };
 
     const removeItem = (index: number) => {
         const updated = localItems.filter((_, i) => i !== index);
         setLocalItems(updated);
-        setData('items', updated.map(({ id, ...rest }) => rest));
+        setData('items', updated.map(({ id: _id, ...rest }) => rest));
     };
 
     const updateItem = (
         index: number,
         field: keyof Omit<TwoForOneItem, 'id'>,
-        value: any
+        value: string | number | null
     ) => {
         const updated = [...localItems];
         updated[index] = { ...updated[index], [field]: value };
         setLocalItems(updated);
-        setData('items', updated.map(({ id, ...rest }) => rest));
+        setData('items', updated.map(({ id: _id, ...rest }) => rest));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -103,7 +103,7 @@ export default function CreateTwoForOnePromotion({ categories }: CreatePromotion
         post(route('menu.promotions.store'), {
             transform: (data) => ({
                 ...data,
-                items: localItems.map(({ id, ...rest }) => rest),
+                items: localItems.map(({ id: _id, ...rest }) => rest),
             }),
         });
     };

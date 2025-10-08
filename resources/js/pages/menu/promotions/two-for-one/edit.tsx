@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
 import React, { useState } from 'react';
 import { PLACEHOLDERS } from '@/constants/ui-constants';
-import { Plus, Trash2, Store, Truck, Calendar } from 'lucide-react';
+import { Plus, Trash2, Store, Truck } from 'lucide-react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
@@ -108,7 +108,7 @@ export default function EditTwoForOnePromotion({ promotion, categories }: EditPr
     const updateItem = (
         index: number,
         field: keyof Omit<LocalItem, 'id'>,
-        value: any
+        value: string | number | null
     ) => {
         const updated = [...localItems];
         updated[index] = { ...updated[index], [field]: value };
@@ -121,7 +121,7 @@ export default function EditTwoForOnePromotion({ promotion, categories }: EditPr
 
         const payload = {
             ...formData,
-            items: localItems.map(({ id, ...rest }) => rest),
+            items: localItems.map(({ id: _id, ...rest }) => rest),
         };
 
         router.put(route('menu.promotions.update', promotion.id), payload, {

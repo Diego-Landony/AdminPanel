@@ -56,10 +56,15 @@ interface Promotion {
     items: PromotionItem[];
 }
 
+interface Category {
+    id: number;
+    name: string;
+}
+
 interface EditPromotionPageProps {
     promotion: Promotion;
     products: Product[];
-    categories: any[];
+    categories: Category[];
 }
 
 interface LocalItem {
@@ -76,7 +81,7 @@ interface LocalItem {
     time_until: string;
 }
 
-export default function EditPromotion({ promotion, products, categories }: EditPromotionPageProps) {
+export default function EditPromotion({ promotion, products }: EditPromotionPageProps) {
     const [formData, setFormData] = useState({
         is_active: promotion.is_active,
         name: promotion.name,
@@ -129,7 +134,7 @@ export default function EditPromotion({ promotion, products, categories }: EditP
         setLocalItems(localItems.filter((_, i) => i !== index));
     };
 
-    const updateItem = (index: number, field: keyof Omit<LocalItem, 'id'>, value: any) => {
+    const updateItem = (index: number, field: keyof Omit<LocalItem, 'id'>, value: string | number | number[] | boolean) => {
         const updated = [...localItems];
         updated[index] = { ...updated[index], [field]: value };
         setLocalItems(updated);
@@ -141,7 +146,7 @@ export default function EditPromotion({ promotion, products, categories }: EditP
 
         const submitData = {
             ...formData,
-            items: localItems.map(({ id, has_schedule, ...rest }) => {
+            items: localItems.map(({ id: _id, has_schedule: _has_schedule, ...rest }) => {
                 // Calcular validity_type automáticamente basado en los campos
                 const hasDates = rest.valid_from || rest.valid_until;
                 const hasTimes = rest.time_from || rest.time_until;
@@ -336,7 +341,7 @@ export default function EditPromotion({ promotion, products, categories }: EditP
                             >
                                 <Select
                                     value={item.service_type}
-                                    onValueChange={(value: any) =>
+                                    onValueChange={(value: 'both' | 'delivery_only' | 'pickup_only') =>
                                         updateItem(index, 'service_type', value)
                                     }
                                 >

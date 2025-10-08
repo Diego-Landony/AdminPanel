@@ -284,32 +284,44 @@ class PriceCalculatorService
         $currentTime = $datetime->format('H:i:s');
 
         return Promotion::where('is_active', true)
-            ->where(function ($q) use ($product, $categoryId) {
-                // Aplica al producto específico
-                $q->whereHas('items', fn ($q2) => $q2->where('product_id', $product->id))
-                    // O a la categoría
-                    ->orWhereHas('items', fn ($q2) => $q2->where('category_id', $categoryId));
-            })
-            // Día de la semana
-            ->where(function ($q) use ($dayOfWeek) {
-                $q->whereNull('active_days')
-                    ->orWhereJsonContains('active_days', $dayOfWeek);
-            })
-            // Vigencia de fechas
-            ->where(function ($q) use ($currentDate) {
-                $q->where('is_permanent', true)
-                    ->orWhere(function ($q2) use ($currentDate) {
-                        $q2->whereDate('valid_from', '<=', $currentDate)
-                            ->whereDate('valid_until', '>=', $currentDate);
-                    });
-            })
-            // Restricción de horas
-            ->where(function ($q) use ($currentTime) {
-                $q->where('has_time_restriction', false)
-                    ->orWhere(function ($q2) use ($currentTime) {
-                        $q2->whereTime('time_from', '<=', $currentTime)
-                            ->whereTime('time_until', '>=', $currentTime);
-                    });
+            ->whereHas('items', function ($q) use ($product, $categoryId, $dayOfWeek, $currentDate, $currentTime) {
+                // Aplica al producto específico o a la categoría
+                $q->where(function ($q2) use ($product, $categoryId) {
+                    $q2->where('product_id', $product->id)
+                        ->orWhere('category_id', $categoryId);
+                });
+
+                // Verificar días de la semana (weekdays)
+                $q->where(function ($q2) use ($dayOfWeek) {
+                    $q2->whereNull('weekdays')
+                        ->orWhereJsonContains('weekdays', $dayOfWeek);
+                });
+
+                // Verificar vigencia según validity_type
+                $q->where(function ($q2) use ($currentDate, $currentTime) {
+                    // Permanente (weekdays solamente)
+                    $q2->where('validity_type', 'weekdays')
+                        // O rango de fechas
+                        ->orWhere(function ($q3) use ($currentDate) {
+                            $q3->whereIn('validity_type', ['date_range', 'date_time_range'])
+                                ->whereDate('valid_from', '<=', $currentDate)
+                                ->whereDate('valid_until', '>=', $currentDate);
+                        })
+                        // O rango de horario
+                        ->orWhere(function ($q3) use ($currentTime) {
+                            $q3->where('validity_type', 'time_range')
+                                ->whereTime('time_from', '<=', $currentTime)
+                                ->whereTime('time_until', '>=', $currentTime);
+                        })
+                        // O fecha + horario
+                        ->orWhere(function ($q3) use ($currentDate, $currentTime) {
+                            $q3->where('validity_type', 'date_time_range')
+                                ->whereDate('valid_from', '<=', $currentDate)
+                                ->whereDate('valid_until', '>=', $currentDate)
+                                ->whereTime('time_from', '<=', $currentTime)
+                                ->whereTime('time_until', '>=', $currentTime);
+                        });
+                });
             })
             ->orderBy('id', 'desc')
             ->first();

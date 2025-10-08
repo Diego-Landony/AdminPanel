@@ -57,7 +57,7 @@ interface DailySpecialItem {
     time_until: string;
 }
 
-export default function CreatePromotion({ products, categories }: CreatePromotionPageProps) {
+export default function CreatePromotion({ products }: CreatePromotionPageProps) {
     const { data, setData, post, processing, errors } = useForm({
         is_active: true,
         name: '',
@@ -98,24 +98,24 @@ export default function CreatePromotion({ products, categories }: CreatePromotio
         };
         const updated = [...localItems, newItem];
         setLocalItems(updated);
-        setData('items', updated.map(({ id, ...rest }) => rest));
+        setData('items', updated.map(({ id: _id, ...rest }) => rest));
     };
 
     const removeItem = (index: number) => {
         const updated = localItems.filter((_, i) => i !== index);
         setLocalItems(updated);
-        setData('items', updated.map(({ id, ...rest }) => rest));
+        setData('items', updated.map(({ id: _id, ...rest }) => rest));
     };
 
     const updateItem = (
         index: number,
         field: keyof Omit<DailySpecialItem, 'id'>,
-        value: any
+        value: string | number | number[] | boolean
     ) => {
         const updated = [...localItems];
         updated[index] = { ...updated[index], [field]: value };
         setLocalItems(updated);
-        setData('items', updated.map(({ id, ...rest }) => rest));
+        setData('items', updated.map(({ id: _id, ...rest }) => rest));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -126,7 +126,7 @@ export default function CreatePromotion({ products, categories }: CreatePromotio
         post(route('menu.promotions.store'), {
             transform: (data) => ({
                 ...data,
-                items: localItems.map(({ id, has_schedule, ...rest }) => {
+                items: localItems.map(({ id: _id, has_schedule: _has_schedule, ...rest }) => {
                     // Calcular validity_type automáticamente basado en los campos
                     const hasDates = rest.valid_from || rest.valid_until;
                     const hasTimes = rest.time_from || rest.time_until;
@@ -308,7 +308,7 @@ export default function CreatePromotion({ products, categories }: CreatePromotio
                             >
                                 <Select
                                     value={item.service_type}
-                                    onValueChange={(value: any) =>
+                                    onValueChange={(value: 'both' | 'delivery_only' | 'pickup_only') =>
                                         updateItem(index, 'service_type', value)
                                     }
                                 >

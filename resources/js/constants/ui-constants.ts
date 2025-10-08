@@ -54,6 +54,8 @@ export const PLACEHOLDERS = {
     promotionSearch: 'Buscar promociones...',
     promotionSearchDailySpecial: 'Buscar subs del día...',
     promotionSearchTwoForOne: 'Buscar promociones 2x1...',
+    promotionSearchPercentage: 'Buscar promociones de porcentaje...',
+    productSearch: 'Buscar producto...',
     // Menu - Product Variants
     variantSku: 'Se genera automáticamente si se deja vacío',
     variantSortOrder: '0',

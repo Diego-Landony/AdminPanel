@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import React, { useState } from 'react';
 import { PLACEHOLDERS } from '@/constants/ui-constants';
 import { Plus, Trash2, Store, Truck } from 'lucide-react';
+import { route } from 'ziggy-js';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
@@ -114,7 +115,7 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
         setLocalItems(localItems.filter((item) => item.id !== id));
     };
 
-    const updateItem = (id: string, field: keyof LocalItem, value: any) => {
+    const updateItem = (id: string, field: keyof LocalItem, value: string | number | null) => {
         setLocalItems(
             localItems.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
         );
@@ -128,7 +129,7 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
             route('menu.promotions.update', promotion.id),
             {
                 ...formData,
-                items: localItems.map(({ id, ...rest }) => rest),
+                items: localItems.map(({ id: _id, ...rest }) => rest),
             },
             {
                 onError: (errors) => {
@@ -153,6 +154,7 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
     return (
         <EditPageLayout
             title="Editar Promoción de Porcentaje"
+            description="Modifica los detalles de la promoción de porcentaje"
             backHref={route('menu.promotions.percentage.index')}
             backLabel="Volver"
             onSubmit={handleSubmit}

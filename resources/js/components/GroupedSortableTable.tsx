@@ -290,7 +290,7 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
                     <CardContent className="p-0">
                         {/* Desktop view */}
                         <div className={`hidden ${breakpointClass}block`}>
-                            {filteredGroups.map((group, groupIndex) => (
+                            {filteredGroups.map((group) => (
                                 <div key={group.category.id ?? 'no-category'} className="border-b last:border-b-0">
                                     {/* Category Header */}
                                     <div className="bg-muted/50 px-6 py-3 border-b">

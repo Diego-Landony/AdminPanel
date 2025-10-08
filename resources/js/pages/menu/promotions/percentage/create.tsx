@@ -100,7 +100,7 @@ export default function CreatePercentage({ products, categories }: CreatePromoti
         setData('items', updated);
     };
 
-    const updateItem = (id: string, field: keyof PercentageItem, value: any) => {
+    const updateItem = (id: string, field: keyof PercentageItem, value: string | number | null) => {
         const updated = localItems.map((item) =>
             item.id === id ? { ...item, [field]: value } : item,
         );
@@ -114,7 +114,7 @@ export default function CreatePercentage({ products, categories }: CreatePromoti
         post(route('menu.promotions.store'), {
             transform: (data) => ({
                 ...data,
-                items: localItems.map(({ id, ...rest }) => rest),
+                items: localItems.map(({ id: _id, ...rest }) => rest),
             }),
         });
     };

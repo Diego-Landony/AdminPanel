@@ -38,17 +38,32 @@ export default [
         },
     },
     {
+        rules: {
+            // Allow unused vars when they start with _ (common pattern for destructuring)
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                {
+                    argsIgnorePattern: '^_',
+                    varsIgnorePattern: '^_',
+                    destructuredArrayIgnorePattern: '^_',
+                },
+            ],
+        },
+    },
+    {
         ignores: [
             'vendor/**',
             'node_modules/**',
             'public/**',
             'bootstrap/ssr/**',
             'web-admin-legacy/**',
+            'admin-legacy/**',
             'tailwind.config.js',
             '**/*.min.js',
             '**/build/**',
             '**/dist/**',
             'coverage/**',
+            'resources/js/ziggy.js', // Auto-generated file
         ],
     },
     prettier, // Turn off all rules that might conflict with Prettier

@@ -36,6 +36,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { generateUniqueId } from '@/utils/generateId';
 import { Banknote, GripVertical, ListChecks, Package, Plus, X } from 'lucide-react';
@@ -332,9 +333,20 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
             loadingSkeleton={EditProductsSkeleton}
         >
             <FormSection icon={Package} title="Información Básica" description="Datos principales del producto">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <Label htmlFor="is_active" className="text-base">
+                        Producto activo
+                    </Label>
+                    <Switch
+                        id="is_active"
+                        checked={formData.is_active}
+                        onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)}
+                    />
+                </div>
+
                 <FormField label="Categoría" error={errors.category_id} required>
                     <Select value={formData.category_id} onValueChange={(value) => handleInputChange('category_id', value)}>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-11">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -355,17 +367,6 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
                     <Textarea id="description" value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} rows={2} />
                 </FormField>
 
-                <div className="flex items-center space-x-2">
-                    <Checkbox
-                        id="is_active"
-                        checked={formData.is_active}
-                        onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)}
-                    />
-                    <Label htmlFor="is_active" className="text-sm leading-none font-medium cursor-pointer">
-                        Producto activo
-                    </Label>
-                </div>
-
                 <ImageUpload label="Imagen del Producto" currentImage={formData.image} onImageChange={(url) => handleInputChange('image', url || '')} error={errors.image} />
             </FormSection>
 
@@ -373,6 +374,7 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
                 icon={Banknote}
                 title="Precios y Variantes"
                 description="Define si el producto usa variantes (ej: 15cm, 30cm) o tiene un precio único"
+                className="mt-8"
             >
                 <div className="flex items-center space-x-2 mb-6">
                     <Checkbox

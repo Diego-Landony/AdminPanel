@@ -143,7 +143,7 @@ export function ImageUpload({
                 </Label>
             )}
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col items-center gap-4">
                 {/* Preview o placeholder */}
                 <div className="relative w-full max-w-xs">
                     {preview ? (

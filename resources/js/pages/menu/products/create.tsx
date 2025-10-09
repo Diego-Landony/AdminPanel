@@ -37,6 +37,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
 import { generateUniqueId } from '@/utils/generateId';
@@ -301,9 +302,20 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
             loadingSkeleton={CreateProductsSkeleton}
         >
             <FormSection icon={Package} title="Información Básica" description="Datos principales del producto">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <Label htmlFor="is_active" className="text-base">
+                        Producto activo
+                    </Label>
+                    <Switch
+                        id="is_active"
+                        checked={data.is_active}
+                        onCheckedChange={(checked) => setData('is_active', checked as boolean)}
+                    />
+                </div>
+
                 <FormField label="Categoría" error={errors.category_id} required>
                     <Select value={data.category_id} onValueChange={(value) => setData('category_id', value)}>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-11">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -336,17 +348,6 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                     />
                 </FormField>
 
-                <div className="flex items-center space-x-2">
-                    <Checkbox
-                        id="is_active"
-                        checked={data.is_active}
-                        onCheckedChange={(checked) => setData('is_active', checked as boolean)}
-                    />
-                    <Label htmlFor="is_active" className="text-sm leading-none font-medium cursor-pointer">
-                        Producto activo
-                    </Label>
-                </div>
-
                 <ImageUpload
                     label="Imagen del Producto"
                     currentImage={data.image}
@@ -359,6 +360,7 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                 icon={Banknote}
                 title="Precios y Variantes"
                 description="Define si el producto usa variantes (ej: 15cm, 30cm) o tiene un precio único"
+                className="mt-8"
             >
                 <div className="flex items-center space-x-2 mb-6">
                     <Checkbox

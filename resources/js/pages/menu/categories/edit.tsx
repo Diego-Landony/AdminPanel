@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Layers } from 'lucide-react';
 
 interface Category {
@@ -79,6 +80,17 @@ export default function CategoryEdit({ category }: EditPageProps) {
             loadingSkeleton={EditCategoriesSkeleton}
         >
             <FormSection icon={Layers} title="Información Básica" description="Datos principales de la categoría">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <Label htmlFor="is_active" className="text-base">
+                        Categoría activa
+                    </Label>
+                    <Switch
+                        id="is_active"
+                        checked={formData.is_active}
+                        onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)}
+                    />
+                </div>
+
                 <FormField label="Nombre" error={errors.name} required>
                     <Input
                         id="name"
@@ -88,17 +100,6 @@ export default function CategoryEdit({ category }: EditPageProps) {
 
                     />
                 </FormField>
-
-                <div className="flex items-center space-x-2">
-                    <Checkbox
-                        id="is_active"
-                        checked={formData.is_active}
-                        onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)}
-                    />
-                    <Label htmlFor="is_active" className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Categoría activa
-                    </Label>
-                </div>
             </FormSection>
         </EditPageLayout>
     );

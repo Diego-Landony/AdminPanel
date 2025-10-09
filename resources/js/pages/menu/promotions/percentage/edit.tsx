@@ -434,14 +434,9 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
             {/* Estado */}
             <FormSection title="Estado">
                 <div className="flex items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                        <Label htmlFor="is-active" className="text-base">
-                            Promoción activa
-                        </Label>
-                        <div className="text-sm text-muted-foreground">
-                            Solo las promociones activas se aplicarán en el cálculo de precios
-                        </div>
-                    </div>
+                    <Label htmlFor="is-active" className="text-base">
+                        Promoción activa
+                    </Label>
                     <Switch
                         id="is-active"
                         checked={formData.is_active}

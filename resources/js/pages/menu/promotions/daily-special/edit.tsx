@@ -198,14 +198,9 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
             <FormSection title="Información de la Promoción">
                 {/* Switch Activo */}
                 <div className="flex items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                        <Label htmlFor="is_active" className="text-base">
-                            Promoción activa
-                        </Label>
-                        <div className="text-sm text-muted-foreground">
-                            Solo las promociones activas se aplicarán en el cálculo de precios
-                        </div>
-                    </div>
+                    <Label htmlFor="is_active" className="text-base">
+                        Promoción activa
+                    </Label>
                     <Switch
                         id="is_active"
                         checked={formData.is_active}

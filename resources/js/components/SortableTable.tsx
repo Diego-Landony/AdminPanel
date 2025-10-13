@@ -333,12 +333,8 @@ function SortableTableComponent<T extends { id: number | string; sort_order?: nu
                                 </Table>
                             </div>
 
-                            {/* Info message and Save Button */}
-                            <div className="mt-4 flex items-center justify-between gap-4">
-                                <div className="text-sm text-muted-foreground">
-                                    Arrastra y suelta las filas para cambiar el orden
-                                </div>
-
+                            {/* Save Button */}
+                            <div className="mt-4 flex items-center justify-end gap-4">
                                 {hasChanges && (
                                     <Button onClick={handleSaveOrder} disabled={isSaving}>
                                         <Save className="mr-2 h-4 w-4" />

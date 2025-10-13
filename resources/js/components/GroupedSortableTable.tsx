@@ -386,13 +386,6 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
                                 </div>
                             </div>
                         )}
-
-                        {/* Info message at bottom */}
-                        <div className="mt-4 px-6 pb-6">
-                            <div className="text-sm text-muted-foreground">
-                                Arrastra y suelta las filas para cambiar el orden dentro de cada categoría
-                            </div>
-                        </div>
                     </CardContent>
                 </Card>
             </div>

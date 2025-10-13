@@ -60,7 +60,7 @@ class Combo extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'combo_items')
-            ->withPivot('quantity', 'label', 'sort_order')
+            ->withPivot('quantity', 'variant_id', 'sort_order')
             ->withTimestamps()
             ->orderByPivot('sort_order');
     }

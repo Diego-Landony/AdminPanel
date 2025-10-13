@@ -19,13 +19,18 @@ interface Category {
 interface ComboItem {
     id: number;
     product_id: number;
+    variant_id: number | null;
     quantity: number;
-    label: string;
     sort_order: number;
     product: {
         id: number;
         name: string;
     };
+    variant?: {
+        id: number;
+        name: string;
+        size: string;
+    } | null;
 }
 
 interface Combo {

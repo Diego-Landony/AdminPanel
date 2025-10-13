@@ -168,8 +168,8 @@ precio_domicilio >= precio_pickup (misma zona)
 
 Cada item representa:
 - **Referencia** a un producto existente (product_id)
+- **Referencia opcional** a una variante específica del producto (variant_id)
 - **Cantidad** (quantity, default 1)
-- **Label descriptivo** (para UI, ej: "Sub Principal")
 - **Orden de visualización** (sort_order)
 
 **Productos Repetidos:**
@@ -177,10 +177,19 @@ Cada item representa:
 
 ```
 Combo "4 Empanadas Mixtas"
-├─ Item 1: Empanada de Carne (label: "Empanada 1")
-├─ Item 2: Empanada de Carne (label: "Empanada 2")
-├─ Item 3: Empanada de Pollo (label: "Empanada 3")
-└─ Item 4: Empanada de Pollo (label: "Empanada 4")
+├─ Item 1: Empanada de Carne (quantity: 1)
+├─ Item 2: Empanada de Carne (quantity: 1)
+├─ Item 3: Empanada de Pollo (quantity: 1)
+└─ Item 4: Empanada de Pollo (quantity: 1)
+```
+
+**Productos con Variantes:**
+✅ **Soportado**: Especificar variante del producto
+
+```
+Combo "2 Subs de Diferentes Tamaños"
+├─ Item 1: Sub de Pollo (variant: "15cm")
+└─ Item 2: Sub de Pollo (variant: "30cm")
 ```
 
 **Validaciones:**
@@ -188,6 +197,7 @@ Combo "4 Empanadas Mixtas"
 - ✅ Productos repetidos permitidos
 - ✅ Todos los productos deben estar activos
 - ✅ No puede haber items sin producto asignado
+- ✅ Si se especifica variant_id, debe pertenecer al producto seleccionado
 
 ### 4. Interacción con Promociones
 
@@ -326,7 +336,6 @@ CREATE TABLE combos (
 
     -- Información básica
     name VARCHAR(255) NOT NULL UNIQUE,
-    slug VARCHAR(255) NOT NULL UNIQUE,
     description TEXT,
     image VARCHAR(255),
 
@@ -354,7 +363,6 @@ CREATE TABLE combos (
     -- Índices
     INDEX idx_active (is_active),
     INDEX idx_sort_order (sort_order),
-    INDEX idx_slug (slug),
     INDEX idx_category (category_id)
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -369,10 +377,10 @@ CREATE TABLE combo_items (
     -- Relaciones
     combo_id BIGINT UNSIGNED NOT NULL,
     product_id BIGINT UNSIGNED NOT NULL,
+    variant_id BIGINT UNSIGNED NULL, -- Referencia a variante específica
 
     -- Configuración del item
     quantity INT UNSIGNED DEFAULT 1,
-    label VARCHAR(100) NOT NULL,
     sort_order INT DEFAULT 0,
 
     -- Timestamps
@@ -390,9 +398,15 @@ CREATE TABLE combo_items (
         ON DELETE RESTRICT
         ON UPDATE RESTRICT,
 
+    FOREIGN KEY (variant_id)
+        REFERENCES product_variants(id)
+        ON DELETE RESTRICT
+        ON UPDATE RESTRICT,
+
     -- Índices
     INDEX idx_combo (combo_id),
     INDEX idx_product (product_id),
+    INDEX idx_variant (variant_id),
     INDEX idx_sort_order (sort_order)
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -421,8 +435,8 @@ class Combo extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'category_id',
         'name',
-        'slug',
         'description',
         'image',
         'precio_pickup_capital',
@@ -456,7 +470,7 @@ class Combo extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'combo_items')
-            ->withPivot('quantity', 'label', 'sort_order')
+            ->withPivot('quantity', 'variant_id', 'sort_order')
             ->withTimestamps()
             ->orderByPivot('sort_order');
     }
@@ -544,14 +558,15 @@ class ComboItem extends Model
     protected $fillable = [
         'combo_id',
         'product_id',
+        'variant_id',
         'quantity',
-        'label',
         'sort_order',
     ];
 
     protected $casts = [
         'combo_id' => 'integer',
         'product_id' => 'integer',
+        'variant_id' => 'integer',
         'quantity' => 'integer',
         'sort_order' => 'integer',
     ];
@@ -573,9 +588,17 @@ class ComboItem extends Model
     }
 
     /**
+     * Relación: Un item puede referenciar una variante específica
+     */
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'variant_id');
+    }
+
+    /**
      * Obtiene el producto con todas sus secciones cargadas
      */
-    public function getProductWithSections()
+    public function getProductWithSections(): ?Product
     {
         return $this->product()->with('sections.options')->first();
     }
@@ -591,7 +614,7 @@ class ComboItem extends Model
 public function combos(): BelongsToMany
 {
     return $this->belongsToMany(Combo::class, 'combo_items')
-        ->withPivot('quantity', 'label', 'sort_order')
+        ->withPivot('quantity', 'variant_id', 'sort_order')
         ->withTimestamps();
 }
 
@@ -863,8 +886,8 @@ $combos = Combo::with([
 │ │ Producto *                                  │   │
 │ │ [Buscar producto... ▼]                     │   │
 │ │                                             │   │
-│ │ Label *                                     │   │
-│ │ [Sub Principal____________]                │   │
+│ │ Variante (si aplica)                        │   │
+│ │ [Seleccionar variante... ▼]                │   │
 │ │                                             │   │
 │ │ Cantidad *                                  │   │
 │ │ [1 ▼]                                      │   │
@@ -1082,7 +1105,6 @@ TOTAL: Q69
 - ✅ Requerido
 - ✅ Máximo 255 caracteres
 - ✅ Único (no puede haber dos combos con el mismo nombre)
-- ⚠️ Slug se genera automático
 
 #### Campo: Descripción
 - ✅ Opcional
@@ -1096,14 +1118,15 @@ TOTAL: Q69
 #### Sección: Items
 - ✅ Mínimo 2 items requeridos
 - ✅ Productos repetidos permitidos
-- ✅ Cada item requiere: product_id, label
+- ✅ Cada item requiere: product_id, quantity
+- ✅ variant_id es opcional (solo si el producto tiene variantes)
 - ✅ Quantity mínimo: 1
 
 **Mensajes de error:**
 ```
 ❌ "Un combo debe tener al menos 2 productos"
 ❌ "El producto seleccionado no existe o está inactivo"
-❌ "El label es requerido"
+❌ "La variante seleccionada no pertenece al producto"
 ```
 
 #### Sección: Precios
@@ -1142,19 +1165,8 @@ if ($combo->is_active) {
 Rule::unique('combos', 'name')->ignore($combo->id)
 ```
 
-#### Validación 3: Slug Único
 
-```php
-// Generar slug desde el nombre
-$slug = Str::slug($nombre);
-
-// Si existe, agregar sufijo numérico
-if (Combo::where('slug', $slug)->exists()) {
-    $slug = $slug . '-2';
-}
-```
-
-#### Validación 4: Coherencia de Precios
+#### Validación 3: Coherencia de Precios
 
 ```php
 // En el FormRequest
@@ -1204,9 +1216,10 @@ Cache::remember('combos.available', 3600, function () {
 
 **Índices:**
 - `combos.is_active`: Para filtrar activos
-- `combos.slug`: Para búsqueda por URL
+- `combos.category_id`: Para filtrar por categoría
 - `combo_items.combo_id`: Para joins eficientes
 - `combo_items.product_id`: Para relaciones
+- `combo_items.variant_id`: Para relaciones con variantes
 
 ### Seguridad
 
@@ -1247,6 +1260,7 @@ Schedule::command('combos:check-availability')->daily();
 - **Combo**: Entidad independiente que agrupa productos bajo un precio especial
 - **Item del Combo**: Referencia a un producto dentro del combo (via combo_items)
 - **Producto Hijo**: Producto referenciado por un combo
+- **Variante de Producto**: Versión específica de un producto (ej: tamaño, sabor)
 - **Herencia de Personalización**: El combo usa las secciones del producto sin copiarlas
 - **Precio Base**: Precio del combo SIN extras de personalización
 - **Extras**: Opciones de personalización que agregan costo (is_extra=true)
@@ -1257,5 +1271,5 @@ Schedule::command('combos:check-availability')->daily();
 ---
 
 **Documento creado**: 2025-01-09
-**Última actualización**: 2025-01-09
-**Versión**: 2.0 (Arquitectura con Tabla Separada)
+**Última actualización**: 2025-10-13
+**Versión**: 2.1 (Con soporte de variantes, sin campo label)

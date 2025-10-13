@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
-import { CURRENCY } from '@/constants/ui-constants';
+import { CURRENCY, PLACEHOLDERS } from '@/constants/ui-constants';
 import { Plus, Trash2, Store, Truck, Calendar } from 'lucide-react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
@@ -192,7 +192,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                     <Textarea
                         value={data.description}
                         onChange={(e) => setData('description', e.target.value)}
-                        placeholder="Descripción opcional de la promoción"
+                        placeholder={PLACEHOLDERS.description}
                         rows={2}
                     />
                 </FormField>
@@ -233,7 +233,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                                                 idx !== index && i.product_id === product.id,
                                         ),
                                 )}
-                                placeholder="Buscar producto..."
+                                placeholder={PLACEHOLDERS.selectProduct}
                                 error={errors[`items.${index}.product_id`]}
                                 required
                             />
@@ -262,7 +262,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                                                 )
                                             }
                                             className="pl-7"
-                                            placeholder="0.00"
+                                            placeholder={PLACEHOLDERS.price}
                                         />
                                     </div>
                                 </FormField>
@@ -289,7 +289,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                                                 )
                                             }
                                             className="pl-7"
-                                            placeholder="0.00"
+                                            placeholder={PLACEHOLDERS.price}
                                         />
                                     </div>
                                 </FormField>

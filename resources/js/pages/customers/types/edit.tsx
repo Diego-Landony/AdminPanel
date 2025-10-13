@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ENTITY_ICONS } from '@/constants/section-icons';
+import { PLACEHOLDERS } from '@/constants/ui-constants';
 
 /**
  * Interfaz para el tipo de cliente
@@ -145,7 +146,7 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
                         type="text"
                         value={formData.name}
                         onChange={(e) => handleInputChange('name', e.target.value)}
-                        placeholder="ej: Bronce, Plata, Oro"
+                        placeholder={PLACEHOLDERS.name}
                     />
                 </FormField>
 

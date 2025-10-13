@@ -241,7 +241,7 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
                             <div className="relative">
                                 <Input
                                     type="text"
-                                    placeholder="Buscar roles..."
+                                    placeholder={PLACEHOLDERS.selectRole}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="h-9 text-sm"

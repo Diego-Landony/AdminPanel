@@ -37,6 +37,25 @@ export const PLACEHOLDERS = {
     // Campos de texto genéricos
     name: 'Nombre',
     description: 'Descripción',
+
+    // Campos específicos de entidades
+    roleName: 'Nombre del rol',
+    categoryName: 'Nombre de la categoría',
+    productName: 'Nombre del producto',
+    comboLabel: 'Etiqueta del elemento',
+
+    // Selects genéricos
+    selectGender: 'Selecciona el género',
+    selectCustomerType: 'Selecciona el tipo de cliente (opcional)',
+    selectVariant: 'Selecciona una variante',
+    selectCategory: 'Buscar categoría...',
+    selectProduct: 'Buscar producto...',
+    selectRole: 'Buscar roles...',
+
+    // Búsquedas específicas
+    searchUserEventDescription: 'Buscar por usuario, evento, descripción...',
+    searchEventTypes: 'Tipos de evento...',
+    searchUsers: 'Usuarios...',
 } as const;
 
 // Mensajes de notificación estandarizados

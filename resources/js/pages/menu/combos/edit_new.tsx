@@ -31,7 +31,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NOTIFICATIONS } from '@/constants/ui-constants';
+import { NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 import { generateUniqueId } from '@/utils/generateId';
 import { CategoryCombobox } from '@/components/CategoryCombobox';
 import { ProductCombobox } from '@/components/ProductCombobox';
@@ -161,7 +161,7 @@ function SortableItem({ item, index, products, onUpdate, onRemove, errors, canDe
                         onValueChange={(value) => onUpdate(index, 'variant_id', value)}
                     >
                         <SelectTrigger>
-                            <SelectValue placeholder="Selecciona una variante" />
+                            <SelectValue placeholder={PLACEHOLDERS.selectVariant} />
                         </SelectTrigger>
                         <SelectContent>
                             {selectedProduct.variants?.map((variant) => (
@@ -197,7 +197,7 @@ function SortableItem({ item, index, products, onUpdate, onRemove, errors, canDe
                         type="text"
                         value={item.label}
                         onChange={(e) => onUpdate(index, 'label', e.target.value)}
-                        placeholder="Ej: Bebida principal"
+                        placeholder={PLACEHOLDERS.comboLabel}
                     />
                 </FormField>
             </div>

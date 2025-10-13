@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ENTITY_ICONS } from '@/constants/section-icons';
-import { NOTIFICATIONS } from '@/constants/ui-constants';
+import { NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
 /**
  * Página para crear un tipo de cliente
@@ -101,7 +101,7 @@ export default function CustomerTypeCreate() {
                         type="text"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-                        placeholder="ej: Bronce, Plata, Oro"
+                        placeholder={PLACEHOLDERS.name}
                     />
                 </FormField>
 

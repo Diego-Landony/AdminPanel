@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import React, { useState } from 'react';
+import { PLACEHOLDERS } from '@/constants/ui-constants';
 import { Plus, Trash2, Store, Truck } from 'lucide-react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
@@ -226,7 +227,7 @@ export default function EditTwoForOnePromotion({ promotion, categories }: EditPr
                                                 idx !== index && i.category_id === category.id,
                                         ),
                                 )}
-                                placeholder="Buscar categoría..."
+                                placeholder={PLACEHOLDERS.selectCategory}
                                 error={errors[`items.${index}.category_id`]}
                                 required
                             />

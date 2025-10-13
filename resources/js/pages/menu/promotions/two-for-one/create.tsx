@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
+import { PLACEHOLDERS } from '@/constants/ui-constants';
 import { Plus, Trash2, Store, Truck } from 'lucide-react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
@@ -187,7 +188,7 @@ export default function CreateTwoForOnePromotion({ categories }: CreatePromotion
                                                 idx !== index && i.category_id === category.id,
                                         ),
                                 )}
-                                placeholder="Buscar categoría..."
+                                placeholder={PLACEHOLDERS.selectCategory}
                                 error={errors[`items.${index}.category_id`]}
                                 required
                             />

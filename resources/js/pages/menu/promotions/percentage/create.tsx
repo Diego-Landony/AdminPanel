@@ -227,7 +227,7 @@ export default function CreatePercentage({ products, categories }: CreatePromoti
                                                     e.target.value,
                                                 )
                                             }
-                                            placeholder="15"
+                                            placeholder={PLACEHOLDERS.percentage}
                                             className="pr-8"
                                             required
                                         />

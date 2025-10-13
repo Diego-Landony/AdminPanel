@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { PLACEHOLDERS } from '@/constants/ui-constants';
 import AppLayout from '@/layouts/app-layout';
 
 import { EntityInfoCell } from '@/components/EntityInfoCell';
@@ -482,7 +483,7 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
                                             <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                             <Input
                                                 id="search"
-                                                placeholder="Buscar por usuario, evento, descripción..."
+                                                placeholder={PLACEHOLDERS.searchUserEventDescription}
                                                 value={search}
                                                 onChange={(e) => setSearch(e.target.value)}
                                                 className="pl-10 pr-10"
@@ -529,7 +530,7 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
                                 {/* Advanced Filters Row */}
                                 <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                                     <FilterDialog
-                                        placeholder="Tipos de evento..."
+                                        placeholder={PLACEHOLDERS.searchEventTypes}
                                         icon={Filter}
                                         title="Seleccionar Tipos de Evento"
                                         description="Marca los tipos de evento que deseas filtrar"
@@ -547,7 +548,7 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
                                     />
 
                                     <FilterDialog
-                                        placeholder="Usuarios..."
+                                        placeholder={PLACEHOLDERS.searchUsers}
                                         icon={Users}
                                         title="Seleccionar Usuarios"
                                         description="Marca los usuarios que deseas filtrar"

@@ -257,7 +257,7 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
                                                 e.target.value,
                                             )
                                         }
-                                        placeholder="15"
+                                        placeholder={PLACEHOLDERS.percentage}
                                         required
                                     />
                                 </FormField>

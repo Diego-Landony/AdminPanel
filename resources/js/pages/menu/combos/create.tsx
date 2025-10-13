@@ -163,7 +163,7 @@ function SortableItem({ item, index, products, onUpdate, onUpdateMultiple, onRem
                         onValueChange={(value) => onUpdate(index, 'variant_id', value)}
                     >
                         <SelectTrigger>
-                            <SelectValue placeholder="Selecciona una variante" />
+                            <SelectValue placeholder={PLACEHOLDERS.selectVariant} />
                         </SelectTrigger>
                         <SelectContent>
                             {selectedProduct.variants?.map((variant) => (

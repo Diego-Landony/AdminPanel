@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
 import React, { useState } from 'react';
-import { CURRENCY } from '@/constants/ui-constants';
+import { CURRENCY, PLACEHOLDERS } from '@/constants/ui-constants';
 import { Plus, Trash2, Store, Truck, Calendar } from 'lucide-react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
@@ -215,7 +215,7 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Ej: Sub del Día Lunes - Sub Italiano"
+                        placeholder={PLACEHOLDERS.name}
                     />
                 </FormField>
 
@@ -225,7 +225,7 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
                         onChange={(e) =>
                             setFormData({ ...formData, description: e.target.value })
                         }
-                        placeholder="Descripción opcional de la promoción"
+                        placeholder={PLACEHOLDERS.description}
                         rows={2}
                     />
                 </FormField>
@@ -266,7 +266,7 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
                                                 idx !== index && i.product_id === product.id,
                                         ),
                                 )}
-                                placeholder="Buscar producto..."
+                                placeholder={PLACEHOLDERS.selectProduct}
                                 error={errors[`items.${index}.product_id`]}
                                 required
                             />
@@ -295,7 +295,7 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
                                                 )
                                             }
                                             className="pl-7"
-                                            placeholder="0.00"
+                                            placeholder={PLACEHOLDERS.price}
                                         />
                                     </div>
                                 </FormField>
@@ -322,7 +322,7 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
                                                 )
                                             }
                                             className="pl-7"
-                                            placeholder="0.00"
+                                            placeholder={PLACEHOLDERS.price}
                                         />
                                     </div>
                                 </FormField>

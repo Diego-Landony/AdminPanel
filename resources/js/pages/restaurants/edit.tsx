@@ -147,7 +147,7 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
                                 step="any"
                                 value={data.latitude}
                                 onChange={(e) => setData('latitude', e.target.value)}
-                                placeholder="14.634915"
+                                placeholder={PLACEHOLDERS.latitude}
                                 className="pl-10"
                             />
                         </div>
@@ -162,7 +162,7 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
                                 step="any"
                                 value={data.longitude}
                                 onChange={(e) => setData('longitude', e.target.value)}
-                                placeholder="-90.506882"
+                                placeholder={PLACEHOLDERS.longitude}
                                 className="pl-10"
                             />
                         </div>
@@ -270,7 +270,7 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
                             step="0.01"
                             value={data.minimum_order_amount}
                             onChange={(e) => setData('minimum_order_amount', e.target.value)}
-                            placeholder="50.00"
+                            placeholder={PLACEHOLDERS.amount}
                         />
                     </FormField>
 
@@ -280,7 +280,7 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
                             type="number"
                             value={data.estimated_delivery_time}
                             onChange={(e) => setData('estimated_delivery_time', e.target.value)}
-                            placeholder="30"
+                            placeholder={PLACEHOLDERS.estimatedTime}
                         />
                     </FormField>
                 </div>

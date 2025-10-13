@@ -129,7 +129,7 @@ export default function CreateCustomer({ customer_types }: CreateCustomerProps) 
                 <FormField label="Género" error={errors.gender}>
                     <Select value={data.gender} onValueChange={(value) => setData('gender', value)}>
                         <SelectTrigger>
-                            <SelectValue placeholder="Selecciona el género" />
+                            <SelectValue placeholder={PLACEHOLDERS.selectGender} />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="masculino">Masculino</SelectItem>
@@ -145,7 +145,7 @@ export default function CreateCustomer({ customer_types }: CreateCustomerProps) 
                         onValueChange={(value) => setData('customer_type_id', value ? parseInt(value) : null)}
                     >
                         <SelectTrigger>
-                            <SelectValue placeholder="Selecciona el tipo de cliente (opcional)" />
+                            <SelectValue placeholder={PLACEHOLDERS.selectCustomerType} />
                         </SelectTrigger>
                         <SelectContent>
                             {customer_types.map((type) => (

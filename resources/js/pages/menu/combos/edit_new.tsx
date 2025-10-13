@@ -275,7 +275,7 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
 
         const submitData = {
             ...data,
-            items: localItems.map(({ id, ...rest }, index) => ({
+            items: localItems.map(({ id: _id, ...rest }, index) => ({
                 product_id: rest.product_id,
                 variant_id: rest.variant_id || null,
                 quantity: rest.quantity,

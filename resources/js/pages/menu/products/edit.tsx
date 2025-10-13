@@ -1,6 +1,5 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import { PLACEHOLDERS } from '@/constants/ui-constants';
 import {
     DndContext,
     closestCenter,

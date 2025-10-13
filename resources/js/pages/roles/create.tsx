@@ -11,7 +11,7 @@ import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ENTITY_ICONS } from '@/constants/section-icons';
-import { PLACEHOLDERS, NOTIFICATIONS } from '@/constants/ui-constants';
+import { NOTIFICATIONS } from '@/constants/ui-constants';
 
 /**
  * Interfaz para los permisos agrupados

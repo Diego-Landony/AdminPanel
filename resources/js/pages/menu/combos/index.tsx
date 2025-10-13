@@ -181,24 +181,23 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
             ),
         },
         {
-            key: 'price_capital',
-            title: 'Precio Capital',
-            width: 'w-40',
+            key: 'prices',
+            title: 'Precios',
+            width: 'w-56',
             render: (combo: Combo) => (
-                <div className="text-sm space-y-0.5">
-                    <div className="text-muted-foreground text-xs">Pickup: Q{Number(combo.precio_pickup_capital).toFixed(2)}</div>
-                    <div className="text-muted-foreground text-xs">Delivery: Q{Number(combo.precio_domicilio_capital).toFixed(2)}</div>
-                </div>
-            ),
-        },
-        {
-            key: 'price_interior',
-            title: 'Precio Interior',
-            width: 'w-40',
-            render: (combo: Combo) => (
-                <div className="text-sm space-y-0.5">
-                    <div className="text-muted-foreground text-xs">Pickup: Q{Number(combo.precio_pickup_interior).toFixed(2)}</div>
-                    <div className="text-muted-foreground text-xs">Delivery: Q{Number(combo.precio_domicilio_interior).toFixed(2)}</div>
+                <div className="text-xs space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                        <span className="text-muted-foreground">Capital:</span>
+                        <span className="font-medium tabular-nums">
+                            Q{Number(combo.precio_pickup_capital).toFixed(2)} / Q{Number(combo.precio_domicilio_capital).toFixed(2)}
+                        </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                        <span className="text-muted-foreground">Interior:</span>
+                        <span className="font-medium tabular-nums">
+                            Q{Number(combo.precio_pickup_interior).toFixed(2)} / Q{Number(combo.precio_domicilio_interior).toFixed(2)}
+                        </span>
+                    </div>
                 </div>
             ),
         },
@@ -269,8 +268,25 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
             }}
             dataFields={[
                 { label: 'Productos', value: combo.items_count.toString() },
-                { label: 'Pickup Capital', value: `Q${Number(combo.precio_pickup_capital).toFixed(2)}` },
-                { label: 'Delivery Capital', value: `Q${Number(combo.precio_domicilio_capital).toFixed(2)}` },
+                {
+                    label: 'Precios',
+                    value: (
+                        <div className="space-y-1 text-xs">
+                            <div className="flex justify-between gap-2">
+                                <span className="text-muted-foreground">Capital:</span>
+                                <span className="font-medium tabular-nums">
+                                    Q{Number(combo.precio_pickup_capital).toFixed(2)} / Q{Number(combo.precio_domicilio_capital).toFixed(2)}
+                                </span>
+                            </div>
+                            <div className="flex justify-between gap-2">
+                                <span className="text-muted-foreground">Interior:</span>
+                                <span className="font-medium tabular-nums">
+                                    Q{Number(combo.precio_pickup_interior).toFixed(2)} / Q{Number(combo.precio_domicilio_interior).toFixed(2)}
+                                </span>
+                            </div>
+                        </div>
+                    ),
+                },
             ]}
         />
     );
@@ -299,7 +315,6 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
 
             <SortableTable
                 title="Combos de Menú"
-                description="Gestiona los combos de productos con precios especiales"
                 data={combos}
                 columns={columns}
                 stats={comboStats}

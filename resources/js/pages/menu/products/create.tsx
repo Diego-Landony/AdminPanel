@@ -1,7 +1,6 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
-import { PLACEHOLDERS } from '@/constants/ui-constants';
 import {
     DndContext,
     closestCenter,

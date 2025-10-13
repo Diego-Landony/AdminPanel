@@ -1,6 +1,5 @@
 import { useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
-import { PLACEHOLDERS } from '@/constants/ui-constants';
 import { Plus, Trash2, Store, Truck } from 'lucide-react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';

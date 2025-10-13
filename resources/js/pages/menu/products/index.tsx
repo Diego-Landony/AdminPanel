@@ -217,7 +217,6 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
 
             <GroupedSortableTable
                 title="Productos de Menú"
-                description="Gestiona los productos de tu menú, agrupados por categoría"
                 groupedData={groupedProducts}
                 columns={columns}
                 stats={productStats}

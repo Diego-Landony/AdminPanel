@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
-import { PLACEHOLDERS, CURRENCY } from '@/constants/ui-constants';
+import { CURRENCY } from '@/constants/ui-constants';
 import { Plus, Trash2, Store, Truck, Calendar } from 'lucide-react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';

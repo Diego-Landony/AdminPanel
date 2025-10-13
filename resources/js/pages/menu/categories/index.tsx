@@ -182,7 +182,6 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
 
             <SortableTable
                 title="Categorías de Menú"
-                description="Administra las categorías del menú"
                 data={categories}
                 columns={columns}
                 stats={categoryStats}

@@ -1,6 +1,5 @@
 import { router } from '@inertiajs/react';
 import React, { useState } from 'react';
-import { PLACEHOLDERS } from '@/constants/ui-constants';
 import { Plus, Trash2, Store, Truck } from 'lucide-react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';

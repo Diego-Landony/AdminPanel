@@ -1,11 +1,9 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import { PLACEHOLDERS } from '@/constants/ui-constants';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
 import { EditCategoriesSkeleton } from '@/components/skeletons';
-import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

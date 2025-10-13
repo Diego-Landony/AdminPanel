@@ -185,7 +185,6 @@ export default function SectionsIndex({ sections, stats }: SectionsPageProps) {
 
             <SortableTable
                 title="Secciones de Menú"
-                description="Administra las secciones del menú"
                 data={sections}
                 columns={columns}
                 stats={sectionStats}

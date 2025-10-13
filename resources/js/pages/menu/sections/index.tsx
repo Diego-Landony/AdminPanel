@@ -129,9 +129,9 @@ export default function SectionsIndex({ sections, stats }: SectionsPageProps) {
         {
             key: 'name',
             title: 'Sección',
-            width: 'flex-1',
+            width: 'w-64',
             render: (section: Section) => (
-                <div className="text-sm font-medium text-foreground">{section.title}</div>
+                <div className="text-sm font-medium text-foreground truncate">{section.title}</div>
             ),
         },
         {

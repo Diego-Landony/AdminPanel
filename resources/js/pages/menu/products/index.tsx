@@ -113,7 +113,7 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
         {
             key: 'name',
             title: 'Producto',
-            width: 'flex-1',
+            width: 'w-64',
             render: (product: Product) => (
                 <div className="flex items-center gap-3">
                     {product.image && (
@@ -123,14 +123,14 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
                             className="h-10 w-10 rounded-md object-cover"
                         />
                     )}
-                    <div className="text-sm font-medium text-foreground">{product.name}</div>
+                    <div className="text-sm font-medium text-foreground truncate">{product.name}</div>
                 </div>
             ),
         },
         {
             key: 'variants',
             title: 'Variantes',
-            width: 'w-48',
+            width: 'w-64',
             render: (product: Product) => (
                 <div className="text-sm text-muted-foreground">
                     {product.has_variants && product.variants && product.variants.length > 0 ? (
@@ -190,6 +190,24 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
                 editTooltip: 'Editar producto',
                 deleteTooltip: 'Eliminar producto',
             }}
+            dataFields={
+                product.has_variants && product.variants && product.variants.length > 0
+                    ? [
+                          {
+                              label: 'Variantes',
+                              value: (
+                                  <ul className="space-y-1">
+                                      {product.variants.map((variant) => (
+                                          <li key={variant.id} className="text-xs">
+                                              {variant.name}
+                                          </li>
+                                      ))}
+                                  </ul>
+                              ),
+                          },
+                      ]
+                    : undefined
+            }
         />
     );
 

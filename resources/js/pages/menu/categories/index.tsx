@@ -116,9 +116,9 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
         {
             key: 'name',
             title: 'Categoría',
-            width: 'flex-1',
+            width: 'w-64',
             render: (category: Category) => (
-                <div className="text-sm font-medium text-foreground">{category.name}</div>
+                <div className="text-sm font-medium text-foreground truncate">{category.name}</div>
             ),
         },
         {
@@ -163,6 +163,8 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
     const renderMobileCard = (category: Category) => (
         <StandardMobileCard
             title={category.name}
+            subtitle={category.is_combo_category ? 'Categoría de combos' : 'Categoría de productos'}
+            icon={<Layers className="h-5 w-5 text-primary" />}
             badge={{
                 children: <StatusBadge status={category.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />,
             }}
@@ -173,6 +175,9 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
                 editTooltip: 'Editar categoría',
                 deleteTooltip: 'Eliminar categoría',
             }}
+            dataFields={[
+                { label: 'Tipo', value: category.is_combo_category ? 'Combo' : 'Producto' },
+            ]}
         />
     );
 

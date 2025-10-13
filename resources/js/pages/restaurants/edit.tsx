@@ -1,6 +1,8 @@
 import { useForm } from '@inertiajs/react';
-import { Building2, Clock, Mail, MapPin, Phone, Settings, Navigation, FileText } from 'lucide-react';
-import React from 'react';
+import { Building2, Clock, Mail, MapPin, Phone, Settings, Navigation, FileText, Search } from 'lucide-react';
+import React, { useState } from 'react';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import L from 'leaflet';
 
 import { Button } from '@/components/ui/button';
 import { EditPageLayout } from '@/components/edit-page-layout';
@@ -10,8 +12,25 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { PLACEHOLDERS, AUTOCOMPLETE } from '@/constants/ui-constants';
+
+// Fix for default markers in React Leaflet
+delete (L.Icon.Default.prototype as unknown as { _getIconUrl: unknown })._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 interface Restaurant {
     id: number;
@@ -51,6 +70,38 @@ interface RestaurantFormData {
     estimated_delivery_time: string;
 }
 
+// Component to handle map clicks
+interface LocationSelectorProps {
+    onLocationSelect: (lat: number, lng: number) => void;
+}
+
+function LocationSelector({ onLocationSelect }: LocationSelectorProps) {
+    useMapEvents({
+        dblclick: (e) => {
+            onLocationSelect(e.latlng.lat, e.latlng.lng);
+        },
+    });
+    return null;
+}
+
+// Component to update map center when search result comes
+interface MapCenterUpdaterProps {
+    center: [number, number] | null;
+}
+
+function MapCenterUpdater({ center }: MapCenterUpdaterProps) {
+    const map = useMap();
+
+    if (center) {
+        map.setView(center, 16, {
+            animate: true,
+            duration: 1,
+        });
+    }
+
+    return null;
+}
+
 export default function RestaurantEdit({ restaurant }: EditPageProps) {
     const { data, setData, put, processing, errors } = useForm<RestaurantFormData>({
         name: restaurant.name,
@@ -75,6 +126,24 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
         estimated_delivery_time: restaurant.estimated_delivery_time.toString(),
     });
 
+    // Map marker position state
+    const [markerPosition, setMarkerPosition] = useState<[number, number] | null>(
+        restaurant.latitude && restaurant.longitude
+            ? [restaurant.latitude, restaurant.longitude]
+            : null
+    );
+
+    // Search state
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchError, setSearchError] = useState('');
+    const [mapCenterToUpdate, setMapCenterToUpdate] = useState<[number, number] | null>(null);
+    const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+
+    // Default center for Guatemala
+    const guatemalaCenter: [number, number] = [14.6349, -90.5069];
+    const mapCenter = markerPosition || guatemalaCenter;
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         put(route('restaurants.update', restaurant.id));
@@ -88,6 +157,64 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
                 [field]: value,
             },
         });
+    };
+
+    const handleLocationSelect = (lat: number, lng: number) => {
+        const latStr = lat.toFixed(7);
+        const lngStr = lng.toFixed(7);
+        setData('latitude', latStr);
+        setData('longitude', lngStr);
+        setMarkerPosition([lat, lng]);
+    };
+
+    const handleSearch = async () => {
+        if (!searchQuery.trim()) return;
+
+        setIsSearching(true);
+        setSearchError('');
+
+        try {
+            // Using Nominatim API (OpenStreetMap) with proper headers and format
+            const searchParams = new URLSearchParams({
+                q: searchQuery,
+                format: 'jsonv2',
+                addressdetails: '1',
+                limit: '5',
+                countrycodes: 'gt',
+            });
+
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?${searchParams.toString()}`,
+                {
+                    headers: {
+                        'Accept': 'application/json',
+                        'User-Agent': 'RestaurantLocationPicker/1.0',
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Error en la búsqueda');
+            }
+
+            const results = await response.json();
+
+            if (results && results.length > 0) {
+                const { lat, lon } = results[0];
+                const latitude = parseFloat(lat);
+                const longitude = parseFloat(lon);
+                handleLocationSelect(latitude, longitude);
+                setMapCenterToUpdate([latitude, longitude]); // Trigger map center update
+                setSearchError('');
+            } else {
+                setSearchError('No se encontró la ubicación. Intenta con términos más específicos (ej: "zona 10 Guatemala", "Antigua Guatemala").');
+            }
+        } catch (error) {
+            console.error('Error al buscar ubicación:', error);
+            setSearchError('Error al buscar la ubicación. Verifica tu conexión e intenta nuevamente.');
+        } finally {
+            setIsSearching(false);
+        }
     };
 
     const dayLabels = {
@@ -137,36 +264,117 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
                     </div>
                 </FormField>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <FormField label="Latitud" error={errors.latitude}>
-                        <div className="relative">
-                            <Navigation className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                id="latitude"
-                                type="number"
-                                step="any"
-                                value={data.latitude}
-                                onChange={(e) => setData('latitude', e.target.value)}
-                                placeholder={PLACEHOLDERS.latitude}
-                                className="pl-10"
-                            />
-                        </div>
-                    </FormField>
+                <div className="space-y-4">
+                    <Dialog open={isMapModalOpen} onOpenChange={setIsMapModalOpen}>
+                        <DialogTrigger asChild>
+                            <Button type="button" variant="outline" className="w-full">
+                                <MapPin className="h-4 w-4 mr-2" />
+                                Seleccionar Ubicación en Mapa
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-6xl h-[90vh] flex flex-col">
+                            <DialogHeader>
+                                <DialogTitle>Seleccionar Ubicación del Restaurante</DialogTitle>
+                                <DialogDescription>
+                                    Haz doble clic en el mapa para seleccionar la ubicación exacta
+                                </DialogDescription>
+                            </DialogHeader>
 
-                    <FormField label="Longitud" error={errors.longitude}>
-                        <div className="relative">
-                            <Navigation className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                id="longitude"
-                                type="number"
-                                step="any"
-                                value={data.longitude}
-                                onChange={(e) => setData('longitude', e.target.value)}
-                                placeholder={PLACEHOLDERS.longitude}
-                                className="pl-10"
-                            />
-                        </div>
-                    </FormField>
+                            <div className="flex flex-col gap-4 flex-1 min-h-0">
+                                {/* Search Control - Always visible */}
+                                <div className="flex gap-2 flex-shrink-0">
+                                    <div className="relative flex-1">
+                                        <Search className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    handleSearch();
+                                                }
+                                            }}
+                                            placeholder="Buscar dirección en Guatemala..."
+                                            className="pl-10"
+                                        />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="default"
+                                        onClick={handleSearch}
+                                        disabled={isSearching || !searchQuery.trim()}
+                                    >
+                                        {isSearching ? 'Buscando...' : 'Buscar'}
+                                    </Button>
+                                </div>
+
+                                {/* Error message */}
+                                {searchError && (
+                                    <div className="bg-destructive/10 border border-destructive/20 text-destructive px-3 py-2 rounded-md text-sm flex-shrink-0">
+                                        {searchError}
+                                    </div>
+                                )}
+
+                                {/* Map Container - Takes remaining space */}
+                                <div className="flex-1 rounded-lg overflow-hidden border min-h-0">
+                                    <MapContainer
+                                        center={mapCenter}
+                                        zoom={13}
+                                        style={{ height: '100%', width: '100%' }}
+                                        className="z-0"
+                                    >
+                                        <TileLayer
+                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                        />
+                                        <LocationSelector onLocationSelect={handleLocationSelect} />
+                                        <MapCenterUpdater center={mapCenterToUpdate} />
+                                        {markerPosition && <Marker position={markerPosition} />}
+                                    </MapContainer>
+                                </div>
+
+                                {/* Coordinates Display - Always at bottom */}
+                                {markerPosition && (
+                                    <div className="flex items-center gap-4 text-sm text-muted-foreground flex-shrink-0">
+                                        <span>Coordenadas seleccionadas:</span>
+                                        <Badge variant="outline">Lat: {parseFloat(data.latitude).toFixed(6)}</Badge>
+                                        <Badge variant="outline">Lng: {parseFloat(data.longitude).toFixed(6)}</Badge>
+                                    </div>
+                                )}
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <FormField label="Latitud" error={errors.latitude}>
+                            <div className="relative">
+                                <Navigation className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    id="latitude"
+                                    type="text"
+                                    value={data.latitude}
+                                    placeholder={PLACEHOLDERS.latitude}
+                                    className="pl-10"
+                                    readOnly
+                                />
+                            </div>
+                        </FormField>
+
+                        <FormField label="Longitud" error={errors.longitude}>
+                            <div className="relative">
+                                <Navigation className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    id="longitude"
+                                    type="text"
+                                    value={data.longitude}
+                                    placeholder={PLACEHOLDERS.longitude}
+                                    className="pl-10"
+                                    readOnly
+                                />
+                            </div>
+                        </FormField>
+                    </div>
                 </div>
 
                 <FormField label="Teléfono" error={errors.phone}>
@@ -233,32 +441,32 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
             </FormSection>
 
             <FormSection icon={Settings} title="Configuración de Servicios">
-                <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="is_active" className="cursor-pointer">Restaurante Activo</Label>
+                        <Switch
                             id="is_active"
                             checked={data.is_active}
                             onCheckedChange={(checked) => setData('is_active', checked as boolean)}
                         />
-                        <Label htmlFor="is_active">Restaurante Activo</Label>
                     </div>
 
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="delivery_active" className="cursor-pointer">Servicio de Delivery</Label>
+                        <Switch
                             id="delivery_active"
                             checked={data.delivery_active}
                             onCheckedChange={(checked) => setData('delivery_active', checked as boolean)}
                         />
-                        <Label htmlFor="delivery_active">Servicio de Delivery</Label>
                     </div>
 
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="pickup_active" className="cursor-pointer">Servicio de Pickup</Label>
+                        <Switch
                             id="pickup_active"
                             checked={data.pickup_active}
                             onCheckedChange={(checked) => setData('pickup_active', checked as boolean)}
                         />
-                        <Label htmlFor="pickup_active">Servicio de Pickup</Label>
                     </div>
                 </div>
 

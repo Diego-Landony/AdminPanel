@@ -152,20 +152,20 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
         {
             key: 'name',
             title: 'Combo',
-            width: 'flex-1',
+            width: 'w-72',
             render: (combo: Combo) => (
                 <div className="flex items-center gap-3">
                     {combo.image && (
                         <img
                             src={combo.image}
                             alt={combo.name}
-                            className="h-10 w-10 rounded-md object-cover"
+                            className="h-10 w-10 rounded-md object-cover flex-shrink-0"
                         />
                     )}
-                    <div>
-                        <div className="text-sm font-medium text-foreground">{combo.name}</div>
+                    <div className="min-w-0">
+                        <div className="text-sm font-medium text-foreground truncate">{combo.name}</div>
                         {combo.description && (
-                            <div className="text-xs text-muted-foreground truncate max-w-xs">{combo.description}</div>
+                            <div className="text-xs text-muted-foreground truncate">{combo.description}</div>
                         )}
                     </div>
                 </div>

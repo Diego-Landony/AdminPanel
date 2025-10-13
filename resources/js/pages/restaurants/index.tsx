@@ -358,7 +358,7 @@ export default function RestaurantsIndex({
                 loadingSkeleton={RestaurantsSkeleton}
                 renderMobileCard={(restaurant) => <RestaurantMobileCard restaurant={restaurant} />}
                 routeName="/restaurants"
-                breakpoint="md"
+                breakpoint="lg"
             />
 
             <DeleteConfirmationDialog

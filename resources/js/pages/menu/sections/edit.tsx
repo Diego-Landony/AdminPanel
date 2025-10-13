@@ -327,7 +327,7 @@ export default function SectionEdit({ section }: EditPageProps) {
 
                 {/* Selecciones mínimas/máximas - solo si allow_multiple */}
                 {formData.allow_multiple && (
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <FormField label="Mínimo de items seleccionables" error={errors.min_selections}>
                             <Input
                                 id="min_selections"

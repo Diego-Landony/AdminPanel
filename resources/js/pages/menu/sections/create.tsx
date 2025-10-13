@@ -281,7 +281,7 @@ export default function SectionCreate() {
 
                 {/* Selecciones mínimas/máximas - solo si allow_multiple */}
                 {data.allow_multiple && (
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <FormField label="Mínimo de items seleccionables" error={errors.min_selections}>
                             <Input id="min_selections" type="number" min="1" value={data.min_selections} onChange={(e) => setData('min_selections', e.target.value)} />
                         </FormField>

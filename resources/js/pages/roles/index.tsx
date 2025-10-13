@@ -302,7 +302,7 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
                     <RoleMobileCard role={role} onDelete={openDeleteDialog} onShowUsers={openUsersModal} isDeleting={deletingRole === role.id} />
                 )}
                 routeName="/roles"
-                breakpoint="md"
+                breakpoint="lg"
             />
 
             {/* Modal para mostrar usuarios del rol */}

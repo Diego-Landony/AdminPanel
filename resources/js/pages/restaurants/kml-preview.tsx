@@ -75,7 +75,7 @@ export default function KMLPreview({ restaurant, geofence_coordinates }: KMLPrev
                 title="Información del Restaurante"
                 description="Datos del restaurante y estado de la geocerca"
             >
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
                         <label className="text-sm font-medium text-muted-foreground">Nombre</label>
                         <p className="text-lg font-semibold">{restaurant.name}</p>

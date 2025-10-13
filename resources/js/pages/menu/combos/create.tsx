@@ -31,7 +31,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NOTIFICATIONS } from '@/constants/ui-constants';
+import { NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 import { generateUniqueId } from '@/utils/generateId';
 import { CategoryCombobox } from '@/components/CategoryCombobox';
 import { ProductCombobox } from '@/components/ProductCombobox';
@@ -267,25 +267,14 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        const submitData = {
-            ...data,
-            items: localItems.map(({ id: _id, ...rest }, index) => ({
-                product_id: rest.product_id,
-                variant_id: rest.variant_id || null,
-                quantity: rest.quantity,
-                sort_order: index + 1,
-            })),
-        };
-
         post(route('menu.combos.store'), {
-            data: submitData,
             onSuccess: () => {
                 reset();
                 setLocalItems([]);
             },
             onError: (errors) => {
                 if (Object.keys(errors).length === 0) {
-                    showNotification.error(NOTIFICATIONS.error.server);
+                    showNotification.error(NOTIFICATIONS.error.dataLoading);
                 }
             },
         });
@@ -294,6 +283,7 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
     return (
         <CreatePageLayout
             title="Nuevo Combo"
+            description="Crea un nuevo combo seleccionando productos y definiendo precios"
             backHref={route('menu.combos.index')}
             backLabel="Volver"
             onSubmit={handleSubmit}

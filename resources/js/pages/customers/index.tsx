@@ -439,7 +439,7 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
                 loadingSkeleton={CustomersSkeleton}
                 renderMobileCard={(customer) => <CustomerMobileCard customer={customer} />}
                 routeName="/customers"
-                breakpoint="md"
+                breakpoint="lg"
             />
 
             <DeleteConfirmationDialog

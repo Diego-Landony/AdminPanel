@@ -296,7 +296,7 @@ export default function UsersIndex({ users, total_users, online_users, filters }
                 loadingSkeleton={UsersSkeleton}
                 renderMobileCard={(user) => <UserMobileCard user={user} onDelete={openDeleteDialog} isDeleting={deletingUser === user.id} />}
                 routeName="/users"
-                breakpoint="md"
+                breakpoint="lg"
             />
 
             <DeleteConfirmationDialog

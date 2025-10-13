@@ -33,7 +33,7 @@ export function PriceFields({
     errors = {},
 }: PriceFieldsProps) {
     return (
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Card Capital */}
             <Card>
                 <CardHeader className="pb-3">

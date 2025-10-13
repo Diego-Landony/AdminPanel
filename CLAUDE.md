@@ -252,6 +252,15 @@ Route::get('/users', function () {
 - When modifying a column, the migration must include all of the attributes that were previously defined on the column. Otherwise, they will be dropped and lost.
 - Laravel 11 allows limiting eagerly loaded records natively, without external packages: `$query->latest()->limit(10);`.
 
+### Migrations - CRITICAL
+- **NEVER, EVER create migrations that drop tables (`Schema::dropIfExists()`, `Schema::drop()`) without EXPLICIT user confirmation.**
+- **NEVER drop columns (`$table->dropColumn()`) without EXPLICIT user confirmation.**
+- Deleting data is IRREVERSIBLE in production and causes critical information loss.
+- If you identify an unused table or column, ASK the user if they want to delete it before creating the migration.
+- Only create destructive migrations when the user explicitly requests it with words like "delete", "drop", "remove".
+- allow the user to review the migration code before finalizing it.
+- always use the command `php artisan migrate` to create new migrations.
+
 ### Models
 - Casts can and likely should be set in a `casts()` method on a model rather than the `$casts` property. Follow existing conventions from other models.
 

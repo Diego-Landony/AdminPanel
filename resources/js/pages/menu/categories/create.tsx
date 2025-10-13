@@ -21,6 +21,7 @@ export default function CategoryCreate() {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         is_active: true,
+        is_combo_category: false,
     });
 
     /**
@@ -63,6 +64,21 @@ export default function CategoryCreate() {
                         id="is_active"
                         checked={data.is_active}
                         onCheckedChange={(checked) => setData('is_active', checked as boolean)}
+                    />
+                </div>
+
+                {/* Categoría de combos */}
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                        <Label htmlFor="is_combo_category" className="text-base">
+                           Es una categoría de combos
+                        </Label>
+                     
+                    </div>
+                    <Switch
+                        id="is_combo_category"
+                        checked={data.is_combo_category}
+                        onCheckedChange={(checked) => setData('is_combo_category', checked as boolean)}
                     />
                 </div>
 

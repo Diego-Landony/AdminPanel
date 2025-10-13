@@ -83,6 +83,10 @@ function createTestUser(): User
         'menu.promotions.create' => ['display_name' => 'Crear Promociones', 'description' => 'Crear promociones', 'group' => 'menu'],
         'menu.promotions.edit' => ['display_name' => 'Editar Promociones', 'description' => 'Editar promociones', 'group' => 'menu'],
         'menu.promotions.delete' => ['display_name' => 'Eliminar Promociones', 'description' => 'Eliminar promociones', 'group' => 'menu'],
+        'menu.combos.view' => ['display_name' => 'Ver Combos', 'description' => 'Ver combos del menú', 'group' => 'menu'],
+        'menu.combos.create' => ['display_name' => 'Crear Combos', 'description' => 'Crear combos', 'group' => 'menu'],
+        'menu.combos.edit' => ['display_name' => 'Editar Combos', 'description' => 'Editar combos', 'group' => 'menu'],
+        'menu.combos.delete' => ['display_name' => 'Eliminar Combos', 'description' => 'Eliminar combos', 'group' => 'menu'],
     ];
 
     // Crear permisos de forma más directa

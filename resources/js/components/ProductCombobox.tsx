@@ -43,7 +43,7 @@ export function ProductCombobox({
     onChange,
     products,
     label = 'Producto',
-    placeholder = 'Buscar producto...',
+    placeholder = 'Seleccionar producto...',
     error,
     required = false,
 }: ProductComboboxProps) {

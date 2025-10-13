@@ -90,7 +90,10 @@ class ProductController extends Controller
      */
     public function create(): Response
     {
-        $categories = Category::active()->ordered()->get(['id', 'name']);
+        $categories = Category::active()
+            ->where('is_combo_category', false)
+            ->ordered()
+            ->get(['id', 'name']);
         $sections = Section::with('options')->orderBy('sort_order')->get();
 
         return Inertia::render('menu/products/create', [
@@ -165,7 +168,10 @@ class ProductController extends Controller
     public function edit(Product $product): Response
     {
         $product->load(['category', 'sections', 'variants']);
-        $categories = Category::active()->ordered()->get(['id', 'name']);
+        $categories = Category::active()
+            ->where('is_combo_category', false)
+            ->ordered()
+            ->get(['id', 'name']);
         $sections = Section::with('options')->orderBy('sort_order')->get();
 
         return Inertia::render('menu/products/edit', [

@@ -130,6 +130,16 @@ class Product extends Model
     }
 
     /**
+     * Relación inversa: Un producto puede estar en muchos combos
+     */
+    public function combos(): BelongsToMany
+    {
+        return $this->belongsToMany(Combo::class, 'combo_items')
+            ->withPivot('quantity', 'label', 'sort_order')
+            ->withTimestamps();
+    }
+
+    /**
      * Scope: Productos activos
      */
     public function scopeActive($query)
@@ -151,5 +161,13 @@ class Product extends Model
     public function getIsCustomizableAttribute(): bool
     {
         return $this->sections()->count() > 0;
+    }
+
+    /**
+     * Verifica si el producto está en algún combo activo
+     */
+    public function isInActiveCombos(): bool
+    {
+        return $this->combos()->where('is_active', true)->exists();
     }
 }

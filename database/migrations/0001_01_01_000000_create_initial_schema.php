@@ -333,11 +333,16 @@ return new class extends Migration
             });
 
             // Agregar constraint check para promotion_items (solo uno de product/variant/category)
-            DB::statement('ALTER TABLE promotion_items ADD CONSTRAINT check_product_variant_or_category CHECK (
-                (product_id IS NOT NULL AND variant_id IS NULL AND category_id IS NULL) OR
-                (product_id IS NULL AND variant_id IS NOT NULL AND category_id IS NULL) OR
-                (product_id IS NULL AND variant_id IS NULL AND category_id IS NOT NULL)
-            )');
+            // Usar try-catch para evitar errores si la tabla no existe
+            try {
+                DB::statement('ALTER TABLE promotion_items ADD CONSTRAINT check_product_variant_or_category CHECK (
+                    (product_id IS NOT NULL AND variant_id IS NULL AND category_id IS NULL) OR
+                    (product_id IS NULL AND variant_id IS NOT NULL AND category_id IS NULL) OR
+                    (product_id IS NULL AND variant_id IS NULL AND category_id IS NOT NULL)
+                )');
+            } catch (\Exception $e) {
+                // Constraint ya existe o tabla no existe, continuar
+            }
         }
 
         // Crear usuario de test admin@test.com con contraseña admintest

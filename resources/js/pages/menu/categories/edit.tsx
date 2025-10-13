@@ -16,6 +16,7 @@ interface Category {
     id: number;
     name: string;
     is_active: boolean;
+    is_combo_category: boolean;
 }
 
 interface EditPageProps {
@@ -25,12 +26,14 @@ interface EditPageProps {
 interface FormData {
     name: string;
     is_active: boolean;
+    is_combo_category: boolean;
 }
 
 export default function CategoryEdit({ category }: EditPageProps) {
     const [formData, setFormData] = useState<FormData>({
         name: category.name,
         is_active: category.is_active,
+        is_combo_category: category.is_combo_category,
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -88,6 +91,20 @@ export default function CategoryEdit({ category }: EditPageProps) {
                         id="is_active"
                         checked={formData.is_active}
                         onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)}
+                    />
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                        <Label htmlFor="is_combo_category" className="text-base">
+                            Es una categoría de combos
+                        </Label>
+                      
+                    </div>
+                    <Switch
+                        id="is_combo_category"
+                        checked={formData.is_combo_category}
+                        onCheckedChange={(checked) => handleInputChange('is_combo_category', checked as boolean)}
                     />
                 </div>
 

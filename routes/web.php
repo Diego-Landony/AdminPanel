@@ -6,6 +6,7 @@ use App\Http\Controllers\CustomerTypeController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\KMLUploadController;
 use App\Http\Controllers\Menu\CategoryController;
+use App\Http\Controllers\Menu\ComboController;
 use App\Http\Controllers\Menu\ProductController;
 use App\Http\Controllers\Menu\ProductVariantController;
 use App\Http\Controllers\Menu\PromotionController;
@@ -296,6 +297,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('permission:menu.sections.edit');
         Route::get('sections/{section}/usage', [SectionController::class, 'usage'])->name('sections.usage')
             ->middleware('permission:menu.sections.view');
+
+        // Combos
+        Route::get('combos', [ComboController::class, 'index'])->name('combos.index')
+            ->middleware('permission:menu.combos.view');
+        Route::get('combos/create', [ComboController::class, 'create'])->name('combos.create')
+            ->middleware('permission:menu.combos.create');
+        Route::post('combos', [ComboController::class, 'store'])->name('combos.store')
+            ->middleware('permission:menu.combos.create');
+        Route::get('combos/{combo}', [ComboController::class, 'show'])->name('combos.show')
+            ->middleware('permission:menu.combos.view');
+        Route::get('combos/{combo}/edit', [ComboController::class, 'edit'])->name('combos.edit')
+            ->middleware('permission:menu.combos.edit');
+        Route::put('combos/{combo}', [ComboController::class, 'update'])->name('combos.update')
+            ->middleware('permission:menu.combos.edit');
+        Route::patch('combos/{combo}', [ComboController::class, 'update'])
+            ->middleware('permission:menu.combos.edit');
+        Route::delete('combos/{combo}', [ComboController::class, 'destroy'])->name('combos.destroy')
+            ->middleware('permission:menu.combos.delete');
+        Route::post('combos/{combo}/toggle', [ComboController::class, 'toggle'])->name('combos.toggle')
+            ->middleware('permission:menu.combos.edit');
+        Route::post('combos/reorder', [ComboController::class, 'reorder'])->name('combos.reorder')
+            ->middleware('permission:menu.combos.edit');
     });
 });
 

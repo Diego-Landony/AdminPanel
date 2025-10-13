@@ -30,17 +30,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
 import { generateUniqueId } from '@/utils/generateId';
+import { CategoryCombobox } from '@/components/CategoryCombobox';
 import { Banknote, GripVertical, ListChecks, Package, Plus, X } from 'lucide-react';
 
 interface Category {
@@ -313,20 +307,14 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                     />
                 </div>
 
-                <FormField label="Categoría" error={errors.category_id} required>
-                    <Select value={data.category_id} onValueChange={(value) => setData('category_id', value)}>
-                        <SelectTrigger className="h-11">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {categories.map((category) => (
-                                <SelectItem key={category.id} value={String(category.id)}>
-                                    {category.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </FormField>
+                <CategoryCombobox
+                    value={data.category_id ? Number(data.category_id) : null}
+                    onChange={(value) => setData('category_id', value ? String(value) : '')}
+                    categories={categories}
+                    label="Categoría"
+                    error={errors.category_id}
+                    required
+                />
 
                 <FormField label="Nombre" error={errors.name} required>
                     <Input
@@ -362,15 +350,15 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                 description="Define si el producto usa variantes (ej: 15cm, 30cm) o tiene un precio único"
                 className="mt-8"
             >
-                <div className="flex items-center space-x-2 mb-6">
-                    <Checkbox
+                <div className="flex items-center justify-between rounded-lg border p-4 mb-6">
+                    <Label htmlFor="has_variants" className="text-base">
+                        Producto con variantes
+                    </Label>
+                    <Switch
                         id="has_variants"
                         checked={data.has_variants}
                         onCheckedChange={(checked) => handleVariantToggle(checked as boolean)}
                     />
-                    <Label htmlFor="has_variants" className="text-sm leading-none font-medium cursor-pointer">
-                        Producto con variantes
-                    </Label>
                 </div>
 
                 {!data.has_variants && (

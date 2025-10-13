@@ -39,7 +39,7 @@ export function CategoryCombobox({
     onChange,
     categories,
     label = 'Categoría',
-    placeholder = 'Buscar categoría...',
+    placeholder = 'Seleccionar categoría...',
     error,
     required = false,
 }: CategoryComboboxProps) {

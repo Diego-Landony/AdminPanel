@@ -16,6 +16,7 @@ class StoreCategoryRequest extends FormRequest
         return [
             'name' => 'required|string|max:100|unique:categories,name',
             'is_active' => 'boolean',
+            'is_combo_category' => 'boolean',
             'uses_variants' => 'boolean',
             'variant_definitions' => 'nullable|array',
             'variant_definitions.*' => 'string|max:50',

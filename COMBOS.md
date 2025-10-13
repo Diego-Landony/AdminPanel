@@ -1,4 +1,4 @@
-# Sistema de Combos - Documentación Conceptual
+# Sistema de Combos - Documentación Técnica
 
 ## Índice
 1. [Visión General](#visión-general)
@@ -14,26 +14,29 @@
 
 ## Visión General
 
-El sistema de combos permite crear y gestionar productos compuestos permanentes que agrupan múltiples productos individuales bajo un precio especial. Los combos son productos del menú que ofrecen un descuento al comprar varios productos juntos.
+El sistema de combos permite crear y gestionar **productos compuestos permanentes** que agrupan múltiples productos individuales bajo un precio especial. Los combos son entidades independientes en el sistema, NO son un tipo de producto.
 
 ### Características Principales
-- ✅ Productos compuestos permanentes (NO son promociones temporales)
+- ✅ Entidad separada con tabla propia (`combos`)
 - ✅ Precio único para el combo completo (Capital/Interior, Pickup/Delivery)
-- ✅ Herencia automática de personalización de productos individuales
+- ✅ Herencia automática de personalización de productos hijos
 - ✅ Agrupación flexible de productos de diferentes categorías
 - ✅ Cálculo automático de extras por personalización
-- ✅ Gestión independiente de productos del menú
+- ✅ **Las promociones SÍ aplican a combos** (a nivel combo, no a productos hijos)
 - ✅ Sistema de activación/desactivación
+- ✅ Gestión en `/menu/combos` (interfaz separada)
 
 ### Diferencia con Promociones
 
 | Característica | Combos | Promociones |
 |----------------|--------|-------------|
-| **Permanencia** | Permanentes en el menú | Temporales con vigencia |
-| **Propósito** | Producto compuesto con precio especial | Descuento sobre productos existentes |
+| **Naturaleza** | Producto compuesto permanente | Descuento temporal sobre productos |
+| **Entidad** | Tabla `combos` separada | Tabla `promotions` |
 | **Ubicación** | `/menu/combos` | `/menu/promotions` |
-| **Personalización** | Hereda de productos individuales | N/A |
+| **Personalización** | Hereda de productos hijos | N/A |
 | **Precio** | Precio fijo del combo + extras | Descuento sobre precio base |
+| **Vigencia** | Permanente (mientras esté activo) | Temporal (fechas, días, horas) |
+| **Promociones** | ✅ Puede recibir promociones | ✅ Aplica a productos/combos |
 
 ---
 
@@ -41,62 +44,92 @@ El sistema de combos permite crear y gestionar productos compuestos permanentes 
 
 ### 📦 ¿Qué es un Combo?
 
-Un combo es un **producto compuesto permanente** que agrupa varios productos del menú bajo un precio especial. Funciona como un producto más del menú, pero en lugar de ser un ítem individual, es una **agrupación de productos**.
+Un combo es una **entidad independiente** que agrupa varios productos del menú bajo un precio especial. NO es un tipo de producto, es una entidad separada con su propia tabla y lógica.
 
 ### 🎯 Filosofía del Sistema
 
-**Principio Fundamental**: Un combo **NO copia** la información de los productos, **REFERENCIA** a ellos.
+**Principio Fundamental**: Un combo **referencia** productos existentes, **NO los copia**.
 
 ```
-COMBO = Agrupación de referencias a productos + Precio especial del combo
+COMBO (Entidad separada)
+│
+├─ Tabla: combos
+├─ Precio del combo: Q150
+├─ Categorías: [Promociones, Combos Especiales]
+│
+└─ Items (vía combo_items):
+    ├─ Producto: Sub de Pollo (REFERENCIA)
+    ├─ Producto: Sub de Res (REFERENCIA)
+    ├─ Producto: Coca Cola (REFERENCIA)
+    └─ Producto: Pepsi (REFERENCIA)
 
-┌─────────────────────────────────────────┐
-│  Combo "2 Subs + 2 Bebidas"             │
-│  Precio: $150                           │
-├─────────────────────────────────────────┤
-│  Items:                                 │
-│  ├─ Producto: Sub de Pollo (referencia)│
-│  ├─ Producto: Sub de Res (referencia)  │
-│  ├─ Producto: Coca Cola (referencia)   │
-│  └─ Producto: Pepsi (referencia)       │
-└─────────────────────────────────────────┘
-
-Cada producto CONSERVA sus secciones de personalización
+Cada producto CONSERVA:
+- Sus secciones de personalización
+- Sus categorías originales
+- Su información completa
 ```
 
-### ✅ Ventajas de la Referencia vs Copia
+### ✅ Ventajas de Entidad Separada
 
-1. **Actualización automática**: Si cambias las secciones del "Sub de Pollo" → se refleja automáticamente en todos los combos que lo incluyen
-2. **Sin duplicación de datos**: Las secciones existen en UN solo lugar (el producto)
-3. **Mantenimiento simple**: Cambias una vez, se actualiza en todos lados
-4. **Consistencia**: El producto se comporta igual dentro o fuera del combo
+1. **Single Responsibility**: Combos y productos tienen responsabilidades distintas
+2. **Código limpio**: Sin condicionales `if (type === 'combo')` por todos lados
+3. **Escalabilidad**: Fácil agregar campos específicos de combos sin afectar productos
+4. **Performance**: Queries directas sin filtros constantes
+5. **Mantenibilidad**: Cambios en combos NO afectan tabla products
+6. **Testing**: Tests específicos por entidad
 
-### 🎨 Ejemplo Conceptual
+### 🎨 Arquitectura Visual
 
 ```
-Producto Individual: "Sub de Pollo"
-├─ Precio normal: $70
-├─ Secciones de personalización:
-│   ├─ Vegetales (requerido, múltiple)
-│   │   ├─ Lechuga (gratis)
-│   │   ├─ Tomate (gratis)
-│   │   └─ Cebolla ($5 extra)
-│   └─ Salsas (opcional, múltiple)
-│       ├─ Mayo (gratis)
-│       ├─ Mostaza (gratis)
-│       └─ BBQ ($3 extra)
-
-Combo: "2 Subs Clásicos"
-├─ Precio del combo: $120
-├─ Items:
-│   ├─ Item 1: Sub de Pollo (HEREDA todas sus secciones)
-│   └─ Item 2: Sub de Res (HEREDA todas sus secciones)
+┌─────────────────────────────────────────────────────┐
+│ COMBOS TABLE                                        │
+│ ┌─────────────────────────────────────────────────┐ │
+│ │ ID: 1                                           │ │
+│ │ Name: "Combo Familiar"                          │ │
+│ │ Precio Capital Pickup: Q200                     │ │
+│ │ Precio Capital Delivery: Q220                   │ │
+│ └─────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────┘
+           │
+           │ combo_items (pivot table)
+           ├──────────────────────┐
+           │                      │
+           ▼                      ▼
+┌──────────────────────┐  ┌──────────────────────┐
+│ PRODUCTS TABLE       │  │ PRODUCTS TABLE       │
+│ ID: 10               │  │ ID: 11               │
+│ Name: "Sub Pollo"    │  │ Name: "Sub Res"      │
+│ Precio: Q70          │  │ Precio: Q70          │
+│ ├─ Secciones →       │  │ ├─ Secciones →       │
+│ └─ Categorías →      │  │ └─ Categorías →      │
+└──────────────────────┘  └──────────────────────┘
 ```
 
-**Si el cliente personaliza**:
-- Sub de Pollo: + Cebolla ($5) + BBQ ($3) = $8 extras
-- Sub de Res: + Cebolla ($5) = $5 extras
-- **Precio final del combo**: $120 + $8 + $5 = $133
+### 💰 Precio del Combo
+
+**El precio del combo PREDOMINA sobre los productos hijos:**
+
+```
+Precio Final = Precio Base del Combo + Extras de Personalización
+
+Donde:
+- Precio Base = combo.precio_pickup_capital (o según zona/servicio)
+- Extras = Suma de price_modifier de opciones con is_extra=true
+- Los productos hijos NO aportan su precio base
+```
+
+**Ejemplo:**
+```
+Combo "2 Subs Clásicos": Q120
+
+Items:
+├─ Sub de Pollo (precio individual Q70, NO SE SUMA)
+│  └─ Extras: +Cebolla (Q5) + BBQ (Q3) = Q8
+└─ Sub de Res (precio individual Q70, NO SE SUMA)
+   └─ Extras: +Queso (Q10) = Q10
+
+Precio final = Q120 (combo) + Q8 + Q10 = Q138
+```
 
 ---
 
@@ -104,102 +137,43 @@ Combo: "2 Subs Clásicos"
 
 ### 1. Herencia de Personalización
 
-#### Regla Fundamental:
-**Los combos heredan TODA la personalización de los productos que contienen, sin modificaciones.**
+**Regla Fundamental**: Los combos heredan TODA la personalización de los productos hijos.
 
 ```
 SI producto tiene secciones de personalización
 ENTONCES combo permite personalizarlo igual que el producto individual
 ```
 
-#### Implicaciones:
-
-✅ **Permitido**:
-- Cliente puede personalizar cada producto del combo
-- Cada personalización agrega su costo individual al total
-- Las secciones requeridas siguen siendo requeridas
-- Las opciones con `price_modifier` siguen agregando al precio
-
-❌ **NO Permitido**:
-- Desactivar personalización a nivel combo
-- Redefinir secciones específicas para el combo
-- Cambiar reglas de personalización (is_required, allow_multiple)
-
-#### Ejemplo de Validación:
-
-```
-Combo "2 Subs + Bebida"
-├─ Item 1: Sub de Pollo
-│   └─ Sección "Vegetales" (is_required=true) → Cliente DEBE seleccionar
-├─ Item 2: Sub de Res
-│   └─ Sección "Vegetales" (is_required=true) → Cliente DEBE seleccionar
-└─ Item 3: Coca Cola
-    └─ Sin secciones → No requiere personalización
-```
+**Implicaciones:**
+- ✅ Cliente puede personalizar cada producto del combo
+- ✅ Cada personalización agrega su costo al total
+- ✅ Las secciones requeridas siguen siendo requeridas
+- ✅ Las opciones con `price_modifier` siguen agregando al precio
 
 ### 2. Estructura de Precios
 
-#### Precio Base del Combo:
-Los combos tienen **4 precios base** (como los productos individuales):
+Los combos tienen **4 precios base** (igual que productos):
 
-- **Precio Capital - Pickup**: Para pedidos pickup en zona capital
-- **Precio Capital - Delivery**: Para pedidos delivery en zona capital
-- **Precio Interior - Pickup**: Para pedidos pickup en zona interior
-- **Precio Interior - Delivery**: Para pedidos delivery en zona interior
+- `precio_pickup_capital`: Pickup en zona capital
+- `precio_domicilio_capital`: Delivery en zona capital
+- `precio_pickup_interior`: Pickup en zona interior
+- `precio_domicilio_interior`: Delivery en zona interior
 
-#### Precio Final = Precio Base + Extras:
-
+**Validación de coherencia:**
 ```
-Precio Final del Combo = precio_base_combo + sum(todos los extras de personalizaciones)
-
-Donde:
-- precio_base_combo = según zona (capital/interior) y servicio (pickup/delivery)
-- extras = sum de price_modifier de todas las opciones seleccionadas donde is_extra=true
-```
-
-#### Ejemplo de Cálculo Completo:
-
-```
-Combo: "2 Subs Clásicos"
-Precio base (Capital-Delivery): $150
-
-Items del combo:
-├─ Sub de Pollo
-│   Personalizaciones seleccionadas:
-│   ├─ Lechuga (gratis)
-│   ├─ Tomate (gratis)
-│   ├─ Cebolla (is_extra=true, price_modifier=$5)
-│   └─ BBQ (is_extra=true, price_modifier=$3)
-│   Subtotal extras: $8
-│
-└─ Sub de Res
-    Personalizaciones seleccionadas:
-    ├─ Lechuga (gratis)
-    ├─ Tomate (gratis)
-    └─ Queso Extra (is_extra=true, price_modifier=$10)
-    Subtotal extras: $10
-
-CÁLCULO FINAL:
-Precio base: $150
-Extras Sub 1: +$8
-Extras Sub 2: +$10
-─────────────────
-TOTAL: $168
+precio_domicilio >= precio_pickup (misma zona)
 ```
 
 ### 3. Items del Combo
 
-#### Características de Items:
+Cada item representa:
+- **Referencia** a un producto existente (product_id)
+- **Cantidad** (quantity, default 1)
+- **Label descriptivo** (para UI, ej: "Sub Principal")
+- **Orden de visualización** (sort_order)
 
-Cada item en un combo representa:
-- **UNA referencia a un producto existente**
-- **Una cantidad** (por defecto 1, puede ser más)
-- **Un label descriptivo** (para distinguir productos repetidos)
-- **Un orden de visualización** (sort_order)
-
-#### Productos Repetidos:
-
-✅ **Permitido**: Mismo producto múltiples veces con diferentes labels
+**Productos Repetidos:**
+✅ **Permitido**: Mismo producto múltiples veces
 
 ```
 Combo "4 Empanadas Mixtas"
@@ -207,202 +181,464 @@ Combo "4 Empanadas Mixtas"
 ├─ Item 2: Empanada de Carne (label: "Empanada 2")
 ├─ Item 3: Empanada de Pollo (label: "Empanada 3")
 └─ Item 4: Empanada de Pollo (label: "Empanada 4")
-
-Cada empanada se personaliza individualmente
 ```
 
-#### Validación de Items:
-
+**Validaciones:**
 - ✅ Mínimo 2 productos en un combo
-- ✅ es posible tener productos repetidos en un combo.
+- ✅ Productos repetidos permitidos
 - ✅ Todos los productos deben estar activos
 - ✅ No puede haber items sin producto asignado
 
 ### 4. Interacción con Promociones
 
-#### Regla de Aplicación:
-**Los combos son inmunes a promociones individuales de productos.**
+**⚡ REGLA IMPORTANTE: Las promociones SÍ aplican a combos**
+
 ```
-SI cliente ordena un combo
-ENTONCES:
-  - NO se aplican descuentos de porcentaje de productos individuales
-  - NO se aplican Sub del Día de productos individuales
-  - NO se aplican 2x1 (los combos no cuentan para 2x1 de categorías)
-  - El precio del combo es FIJO + extras de personalización
+Las promociones se aplican A NIVEL COMBO, NO a productos individuales hijos.
 ```
 
-#### Excepción: Descuentos sobre Combos
+**Escenarios:**
 
-En el futuro, se podría crear promociones que apliquen directamente sobre combos:
-- Ejemplo: "20% descuento en Combo Familiar los domingos"
-- Esto requeriría extensión del sistema de promociones (no está en alcance actual)
+#### ✅ Promociones QUE APLICAN a Combos:
 
-### 5. Estados del Combo
+1. **Sub del Día en Combo Completo:**
+   ```
+   Promoción: "Sub del Día - Combo Familiar"
+   - Se aplica al combo entero
+   - Precio especial: Q180 (en lugar de Q220)
+   ```
 
-#### Estado Activo/Inactivo:
+2. **Descuento Porcentual en Combo:**
+   ```
+   Promoción: "20% descuento en Combo 2 Subs"
+   - Se aplica al precio del combo
+   - Q120 - 20% = Q96
+   ```
 
-- **Activo** (`is_active = true`): Se muestra en el menú, se puede ordenar
-- **Inactivo** (`is_active = false`): Oculto del menú, no se puede ordenar
+3. **2x1 en Combos:**
+   ```
+   Promoción: "2x1 en Combos los Martes"
+   - Compras 2 combos, pagas 1
+   ```
 
-#### Validación de Disponibilidad:
+#### ❌ Promociones QUE NO APLICAN:
 
+**Los productos HIJOS del combo NO reciben promociones individuales:**
+
+```
+Combo "2 Subs Clásicos" (Q120)
+├─ Sub de Pollo
+│  └─ ❌ NO recibe "Sub del Día - Sub de Pollo Q30"
+│  └─ ❌ NO recibe "20% descuento en Subs"
+└─ Sub de Res
+   └─ ❌ NO recibe promociones individuales
+
+✅ El combo COMPLETO puede recibir promociones
+```
+
+**Lógica de Cálculo:**
+```php
+// Pseudocódigo
+if (item_is_combo) {
+    $precio_base = $combo->precio_pickup_capital;
+
+    // Buscar promociones para COMBOS
+    $promocion = Promotion::forCombo($combo)->activeNow()->first();
+
+    if ($promocion) {
+        $precio_base = aplicar_promocion($precio_base, $promocion);
+    }
+
+    // NO buscar promociones de productos hijos
+    $precio_final = $precio_base + $extras_personalizacion;
+}
+```
+
+### 5. Categorías del Combo
+
+Los combos **pertenecen a UNA categoría** de tipo combo:
+
+- Relación 1:N (BelongsTo) vía campo `category_id`
+- La categoría debe tener `is_combo_category = true`
+- Un combo puede tener productos de diferentes categorías
+- La categoría del combo es **REQUERIDA**
+
+**Arquitectura:**
+```
+Combo "2 Subs + Bebida"
+├─ Categoría del combo: "Combos Especiales" (is_combo_category = true)
+└─ Items (productos pueden ser de diferentes categorías):
+    ├─ Sub de Pollo → Categoría original: "Subs"
+    ├─ Sub de Res → Categoría original: "Subs"
+    └─ Coca Cola → Categoría original: "Bebidas"
+```
+
+**Importante:** Los productos dentro del combo mantienen sus categorías originales independientes.
+
+### 6. Estados del Combo
+
+**Estado Activo/Inactivo:**
+- `is_active = true`: Se muestra en el menú
+- `is_active = false`: Oculto del menú
+
+**Validación de Disponibilidad:**
 ```
 Un combo está DISPONIBLE cuando:
 1. is_active = true
-2. TODOS los productos del combo están activos (product.is_active = true)
-3. TODOS los productos del combo existen (no fueron eliminados)
+2. TODOS los productos hijos están activos (product.is_active = true)
+3. TODOS los productos hijos existen (no soft deleted)
 ```
 
-**Comportamiento automático**:
-- Si un producto del combo se desactiva → el combo se marca automáticamente como no disponible
-- Si un producto del combo se elimina (soft delete) → el combo se marca automáticamente como no disponible
-- Se muestra advertencia en el admin si un combo tiene productos inactivos
+**Comportamiento automático:**
+- Si un producto hijo se desactiva → combo se marca como no disponible
+- Se muestra advertencia en admin
+- No se puede agregar al carrito
 
 ---
 
 ## Estructura de Datos
 
-### Arquitectura: Sistema de Dos Niveles
-
-El sistema utiliza una arquitectura **Combo → Items → Productos (por referencia)**.
-
-#### 📦 Nivel 1: Combo (Contenedor)
-
-Representa el combo completo con:
-- **Identificación**: Nombre, slug, descripción, imagen
-- **Precios**: 4 precios (Capital/Interior × Pickup/Delivery)
-- **Estado**: Activo/Inactivo
-- **Configuración**: Orden de visualización
+### Arquitectura: Sistema de Tres Niveles
 
 ```
-COMBO
-│
-├─ Nombre: "Combo Familiar"
-├─ Slug: "combo-familiar"
-├─ Descripción: "2 Subs grandes + 2 bebidas + papas"
-├─ Imagen: "/storage/combos/combo-familiar.jpg"
-├─ Precios:
-│   ├─ Capital Pickup: $200
-│   ├─ Capital Delivery: $220
-│   ├─ Interior Pickup: $180
-│   └─ Interior Delivery: $200
-├─ Estado: Activo
-└─ Orden: 1
+NIVEL 1: Combos (Tabla combos)
+    │
+    ├─ Relación 1:N con Categoría (campo category_id → categories)
+    │
+    └─ NIVEL 2: Items del Combo (Tabla combo_items)
+            │
+            └─ NIVEL 3: Productos (Tabla products)
+                    │
+                    ├─ Relación N:N con Secciones (tabla product_sections)
+                    └─ Relación N:N con Categorías (tabla category_product)
 ```
 
-#### 🎯 Nivel 2: Items del Combo (Referencias a Productos)
+### DDL: Definición de Tablas
 
-Cada item representa **UNA referencia a un producto**:
-- Producto al que hace referencia (product_id)
-- Cantidad (quantity)
-- Label descriptivo para UI
-- Orden de visualización
+#### Tabla: `combos`
 
-```
-ITEM 1
-├─ Producto: "Sub de Pollo" (REFERENCIA, NO COPIA)
-├─ Cantidad: 1
-├─ Label: "Sub Principal"
-└─ Orden: 1
+```sql
+CREATE TABLE combos (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
-ITEM 2
-├─ Producto: "Sub de Res" (REFERENCIA, NO COPIA)
-├─ Cantidad: 1
-├─ Label: "Sub Secundario"
-└─ Orden: 2
+    -- Relación con categoría
+    category_id BIGINT UNSIGNED,
 
-ITEM 3
-├─ Producto: "Coca Cola 500ml" (REFERENCIA, NO COPIA)
-├─ Cantidad: 2
-├─ Label: "Bebidas"
-└─ Orden: 3
-```
+    -- Información básica
+    name VARCHAR(255) NOT NULL UNIQUE,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    description TEXT,
+    image VARCHAR(255),
 
-### 🎨 Ejemplo Completo de Arquitectura
+    -- Precios del combo (4 precios)
+    precio_pickup_capital DECIMAL(10, 2) NOT NULL,
+    precio_domicilio_capital DECIMAL(10, 2) NOT NULL,
+    precio_pickup_interior DECIMAL(10, 2) NOT NULL,
+    precio_domicilio_interior DECIMAL(10, 2) NOT NULL,
 
-```
-┌───────────────────────────────────────────────────────────┐
-│ COMBO: "Combo Familiar"                                   │
-│ Slug: combo-familiar                                      │
-│ Estado: Activo                                            │
-│ Precios:                                                  │
-│ • Capital Pickup: $200 | Capital Delivery: $220          │
-│ • Interior Pickup: $180 | Interior Delivery: $200        │
-├───────────────────────────────────────────────────────────┤
-│                                                           │
-│ ┌─────────────────────────────────────────────────────┐ │
-│ │ ITEM 1: Sub de Pollo (referencia)                   │ │
-│ │ • Cantidad: 1                                       │ │
-│ │ • Label: "Sub Principal"                            │ │
-│ │ • Hereda: Todas las secciones del producto         │ │
-│ │   - Vegetales (requerido)                           │ │
-│ │   - Salsas (opcional)                               │ │
-│ │   - Quesos (opcional, con extras)                   │ │
-│ └─────────────────────────────────────────────────────┘ │
-│                                                           │
-│ ┌─────────────────────────────────────────────────────┐ │
-│ │ ITEM 2: Sub de Res (referencia)                     │ │
-│ │ • Cantidad: 1                                       │ │
-│ │ • Label: "Sub Secundario"                           │ │
-│ │ • Hereda: Todas las secciones del producto         │ │
-│ │   - Vegetales (requerido)                           │ │
-│ │   - Salsas (opcional)                               │ │
-│ │   - Quesos (opcional, con extras)                   │ │
-│ └─────────────────────────────────────────────────────┘ │
-│                                                           │
-│ ┌─────────────────────────────────────────────────────┐ │
-│ │ ITEM 3: Coca Cola 500ml (referencia)                │ │
-│ │ • Cantidad: 2                                       │ │
-│ │ • Label: "Bebidas"                                  │ │
-│ │ • Hereda: Sin secciones (bebida simple)            │ │
-│ └─────────────────────────────────────────────────────┘ │
-│                                                           │
-│ ┌─────────────────────────────────────────────────────┐ │
-│ │ ITEM 4: Papas Fritas (referencia)                   │ │
-│ │ • Cantidad: 1                                       │ │
-│ │ • Label: "Acompañamiento"                           │ │
-│ │ • Hereda: Todas las secciones del producto         │ │
-│ │   - Tamaño (requerido)                              │ │
-│ │   - Salsas (opcional, con extras)                   │ │
-│ └─────────────────────────────────────────────────────┘ │
-└───────────────────────────────────────────────────────────┘
+    -- Configuración
+    is_active BOOLEAN DEFAULT TRUE,
+    sort_order INT DEFAULT 0,
+
+    -- Timestamps
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    deleted_at TIMESTAMP NULL, -- Soft deletes
+
+    -- Foreign keys
+    FOREIGN KEY (category_id)
+        REFERENCES categories(id)
+        ON DELETE SET NULL
+        ON UPDATE RESTRICT,
+
+    -- Índices
+    INDEX idx_active (is_active),
+    INDEX idx_sort_order (sort_order),
+    INDEX idx_slug (slug),
+    INDEX idx_category (category_id)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
-### ✅ Ventajas de esta Arquitectura
+#### Tabla: `combo_items`
 
-- ✅ **DRY Principle**: Información de productos existe en un solo lugar
-- ✅ **Actualización automática**: Cambios en productos se reflejan en combos
-- ✅ **Simplicidad**: No duplica lógica de secciones
-- ✅ **Mantenibilidad**: Modificas el producto una vez, se actualiza en todos los combos
-- ✅ **Consistencia**: Producto se comporta igual dentro y fuera del combo
-- ✅ **Escalabilidad**: Fácil agregar nuevos combos sin tocar estructura de productos
+```sql
+CREATE TABLE combo_items (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
-### 🔗 Relaciones Conceptuales
+    -- Relaciones
+    combo_id BIGINT UNSIGNED NOT NULL,
+    product_id BIGINT UNSIGNED NOT NULL,
+
+    -- Configuración del item
+    quantity INT UNSIGNED DEFAULT 1,
+    label VARCHAR(100) NOT NULL,
+    sort_order INT DEFAULT 0,
+
+    -- Timestamps
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+
+    -- Foreign keys
+    FOREIGN KEY (combo_id)
+        REFERENCES combos(id)
+        ON DELETE CASCADE
+        ON UPDATE RESTRICT,
+
+    FOREIGN KEY (product_id)
+        REFERENCES products(id)
+        ON DELETE RESTRICT
+        ON UPDATE RESTRICT,
+
+    -- Índices
+    INDEX idx_combo (combo_id),
+    INDEX idx_product (product_id),
+    INDEX idx_sort_order (sort_order)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+**Constraints importantes:**
+- `ON DELETE CASCADE` en combo_id: Si elimino combo, se eliminan sus items
+- `ON DELETE RESTRICT` en product_id: NO puedo eliminar un producto si está en un combo activo
+
+### Relaciones Eloquent
+
+#### Modelo: `Combo`
+
+```php
+<?php
+
+namespace App\Models\Menu;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Combo extends Model
+{
+    use SoftDeletes;
+
+    protected $fillable = [
+        'name',
+        'slug',
+        'description',
+        'image',
+        'precio_pickup_capital',
+        'precio_domicilio_capital',
+        'precio_pickup_interior',
+        'precio_domicilio_interior',
+        'is_active',
+        'sort_order',
+    ];
+
+    protected $casts = [
+        'precio_pickup_capital' => 'decimal:2',
+        'precio_domicilio_capital' => 'decimal:2',
+        'precio_pickup_interior' => 'decimal:2',
+        'precio_domicilio_interior' => 'decimal:2',
+        'is_active' => 'boolean',
+        'sort_order' => 'integer',
+    ];
+
+    /**
+     * Relación: Un combo tiene muchos items
+     */
+    public function items(): HasMany
+    {
+        return $this->hasMany(ComboItem::class)->orderBy('sort_order');
+    }
+
+    /**
+     * Relación: Un combo tiene muchos productos (via items)
+     */
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'combo_items')
+            ->withPivot('quantity', 'label', 'sort_order')
+            ->withTimestamps()
+            ->orderByPivot('sort_order');
+    }
+
+    /**
+     * Relación: Un combo pertenece a una categoría
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Scope: Combos activos
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope: Combos disponibles (activos + todos productos activos)
+     */
+    public function scopeAvailable($query)
+    {
+        return $query->active()
+            ->whereDoesntHave('products', function ($q) {
+                $q->where('is_active', false);
+            });
+    }
+
+    /**
+     * Scope: Ordenar por configuración
+     */
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('is_active', 'desc')
+            ->orderBy('sort_order', 'asc')
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Verifica si el combo está disponible
+     */
+    public function isAvailable(): bool
+    {
+        if (!$this->is_active) {
+            return false;
+        }
+
+        // Verificar que TODOS los productos estén activos
+        return $this->products()->where('is_active', false)->doesntExist();
+    }
+
+    /**
+     * Obtiene el precio para una zona y tipo de servicio
+     */
+    public function getPriceForZone(string $zone, string $serviceType): float
+    {
+        $field = match([$zone, $serviceType]) {
+            ['capital', 'pickup'] => 'precio_pickup_capital',
+            ['capital', 'delivery'] => 'precio_domicilio_capital',
+            ['interior', 'pickup'] => 'precio_pickup_interior',
+            ['interior', 'delivery'] => 'precio_domicilio_interior',
+            default => 'precio_pickup_capital',
+        };
+
+        return (float) $this->$field;
+    }
+}
+```
+
+#### Modelo: `ComboItem`
+
+```php
+<?php
+
+namespace App\Models\Menu;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class ComboItem extends Model
+{
+    protected $fillable = [
+        'combo_id',
+        'product_id',
+        'quantity',
+        'label',
+        'sort_order',
+    ];
+
+    protected $casts = [
+        'combo_id' => 'integer',
+        'product_id' => 'integer',
+        'quantity' => 'integer',
+        'sort_order' => 'integer',
+    ];
+
+    /**
+     * Relación: Un item pertenece a un combo
+     */
+    public function combo(): BelongsTo
+    {
+        return $this->belongsTo(Combo::class);
+    }
+
+    /**
+     * Relación: Un item referencia a un producto
+     */
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Obtiene el producto con todas sus secciones cargadas
+     */
+    public function getProductWithSections()
+    {
+        return $this->product()->with('sections.options')->first();
+    }
+}
+```
+
+#### Extensión al Modelo: `Product`
+
+```php
+/**
+ * Relación inversa: Un producto puede estar en muchos combos
+ */
+public function combos(): BelongsToMany
+{
+    return $this->belongsToMany(Combo::class, 'combo_items')
+        ->withPivot('quantity', 'label', 'sort_order')
+        ->withTimestamps();
+}
+
+/**
+ * Verifica si el producto está en algún combo activo
+ */
+public function isInActiveCombos(): bool
+{
+    return $this->combos()->where('is_active', true)->exists();
+}
+```
+
+### Diagrama de Relaciones
 
 ```
-UN Combo ──tiene──> MUCHOS Items
-UN Item ──pertenece a──> UN Combo
-UN Item ──referencia a──> UN Producto (NO copia)
-UN Producto ──tiene──> MUCHAS Secciones (N:N)
-UNA Sección ──tiene──> MUCHAS Opciones (1:N)
+┌──────────────────────┐
+│  categories          │
+│(is_combo_category=1) │
+└──────────────────────┘
+           │ 1
+           │ HasMany
+           ▼ N
+┌──────────────────────┐
+│      combos          │◄────────────────┐
+│   (category_id)      │                 │
+└──────────────────────┘                 │
+           │ 1                           │
+           │ HasMany                     │
+           ▼ N                           │
+┌──────────────────────┐                 │
+│   combo_items        │                 │
+└──────────────────────┘                 │
+           │ N                           │
+           │ BelongsTo                   │
+           ▼ 1                           │
+┌──────────────────────┐  N             │ N
+│     products         │◄───────┐       │
+└──────────────────────┘        │       │
+           │ N                  │       │
+           │ BelongsToMany      │       │
+           ▼ N                  │       │
+┌──────────────────────┐   ┌────────────┴───────┐
+│ category_product     │───│   categories       │
+│      (pivot)         │   │(is_combo_category  │
+└──────────────────────┘   │    = 0 o 1)        │
+                           └────────────────────┘
 ```
-
-### ✏️ Validaciones de Integridad
-
-#### 1. Items del Combo:
-- Un combo debe tener mínimo 2 items
-- Un combo puede tener máximo 10 items
-- Cada item debe referenciar un producto válido y activo
-- Un mismo producto puede aparecer múltiples veces (con labels diferentes)
-
-#### 2. Precios del Combo:
-- Todos los 4 precios son requeridos
-- Todos los precios deben ser mayores a 0
-- Los precios de delivery deben ser >= precios de pickup (misma zona)
-
-#### 3. Disponibilidad:
-- Un combo solo está disponible si TODOS sus productos están activos
-- Si un producto se desactiva/elimina, el combo se marca como no disponible
 
 ---
 
@@ -412,184 +648,188 @@ UNA Sección ──tiene──> MUCHAS Opciones (1:N)
 
 ```
 INICIO: Usuario selecciona un combo en el menú
-│
-├─> PASO 1: Cargar combo con sus items
-│   └─ Eager load: combo.items.product.sections.options
-│
-├─> PASO 2: Obtener precio base del combo
-│   ├─ Detectar zona del pedido (capital/interior)
+
+├─► PASO 1: Cargar combo con eager loading
+│   └─ Combo::with(['items.product.sections.options', 'categories'])->find($id)
+
+├─► PASO 2: Verificar disponibilidad
+│   ├─ Verificar combo.is_active = true
+│   └─ Verificar que TODOS los productos hijos estén activos
+
+├─► PASO 3: Buscar promociones aplicables AL COMBO
+│   ├─ Promotion::forCombo($combo)->activeNow()->first()
+│   └─ Si existe, calcular precio con descuento
+
+├─► PASO 4: Obtener precio base del combo
+│   ├─ Detectar zona (capital/interior)
 │   ├─ Detectar tipo de servicio (pickup/delivery)
-│   └─ Seleccionar precio correspondiente
-│       Ejemplo: Capital + Delivery → precio_domicilio_capital
-│
-├─> PASO 3: Para cada item del combo:
+│   └─ $precio_base = $combo->getPriceForZone($zona, $servicio)
+
+├─► PASO 5: Para cada item del combo (producto hijo):
 │   │
 │   ├─ Cargar producto con sus secciones
 │   │
-│   ├─ Mostrar UI de personalización (si tiene secciones)
-│   │   ├─ Mostrar secciones requeridas (is_required=true)
-│   │   ├─ Mostrar secciones opcionales (is_required=false)
-│   │   └─ Marcar opciones con precio extra (is_extra=true)
+│   ├─ Mostrar UI de personalización
+│   │   ├─ Secciones requeridas (is_required=true)
+│   │   ├─ Secciones opcionales (is_required=false)
+│   │   └─ Marcar opciones con extra (is_extra=true)
 │   │
-│   └─ Esperar selección del cliente
-│
-├─> PASO 4: Validar selecciones
+│   └─ Esperar selecciones del cliente
+
+├─► PASO 6: Validar selecciones
 │   │
 │   └─ Para cada producto del combo:
-│       ├─ Verificar que secciones requeridas tengan selección
+│       ├─ Verificar secciones requeridas completas
 │       ├─ Verificar min_selections y max_selections
-│       └─ Si falla → mostrar error, no permitir agregar al carrito
-│
-├─> PASO 5: Calcular precio total del combo
+│       └─ Si falla → error
+
+├─► PASO 7: Calcular precio total
 │   │
-│   ├─ precio_total = precio_base_combo
+│   ├─ precio_total = precio_base_combo (ya con promoción si aplica)
 │   │
 │   └─ Para cada item del combo:
-│       └─ Para cada sección del producto:
-│           └─ Para cada opción seleccionada:
-│               └─ Si opcion.is_extra = true:
-│                   └─ precio_total += opcion.price_modifier
-│
-├─> PASO 6: Agregar combo al carrito
+│       └─ Para cada opción seleccionada:
+│           └─ Si opcion.is_extra = true:
+│               └─ precio_total += opcion.price_modifier
+
+├─► PASO 8: Agregar combo al carrito
 │   └─ Guardar:
 │       ├─ combo_id
 │       ├─ precio_base
-│       ├─ precio_total (con extras)
-│       └─ personalizaciones (JSON con todas las selecciones)
-│
-└─> RESULTADO FINAL: Combo agregado al carrito con personalización completa
+│       ├─ precio_total
+│       ├─ promocion_id (si aplica)
+│       └─ personalizaciones (JSON)
+
+└─► RESULTADO: Combo en carrito con personalización completa
 ```
 
 ### 2. Algoritmo de Cálculo de Precio
 
-```
-FUNCIÓN: calcularPrecioCombo(combo, zona, tipo_servicio, personalizaciones)
-│
-├─ PASO 1: Obtener precio base según zona y servicio
-│   │
-│   ├─ Si zona = 'capital' AND tipo_servicio = 'pickup':
-│   │   └─ precio_base = combo.precio_pickup_capital
-│   │
-│   ├─ Si zona = 'capital' AND tipo_servicio = 'delivery':
-│   │   └─ precio_base = combo.precio_domicilio_capital
-│   │
-│   ├─ Si zona = 'interior' AND tipo_servicio = 'pickup':
-│   │   └─ precio_base = combo.precio_pickup_interior
-│   │
-│   └─ Si zona = 'interior' AND tipo_servicio = 'delivery':
-│       └─ precio_base = combo.precio_domicilio_interior
-│
-├─ PASO 2: Inicializar acumulador de extras
-│   └─ total_extras = 0
-│
-├─ PASO 3: Por cada item del combo
-│   │
-│   └─ Por cada personalización del item
-│       │
-│       └─ Si opcion.is_extra = true:
-│           └─ total_extras += opcion.price_modifier
-│
-├─ PASO 4: Calcular precio final
-│   └─ precio_final = precio_base + total_extras
-│
-└─ RETORNAR precio_final
-```
+```php
+function calcularPrecioCombo(
+    Combo $combo,
+    string $zona,
+    string $tipoServicio,
+    array $personalizaciones
+): float {
+    // PASO 1: Precio base del combo
+    $precioBase = $combo->getPriceForZone($zona, $tipoServicio);
 
-### 3. Algoritmo de Validación de Disponibilidad
+    // PASO 2: Aplicar promoción SI EXISTE (a nivel combo)
+    $promocion = Promotion::forCombo($combo)->activeNow()->first();
 
-```
-FUNCIÓN: esComboDisponible(combo)
-│
-├─ VALIDACIÓN 1: Estado Activo del Combo
-│  └─ Si combo.is_active = false → RETORNAR false
-│
-├─ VALIDACIÓN 2: Productos Activos
-│  │
-│  └─ Para cada item del combo:
-│      ├─ Si item.product = null → RETORNAR false (producto eliminado)
-│      └─ Si item.product.is_active = false → RETORNAR false
-│
-└─ RETORNAR true (pasó todas las validaciones)
+    if ($promocion) {
+        $precioBase = aplicarPromocion($precioBase, $promocion);
+    }
+
+    // PASO 3: Sumar extras de personalización
+    $totalExtras = 0;
+
+    foreach ($combo->items as $item) {
+        $personalizacionItem = $personalizaciones[$item->id] ?? [];
+
+        foreach ($personalizacionItem['opciones'] as $opcionId) {
+            $opcion = Option::find($opcionId);
+
+            if ($opcion && $opcion->is_extra) {
+                $totalExtras += $opcion->price_modifier;
+            }
+        }
+    }
+
+    // PASO 4: Precio final
+    return $precioBase + $totalExtras;
+}
 ```
 
-### 4. Carga de Datos Eficiente (Eager Loading)
+### 3. Validación de Disponibilidad
 
+```php
+function esComboDisponible(Combo $combo): bool
+{
+    // Validación 1: Combo activo
+    if (!$combo->is_active) {
+        return false;
+    }
+
+    // Validación 2: TODOS los productos activos
+    foreach ($combo->items as $item) {
+        if (!$item->product || !$item->product->is_active) {
+            return false;
+        }
+    }
+
+    return true;
+}
 ```
-Al listar combos en el menú:
 
-Combos::with([
-    'items.product.sections.options'
-])->where('is_active', true)->get()
+### 4. Carga Eficiente (Eager Loading)
 
-Esto precarga:
-- Los items del combo
-- Los productos referenciados por cada item
-- Las secciones de cada producto
-- Las opciones de cada sección
+```php
+// Al listar combos en el menú
+$combos = Combo::with([
+    'items.product.sections.options',
+    'categories'
+])
+->available()
+->ordered()
+->get();
 
-Evita el problema N+1 de consultas
+// Precarga:
+// - Items del combo
+// - Productos de cada item
+// - Secciones de cada producto
+// - Opciones de cada sección
+// - Categorías del combo
+
+// Evita N+1 queries
 ```
 
 ---
 
 ## Interfaz de Usuario
 
-### 1. Página Principal de Combos
+### 1. Página Principal: `/menu/combos`
 
-**Ruta**: `/menu/combos`
-
-**Elementos**:
+**Elementos:**
 
 #### Header:
-- Título: "🍔 Combos"
+- Título: "Combos"
 - Botón: "+ Nuevo Combo"
+- Breadcrumbs: Menú / Combos
 
-#### Estadísticas (Cards superiores):
+#### Estadísticas:
 ```
 ┌──────────────────┬──────────────────┬──────────────────┐
-│ Total Combos     │ Combos Activos   │ Combos Inactivos │
+│ Total Combos     │ Combos Activos   │ No Disponibles   │
 │      15          │        12        │         3        │
 └──────────────────┴──────────────────┴──────────────────┘
 ```
 
 #### Filtros:
-- Estado (Dropdown): Todos / Activos / Inactivos
-- Búsqueda: Por nombre
+- Búsqueda por nombre
+- Estado: Todos / Activos / Inactivos
+- Categoría (si aplica)
 
-#### Listado (DataTable):
-Cada combo muestra:
+#### DataTable:
 
-| Imagen | Nombre | Items | Precio Capital | Precio Interior | Estado | Acciones |
-|--------|--------|-------|----------------|-----------------|--------|----------|
-| [IMG]  | Combo Familiar | 4 productos | $200 - $220 | $180 - $200 | 🟢 Activo | [⋮] |
-| [IMG]  | 2 Subs Clásicos | 2 productos | $120 - $130 | $110 - $120 | 🟢 Activo | [⋮] |
+| Imagen | Nombre | Items | Categorías | Precio Capital | Estado | Acciones |
+|--------|--------|-------|------------|----------------|--------|----------|
+| [IMG] | Combo Familiar | 4 items | Promociones | Q200 - Q220 | 🟢 Activo | [⋮] |
+| [IMG] | 2 Subs Clásicos | 2 items | Combos | Q120 - Q130 | 🟢 Activo | [⋮] |
 
-**Columnas**:
-- Imagen: Thumbnail del combo
-- Nombre: Nombre descriptivo
-- Items: Cantidad de productos en el combo
-- Precio Capital: Rango pickup-delivery
-- Precio Interior: Rango pickup-delivery
-- Estado: Badge verde (activo) o rojo (inactivo)
-- Acciones: Menú contextual
-
-#### Menú Contextual (⋮):
+**Menú Contextual (⋮):**
+- Ver
 - Editar
-- Ver Detalle
 - Duplicar
 - Activar/Desactivar
 - Eliminar
 
----
+### 2. Formulario Crear: `/menu/combos/create`
 
-### 2. Formulario Crear Combo
-
-**Ruta**: `/menu/combos/create`
-
-**Secciones del Formulario**:
+**Secciones:**
 
 #### Sección 1: Información Básica
-
 ```
 ┌─────────────────────────────────────────────────────┐
 │ Información Básica                                  │
@@ -597,24 +837,24 @@ Cada combo muestra:
 │                                                     │
 │ Nombre del Combo *                                  │
 │ [________________________________]                  │
-│ ej: Combo Familiar, 2 Subs Clásicos                │
 │                                                     │
 │ Descripción (opcional)                              │
 │ [________________________________]                  │
 │ [________________________________]                  │
-│ [________________________________]                  │
 │                                                     │
-│ Imagen del Combo                                    │
+│ Imagen                                              │
 │ [Seleccionar imagen] [Vista previa]                │
+│                                                     │
+│ Categorías                                          │
+│ [Multi-select de categorías]                       │
 │                                                     │
 └─────────────────────────────────────────────────────┘
 ```
 
 #### Sección 2: Items del Combo
-
 ```
 ┌─────────────────────────────────────────────────────┐
-│ Items del Combo (mínimo 2, máximo 10) *            │
+│ Items del Combo (mínimo 2) *                       │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
 │ ┌─────────────────────────────────────────────┐   │
@@ -624,122 +864,70 @@ Cada combo muestra:
 │ │ [Buscar producto... ▼]                     │   │
 │ │                                             │   │
 │ │ Label *                                     │   │
-│ │ [_____________________________]            │   │
-│ │ ej: Sub Principal, Bebida 1                │   │
+│ │ [Sub Principal____________]                │   │
 │ │                                             │   │
 │ │ Cantidad *                                  │   │
 │ │ [1 ▼]                                      │   │
-│ └─────────────────────────────────────────────┘   │
-│                                                     │
-│ ┌─────────────────────────────────────────────┐   │
-│ │ Item 2                              [✕]     │   │
-│ │ ...                                         │   │
+│ │                                             │   │
+│ │ ℹ️ Este producto tiene 3 secciones de      │   │
+│ │    personalización                          │   │
 │ └─────────────────────────────────────────────┘   │
 │                                                     │
 │ [+ Agregar Item]                                   │
 │                                                     │
-│ Nota: Las secciones de personalización se          │
-│ heredan automáticamente de cada producto            │
-│                                                     │
 └─────────────────────────────────────────────────────┘
 ```
 
-**Comportamiento del selector de productos**:
-- Combobox con búsqueda
-- Muestra productos activos
-- Permite seleccionar el mismo producto múltiples veces
-- Al seleccionar, muestra badge si el producto tiene personalización
-
-#### Sección 3: Precios del Combo
-
+#### Sección 3: Precios
 ```
 ┌─────────────────────────────────────────────────────┐
 │ Precios del Combo *                                 │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
-│ Zona Capital                                        │
-│ ├─ Pickup:    $ [________]                         │
-│ └─ Delivery:  $ [________]                         │
+│ 🏙️ Zona Capital                                    │
+│ ├─ Pickup:    Q [________]                         │
+│ └─ Delivery:  Q [________]                         │
 │                                                     │
-│ Zona Interior                                       │
-│ ├─ Pickup:    $ [________]                         │
-│ └─ Delivery:  $ [________]                         │
+│ 🏘️ Zona Interior                                   │
+│ ├─ Pickup:    Q [________]                         │
+│ └─ Delivery:  Q [________]                         │
 │                                                     │
-│ ℹ️ Estos precios NO incluyen extras de             │
-│    personalización. Los extras se calculan          │
-│    automáticamente según las opciones del cliente.  │
-│                                                     │
-└─────────────────────────────────────────────────────┘
-```
-
-**Validación en tiempo real**:
-- Delivery >= Pickup (misma zona)
-- Todos los precios > 0
-
-#### Sección 4: Calculadora de Referencia (Opcional)
-
-```
-┌─────────────────────────────────────────────────────┐
 │ 💡 Calculadora de Precio Sugerido                  │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│ Precio individual de productos:                    │
-│ ├─ Sub de Pollo:     $70                          │
-│ ├─ Sub de Res:       $70                          │
-│ ├─ Coca Cola (×2):   $60                          │
-│ └─ Papas Fritas:     $40                          │
-│                                                     │
-│ Total individual: $240                             │
-│ Descuento sugerido (20%): -$48                     │
-│ Precio sugerido: $192                              │
-│                                                     │
-│ [Aplicar precio sugerido]                          │
+│ ┌─────────────────────────────────────────────┐   │
+│ │ Suma de productos: Q240                     │   │
+│ │ Descuento sugerido (20%): -Q48              │   │
+│ │ Precio sugerido: Q192                       │   │
+│ │ [Aplicar sugerencia]                        │   │
+│ └─────────────────────────────────────────────┘   │
 │                                                     │
 └─────────────────────────────────────────────────────┘
 ```
 
-**Comportamiento**:
-- Se calcula automáticamente al agregar productos
-- Sugiere 20% de descuento por defecto
-- Permite aplicar o ignorar la sugerencia
-
-#### Sección 5: Estado y Orden
-
+#### Sección 4: Estado
 ```
 ┌─────────────────────────────────────────────────────┐
 │ Configuración                                       │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
 │ Estado                                              │
-│ ○ Activo   ○ Inactivo                              │
+│ [🔘 Activo] ○ Inactivo                             │
 │                                                     │
 │ Orden de visualización                              │
-│ [____] (menor número = aparece primero)            │
+│ [0___] (menor = aparece primero)                   │
 │                                                     │
 └─────────────────────────────────────────────────────┘
 ```
 
-#### Footer del Formulario:
+#### Footer:
 ```
 [Cancelar]                           [Guardar Combo]
 ```
 
----
-
-### 3. Formulario Editar Combo
-
-**Ruta**: `/menu/combos/{id}/edit`
-
-**Elementos**:
+### 3. Formulario Editar: `/menu/combos/{id}/edit`
 
 Igual que crear, con adiciones:
 
-#### Header:
-- Título: "✏️ Editar Combo: [Nombre]"
-- Botón adicional: [Ver Vista Previa]
-
-#### Validaciones especiales al editar:
-
+**Advertencia de productos inactivos:**
 ```
 ⚠️ ADVERTENCIA: Productos Inactivos
 ┌─────────────────────────────────────────────────────┐
@@ -749,136 +937,12 @@ Igual que crear, con adiciones:
 │                                                     │
 │ • Sub de Pollo (Item 1)                            │
 │                                                     │
-│ El combo se marcará como no disponible hasta       │
-│ que reactives los productos o los reemplaces.       │
+│ El combo está marcado como no disponible.          │
+│ Reactiva los productos o reemplázalos.              │
 │                                                     │
-│ [Reemplazar productos] [Mantener y continuar]      │
+│ [Reemplazar productos] [Mantener]                  │
 └─────────────────────────────────────────────────────┘
 ```
-
----
-
-### 4. Modal de Vista Previa
-
-**Trigger**: Click en "Ver Vista Previa" o en menú contextual
-
-**Contenido**:
-
-```
-┌─────────────────────────────────────────────────────┐
-│ Vista Previa del Combo                         [✕] │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│ [Imagen del combo]                                 │
-│                                                     │
-│ 🍔 Combo Familiar                                  │
-│ 2 Subs grandes + 2 bebidas + papas                 │
-│                                                     │
-│ ────────────────────────────────────────────────   │
-│                                                     │
-│ Incluye:                                           │
-│ ✓ Sub de Pollo (Personalizable)                   │
-│ ✓ Sub de Res (Personalizable)                     │
-│ ✓ Coca Cola 500ml (×2)                            │
-│ ✓ Papas Fritas (Personalizable)                   │
-│                                                     │
-│ ────────────────────────────────────────────────   │
-│                                                     │
-│ 💰 Precios:                                        │
-│                                                     │
-│ Capital                                            │
-│ • Pickup:     $200                                 │
-│ • Delivery:   $220                                 │
-│                                                     │
-│ Interior                                           │
-│ • Pickup:     $180                                 │
-│ • Delivery:   $200                                 │
-│                                                     │
-│ * Los extras de personalización se cobran aparte   │
-│                                                     │
-│ ────────────────────────────────────────────────   │
-│                                                     │
-│ 📊 Comparación de Precios                          │
-│                                                     │
-│ Si compras individual (Capital-Delivery):          │
-│ • Sub de Pollo: $70                                │
-│ • Sub de Res: $70                                  │
-│ • Coca Cola (×2): $60                              │
-│ • Papas: $40                                       │
-│ Total: $240                                        │
-│                                                     │
-│ Con este combo: $220                               │
-│ Ahorro: $20 (8%)                                   │
-│                                                     │
-│ ────────────────────────────────────────────────   │
-│                                                     │
-│ Estado: 🟢 Activo y Disponible                     │
-│                                                     │
-└─────────────────────────────────────────────────────┘
-```
-
----
-
-### 5. Vista de Detalle del Combo (Read-only)
-
-**Ruta**: `/menu/combos/{id}`
-
-Similar a la vista previa pero con más información técnica:
-
-```
-┌─────────────────────────────────────────────────────┐
-│ Detalle del Combo                                   │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│ [Imagen]                                           │
-│                                                     │
-│ Combo Familiar                                      │
-│ Slug: combo-familiar                               │
-│ Creado: 15 de Enero, 2025                          │
-│ Última edición: 20 de Enero, 2025                  │
-│                                                     │
-│ ────────────────────────────────────────────────   │
-│                                                     │
-│ Items del Combo:                                   │
-│                                                     │
-│ 1. Sub de Pollo                                    │
-│    • Label: "Sub Principal"                        │
-│    • Cantidad: 1                                   │
-│    • Personalización: Sí (3 secciones)            │
-│    • Estado: 🟢 Activo                             │
-│                                                     │
-│ 2. Sub de Res                                      │
-│    • Label: "Sub Secundario"                       │
-│    • Cantidad: 1                                   │
-│    • Personalización: Sí (3 secciones)            │
-│    • Estado: 🟢 Activo                             │
-│                                                     │
-│ 3. Coca Cola 500ml                                 │
-│    • Label: "Bebidas"                              │
-│    • Cantidad: 2                                   │
-│    • Personalización: No                           │
-│    • Estado: 🟢 Activo                             │
-│                                                     │
-│ ────────────────────────────────────────────────   │
-│                                                     │
-│ [Editar Combo] [Duplicar] [Desactivar] [Eliminar] │
-│                                                     │
-└─────────────────────────────────────────────────────┘
-```
-
----
-
-### 6. Indicadores Visuales
-
-#### Estados:
-- 🟢 Verde: Activo y disponible (todos los productos activos)
-- 🟡 Amarillo: Activo pero no disponible (productos inactivos)
-- 🔴 Rojo: Inactivo
-
-#### Badges:
-- **Personalizable**: Si al menos un producto tiene secciones
-- **Simple**: Si ningún producto tiene secciones
-- **X items**: Cantidad de productos en el combo
 
 ---
 
@@ -886,227 +950,139 @@ Similar a la vista previa pero con más información técnica:
 
 ### Caso 1: Combo Simple sin Personalización
 
-**Escenario**: "Combo 3 Bebidas"
+**Configuración:**
+```
+Nombre: "Combo 3 Bebidas"
+Items:
+  - Coca Cola 500ml (cantidad: 1, label: "Bebida 1")
+  - Pepsi 500ml (cantidad: 1, label: "Bebida 2")
+  - Fanta 500ml (cantidad: 1, label: "Bebida 3")
+Precio Capital-Delivery: Q70
+Categorías: ["Bebidas", "Combos"]
+```
 
-**Configuración**:
-- Nombre: "Combo 3 Bebidas"
-- Items:
-  - Item 1: Coca Cola 500ml (cantidad: 1, label: "Bebida 1")
-  - Item 2: Pepsi 500ml (cantidad: 1, label: "Bebida 2")
-  - Item 3: Fanta 500ml (cantidad: 1, label: "Bebida 3")
-- Precio Capital-Delivery: $70
-- Estado: Activo
+**Comparación:**
+- Individual: Q30 + Q30 + Q30 = Q90
+- Combo: Q70
+- **Ahorro: Q20 (22%)**
 
-**Precios individuales**:
-- Coca Cola: $30
-- Pepsi: $30
-- Fanta: $30
-- **Total individual**: $90
-
-**Ahorro con combo**: $20 (22%)
-
-**Comportamiento en el carrito**:
-- Cliente selecciona "Combo 3 Bebidas"
-- No hay personalización (bebidas simples)
-- Precio final: $70 (sin extras)
+**En el carrito:**
+- Cliente selecciona combo
+- NO hay personalización (bebidas simples)
+- Precio final: Q70
 - Se agrega directo al carrito
 
----
+### Caso 2: Combo con Personalización
 
-### Caso 2: Combo con Personalización Simple
+**Configuración:**
+```
+Nombre: "2 Subs Clásicos"
+Items:
+  - Sub de Pollo (label: "Sub 1")
+  - Sub de Res (label: "Sub 2")
+Precio Capital-Delivery: Q120
+Categorías: ["Combos Especiales"]
+```
 
-**Escenario**: "2 Subs Clásicos"
+**Personalización:**
 
-**Configuración**:
-- Nombre: "2 Subs Clásicos"
-- Items:
-  - Item 1: Sub de Pollo (label: "Sub 1")
-  - Item 2: Sub de Res (label: "Sub 2")
-- Precio Capital-Delivery: $120
-- Estado: Activo
+Sub 1 (Pollo):
+- Vegetales: Lechuga, Tomate, Cebolla (+Q5)
+- Salsas: Mayo, BBQ (+Q3)
+- **Extras: Q8**
 
-**Personalización de cada Sub**:
-- Sección "Vegetales" (requerida, múltiple):
-  - Lechuga (gratis)
-  - Tomate (gratis)
-  - Cebolla (is_extra=true, +$5)
-- Sección "Salsas" (opcional, múltiple):
-  - Mayo (gratis)
-  - Mostaza (gratis)
-  - BBQ (is_extra=true, +$3)
-
-**Flujo de compra**:
-1. Cliente selecciona combo
-2. Sistema muestra personalización para "Sub 1":
-   - Selecciona: Lechuga, Tomate, Cebolla (+$5)
-   - Selecciona: Mayo, BBQ (+$3)
-   - **Extras Sub 1**: $8
-3. Sistema muestra personalización para "Sub 2":
-   - Selecciona: Lechuga, Tomate
-   - Selecciona: Mostaza
-   - **Extras Sub 2**: $0
-4. **Precio final**: $120 + $8 + $0 = $128
-
----
-
-### Caso 3: Combo Familiar Completo
-
-**Escenario**: "Combo Familiar Completo"
-
-**Configuración**:
-- Nombre: "Combo Familiar"
-- Items:
-  - Item 1: Sub Grande de Pollo (label: "Sub Principal")
-  - Item 2: Sub Grande de Res (label: "Sub Secundario")
-  - Item 3: Coca Cola 1L (cantidad: 2, label: "Bebidas")
-  - Item 4: Papas Fritas Grande (label: "Papas")
-- Precio Capital-Delivery: $250
-- Estado: Activo
-
-**Personalización**:
-
-**Sub de Pollo**:
-- Vegetales: Lechuga, Tomate, Cebolla (+$5)
-- Salsas: Mayo, BBQ (+$3)
-- Quesos: Queso Extra (+$10)
-- **Subtotal extras**: $18
-
-**Sub de Res**:
+Sub 2 (Res):
 - Vegetales: Lechuga, Tomate
 - Salsas: Mostaza
-- **Subtotal extras**: $0
+- **Extras: Q0**
 
-**Papas Fritas**:
-- Tamaño: Grande (ya incluido)
-- Salsas: Ketchup (gratis), Mayo BBQ (+$5)
-- **Subtotal extras**: $5
-
-**Bebidas**: Sin personalización
-
-**Cálculo final**:
+**Precio final:**
 ```
-Precio base combo:     $250
-Extras Sub 1:          +$18
-Extras Sub 2:          +$0
-Extras Papas:          +$5
-Extras Bebidas:        +$0
-──────────────────────────
-TOTAL:                 $273
+Precio base: Q120
+Extras Sub 1: +Q8
+Extras Sub 2: +Q0
+──────────────
+TOTAL: Q128
 ```
 
-**Comparación con compra individual**:
-- Sub de Pollo: $90
-- Sub de Res: $90
-- Coca Cola 1L (×2): $80
-- Papas Fritas: $50
-- **Total individual**: $310
+### Caso 3: Combo con Promoción
 
-**Con extras del ejemplo**: $310 + $23 = $333
-**Con combo + extras**: $273
-
-**Ahorro total**: $60 (18%)
-
----
-
-### Caso 4: Producto Repetido con Diferentes Personalizaciones
-
-**Escenario**: "4 Empanadas Mixtas"
-
-**Configuración**:
-- Nombre: "4 Empanadas Mixtas"
-- Items:
-  - Item 1: Empanada de Carne (label: "Empanada 1")
-  - Item 2: Empanada de Carne (label: "Empanada 2")
-  - Item 3: Empanada de Pollo (label: "Empanada 3")
-  - Item 4: Empanada de Pollo (label: "Empanada 4")
-- Precio Capital-Delivery: $60
-- Estado: Activo
-
-**Personalización de Empanadas**:
-- Sección "Cocción" (requerida, única):
-  - Al horno (gratis)
-  - Frita (gratis)
-- Sección "Extras" (opcional):
-  - Chimichurri (+$2)
-  - Queso extra (+$5)
-
-**Flujo de compra**:
-El cliente personaliza CADA empanada individualmente:
-
-1. **Empanada 1** (Carne):
-   - Cocción: Al horno
-   - Extras: Chimichurri (+$2)
-
-2. **Empanada 2** (Carne):
-   - Cocción: Frita
-   - Extras: Queso extra (+$5)
-
-3. **Empanada 3** (Pollo):
-   - Cocción: Al horno
-   - Extras: Ninguno
-
-4. **Empanada 4** (Pollo):
-   - Cocción: Frita
-   - Extras: Chimichurri (+$2)
-
-**Cálculo**:
+**Configuración:**
 ```
-Precio base combo:    $60
-Extras Empanada 1:    +$2
-Extras Empanada 2:    +$5
-Extras Empanada 3:    +$0
-Extras Empanada 4:    +$2
-─────────────────────────
-TOTAL:                $69
+Nombre: "Combo Familiar"
+Precio Capital-Delivery: Q220
+Items: 2 Subs + 2 Bebidas + Papas
 ```
 
----
-
-### Caso 5: Combo con Producto Inactivo (Error)
-
-**Escenario**: Administrador intenta activar un combo pero uno de sus productos está inactivo.
-
-**Configuración del combo**:
-- Nombre: "Combo 2 Subs"
-- Items:
-  - Item 1: Sub de Pollo (🟢 Activo)
-  - Item 2: Sub de Jamón (🔴 Inactivo)
-- Estado actual del combo: Inactivo
-
-**Flujo**:
-
-1. Admin intenta activar el combo
-2. Sistema valida disponibilidad de productos
-3. Detecta que "Sub de Jamón" está inactivo
-4. **Muestra error**:
-
+**Promoción aplicable:**
 ```
-❌ No se puede activar el combo
-
-El combo "Combo 2 Subs" contiene productos inactivos:
-• Sub de Jamón (Item 2)
-
-Opciones:
-1. Reemplazar "Sub de Jamón" por otro producto
-2. Reactivar el producto "Sub de Jamón"
-3. Mantener el combo inactivo
-
-[Reemplazar productos] [Cancelar]
+Tipo: Descuento Porcentual
+Nombre: "20% descuento en Combo Familiar - Domingos"
+Aplica a: Combo Familiar (entidad completa)
+Descuento: 20%
+Vigencia: Domingos
 ```
 
-5. Admin debe resolver el problema antes de activar el combo
+**Cálculo:**
+```
+Precio base combo: Q220
+Promoción (20%): -Q44
+──────────────────────
+Precio con promo: Q176
+
+Personalizaciones:
+- Sub 1 extras: +Q10
+- Sub 2 extras: +Q5
+- Papas extras: +Q3
+──────────────────────
+TOTAL FINAL: Q194
+```
+
+**Importante:**
+❌ Los productos hijos NO reciben promociones individuales:
+- Si "Sub de Pollo" tiene promoción "Sub del Día Q30"
+- NO se aplica cuando está dentro del combo
+- Solo se aplica la promoción del combo completo
+
+### Caso 4: Producto Repetido con Personalizaciones Diferentes
+
+**Configuración:**
+```
+Nombre: "4 Empanadas Mixtas"
+Items:
+  - Empanada de Carne (label: "Empanada 1")
+  - Empanada de Carne (label: "Empanada 2")
+  - Empanada de Pollo (label: "Empanada 3")
+  - Empanada de Pollo (label: "Empanada 4")
+Precio: Q60
+```
+
+**Personalización individual:**
+
+Empanada 1: Al horno + Chimichurri (+Q2)
+Empanada 2: Frita + Queso (+Q5)
+Empanada 3: Al horno
+Empanada 4: Frita + Chimichurri (+Q2)
+
+**Precio final:**
+```
+Precio base: Q60
+Extras: Q2 + Q5 + Q0 + Q2 = Q9
+──────────────────────────────
+TOTAL: Q69
+```
 
 ---
 
 ## Validaciones
 
-### Validaciones del Formulario
+### Validaciones de Formulario
 
-#### Campo: Nombre del Combo
+#### Campo: Nombre
 - ✅ Requerido
 - ✅ Máximo 255 caracteres
-- ✅ Debe ser único (no puede haber dos combos con el mismo nombre)
-- ⚠️ Se genera slug automático (ej: "Combo Familiar" → "combo-familiar")
+- ✅ Único (no puede haber dos combos con el mismo nombre)
+- ⚠️ Slug se genera automático
 
 #### Campo: Descripción
 - ✅ Opcional
@@ -1114,207 +1090,84 @@ Opciones:
 
 #### Campo: Imagen
 - ✅ Opcional
-- ✅ Formatos permitidos: JPG, PNG, WEBP
+- ✅ Formatos: JPG, PNG, WEBP
 - ✅ Tamaño máximo: 2MB
-- ✅ Dimensiones recomendadas: 800×600px
 
-#### Sección: Items del Combo
-
-**Cantidad de items**:
+#### Sección: Items
 - ✅ Mínimo 2 items requeridos
-- ✅ Máximo 10 items permitidos
-- ❌ Error si < 2: "Un combo debe tener al menos 2 productos"
-- ❌ Error si > 10: "Un combo no puede tener más de 10 productos"
+- ✅ Productos repetidos permitidos
+- ✅ Cada item requiere: product_id, label
+- ✅ Quantity mínimo: 1
 
-**Por cada item**:
-- ✅ Producto requerido
-- ✅ Producto debe estar activo
-- ✅ Label requerido (máximo 100 caracteres)
-- ✅ Cantidad mínima: 1
-- ✅ Cantidad máxima: 10
-
-**Validación de duplicados**:
-- ✅ Permitido: Mismo producto múltiples veces
-- ⚠️ Recomendación: Labels diferentes para productos repetidos
+**Mensajes de error:**
+```
+❌ "Un combo debe tener al menos 2 productos"
+❌ "El producto seleccionado no existe o está inactivo"
+❌ "El label es requerido"
+```
 
 #### Sección: Precios
-
-**Todos los precios son requeridos**:
-- ✅ precio_pickup_capital (requerido)
-- ✅ precio_domicilio_capital (requerido)
-- ✅ precio_pickup_interior (requerido)
-- ✅ precio_domicilio_interior (requerido)
-
-**Validaciones de valores**:
-- ✅ Deben ser números positivos
-- ✅ Deben ser mayores a 0
+- ✅ Los 4 precios son requeridos
+- ✅ Deben ser números positivos > 0
 - ✅ Máximo 2 decimales
-- ⚠️ precio_domicilio >= precio_pickup (misma zona)
+- ✅ precio_domicilio >= precio_pickup (misma zona)
 
-**Mensajes de error**:
+**Mensajes de error:**
 ```
 ❌ "El precio debe ser mayor a 0"
-❌ "El precio de delivery debe ser mayor o igual al precio de pickup"
-❌ "El precio debe tener máximo 2 decimales"
+❌ "El precio de delivery debe ser mayor o igual al de pickup"
 ```
-
-#### Campo: Estado
-- ✅ Requerido
-- ✅ Valores permitidos: activo, inactivo
-- ⚠️ Al activar, se valida que todos los productos estén activos
-
-#### Campo: Sort Order
-- ✅ Opcional (default: 0)
-- ✅ Debe ser número entero
-
----
 
 ### Validaciones de Negocio
 
-#### Validación 1: Productos Activos al Activar Combo
+#### Validación 1: Productos Activos al Activar
 
-**Regla**: No se puede activar un combo si contiene productos inactivos.
+**Regla:** No puedo activar un combo si tiene productos inactivos.
 
-**Validación**:
-```
-Al intentar activar un combo:
-1. Verificar que combo.is_active = true
-2. Verificar que TODOS los productos de los items estén activos
-3. Si algún producto está inactivo → Mostrar error
-
-Error: "No se puede activar el combo porque contiene productos inactivos"
-Detalle: Lista de productos inactivos con sus items
-```
-
-**Comportamiento automático**:
-Si un combo está activo y uno de sus productos se desactiva:
-- El combo NO se desactiva automáticamente
-- PERO se marca como "no disponible" en el menú
-- Se muestra advertencia en el listado admin
-- No se puede agregar al carrito
-
-#### Validación 2: Productos Existentes
-
-**Regla**: Todos los items deben referenciar productos que existen.
-
-**Validación**:
-```
-Al guardar un combo:
-1. Para cada item:
-   └─ Verificar que product_id exista en la tabla products
-2. Si algún producto no existe → Error 404
-
-Error: "El producto seleccionado no existe o fue eliminado"
-```
-
-#### Validación 3: Nombre Único
-
-**Regla**: No pueden existir dos combos con el mismo nombre.
-
-**Validación**:
-```
-Al crear/editar combo:
-1. Verificar que no exista otro combo con el mismo nombre
-2. Al editar, excluir el combo actual de la búsqueda
-3. Si existe → Error
-
-Error: "Ya existe un combo con el nombre '[nombre]'"
-```
-
-#### Validación 4: Slug Único
-
-**Regla**: El slug debe ser único.
-
-**Validación**:
-```
-Al crear combo:
-1. Generar slug desde el nombre
-2. Si ya existe, agregar sufijo numérico
-   Ejemplo: "combo-familiar-2"
-```
-
-#### Validación 5: Precios Coherentes
-
-**Regla**: Delivery >= Pickup (misma zona).
-
-**Validación**:
-```
-Al guardar precios:
-1. Verificar: precio_domicilio_capital >= precio_pickup_capital
-2. Verificar: precio_domicilio_interior >= precio_pickup_interior
-3. Si no cumple → Error
-
-Error: "El precio de delivery debe ser mayor o igual al de pickup"
-```
-
----
-
-### Validaciones en Tiempo Real (Frontend)
-
-#### Al agregar items:
-
-**Validación de cantidad mínima**:
-```tsx
-if (items.length < 2) {
-  showWarning("Debes agregar al menos 2 productos al combo");
-  disableSubmit();
+```php
+if ($combo->is_active) {
+    foreach ($combo->items as $item) {
+        if (!$item->product->is_active) {
+            throw ValidationException::withMessages([
+                'is_active' => 'No puedes activar el combo porque tiene productos inactivos'
+            ]);
+        }
+    }
 }
 ```
 
-**Validación de cantidad máxima**:
-```tsx
-if (items.length >= 10) {
-  showWarning("Has alcanzado el máximo de 10 productos");
-  disableAddItemButton();
+#### Validación 2: Nombre Único
+
+```php
+Rule::unique('combos', 'name')->ignore($combo->id)
+```
+
+#### Validación 3: Slug Único
+
+```php
+// Generar slug desde el nombre
+$slug = Str::slug($nombre);
+
+// Si existe, agregar sufijo numérico
+if (Combo::where('slug', $slug)->exists()) {
+    $slug = $slug . '-2';
 }
 ```
 
-#### Al seleccionar producto:
+#### Validación 4: Coherencia de Precios
 
-**Mostrar badge de personalización**:
-```tsx
-if (product.is_customizable) {
-  showBadge("Este producto tiene personalización");
-}
-```
-
-#### Al ingresar precios:
-
-**Validar coherencia de precios**:
-```tsx
-if (precio_domicilio < precio_pickup) {
-  showError("Delivery debe ser >= Pickup");
-  markFieldInvalid();
-}
-```
-
-**Calculadora automática**:
-```tsx
-// Al agregar items, calcular precio sugerido
-const totalIndividual = items.reduce((sum, item) =>
-  sum + (item.product.price * item.quantity), 0
-);
-const descuentoSugerido = totalIndividual * 0.20; // 20%
-const precioSugerido = totalIndividual - descuentoSugerido;
-
-showSuggestion(`Precio sugerido: $${precioSugerido}`);
-```
-
-#### Al activar combo:
-
-**Validar productos activos**:
-```tsx
-const productosInactivos = items.filter(item =>
-  !item.product.is_active
-);
-
-if (productosInactivos.length > 0 && combo.is_active) {
-  showError(
-    `No puedes activar el combo porque tiene productos inactivos:
-    ${productosInactivos.map(i => i.product.name).join(', ')}`
-  );
-  preventActivation();
-}
+```php
+// En el FormRequest
+'precio_domicilio_capital' => [
+    'required',
+    'numeric',
+    'min:0',
+    function ($attribute, $value, $fail) {
+        if ($value < $this->precio_pickup_capital) {
+            $fail('El precio de delivery debe ser mayor o igual al de pickup');
+        }
+    }
+]
 ```
 
 ---
@@ -1323,111 +1176,86 @@ if (productosInactivos.length > 0 && combo.is_active) {
 
 ### Performance
 
-#### Eager Loading:
-```
-Al listar combos:
-Combo::with(['items.product.sections.options'])
-  ->where('is_active', true)
-  ->orderBy('sort_order')
-  ->get()
+**Eager Loading:**
+```php
+// BUENO ✅
+$combos = Combo::with(['items.product.sections.options', 'categories'])
+    ->available()
+    ->get();
 
-Esto precarga en 1 query:
-- Combos
-- Items de cada combo
-- Productos de cada item
-- Secciones de cada producto
-- Opciones de cada sección
-
-Evita N+1 queries
+// MALO ❌
+$combos = Combo::all();
+foreach ($combos as $combo) {
+    foreach ($combo->items as $item) {
+        $product = $item->product; // N+1 query
+    }
+}
 ```
 
-#### Caché:
-- Cachear lista de combos activos (invalidar al crear/editar/eliminar)
-- Cachear productos con secciones (invalidar al modificar producto)
-- TTL recomendado: 1 hora
-
-#### Índices de Base de Datos:
-```sql
--- Combos
-INDEX(is_active)
-INDEX(sort_order)
-INDEX(slug) UNIQUE
-
--- Combo Items
-INDEX(combo_id)
-INDEX(product_id)
-INDEX(sort_order)
-
--- Relaciones
-FOREIGN KEY(combo_id) REFERENCES combos(id) ON DELETE CASCADE
-FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE RESTRICT
+**Caché:**
+```php
+Cache::remember('combos.available', 3600, function () {
+    return Combo::with(['items.product', 'categories'])
+        ->available()
+        ->ordered()
+        ->get();
+});
 ```
+
+**Índices:**
+- `combos.is_active`: Para filtrar activos
+- `combos.slug`: Para búsqueda por URL
+- `combo_items.combo_id`: Para joins eficientes
+- `combo_items.product_id`: Para relaciones
 
 ### Seguridad
 
-#### Autorización:
-- Solo usuarios con permisos específicos pueden gestionar combos
-- Permisos requeridos:
-  - `menu.combos.view`: Ver listado
-  - `menu.combos.create`: Crear nuevos
-  - `menu.combos.edit`: Editar existentes
-  - `menu.combos.delete`: Eliminar
+**Autorización:**
+```php
+Gate::define('menu.combos.view', fn($user) => $user->hasPermission('menu.combos.view'));
+Gate::define('menu.combos.create', fn($user) => $user->hasPermission('menu.combos.create'));
+Gate::define('menu.combos.edit', fn($user) => $user->hasPermission('menu.combos.edit'));
+Gate::define('menu.combos.delete', fn($user) => $user->hasPermission('menu.combos.delete'));
+```
 
-#### Validación:
+**Validación:**
 - Todos los datos se validan en FormRequest
 - Sanitización de inputs (nombre, descripción)
 - Validación de imágenes (tipo, tamaño)
 
-#### Auditoría:
-- Registrar quién creó cada combo (created_by)
-- Registrar quién editó cada combo (updated_by)
+**Auditoría:**
+- Soft deletes para mantener historial
 - Timestamps automáticos (created_at, updated_at)
 
 ### Escalabilidad
 
-#### Soft Deletes:
-- Nunca eliminar físicamente los combos
+**Soft Deletes:**
+- Nunca eliminar físicamente combos
 - Usar `deleted_at` para soft delete
-- Mantener historial de combos eliminados
+- Útil para reportes históricos
 
-#### Versionado (futuro):
-- Considerar versionar combos para análisis histórico
-- Útil para reportes de ventas
-
-#### Localización (futuro):
-- Preparar estructura para múltiples idiomas
-- Campos traducibles: name, description
-
-### Mantenimiento
-
-#### Limpieza Automática:
-- Job programado para detectar combos con productos inactivos
-- Notificar al admin si hay combos afectados
-
-#### Notificaciones:
-- Alert en dashboard si hay combos con productos inactivos
-- Email al admin cuando un combo se marca como no disponible
-
-#### Logs:
-- Registrar cambios en combos (create, update, delete)
-- Registrar cuando un combo se vuelve no disponible por productos inactivos
+**Jobs Programados:**
+```php
+// Detectar combos con productos inactivos
+Schedule::command('combos:check-availability')->daily();
+```
 
 ---
 
 ## Glosario
 
-- **Combo**: Producto compuesto permanente con precio especial
-- **Item del Combo**: Referencia a un producto individual dentro del combo
+- **Combo**: Entidad independiente que agrupa productos bajo un precio especial
+- **Item del Combo**: Referencia a un producto dentro del combo (via combo_items)
+- **Producto Hijo**: Producto referenciado por un combo
 - **Herencia de Personalización**: El combo usa las secciones del producto sin copiarlas
 - **Precio Base**: Precio del combo SIN extras de personalización
 - **Extras**: Opciones de personalización que agregan costo (is_extra=true)
-- **Label**: Etiqueta descriptiva para distinguir productos en el combo
 - **Disponible**: Combo activo con todos sus productos activos
 - **No Disponible**: Combo activo pero con productos inactivos
 - **Soft Delete**: Eliminación lógica (no física) de registros
 
 ---
 
-**Documento creado**: [Fecha de hoy]
-**Última actualización**: [Fecha de hoy]
-**Versión**: 1.0
+**Documento creado**: 2025-01-09
+**Última actualización**: 2025-01-09
+**Versión**: 2.0 (Arquitectura con Tabla Separada)

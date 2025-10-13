@@ -3,7 +3,6 @@
 use App\Models\Menu\Category;
 use App\Models\Menu\Product;
 use App\Models\Menu\ProductVariant;
-use App\Models\Menu\Promotion;
 use App\Models\Menu\Section;
 use App\Models\Menu\SectionOption;
 use App\Services\PriceCalculatorService;

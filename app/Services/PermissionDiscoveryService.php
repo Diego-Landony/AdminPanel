@@ -354,8 +354,8 @@ class PermissionDiscoveryService
         foreach ($subdirectories as $subdirectory) {
             $subName = basename($subdirectory);
 
-            // Crear nombre de página anidada (ej: customers/types -> customer-types)
-            $nestedPageName = Str::singular($parentName).'-'.$subName;
+            // Crear nombre de página anidada (ej: menu/categories -> menu.categories)
+            $nestedPageName = Str::singular($parentName).'.'.$subName;
 
             // Saltar si está excluida o ya existe
             if (in_array($nestedPageName, $this->excludedPages) || isset($discoveredPages[$nestedPageName])) {

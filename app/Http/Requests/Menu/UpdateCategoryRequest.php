@@ -24,6 +24,7 @@ class UpdateCategoryRequest extends FormRequest
                 Rule::unique('categories', 'name')->ignore($categoryId),
             ],
             'is_active' => 'boolean',
+            'is_combo_category' => 'boolean',
             'uses_variants' => 'boolean',
             'variant_definitions' => 'nullable|array',
             'variant_definitions.*' => 'string|max:50',

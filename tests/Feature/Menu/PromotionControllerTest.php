@@ -2,7 +2,6 @@
 
 use App\Models\Menu\Product;
 use App\Models\Menu\Promotion;
-use App\Models\User;
 
 beforeEach(function () {
     // Usar el helper createTestUser que crea un usuario con todos los permisos

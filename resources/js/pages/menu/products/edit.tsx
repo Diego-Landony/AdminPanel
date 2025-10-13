@@ -29,16 +29,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { generateUniqueId } from '@/utils/generateId';
+import { CategoryCombobox } from '@/components/CategoryCombobox';
 import { Banknote, GripVertical, ListChecks, Package, Plus, X } from 'lucide-react';
 
 interface Category {
@@ -344,20 +338,14 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
                     />
                 </div>
 
-                <FormField label="Categoría" error={errors.category_id} required>
-                    <Select value={formData.category_id} onValueChange={(value) => handleInputChange('category_id', value)}>
-                        <SelectTrigger className="h-11">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {categories.map((category) => (
-                                <SelectItem key={category.id} value={String(category.id)}>
-                                    {category.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </FormField>
+                <CategoryCombobox
+                    value={formData.category_id ? Number(formData.category_id) : null}
+                    onChange={(value) => handleInputChange('category_id', value ? String(value) : '')}
+                    categories={categories}
+                    label="Categoría"
+                    error={errors.category_id}
+                    required
+                />
 
                 <FormField label="Nombre" error={errors.name} required>
                     <Input id="name" type="text" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} />
@@ -376,15 +364,15 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
                 description="Define si el producto usa variantes (ej: 15cm, 30cm) o tiene un precio único"
                 className="mt-8"
             >
-                <div className="flex items-center space-x-2 mb-6">
-                    <Checkbox
+                <div className="flex items-center justify-between rounded-lg border p-4 mb-6">
+                    <Label htmlFor="has_variants" className="text-base">
+                        Producto con variantes
+                    </Label>
+                    <Switch
                         id="has_variants"
                         checked={formData.has_variants}
                         onCheckedChange={(checked) => handleVariantToggle(checked as boolean)}
                     />
-                    <Label htmlFor="has_variants" className="text-sm leading-none font-medium cursor-pointer">
-                        Producto con variantes
-                    </Label>
                 </div>
 
                 {!formData.has_variants && (

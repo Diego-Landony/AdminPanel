@@ -14,6 +14,7 @@ interface Category {
     id: number;
     name: string;
     is_active: boolean;
+    is_combo_category: boolean;
     sort_order: number;
     created_at: string;
     updated_at: string;
@@ -118,6 +119,17 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
             width: 'flex-1',
             render: (category: Category) => (
                 <div className="text-sm font-medium text-foreground">{category.name}</div>
+            ),
+        },
+        {
+            key: 'type',
+            title: 'Tipo',
+            width: 'w-24',
+            textAlign: 'center' as const,
+            render: (category: Category) => (
+                <div className="text-sm text-muted-foreground">
+                    {category.is_combo_category ? 'Combo' : '-'}
+                </div>
             ),
         },
         {

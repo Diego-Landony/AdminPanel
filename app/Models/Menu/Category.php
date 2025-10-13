@@ -5,6 +5,7 @@ namespace App\Models\Menu;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
@@ -13,6 +14,7 @@ class Category extends Model
     protected $fillable = [
         'name',
         'is_active',
+        'is_combo_category',
         'sort_order',
         'uses_variants',
         'variant_definitions',
@@ -20,6 +22,7 @@ class Category extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_combo_category' => 'boolean',
         'sort_order' => 'integer',
         'uses_variants' => 'boolean',
         'variant_definitions' => 'array',
@@ -59,5 +62,21 @@ class Category extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order')->orderBy('name');
+    }
+
+    /**
+     * Scope para filtrar solo categorías de combos
+     */
+    public function scopeComboCategories($query)
+    {
+        return $query->where('is_combo_category', true);
+    }
+
+    /**
+     * Relación 1:N: Una categoría puede tener múltiples combos
+     */
+    public function combos(): HasMany
+    {
+        return $this->hasMany(Combo::class);
     }
 }

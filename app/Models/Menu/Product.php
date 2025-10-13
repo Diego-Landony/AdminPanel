@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 /**
  * Modelo de Producto Base
@@ -28,7 +27,6 @@ class Product extends Model
     protected $fillable = [
         'category_id',
         'name',
-        'slug',
         'description',
         'image',
         'is_active',
@@ -65,20 +63,6 @@ class Product extends Model
         'is_customizable',
     ];
 
-    /**
-     * Boot del modelo
-     */
-    protected static function boot(): void
-    {
-        parent::boot();
-
-        // Generar slug automáticamente al crear
-        static::creating(function ($product) {
-            if (empty($product->slug)) {
-                $product->slug = Str::slug($product->name);
-            }
-        });
-    }
 
     /**
      * Relación: Un producto pertenece a una categoría

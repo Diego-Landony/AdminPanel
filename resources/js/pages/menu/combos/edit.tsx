@@ -80,7 +80,6 @@ interface ComboItem {
 interface Combo {
     id: number;
     name: string;
-    slug: string;
     description: string | null;
     image: string | null;
     precio_pickup_capital: number;

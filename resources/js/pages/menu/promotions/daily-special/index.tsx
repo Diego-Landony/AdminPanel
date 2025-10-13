@@ -16,7 +16,6 @@ import { CheckCircle, Clock, Tag } from 'lucide-react';
 interface Promotion {
     id: number;
     name: string;
-    slug: string;
     description: string | null;
     type: 'daily_special';
     scope_type: 'product';

@@ -134,7 +134,7 @@ class ProductController extends Controller
                 foreach ($variants as $index => $variantData) {
                     ProductVariant::create([
                         'product_id' => $product->id,
-                        'sku' => $product->slug.'-'.($index + 1),
+                        'sku' => 'PROD-'.$product->id.'-'.($index + 1),
                         'name' => $variantData['name'],
                         'size' => $variantData['name'],
                         'precio_pickup_capital' => $variantData['precio_pickup_capital'],
@@ -231,7 +231,7 @@ class ProductController extends Controller
                         // Crear nueva variante
                         $variant = ProductVariant::create([
                             'product_id' => $product->id,
-                            'sku' => $product->slug.'-'.uniqid(),
+                            'sku' => 'PROD-'.$product->id.'-'.uniqid(),
                             'name' => $variantData['name'],
                             'size' => $variantData['name'],
                             'precio_pickup_capital' => $variantData['precio_pickup_capital'],

@@ -25,12 +25,6 @@ class UpdateComboRequest extends FormRequest
                 'max:255',
                 Rule::unique('combos', 'name')->ignore($comboId),
             ],
-            'slug' => [
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('combos', 'slug')->ignore($comboId),
-            ],
             'description' => ['nullable', 'string', 'max:500'],
             'image' => ['nullable', 'string', 'max:255'],
 
@@ -102,18 +96,6 @@ class UpdateComboRequest extends FormRequest
         ];
     }
 
-    /**
-     * Prepara los datos para validación
-     */
-    protected function prepareForValidation(): void
-    {
-        // Generar slug si no se proporciona
-        if (! $this->has('slug') || empty($this->slug)) {
-            $this->merge([
-                'slug' => \Illuminate\Support\Str::slug($this->name),
-            ]);
-        }
-    }
 
     /**
      * Validación adicional después de las reglas básicas

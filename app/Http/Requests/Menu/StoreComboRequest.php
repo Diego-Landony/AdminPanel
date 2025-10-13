@@ -17,7 +17,6 @@ class StoreComboRequest extends FormRequest
             // Información básica
             'category_id' => ['required', 'integer', 'exists:categories,id'],
             'name' => ['required', 'string', 'max:255', 'unique:combos,name'],
-            'slug' => ['nullable', 'string', 'max:255', 'unique:combos,slug'],
             'description' => ['nullable', 'string', 'max:500'],
             'image' => ['nullable', 'string', 'max:255'],
 
@@ -94,13 +93,6 @@ class StoreComboRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        // Generar slug si no se proporciona
-        if (! $this->has('slug') || empty($this->slug)) {
-            $this->merge([
-                'slug' => \Illuminate\Support\Str::slug($this->name),
-            ]);
-        }
-
         // Asegurar que is_active sea boolean
         if (! $this->has('is_active')) {
             $this->merge(['is_active' => true]);

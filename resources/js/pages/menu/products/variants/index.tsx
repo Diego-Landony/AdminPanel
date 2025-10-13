@@ -17,7 +17,6 @@ import { ArrowLeft, Banknote, Package, Star } from 'lucide-react';
 interface Product {
     id: number;
     name: string;
-    slug: string;
 }
 
 interface ProductVariant {

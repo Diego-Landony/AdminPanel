@@ -28,7 +28,6 @@ export const PLACEHOLDERS = {
 
     // Auto-generados
     sku: 'Se genera automáticamente',
-    slug: 'Se genera automáticamente',
     sortOrder: '0',
 
     // Búsqueda

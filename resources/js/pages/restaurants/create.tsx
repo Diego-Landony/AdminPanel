@@ -127,7 +127,8 @@ export default function RestaurantCreate() {
     // Default center for Guatemala
     const guatemalaCenter: [number, number] = [14.6349, -90.5069];
     const mapCenter = markerPosition || guatemalaCenter;
-    const geofenceCenter = geofenceMapCenter || guatemalaCenter;
+    // Geofence center: prioritize map search, then restaurant location, then Guatemala
+    const geofenceCenter = geofenceMapCenter || markerPosition || guatemalaCenter;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -496,6 +497,7 @@ export default function RestaurantCreate() {
                                             onPolygonEdit={handlePolygonEdit}
                                             existingPolygon={geofenceCoordinates}
                                         />
+                                        {markerPosition && <Marker position={markerPosition} />}
                                         {geofenceCoordinates.length > 0 && (
                                             <Polygon
                                                 positions={geofenceCoordinates}

@@ -159,7 +159,8 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
     // Default center for Guatemala
     const guatemalaCenter: [number, number] = [14.6349, -90.5069];
     const mapCenter = markerPosition || guatemalaCenter;
-    const geofenceCenter = geofenceMapCenter || (geofenceCoordinates.length > 0 ? geofenceCoordinates[0] : guatemalaCenter);
+    // Geofence center: prioritize map search, then restaurant location, then existing polygon, then Guatemala
+    const geofenceCenter = geofenceMapCenter || markerPosition || (geofenceCoordinates.length > 0 ? geofenceCoordinates[0] : guatemalaCenter);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -523,6 +524,7 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
                                             onPolygonEdit={handlePolygonEdit}
                                             existingPolygon={geofenceCoordinates}
                                         />
+                                        {markerPosition && <Marker position={markerPosition} />}
                                         {geofenceCoordinates.length > 0 && (
                                             <Polygon
                                                 positions={geofenceCoordinates}

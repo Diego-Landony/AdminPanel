@@ -1,7 +1,7 @@
 import { useForm } from '@inertiajs/react';
-import { Building2, Clock, Mail, MapPin, Phone, Settings, FileText, Search, Navigation } from 'lucide-react';
+import { Building2, Clock, Mail, MapPin, Phone, Settings, FileText, Search, Navigation, Pentagon } from 'lucide-react';
 import React, { useState } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap, Polygon } from 'react-leaflet';
 import L from 'leaflet';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
@@ -22,6 +22,8 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { GeomanControl } from '@/components/GeomanControl';
+import { coordinatesToKML } from '@/utils/kmlParser';
 import { PLACEHOLDERS, AUTOCOMPLETE } from '@/constants/ui-constants';
 
 // Fix for default markers in React Leaflet
@@ -45,6 +47,7 @@ interface RestaurantFormData {
     schedule: Record<string, { is_open: boolean; open: string; close: string }>;
     minimum_order_amount: string;
     estimated_delivery_time: string;
+    geofence_kml?: string;
 }
 
 // Component to handle map clicks
@@ -113,12 +116,32 @@ export default function RestaurantCreate() {
     const [mapCenterToUpdate, setMapCenterToUpdate] = useState<[number, number] | null>(null);
     const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
+    // Geofence state
+    const [isGeofenceModalOpen, setIsGeofenceModalOpen] = useState(false);
+    const [geofenceCoordinates, setGeofenceCoordinates] = useState<[number, number][]>([]);
+    const [geofenceSearchQuery, setGeofenceSearchQuery] = useState('');
+    const [isGeofenceSearching, setIsGeofenceSearching] = useState(false);
+    const [geofenceSearchError, setGeofenceSearchError] = useState('');
+    const [geofenceMapCenter, setGeofenceMapCenter] = useState<[number, number] | null>(null);
+
     // Default center for Guatemala
     const guatemalaCenter: [number, number] = [14.6349, -90.5069];
     const mapCenter = markerPosition || guatemalaCenter;
+    const geofenceCenter = geofenceMapCenter || guatemalaCenter;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Add geofence KML if coordinates exist
+        if (geofenceCoordinates.length >= 3) {
+            try {
+                const kml = coordinatesToKML(geofenceCoordinates);
+                setData('geofence_kml', kml);
+            } catch (error) {
+                console.error('Error al convertir geocerca a KML:', error);
+            }
+        }
+
         post(route('restaurants.store'));
     };
 
@@ -186,6 +209,67 @@ export default function RestaurantCreate() {
             setSearchError('Error al buscar la ubicación. Verifica tu conexión e intenta nuevamente.');
         } finally {
             setIsSearching(false);
+        }
+    };
+
+    // Geofence handlers
+    const handleGeofenceSearch = async () => {
+        if (!geofenceSearchQuery.trim()) return;
+
+        setIsGeofenceSearching(true);
+        setGeofenceSearchError('');
+
+        try {
+            const searchParams = new URLSearchParams({
+                q: geofenceSearchQuery,
+                format: 'jsonv2',
+                addressdetails: '1',
+                limit: '5',
+                countrycodes: 'gt',
+            });
+
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?${searchParams.toString()}`,
+                {
+                    headers: {
+                        'Accept': 'application/json',
+                        'User-Agent': 'RestaurantLocationPicker/1.0',
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Error en la búsqueda');
+            }
+
+            const results = await response.json();
+
+            if (results && results.length > 0) {
+                const { lat, lon } = results[0];
+                const latitude = parseFloat(lat);
+                const longitude = parseFloat(lon);
+                setGeofenceMapCenter([latitude, longitude]);
+                setGeofenceSearchError('');
+            } else {
+                setGeofenceSearchError('No se encontró la ubicación. Intenta con términos más específicos.');
+            }
+        } catch (error) {
+            console.error('Error al buscar ubicación:', error);
+            setGeofenceSearchError('Error al buscar la ubicación. Verifica tu conexión e intenta nuevamente.');
+        } finally {
+            setIsGeofenceSearching(false);
+        }
+    };
+
+    const handlePolygonCreate = (coordinates: [number, number][][]) => {
+        if (coordinates.length > 0) {
+            setGeofenceCoordinates(coordinates[0]);
+        }
+    };
+
+    const handlePolygonEdit = (coordinates: [number, number][][]) => {
+        if (coordinates.length > 0) {
+            setGeofenceCoordinates(coordinates[0]);
         }
     };
 
@@ -339,6 +423,112 @@ export default function RestaurantCreate() {
                                         <Badge variant="outline">Lng: {parseFloat(data.longitude).toFixed(6)}</Badge>
                                     </div>
                                 )}
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* Geofence Modal */}
+                    <Dialog open={isGeofenceModalOpen} onOpenChange={setIsGeofenceModalOpen}>
+                        <DialogTrigger asChild>
+                            <Button type="button" variant="outline" className="w-full">
+                                <Pentagon className="h-4 w-4 mr-2" />
+                                {geofenceCoordinates.length > 0 ? 'Editar Geocerca' : 'Crear Geocerca'} (Opcional)
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-6xl h-[90vh] flex flex-col">
+                            <DialogHeader>
+                                <DialogTitle>Geocerca del Restaurante</DialogTitle>
+                                <DialogDescription>
+                                    Dibuja un polígono haciendo clic en el mapa para delimitar el área de entrega
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            <div className="flex flex-col gap-4 flex-1 min-h-0">
+                                {/* Search Control */}
+                                <div className="flex gap-2 flex-shrink-0">
+                                    <div className="relative flex-1">
+                                        <Search className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            type="text"
+                                            value={geofenceSearchQuery}
+                                            onChange={(e) => setGeofenceSearchQuery(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    handleGeofenceSearch();
+                                                }
+                                            }}
+                                            placeholder="Buscar dirección en Guatemala..."
+                                            className="pl-10"
+                                        />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="default"
+                                        onClick={handleGeofenceSearch}
+                                        disabled={isGeofenceSearching || !geofenceSearchQuery.trim()}
+                                    >
+                                        {isGeofenceSearching ? 'Buscando...' : 'Buscar'}
+                                    </Button>
+                                </div>
+
+                                {/* Error message */}
+                                {geofenceSearchError && (
+                                    <div className="bg-destructive/10 border border-destructive/20 text-destructive px-3 py-2 rounded-md text-sm flex-shrink-0">
+                                        {geofenceSearchError}
+                                    </div>
+                                )}
+
+                                {/* Map Container */}
+                                <div className="flex-1 rounded-lg overflow-hidden border min-h-0">
+                                    <MapContainer
+                                        center={geofenceCenter}
+                                        zoom={13}
+                                        style={{ height: '100%', width: '100%' }}
+                                        className="z-0"
+                                    >
+                                        <TileLayer
+                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                        />
+                                        <GeomanControl
+                                            onPolygonCreate={handlePolygonCreate}
+                                            onPolygonEdit={handlePolygonEdit}
+                                            existingPolygon={geofenceCoordinates}
+                                        />
+                                        {geofenceCoordinates.length > 0 && (
+                                            <Polygon
+                                                positions={geofenceCoordinates}
+                                                pathOptions={{
+                                                    color: '#3388ff',
+                                                    fillColor: '#3388ff',
+                                                    fillOpacity: 0.2,
+                                                }}
+                                            />
+                                        )}
+                                    </MapContainer>
+                                </div>
+
+                                {/* Polygon Info */}
+                                <div className="flex items-center justify-between flex-shrink-0">
+                                    {geofenceCoordinates.length > 0 ? (
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <Pentagon className="h-4 w-4" />
+                                            <span>Polígono con {geofenceCoordinates.length} puntos</span>
+                                        </div>
+                                    ) : (
+                                        <div className="text-sm text-muted-foreground">
+                                            Usa las herramientas del mapa para dibujar la geocerca
+                                        </div>
+                                    )}
+                                    <Button
+                                        type="button"
+                                        onClick={() => setIsGeofenceModalOpen(false)}
+                                        disabled={geofenceCoordinates.length > 0 && geofenceCoordinates.length < 3}
+                                    >
+                                        Confirmar
+                                    </Button>
+                                </div>
                             </div>
                         </DialogContent>
                     </Dialog>

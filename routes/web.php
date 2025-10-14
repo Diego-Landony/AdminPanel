@@ -127,6 +127,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:restaurants.edit');
     Route::get('restaurants/{restaurant}/kml/preview', [KMLUploadController::class, 'preview'])->name('restaurants.kml.preview')
         ->middleware('permission:restaurants.view');
+    Route::post('restaurants/{restaurant}/geofence', [RestaurantController::class, 'saveGeofence'])->name('restaurants.geofence.save')
+        ->middleware('permission:restaurants.edit');
 
     // Vista general de geocercas
     Route::get('restaurants-geofences', [RestaurantGeofencesController::class, 'index'])->name('restaurants.geofences')

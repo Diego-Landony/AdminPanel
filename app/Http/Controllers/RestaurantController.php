@@ -246,4 +246,20 @@ class RestaurantController extends Controller
 
         return back()->with('success', "Restaurante '{$restaurantName}' eliminado exitosamente.");
     }
+
+    /**
+     * Save geofence from map coordinates
+     */
+    public function saveGeofence(Request $request, Restaurant $restaurant): RedirectResponse
+    {
+        $request->validate([
+            'geofence_kml' => 'required|string',
+        ]);
+
+        $restaurant->update([
+            'geofence_kml' => $request->geofence_kml,
+        ]);
+
+        return back()->with('success', 'Geocerca actualizada exitosamente.');
+    }
 }

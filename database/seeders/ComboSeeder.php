@@ -25,7 +25,6 @@ class ComboSeeder extends Seeder
         // Combo 1: 2 Subs Clásicos
         $combo1 = Combo::create([
             'name' => 'Combo 2 Subs Clásicos',
-            'slug' => 'combo-2-subs-clasicos',
             'description' => '2 Subs de 15cm a elección',
             'precio_pickup_capital' => 120.00,
             'precio_domicilio_capital' => 130.00,
@@ -56,7 +55,6 @@ class ComboSeeder extends Seeder
         // Combo 2: Combo Familiar
         $combo2 = Combo::create([
             'name' => 'Combo Familiar',
-            'slug' => 'combo-familiar',
             'description' => '2 Subs grandes + 2 Bebidas + Papas',
             'precio_pickup_capital' => 220.00,
             'precio_domicilio_capital' => 240.00,
@@ -99,7 +97,6 @@ class ComboSeeder extends Seeder
         // Combo 3: Combo Personal
         $combo3 = Combo::create([
             'name' => 'Combo Personal',
-            'slug' => 'combo-personal',
             'description' => '1 Sub + Bebida',
             'precio_pickup_capital' => 80.00,
             'precio_domicilio_capital' => 90.00,

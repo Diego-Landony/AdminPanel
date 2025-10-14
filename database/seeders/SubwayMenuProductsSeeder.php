@@ -106,7 +106,6 @@ class SubwayMenuProductsSeeder extends Seeder
             $product = Product::create([
                 'category_id' => $category->id,
                 'name' => $subData['name'],
-                'slug' => Str::slug($subData['name']),
                 'description' => $subData['description'],
                 'image' => null,
                 'has_variants' => true,
@@ -209,7 +208,6 @@ class SubwayMenuProductsSeeder extends Seeder
             $product = Product::create([
                 'category_id' => $category->id,
                 'name' => $bebidaData['name'],
-                'slug' => Str::slug($bebidaData['name']),
                 'description' => $bebidaData['description'],
                 'image' => null,
                 'has_variants' => count($bebidaData['prices']) > 1,
@@ -279,7 +277,6 @@ class SubwayMenuProductsSeeder extends Seeder
             $product = Product::create([
                 'category_id' => $category->id,
                 'name' => $ensaladaData['name'],
-                'slug' => Str::slug($ensaladaData['name']),
                 'description' => $ensaladaData['description'],
                 'image' => null,
                 'has_variants' => false,
@@ -332,7 +329,6 @@ class SubwayMenuProductsSeeder extends Seeder
             $product = Product::create([
                 'category_id' => $category->id,
                 'name' => $complementoData['name'],
-                'slug' => Str::slug($complementoData['name']),
                 'description' => $complementoData['description'],
                 'image' => null,
                 'has_variants' => false,
@@ -385,7 +381,6 @@ class SubwayMenuProductsSeeder extends Seeder
             $product = Product::create([
                 'category_id' => $category->id,
                 'name' => $postreData['name'],
-                'slug' => Str::slug($postreData['name']),
                 'description' => $postreData['description'],
                 'image' => null,
                 'has_variants' => false,
@@ -439,7 +434,6 @@ class SubwayMenuProductsSeeder extends Seeder
             $product = Product::create([
                 'category_id' => $category->id,
                 'name' => $desayunoData['name'],
-                'slug' => Str::slug($desayunoData['name']),
                 'description' => $desayunoData['description'],
                 'image' => null,
                 'has_variants' => true,

@@ -46,7 +46,6 @@ class SubwayRealCombosSeeder extends Seeder
         $combo = Combo::create([
             'category_id' => $comboCategory->id,
             'name' => 'Combo Personal',
-            'slug' => 'combo-personal',
             'description' => 'Sub de 15cm a elección + Bebida mediana + Papas o Galleta',
             'precio_pickup_capital' => 48.00,
             'precio_domicilio_capital' => 55.00,
@@ -104,7 +103,6 @@ class SubwayRealCombosSeeder extends Seeder
         $combo = Combo::create([
             'category_id' => $comboCategory->id,
             'name' => 'Combo Doble',
-            'slug' => 'combo-doble',
             'description' => '2 Subs de 15cm a elección + 2 Bebidas medianas',
             'precio_pickup_capital' => 75.00,
             'precio_domicilio_capital' => 85.00,
@@ -165,7 +163,6 @@ class SubwayRealCombosSeeder extends Seeder
         $combo = Combo::create([
             'category_id' => $comboCategory->id,
             'name' => 'Combo Familiar',
-            'slug' => 'combo-familiar',
             'description' => '2 Subs de 30cm a elección + 2 Bebidas grandes + 2 Papas',
             'precio_pickup_capital' => 145.00,
             'precio_domicilio_capital' => 160.00,
@@ -237,7 +234,6 @@ class SubwayRealCombosSeeder extends Seeder
         $combo = Combo::create([
             'category_id' => $comboCategory->id,
             'name' => 'Combo Desayuno',
-            'slug' => 'combo-desayuno',
             'description' => 'Desayuno de 15cm a elección + Bebida personal + Muffin o Galleta',
             'precio_pickup_capital' => 42.00,
             'precio_domicilio_capital' => 48.00,
@@ -295,7 +291,6 @@ class SubwayRealCombosSeeder extends Seeder
         $combo = Combo::create([
             'category_id' => $comboCategory->id,
             'name' => 'Combo Económico',
-            'slug' => 'combo-economico',
             'description' => 'Sub de 15cm seleccionado + Bebida personal',
             'precio_pickup_capital' => 38.00,
             'precio_domicilio_capital' => 43.00,

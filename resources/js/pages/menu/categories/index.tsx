@@ -164,7 +164,7 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
         <StandardMobileCard
             title={category.name}
             subtitle={category.is_combo_category ? 'Categoría de combos' : 'Categoría de productos'}
-            icon={<Layers className="h-5 w-5 text-primary" />}
+            icon={Layers}
             badge={{
                 children: <StatusBadge status={category.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />,
             }}

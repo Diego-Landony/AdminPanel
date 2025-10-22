@@ -1,7 +1,7 @@
 import { useForm } from '@inertiajs/react';
-import { Building2, Clock, Mail, MapPin, Phone, Settings, FileText, Search, Navigation, Pentagon } from 'lucide-react';
+import { Building2, Clock, Mail, MapPin, Phone, Settings, Search, Navigation, Pentagon } from 'lucide-react';
 import React, { useState } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap, Polygon } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
@@ -104,6 +104,7 @@ export default function RestaurantCreate() {
         },
         minimum_order_amount: '0.00',
         estimated_delivery_time: '30',
+        geofence_kml: '',
     });
 
     // Map marker position state
@@ -133,17 +134,21 @@ export default function RestaurantCreate() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Add geofence KML if coordinates exist
+        let geofenceKml = '';
         if (geofenceCoordinates.length >= 3) {
             try {
-                const kml = coordinatesToKML(geofenceCoordinates);
-                setData('geofence_kml', kml);
+                geofenceKml = coordinatesToKML(geofenceCoordinates);
             } catch (error) {
                 console.error('Error al convertir geocerca a KML:', error);
             }
         }
 
-        post(route('restaurants.store'));
+        post(route('restaurants.store'), {
+            transform: (data) => ({
+                ...data,
+                geofence_kml: geofenceKml,
+            }),
+        });
     };
 
     const handleScheduleChange = (day: string, field: string, value: boolean | string) => {
@@ -498,16 +503,6 @@ export default function RestaurantCreate() {
                                             existingPolygon={geofenceCoordinates}
                                         />
                                         {markerPosition && <Marker position={markerPosition} />}
-                                        {geofenceCoordinates.length > 0 && (
-                                            <Polygon
-                                                positions={geofenceCoordinates}
-                                                pathOptions={{
-                                                    color: '#3388ff',
-                                                    fillColor: '#3388ff',
-                                                    fillOpacity: 0.2,
-                                                }}
-                                            />
-                                        )}
                                     </MapContainer>
                                 </div>
 

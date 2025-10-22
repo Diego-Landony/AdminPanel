@@ -1,7 +1,7 @@
 import { useForm, router } from '@inertiajs/react';
 import { Building2, Clock, Mail, MapPin, Phone, Settings, Navigation, FileText, Search, Pentagon } from 'lucide-react';
 import React, { useState } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap, Polygon } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
 import { Button } from '@/components/ui/button';
@@ -458,9 +458,17 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
                     {/* Geofence Modal */}
                     <Dialog open={isGeofenceModalOpen} onOpenChange={setIsGeofenceModalOpen}>
                         <DialogTrigger asChild>
-                            <Button type="button" variant="outline" className="w-full">
-                                <Pentagon className="h-4 w-4 mr-2" />
-                                {hasGeofence ? 'Editar Geocerca' : 'Crear Geocerca'}
+                            <Button type="button" variant="outline" className="w-full flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Pentagon className="h-4 w-4" />
+                                    <span>{hasGeofence ? 'Editar Geocerca' : 'Crear Geocerca'}</span>
+                                </div>
+                                {hasGeofence && (
+                                    <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 border-green-200">
+                                        <FileText className="h-3 w-3 mr-1" />
+                                        Configurada
+                                    </Badge>
+                                )}
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-6xl h-[90vh] flex flex-col">
@@ -525,16 +533,6 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
                                             existingPolygon={geofenceCoordinates}
                                         />
                                         {markerPosition && <Marker position={markerPosition} />}
-                                        {geofenceCoordinates.length > 0 && (
-                                            <Polygon
-                                                positions={geofenceCoordinates}
-                                                pathOptions={{
-                                                    color: '#3388ff',
-                                                    fillColor: '#3388ff',
-                                                    fillOpacity: 0.2,
-                                                }}
-                                            />
-                                        )}
                                     </MapContainer>
                                 </div>
 
@@ -621,39 +619,6 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
                         />
                     </div>
                 </FormField>
-            </FormSection>
-
-            <FormSection icon={FileText} title="Geocerca KML" description="Administrar archivo KML para definir zona de entrega">
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
-                        <div className="flex items-center gap-3">
-                            <FileText className="h-5 w-5 text-gray-500" />
-                            <div>
-                                <p className="font-medium">Estado de Geocerca</p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    {hasGeofence ? 'KML cargado y configurado' : 'Sin geocerca definida'}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {hasGeofence && (
-                                <Badge className="bg-green-100 text-green-800 border-green-200">
-                                    <FileText className="h-3 w-3 mr-1" />
-                                    KML Activo
-                                </Badge>
-                            )}
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => window.open(route('restaurants.kml.show', restaurant.id), '_blank')}
-                                className="flex items-center gap-2"
-                            >
-                                <FileText className="h-4 w-4" />
-                                Gestionar KML
-                            </Button>
-                        </div>
-                    </div>
-                </div>
             </FormSection>
 
             <FormSection icon={Settings} title="Configuración de Servicios">

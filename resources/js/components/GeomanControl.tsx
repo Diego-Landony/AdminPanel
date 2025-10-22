@@ -17,13 +17,13 @@ export function GeomanControl({ onPolygonCreate, onPolygonEdit, existingPolygon 
 
     // Initialize controls and event handlers once
     useEffect(() => {
-        // @ts-ignore - Geoman extends Leaflet map
+        // @ts-expect-error - Geoman extends Leaflet map
         if (!map.pm || isInitializedRef.current) return;
 
         isInitializedRef.current = true;
 
         // Add Geoman controls
-        // @ts-ignore
+        // @ts-expect-error - Geoman types not available
         map.pm.addControls({
             position: 'topleft',
             drawMarker: false,
@@ -39,7 +39,7 @@ export function GeomanControl({ onPolygonCreate, onPolygonEdit, existingPolygon 
         });
 
         // Handle polygon creation
-        // @ts-ignore
+        // @ts-expect-error - Event type not defined
         const handleCreate = (e) => {
             const layer = e.layer;
             if (layer instanceof L.Polygon) {
@@ -58,10 +58,36 @@ export function GeomanControl({ onPolygonCreate, onPolygonEdit, existingPolygon 
         };
 
         // Handle polygon edit
-        // @ts-ignore
+        // @ts-expect-error - Event type not defined
         const handleEdit = (e) => {
             const layer = e.layer;
             if (layer instanceof L.Polygon) {
+                // Update the reference if it's the current polygon
+                if (layer === polygonLayerRef.current) {
+                    const coords = layer.getLatLngs();
+                    const coordinates = coords.map((ring: L.LatLng[]) =>
+                        ring.map(latlng => [latlng.lat, latlng.lng] as [number, number])
+                    );
+                    onPolygonEdit?.(coordinates);
+                }
+            }
+        };
+
+        // Handle polygon removal
+        // @ts-expect-error - Event type not defined
+        const handleRemove = (e) => {
+            const layer = e.layer;
+            if (layer === polygonLayerRef.current) {
+                polygonLayerRef.current = null;
+                onPolygonEdit?.([]);
+            }
+        };
+
+        // Handle polygon update (when edit is finalized)
+        // @ts-expect-error - Event type not defined
+        const handleUpdate = (e) => {
+            const layer = e.layer;
+            if (layer instanceof L.Polygon && layer === polygonLayerRef.current) {
                 const coords = layer.getLatLngs();
                 const coordinates = coords.map((ring: L.LatLng[]) =>
                     ring.map(latlng => [latlng.lat, latlng.lng] as [number, number])
@@ -70,28 +96,21 @@ export function GeomanControl({ onPolygonCreate, onPolygonEdit, existingPolygon 
             }
         };
 
-        // Handle polygon removal
-        // @ts-ignore
-        const handleRemove = (e) => {
-            const layer = e.layer;
-            if (layer === polygonLayerRef.current) {
-                polygonLayerRef.current = null;
-            }
-        };
-
         map.on('pm:create', handleCreate);
         map.on('pm:edit', handleEdit);
+        map.on('pm:update', handleUpdate);
         map.on('pm:remove', handleRemove);
 
         // Cleanup
         return () => {
-            // @ts-ignore
+            // @ts-expect-error - Geoman types not available
             if (map.pm) {
-                // @ts-ignore
+                // @ts-expect-error - Geoman types not available
                 map.pm.removeControls();
             }
             map.off('pm:create', handleCreate);
             map.off('pm:edit', handleEdit);
+            map.off('pm:update', handleUpdate);
             map.off('pm:remove', handleRemove);
 
             // Remove polygon layer if exists
@@ -109,12 +128,64 @@ export function GeomanControl({ onPolygonCreate, onPolygonEdit, existingPolygon 
                 color: '#3388ff',
                 fillColor: '#3388ff',
                 fillOpacity: 0.2,
+                pmIgnore: false,
             });
             polygon.addTo(map);
             polygonLayerRef.current = polygon;
+
+            // Enable edit mode for the existing polygon
+            // @ts-expect-error - Geoman types not available
+            if (polygon.pm) {
+                // @ts-expect-error - Geoman types not available
+                polygon.pm.enable({
+                    allowSelfIntersection: false,
+                });
+
+                // Disable draw mode when polygon exists
+                // @ts-expect-error - Geoman types not available
+                map.pm.disableDraw();
+
+                // Listen to edit events on the polygon layer directly
+                // @ts-expect-error - Event type not defined
+                polygon.on('pm:edit', (e) => {
+                    const coords = polygon.getLatLngs();
+                    const coordinates = coords.map((ring: L.LatLng[]) =>
+                        ring.map(latlng => [latlng.lat, latlng.lng] as [number, number])
+                    );
+                    onPolygonEdit?.(coordinates);
+                });
+
+                // @ts-expect-error - Event type not defined
+                polygon.on('pm:vertexadded', (e) => {
+                    const coords = polygon.getLatLngs();
+                    const coordinates = coords.map((ring: L.LatLng[]) =>
+                        ring.map(latlng => [latlng.lat, latlng.lng] as [number, number])
+                    );
+                    onPolygonEdit?.(coordinates);
+                });
+
+                // @ts-expect-error - Event type not defined
+                polygon.on('pm:vertexremoved', (e) => {
+                    const coords = polygon.getLatLngs();
+                    const coordinates = coords.map((ring: L.LatLng[]) =>
+                        ring.map(latlng => [latlng.lat, latlng.lng] as [number, number])
+                    );
+                    onPolygonEdit?.(coordinates);
+                });
+
+                // @ts-expect-error - Event type not defined
+                polygon.on('pm:markerdragend', (e) => {
+                    const coords = polygon.getLatLngs();
+                    const coordinates = coords.map((ring: L.LatLng[]) =>
+                        ring.map(latlng => [latlng.lat, latlng.lng] as [number, number])
+                    );
+                    onPolygonEdit?.(coordinates);
+                });
+            }
+
             map.fitBounds(polygon.getBounds());
         }
-    }, [existingPolygon, map]);
+    }, [existingPolygon, map, onPolygonEdit]);
 
     return null;
 }

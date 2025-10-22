@@ -1,6 +1,5 @@
 import { Head, router } from '@inertiajs/react';
 import { useState, useCallback } from 'react';
-import { type DateRange } from 'react-day-picker';
 
 import { ActivitySkeleton } from '@/components/skeletons';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +13,7 @@ import { PLACEHOLDERS } from '@/constants/ui-constants';
 import AppLayout from '@/layouts/app-layout';
 
 import { EntityInfoCell } from '@/components/EntityInfoCell';
-import { DateRangeFilterDialog, FilterDialog } from '@/components/FilterDialog';
+import { DateRangeFilterDialog, FilterDialog, type DateRange } from '@/components/FilterDialog';
 import { PaginationWrapper } from '@/components/PaginationWrapper';
 import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { format } from 'date-fns';
@@ -72,6 +71,15 @@ interface ActivityPageProps {
         today_events: number;
     };
     options: ActivityOptions;
+}
+
+interface ColumnDefinition {
+    key: string;
+    title: string;
+    width: 'sm' | 'md' | 'lg' | 'xl';
+    sortable?: boolean;
+    truncate?: number;
+    render: (activity: ActivityData) => React.ReactNode;
 }
 
 const getActivityTypeColor = (type: string): string => {
@@ -364,18 +372,18 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
         });
     };
 
-    const columns = [
+    const columns: ColumnDefinition[] = [
         {
             key: 'user',
             title: 'Usuario',
-            width: 'lg' as const,
+            width: 'lg',
             sortable: true,
             render: (activity: ActivityData) => <UserInfoCell activity={activity} />,
         },
         {
             key: 'event_type',
             title: 'Actividad',
-            width: 'md' as const,
+            width: 'md',
             sortable: true,
             render: (activity: ActivityData) => (
                 <Badge className={`${getActivityTypeColor(activity.event_type)} px-3 py-1 text-xs font-medium`}>
@@ -386,14 +394,14 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
         {
             key: 'description',
             title: 'Descripción',
-            width: 'xl' as const,
+            width: 'xl',
             truncate: 60,
             render: (activity: ActivityData) => <div className="text-sm text-muted-foreground">{getEnhancedDescription(activity)}</div>,
         },
         {
             key: 'created_at',
             title: 'Fecha',
-            width: 'md' as const,
+            width: 'md',
             sortable: true,
             render: (activity: ActivityData) => <span className="text-sm text-muted-foreground">{formatDate(activity.created_at)}</span>,
         },
@@ -586,7 +594,6 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
                                         icon={CalendarIcon}
                                         title="Seleccionar Rango de Fechas"
                                         description="Selecciona el período de fechas para filtrar los eventos"
-                                        buttonVariant="outline"
                                     />
 
                                     <Select value={perPage.toString()} onValueChange={(value) => setPerPage(parseInt(value))}>
@@ -647,7 +654,7 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
                                                                     key={column.key}
                                                                     className="py-5 md:py-4 leading-relaxed break-words whitespace-normal"
                                                                 >
-                                                                    {column.render ? column.render(activity) : (activity as Record<string, unknown>)[column.key]}
+                                                                    {column.render(activity)}
                                                                 </TableCell>
                                                             ))}
                                                         </TableRow>

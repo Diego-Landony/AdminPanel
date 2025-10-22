@@ -71,45 +71,51 @@ class ActivityController extends Controller
             })
             ->when($userId, fn ($query) => $query->where('user_id', $userId));
 
-        // Obtener actividades de usuarios
-        $userActivities = $activitiesQuery->get()->map(function ($activity) {
-            return [
-                'id' => 'ua_'.$activity->id,
-                'type' => 'activity',
-                'user' => [
-                    'name' => $activity->user?->name ?? 'Usuario eliminado',
-                    'email' => $activity->user?->email ?? 'N/A',
-                    'initials' => $this->getUserInitials($activity->user?->name ?? 'UD'),
-                ],
-                'event_type' => $activity->activity_type,
-                'description' => $activity->description,
-                'created_at' => $activity->created_at,
+        // Obtener actividades con límite razonable para mejor performance
+        $userActivities = $activitiesQuery->latest('created_at')
+            ->limit(1000)
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'id' => 'ua_'.$activity->id,
+                    'type' => 'activity',
+                    'user' => [
+                        'name' => $activity->user?->name ?? 'Usuario eliminado',
+                        'email' => $activity->user?->email ?? 'N/A',
+                        'initials' => $this->getUserInitials($activity->user?->name ?? 'UD'),
+                    ],
+                    'event_type' => $activity->activity_type,
+                    'description' => $activity->description,
+                    'created_at' => $activity->created_at,
 
-                'metadata' => $activity->metadata,
-                'old_values' => null,
-                'new_values' => null,
-            ];
-        });
+                    'metadata' => $activity->metadata,
+                    'old_values' => null,
+                    'new_values' => null,
+                ];
+            });
 
-        // Agregar logs de actividad
-        $activityLogs = $activityQuery->get()->map(function ($log) {
-            return [
-                'id' => 'al_'.$log->id,
-                'type' => 'activity_log',
-                'user' => [
-                    'name' => $log->user?->name ?? 'Usuario eliminado',
-                    'email' => $log->user?->email ?? 'N/A',
-                    'initials' => $this->getUserInitials($log->user?->name ?? 'UD'),
-                ],
-                'event_type' => $log->event_type,
-                'description' => $log->description,
-                'created_at' => $log->created_at,
+        // Agregar logs de actividad con límite razonable
+        $activityLogs = $activityQuery->latest('created_at')
+            ->limit(1000)
+            ->get()
+            ->map(function ($log) {
+                return [
+                    'id' => 'al_'.$log->id,
+                    'type' => 'activity_log',
+                    'user' => [
+                        'name' => $log->user?->name ?? 'Usuario eliminado',
+                        'email' => $log->user?->email ?? 'N/A',
+                        'initials' => $this->getUserInitials($log->user?->name ?? 'UD'),
+                    ],
+                    'event_type' => $log->event_type,
+                    'description' => $log->description,
+                    'created_at' => $log->created_at,
 
-                'metadata' => null,
-                'old_values' => $log->old_values,
-                'new_values' => $log->new_values,
-            ];
-        });
+                    'metadata' => null,
+                    'old_values' => $log->old_values,
+                    'new_values' => $log->new_values,
+                ];
+            });
 
         // Combinar y ordenar por fecha
         $allActivities = $userActivities->concat($activityLogs)

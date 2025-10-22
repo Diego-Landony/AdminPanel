@@ -63,7 +63,6 @@ class Product extends Model
         'is_customizable',
     ];
 
-
     /**
      * Relación: Un producto pertenece a una categoría
      */

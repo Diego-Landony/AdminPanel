@@ -16,13 +16,11 @@ class ComboFactory extends Factory
      */
     public function definition(): array
     {
-        $name = fake()->words(3, true);
         $precioBase = fake()->randomFloat(2, 50, 300);
 
         return [
             'category_id' => \App\Models\Menu\Category::factory()->state(['is_combo_category' => true]),
-            'name' => 'Combo '.ucfirst($name),
-            'slug' => \Illuminate\Support\Str::slug('Combo '.$name),
+            'name' => fake()->unique()->words(3, true),
             'description' => fake()->sentence(),
             'image' => null,
 
@@ -54,7 +52,6 @@ class ComboFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'name' => $name,
-            'slug' => \Illuminate\Support\Str::slug($name),
         ]);
     }
 }

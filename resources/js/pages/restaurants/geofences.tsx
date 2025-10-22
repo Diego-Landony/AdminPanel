@@ -1,11 +1,14 @@
-import { Building2, FileText, MapPin, Truck, ShoppingBag } from 'lucide-react';
-import React from 'react';
+import { Head, router } from '@inertiajs/react';
+import { Building2, MapPin, Edit, Save, X, Pentagon } from 'lucide-react';
+import React, { useState } from 'react';
 import { MapContainer, TileLayer, Polygon, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 
 import { Badge } from '@/components/ui/badge';
-import { ViewPageLayout } from '@/components/view-page-layout';
-import { FormSection } from '@/components/form-section';
+import { Button } from '@/components/ui/button';
+import { GeomanControl } from '@/components/GeomanControl';
+import { coordinatesToKML } from '@/utils/kmlParser';
+import AppLayout from '@/layouts/app-layout';
 
 // Fix for default markers in React Leaflet
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl: unknown })._getIconUrl;
@@ -34,6 +37,18 @@ interface GeofencesOverviewProps {
 export default function RestaurantsGeofences({ restaurants }: GeofencesOverviewProps) {
     // Guatemala center coordinates
     const guatemalaCenter: [number, number] = [14.6, -90.5];
+
+    // Edit mode state
+    const [selectedRestaurantId, setSelectedRestaurantId] = useState<number | null>(null);
+    const [editedCoordinates, setEditedCoordinates] = useState<[number, number][]>([]);
+    const [originalCoordinates, setOriginalCoordinates] = useState<[number, number][]>([]);
+    const [isSaving, setIsSaving] = useState(false);
+
+    const selectedRestaurant = restaurants.find(r => r.id === selectedRestaurantId);
+
+    // Check if coordinates were actually edited
+    const hasChanges = selectedRestaurantId &&
+        JSON.stringify(editedCoordinates) !== JSON.stringify(originalCoordinates);
 
     // Calculate bounds to fit all restaurants and geofences
     const getMapBounds = () => {
@@ -75,152 +90,168 @@ export default function RestaurantsGeofences({ restaurants }: GeofencesOverviewP
         return '#6b7280'; // gray-500 for others
     };
 
-    const getServiceType = (restaurant: Restaurant) => {
-        if (!restaurant.is_active) return 'Inactivo';
-        if (restaurant.delivery_active && restaurant.pickup_active) return 'Delivery + Pickup';
-        if (restaurant.delivery_active) return 'Solo Delivery';
-        if (restaurant.pickup_active) return 'Solo Pickup';
-        return 'Sin servicio';
+
+    // Edit mode handlers
+    const handleSelectRestaurant = (restaurantId: number) => {
+        const restaurant = restaurants.find(r => r.id === restaurantId);
+        if (restaurant && restaurant.has_geofence) {
+            const coords = restaurant.geofence_coordinates.map(coord => [coord.lat, coord.lng]);
+            setSelectedRestaurantId(restaurantId);
+            setEditedCoordinates(coords);
+            setOriginalCoordinates(coords);
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setSelectedRestaurantId(null);
+        setEditedCoordinates([]);
+        setOriginalCoordinates([]);
+    };
+
+    const handlePolygonEdit = (coordinates: [number, number][][]) => {
+        if (coordinates.length > 0) {
+            setEditedCoordinates(coordinates[0]);
+        }
+    };
+
+    const handleSaveGeofence = () => {
+        if (!selectedRestaurantId || editedCoordinates.length < 3) return;
+
+        setIsSaving(true);
+
+        try {
+            const kml = coordinatesToKML(editedCoordinates);
+
+            router.post(route('restaurants.geofence.save', selectedRestaurantId), {
+                geofence_kml: kml,
+            }, {
+                onSuccess: () => {
+                    setSelectedRestaurantId(null);
+                    setEditedCoordinates([]);
+                    setOriginalCoordinates([]);
+                    setIsSaving(false);
+                },
+                onError: () => {
+                    setIsSaving(false);
+                },
+            });
+        } catch (error) {
+            console.error('Error al convertir coordenadas a KML:', error);
+            setIsSaving(false);
+        }
     };
 
     return (
-        <ViewPageLayout
-            title="Geocercas"
-            description="Mapa de zonas de entrega de restaurantes"
-            backHref={route('restaurants.index')}
-            backLabel="Volver a Restaurantes"
-            pageTitle="Geocercas Restaurantes"
-        >
+        <AppLayout>
+            <Head title="Geocercas" />
 
-            {/* Map */}
-            <FormSection
-                icon={MapPin}
-                title="Mapa de Geocercas"
-                description="Haz clic en las geocercas y marcadores para más información."
-            >
-                <div className="h-[700px] w-full rounded-lg overflow-hidden border">
-                    <MapContainer
-                        center={guatemalaCenter}
-                        zoom={11}
-                        bounds={bounds}
-                        style={{ height: '100%', width: '100%' }}
-                        className="z-0"
-                    >
-                        <TileLayer
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        />
-
-                        {restaurants.map((restaurant) => (
-                            <React.Fragment key={restaurant.id}>
-                                {/* Geofence Polygon */}
-                                {restaurant.has_geofence && restaurant.geofence_coordinates.length > 0 && (
-                                    <Polygon
-                                        positions={restaurant.geofence_coordinates.map(coord => [coord.lat, coord.lng])}
-                                        pathOptions={{
-                                            fillColor: getPolygonColor(restaurant),
-                                            weight: 2,
-                                            opacity: 1,
-                                            color: getPolygonColor(restaurant),
-                                            fillOpacity: 0.4,
-                                        }}
-                                    >
-                                        <Popup>
-                                            <div className="min-w-48">
-                                                <div className="font-semibold text-base mb-2">{restaurant.name}</div>
-                                                <div className="space-y-1 text-sm">
-                                                    <div className="flex items-center gap-2">
-                                                        <MapPin className="h-3 w-3 text-gray-500" />
-                                                        <span className="text-gray-700">{restaurant.address}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <FileText className="h-3 w-3 text-green-500" />
-                                                        <span>Zona de entrega: {restaurant.geofence_coordinates.length} puntos</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        {restaurant.delivery_active ? (
-                                                            <Truck className="h-3 w-3 text-green-500" />
-                                                        ) : restaurant.pickup_active ? (
-                                                            <ShoppingBag className="h-3 w-3 text-orange-500" />
-                                                        ) : (
-                                                            <Building2 className="h-3 w-3 text-gray-500" />
-                                                        )}
-                                                        <span>{getServiceType(restaurant)}</span>
-                                                    </div>
-                                                    <div className="mt-2">
-                                                        <Badge
-                                                            className={`text-xs ${
-                                                                restaurant.is_active
-                                                                    ? 'bg-green-100 text-green-800 border-green-200'
-                                                                    : 'bg-red-100 text-red-800 border-red-200'
-                                                            }`}
-                                                        >
-                                                            {restaurant.is_active ? 'Activo' : 'Inactivo'}
-                                                        </Badge>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </Popup>
-                                    </Polygon>
-                                )}
-
-                                {/* Restaurant Marker */}
-                                {restaurant.coordinates && (
-                                    <Marker
-                                        position={[restaurant.coordinates.lat, restaurant.coordinates.lng]}
-                                    >
-                                        <Popup>
-                                            <div className="min-w-48">
-                                                <div className="font-semibold text-base mb-2">{restaurant.name}</div>
-                                                <div className="space-y-1 text-sm">
-                                                    <div className="flex items-center gap-2">
-                                                        <MapPin className="h-3 w-3 text-gray-500" />
-                                                        <span className="text-gray-700">{restaurant.address}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Building2 className="h-3 w-3 text-blue-500" />
-                                                        <span>Ubicación del restaurante</span>
-                                                    </div>
-                                                    <div className="text-xs text-gray-500">
-                                                        GPS: {restaurant.coordinates.lat.toFixed(6)}, {restaurant.coordinates.lng.toFixed(6)}
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        {restaurant.delivery_active ? (
-                                                            <Truck className="h-3 w-3 text-green-500" />
-                                                        ) : restaurant.pickup_active ? (
-                                                            <ShoppingBag className="h-3 w-3 text-orange-500" />
-                                                        ) : (
-                                                            <Building2 className="h-3 w-3 text-gray-500" />
-                                                        )}
-                                                        <span>{getServiceType(restaurant)}</span>
-                                                    </div>
-                                                    <div className="mt-2 space-y-1">
-                                                        <Badge
-                                                            className={`text-xs mr-1 ${
-                                                                restaurant.is_active
-                                                                    ? 'bg-green-100 text-green-800 border-green-200'
-                                                                    : 'bg-red-100 text-red-800 border-red-200'
-                                                            }`}
-                                                        >
-                                                            {restaurant.is_active ? 'Activo' : 'Inactivo'}
-                                                        </Badge>
-                                                        {restaurant.has_geofence && (
-                                                            <Badge className="text-xs bg-blue-100 text-blue-800 border-blue-200">
-                                                                <FileText className="h-3 w-3 mr-1" />
-                                                                Con KML
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </Popup>
-                                    </Marker>
-                                )}
-                            </React.Fragment>
-                        ))}
-                    </MapContainer>
+            <div className="rounded-lg border bg-card">
+                <div className="p-6 border-b">
+                    <div className="flex items-center gap-2">
+                        <MapPin className="h-5 w-5" />
+                        <h2 className="font-semibold">Geocercas</h2>
+                    </div>
                 </div>
-            </FormSection>
-        </ViewPageLayout>
+                <div className="relative">
+                    <div className="h-[calc(100vh-220px)]">
+                        <MapContainer
+                            center={guatemalaCenter}
+                            zoom={11}
+                            bounds={bounds}
+                            style={{ height: '100%', width: '100%' }}
+                            className="z-0"
+                        >
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+
+                            {selectedRestaurantId && editedCoordinates.length > 0 && (
+                                <GeomanControl
+                                    onPolygonEdit={handlePolygonEdit}
+                                    existingPolygon={editedCoordinates}
+                                />
+                            )}
+
+                            {restaurants.map((restaurant) => (
+                                <React.Fragment key={restaurant.id}>
+                                    {restaurant.has_geofence &&
+                                        restaurant.geofence_coordinates.length > 0 &&
+                                        restaurant.id !== selectedRestaurantId && (
+                                        <Polygon
+                                            positions={restaurant.geofence_coordinates.map(coord => [coord.lat, coord.lng])}
+                                            pathOptions={{
+                                                fillColor: getPolygonColor(restaurant),
+                                                weight: 2,
+                                                opacity: selectedRestaurantId ? 0.3 : 1,
+                                                color: getPolygonColor(restaurant),
+                                                fillOpacity: selectedRestaurantId ? 0.1 : 0.4,
+                                                className: 'cursor-pointer',
+                                            }}
+                                            eventHandlers={{
+                                                click: () => {
+                                                    if (!selectedRestaurantId) {
+                                                        handleSelectRestaurant(restaurant.id);
+                                                    }
+                                                },
+                                            }}
+                                        >
+                                            <Popup>
+                                                <div className="font-medium">{restaurant.name}</div>
+                                                <div className="text-xs text-muted-foreground">{restaurant.address}</div>
+                                            </Popup>
+                                        </Polygon>
+                                    )}
+
+                                    {restaurant.coordinates && (
+                                        <Marker position={[restaurant.coordinates.lat, restaurant.coordinates.lng]}>
+                                            <Popup>
+                                                <div className="font-medium">{restaurant.name}</div>
+                                            </Popup>
+                                        </Marker>
+                                    )}
+                                </React.Fragment>
+                            ))}
+                        </MapContainer>
+
+                        {/* Floating Action Panel */}
+                        {hasChanges && (
+                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000]">
+                                <div className="bg-card border rounded-lg shadow-lg p-4">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <Edit className="h-4 w-4 text-primary" />
+                                        <div className="flex-1">
+                                            <div className="font-medium text-sm">{selectedRestaurant?.name}</div>
+                                            <div className="text-xs text-muted-foreground">
+                                                {editedCoordinates.length} puntos
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            size="sm"
+                                            onClick={handleSaveGeofence}
+                                            disabled={isSaving || editedCoordinates.length < 3}
+                                            className="flex-1"
+                                        >
+                                            <Save className="h-4 w-4 mr-2" />
+                                            {isSaving ? 'Guardando...' : 'Guardar'}
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={handleCancelEdit}
+                                            disabled={isSaving}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </AppLayout>
     );
 }

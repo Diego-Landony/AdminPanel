@@ -168,6 +168,7 @@ class RestaurantController extends Controller
             'schedule' => 'nullable|array',
             'minimum_order_amount' => 'nullable|numeric|min:0',
             'estimated_delivery_time' => 'nullable|integer|min:1',
+            'geofence_kml' => 'nullable|string',
         ]);
 
         Restaurant::create($request->all());

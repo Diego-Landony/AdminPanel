@@ -96,7 +96,6 @@ class UpdateComboRequest extends FormRequest
         ];
     }
 
-
     /**
      * Validación adicional después de las reglas básicas
      */

@@ -4,7 +4,6 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerTypeController;
 use App\Http\Controllers\ImageUploadController;
-use App\Http\Controllers\KMLUploadController;
 use App\Http\Controllers\Menu\CategoryController;
 use App\Http\Controllers\Menu\ComboController;
 use App\Http\Controllers\Menu\ProductController;
@@ -117,16 +116,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:restaurants.edit');
     Route::delete('restaurants/{restaurant}', [RestaurantController::class, 'destroy'])->name('restaurants.destroy')
         ->middleware('permission:restaurants.delete');
-
-    // KML Upload para restaurantes
-    Route::get('restaurants/{restaurant}/kml', [KMLUploadController::class, 'show'])->name('restaurants.kml.show')
-        ->middleware('permission:restaurants.edit');
-    Route::post('restaurants/{restaurant}/kml', [KMLUploadController::class, 'upload'])->name('restaurants.kml.upload')
-        ->middleware('permission:restaurants.edit');
-    Route::delete('restaurants/{restaurant}/kml', [KMLUploadController::class, 'remove'])->name('restaurants.kml.remove')
-        ->middleware('permission:restaurants.edit');
-    Route::get('restaurants/{restaurant}/kml/preview', [KMLUploadController::class, 'preview'])->name('restaurants.kml.preview')
-        ->middleware('permission:restaurants.view');
     Route::post('restaurants/{restaurant}/geofence', [RestaurantController::class, 'saveGeofence'])->name('restaurants.geofence.save')
         ->middleware('permission:restaurants.edit');
 

@@ -148,45 +148,6 @@ test('valida que delivery precio sea mayor o igual que pickup', function () {
     $response->assertSessionHasErrors(['precio_domicilio_capital']);
 });
 
-test('genera slug automáticamente si no se proporciona', function () {
-    $product1 = Product::factory()->create();
-    $product2 = Product::factory()->create();
-    $category = Category::factory()->create(['is_combo_category' => true]);
-
-    $comboData = [
-        'name' => 'Combo Especial',
-        'precio_pickup_capital' => 100.00,
-        'precio_domicilio_capital' => 110.00,
-        'precio_pickup_interior' => 95.00,
-        'precio_domicilio_interior' => 105.00,
-        'is_active' => true,
-        'category_id' => $category->id,
-        'items' => [
-            [
-                'product_id' => $product1->id,
-                'quantity' => 1,
-                'label' => 'Sub',
-                'sort_order' => 1,
-            ],
-            [
-                'product_id' => $product2->id,
-                'quantity' => 1,
-                'label' => 'Bebida',
-                'sort_order' => 2,
-            ],
-        ],
-    ];
-
-    $response = $this->post(route('menu.combos.store'), $comboData);
-
-    $response->assertRedirect();
-
-    $this->assertDatabaseHas('combos', [
-        'name' => 'Combo Especial',
-        'slug' => 'combo-especial',
-    ]);
-});
-
 test('puede editar un combo', function () {
     $category = Category::factory()->create(['is_combo_category' => true]);
     $combo = Combo::factory()->create(['name' => 'Nombre Original', 'category_id' => $category->id]);

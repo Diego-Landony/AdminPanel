@@ -47,9 +47,6 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
             { categories: orderData },
             {
                 preserveState: true,
-                onSuccess: () => {
-                    showNotification.success('Orden guardado correctamente');
-                },
                 onError: (error) => {
                     if (error.message) {
                         showNotification.error(error.message);

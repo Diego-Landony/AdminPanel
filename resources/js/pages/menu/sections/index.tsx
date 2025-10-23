@@ -52,9 +52,6 @@ export default function SectionsIndex({ sections, stats }: SectionsPageProps) {
             { sections: orderData },
             {
                 preserveState: true,
-                onSuccess: () => {
-                    showNotification.success('Orden guardado correctamente');
-                },
                 onError: (error) => {
                     if (error.message) {
                         showNotification.error(error.message);

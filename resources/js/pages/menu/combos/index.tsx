@@ -78,9 +78,6 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
             { combos: orderData },
             {
                 preserveState: true,
-                onSuccess: () => {
-                    showNotification.success('Orden guardado correctamente');
-                },
                 onError: (error) => {
                     if (error.message) {
                         showNotification.error(error.message);
@@ -134,9 +131,6 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
             {
                 preserveState: true,
                 preserveScroll: true,
-                onSuccess: () => {
-                    showNotification.success(`Combo ${combo.is_active ? 'desactivado' : 'activado'} correctamente`);
-                },
                 onError: (error) => {
                     if (error.message) {
                         showNotification.error(error.message);

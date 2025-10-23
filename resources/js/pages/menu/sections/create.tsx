@@ -204,19 +204,14 @@ export default function SectionCreate() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Convertir valores string a números antes de enviar
-        const transformedData: Record<string, unknown> = {
-            ...data,
-            min_selections: typeof data.min_selections === 'string' ? parseInt(data.min_selections) : data.min_selections,
-            max_selections: typeof data.max_selections === 'string' ? parseInt(data.max_selections) : data.max_selections,
-            options: localOptions.map((option) => ({
-                name: option.name,
-                is_extra: option.is_extra,
-                price_modifier: typeof option.price_modifier === 'string' ? parseFloat(option.price_modifier) : option.price_modifier,
-            })),
-        };
+        // Actualizar las opciones en el formulario antes de enviar
+        data.options = localOptions.map((option) => ({
+            name: option.name,
+            is_extra: option.is_extra,
+            price_modifier: typeof option.price_modifier === 'string' ? parseFloat(option.price_modifier) : option.price_modifier,
+        })) as unknown as typeof data.options;
 
-        post(route('menu.sections.store'), transformedData, {
+        post(route('menu.sections.store'), {
             onSuccess: () => {
                 reset();
                 setLocalOptions([]);

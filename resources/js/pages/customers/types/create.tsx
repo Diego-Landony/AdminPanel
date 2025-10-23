@@ -44,19 +44,8 @@ export default function CustomerTypeCreate() {
             return;
         }
 
-        // Convertir valores string a números antes de enviar
-        const submitData: Record<string, unknown> = {
-            ...data,
-            points_required: typeof data.points_required === 'string'
-                ? parseInt(data.points_required)
-                : data.points_required,
-            multiplier: typeof data.multiplier === 'string'
-                ? parseFloat(data.multiplier)
-                : data.multiplier,
-        };
-
-        // Submit directly with the transformed data
-        post(route('customer-types.store'), submitData, {
+        // Enviar directamente - Laravel convertirá los strings a números
+        post(route('customer-types.store'), {
             onSuccess: () => {
                 reset();
             },

@@ -870,7 +870,7 @@ const renderMobileCard = (customer: Customer) => (
             },
             {
                 label: 'Puntos',
-                value: <span className="text-blue-600">{customer.puntos}</span>,
+                value: <span className="text-blue-600">{customer.points}</span>,
             },
             {
                 label: 'Teléfono',

@@ -18,7 +18,7 @@ class CustomerFactory extends Factory
     public function definition(): array
     {
         return [
-            'full_name' => fake()->name(),
+            'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => bcrypt('password'),
@@ -28,14 +28,13 @@ class CustomerFactory extends Factory
             'customer_type_id' => CustomerType::factory(),
             'phone' => fake()->phoneNumber(),
             'address' => fake()->address(),
-            'location' => fake()->city(),
             'nit' => fake()->optional()->numerify('########-#'),
             'fcm_token' => fake()->optional()->sha256(),
             'last_login_at' => fake()->optional()->dateTimeBetween('-30 days', 'now'),
             'last_activity_at' => fake()->optional()->dateTimeBetween('-7 days', 'now'),
             'last_purchase_at' => fake()->optional()->dateTimeBetween('-60 days', 'now'),
-            'puntos' => fake()->numberBetween(0, 2000),
-            'puntos_updated_at' => fake()->optional()->dateTimeBetween('-30 days', 'now'),
+            'points' => fake()->numberBetween(0, 2000),
+            'points_updated_at' => fake()->optional()->dateTimeBetween('-30 days', 'now'),
             'timezone' => 'America/Guatemala',
             'remember_token' => fake()->sha256(),
         ];
@@ -48,7 +47,7 @@ class CustomerFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'customer_type_id' => CustomerType::factory()->regular(),
-            'puntos' => fake()->numberBetween(0, 49),
+            'points' => fake()->numberBetween(0, 49),
         ]);
     }
 
@@ -59,7 +58,7 @@ class CustomerFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'customer_type_id' => CustomerType::factory()->bronze(),
-            'puntos' => fake()->numberBetween(50, 124),
+            'points' => fake()->numberBetween(50, 124),
         ]);
     }
 
@@ -70,7 +69,7 @@ class CustomerFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'customer_type_id' => CustomerType::factory()->silver(),
-            'puntos' => fake()->numberBetween(125, 324),
+            'points' => fake()->numberBetween(125, 324),
         ]);
     }
 
@@ -81,7 +80,7 @@ class CustomerFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'customer_type_id' => CustomerType::factory()->gold(),
-            'puntos' => fake()->numberBetween(325, 999),
+            'points' => fake()->numberBetween(325, 999),
         ]);
     }
 
@@ -92,7 +91,7 @@ class CustomerFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'customer_type_id' => CustomerType::factory()->platinum(),
-            'puntos' => fake()->numberBetween(1000, 5000),
+            'points' => fake()->numberBetween(1000, 5000),
         ]);
     }
 

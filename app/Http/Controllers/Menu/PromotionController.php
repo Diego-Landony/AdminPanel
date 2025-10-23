@@ -204,15 +204,9 @@ class PromotionController extends Controller
         });
 
         // Redirigir según el tipo de promoción
-        $routeMap = [
-            'daily_special' => 'menu.promotions.daily-special.index',
-            'two_for_one' => 'menu.promotions.two-for-one.index',
-            'percentage_discount' => 'menu.promotions.percentage.index',
-        ];
+        $routeName = $this->getPromotionIndexRoute($promotion->type);
 
-        $route = $routeMap[$promotion->type] ?? 'menu.promotions.index';
-
-        return redirect()->route($route)
+        return redirect()->route($routeName)
             ->with('success', 'Promoción creada exitosamente.');
     }
 
@@ -309,15 +303,9 @@ class PromotionController extends Controller
         });
 
         // Redirigir según el tipo de promoción
-        $routeMap = [
-            'daily_special' => 'menu.promotions.daily-special.index',
-            'two_for_one' => 'menu.promotions.two-for-one.index',
-            'percentage_discount' => 'menu.promotions.percentage.index',
-        ];
+        $routeName = $this->getPromotionIndexRoute($promotion->type);
 
-        $route = $routeMap[$promotion->type] ?? 'menu.promotions.index';
-
-        return redirect()->route($route)
+        return redirect()->route($routeName)
             ->with('success', 'Promoción actualizada exitosamente.');
     }
 
@@ -327,14 +315,28 @@ class PromotionController extends Controller
     public function destroy(Promotion $promotion): RedirectResponse
     {
         try {
+            $routeName = $this->getPromotionIndexRoute($promotion->type);
             $promotion->delete();
 
-            return redirect()->route('menu.promotions.index')
+            return redirect()->route($routeName)
                 ->with('success', 'Promoción eliminada exitosamente.');
         } catch (\Exception $e) {
             return back()
                 ->withErrors(['error' => 'Error al eliminar la promoción: '.$e->getMessage()]);
         }
+    }
+
+    /**
+     * Obtiene la ruta del índice según el tipo de promoción
+     */
+    private function getPromotionIndexRoute(string $type): string
+    {
+        return match ($type) {
+            'daily_special' => 'menu.promotions.daily-special.index',
+            'percentage_discount' => 'menu.promotions.percentage.index',
+            'two_for_one' => 'menu.promotions.two-for-one.index',
+            default => 'menu.promotions.daily-special.index',
+        };
     }
 
     /**

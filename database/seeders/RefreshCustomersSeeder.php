@@ -93,8 +93,8 @@ class RefreshCustomersSeeder extends Seeder
             // Seleccionar tipo de cliente aleatoriamente
             $customerType = $customerTypes->random();
 
-            // Generar puntos apropiados para el tipo de cliente
-            $puntos = $this->generatePointsForType($customerType, $faker);
+            // Generar points apropiados para el tipo de cliente
+            $points = $this->generatePointsForType($customerType, $faker);
 
             // Generar género y nombre apropiado
             $gender = $faker->randomElement(['masculino', 'femenino']);
@@ -126,8 +126,8 @@ class RefreshCustomersSeeder extends Seeder
                 'last_login_at' => $faker->optional(0.7)->dateTimeBetween('-30 days', 'now'),
                 'last_activity_at' => $faker->optional(0.8)->dateTimeBetween('-7 days', 'now'),
                 'last_purchase_at' => $faker->optional(0.5)->dateTimeBetween('-90 days', 'now'),
-                'puntos' => $puntos,
-                'puntos_updated_at' => $faker->optional(0.6)->dateTimeBetween('-60 days', 'now'),
+                'points' => $points,
+                'points_updated_at' => $faker->optional(0.6)->dateTimeBetween('-60 days', 'now'),
                 'timezone' => 'America/Guatemala',
             ]);
 
@@ -145,7 +145,7 @@ class RefreshCustomersSeeder extends Seeder
     }
 
     /**
-     * Genera puntos apropiados según el tipo de cliente
+     * Genera points apropiados según el tipo de cliente
      */
     private function generatePointsForType(CustomerType $type, $faker): int
     {
@@ -204,8 +204,8 @@ class RefreshCustomersSeeder extends Seeder
             $this->command->line("   • {$stat->display_name}: {$stat->count} clientes");
         }
 
-        $avgPoints = Customer::avg('puntos');
-        $this->command->line('   • Promedio de puntos: '.number_format($avgPoints, 0).' puntos');
+        $avgPoints = Customer::avg('points');
+        $this->command->line('   • Promedio de points: '.number_format($avgPoints, 0).' points');
 
         $withEmail = Customer::whereNotNull('email_verified_at')->count();
         $this->command->line("   • Con email verificado: {$withEmail} clientes");

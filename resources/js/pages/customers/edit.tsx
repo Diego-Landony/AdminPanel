@@ -1,6 +1,6 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { useForm } from '@inertiajs/react';
-import { Calendar, CreditCard, Eye, EyeOff, Hash, Lock, Mail, MapPin, Phone, User } from 'lucide-react';
+import { Calendar, CreditCard, Eye, EyeOff, Hash, Lock, Mail, Phone, User } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
@@ -30,7 +30,7 @@ interface CustomerType {
  */
 interface Customer {
     id: number;
-    full_name: string;
+    name: string;
     email: string;
     subway_card: string;
     birth_date: string | null;
@@ -39,7 +39,6 @@ interface Customer {
     customer_type: { id: number; name: string } | null;
     phone: string | null;
     address: string | null;
-    location: string | null;
     nit: string | null;
     email_verified_at: string | null;
     created_at: string | null;
@@ -78,7 +77,7 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
     const [showPassword, setShowPassword] = useState(false);
 
     const { data, setData, put, processing, errors, reset, isDirty } = useForm({
-        full_name: customer.full_name || '',
+        name: customer.name || '',
         email: customer.email || '',
         password: '',
         password_confirmation: '',
@@ -88,7 +87,6 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
         customer_type_id: customer.customer_type_id,
         phone: customer.phone || '',
         address: customer.address || '',
-        location: customer.location || '',
         nit: customer.nit || '',
     });
 
@@ -120,7 +118,7 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
     const handleReset = () => {
         reset();
         setData({
-            full_name: customer.full_name || '',
+            name: customer.name || '',
             email: customer.email || '',
             password: '',
             password_confirmation: '',
@@ -130,7 +128,6 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
             customer_type_id: customer.customer_type_id,
             phone: customer.phone || '',
             address: customer.address || '',
-            location: customer.location || '',
             nit: customer.nit || '',
         });
     };
@@ -138,11 +135,11 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
     return (
         <EditPageLayout
             title="Editar Cliente"
-            description={`Modifica la información de ${customer.full_name}`}
+            description={`Modifica la información de ${customer.name}`}
             backHref={route('customers.index')}
             onSubmit={handleSubmit}
             processing={processing}
-            pageTitle={`Editar Cliente - ${customer.full_name}`}
+            pageTitle={`Editar Cliente - ${customer.name}`}
             loading={processing}
             loadingSkeleton={EditCustomersSkeleton}
             isDirty={isDirty}
@@ -150,11 +147,11 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
             showResetButton={true}
         >
             <FormSection icon={User} title="Información Personal">
-                <FormField label="Nombre Completo" error={errors.full_name} required>
+                <FormField label="Nombre Completo" error={errors.name} required>
                     <Input
                         type="text"
-                        value={data.full_name}
-                        onChange={(e) => setData('full_name', e.target.value)}
+                        value={data.name}
+                        onChange={(e) => setData('name', e.target.value)}
                         autoComplete={AUTOCOMPLETE.name}
                     />
                 </FormField>
@@ -240,19 +237,6 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
                             value={data.phone}
                             onChange={(e) => setData('phone', e.target.value)}
                             placeholder={PLACEHOLDERS.phone}
-                            className="pl-10"
-                        />
-                    </div>
-                </FormField>
-
-                <FormField label="Ubicación" error={errors.location}>
-                    <div className="relative">
-                        <MapPin className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="text"
-                            value={data.location}
-                            onChange={(e) => setData('location', e.target.value)}
-                            placeholder={PLACEHOLDERS.location}
                             className="pl-10"
                         />
                     </div>

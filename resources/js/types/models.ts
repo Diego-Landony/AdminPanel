@@ -31,7 +31,7 @@ export interface User {
  */
 export interface Customer {
     id: number;
-    full_name: string;
+    name: string;
     email: string;
     email_verified_at: string | null;
     subway_card: string;
@@ -40,14 +40,13 @@ export interface Customer {
     customer_type_id: number | null;
     phone: string | null;
     address: string | null;
-    location: string | null;
     nit: string | null;
     fcm_token: string | null;
     last_login_at: string | null;
     last_activity_at: string | null;
     last_purchase_at: string | null;
-    puntos: number;
-    puntos_updated_at: string | null;
+    points: number;
+    points_updated_at: string | null;
     timezone: string;
     created_at: string;
     updated_at: string;
@@ -57,6 +56,7 @@ export interface Customer {
     is_online: boolean;
     // Relations
     customer_type?: CustomerType;
+    addresses?: CustomerAddress[];
 }
 
 /**
@@ -73,6 +73,24 @@ export interface CustomerType {
     updated_at: string;
     // Relations
     customers?: Customer[];
+}
+
+/**
+ * Dirección de entrega del cliente
+ */
+export interface CustomerAddress {
+    id: number;
+    customer_id: number;
+    label: string;
+    address_line: string;
+    latitude: number;
+    longitude: number;
+    delivery_notes: string | null;
+    is_default: boolean;
+    created_at: string;
+    updated_at: string;
+    // Relations
+    customer?: Customer;
 }
 
 /**

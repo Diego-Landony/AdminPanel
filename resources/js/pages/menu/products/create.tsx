@@ -238,90 +238,22 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        console.log('=== INICIO SUBMIT PRODUCTO ===');
-        console.log('1. Evento preventDefault ejecutado');
-        console.log('2. Data actual:', data);
-        console.log('3. Selected sections:', selectedSections);
-        console.log('4. Local variants:', localVariants);
+        // Actualizar las secciones y variantes en el formulario antes de enviar
+        data.sections = selectedSections;
+        data.variants = localVariants.map(({ id, ...rest }) => ({ ...rest, _tempId: id })) as unknown as typeof data.variants;
 
-        // Limpiar los IDs temporales de las variantes antes de enviar
-        const submitData: Record<string, unknown> = {
-            ...data,
-            sections: selectedSections,
-            variants: localVariants.map(({ id, ...rest }) => ({ ...rest, _tempId: id })),
-        };
-
-        console.log('5. Submit data preparado:', submitData);
-        console.log('6. Route:', route('menu.products.store'));
-        console.log('7. Iniciando POST request...');
-
-        // Submit directly with transformed data
-        post(route('menu.products.store'), submitData, {
+        post(route('menu.products.store'), {
             onSuccess: () => {
-                console.log('✅ POST exitoso - onSuccess ejecutado');
                 reset();
                 setSelectedSections([]);
                 setLocalVariants([]);
             },
             onError: (errors: Record<string, string>) => {
-                console.error('❌ POST fallido - onError ejecutado');
-                console.error('Errors recibidos:', errors);
                 if (Object.keys(errors).length === 0) {
                     showNotification.error(NOTIFICATIONS.error.server);
                 }
             },
         });
-    };
-
-    const _handleSubmitOld = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        const submitData = {
-            ...data,
-            sections: selectedSections.map((id) => ({ id })),
-            variants: localVariants.map(({ id: _id, ...variant }) => ({
-                ...variant,
-                capital_pickup_price: parseFloat(variant.capital_pickup_price || '0'),
-                capital_delivery_price: parseFloat(variant.capital_delivery_price || '0'),
-                interior_pickup_price: parseFloat(variant.interior_pickup_price || '0'),
-                interior_delivery_price: parseFloat(variant.interior_delivery_price || '0'),
-                sort_order: parseInt(variant.sort_order || '0'),
-            })),
-        };
-
-        console.log('OLD SUBMIT');
-        console.log('1. Data de useForm:', data);
-        console.log('2. selectedSections:', selectedSections);
-        console.log('3. localVariants:', localVariants);
-        console.log('4. submitData completo:', submitData);
-        console.log('5. submitData.sections:', submitData.sections);
-        console.log('6. Route:', route('menu.products.store'));
-        console.log('7. Iniciando POST request...');
-
-        post(route('menu.products.store'), submitData, {
-            onSuccess: () => {
-                console.log('✅ POST exitoso - onSuccess ejecutado');
-                reset();
-                setSelectedSections([]);
-                setLocalVariants([]);
-            },
-            onError: (errors: Record<string, string>) => {
-                console.error('❌ POST fallido - onError ejecutado');
-                console.error('Errors recibidos:', errors);
-                if (Object.keys(errors).length === 0) {
-                    showNotification.error(NOTIFICATIONS.error.server);
-                }
-            },
-            onFinish: () => {
-                console.log('🏁 POST finalizado - onFinish ejecutado');
-            },
-            onBefore: () => {
-                console.log('⏳ POST iniciado - onBefore ejecutado');
-            },
-        });
-
-        console.log('8. POST request enviado');
-        console.log('=== FIN SUBMIT PRODUCTO ===');
     };
 
     return (

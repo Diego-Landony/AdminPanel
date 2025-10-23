@@ -44,27 +44,26 @@ class CustomerController extends Controller
         $query = Customer::with('customerType')
             ->select([
                 'id',
-                'full_name',
+                'name',
                 'email',
                 'subway_card',
                 'birth_date',
                 'gender',
                 'customer_type_id',
                 'phone',
-                'location',
                 'email_verified_at',
                 'created_at',
                 'updated_at',
                 'last_activity_at',
                 'last_purchase_at',
-                'puntos',
-                'puntos_updated_at',
+                'points',
+                'points_updated_at',
             ]);
 
         // Aplicar búsqueda global si existe
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('full_name', 'like', "%{$search}%")
+                $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('subway_card', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%")
@@ -80,8 +79,8 @@ class CustomerController extends Controller
                 $field = $criteria['field'] ?? 'created_at';
                 $direction = $criteria['direction'] ?? 'desc';
 
-                if ($field === 'customer' || $field === 'full_name') {
-                    $query->orderBy('full_name', $direction);
+                if ($field === 'customer' || $field === 'name') {
+                    $query->orderBy('name', $direction);
                 } elseif ($field === 'status') {
                     $query->orderByRaw('
                         CASE
@@ -90,8 +89,8 @@ class CustomerController extends Controller
                             WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
                             ELSE 3
                         END '.($direction === 'asc' ? 'ASC' : 'DESC'));
-                } elseif ($field === 'puntos') {
-                    $query->orderBy('puntos', $direction);
+                } elseif ($field === 'points') {
+                    $query->orderBy('points', $direction);
                 } elseif ($field === 'last_purchase') {
                     $query->orderBy('last_purchase_at', $direction);
                 } else {
@@ -100,8 +99,8 @@ class CustomerController extends Controller
             }
         } else {
             // Fallback a ordenamiento único
-            if ($sortField === 'customer' || $sortField === 'full_name') {
-                $query->orderBy('full_name', $sortDirection);
+            if ($sortField === 'customer' || $sortField === 'name') {
+                $query->orderBy('name', $sortDirection);
             } elseif ($sortField === 'status') {
                 $query->orderByRaw('
                     CASE
@@ -110,8 +109,8 @@ class CustomerController extends Controller
                         WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
                         ELSE 3
                     END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
-            } elseif ($sortField === 'puntos') {
-                $query->orderBy('puntos', $sortDirection);
+            } elseif ($sortField === 'points') {
+                $query->orderBy('points', $sortDirection);
             } elseif ($sortField === 'last_purchase') {
                 $query->orderBy('last_purchase_at', $sortDirection);
             } else {
@@ -124,13 +123,13 @@ class CustomerController extends Controller
             ->appends($request->all()) // Preservar filtros en paginación
             ->through(function ($customer) {
                 // Actualizar tipo de cliente basado en puntos
-                if ($customer->puntos !== null) {
+                if ($customer->points !== null) {
                     $customer->updateCustomerType();
                 }
 
                 return [
                     'id' => $customer->id,
-                    'full_name' => $customer->full_name,
+                    'name' => $customer->name,
                     'email' => $customer->email,
                     'subway_card' => $customer->subway_card,
                     'birth_date' => $customer->birth_date,
@@ -144,14 +143,13 @@ class CustomerController extends Controller
                     // ✅ Legacy compatibility: provide client_type as computed field
                     'client_type' => $customer->customerType?->name ?? 'regular',
                     'phone' => $customer->phone,
-                    'location' => $customer->location,
                     'email_verified_at' => $customer->email_verified_at,
                     'created_at' => $customer->created_at,
                     'updated_at' => $customer->updated_at,
                     'last_activity' => $customer->last_activity_at,
                     'last_purchase' => $customer->last_purchase_at,
-                    'puntos' => $customer->puntos ?? 0,
-                    'puntos_updated_at' => $customer->puntos_updated_at,
+                    'points' => $customer->points ?? 0,
+                    'points_updated_at' => $customer->points_updated_at,
                     'is_online' => $customer->is_online, // ✅ Usar accessor del modelo
                     'status' => $customer->status, // ✅ Usar accessor del modelo
                 ];
@@ -234,7 +232,7 @@ class CustomerController extends Controller
 
         try {
             $request->validate([
-                'full_name' => 'required|string|max:255',
+                'name' => 'required|string|max:255',
                 'email' => 'required|email|max:255|unique:customers',
                 'password' => 'required|string|min:6|confirmed',
                 'subway_card' => 'required|string|max:255|unique:customers',
@@ -243,7 +241,6 @@ class CustomerController extends Controller
                 'customer_type_id' => 'nullable|exists:customer_types,id',
                 'phone' => 'nullable|string|max:255',
                 'address' => 'nullable|string|max:1000',
-                'location' => 'nullable|string|max:255',
                 'nit' => 'nullable|string|max:255',
             ]);
 
@@ -251,7 +248,7 @@ class CustomerController extends Controller
             $customerTypeId = $request->customer_type_id ?? CustomerType::getDefault()?->id;
 
             $customer = Customer::create([
-                'full_name' => $request->full_name,
+                'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'subway_card' => $request->subway_card,
@@ -260,7 +257,6 @@ class CustomerController extends Controller
                 'customer_type_id' => $customerTypeId,
                 'phone' => $request->phone,
                 'address' => $request->address,
-                'location' => $request->location,
                 'nit' => $request->nit,
                 'email_verified_at' => now(),
                 'timezone' => 'America/Guatemala',
@@ -296,7 +292,7 @@ class CustomerController extends Controller
     {
         $customerData = [
             'id' => $customer->id,
-            'full_name' => $customer->full_name,
+            'name' => $customer->name,
             'email' => $customer->email,
             'subway_card' => $customer->subway_card,
             'birth_date' => $customer->birth_date ? $customer->birth_date->format('Y-m-d') : null,
@@ -308,7 +304,6 @@ class CustomerController extends Controller
             ] : null,
             'phone' => $customer->phone,
             'address' => $customer->address,
-            'location' => $customer->location,
             'nit' => $customer->nit,
             'email_verified_at' => $customer->email_verified_at ? $customer->email_verified_at->toISOString() : null,
             'created_at' => $customer->created_at ? $customer->created_at->toISOString() : null,
@@ -316,8 +311,11 @@ class CustomerController extends Controller
             'last_activity_at' => $customer->last_activity_at ? $customer->last_activity_at->toISOString() : null,
         ];
 
+        $customerTypes = CustomerType::active()->ordered()->get();
+
         return Inertia::render('customers/edit', [
             'customer' => $customerData,
+            'customer_types' => $customerTypes,
         ]);
     }
 
@@ -328,7 +326,7 @@ class CustomerController extends Controller
     {
         try {
             $rules = [
-                'full_name' => 'required|string|max:255',
+                'name' => 'required|string|max:255',
                 'email' => 'required|string|lowercase|email|max:255|unique:customers,email,'.$customer->id,
                 'subway_card' => 'required|string|max:255|unique:customers,subway_card,'.$customer->id,
                 'birth_date' => 'required|date|before:today',
@@ -336,7 +334,6 @@ class CustomerController extends Controller
                 'customer_type_id' => 'nullable|exists:customer_types,id',
                 'phone' => 'nullable|string|max:255',
                 'address' => 'nullable|string|max:1000',
-                'location' => 'nullable|string|max:255',
                 'nit' => 'nullable|string|max:255',
             ];
 
@@ -351,7 +348,7 @@ class CustomerController extends Controller
             $emailChanged = $customer->email !== $request->email;
 
             $customerData = [
-                'full_name' => $request->full_name,
+                'name' => $request->name,
                 'email' => $request->email,
                 'subway_card' => $request->subway_card,
                 'birth_date' => $request->birth_date,
@@ -359,7 +356,6 @@ class CustomerController extends Controller
                 'customer_type_id' => $request->customer_type_id,
                 'phone' => $request->phone,
                 'address' => $request->address,
-                'location' => $request->location,
                 'nit' => $request->nit,
             ];
 
@@ -402,7 +398,7 @@ class CustomerController extends Controller
     public function destroy(Customer $customer): RedirectResponse
     {
         try {
-            $customerName = $customer->full_name;
+            $customerName = $customer->name;
             $customer->delete();
 
             return back()->with('success', "Cliente '{$customerName}' eliminado exitosamente");

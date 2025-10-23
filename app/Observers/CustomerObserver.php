@@ -147,7 +147,7 @@ class CustomerObserver
                             'subway_card' => 'tarjeta subway',
                             'phone' => 'teléfono',
                             'address' => 'dirección',
-                            'puntos' => 'puntos',
+                            'points' => 'puntos',
                             'customer_type_id' => 'tipo de cliente',
                             'client_type' => 'tipo de cliente',
                         ];
@@ -180,7 +180,7 @@ class CustomerObserver
      */
     private function isOnlyTimestampUpdate(array $changes): bool
     {
-        $timestampFields = ['updated_at', 'last_activity_at', 'last_login_at', 'puntos_updated_at'];
+        $timestampFields = ['updated_at', 'last_activity_at', 'last_login_at', 'points_updated_at'];
 
         foreach ($changes as $field => $value) {
             if (! in_array($field, $timestampFields)) {

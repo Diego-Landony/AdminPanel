@@ -52,19 +52,8 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Convertir valores string a números antes de enviar
-        const submitData: Record<string, unknown> = {
-            ...data,
-            category_id: data.category_id ? parseInt(data.category_id) : null,
-            base_price: data.base_price ? parseFloat(data.base_price) : 0,
-            delivery_price: data.delivery_price ? parseFloat(data.delivery_price) : 0,
-            interior_base_price: data.interior_base_price ? parseFloat(data.interior_base_price) : 0,
-            interior_delivery_price: data.interior_delivery_price ? parseFloat(data.interior_delivery_price) : 0,
-            sort_order: data.sort_order ? parseInt(data.sort_order) : 0,
-        };
-
-        // Submit directly with transformed data
-        post(route('menu.products.variants.store', product.id), submitData, {
+        // Enviar directamente - Laravel convertirá los strings a números
+        post(route('menu.products.variants.store', product.id), {
             onSuccess: () => {
                 reset();
             },

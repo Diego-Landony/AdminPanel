@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\TracksUserStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -20,7 +21,7 @@ class Customer extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'full_name',
+        'name',
         'email',
         'email_verified_at',
         'password',
@@ -29,14 +30,13 @@ class Customer extends Authenticatable
         'gender',
         'phone',
         'address',
-        'location',
         'nit',
         'fcm_token',
         'last_login_at',
         'last_activity_at',
         'last_purchase_at',
-        'puntos',
-        'puntos_updated_at',
+        'points',
+        'points_updated_at',
         'timezone',
         'customer_type_id',
     ];
@@ -65,8 +65,8 @@ class Customer extends Authenticatable
             'last_login_at' => 'datetime',
             'last_activity_at' => 'datetime',
             'last_purchase_at' => 'datetime',
-            'puntos' => 'integer',
-            'puntos_updated_at' => 'datetime',
+            'points' => 'integer',
+            'points_updated_at' => 'datetime',
         ];
     }
 
@@ -86,11 +86,27 @@ class Customer extends Authenticatable
     }
 
     /**
+     * Relación con las direcciones del cliente
+     */
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(CustomerAddress::class);
+    }
+
+    /**
+     * Obtiene la dirección predeterminada del cliente
+     */
+    public function defaultAddress(): ?CustomerAddress
+    {
+        return $this->addresses()->where('is_default', true)->first();
+    }
+
+    /**
      * Actualiza automáticamente el tipo de cliente basado en los puntos
      */
     public function updateCustomerType(): void
     {
-        $newType = CustomerType::getTypeForPoints($this->puntos ?? 0);
+        $newType = CustomerType::getTypeForPoints($this->points ?? 0);
 
         if ($newType && $this->customer_type_id !== $newType->id) {
             $this->customer_type_id = $newType->id;

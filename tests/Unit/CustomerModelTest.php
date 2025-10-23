@@ -24,8 +24,8 @@ test('customer has fillable attributes', function () {
         'last_login_at',
         'last_activity_at',
         'last_purchase_at',
-        'puntos',
-        'puntos_updated_at',
+        'points',
+        'points_updated_at',
         'timezone',
         'customer_type_id',
     ];
@@ -55,8 +55,8 @@ test('customer casts attributes correctly', function () {
         'last_login_at' => 'datetime',
         'last_activity_at' => 'datetime',
         'last_purchase_at' => 'datetime',
-        'puntos' => 'integer',
-        'puntos_updated_at' => 'datetime',
+        'points' => 'integer',
+        'points_updated_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
 

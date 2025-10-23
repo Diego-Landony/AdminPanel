@@ -1,6 +1,6 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { useForm } from '@inertiajs/react';
-import { Calendar, CreditCard, Eye, EyeOff, Hash, Lock, Mail, MapPin, Phone, User } from 'lucide-react';
+import { Calendar, CreditCard, Eye, EyeOff, Hash, Lock, Mail, Phone, User } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
@@ -32,7 +32,7 @@ export default function CreateCustomer({ customer_types }: CreateCustomerProps) 
     const [showPassword, setShowPassword] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        full_name: '',
+        name: '',
         email: '',
         password: '',
         password_confirmation: '',
@@ -42,7 +42,6 @@ export default function CreateCustomer({ customer_types }: CreateCustomerProps) 
         customer_type_id: null as number | null,
         phone: '',
         address: '',
-        location: '',
         nit: '',
     });
 
@@ -77,11 +76,11 @@ export default function CreateCustomer({ customer_types }: CreateCustomerProps) 
             loadingSkeleton={CreateCustomersSkeleton}
         >
             <FormSection icon={User} title="Información Personal">
-                <FormField label="Nombre Completo" error={errors.full_name} required>
+                <FormField label="Nombre Completo" error={errors.name} required>
                     <Input
                         type="text"
-                        value={data.full_name}
-                        onChange={(e) => setData('full_name', e.target.value)}
+                        value={data.name}
+                        onChange={(e) => setData('name', e.target.value)}
                         autoComplete={AUTOCOMPLETE.name}
                     />
                 </FormField>
@@ -167,19 +166,6 @@ export default function CreateCustomer({ customer_types }: CreateCustomerProps) 
                             value={data.phone}
                             onChange={(e) => setData('phone', e.target.value)}
                             placeholder={PLACEHOLDERS.phone}
-                            className="pl-10"
-                        />
-                    </div>
-                </FormField>
-
-                <FormField label="Ubicación" error={errors.location}>
-                    <div className="relative">
-                        <MapPin className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="text"
-                            value={data.location}
-                            onChange={(e) => setData('location', e.target.value)}
-                            placeholder={PLACEHOLDERS.location}
                             className="pl-10"
                         />
                     </div>

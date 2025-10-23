@@ -1,15 +1,12 @@
-import { showNotification } from '@/hooks/useNotifications';
-import { Head, router } from '@inertiajs/react';
-import { Award, Check, Clock, CreditCard, MapPin, Phone, Users, X } from 'lucide-react';
-import { NOTIFICATIONS } from '@/constants/ui-constants';
-import React, { useCallback, useState } from 'react';
+import { Head } from '@inertiajs/react';
+import { Award, Check, Clock, CreditCard, Phone, Users, X } from 'lucide-react';
+import React from 'react';
 
 import { DataTable } from '@/components/DataTable';
-import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { EntityInfoCell } from '@/components/EntityInfoCell';
 import { CustomersSkeleton } from '@/components/skeletons';
 import { StandardMobileCard } from '@/components/StandardMobileCard';
-import { CONNECTION_STATUS_CONFIGS, CUSTOMER_TYPE_COLORS, StatusBadge } from '@/components/status-badge';
+import { CUSTOMER_TYPE_COLORS } from '@/components/status-badge';
 import { TableActions } from '@/components/TableActions';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
@@ -20,7 +17,7 @@ import { calculateAge, daysSince, formatDate, formatPoints } from '@/utils/forma
  */
 interface Customer {
     id: number;
-    full_name: string;
+    name: string;
     email: string;
     subway_card: string;
     birth_date: string;
@@ -32,14 +29,13 @@ interface Customer {
         multiplier: number;
     } | null;
     phone: string | null;
-    location: string | null;
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
     last_activity: string | null;
     last_purchase: string | null;
-    puntos: number;
-    puntos_updated_at: string | null;
+    points: number;
+    points_updated_at: string | null;
     is_online: boolean;
     status: string;
 }
@@ -125,40 +121,6 @@ const getClientTypeColor = (customerType: Customer['customer_type']): string => 
  * Refactorizada para usar DataTable unificado directamente
  */
 export default function CustomersIndex({ customers, customer_type_stats, filters }: CustomersPageProps) {
-    const [deletingCustomer, setDeletingCustomer] = useState<number | null>(null);
-    const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
-    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-    const openDeleteDialog = useCallback((customer: Customer) => {
-        setCustomerToDelete(customer);
-        setShowDeleteDialog(true);
-    }, []);
-
-    const closeDeleteDialog = useCallback(() => {
-        setCustomerToDelete(null);
-        setShowDeleteDialog(false);
-        setDeletingCustomer(null);
-    }, []);
-
-    const handleDeleteCustomer = async () => {
-        if (!customerToDelete) return;
-
-        setDeletingCustomer(customerToDelete.id);
-        router.delete(`/customers/${customerToDelete.id}`, {
-            preserveState: false,
-            onBefore: () => {
-                closeDeleteDialog();
-            },
-            onError: (error) => {
-                setDeletingCustomer(null);
-                if (error.message) {
-                    showNotification.error(error.message);
-                } else {
-                    showNotification.error(NOTIFICATIONS.error.deleteCustomer);
-                }
-            },
-        });
-    };
     // Generar estadísticas dinámicas basadas en los tipos de cliente reales
     const stats = [
         {
@@ -214,12 +176,12 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
                     ),
                 );
 
-                return <EntityInfoCell icon={Users} primaryText={customer.full_name} secondaryText={customer.email} badges={<>{badges}</>} />;
+                return <EntityInfoCell icon={Users} primaryText={customer.name} secondaryText={customer.email} badges={<>{badges}</>} />;
             },
         },
         {
             key: 'subway_card',
-            title: 'Tarjeta Subway',
+            title: 'SubwayCard',
             width: 'md' as const,
             render: (customer: Customer) => (
                 <div>
@@ -242,36 +204,11 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
             ),
         },
         {
-            key: 'status',
-            title: 'Estatus',
-            width: 'sm' as const,
-            sortable: true,
-            render: (customer: Customer) => (
-                <div>
-                    <StatusBadge status={customer.status} configs={CONNECTION_STATUS_CONFIGS} />
-                    {customer.last_activity && (
-                        <div className="mt-1 text-xs text-muted-foreground">
-                            <Clock className="mr-1 inline h-3 w-3" />
-                            {formatDate(customer.last_activity)}
-                        </div>
-                    )}
-                </div>
-            ),
-        },
-        {
             key: 'phone',
             title: 'Teléfono',
             width: 'md' as const,
             render: (customer: Customer) => (
-                <div>
-                    <div className="text-sm">{customer.phone || 'N/A'}</div>
-                    {customer.location && (
-                        <div className="flex items-center text-xs text-muted-foreground">
-                            <MapPin className="mr-1 inline h-3 w-3" />
-                            {customer.location}
-                        </div>
-                    )}
-                </div>
+                <div className="text-sm">{customer.phone || 'N/A'}</div>
             ),
         },
         {
@@ -287,15 +224,15 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
             ),
         },
         {
-            key: 'puntos',
+            key: 'points',
             title: 'Puntos',
             width: 'sm' as const,
             sortable: true,
             render: (customer: Customer) => (
                 <div>
-                    <div className="text-sm font-medium text-blue-600">{formatPoints(customer.puntos || 0)}</div>
-                    {customer.puntos_updated_at && (
-                        <div className="text-xs text-muted-foreground">Actualizado: {formatDate(customer.puntos_updated_at)}</div>
+                    <div className="text-sm font-medium text-blue-600">{formatPoints(customer.points || 0)}</div>
+                    {customer.points_updated_at && (
+                        <div className="text-xs text-muted-foreground">Actualizado: {formatDate(customer.points_updated_at)}</div>
                     )}
                 </div>
             ),
@@ -315,10 +252,7 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
             render: (customer: Customer) => (
                 <TableActions
                     editHref={`/customers/${customer.id}/edit`}
-                    onDelete={() => openDeleteDialog(customer)}
-                    isDeleting={deletingCustomer === customer.id}
                     editTooltip="Editar cliente"
-                    deleteTooltip="Eliminar cliente"
                 />
             ),
         },
@@ -327,21 +261,15 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
     const CustomerMobileCard = ({ customer }: { customer: Customer }) => (
         <StandardMobileCard
             icon={Users}
-            title={customer.full_name}
+            title={customer.name}
             subtitle={customer.email}
-            badge={{
-                children: <StatusBadge status={customer.status} configs={CONNECTION_STATUS_CONFIGS} className="text-xs" />,
-            }}
             actions={{
                 editHref: `/customers/${customer.id}/edit`,
-                onDelete: () => openDeleteDialog(customer),
-                isDeleting: deletingCustomer === customer.id,
                 editTooltip: 'Editar cliente',
-                deleteTooltip: 'Eliminar cliente',
             }}
             dataFields={[
                 {
-                    label: 'Tarjeta Subway',
+                    label: 'SubwayCard',
                     value: (
                         <div className="flex items-center gap-2">
                             <CreditCard className="h-3 w-3 text-muted-foreground" />
@@ -351,7 +279,7 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
                 },
                 {
                     label: 'Puntos',
-                    value: <div className="font-medium text-blue-600">{formatPoints(customer.puntos || 0)}</div>,
+                    value: <div className="font-medium text-blue-600">{formatPoints(customer.points || 0)}</div>,
                 },
                 {
                     label: 'Tipo de Cliente',
@@ -375,16 +303,6 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
                         </div>
                     ),
                     condition: !!customer.phone,
-                },
-                {
-                    label: 'Ubicación',
-                    value: (
-                        <div className="flex items-center gap-2">
-                            <MapPin className="h-3 w-3 text-muted-foreground" />
-                            <span>{customer.location}</span>
-                        </div>
-                    ),
-                    condition: !!customer.location,
                 },
                 {
                     label: 'Verificación Email',
@@ -443,15 +361,6 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
                 renderMobileCard={(customer) => <CustomerMobileCard customer={customer} />}
                 routeName="/customers"
                 breakpoint="lg"
-            />
-
-            <DeleteConfirmationDialog
-                isOpen={showDeleteDialog}
-                onClose={closeDeleteDialog}
-                onConfirm={handleDeleteCustomer}
-                isDeleting={deletingCustomer !== null}
-                entityName={customerToDelete?.full_name || ''}
-                entityType="cliente"
             />
         </AppLayout>
     );

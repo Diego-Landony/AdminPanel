@@ -53,7 +53,7 @@ export const systemPages: PageConfig[] = [
     },
     {
         name: 'restaurants',
-        title: 'Gestión de restaurantes',
+        title: 'Restaurantes',
         href: '/restaurants',
         icon: Utensils,
         group: 'Restaurantes',
@@ -61,7 +61,7 @@ export const systemPages: PageConfig[] = [
     },
     {
         name: 'restaurants-geofences',
-        title: 'Geocercas restaurantes',
+        title: 'Geocercas',
         href: '/restaurants-geofences',
         icon: MapPin,
         group: 'Restaurantes',

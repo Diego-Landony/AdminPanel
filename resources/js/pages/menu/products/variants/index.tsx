@@ -139,7 +139,8 @@ export default function VariantsIndex({ product, variants, stats, filters }: Var
 
         setDeletingVariant(selectedVariant.id);
         router.delete(`/menu/products/${product.id}/variants/${selectedVariant.id}`, {
-            onSuccess: () => {
+            preserveState: false,
+            onBefore: () => {
                 closeDeleteDialog();
             },
             onError: (error) => {
@@ -292,7 +293,7 @@ export default function VariantsIndex({ product, variants, stats, filters }: Var
                 columns={columns}
                 stats={variantStats}
                 filters={filters}
-                createUrl={null}
+                createUrl={undefined}
                 searchPlaceholder="Buscar por tamaño o SKU..."
                 loadingSkeleton={ProductsSkeleton}
                 renderMobileCard={(variant) => <VariantMobileCard variant={variant} onDelete={openDeleteDialog} isDeleting={deletingVariant === variant.id} productId={product.id} />}

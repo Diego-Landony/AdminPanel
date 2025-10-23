@@ -48,6 +48,8 @@ export default [
                     destructuredArrayIgnorePattern: '^_',
                 },
             ],
+            // Prohibit explicit use of 'any' type - use 'unknown' instead
+            '@typescript-eslint/no-explicit-any': 'error',
         },
     },
     {

@@ -14,6 +14,10 @@ class SubwayPromotionsSeeder extends Seeder
     {
         $this->command->info('🎉 Creando promociones de Subway...');
 
+        // Limpiar datos existentes (respetando foreign keys)
+        PromotionItem::query()->delete();
+        Promotion::query()->delete();
+
         $this->create2x1Promotions();
         $this->createSubDelDia();
         $this->createDiscountPromotions();
@@ -45,7 +49,7 @@ class SubwayPromotionsSeeder extends Seeder
             if ($variant15cm) {
                 PromotionItem::create([
                     'promotion_id' => $promotion->id,
-                    'product_id' => null,
+                    'product_id' => $sub->id,
                     'variant_id' => $variant15cm->id,
                     'category_id' => null,
                     'special_price_capital' => $variant15cm->precio_pickup_capital * 0.5,
@@ -73,7 +77,7 @@ class SubwayPromotionsSeeder extends Seeder
             if ($variantMediano) {
                 PromotionItem::create([
                     'promotion_id' => $promotion2->id,
-                    'product_id' => null,
+                    'product_id' => $bebida->id,
                     'variant_id' => $variantMediano->id,
                     'category_id' => null,
                     'special_price_capital' => $variantMediano->precio_pickup_capital * 0.5,
@@ -89,16 +93,27 @@ class SubwayPromotionsSeeder extends Seeder
     {
         $this->command->line('   ⭐ Creando Sub del Día...');
 
-        // Sub del Día real de Subway Guatemala
-        // Cada día tiene un sub diferente con precio especial de 15cm
+        // Precio especial uniforme para todos los subs del día
+        $precioSubDelDia = 22;
+
+        // Crear UNA SOLA promoción "Sub del Día"
+        $promotion = Promotion::create([
+            'name' => 'Sub del Día',
+            'description' => 'Disfruta nuestros deliciosos Subs a precio especial según el día de la semana',
+            'type' => 'daily_special',
+            'is_active' => true,
+        ]);
+
+        // Items del Sub del Día (cada uno con sus días específicos)
         $subsDelDia = [
-            ['name' => 'Jamón', 'day' => 1, 'precio_especial' => 27], // Lunes
-            ['name' => 'Italian B.M.T.', 'day' => 2, 'precio_especial' => 29], // Martes
-            ['name' => 'Pechuga de Pavo', 'day' => 3, 'precio_especial' => 28], // Miércoles
-            ['name' => 'Pollo Teriyaki', 'day' => 4, 'precio_especial' => 30], // Jueves
-            ['name' => 'Atún', 'day' => 5, 'precio_especial' => 28], // Viernes
-            ['name' => 'Subway Club', 'day' => 6, 'precio_especial' => 32], // Sábado
-            ['name' => 'Subway Melt', 'day' => 0, 'precio_especial' => 33], // Domingo
+            ['name' => 'Pechuga de Pollo', 'days' => [1, 2, 3, 4, 5, 6, 7], 'dayName' => 'Todos los días'],
+            ['name' => 'Jamón', 'days' => [1], 'dayName' => 'Lunes'],
+            ['name' => 'Italian B.M.T.', 'days' => [2], 'dayName' => 'Martes'],
+            ['name' => 'Pechuga de Pavo', 'days' => [3], 'dayName' => 'Miércoles'],
+            ['name' => 'Pollo Teriyaki', 'days' => [4], 'dayName' => 'Jueves'],
+            ['name' => 'Atún', 'days' => [5], 'dayName' => 'Viernes'],
+            ['name' => 'Subway Club', 'days' => [6], 'dayName' => 'Sábado'],
+            ['name' => 'Subway Melt', 'days' => [7], 'dayName' => 'Domingo'],
         ];
 
         foreach ($subsDelDia as $subData) {
@@ -106,20 +121,34 @@ class SubwayPromotionsSeeder extends Seeder
             if ($product) {
                 $variant15cm = $product->variants()->where('size', '15cm')->first();
                 if ($variant15cm) {
+                    // Actualizar información en la variante
                     $variant15cm->update([
                         'is_daily_special' => true,
-                        'daily_special_days' => json_encode([$subData['day']]),
-                        'daily_special_precio_pickup_capital' => $subData['precio_especial'],
-                        'daily_special_precio_domicilio_capital' => $subData['precio_especial'] + 5,
-                        'daily_special_precio_pickup_interior' => $subData['precio_especial'] + 2,
-                        'daily_special_precio_domicilio_interior' => $subData['precio_especial'] + 7,
+                        'daily_special_days' => $subData['days'],
+                        'daily_special_precio_pickup_capital' => $precioSubDelDia,
+                        'daily_special_precio_domicilio_capital' => $precioSubDelDia + 5,
+                        'daily_special_precio_pickup_interior' => $precioSubDelDia + 2,
+                        'daily_special_precio_domicilio_interior' => $precioSubDelDia + 7,
                     ]);
 
-                    $dayName = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][$subData['day']];
-                    $this->command->line("      ✓ {$product->name} - {$dayName} (Q{$subData['precio_especial']})");
+                    // Crear item en la promoción
+                    $promotion->items()->create([
+                        'product_id' => $product->id,
+                        'variant_id' => $variant15cm->id,
+                        'category_id' => null,
+                        'special_price_capital' => $precioSubDelDia,
+                        'special_price_interior' => $precioSubDelDia + 2,
+                        'service_type' => 'both',
+                        'validity_type' => 'weekdays',
+                        'weekdays' => $subData['days'],
+                    ]);
+
+                    $this->command->line("      ✓ {$product->name} - {$subData['dayName']} (Q{$precioSubDelDia})");
                 }
             }
         }
+
+        $this->command->line("      ✅ Promoción 'Sub del Día' creada con 8 items");
     }
 
     private function createDiscountPromotions(): void

@@ -189,7 +189,8 @@ export default function UsersIndex({ users, total_users, online_users, filters }
 
         setDeletingUser(userToDelete.id);
         router.delete(`/users/${userToDelete.id}`, {
-            onSuccess: () => {
+            preserveState: false,
+            onBefore: () => {
                 closeDeleteDialog();
             },
             onError: (error) => {

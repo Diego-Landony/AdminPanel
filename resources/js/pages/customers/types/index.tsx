@@ -112,7 +112,8 @@ export default function CustomerTypesIndex({ customer_types, stats, filters }: C
 
         setDeletingType(selectedType.id);
         router.delete(`/customer-types/${selectedType.id}`, {
-            onSuccess: () => {
+            preserveState: false,
+            onBefore: () => {
                 closeDeleteDialog();
             },
             onError: (error) => {
@@ -243,7 +244,7 @@ export default function CustomerTypesIndex({ customer_types, stats, filters }: C
                 onClose={closeDeleteDialog}
                 onConfirm={handleDeleteType}
                 isDeleting={deletingType !== null}
-                entityName={selectedType?.display_name || ''}
+                entityName={selectedType?.name || ''}
                 entityType="tipo de cliente"
                 canDelete={(selectedType?.customers_count ?? 0) === 0}
                 deleteBlockedReason={

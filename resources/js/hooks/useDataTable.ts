@@ -170,7 +170,7 @@ export function useDataTable(config: DataTableConfig): [DataTableState, DataTabl
 
     // Build query params for API request
     const buildQueryParams = useCallback((currentState: DataTableState) => {
-        const params: Record<string, unknown> = {
+        const params: Record<string, string | number> = {
             page: currentState.currentPage,
             per_page: currentState.perPage,
         };
@@ -190,7 +190,7 @@ export function useDataTable(config: DataTableConfig): [DataTableState, DataTabl
         // Add filters
         Object.entries(currentState.filters).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== '') {
-                params[key] = value;
+                params[key] = typeof value === 'string' || typeof value === 'number' ? value : String(value);
             }
         });
 

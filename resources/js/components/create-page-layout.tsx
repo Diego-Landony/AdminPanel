@@ -7,7 +7,7 @@ import AppLayout from '@/layouts/app-layout';
 
 interface CreatePageLayoutProps {
     title: string;
-    description: string;
+    description?: string;
     backHref: string;
     backLabel?: string;
     onSubmit: (e: React.FormEvent) => void;
@@ -50,7 +50,7 @@ export function CreatePageLayout({
                         <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
                             <div className="min-w-0 flex-1">
                                 <h1 className="truncate text-2xl font-bold tracking-tight lg:text-3xl">{title}</h1>
-                                <p className="break-words text-muted-foreground">{description}</p>
+                                {description && <p className="break-words text-muted-foreground">{description}</p>}
                             </div>
                             <Link href={backHref} className="w-full flex-shrink-0 sm:w-auto">
                                 <Button variant="outline" className="w-full sm:w-auto">

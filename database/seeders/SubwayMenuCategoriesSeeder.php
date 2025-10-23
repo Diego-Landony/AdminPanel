@@ -11,6 +11,9 @@ class SubwayMenuCategoriesSeeder extends Seeder
     {
         $this->command->info('📁 Creando categorías del menú de Subway...');
 
+        // Limpiar datos existentes
+        Category::query()->delete();
+
         $categories = [
             [
                 'name' => 'Subs',
@@ -82,6 +85,7 @@ class SubwayMenuCategoriesSeeder extends Seeder
             [
                 'name' => 'Combos',
                 'is_active' => true,
+                'is_combo_category' => true,
                 'uses_variants' => false,
                 'variant_definitions' => null,
                 'sort_order' => 7,

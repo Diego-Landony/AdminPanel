@@ -135,7 +135,7 @@ export default function EditTwoForOnePromotion({ promotion, categories }: EditPr
         });
     };
 
-    const handleDelete = () => {
+    const _handleDelete = () => {
         if (window.confirm('¿Estás seguro de eliminar esta promoción?')) {
             router.delete(route('menu.promotions.destroy', promotion.id));
         }
@@ -147,9 +147,7 @@ export default function EditTwoForOnePromotion({ promotion, categories }: EditPr
             backHref={route('menu.promotions.two-for-one.index')}
             backLabel="Volver"
             onSubmit={handleSubmit}
-            onDelete={handleDelete}
             submitLabel="Guardar"
-            deleteLabel="Eliminar"
             processing={processing}
             pageTitle={`Editar ${promotion.name}`}
             loading={processing}

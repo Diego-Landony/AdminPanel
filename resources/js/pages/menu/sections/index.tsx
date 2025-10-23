@@ -87,7 +87,8 @@ export default function SectionsIndex({ sections, stats }: SectionsPageProps) {
 
         setDeletingSection(selectedSection.id);
         router.delete(`/menu/sections/${selectedSection.id}`, {
-            onSuccess: () => {
+            preserveState: false,
+            onBefore: () => {
                 closeDeleteDialog();
             },
             onError: (error) => {

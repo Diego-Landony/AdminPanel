@@ -143,12 +143,12 @@ export default function RestaurantCreate() {
             }
         }
 
-        post(route('restaurants.store'), {
-            transform: (data) => ({
-                ...data,
-                geofence_kml: geofenceKml,
-            }),
-        });
+        const transformedData = {
+            ...data,
+            geofence_kml: geofenceKml,
+        };
+
+        post(route('restaurants.store'), transformedData as Record<string, unknown>);
     };
 
     const handleScheduleChange = (day: string, field: string, value: boolean | string) => {

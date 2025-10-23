@@ -8,7 +8,6 @@ use App\Http\Requests\Menu\UpdateComboRequest;
 use App\Models\Menu\Category;
 use App\Models\Menu\Combo;
 use App\Models\Menu\Product;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -210,7 +209,7 @@ class ComboController extends Controller
     /**
      * Activa o desactiva un combo
      */
-    public function toggle(Combo $combo): JsonResponse
+    public function toggle(Combo $combo): RedirectResponse
     {
         $combo->update([
             'is_active' => ! $combo->is_active,
@@ -218,17 +217,14 @@ class ComboController extends Controller
 
         $status = $combo->is_active ? 'activado' : 'desactivado';
 
-        return response()->json([
-            'success' => true,
-            'message' => "Combo {$status} exitosamente.",
-            'is_active' => $combo->is_active,
-        ]);
+        return redirect()->back()
+            ->with('success', "Combo {$status} exitosamente.");
     }
 
     /**
      * Reordena los combos
      */
-    public function reorder(Request $request): JsonResponse
+    public function reorder(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'combos' => ['required', 'array'],
@@ -242,9 +238,7 @@ class ComboController extends Controller
             ]);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Orden actualizado exitosamente.',
-        ]);
+        return redirect()->back()
+            ->with('success', 'Orden actualizado exitosamente.');
     }
 }

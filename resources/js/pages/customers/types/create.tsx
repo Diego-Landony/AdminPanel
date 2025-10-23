@@ -45,7 +45,7 @@ export default function CustomerTypeCreate() {
         }
 
         // Convertir valores string a números antes de enviar
-        const submitData = {
+        const submitData: Record<string, unknown> = {
             ...data,
             points_required: typeof data.points_required === 'string'
                 ? parseInt(data.points_required)
@@ -55,12 +55,12 @@ export default function CustomerTypeCreate() {
                 : data.multiplier,
         };
 
-        post(route('customer-types.store'), {
-            data: submitData,
+        // Submit directly with the transformed data
+        post(route('customer-types.store'), submitData, {
             onSuccess: () => {
                 reset();
             },
-            onError: (errors) => {
+            onError: (errors: Record<string, string>) => {
                 // Los errores de validación se muestran automáticamente
                 // Los errores del servidor se manejan por el layout
                 if (Object.keys(errors).length === 0) {

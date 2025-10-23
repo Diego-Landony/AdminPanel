@@ -24,26 +24,23 @@ class StorePromotionRequest extends FormRequest
 
             // Items de promoción
             'items' => 'required|array|min:1',
-            'items.*.product_id' => [
-                'required_if:type,daily_special',
-                'required_if:type,percentage_discount',
+            'items.*.product_id' => 'nullable|exists:products,id',
+            'items.*.variant_id' => [
                 'nullable',
-                'exists:products,id',
+                'exists:product_variants,id',
                 function ($attribute, $value, $fail) {
-                    // Para Sub del Día, validar que no haya conflicto de días
+                    // Para Sub del Día, validar que no haya conflicto de días con variante
                     if ($this->type === 'daily_special' && $value) {
-                        // Extraer índice del item
-                        preg_match('/items\.(\d+)\.product_id/', $attribute, $matches);
+                        preg_match('/items\.(\d+)\.variant_id/', $attribute, $matches);
                         $index = $matches[1] ?? 0;
                         $weekdays = $this->input("items.{$index}.weekdays");
 
                         if ($weekdays && count($weekdays) > 0) {
-                            $this->validateNoConflictingWeekdays($value, $weekdays, $fail);
+                            $this->validateNoConflictingVariantWeekdays($value, $weekdays, $fail);
                         }
                     }
                 },
             ],
-            'items.*.variant_id' => 'nullable|exists:product_variants,id',
             'items.*.category_id' => [
                 'required_if:type,two_for_one',
                 'nullable',
@@ -137,19 +134,19 @@ class StorePromotionRequest extends FormRequest
     }
 
     /**
-     * Validar que no haya conflicto de días de la semana para el mismo producto
+     * Validar que no haya conflicto de días de la semana para la misma variante
      */
-    protected function validateNoConflictingWeekdays(int $productId, array $weekdays, $fail): void
+    protected function validateNoConflictingVariantWeekdays(int $variantId, array $weekdays, $fail): void
     {
         if (! $weekdays || count($weekdays) === 0) {
             return;
         }
 
-        // Buscar items existentes de Sub del Día activos para este producto
+        // Buscar items existentes de Sub del Día activos para esta variante
         $existingItems = \App\Models\Menu\PromotionItem::whereHas('promotion', function ($q) {
             $q->where('type', 'daily_special')->where('is_active', true);
         })
-            ->where('product_id', $productId)
+            ->where('variant_id', $variantId)
             ->get();
 
         foreach ($existingItems as $item) {
@@ -159,7 +156,7 @@ class StorePromotionRequest extends FormRequest
                 if (count($conflictingDays) > 0) {
                     $dayNames = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
                     $conflictingDayNames = array_map(fn ($day) => $dayNames[$day], $conflictingDays);
-                    $fail('Este producto ya tiene un Sub del Día activo en: '.implode(', ', $conflictingDayNames));
+                    $fail('Esta variante ya tiene un Sub del Día activo en: '.implode(', ', $conflictingDayNames));
 
                     return;
                 }

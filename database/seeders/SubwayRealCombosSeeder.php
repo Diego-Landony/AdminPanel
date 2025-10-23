@@ -17,6 +17,9 @@ class SubwayRealCombosSeeder extends Seeder
     {
         $this->command->info('🎁 Creando combos reales de Subway Guatemala...');
 
+        // Limpiar datos existentes (respetando foreign keys)
+        Combo::query()->delete();
+
         // Crear categoría especial para combos
         $comboCategory = Category::firstOrCreate(
             ['name' => 'Combos'],

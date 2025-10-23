@@ -23,19 +23,30 @@ import { WeekdaySelector } from '@/components/WeekdaySelector';
 import { EditPageSkeleton } from '@/components/skeletons';
 import { generateUniqueId } from '@/utils/generateId';
 
+interface ProductVariant {
+    id: number;
+    name: string;
+    size: string;
+    precio_pickup_capital: number;
+    precio_pickup_interior: number;
+}
+
 interface Product {
     id: number;
     name: string;
     category_id: number;
+    has_variants: boolean;
     category?: {
         id: number;
         name: string;
     };
+    variants?: ProductVariant[];
 }
 
 interface PromotionItem {
     id: number;
     product_id: number | null;
+    variant_id: number | null;
     special_price_capital: number | null;
     special_price_interior: number | null;
     service_type: 'both' | 'delivery_only' | 'pickup_only' | null;
@@ -69,7 +80,8 @@ interface EditPromotionPageProps {
 
 interface LocalItem {
     id: string;
-    product_id: number | null;
+    product_id: string;
+    variant_ids: string[]; // Changed from variant_id to support multiple variants
     special_price_capital: string;
     special_price_interior: string;
     service_type: 'both' | 'delivery_only' | 'pickup_only';
@@ -96,7 +108,8 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
 
             return {
                 id: generateUniqueId(),
-                product_id: item.product_id,
+                product_id: item.product_id ? String(item.product_id) : '',
+                variant_ids: item.variant_id ? [String(item.variant_id)] : [], // Convert single variant to array
                 special_price_capital: String(item.special_price_capital || ''),
                 special_price_interior: String(item.special_price_interior || ''),
                 service_type: item.service_type || 'both',
@@ -116,7 +129,8 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
     const addItem = () => {
         const newItem: LocalItem = {
             id: generateUniqueId(),
-            product_id: null,
+            product_id: '',
+            variant_ids: [], // Changed from variant_id to variant_ids
             special_price_capital: '',
             special_price_interior: '',
             service_type: 'both',
@@ -144,31 +158,65 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
         e.preventDefault();
         setProcessing(true);
 
-        const submitData = {
-            ...formData,
-            items: localItems.map(({ id: _id, has_schedule: _has_schedule, ...rest }) => {
-                // Calcular validity_type automáticamente basado en los campos
-                const hasDates = rest.valid_from || rest.valid_until;
-                const hasTimes = rest.time_from || rest.time_until;
+        // Expandir cada item con variant_ids a múltiples items (uno por variante)
+        const expandedItems = localItems.flatMap(({ id: _id, has_schedule: _has_schedule, variant_ids, ...rest }: LocalItem) => {
+            // Si tiene variantes seleccionadas, crear un item por cada variante
+            if (variant_ids.length > 0) {
+                return variant_ids.map((variant_id) => {
+                    // Calcular validity_type automáticamente basado en los campos
+                    const hasDates = rest.valid_from || rest.valid_until;
+                    const hasTimes = rest.time_from || rest.time_until;
 
-                let validity_type;
-                if (hasDates && hasTimes) {
-                    validity_type = 'date_time_range';
-                } else if (hasDates) {
-                    validity_type = 'date_range';
-                } else if (hasTimes) {
-                    validity_type = 'time_range';
-                } else {
-                    validity_type = 'weekdays';
-                }
+                    let validity_type;
+                    if (hasDates && hasTimes) {
+                        validity_type = 'date_time_range';
+                    } else if (hasDates) {
+                        validity_type = 'date_range';
+                    } else if (hasTimes) {
+                        validity_type = 'time_range';
+                    } else {
+                        validity_type = 'weekdays';
+                    }
 
-                return {
+                    return {
+                        ...rest,
+                        variant_id: variant_id,
+                        validity_type,
+                        special_price_capital: parseFloat(rest.special_price_capital) || 0,
+                        special_price_interior: parseFloat(rest.special_price_interior) || 0,
+                    };
+                });
+            }
+
+            // Si no tiene variantes (producto simple), crear un solo item
+            const hasDates = rest.valid_from || rest.valid_until;
+            const hasTimes = rest.time_from || rest.time_until;
+
+            let validity_type;
+            if (hasDates && hasTimes) {
+                validity_type = 'date_time_range';
+            } else if (hasDates) {
+                validity_type = 'date_range';
+            } else if (hasTimes) {
+                validity_type = 'time_range';
+            } else {
+                validity_type = 'weekdays';
+            }
+
+            return [
+                {
                     ...rest,
+                    variant_id: null,
                     validity_type,
                     special_price_capital: parseFloat(rest.special_price_capital) || 0,
                     special_price_interior: parseFloat(rest.special_price_interior) || 0,
-                };
-            }),
+                },
+            ];
+        });
+
+        const submitData = {
+            ...formData,
+            items: expandedItems,
         };
 
         router.put(route('menu.promotions.update', promotion.id), submitData, {
@@ -257,19 +305,67 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
                             {/* Producto */}
                             <ProductCombobox
                                 label="Producto"
-                                value={item.product_id}
-                                onChange={(value) => updateItem(index, 'product_id', value)}
-                                products={products.filter(
-                                    (product) =>
-                                        !localItems.some(
-                                            (i, idx) =>
-                                                idx !== index && i.product_id === product.id,
-                                        ),
-                                )}
+                                value={item.product_id ? Number(item.product_id) : null}
+                                onChange={(value) => {
+                                    // Actualizar product_id y resetear variant_ids en una sola operación
+                                    const updated = [...localItems];
+                                    updated[index] = {
+                                        ...updated[index],
+                                        product_id: value ? String(value) : '',
+                                        variant_ids: [], // Resetear variantes cuando cambia el producto
+                                    };
+                                    setLocalItems(updated);
+                                }}
+                                products={products.filter((product) => {
+                                    // Si el producto NO tiene variantes, eliminar si ya está en uso
+                                    if (!product.has_variants) {
+                                        return !localItems.some(
+                                            (i, idx) => idx !== index && i.product_id === String(product.id)
+                                        );
+                                    }
+                                    // Si el producto TIENE variantes, siempre permitir
+                                    return true;
+                                })}
                                 placeholder={PLACEHOLDERS.selectProduct}
                                 error={errors[`items.${index}.product_id`]}
                                 required
                             />
+
+                            {/* Selector de Variantes */}
+                            {item.product_id && (() => {
+                                const selectedProduct = products.find(p => p.id === Number(item.product_id));
+                                const hasVariants = selectedProduct?.has_variants && selectedProduct?.variants && selectedProduct.variants.length > 0;
+
+                                if (!hasVariants) return null;
+
+                                return (
+                                    <FormField
+                                        label="Variante"
+                                        error={errors[`items.${index}.variant_ids`]}
+                                        required
+                                    >
+                                        <Select
+                                            value={item.variant_ids[0] || ''}
+                                            onValueChange={(value) => {
+                                                const updated = [...localItems];
+                                                updated[index] = { ...updated[index], variant_ids: [value] };
+                                                setLocalItems(updated);
+                                            }}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecciona una variante" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {selectedProduct.variants?.map((variant) => (
+                                                    <SelectItem key={variant.id} value={variant.id.toString()}>
+                                                        {variant.name} {variant.size && `- ${variant.size}`}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </FormField>
+                                );
+                            })()}
 
                             {/* Precios */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

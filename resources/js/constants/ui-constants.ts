@@ -71,6 +71,7 @@ export const NOTIFICATIONS = {
         customerUpdated: 'Cliente actualizado exitosamente',
     },
     error: {
+        server: 'Error del servidor. Inténtalo de nuevo.',
         delete: 'Error al eliminar',
         updateUsers: 'Error al actualizar usuarios del rol',
         connectionUsers: 'Error de conexión al actualizar usuarios',

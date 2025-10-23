@@ -81,7 +81,7 @@ export const TableActions: React.FC<TableActionsProps> = ({
                         <TooltipTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-11 w-11 md:h-8 md:w-8 p-0 text-muted-foreground hover:text-foreground" asChild>
                                 <Link href={editHref} aria-label={editTooltip}>
-                                    <Edit className="h-4 w-4" alt="Editar" />
+                                    <Edit className="h-4 w-4" />
                                 </Link>
                             </Button>
                         </TooltipTrigger>
@@ -106,7 +106,7 @@ export const TableActions: React.FC<TableActionsProps> = ({
                                 {isDeleting ? (
                                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" aria-label="Eliminando..." />
                                 ) : (
-                                    <Trash2 className="h-4 w-4" alt="Eliminar" />
+                                    <Trash2 className="h-4 w-4" />
                                 )}
                             </Button>
                         </TooltipTrigger>

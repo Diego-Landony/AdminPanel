@@ -15,6 +15,10 @@ class SubwayMenuProductsSeeder extends Seeder
     {
         $this->command->info('🥪 Creando productos del menú de Subway...');
 
+        // Limpiar datos existentes (respetando foreign keys)
+        ProductVariant::query()->delete();
+        Product::query()->delete();
+
         $this->createSubs();
         $this->createBebidas();
         $this->createEnsaladas();
@@ -100,6 +104,12 @@ class SubwayMenuProductsSeeder extends Seeder
                 'prices_15cm' => ['pickup_capital' => 32, 'domicilio_capital' => 37, 'pickup_interior' => 34, 'domicilio_interior' => 39],
                 'prices_30cm' => ['pickup_capital' => 62, 'domicilio_capital' => 67, 'pickup_interior' => 64, 'domicilio_interior' => 69],
             ],
+            [
+                'name' => 'Pechuga de Pollo',
+                'description' => 'Pechuga de pollo jugosa con vegetales frescos',
+                'prices_15cm' => ['pickup_capital' => 35, 'domicilio_capital' => 40, 'pickup_interior' => 37, 'domicilio_interior' => 42],
+                'prices_30cm' => ['pickup_capital' => 65, 'domicilio_capital' => 70, 'pickup_interior' => 67, 'domicilio_interior' => 72],
+            ],
         ];
 
         foreach ($subs as $subData) {
@@ -121,7 +131,7 @@ class SubwayMenuProductsSeeder extends Seeder
             ProductVariant::create([
                 'product_id' => $product->id,
                 'sku' => Str::slug($subData['name']).'-15cm',
-                'name' => $subData['name'].' 15cm',
+                'name' => '15 cm',
                 'size' => '15cm',
                 'precio_pickup_capital' => $subData['prices_15cm']['pickup_capital'],
                 'precio_domicilio_capital' => $subData['prices_15cm']['domicilio_capital'],
@@ -135,7 +145,7 @@ class SubwayMenuProductsSeeder extends Seeder
             ProductVariant::create([
                 'product_id' => $product->id,
                 'sku' => Str::slug($subData['name']).'-30cm',
-                'name' => $subData['name'].' 30cm',
+                'name' => '30 cm',
                 'size' => '30cm',
                 'precio_pickup_capital' => $subData['prices_30cm']['pickup_capital'],
                 'precio_domicilio_capital' => $subData['prices_30cm']['domicilio_capital'],
@@ -197,9 +207,8 @@ class SubwayMenuProductsSeeder extends Seeder
                 'name' => 'Té Helado',
                 'description' => 'Té helado refrescante',
                 'prices' => [
-                    'personal' => ['pickup_capital' => 10, 'domicilio_capital' => 12, 'pickup_interior' => 11, 'domicilio_interior' => 13],
-                    'mediano' => ['pickup_capital' => 14, 'domicilio_capital' => 16, 'pickup_interior' => 15, 'domicilio_interior' => 17],
-                    'grande' => ['pickup_capital' => 17, 'domicilio_capital' => 19, 'pickup_interior' => 18, 'domicilio_interior' => 20],
+                    'normal' => ['pickup_capital' => 12, 'domicilio_capital' => 14, 'pickup_interior' => 13, 'domicilio_interior' => 15],
+                    'zero' => ['pickup_capital' => 12, 'domicilio_capital' => 14, 'pickup_interior' => 13, 'domicilio_interior' => 15],
                 ],
             ],
         ];
@@ -221,10 +230,17 @@ class SubwayMenuProductsSeeder extends Seeder
 
             $sortOrder = 1;
             foreach ($bebidaData['prices'] as $size => $prices) {
+                // Determinar el nombre de la variante
+                $variantName = match ($size) {
+                    'normal' => 'Normal',
+                    'zero' => 'Zero Azúcar',
+                    default => ucfirst($size),
+                };
+
                 ProductVariant::create([
                     'product_id' => $product->id,
                     'sku' => Str::slug($bebidaData['name']).'-'.$size,
-                    'name' => $bebidaData['name'].' '.ucfirst($size),
+                    'name' => $variantName,
                     'size' => $size,
                     'precio_pickup_capital' => $prices['pickup_capital'],
                     'precio_domicilio_capital' => $prices['domicilio_capital'],
@@ -449,7 +465,7 @@ class SubwayMenuProductsSeeder extends Seeder
             ProductVariant::create([
                 'product_id' => $product->id,
                 'sku' => Str::slug($desayunoData['name']).'-15cm',
-                'name' => $desayunoData['name'].' 15cm',
+                'name' => '15 cm',
                 'size' => '15cm',
                 'precio_pickup_capital' => $desayunoData['prices_15cm']['pickup_capital'],
                 'precio_domicilio_capital' => $desayunoData['prices_15cm']['domicilio_capital'],
@@ -463,7 +479,7 @@ class SubwayMenuProductsSeeder extends Seeder
             ProductVariant::create([
                 'product_id' => $product->id,
                 'sku' => Str::slug($desayunoData['name']).'-30cm',
-                'name' => $desayunoData['name'].' 30cm',
+                'name' => '30 cm',
                 'size' => '30cm',
                 'precio_pickup_capital' => $desayunoData['prices_30cm']['pickup_capital'],
                 'precio_domicilio_capital' => $desayunoData['prices_30cm']['domicilio_capital'],

@@ -17,7 +17,7 @@ export interface StandardMobileCardProps {
     /** Primary title (entity name) */
     title: React.ReactNode;
     /** Secondary subtitle text */
-    subtitle: React.ReactNode;
+    subtitle?: React.ReactNode;
     /** Badge configuration for status/state */
     badge?: {
         children: React.ReactNode;

@@ -106,7 +106,8 @@ export default function RestaurantsIndex({
 
         setDeletingRestaurant(restaurantToDelete.id);
         router.delete(`/restaurants/${restaurantToDelete.id}`, {
-            onSuccess: () => {
+            preserveState: false,
+            onBefore: () => {
                 closeDeleteDialog();
             },
             onError: (error) => {

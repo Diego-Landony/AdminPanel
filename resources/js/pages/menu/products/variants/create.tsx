@@ -53,7 +53,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
         e.preventDefault();
 
         // Convertir valores string a números antes de enviar
-        const submitData = {
+        const submitData: Record<string, unknown> = {
             ...data,
             category_id: data.category_id ? parseInt(data.category_id) : null,
             base_price: data.base_price ? parseFloat(data.base_price) : 0,
@@ -63,12 +63,12 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
             sort_order: data.sort_order ? parseInt(data.sort_order) : 0,
         };
 
-        post(route('menu.products.variants.store', product.id), {
-            data: submitData,
+        // Submit directly with transformed data
+        post(route('menu.products.variants.store', product.id), submitData, {
             onSuccess: () => {
                 reset();
             },
-            onError: (errors) => {
+            onError: (errors: Record<string, string>) => {
                 if (Object.keys(errors).length === 0) {
                     showNotification.error(NOTIFICATIONS.error.server);
                 }

@@ -82,7 +82,8 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
 
         setDeletingCategory(selectedCategory.id);
         router.delete(`/menu/categories/${selectedCategory.id}`, {
-            onSuccess: () => {
+            preserveState: false,
+            onBefore: () => {
                 closeDeleteDialog();
             },
             onError: (error) => {

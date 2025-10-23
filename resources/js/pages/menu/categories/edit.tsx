@@ -56,7 +56,7 @@ export default function CategoryEdit({ category }: EditPageProps) {
         e.preventDefault();
         setIsSubmitting(true);
 
-        router.put(`/menu/categories/${category.id}`, formData, {
+        router.put(`/menu/categories/${category.id}`, formData as unknown as Record<string, string | number | boolean>, {
             onSuccess: () => {
                 // La redirección la maneja el controlador
             },

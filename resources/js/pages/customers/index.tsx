@@ -145,7 +145,8 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
 
         setDeletingCustomer(customerToDelete.id);
         router.delete(`/customers/${customerToDelete.id}`, {
-            onSuccess: () => {
+            preserveState: false,
+            onBefore: () => {
                 closeDeleteDialog();
             },
             onError: (error) => {
@@ -414,7 +415,9 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
                     value: (
                         <div>
                             {formatDate(customer.last_purchase)}
-                            <span className="ml-2 text-xs text-muted-foreground">({daysSince(customer.last_purchase)} días)</span>
+                            {customer.last_purchase && (
+                                <span className="ml-2 text-xs text-muted-foreground">({daysSince(customer.last_purchase)} días)</span>
+                            )}
                         </div>
                     ),
                     condition: !!customer.last_purchase,

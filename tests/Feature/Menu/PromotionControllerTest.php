@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Menu\Product;
+use App\Models\Menu\ProductVariant;
 use App\Models\Menu\Promotion;
 
 beforeEach(function () {
@@ -190,4 +191,195 @@ test('puede listar promociones con filtro por estado', function () {
     $response = $this->get(route('menu.promotions.daily-special.index', ['is_active' => 1]));
 
     $response->assertSuccessful();
+});
+
+test('daily special create carga productos con variantes', function () {
+    $product = Product::factory()->create();
+    $variant1 = ProductVariant::factory()->for($product)->create([
+        'name' => 'Sub 15cm',
+        'size' => '15cm',
+        'sort_order' => 1,
+    ]);
+    $variant2 = ProductVariant::factory()->for($product)->create([
+        'name' => 'Sub 30cm',
+        'size' => '30cm',
+        'sort_order' => 2,
+    ]);
+
+    $response = $this->get(route('menu.promotions.daily-special.create'));
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('menu/promotions/daily-special/create')
+        ->has('products', 1)
+        ->where('products.0.id', $product->id)
+        ->has('products.0.variants', 2)
+        ->where('products.0.variants.0.id', $variant1->id)
+        ->where('products.0.variants.1.id', $variant2->id)
+    );
+});
+
+test('daily special edit carga productos con variantes', function () {
+    $promotion = Promotion::factory()->create(['type' => 'daily_special']);
+    $product = Product::factory()->create();
+    ProductVariant::factory()->for($product)->create(['size' => '15cm', 'sort_order' => 1]);
+    ProductVariant::factory()->for($product)->create(['size' => '30cm', 'sort_order' => 2]);
+
+    $response = $this->get(route('menu.promotions.edit', $promotion));
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('menu/promotions/daily-special/edit')
+        ->has('products', 1)
+        ->has('products.0.variants', 2)
+    );
+});
+
+test('percentage create carga productos con variantes', function () {
+    $product = Product::factory()->create();
+    $variant1 = ProductVariant::factory()->for($product)->create([
+        'name' => 'Sub 15cm',
+        'size' => '15cm',
+        'sort_order' => 1,
+    ]);
+    $variant2 = ProductVariant::factory()->for($product)->create([
+        'name' => 'Sub 30cm',
+        'size' => '30cm',
+        'sort_order' => 2,
+    ]);
+
+    $response = $this->get(route('menu.promotions.percentage.create'));
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('menu/promotions/percentage/create')
+        ->has('products', 1)
+        ->where('products.0.id', $product->id)
+        ->has('products.0.variants', 2)
+        ->where('products.0.variants.0.id', $variant1->id)
+        ->where('products.0.variants.1.id', $variant2->id)
+    );
+});
+
+test('percentage edit carga productos con variantes', function () {
+    $promotion = Promotion::factory()->create(['type' => 'percentage_discount']);
+    $product = Product::factory()->create();
+    ProductVariant::factory()->for($product)->create(['size' => '15cm', 'sort_order' => 1]);
+    ProductVariant::factory()->for($product)->create(['size' => '30cm', 'sort_order' => 2]);
+
+    $response = $this->get(route('menu.promotions.edit', $promotion));
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('menu/promotions/percentage/edit')
+        ->has('products', 1)
+        ->has('products.0.variants', 2)
+    );
+});
+
+test('puede crear daily special con variant_id', function () {
+    $product = Product::factory()->create();
+    $variant = ProductVariant::factory()->for($product)->create(['size' => '15cm']);
+
+    $promotionData = [
+        'name' => 'Sub 15cm del Día',
+        'description' => 'Promoción para sub de 15cm',
+        'type' => 'daily_special',
+        'is_active' => true,
+        'items' => [
+            [
+                'product_id' => $product->id,
+                'variant_id' => $variant->id,
+                'special_price_capital' => 35.00,
+                'special_price_interior' => 30.00,
+                'service_type' => 'both',
+                'validity_type' => 'weekdays',
+                'weekdays' => [1, 2],
+            ],
+        ],
+    ];
+
+    $response = $this->post(route('menu.promotions.store'), $promotionData);
+
+    $response->assertRedirect();
+
+    $this->assertDatabaseHas('promotion_items', [
+        'product_id' => $product->id,
+        'variant_id' => $variant->id,
+        'special_price_capital' => 35.00,
+    ]);
+});
+
+test('puede crear percentage con variant_id', function () {
+    $product = Product::factory()->create();
+    $variant = ProductVariant::factory()->for($product)->create(['size' => '30cm']);
+
+    $promotionData = [
+        'name' => 'Descuento Sub 30cm',
+        'description' => 'Descuento para sub de 30cm',
+        'type' => 'percentage_discount',
+        'is_active' => true,
+        'items' => [
+            [
+                'product_id' => $product->id,
+                'variant_id' => $variant->id,
+                'discount_percentage' => 15.00,
+                'service_type' => 'both',
+                'validity_type' => 'permanent',
+            ],
+        ],
+    ];
+
+    $response = $this->post(route('menu.promotions.store'), $promotionData);
+
+    $response->assertRedirect();
+
+    $this->assertDatabaseHas('promotion_items', [
+        'product_id' => $product->id,
+        'variant_id' => $variant->id,
+        'discount_percentage' => 15.00,
+    ]);
+});
+
+test('puede actualizar promoción con variant_id', function () {
+    $promotion = Promotion::factory()->create(['type' => 'daily_special']);
+    $product = Product::factory()->create();
+    $oldVariant = ProductVariant::factory()->for($product)->create(['size' => '15cm']);
+    $newVariant = ProductVariant::factory()->for($product)->create(['size' => '30cm']);
+
+    $promotion->items()->create([
+        'product_id' => $product->id,
+        'variant_id' => $oldVariant->id,
+        'special_price_capital' => 30.00,
+        'special_price_interior' => 25.00,
+        'service_type' => 'both',
+        'validity_type' => 'weekdays',
+        'weekdays' => [1],
+    ]);
+
+    $response = $this->put(route('menu.promotions.update', $promotion), [
+        'name' => 'Promoción Actualizada',
+        'type' => 'daily_special',
+        'is_active' => true,
+        'items' => [
+            [
+                'product_id' => $product->id,
+                'variant_id' => $newVariant->id,
+                'special_price_capital' => 40.00,
+                'special_price_interior' => 35.00,
+                'service_type' => 'both',
+                'validity_type' => 'weekdays',
+                'weekdays' => [1, 2],
+            ],
+        ],
+    ]);
+
+    $response->assertRedirect();
+
+    $this->assertDatabaseHas('promotion_items', [
+        'promotion_id' => $promotion->id,
+        'product_id' => $product->id,
+        'variant_id' => $newVariant->id,
+        'special_price_capital' => 40.00,
+    ]);
 });

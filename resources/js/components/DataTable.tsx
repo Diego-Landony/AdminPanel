@@ -72,7 +72,7 @@ interface DataTableFilters {
 
 interface DataTableProps<T> {
     title: string;
-    description: string;
+    description?: string;
     data: PaginatedData<T>;
     columns: DataTableColumn<T>[];
     stats?: DataTableStat[];
@@ -250,6 +250,22 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
     }, [search, perPage, sortField, sortDirection, sortCriteria, updateFilters]);
 
     /**
+     * Debounced search effect - executes search automatically after user stops typing
+     * Waits 800ms after last keystroke to avoid overwhelming the server
+     */
+    useEffect(() => {
+        // Don't trigger on initial load or when syncing from backend
+        if (search === filters.search) return;
+
+        const debounceTimer = setTimeout(() => {
+            applyFilters();
+        }, 800); // 800ms delay - adjust if needed
+
+        return () => clearTimeout(debounceTimer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [search, applyFilters]);
+
+    /**
      * Clear search input and apply immediately
      */
     const clearSearch = useCallback(() => {
@@ -288,18 +304,10 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
 
     /**
      * Get active filters for display
+     * NOTE: Search is not included as a chip - it stays in the search input only
      */
     const getActiveFilters = useCallback(() => {
         const activeFilters = [];
-
-        // Add search filter
-        if (search && search.trim()) {
-            activeFilters.push({
-                key: 'search',
-                label: `Búsqueda: "${search.trim()}"`,
-                onRemove: () => clearSearch()
-            });
-        }
 
         // Add sorting filters
         if (sortCriteria.length > 0) {
@@ -319,7 +327,7 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                             // Apply to backend immediately
                             router.post(routeName, {
                                 per_page: perPage,
-                                ...(search && search.trim() ? { search: search.trim() } : {})
+                                ...(filters.search && filters.search.trim() ? { search: filters.search.trim() } : {})
                             }, {
                                 preserveState: true,
                                 replace: true,
@@ -335,7 +343,7 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                                 sort_field: newCriteria[0].field,
                                 sort_direction: newCriteria[0].direction,
                                 sort_criteria: JSON.stringify(newCriteria),
-                                ...(search && search.trim() ? { search: search.trim() } : {})
+                                ...(filters.search && filters.search.trim() ? { search: filters.search.trim() } : {})
                             }, {
                                 preserveState: true,
                                 replace: true,
@@ -361,7 +369,7 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                         sort_field: sortField,
                         sort_direction: sortDirection,
                         sort_criteria: JSON.stringify(sortCriteria),
-                        ...(search && search.trim() ? { search: search.trim() } : {})
+                        ...(filters.search && filters.search.trim() ? { search: filters.search.trim() } : {})
                     }, {
                         preserveState: true,
                         replace: true,
@@ -371,7 +379,7 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
         }
 
         return activeFilters;
-    }, [search, sortCriteria, perPage, filters.per_page, clearSearch, routeName, sortField, sortDirection, getFieldLabel]);
+    }, [sortCriteria, perPage, filters.per_page, filters.search, routeName, sortField, sortDirection, getFieldLabel]);
 
     const activeFilters = getActiveFilters();
     const hasActiveFilters = activeFilters.length > 0;
@@ -379,6 +387,7 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
     /**
      * Effect for handling per_page and sorting changes (apply automatically)
      * NOTE: search is NOT in dependencies to avoid executing on every keystroke
+     * Search is only applied when user explicitly triggers it (Enter key or Search button)
      */
     useEffect(() => {
         const payload: Record<string, string | number | undefined> = {
@@ -388,12 +397,15 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
             sort_criteria: JSON.stringify(sortCriteria),
         };
 
-        if (search && search.trim()) {
-            payload.search = search.trim();
+        // Include current search value from filters prop (not local state)
+        // This ensures search persists when other filters change
+        if (filters.search && filters.search.trim()) {
+            payload.search = filters.search.trim();
         }
 
         updateFilters(payload);
-    }, [perPage, sortField, sortDirection, sortCriteria, search, updateFilters]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [perPage, sortField, sortDirection, sortCriteria, updateFilters]);
 
     /**
      * Handles column sorting with multiple criteria support
@@ -509,7 +521,7 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
             <div className="flex items-center justify-between">
                 <div className="space-y-1">
                     <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-                    <p className="text-muted-foreground">{description}</p>
+                    {description && <p className="text-muted-foreground">{description}</p>}
                 </div>
                 {createUrl && (
                     <Link href={createUrl}>

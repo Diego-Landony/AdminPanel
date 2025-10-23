@@ -1,4 +1,4 @@
-import { useForm } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
 import { CURRENCY, PLACEHOLDERS } from '@/constants/ui-constants';
 import { Plus, Trash2, Store, Truck, Calendar } from 'lucide-react';
@@ -23,14 +23,24 @@ import { WeekdaySelector } from '@/components/WeekdaySelector';
 import { CreatePageSkeleton } from '@/components/skeletons';
 import { generateUniqueId } from '@/utils/generateId';
 
+interface ProductVariant {
+    id: number;
+    name: string;
+    size: string;
+    precio_pickup_capital: number;
+    precio_pickup_interior: number;
+}
+
 interface Product {
     id: number;
     name: string;
     category_id: number;
+    has_variants: boolean;
     category?: {
         id: number;
         name: string;
     };
+    variants?: ProductVariant[];
 }
 
 interface Category {
@@ -45,7 +55,8 @@ interface CreatePromotionPageProps {
 
 interface DailySpecialItem {
     id: string;
-    product_id: number | null;
+    product_id: string;
+    variant_ids: string[]; // Changed from variant_id to support multiple variants
     special_price_capital: string;
     special_price_interior: string;
     service_type: 'both' | 'delivery_only' | 'pickup_only';
@@ -57,19 +68,38 @@ interface DailySpecialItem {
     time_until: string;
 }
 
+// Tipo para enviar al backend (sin id, con variant_id individual y precios numéricos)
+interface SubmitDailySpecialItem {
+    variant_id: string | null;
+    product_id: string;
+    special_price_capital: number;
+    special_price_interior: number;
+    service_type: 'both' | 'delivery_only' | 'pickup_only';
+    weekdays: number[];
+    validity_type: string;
+    valid_from: string;
+    valid_until: string;
+    time_from: string;
+    time_until: string;
+}
+
 export default function CreatePromotion({ products }: CreatePromotionPageProps) {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, processing, errors } = useForm({
         is_active: true,
         name: '',
         description: '',
         type: 'daily_special' as const,
-        items: [] as DailySpecialItem[],
+        items: [] as Array<Omit<DailySpecialItem, 'id'>>,
     });
+
+    // Cast errors to allow dynamic indexing
+    const dynamicErrors = errors as Record<string, string | undefined>;
 
     const [localItems, setLocalItems] = useState<DailySpecialItem[]>([
         {
             id: generateUniqueId(),
-            product_id: null,
+            product_id: '',
+            variant_ids: [], // Changed from variant_id to variant_ids
             special_price_capital: '',
             special_price_interior: '',
             service_type: 'both',
@@ -85,7 +115,8 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
     const addItem = () => {
         const newItem: DailySpecialItem = {
             id: generateUniqueId(),
-            product_id: null,
+            product_id: '',
+            variant_ids: [], // Changed from variant_id to variant_ids
             special_price_capital: '',
             special_price_interior: '',
             service_type: 'both',
@@ -98,13 +129,13 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
         };
         const updated = [...localItems, newItem];
         setLocalItems(updated);
-        setData('items', updated.map(({ id: _id, ...rest }) => rest));
+        setData('items', updated as unknown as DailySpecialItem[]);
     };
 
     const removeItem = (index: number) => {
         const updated = localItems.filter((_, i) => i !== index);
         setLocalItems(updated);
-        setData('items', updated.map(({ id: _id, ...rest }) => rest));
+        setData('items', updated as unknown as DailySpecialItem[]);
     };
 
     const updateItem = (
@@ -115,23 +146,22 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
         const updated = [...localItems];
         updated[index] = { ...updated[index], [field]: value };
         setLocalItems(updated);
-        setData('items', updated.map(({ id: _id, ...rest }) => rest));
+        setData('items', updated as unknown as DailySpecialItem[]);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // useForm().post() envía automáticamente el estado 'data'
-        // Usamos transform para modificar los datos antes de enviar
-        post(route('menu.promotions.store'), {
-            transform: (data) => ({
-                ...data,
-                items: localItems.map(({ id: _id, has_schedule: _has_schedule, ...rest }) => {
+        // Expandir cada item con variant_ids a múltiples items (uno por variante)
+        const expandedItems: SubmitDailySpecialItem[] = localItems.flatMap(({ id: _id, has_schedule: _has_schedule, variant_ids, ...rest }) => {
+            // Si tiene variantes seleccionadas, crear un item por cada variante
+            if (variant_ids.length > 0) {
+                return variant_ids.map((variant_id): SubmitDailySpecialItem => {
                     // Calcular validity_type automáticamente basado en los campos
                     const hasDates = rest.valid_from || rest.valid_until;
                     const hasTimes = rest.time_from || rest.time_until;
 
-                    let validity_type;
+                    let validity_type: string;
                     if (hasDates && hasTimes) {
                         validity_type = 'date_time_range';
                     } else if (hasDates) {
@@ -143,14 +173,63 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                     }
 
                     return {
-                        ...rest,
+                        product_id: rest.product_id,
+                        variant_id: variant_id,
                         validity_type,
                         special_price_capital: parseFloat(rest.special_price_capital) || 0,
                         special_price_interior: parseFloat(rest.special_price_interior) || 0,
+                        service_type: rest.service_type,
+                        weekdays: rest.weekdays,
+                        valid_from: rest.valid_from,
+                        valid_until: rest.valid_until,
+                        time_from: rest.time_from,
+                        time_until: rest.time_until,
                     };
-                }),
-            }),
+                });
+            }
+
+            // Si no tiene variantes (producto simple), crear un solo item
+            const hasDates = rest.valid_from || rest.valid_until;
+            const hasTimes = rest.time_from || rest.time_until;
+
+            let validity_type: string;
+            if (hasDates && hasTimes) {
+                validity_type = 'date_time_range';
+            } else if (hasDates) {
+                validity_type = 'date_range';
+            } else if (hasTimes) {
+                validity_type = 'time_range';
+            } else {
+                validity_type = 'weekdays';
+            }
+
+            return [
+                {
+                    product_id: rest.product_id,
+                    variant_id: null,
+                    validity_type,
+                    special_price_capital: parseFloat(rest.special_price_capital) || 0,
+                    special_price_interior: parseFloat(rest.special_price_interior) || 0,
+                    service_type: rest.service_type,
+                    weekdays: rest.weekdays,
+                    valid_from: rest.valid_from,
+                    valid_until: rest.valid_until,
+                    time_from: rest.time_from,
+                    time_until: rest.time_until,
+                },
+            ];
         });
+
+        // Preparar datos transformados antes de enviar
+        const transformedData = {
+            is_active: data.is_active,
+            name: data.name,
+            description: data.description,
+            type: data.type,
+            items: expandedItems,
+        };
+
+        router.post(route('menu.promotions.store'), transformedData);
     };
 
     return (
@@ -184,7 +263,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                         type="text"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-
+                        placeholder={PLACEHOLDERS.name}
                     />
                 </FormField>
 
@@ -224,25 +303,75 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                             {/* Producto */}
                             <ProductCombobox
                                 label="Producto"
-                                value={item.product_id}
-                                onChange={(value) => updateItem(index, 'product_id', value)}
-                                products={products.filter(
-                                    (product) =>
-                                        !localItems.some(
-                                            (i, idx) =>
-                                                idx !== index && i.product_id === product.id,
-                                        ),
-                                )}
+                                value={item.product_id ? Number(item.product_id) : null}
+                                onChange={(value) => {
+                                    // Actualizar product_id y resetear variant_ids en una sola operación
+                                    const updated = [...localItems];
+                                    updated[index] = {
+                                        ...updated[index],
+                                        product_id: value ? String(value) : '',
+                                        variant_ids: [], // Resetear variantes cuando cambia el producto
+                                    };
+                                    setLocalItems(updated);
+                                    setData('items', updated.map(({ id: _id, ...rest }) => rest));
+                                }}
+                                products={products.filter((product) => {
+                                    // Si el producto NO tiene variantes, eliminar si ya está en uso
+                                    if (!product.has_variants) {
+                                        return !localItems.some(
+                                            (i, idx) => idx !== index && i.product_id === String(product.id)
+                                        );
+                                    }
+                                    // Si el producto TIENE variantes, siempre permitir
+                                    return true;
+                                })}
                                 placeholder={PLACEHOLDERS.selectProduct}
-                                error={errors[`items.${index}.product_id`]}
+                                error={dynamicErrors[`items.${index}.product_id`]}
                                 required
                             />
+
+                            {/* Selector de Variantes */}
+                            {item.product_id && (() => {
+                                const selectedProduct = products.find(p => p.id === Number(item.product_id));
+                                const hasVariants = selectedProduct?.has_variants && selectedProduct?.variants && selectedProduct.variants.length > 0;
+
+                                if (!hasVariants) return null;
+
+                                return (
+                                    <FormField
+                                        label="Variante"
+                                        error={dynamicErrors[`items.${index}.variant_ids`]}
+                                        required
+                                    >
+                                        <Select
+                                            value={item.variant_ids[0] || ''}
+                                            onValueChange={(value) => {
+                                                const updated = [...localItems];
+                                                updated[index] = { ...updated[index], variant_ids: [value] };
+                                                setLocalItems(updated);
+                                                setData('items', updated.map(({ id: _id, ...rest }) => rest));
+                                            }}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecciona una variante" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {selectedProduct.variants?.map((variant) => (
+                                                    <SelectItem key={variant.id} value={variant.id.toString()}>
+                                                        {variant.name} {variant.size && `- ${variant.size}`}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </FormField>
+                                );
+                            })()}
 
                             {/* Precios */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField
                                     label="Precio Capital"
-                                    error={errors[`items.${index}.special_price_capital`]}
+                                    error={dynamicErrors[`items.${index}.special_price_capital`]}
                                     required
                                 >
                                     <div className="relative">
@@ -269,7 +398,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
 
                                 <FormField
                                     label="Precio Interior"
-                                    error={errors[`items.${index}.special_price_interior`]}
+                                    error={dynamicErrors[`items.${index}.special_price_interior`]}
                                     required
                                 >
                                     <div className="relative">
@@ -298,7 +427,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                             {/* Tipo de Servicio */}
                             <FormField
                                 label="Tipo de servicio"
-                                error={errors[`items.${index}.service_type`]}
+                                error={dynamicErrors[`items.${index}.service_type`]}
                                 required
                             >
                                 <Select
@@ -345,7 +474,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                                 <WeekdaySelector
                                     value={item.weekdays}
                                     onChange={(days) => updateItem(index, 'weekdays', days)}
-                                    error={errors[`items.${index}.weekdays`]}
+                                    error={dynamicErrors[`items.${index}.weekdays`]}
                                     label="Días activos"
                                     required
                                 />
@@ -378,7 +507,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <FormField
                                                     label="Desde"
-                                                    error={errors[`items.${index}.valid_from`]}
+                                                    error={dynamicErrors[`items.${index}.valid_from`]}
                                                 >
                                                     <Input
                                                         type="date"
@@ -390,7 +519,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                                                 </FormField>
                                                 <FormField
                                                     label="Hasta"
-                                                    error={errors[`items.${index}.valid_until`]}
+                                                    error={dynamicErrors[`items.${index}.valid_until`]}
                                                 >
                                                     <Input
                                                         type="date"
@@ -409,7 +538,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <FormField
                                                     label="Desde"
-                                                    error={errors[`items.${index}.time_from`]}
+                                                    error={dynamicErrors[`items.${index}.time_from`]}
                                                 >
                                                     <Input
                                                         type="time"
@@ -421,7 +550,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                                                 </FormField>
                                                 <FormField
                                                     label="Hasta"
-                                                    error={errors[`items.${index}.time_until`]}
+                                                    error={dynamicErrors[`items.${index}.time_until`]}
                                                 >
                                                     <Input
                                                         type="time"

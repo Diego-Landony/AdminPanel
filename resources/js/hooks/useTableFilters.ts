@@ -51,7 +51,7 @@ export function useTableFilters<T extends Record<string, unknown> = Record<strin
 
     // Build filter payload for API request
     const buildFilterPayload = useCallback((currentFilters: T, currentSearch: string, currentPerPage: number) => {
-        const payload: Record<string, unknown> = {
+        const payload: Record<string, string | number> = {
             per_page: currentPerPage,
         };
 
@@ -68,8 +68,10 @@ export function useTableFilters<T extends Record<string, unknown> = Record<strin
                     if (value.length > 0) {
                         payload[key] = value.join(',');
                     }
-                } else {
+                } else if (typeof value === 'string' || typeof value === 'number') {
                     payload[key] = value;
+                } else {
+                    payload[key] = String(value);
                 }
             }
         });
@@ -82,7 +84,7 @@ export function useTableFilters<T extends Record<string, unknown> = Record<strin
         setIsLoading(true);
         const payload = buildFilterPayload(filters, search, perPage);
 
-        router.post(endpoint, payload as Record<string, unknown>, {
+        router.post(endpoint, payload, {
             preserveState,
             replace,
             onFinish: () => setIsLoading(false),
@@ -98,7 +100,7 @@ export function useTableFilters<T extends Record<string, unknown> = Record<strin
         setIsLoading(true);
         const payload = buildFilterPayload(initialFilters, '', defaultPerPage);
 
-        router.post(endpoint, payload as Record<string, unknown>, {
+        router.post(endpoint, payload, {
             preserveState,
             replace,
             onFinish: () => setIsLoading(false),
@@ -110,7 +112,7 @@ export function useTableFilters<T extends Record<string, unknown> = Record<strin
         setIsRefreshing(true);
         const payload = buildFilterPayload(filters, search, perPage);
 
-        router.post(endpoint, payload as Record<string, unknown>, {
+        router.post(endpoint, payload, {
             preserveState,
             replace,
             onFinish: () => setIsRefreshing(false),

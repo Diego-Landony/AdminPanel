@@ -181,7 +181,6 @@ return new class extends Migration
                 $table->id();
                 $table->foreignId('category_id')->nullable()->constrained('categories')->onDelete('set null');
                 $table->string('name');
-                $table->string('slug')->unique();
                 $table->text('description')->nullable();
                 $table->string('image')->nullable();
                 $table->boolean('has_variants')->default(false);
@@ -294,22 +293,13 @@ return new class extends Migration
                 $table->id();
                 $table->string('name');
                 $table->text('description')->nullable();
-                $table->enum('type', ['percentage', 'fixed'])->default('percentage');
-                $table->decimal('discount_value', 8, 2);
-                $table->enum('applies_to', ['product', 'variant', 'category'])->default('product');
-                $table->boolean('is_permanent')->default(false);
-                $table->dateTime('valid_from')->nullable();
-                $table->dateTime('valid_until')->nullable();
-                $table->boolean('has_time_restriction')->default(false);
-                $table->time('time_from')->nullable();
-                $table->time('time_until')->nullable();
-                $table->json('active_days')->nullable();
+                $table->enum('type', ['two_for_one', 'percentage_discount', 'daily_special']);
                 $table->boolean('is_active')->default(true);
                 $table->timestamps();
+                $table->softDeletes();
 
                 $table->index(['is_active']);
                 $table->index(['type']);
-                $table->index(['valid_from', 'valid_until']);
             });
         }
 

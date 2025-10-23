@@ -205,7 +205,7 @@ export default function SectionCreate() {
         e.preventDefault();
 
         // Convertir valores string a números antes de enviar
-        const submitData = {
+        const transformedData: Record<string, unknown> = {
             ...data,
             min_selections: typeof data.min_selections === 'string' ? parseInt(data.min_selections) : data.min_selections,
             max_selections: typeof data.max_selections === 'string' ? parseInt(data.max_selections) : data.max_selections,
@@ -216,13 +216,12 @@ export default function SectionCreate() {
             })),
         };
 
-        post(route('menu.sections.store'), {
-            data: submitData,
+        post(route('menu.sections.store'), transformedData, {
             onSuccess: () => {
                 reset();
                 setLocalOptions([]);
             },
-            onError: (errors) => {
+            onError: (errors: Record<string, string>) => {
                 if (Object.keys(errors).length === 0) {
                     showNotification.error(NOTIFICATIONS.error.server);
                 }

@@ -113,7 +113,8 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
 
         setDeletingCombo(selectedCombo.id);
         router.delete(route('menu.combos.destroy', selectedCombo.id), {
-            onSuccess: () => {
+            preserveState: false,
+            onBefore: () => {
                 closeDeleteDialog();
             },
             onError: (error) => {
@@ -187,17 +188,17 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
         {
             key: 'prices',
             title: 'Precios',
-            width: 'w-56',
+            width: 'w-80',
             render: (combo: Combo) => (
-                <div className="text-xs space-y-1">
-                    <div className="flex items-center justify-between gap-2">
-                        <span className="text-muted-foreground">Capital:</span>
+                <div className="text-xs space-y-0.5">
+                    <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground min-w-[3.5rem]">Capital:</span>
                         <span className="font-medium tabular-nums">
                             Q{Number(combo.precio_pickup_capital).toFixed(2)} / Q{Number(combo.precio_domicilio_capital).toFixed(2)}
                         </span>
                     </div>
-                    <div className="flex items-center justify-between gap-2">
-                        <span className="text-muted-foreground">Interior:</span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground min-w-[3.5rem]">Interior:</span>
                         <span className="font-medium tabular-nums">
                             Q{Number(combo.precio_pickup_interior).toFixed(2)} / Q{Number(combo.precio_domicilio_interior).toFixed(2)}
                         </span>
@@ -247,7 +248,7 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
         <StandardMobileCard
             title={combo.name}
             subtitle={combo.description || `${combo.items_count} productos`}
-            imageUrl={combo.image || undefined}
+            image={combo.image}
             badge={{
                 children: (
                     <button

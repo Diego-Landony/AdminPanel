@@ -107,7 +107,7 @@ function SortableRow<T extends { id: number | string }>({ item, columns }: Sorta
                     key={column.key}
                     className={`${column.width || ''} ${column.textAlign ? `text-${column.textAlign}` : 'text-left'} ${column.className || ''}`}
                 >
-                    {column.render ? column.render(item) : (item as Record<string, unknown>)[column.key]}
+                    {column.render ? column.render(item) : String((item as Record<string, unknown>)[column.key] ?? '')}
                 </TableCell>
             ))}
         </TableRow>

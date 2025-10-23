@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Select,
     SelectContent,
@@ -23,19 +24,30 @@ import { ProductCombobox } from '@/components/ProductCombobox';
 import { EditPageSkeleton } from '@/components/skeletons';
 import { generateUniqueId } from '@/utils/generateId';
 
+interface ProductVariant {
+    id: number;
+    name: string;
+    size: string;
+    precio_pickup_capital: number;
+    precio_pickup_interior: number;
+}
+
 interface Product {
     id: number;
     name: string;
     category_id: number;
+    has_variants: boolean;
     category?: {
         id: number;
         name: string;
     };
+    variants?: ProductVariant[];
 }
 
 interface PromotionItem {
     id: number;
     product_id: number | null;
+    variant_id: number | null;
     discount_percentage: string | null;
     service_type: 'both' | 'delivery_only' | 'pickup_only' | null;
     validity_type: 'permanent' | 'date_range' | 'time_range' | 'date_time_range' | null;
@@ -62,6 +74,7 @@ interface EditPromotionPageProps {
 interface LocalItem {
     id: string;
     product_id: number | null;
+    variant_ids: number[]; // Changed from variant_id to support multiple variants
     discount_percentage: string;
     service_type: 'both' | 'delivery_only' | 'pickup_only';
     validity_type: 'permanent' | 'date_range' | 'time_range' | 'date_time_range';
@@ -83,6 +96,7 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
         promotion.items.map((item) => ({
             id: generateUniqueId(),
             product_id: item.product_id,
+            variant_ids: item.variant_id ? [item.variant_id] : [], // Convert single variant to array
             discount_percentage: item.discount_percentage || '',
             service_type: item.service_type || 'both',
             validity_type: item.validity_type || 'permanent',
@@ -100,6 +114,7 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
         const newItem: LocalItem = {
             id: generateUniqueId(),
             product_id: null,
+            variant_ids: [], // Changed from variant_id to variant_ids
             discount_percentage: '',
             service_type: 'both',
             validity_type: 'permanent',
@@ -115,7 +130,7 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
         setLocalItems(localItems.filter((item) => item.id !== id));
     };
 
-    const updateItem = (id: string, field: keyof LocalItem, value: string | number | null) => {
+    const updateItem = (id: string, field: keyof LocalItem, value: string | number | number[] | null) => {
         setLocalItems(
             localItems.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
         );
@@ -125,11 +140,30 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
         e.preventDefault();
         setProcessing(true);
 
+        // Expandir cada item con variant_ids a múltiples items (uno por variante)
+        const expandedItems = localItems.flatMap(({ id: _id, variant_ids, ...rest }: LocalItem) => {
+            // Si tiene variantes seleccionadas, crear un item por cada variante
+            if (variant_ids.length > 0) {
+                return variant_ids.map((variant_id) => ({
+                    ...rest,
+                    variant_id: variant_id,
+                }));
+            }
+
+            // Si no tiene variantes (producto simple), crear un solo item
+            return [
+                {
+                    ...rest,
+                    variant_id: null,
+                },
+            ];
+        });
+
         router.put(
             route('menu.promotions.update', promotion.id),
             {
                 ...formData,
-                items: localItems.map(({ id: _id, ...rest }) => rest),
+                items: expandedItems,
             },
             {
                 onError: (errors) => {
@@ -167,6 +201,20 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
             {/* Información Básica */}
             <FormSection title="Información Básica">
                 <div className="space-y-4">
+                    {/* Switch de Promoción Activa */}
+                    <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
+                        <Label htmlFor="is-active" className="text-base">
+                            Promoción activa
+                        </Label>
+                        <Switch
+                            id="is-active"
+                            checked={formData.is_active}
+                            onCheckedChange={(checked) =>
+                                setFormData({ ...formData, is_active: checked })
+                            }
+                        />
+                    </div>
+
                     <FormField label="Nombre" required error={errors.name}>
                         <Input
                             value={formData.name}
@@ -223,20 +271,63 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
                                 >
                                     <ProductCombobox
                                         products={products.filter(
-                                            (product) =>
-                                                !localItems.some(
-                                                    (i) =>
-                                                        i.id !== item.id &&
-                                                        i.product_id === product.id,
-                                                ),
+                                            (product) => {
+                                                // Si el producto NO tiene variantes, eliminar si ya está en uso
+                                                if (!product.has_variants) {
+                                                    return !localItems.some(
+                                                        (i) =>
+                                                            i.id !== item.id &&
+                                                            i.product_id === product.id,
+                                                    );
+                                                }
+                                                // Si el producto TIENE variantes, siempre permitir (se valida por variante)
+                                                return true;
+                                            }
                                         )}
                                         value={item.product_id}
-                                        onChange={(value) =>
-                                            updateItem(item.id, 'product_id', value)
-                                        }
+                                        onChange={(value) => {
+                                            updateItem(item.id, 'product_id', value);
+                                            // Resetear variantes al cambiar producto
+                                            updateItem(item.id, 'variant_ids', [] as number[]);
+                                        }}
                                         placeholder={PLACEHOLDERS.search}
                                     />
                                 </FormField>
+
+                                {/* Selector de Variantes con Checkboxes */}
+                                {item.product_id && (() => {
+                                    const selectedProduct = products.find(p => p.id === item.product_id);
+                                    const hasVariants = selectedProduct?.has_variants && selectedProduct?.variants && selectedProduct.variants.length > 0;
+
+                                    if (!hasVariants) {
+                                        return null;
+                                    }
+
+                                    return (
+                                        <div className="space-y-2 rounded-lg border border-border bg-card p-4">
+                                            {selectedProduct.variants?.map((variant) => (
+                                                <div key={variant.id} className="flex items-center space-x-2">
+                                                    <Checkbox
+                                                        id={`variant-${item.id}-${variant.id}`}
+                                                        checked={item.variant_ids.includes(variant.id)}
+                                                        onCheckedChange={(checked) => {
+                                                            const newVariantIds = checked
+                                                                ? [...item.variant_ids, variant.id]
+                                                                : item.variant_ids.filter((vid) => vid !== variant.id);
+                                                            updateItem(item.id, 'variant_ids', newVariantIds as number[]);
+                                                        }}
+                                                    />
+                                                    <label
+                                                        htmlFor={`variant-${item.id}-${variant.id}`}
+                                                        className="text-sm cursor-pointer"
+                                                    >
+                                                        {variant.name} {variant.size && `- ${variant.size}`}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    );
+                                })()}
 
                                 {/* Porcentaje de Descuento */}
                                 <FormField
@@ -428,22 +519,6 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
                         <Plus className="mr-2 h-4 w-4" />
                         Agregar producto
                     </Button>
-                </div>
-            </FormSection>
-
-            {/* Estado */}
-            <FormSection title="Estado">
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                    <Label htmlFor="is-active" className="text-base">
-                        Promoción activa
-                    </Label>
-                    <Switch
-                        id="is-active"
-                        checked={formData.is_active}
-                        onCheckedChange={(checked) =>
-                            setFormData({ ...formData, is_active: checked })
-                        }
-                    />
                 </div>
             </FormSection>
         </EditPageLayout>

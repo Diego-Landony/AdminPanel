@@ -99,9 +99,10 @@ export function BulkActionsBar({
             // Pequeño delay para animación
             const timer = setTimeout(() => setIsVisible(true), 10);
             return () => clearTimeout(timer);
-        } else {
-            setIsVisible(false);
         }
+
+        setIsVisible(false);
+        return undefined;
     }, [selectedCount]);
 
     // No renderizar si no hay selección

@@ -19,9 +19,11 @@ class PromotionItem extends Model
     protected $fillable = [
         'promotion_id',
         'product_id',
+        'variant_id',
         'category_id',
         'special_price_capital',
         'special_price_interior',
+        'discount_percentage',
         'service_type',
         'validity_type',
         'valid_from',
@@ -34,9 +36,11 @@ class PromotionItem extends Model
     protected $casts = [
         'promotion_id' => 'integer',
         'product_id' => 'integer',
+        'variant_id' => 'integer',
         'category_id' => 'integer',
         'special_price_capital' => 'decimal:2',
         'special_price_interior' => 'decimal:2',
+        'discount_percentage' => 'decimal:2',
         'valid_from' => 'date',
         'valid_until' => 'date',
         'weekdays' => 'array',
@@ -56,6 +60,14 @@ class PromotionItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Relación: Un item puede pertenecer a una variante
+     */
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'variant_id');
     }
 
     /**

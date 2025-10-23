@@ -52,29 +52,31 @@ class PromotionController extends Controller
             $query->where('is_active', $request->boolean('is_active'));
         }
 
-        // Filtro por aplicabilidad
-        if ($request->filled('applies_to')) {
-            $query->where('applies_to', $request->input('applies_to'));
-        }
+        // Filtro por aplicabilidad - comentado porque applies_to no existe en la tabla promotions
+        // if ($request->filled('applies_to')) {
+        //     $query->where('applies_to', $request->input('applies_to'));
+        // }
 
-        // Filtro por vigencia actual
-        if ($request->boolean('only_valid')) {
-            $query->where('is_active', true)
-                ->where(function ($q) {
-                    $q->whereNull('valid_from')
-                        ->orWhere('valid_from', '<=', now());
-                })
-                ->where(function ($q) {
-                    $q->whereNull('valid_until')
-                        ->orWhere('valid_until', '>=', now());
-                });
-        }
+        // Filtro por vigencia actual - comentado porque valid_from/valid_until están en promotion_items
+        // if ($request->boolean('only_valid')) {
+        //     $query->where('is_active', true)
+        //         ->whereHas('items', function ($q) {
+        //             $q->where(function ($q2) {
+        //                 $q2->whereNull('valid_from')
+        //                     ->orWhere('valid_from', '<=', now());
+        //             })
+        //             ->where(function ($q2) {
+        //                 $q2->whereNull('valid_until')
+        //                     ->orWhere('valid_until', '>=', now());
+        //             });
+        //         });
+        // }
 
         // Ordenamiento
         $sortField = $request->input('sort_field', 'created_at');
         $sortDirection = $request->input('sort_direction', 'desc');
 
-        if (in_array($sortField, ['name', 'type', 'is_active', 'applies_to', 'created_at'])) {
+        if (in_array($sortField, ['name', 'type', 'is_active', 'created_at'])) {
             $query->orderBy($sortField, $sortDirection);
         } elseif ($sortField === 'items_count') {
             $query->orderBy('items_count', $sortDirection);
@@ -83,10 +85,40 @@ class PromotionController extends Controller
         }
 
         $perPage = (int) $request->input('per_page', 10);
-        $promotions = $query->paginate($perPage)->withQueryString();
+        $promotions = $query->with(['items.variant.product', 'items.product', 'items.category'])
+            ->paginate($perPage)
+            ->withQueryString();
 
-        // Calcular estadísticas
-        $allPromotions = Promotion::all();
+        // Transformar promociones para aplanar datos del primer item
+        $promotions->getCollection()->transform(function ($promotion) {
+            $firstItem = $promotion->items->first();
+
+            if ($firstItem) {
+                $promotion->scope_type = 'product';
+                $promotion->special_price_capital = $firstItem->special_price_capital;
+                $promotion->special_price_interior = $firstItem->special_price_interior;
+                $promotion->applies_to = 'product';
+                $promotion->service_type = $firstItem->service_type ?? 'both';
+                $promotion->validity_type = $firstItem->validity_type ?? 'permanent';
+                $promotion->is_permanent = $firstItem->validity_type === 'permanent';
+                $promotion->valid_from = $firstItem->valid_from;
+                $promotion->valid_until = $firstItem->valid_until;
+                $promotion->has_time_restriction = ! empty($firstItem->time_from) && ! empty($firstItem->time_until);
+                $promotion->time_from = $firstItem->time_from;
+                $promotion->time_until = $firstItem->time_until;
+                $promotion->active_days = $firstItem->weekdays;
+                $promotion->weekdays = $firstItem->weekdays;
+            }
+
+            return $promotion;
+        });
+
+        // Calcular estadísticas - filtrar por tipo si se proporciona
+        $statsQuery = Promotion::query();
+        if ($typeFilter) {
+            $statsQuery->where('type', $typeFilter);
+        }
+        $allPromotions = $statsQuery->get();
         $activePromotions = $allPromotions->where('is_active', true);
 
         // Promociones válidas ahora (activas + vigentes)
@@ -156,6 +188,9 @@ class PromotionController extends Controller
                         // Campos para Sub del Día
                         'special_price_capital' => $item['special_price_capital'] ?? null,
                         'special_price_interior' => $item['special_price_interior'] ?? null,
+                        // Campo para Percentage Discount
+                        'discount_percentage' => $item['discount_percentage'] ?? null,
+                        // Campos comunes
                         'service_type' => $item['service_type'] ?? null,
                         'validity_type' => $item['validity_type'] ?? null,
                         'valid_from' => $item['valid_from'] ?? null,
@@ -202,7 +237,8 @@ class PromotionController extends Controller
     public function edit(Promotion $promotion): Response
     {
         $promotion->load([
-            'items.product',
+            'items.product.variants',
+            'items.variant.product',
             'items.category',
         ]);
 
@@ -218,10 +254,13 @@ class PromotionController extends Controller
         return Inertia::render($view, [
             'promotion' => $promotion,
             'products' => Product::query()
-                ->with('category')
+                ->with(['category:id,name', 'variants' => function ($query) {
+                    $query->select(['id', 'product_id', 'name', 'size', 'precio_pickup_capital', 'precio_pickup_interior'])
+                        ->orderBy('sort_order');
+                }])
                 ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name', 'category_id']),
+                ->get(['id', 'name', 'category_id', 'has_variants']),
             'categories' => Category::query()
                 ->where('is_active', true)
                 ->orderBy('name')
@@ -254,6 +293,9 @@ class PromotionController extends Controller
                         // Campos para Sub del Día
                         'special_price_capital' => $item['special_price_capital'] ?? null,
                         'special_price_interior' => $item['special_price_interior'] ?? null,
+                        // Campo para Percentage Discount
+                        'discount_percentage' => $item['discount_percentage'] ?? null,
+                        // Campos comunes
                         'service_type' => $item['service_type'] ?? null,
                         'validity_type' => $item['validity_type'] ?? null,
                         'valid_from' => $item['valid_from'] ?? null,
@@ -403,10 +445,13 @@ class PromotionController extends Controller
     {
         return Inertia::render('menu/promotions/daily-special/create', [
             'products' => Product::query()
-                ->with('category')
+                ->with(['category:id,name', 'variants' => function ($query) {
+                    $query->select(['id', 'product_id', 'name', 'size', 'precio_pickup_capital', 'precio_pickup_interior'])
+                        ->orderBy('sort_order');
+                }])
                 ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name', 'category_id']),
+                ->get(['id', 'name', 'category_id', 'has_variants']),
             'categories' => Category::query()
                 ->where('is_active', true)
                 ->orderBy('name')
@@ -450,10 +495,13 @@ class PromotionController extends Controller
     {
         return Inertia::render('menu/promotions/percentage/create', [
             'products' => Product::query()
-                ->with('category')
+                ->with(['category:id,name', 'variants' => function ($query) {
+                    $query->select(['id', 'product_id', 'name', 'size', 'precio_pickup_capital', 'precio_pickup_interior'])
+                        ->orderBy('sort_order');
+                }])
                 ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name', 'category_id']),
+                ->get(['id', 'name', 'category_id', 'has_variants']),
             'categories' => Category::query()
                 ->where('is_active', true)
                 ->orderBy('name')

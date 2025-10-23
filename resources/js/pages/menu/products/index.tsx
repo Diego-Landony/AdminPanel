@@ -14,6 +14,10 @@ interface ProductVariant {
     id: number;
     name: string;
     size: string;
+    precio_pickup_capital: number;
+    precio_domicilio_capital: number;
+    precio_pickup_interior: number;
+    precio_domicilio_interior: number;
 }
 
 interface Product {
@@ -24,6 +28,10 @@ interface Product {
     is_active: boolean;
     sort_order: number;
     has_variants: boolean;
+    precio_pickup_capital: number;
+    precio_domicilio_capital: number;
+    precio_pickup_interior: number;
+    precio_domicilio_interior: number;
     variants?: ProductVariant[];
 }
 
@@ -48,6 +56,54 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+
+    const getPriceRange = (product: Product) => {
+        if (product.has_variants && product.variants && product.variants.length > 0) {
+            const pickupCapital = product.variants.map(v => Number(v.precio_pickup_capital));
+            const domicilioCapital = product.variants.map(v => Number(v.precio_domicilio_capital));
+            const pickupInterior = product.variants.map(v => Number(v.precio_pickup_interior));
+            const domicilioInterior = product.variants.map(v => Number(v.precio_domicilio_interior));
+
+            const minPickupCapital = Math.min(...pickupCapital);
+            const maxPickupCapital = Math.max(...pickupCapital);
+            const minDomicilioCapital = Math.min(...domicilioCapital);
+            const maxDomicilioCapital = Math.max(...domicilioCapital);
+            const minPickupInterior = Math.min(...pickupInterior);
+            const maxPickupInterior = Math.max(...pickupInterior);
+            const minDomicilioInterior = Math.min(...domicilioInterior);
+            const maxDomicilioInterior = Math.max(...domicilioInterior);
+
+            return {
+                capital: {
+                    pickup: minPickupCapital === maxPickupCapital
+                        ? `Q${minPickupCapital.toFixed(2)}`
+                        : `Q${minPickupCapital.toFixed(2)} - Q${maxPickupCapital.toFixed(2)}`,
+                    domicilio: minDomicilioCapital === maxDomicilioCapital
+                        ? `Q${minDomicilioCapital.toFixed(2)}`
+                        : `Q${minDomicilioCapital.toFixed(2)} - Q${maxDomicilioCapital.toFixed(2)}`,
+                },
+                interior: {
+                    pickup: minPickupInterior === maxPickupInterior
+                        ? `Q${minPickupInterior.toFixed(2)}`
+                        : `Q${minPickupInterior.toFixed(2)} - Q${maxPickupInterior.toFixed(2)}`,
+                    domicilio: minDomicilioInterior === maxDomicilioInterior
+                        ? `Q${minDomicilioInterior.toFixed(2)}`
+                        : `Q${minDomicilioInterior.toFixed(2)} - Q${maxDomicilioInterior.toFixed(2)}`,
+                },
+            };
+        }
+
+        return {
+            capital: {
+                pickup: `Q${Number(product.precio_pickup_capital).toFixed(2)}`,
+                domicilio: `Q${Number(product.precio_domicilio_capital).toFixed(2)}`,
+            },
+            interior: {
+                pickup: `Q${Number(product.precio_pickup_interior).toFixed(2)}`,
+                domicilio: `Q${Number(product.precio_domicilio_interior).toFixed(2)}`,
+            },
+        };
+    };
 
     const handleReorder = (reorderedProducts: Product[]) => {
         setIsSaving(true);
@@ -97,7 +153,8 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
 
         setDeletingProduct(selectedProduct.id);
         router.delete(`/menu/products/${selectedProduct.id}`, {
-            onSuccess: () => {
+            preserveState: false,
+            onBefore: () => {
                 closeDeleteDialog();
             },
             onError: (error) => {
@@ -148,6 +205,30 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
             ),
         },
         {
+            key: 'prices',
+            title: 'Precios',
+            width: 'w-80',
+            render: (product: Product) => {
+                const prices = getPriceRange(product);
+                return (
+                    <div className="text-xs space-y-0.5">
+                        <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground min-w-[3.5rem]">Capital:</span>
+                            <span className="font-medium tabular-nums">
+                                {prices.capital.pickup} / {prices.capital.domicilio}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground min-w-[3.5rem]">Interior:</span>
+                            <span className="font-medium tabular-nums">
+                                {prices.interior.pickup} / {prices.interior.domicilio}
+                            </span>
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
             key: 'status',
             title: 'Estado',
             width: 'w-32',
@@ -175,41 +256,64 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
         },
     ];
 
-    const renderMobileCard = (product: Product) => (
-        <StandardMobileCard
-            title={product.name}
-            subtitle={product.description || 'Sin descripción'}
-            imageUrl={product.image || undefined}
-            badge={{
-                children: <StatusBadge status={product.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />,
-            }}
-            actions={{
-                editHref: `/menu/products/${product.id}/edit`,
-                onDelete: () => openDeleteDialog(product),
-                isDeleting: deletingProduct === product.id,
-                editTooltip: 'Editar producto',
-                deleteTooltip: 'Eliminar producto',
-            }}
-            dataFields={
-                product.has_variants && product.variants && product.variants.length > 0
-                    ? [
-                          {
-                              label: 'Variantes',
-                              value: (
-                                  <ul className="space-y-1">
-                                      {product.variants.map((variant) => (
-                                          <li key={variant.id} className="text-xs">
-                                              {variant.name}
-                                          </li>
-                                      ))}
-                                  </ul>
-                              ),
-                          },
-                      ]
-                    : undefined
-            }
-        />
-    );
+    const renderMobileCard = (product: Product) => {
+        const dataFields = [];
+        const prices = getPriceRange(product);
+
+        if (product.has_variants && product.variants && product.variants.length > 0) {
+            dataFields.push({
+                label: 'Variantes',
+                value: (
+                    <ul className="space-y-1">
+                        {product.variants.map((variant) => (
+                            <li key={variant.id} className="text-xs">
+                                {variant.name}
+                            </li>
+                        ))}
+                    </ul>
+                ),
+            });
+        }
+
+        dataFields.push({
+            label: 'Precios',
+            value: (
+                <div className="space-y-1 text-xs">
+                    <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground">Capital:</span>
+                        <span className="font-medium tabular-nums">
+                            {prices.capital.pickup} / {prices.capital.domicilio}
+                        </span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground">Interior:</span>
+                        <span className="font-medium tabular-nums">
+                            {prices.interior.pickup} / {prices.interior.domicilio}
+                        </span>
+                    </div>
+                </div>
+            ),
+        });
+
+        return (
+            <StandardMobileCard
+                title={product.name}
+                subtitle={product.description || 'Sin descripción'}
+                image={product.image}
+                badge={{
+                    children: <StatusBadge status={product.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />,
+                }}
+                actions={{
+                    editHref: `/menu/products/${product.id}/edit`,
+                    onDelete: () => openDeleteDialog(product),
+                    isDeleting: deletingProduct === product.id,
+                    editTooltip: 'Editar producto',
+                    deleteTooltip: 'Eliminar producto',
+                }}
+                dataFields={dataFields}
+            />
+        );
+    };
 
     const productStats = [
         {

@@ -1,10 +1,9 @@
 import { Head, router } from '@inertiajs/react';
-import { Building2, MapPin, Edit, Save, X, Pentagon } from 'lucide-react';
+import { MapPin, Edit, Save, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { MapContainer, TileLayer, Polygon, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { GeomanControl } from '@/components/GeomanControl';
 import { coordinatesToKML } from '@/utils/kmlParser';
@@ -95,7 +94,7 @@ export default function RestaurantsGeofences({ restaurants }: GeofencesOverviewP
     const handleSelectRestaurant = (restaurantId: number) => {
         const restaurant = restaurants.find(r => r.id === restaurantId);
         if (restaurant && restaurant.has_geofence) {
-            const coords = restaurant.geofence_coordinates.map(coord => [coord.lat, coord.lng]);
+            const coords = restaurant.geofence_coordinates.map(coord => [coord.lat, coord.lng] as [number, number]);
             setSelectedRestaurantId(restaurantId);
             setEditedCoordinates(coords);
             setOriginalCoordinates(coords);

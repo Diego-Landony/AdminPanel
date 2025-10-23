@@ -97,7 +97,8 @@ export default function TwoForOneIndex({ promotions, stats, filters }: Promotion
 
         setDeletingPromotion(selectedPromotion.id);
         router.delete(`/menu/promotions/${selectedPromotion.id}`, {
-            onSuccess: () => {
+            preserveState: false,
+            onBefore: () => {
                 closeDeleteDialog();
             },
             onError: (error) => {
@@ -113,7 +114,7 @@ export default function TwoForOneIndex({ promotions, stats, filters }: Promotion
         {
             key: 'name',
             title: 'Promoción',
-            width: 'flex-1',
+            width: 'full' as const,
             sortable: true,
             render: (promotion: Promotion) => (
                 <div className="text-sm font-medium text-foreground">{promotion.name}</div>
@@ -122,7 +123,7 @@ export default function TwoForOneIndex({ promotions, stats, filters }: Promotion
         {
             key: 'created_at',
             title: 'Creado',
-            width: 'w-40',
+            width: 'lg' as const,
             sortable: true,
             render: (promotion: Promotion) => (
                 <div className="text-sm text-muted-foreground">{formatDate(promotion.created_at)}</div>
@@ -131,7 +132,7 @@ export default function TwoForOneIndex({ promotions, stats, filters }: Promotion
         {
             key: 'status',
             title: 'Estado',
-            width: 'w-32',
+            width: 'md' as const,
             textAlign: 'center' as const,
             render: (promotion: Promotion) => (
                 <div className="flex justify-center">
@@ -146,7 +147,7 @@ export default function TwoForOneIndex({ promotions, stats, filters }: Promotion
         {
             key: 'actions',
             title: 'Acciones',
-            width: 'w-24',
+            width: 'sm' as const,
             textAlign: 'right' as const,
             render: (promotion: Promotion) => (
                 <TableActions

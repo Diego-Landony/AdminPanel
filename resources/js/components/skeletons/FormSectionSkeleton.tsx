@@ -1,11 +1,23 @@
 import { Skeleton } from '@/components/ui/skeleton';
 
+export interface FormSectionConfig {
+    fields: number;
+    hasTextarea?: boolean;
+    hasSelect?: boolean;
+    hasCheckboxes?: number;
+    hasTable?: boolean;
+    showIcon?: boolean;
+    showTitle?: boolean;
+}
+
 interface FormSectionSkeletonProps {
     fields?: number;
     hasTextarea?: boolean;
     hasSelect?: boolean;
     hasCheckboxes?: number;
     hasTable?: boolean;
+    showIcon?: boolean;
+    showTitle?: boolean;
 }
 
 export function FormSectionSkeleton({
@@ -13,18 +25,24 @@ export function FormSectionSkeleton({
     hasTextarea = false,
     hasSelect = false,
     hasCheckboxes = 0,
-    hasTable = false
+    hasTable = false,
+    showIcon = true,
+    showTitle = true
 }: FormSectionSkeletonProps) {
     return (
         <div className="space-y-6 rounded-lg border border-border bg-card p-6 animate-pulse">
             {/* Section Header */}
-            <div className="flex items-center gap-3 border-b border-border pb-4">
-                <Skeleton className="h-5 w-5 rounded-full" />
-                <div className="space-y-1">
-                    <Skeleton className="h-5 w-32 rounded-md" />
-                    <Skeleton className="h-3 w-48 rounded-sm" />
+            {(showIcon || showTitle) && (
+                <div className="flex items-center gap-3 border-b border-border pb-4">
+                    {showIcon && <Skeleton className="h-5 w-5 rounded-full" />}
+                    {showTitle && (
+                        <div className="space-y-1">
+                            <Skeleton className="h-5 w-32 rounded-md" />
+                            <Skeleton className="h-3 w-48 rounded-sm" />
+                        </div>
+                    )}
                 </div>
-            </div>
+            )}
 
             {/* Form Fields */}
             <div className="space-y-4">

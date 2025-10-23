@@ -48,8 +48,11 @@ export default function CreateTwoForOnePromotion({ categories }: CreatePromotion
         name: '',
         description: '',
         type: 'two_for_one' as const,
-        items: [] as TwoForOneItem[],
+        items: [] as Array<Omit<TwoForOneItem, 'id'>>,
     });
+
+    // Cast errors to allow dynamic indexing
+    const dynamicErrors = errors as Record<string, string | undefined>;
 
     const [localItems, setLocalItems] = useState<TwoForOneItem[]>([
         {
@@ -100,12 +103,12 @@ export default function CreateTwoForOnePromotion({ categories }: CreatePromotion
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        post(route('menu.promotions.store'), {
-            transform: (data) => ({
-                ...data,
-                items: localItems.map(({ id: _id, ...rest }) => rest),
-            }),
-        });
+        const transformedData = {
+            ...data,
+            items: localItems.map(({ id: _id, ...rest }) => rest),
+        };
+
+        post(route('menu.promotions.store'), transformedData as Record<string, unknown>);
     };
 
     return (
@@ -189,14 +192,14 @@ export default function CreateTwoForOnePromotion({ categories }: CreatePromotion
                                         ),
                                 )}
                                 placeholder={PLACEHOLDERS.selectCategory}
-                                error={errors[`items.${index}.category_id`]}
+                                error={dynamicErrors[`items.${index}.category_id`]}
                                 required
                             />
 
                             {/* Tipo de servicio */}
                             <FormField
                                 label="Tipo de Servicio"
-                                error={errors[`items.${index}.service_type`]}
+                                error={dynamicErrors[`items.${index}.service_type`]}
                                 required
                             >
                                 <Select
@@ -237,7 +240,7 @@ export default function CreateTwoForOnePromotion({ categories }: CreatePromotion
                             {/* Tipo de vigencia */}
                             <FormField
                                 label="Vigencia"
-                                error={errors[`items.${index}.validity_type`]}
+                                error={dynamicErrors[`items.${index}.validity_type`]}
                                 required
                             >
                                 <Select
@@ -266,7 +269,7 @@ export default function CreateTwoForOnePromotion({ categories }: CreatePromotion
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <FormField
                                         label="Fecha de Inicio"
-                                        error={errors[`items.${index}.valid_from`]}
+                                        error={dynamicErrors[`items.${index}.valid_from`]}
                                         required
                                     >
                                         <Input
@@ -279,7 +282,7 @@ export default function CreateTwoForOnePromotion({ categories }: CreatePromotion
                                     </FormField>
                                     <FormField
                                         label="Fecha de Fin"
-                                        error={errors[`items.${index}.valid_until`]}
+                                        error={dynamicErrors[`items.${index}.valid_until`]}
                                         required
                                     >
                                         <Input
@@ -299,7 +302,7 @@ export default function CreateTwoForOnePromotion({ categories }: CreatePromotion
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <FormField
                                         label="Hora de Inicio"
-                                        error={errors[`items.${index}.time_from`]}
+                                        error={dynamicErrors[`items.${index}.time_from`]}
                                         required
                                     >
                                         <Input
@@ -312,7 +315,7 @@ export default function CreateTwoForOnePromotion({ categories }: CreatePromotion
                                     </FormField>
                                     <FormField
                                         label="Hora de Fin"
-                                        error={errors[`items.${index}.time_until`]}
+                                        error={dynamicErrors[`items.${index}.time_until`]}
                                         required
                                     >
                                         <Input

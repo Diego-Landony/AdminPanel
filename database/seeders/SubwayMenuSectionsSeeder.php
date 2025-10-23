@@ -12,6 +12,9 @@ class SubwayMenuSectionsSeeder extends Seeder
     {
         $this->command->info('🥖 Creando secciones y opciones de personalización...');
 
+        // Limpiar datos existentes
+        Section::query()->delete();
+
         $sections = [
             [
                 'title' => 'Tipo de Pan',

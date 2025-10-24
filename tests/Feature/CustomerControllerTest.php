@@ -31,8 +31,8 @@ test('customers index can search customers', function () {
     $this->actingAs($testUser);
 
     // Crear clientes específicos para la búsqueda
-    Customer::factory()->create(['full_name' => 'Juan Pérez']);
-    Customer::factory()->create(['full_name' => 'María González']);
+    Customer::factory()->create(['name' => 'Juan Pérez']);
+    Customer::factory()->create(['name' => 'María González']);
     Customer::factory()->create(['email' => 'test@example.com']);
 
     $response = $this->get('/customers?search=Juan');
@@ -40,7 +40,7 @@ test('customers index can search customers', function () {
     $response->assertStatus(200);
     $response->assertInertia(fn ($page) => $page->component('customers/index')
         ->has('customers.data', 1)
-        ->where('customers.data.0.full_name', 'Juan Pérez')
+        ->where('customers.data.0.name', 'Juan Pérez')
     );
 });
 
@@ -49,17 +49,17 @@ test('customers index can sort customers', function () {
     $this->actingAs($testUser);
 
     // Crear clientes con nombres específicos para ordenar
-    Customer::factory()->create(['full_name' => 'Ana López']);
-    Customer::factory()->create(['full_name' => 'Carlos Ruiz']);
-    Customer::factory()->create(['full_name' => 'Beatriz Silva']);
+    Customer::factory()->create(['name' => 'Ana López']);
+    Customer::factory()->create(['name' => 'Carlos Ruiz']);
+    Customer::factory()->create(['name' => 'Beatriz Silva']);
 
-    $response = $this->get('/customers?sort_field=full_name&sort_direction=asc');
+    $response = $this->get('/customers?sort_field=name&sort_direction=asc');
 
     $response->assertStatus(200);
     $response->assertInertia(fn ($page) => $page->component('customers/index')
-        ->where('customers.data.0.full_name', 'Ana López')
-        ->where('customers.data.1.full_name', 'Beatriz Silva')
-        ->where('customers.data.2.full_name', 'Carlos Ruiz')
+        ->where('customers.data.0.name', 'Ana López')
+        ->where('customers.data.1.name', 'Beatriz Silva')
+        ->where('customers.data.2.name', 'Carlos Ruiz')
     );
 });
 
@@ -79,7 +79,7 @@ test('can create a new customer', function () {
     $this->actingAs($testUser);
 
     $customerData = [
-        'full_name' => 'Nuevo Cliente',
+        'name' => 'Nuevo Cliente',
         'email' => 'nuevo@test.com',
         'password' => 'password123',
         'password_confirmation' => 'password123',
@@ -89,7 +89,6 @@ test('can create a new customer', function () {
         // Customer type assigned automatically
         'phone' => '+502 1234-5678',
         'address' => 'Dirección de prueba',
-        'location' => 'Guatemala',
         'nit' => '12345678-9',
     ];
 
@@ -100,7 +99,7 @@ test('can create a new customer', function () {
 
     // Verificar que el cliente fue creado en la base de datos
     $this->assertDatabaseHas('customers', [
-        'full_name' => 'Nuevo Cliente',
+        'name' => 'Nuevo Cliente',
         'email' => 'nuevo@test.com',
         'subway_card' => '1234567890',
         // Customer type assigned automatically
@@ -119,7 +118,7 @@ test('customer creation validates required fields', function () {
     $response = $this->post('/customers', []);
 
     $response->assertSessionHasErrors([
-        'full_name',
+        'name',
         'email',
         'password',
         'subway_card',
@@ -134,7 +133,7 @@ test('customer creation validates unique email', function () {
     $existingCustomer = Customer::factory()->create(['email' => 'existing@test.com']);
 
     $customerData = [
-        'full_name' => 'Nuevo Cliente',
+        'name' => 'Nuevo Cliente',
         'email' => 'existing@test.com', // Email ya existe
         'password' => 'password123',
         'password_confirmation' => 'password123',
@@ -154,7 +153,7 @@ test('customer creation validates unique subway card', function () {
     $existingCustomer = Customer::factory()->create(['subway_card' => '1234567890']);
 
     $customerData = [
-        'full_name' => 'Nuevo Cliente',
+        'name' => 'Nuevo Cliente',
         'email' => 'nuevo@test.com',
         'password' => 'password123',
         'password_confirmation' => 'password123',
@@ -172,7 +171,7 @@ test('customers edit page renders with customer data', function () {
     $this->actingAs($testUser);
 
     $customer = Customer::factory()->create([
-        'full_name' => 'Cliente Test',
+        'name' => 'Cliente Test',
         'email' => 'cliente@test.com',
     ]);
 
@@ -181,7 +180,7 @@ test('customers edit page renders with customer data', function () {
     $response->assertStatus(200);
     $response->assertInertia(fn ($page) => $page->component('customers/edit')
         ->has('customer')
-        ->where('customer.full_name', 'Cliente Test')
+        ->where('customer.name', 'Cliente Test')
         ->where('customer.email', 'cliente@test.com')
     );
 });
@@ -191,12 +190,12 @@ test('can update customer information', function () {
     $this->actingAs($testUser);
 
     $customer = Customer::factory()->create([
-        'full_name' => 'Cliente Original',
+        'name' => 'Cliente Original',
         'email' => 'original@test.com',
     ]);
 
     $updateData = [
-        'full_name' => 'Cliente Actualizado',
+        'name' => 'Cliente Actualizado',
         'email' => 'actualizado@test.com',
         'subway_card' => $customer->subway_card,
         'birth_date' => $customer->birth_date->format('Y-m-d'),
@@ -211,7 +210,7 @@ test('can update customer information', function () {
 
     // Verificar que los datos fueron actualizados
     $customer->refresh();
-    expect($customer->full_name)->toBe('Cliente Actualizado');
+    expect($customer->name)->toBe('Cliente Actualizado');
     expect($customer->email)->toBe('actualizado@test.com');
     // Customer type is managed through relationships, not direct field
     expect($customer->phone)->toBe('+502 9876-5432');
@@ -225,7 +224,7 @@ test('can update customer password', function () {
     $originalPassword = $customer->password;
 
     $updateData = [
-        'full_name' => $customer->full_name,
+        'name' => $customer->name,
         'email' => $customer->email,
         'subway_card' => $customer->subway_card,
         'birth_date' => $customer->birth_date->format('Y-m-d'),
@@ -256,7 +255,7 @@ test('email verification is reset when email is changed', function () {
     expect($customer->email_verified_at)->not->toBeNull();
 
     $updateData = [
-        'full_name' => $customer->full_name,
+        'name' => $customer->name,
         'email' => 'newemail@test.com',
         'subway_card' => $customer->subway_card,
         'birth_date' => $customer->birth_date->format('Y-m-d'),
@@ -278,7 +277,7 @@ test('can delete customer', function () {
     $testUser = createTestUser();
     $this->actingAs($testUser);
 
-    $customer = Customer::factory()->create(['full_name' => 'Cliente a Eliminar']);
+    $customer = Customer::factory()->create(['name' => 'Cliente a Eliminar']);
 
     $response = $this->delete("/customers/{$customer->id}");
 

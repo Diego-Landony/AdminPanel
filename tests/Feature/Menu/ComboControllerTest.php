@@ -233,11 +233,8 @@ test('puede activar o desactivar un combo', function () {
 
     $response = $this->post(route('menu.combos.toggle', $combo));
 
-    $response->assertSuccessful();
-    $response->assertJson([
-        'success' => true,
-        'is_active' => false,
-    ]);
+    $response->assertRedirect();
+    $response->assertSessionHas('success');
 
     $this->assertDatabaseHas('combos', [
         'id' => $combo->id,

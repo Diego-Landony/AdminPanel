@@ -48,43 +48,52 @@ class ActivityLog extends Model
     }
 
     /**
-     * Tipos de eventos de actividad
+     * Scope: Filtrar por modelo específico
      */
-    public static function getEventTypes(): array
+    public function scopeForModel($query, string $modelClass, ?int $modelId = null)
     {
-        return [
-            // Eventos de usuarios
-            'user_created' => 'Usuario creado',
-            'user_updated' => 'Usuario actualizado',
-            'user_deleted' => 'Usuario eliminado',
-            'user_restored' => 'Usuario restaurado',
-            'user_force_deleted' => 'Usuario eliminado permanentemente',
+        $query->where('target_model', $modelClass);
 
-            // Eventos de autenticación
-            'login' => 'Inicio de sesión',
-            'logout' => 'Cierre de sesión',
-            'password_changed' => 'Contraseña cambiada',
-            'profile_updated' => 'Perfil actualizado',
+        if ($modelId !== null) {
+            $query->where('target_id', $modelId);
+        }
 
-            // Eventos de configuración
-            'settings_changed' => 'Configuración cambiada',
-            'theme_changed' => 'Tema cambiado',
+        return $query;
+    }
 
-            // Eventos de archivos
-            'file_uploaded' => 'Archivo subido',
-            'file_deleted' => 'Archivo eliminado',
+    /**
+     * Scope: Filtrar por usuario
+     */
+    public function scopeByUser($query, int $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
 
-            // Eventos de permisos
-            'permission_granted' => 'Permiso otorgado',
-            'permission_revoked' => 'Permiso revocado',
+    /**
+     * Scope: Filtrar por tipo de evento
+     */
+    public function scopeOfType($query, string|array $types)
+    {
+        if (is_array($types)) {
+            return $query->whereIn('event_type', $types);
+        }
 
-            // Eventos de roles
-            'role_created' => 'Rol creado',
-            'role_updated' => 'Rol actualizado',
-            'role_deleted' => 'Rol eliminado',
-            'role_restored' => 'Rol restaurado',
-            'role_force_deleted' => 'Rol eliminado permanentemente',
-            'role_users_updated' => 'Usuarios de rol actualizados',
-        ];
+        return $query->where('event_type', $types);
+    }
+
+    /**
+     * Scope: Solo eventos recientes
+     */
+    public function scopeRecent($query, int $days = 7)
+    {
+        return $query->where('created_at', '>=', now()->subDays($days));
+    }
+
+    /**
+     * Accessor: Descripción formateada con valores de configuración
+     */
+    public function getFormattedDescriptionAttribute(): string
+    {
+        return $this->description;
     }
 }

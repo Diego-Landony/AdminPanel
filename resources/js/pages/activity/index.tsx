@@ -16,6 +16,7 @@ import { EntityInfoCell } from '@/components/EntityInfoCell';
 import { DateRangeFilterDialog, FilterDialog, type DateRange } from '@/components/FilterDialog';
 import { PaginationWrapper } from '@/components/PaginationWrapper';
 import { StandardMobileCard } from '@/components/StandardMobileCard';
+import { ACTIVITY_CONFIG } from '@/config/activity-config';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar as CalendarIcon, Filter, RefreshCw, Search, Users, X } from 'lucide-react';
@@ -82,108 +83,9 @@ interface ColumnDefinition {
     render: (activity: ActivityData) => React.ReactNode;
 }
 
-const getActivityTypeColor = (type: string): string => {
-    switch (type) {
-        case 'login':
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-        case 'logout':
-            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-        case 'page_view':
-        case 'heartbeat':
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
-        case 'user_created':
-        case 'role_created':
-        case 'customer_created':
-        case 'customer_type_created':
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-        case 'user_updated':
-        case 'role_updated':
-        case 'role_users_updated':
-        case 'customer_updated':
-        case 'customer_type_updated':
-        case 'theme_changed':
-            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-        case 'user_deleted':
-        case 'user_force_deleted':
-        case 'role_deleted':
-        case 'role_force_deleted':
-        case 'customer_deleted':
-        case 'customer_force_deleted':
-        case 'customer_type_deleted':
-        case 'customer_type_force_deleted':
-            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-        case 'user_restored':
-        case 'role_restored':
-        case 'customer_restored':
-        case 'customer_type_restored':
-            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-        case 'action':
-            return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
-        default:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
-    }
-};
-
-const getActivityTypeText = (type: string): string => {
-    switch (type) {
-        case 'login':
-            return 'Inicio de sesión';
-        case 'logout':
-            return 'Cierre de sesión';
-        case 'page_view':
-            return 'Vista de página';
-        case 'heartbeat':
-            return 'Actividad';
-        case 'action':
-            return 'Acción';
-        case 'user_created':
-            return 'Usuario creado';
-        case 'user_updated':
-            return 'Usuario actualizado';
-        case 'user_deleted':
-            return 'Usuario eliminado';
-        case 'user_restored':
-            return 'Usuario restaurado';
-        case 'user_force_deleted':
-            return 'Usuario eliminado permanentemente';
-        case 'role_created':
-            return 'Rol creado';
-        case 'role_updated':
-            return 'Rol actualizado';
-        case 'role_deleted':
-            return 'Rol eliminado';
-        case 'role_restored':
-            return 'Rol restaurado';
-        case 'role_force_deleted':
-            return 'Rol eliminado permanentemente';
-        case 'role_users_updated':
-            return 'Usuarios de rol actualizados';
-        case 'theme_changed':
-            return 'Tema cambiado';
-        case 'customer_created':
-            return 'Cliente creado';
-        case 'customer_updated':
-            return 'Cliente actualizado';
-        case 'customer_deleted':
-            return 'Cliente eliminado';
-        case 'customer_restored':
-            return 'Cliente restaurado';
-        case 'customer_force_deleted':
-            return 'Cliente eliminado permanentemente';
-        case 'customer_type_created':
-            return 'Tipo de cliente creado';
-        case 'customer_type_updated':
-            return 'Tipo de cliente actualizado';
-        case 'customer_type_deleted':
-            return 'Tipo de cliente eliminado';
-        case 'customer_type_restored':
-            return 'Tipo de cliente restaurado';
-        case 'customer_type_force_deleted':
-            return 'Tipo de cliente eliminado permanentemente';
-        default:
-            return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
-    }
-};
+// Funciones simplificadas usando configuración centralizada
+const getActivityTypeColor = (type: string): string => ACTIVITY_CONFIG.getColor(type);
+const getActivityTypeText = (type: string): string => ACTIVITY_CONFIG.getLabel(type);
 
 const formatDate = (dateString: string): string => {
     try {

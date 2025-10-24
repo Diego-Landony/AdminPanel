@@ -170,60 +170,8 @@ class ActivityController extends Controller
             $todayEvents = $totalStatsQuery->whereDate('created_at', today())->count() + $totalActivityStatsQuery->whereDate('created_at', today())->count();
         }
 
-        // Obtener tipos de eventos únicos para filtros (actividades + logs)
-        $activityTypes = UserActivity::select('activity_type')
-            ->distinct()
-            ->pluck('activity_type');
-
-        $activityLogTypes = ActivityLog::select('event_type')
-            ->distinct()
-            ->pluck('event_type');
-
-        // Filtrar tipos de eventos no deseados
-        $filteredActivityTypes = $activityTypes->filter(function ($type) {
-            return ! in_array($type, ['heartbeat', 'page_view']);
-        });
-
-        $filteredActivityLogTypes = $activityLogTypes->filter(function ($type) {
-            return ! in_array($type, ['heartbeat', 'page_view']);
-        });
-
-        $allEventTypes = $filteredActivityTypes->concat($filteredActivityLogTypes)->unique();
-
-        $eventTypes = $allEventTypes->mapWithKeys(function ($type) {
-            // Mapeo de tipos de eventos en español
-            $eventTypeTranslations = [
-                'login' => 'Inicio de sesión',
-                'role_users_updated' => 'Usuarios de rol actualizados',
-                'user_roles_updated' => 'Roles de usuario actualizados',
-                'role_created' => 'Rol creado',
-                'role_deleted' => 'Rol eliminado',
-                'role_updated' => 'Rol actualizado',
-                'user_created' => 'Usuario creado',
-                'user_updated' => 'Usuario actualizado',
-                'user_deleted' => 'Usuario eliminado',
-                'user_restored' => 'Usuario restaurado',
-                'user_force_deleted' => 'Usuario eliminado permanentemente',
-                'role_restored' => 'Rol restaurado',
-                'role_force_deleted' => 'Rol eliminado permanentemente',
-
-                // Eventos de clientes
-                'customer_created' => 'Cliente creado',
-                'customer_updated' => 'Cliente actualizado',
-                'customer_deleted' => 'Cliente eliminado',
-                'customer_restored' => 'Cliente restaurado',
-                'customer_force_deleted' => 'Cliente eliminado permanentemente',
-
-                // Eventos de tipos de cliente
-                'customer_type_created' => 'Tipo de cliente creado',
-                'customer_type_updated' => 'Tipo de cliente actualizado',
-                'customer_type_deleted' => 'Tipo de cliente eliminado',
-                'customer_type_restored' => 'Tipo de cliente restaurado',
-                'customer_type_force_deleted' => 'Tipo de cliente eliminado permanentemente',
-            ];
-
-            return [$type => $eventTypeTranslations[$type] ?? ucfirst(str_replace('_', ' ', $type))];
-        });
+        // Obtener tipos de eventos desde la configuración
+        $eventTypes = config('activity.event_types', []);
 
         // Obtener usuarios para filtros
         $users = User::select('id', 'name', 'email')

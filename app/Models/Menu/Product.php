@@ -2,6 +2,7 @@
 
 namespace App\Models\Menu;
 
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     /**
      * Los atributos que se pueden asignar masivamente

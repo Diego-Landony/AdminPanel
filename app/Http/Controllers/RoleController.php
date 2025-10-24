@@ -6,7 +6,7 @@ use App\Models\ActivityLog;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
-use App\Services\PermissionDiscoveryService;
+use App\Services\PermissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -205,23 +205,6 @@ class RoleController extends Controller
      */
     public function edit(Role $role): Response
     {
-        // Verificar si el usuario actual es administrador
-        $currentUser = auth()->user();
-        $isCurrentUserAdmin = $currentUser && $currentUser->hasRole('admin');
-
-        // Verificar si es un rol del sistema
-        if ($role->is_system && $role->name !== 'admin') {
-            // Solo administradores pueden editar roles del sistema
-            if (! $isCurrentUserAdmin) {
-                abort(403, 'No tienes permisos para editar este rol del sistema');
-            }
-        }
-
-        // Para el rol "admin", solo usuarios administradores pueden editarlo
-        if ($role->name === 'admin' && ! $isCurrentUserAdmin) {
-            abort(403, 'Solo los administradores pueden editar el rol Administrador');
-        }
-
         // Cargar relaciones necesarias para el frontend
         $role->load(['permissions', 'users']);
 
@@ -261,23 +244,6 @@ class RoleController extends Controller
     public function update(Request $request, Role $role): RedirectResponse
     {
         try {
-            // Verificar si el usuario actual es administrador
-            $currentUser = auth()->user();
-            $isCurrentUserAdmin = $currentUser && $currentUser->hasRole('admin');
-
-            // Verificar si es un rol del sistema
-            if ($role->is_system && $role->name !== 'admin') {
-                // Solo administradores pueden editar roles del sistema
-                if (! $isCurrentUserAdmin) {
-                    abort(403, 'No tienes permisos para editar este rol del sistema');
-                }
-            }
-
-            // Para el rol "admin", solo usuarios administradores pueden editarlo
-            if ($role->name === 'admin' && ! $isCurrentUserAdmin) {
-                abort(403, 'Solo los administradores pueden editar el rol Administrador');
-            }
-
             $request->validate([
                 'name' => 'required|string|max:255|unique:roles,name,'.$role->id,
                 'description' => 'nullable|string|max:500',
@@ -305,6 +271,9 @@ class RoleController extends Controller
             // Sincronizar permisos - convertir nombres a IDs
             $permissionIds = Permission::whereIn('name', $permissionNames)->pluck('id')->toArray();
             $role->permissions()->sync($permissionIds);
+
+            // Invalidar cache de permisos de todos los usuarios con este rol
+            $role->users()->each(fn ($user) => $user->flushPermissionsCache());
 
             // Preparar nuevos valores para el log
             $newValues['permissions'] = $permissionNames;
@@ -340,23 +309,6 @@ class RoleController extends Controller
     public function updateUsers(Request $request, Role $role): JsonResponse
     {
         try {
-            // Verificar si el usuario actual es administrador
-            $currentUser = auth()->user();
-            $isCurrentUserAdmin = $currentUser && $currentUser->hasRole('admin');
-
-            // Verificar si es un rol del sistema
-            if ($role->is_system && $role->name !== 'admin') {
-                // Solo administradores pueden editar usuarios de roles del sistema
-                if (! $isCurrentUserAdmin) {
-                    return response()->json(['error' => 'No tienes permisos para editar usuarios de este rol del sistema'], 403);
-                }
-            }
-
-            // Para el rol "admin", solo usuarios administradores pueden gestionar usuarios
-            if ($role->name === 'admin' && ! $isCurrentUserAdmin) {
-                return response()->json(['error' => 'Solo los administradores pueden gestionar usuarios del rol Administrador'], 403);
-            }
-
             $request->validate([
                 'users' => 'array',
                 'users.*' => 'exists:users,id',
@@ -374,6 +326,10 @@ class RoleController extends Controller
             }
 
             $role->users()->sync($newUserIds);
+
+            // Invalidar cache de permisos de usuarios afectados
+            $affectedUserIds = collect(array_merge($oldUserIds, $newUserIds))->unique();
+            User::whereIn('id', $affectedUserIds)->each(fn ($user) => $user->flushPermissionsCache());
 
             // Log de la acción para actividad
             $this->logRoleUsersUpdate($role, $oldUserIds, $newUserIds);
@@ -404,16 +360,9 @@ class RoleController extends Controller
     public function destroy(Role $role): RedirectResponse
     {
         try {
-            // Verificar si el usuario actual es administrador
-            $currentUser = auth()->user();
-            $isCurrentUserAdmin = $currentUser && $currentUser->hasRole('admin');
-
-            // Verificar si es un rol del sistema
+            // Verificar si es un rol del sistema (regla de negocio)
             if ($role->is_system) {
-                // Solo administradores pueden eliminar roles del sistema
-                if (! $isCurrentUserAdmin) {
-                    abort(403, 'No tienes permisos para eliminar este rol del sistema');
-                }
+                return back()->with('error', 'No se pueden eliminar roles del sistema');
             }
 
             // Verificar si tiene usuarios asignados
@@ -444,16 +393,15 @@ class RoleController extends Controller
 
     /**
      * Sincroniza automáticamente los permisos del sistema
-     * Detecta nuevas páginas y actualiza permisos en tiempo real
+     * Actualiza permisos basándose en la configuración
      */
     private function syncPermissionsIfNeeded(): void
     {
         try {
-            $discoveryService = new PermissionDiscoveryService;
+            $permissionService = new PermissionService;
 
-            // Verificar si hay páginas nuevas detectadas
-            $currentPages = $discoveryService->discoverPages();
-            $currentPermissionNames = collect($discoveryService->generatePermissions())->pluck('name');
+            // Verificar si hay permisos nuevos
+            $currentPermissionNames = collect($permissionService->generatePermissions())->pluck('name');
             $existingPermissionNames = Permission::pluck('name');
 
             // Si hay permisos nuevos, sincronizar automáticamente
@@ -461,7 +409,7 @@ class RoleController extends Controller
 
             if ($newPermissions->count() > 0) {
                 \Log::info('Auto-sincronizando permisos: '.$newPermissions->join(', '));
-                $discoveryService->syncPermissions();
+                $permissionService->syncPermissions();
 
                 // Actualizar rol admin con nuevos permisos
                 $adminRole = Role::where('name', 'admin')->first();

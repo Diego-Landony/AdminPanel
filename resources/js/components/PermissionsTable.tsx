@@ -36,12 +36,16 @@ export function PermissionsTable({ selectedPermissions, onPermissionChange, perm
 
         // Procesar cada página del sidebar
         systemPages.forEach((page) => {
+            // Extraer el grupo de permisos desde page.permission
+            // Ejemplo: 'menu.categories.view' -> 'menu.categories'
+            const permissionGroup = page.permission.split('.').slice(0, -1).join('.');
+
             // Buscar permisos que correspondan a esta página
-            const pagePerms = allPermissions.filter(perm => perm.name.startsWith(page.name + '.'));
+            const pagePerms = allPermissions.filter(perm => perm.name.startsWith(permissionGroup + '.'));
 
             if (pagePerms.length > 0) {
                 const item = {
-                    resource: page.name,
+                    resource: permissionGroup,
                     title: page.title,
                     permissions: pagePerms
                 };
@@ -76,7 +80,7 @@ export function PermissionsTable({ selectedPermissions, onPermissionChange, perm
                     <TableBody>
                         {/* Páginas individuales (sin grupo) */}
                         {organizedPermissions['__individual__']?.map((item) => {
-                            const page = systemPages.find(p => p.name === item.resource);
+                            const page = systemPages.find(p => p.permission.split('.').slice(0, -1).join('.') === item.resource);
                             const Icon = page?.icon;
 
                             return (

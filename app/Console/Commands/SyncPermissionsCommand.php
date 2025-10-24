@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Permission;
 use App\Models\Role;
-use App\Services\PermissionDiscoveryService;
+use App\Services\PermissionService;
 use Illuminate\Console\Command;
 
 class SyncPermissionsCommand extends Command
@@ -28,28 +28,20 @@ class SyncPermissionsCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(PermissionDiscoveryService $service): int
+    public function handle(PermissionService $service): int
     {
-        $this->info('🔍 Descubriendo permisos del sistema...');
+        $this->info('🔍 Sincronizando permisos del sistema...');
         $this->newLine();
 
-        // Limpiar caché si se solicita
-        if ($this->option('clear-cache')) {
-            $service->clearCache();
-            $this->info('✅ Caché de permisos limpiado');
-            $this->newLine();
-        }
-
         // Sincronizar permisos
-        $removeObsolete = $this->option('remove-obsolete');
-        $result = $service->syncPermissions($removeObsolete);
+        $result = $service->syncPermissions();
 
         // Mostrar resultados
         $this->info('📊 Resultado de la sincronización:');
         $this->table(
             ['Métrica', 'Valor'],
             [
-                ['Páginas detectadas', $result['discovered_pages']],
+                ['Páginas configuradas', $result['total_pages']],
                 ['Permisos totales', $result['total_permissions']],
                 ['Permisos creados', $result['created']],
                 ['Permisos actualizados', $result['updated']],

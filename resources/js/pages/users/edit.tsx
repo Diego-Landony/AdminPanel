@@ -1,5 +1,5 @@
 import { showNotification } from '@/hooks/useNotifications';
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import { Eye, EyeOff, Lock, Mail, Shield, User } from 'lucide-react';
 import React, { useState } from 'react';
 
@@ -51,11 +51,18 @@ interface EditUserPageProps {
  * Página para editar un usuario existente
  */
 export default function EditUser({ user, all_roles }: EditUserPageProps) {
+    const { auth } = usePage().props as any;
     const [showPassword, setShowPassword] = useState(false);
     const [changePassword, setChangePassword] = useState(false);
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
     const [selectedRoles, setSelectedRoles] = useState<number[]>(user?.roles || []);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Verificar si el usuario siendo editado es el usuario autenticado
+    const isCurrentUser = auth?.user?.id === user?.id;
+
+    // Encontrar el rol admin
+    const adminRole = all_roles.find(role => role.name === 'admin');
 
     // Siempre llamar hooks antes de cualquier early return
     const { data, setData, patch, processing, errors } = useForm({
@@ -122,6 +129,12 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
      * Maneja el cambio de roles del usuario (auto-save)
      */
     const handleRoleChange = async (roleId: number, checked: boolean) => {
+        // Prevenir que el usuario actual se quite su propio rol admin
+        if (isCurrentUser && adminRole && roleId === adminRole.id && !checked) {
+            showNotification.error(NOTIFICATIONS.error.removeOwnAdminRole);
+            return;
+        }
+
         const newSelectedRoles = checked
             ? [...selectedRoles, roleId]
             : selectedRoles.filter(id => id !== roleId);
@@ -134,24 +147,25 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
                 body: JSON.stringify({ roles: newSelectedRoles }),
             });
 
             if (response.ok) {
-                showNotification.success(checked ? 'Rol agregado exitosamente' : 'Rol removido exitosamente');
+                showNotification.success(checked ? NOTIFICATIONS.success.roleAdded : NOTIFICATIONS.success.roleRemoved);
             } else {
                 // Revertir el cambio si falla
                 setSelectedRoles(selectedRoles);
                 const errorData = await response.json();
-                showNotification.error(errorData.error || 'Error al actualizar roles');
+                showNotification.error(errorData.error || NOTIFICATIONS.error.updateRoles);
             }
         } catch (error) {
             // Revertir el cambio si falla
             setSelectedRoles(selectedRoles);
             console.error('Error saving roles:', error);
-            showNotification.error('Error de conexión al actualizar roles');
+            showNotification.error(NOTIFICATIONS.error.connectionRoles);
         }
     };
 
@@ -252,34 +266,47 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
                             {/* Lista de roles con scroll */}
                             <ScrollArea className="h-[300px] rounded-lg border">
                                 <div className="p-2">
-                                    {filteredRoles.map((role) => (
-                                        <div
-                                            key={role.id}
-                                            className={`flex items-center gap-3 rounded-md p-2 transition-colors ${
-                                                selectedRoles.includes(role.id)
-                                                    ? 'border border-primary/20 bg-primary/5'
-                                                    : 'hover:bg-muted/50'
-                                            }`}
-                                        >
-                                            <Checkbox
-                                                id={`role-${role.id}`}
-                                                checked={selectedRoles.includes(role.id)}
-                                                onCheckedChange={(checked) => handleRoleChange(role.id, checked as boolean)}
-                                                className="data-[state=checked]:border-primary data-[state=checked]:bg-primary"
-                                            />
-                                            <div className="min-w-0 flex-1">
-                                                <Label
-                                                    htmlFor={`role-${role.id}`}
-                                                    className="block cursor-pointer text-sm font-medium"
-                                                >
-                                                    {role.name}
-                                                </Label>
-                                                <p className="truncate text-xs text-muted-foreground">
-                                                    {role.description || 'Sin descripción'}
-                                                </p>
+                                    {filteredRoles.map((role) => {
+                                        const isAdminRoleForCurrentUser = isCurrentUser && role.name === 'admin' && selectedRoles.includes(role.id);
+
+                                        return (
+                                            <div
+                                                key={role.id}
+                                                className={`flex items-center gap-3 rounded-md p-2 transition-colors ${
+                                                    selectedRoles.includes(role.id)
+                                                        ? 'border border-primary/20 bg-primary/5'
+                                                        : 'hover:bg-muted/50'
+                                                } ${isAdminRoleForCurrentUser ? 'opacity-60' : ''}`}
+                                            >
+                                                <Checkbox
+                                                    id={`role-${role.id}`}
+                                                    checked={selectedRoles.includes(role.id)}
+                                                    onCheckedChange={(checked) => handleRoleChange(role.id, checked as boolean)}
+                                                    disabled={isAdminRoleForCurrentUser}
+                                                    className="data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+                                                />
+                                                <div className="min-w-0 flex-1">
+                                                    <Label
+                                                        htmlFor={`role-${role.id}`}
+                                                        className={`block text-sm font-medium ${isAdminRoleForCurrentUser ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                                    >
+                                                        {role.name}
+                                                        {isAdminRoleForCurrentUser && (
+                                                            <span className="ml-2 text-xs font-normal text-amber-600">
+                                                                (No removible)
+                                                            </span>
+                                                        )}
+                                                    </Label>
+                                                    <p className="truncate text-xs text-muted-foreground">
+                                                        {isAdminRoleForCurrentUser
+                                                            ? NOTIFICATIONS.error.removeOwnAdminRole
+                                                            : (role.description || 'Sin descripción')
+                                                        }
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </ScrollArea>
                         </div>

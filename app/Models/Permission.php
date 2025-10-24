@@ -49,12 +49,12 @@ class Permission extends Model
     }
 
     /**
-     * Obtiene el nombre legible del grupo usando el servicio de descubrimiento
+     * Obtiene el nombre legible del grupo usando el servicio de permisos
      */
     public function getGroupDisplayName(): string
     {
-        $discoveryService = app(\App\Services\PermissionDiscoveryService::class);
+        $permissionService = app(\App\Services\PermissionService::class);
 
-        return $discoveryService->getGroupDisplayName($this->group);
+        return $permissionService->getGroupDisplayName($this->group);
     }
 }

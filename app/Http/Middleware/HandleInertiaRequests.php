@@ -36,22 +36,20 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        // Eager load roles y permisos una sola vez para toda la aplicación
+        $user = $request->user()?->load('roles.permissions');
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user() ? [
-                    'id' => $request->user()->id,
-                    'name' => $request->user()->name,
-                    'email' => $request->user()->email,
-                    'is_admin' => $request->user()->isAdmin(), // Flag para bypass en frontend
-                    'roles' => $request->user()->roles->map(function ($role) {
-                        return [
-                            'id' => $role->id,
-                            'name' => $role->name,
-                            'permissions' => $role->permissions->pluck('name')->toArray(),
-                        ];
-                    }),
+                'user' => $user ? [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'is_admin' => $user->isAdmin(),
+                    'permissions' => $user->getAllPermissions(), // Array plano de permisos
+                    'roles' => $user->roles->pluck('name')->toArray(), // Array simple de nombres de roles
                 ] : null,
             ],
             'ziggy' => fn (): array => [

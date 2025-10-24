@@ -123,6 +123,7 @@ export default function EditRole({ role, all_users, permissions }: EditRolePageP
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
                 body: JSON.stringify({ users: newSelectedUsers }),

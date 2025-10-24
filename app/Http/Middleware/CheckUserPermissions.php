@@ -27,8 +27,7 @@ class CheckUserPermissions
             return $next($request);
         }
 
-        // Eager load roles y permisos para evitar N+1 queries
-        $user->load('roles.permissions');
+        // Las relaciones se cargan en HandleInertiaRequests para evitar duplicación
 
         // Si no se especifica permiso, continuar
         if (! $permission) {

@@ -1,13 +1,9 @@
 import { usePage } from '@inertiajs/react';
 
-interface UserRole {
-    name: string;
-    permissions?: string[];
-}
-
 interface User {
     is_admin?: boolean;
-    roles?: UserRole[];
+    permissions?: string[]; // Array plano de permisos
+    roles?: string[]; // Array simple de nombres de roles
 }
 
 interface PageProps {
@@ -19,7 +15,7 @@ interface PageProps {
 /**
  * Hook para verificar permisos del usuario
  *
- * Sistema dinámico que detecta automáticamente páginas y permisos
+ * Optimizado con estructura plana de permisos
  */
 export function usePermissions() {
     const { props } = usePage();
@@ -36,13 +32,15 @@ export function usePermissions() {
         // Admin siempre tiene todos los permisos (bypass automático)
         if (user.is_admin) return true;
 
-        // Si no tiene roles, solo puede acceder al dashboard
-        if (!user.roles || user.roles.length === 0) {
+        // Verificar directamente en el array de permisos
+        if (!user.permissions || user.permissions.length === 0) {
             return permission === 'dashboard.view';
         }
 
-        // Verificar si alguno de sus roles tiene el permiso
-        return user.roles.some((role: UserRole) => role.permissions && role.permissions.includes(permission));
+        // Wildcard para admin
+        if (user.permissions.includes('*')) return true;
+
+        return user.permissions.includes(permission);
     };
 
     /**
@@ -50,7 +48,7 @@ export function usePermissions() {
      */
     const hasRole = (roleName: string): boolean => {
         if (!user || !user.roles) return false;
-        return user.roles.some((role: UserRole) => role.name === roleName);
+        return user.roles.includes(roleName);
     };
 
     /**
@@ -70,20 +68,8 @@ export function usePermissions() {
         // Admin tiene wildcard (todos los permisos)
         if (user.is_admin) return ['*'];
 
-        if (!user.roles) return ['dashboard.view'];
-
-        const permissions = new Set<string>();
-        permissions.add('dashboard.view'); // Siempre incluir dashboard
-
-        user.roles.forEach((role: UserRole) => {
-            if (role.permissions) {
-                role.permissions.forEach((permission: string) => {
-                    permissions.add(permission);
-                });
-            }
-        });
-
-        return Array.from(permissions);
+        // Retornar directamente el array de permisos
+        return user.permissions || ['dashboard.view'];
     };
 
     /**

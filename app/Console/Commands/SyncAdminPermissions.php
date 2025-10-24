@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Permission;
 use App\Models\Role;
-use App\Services\PermissionDiscoveryService;
+use App\Services\PermissionService;
 use Illuminate\Console\Command;
 
 class SyncAdminPermissions extends Command
@@ -27,7 +27,7 @@ class SyncAdminPermissions extends Command
         }
 
         // Sincronizar permisos
-        $service = new PermissionDiscoveryService;
+        $service = new PermissionService;
         $service->syncPermissions();
 
         // Obtener todos los permisos y asignarlos al rol admin

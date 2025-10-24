@@ -138,6 +138,13 @@ export const systemPages: PageConfig[] = [
         group: 'Usuarios',
         permission: 'roles.view',
     },
+    {
+        name: 'settings',
+        title: 'Configuración',
+        href: '/settings/profile',
+        icon: Settings,
+        permission: 'settings.view',
+    },
 ];
 
 /**

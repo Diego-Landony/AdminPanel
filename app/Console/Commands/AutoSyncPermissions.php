@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Role;
-use App\Services\PermissionDiscoveryService;
+use App\Services\PermissionService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 
@@ -66,8 +66,8 @@ class AutoSyncPermissions extends Command
         $this->lastHash = $currentHash;
 
         // Ejecutar sincronización silenciosa
-        $discoveryService = new PermissionDiscoveryService;
-        $result = $discoveryService->syncPermissions();
+        $service = new PermissionService;
+        $result = $service->syncPermissions();
 
         // Actualizar rol admin automáticamente
         $adminRole = Role::where('name', 'admin')->first();

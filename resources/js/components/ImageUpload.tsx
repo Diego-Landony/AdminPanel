@@ -87,6 +87,7 @@ export function ImageUpload({
                 method: 'POST',
                 body: formData,
                 headers: {
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                 },
             });

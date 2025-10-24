@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
 
 class User extends Authenticatable
 {
@@ -115,11 +116,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Caché de permisos en memoria durante el request
-     */
-    private ?array $cachedPermissions = null;
-
-    /**
      * Verifica si el usuario tiene un permiso específico
      * Admin siempre tiene todos los permisos (bypass automático)
      */
@@ -130,10 +126,8 @@ class User extends Authenticatable
             return true;
         }
 
-        // Optimizado: usa relaciones cargadas en vez de query
-        return $this->roles
-            ->flatMap(fn ($role) => $role->permissions)
-            ->contains('name', $permission);
+        // Verificar en el array de permisos cacheado
+        return in_array($permission, $this->getAllPermissions());
     }
 
     /**
@@ -147,7 +141,7 @@ class User extends Authenticatable
     /**
      * Obtiene todos los permisos del usuario
      * Admin tiene wildcard (*) = todos los permisos
-     * Incluye caché en memoria para evitar múltiples cálculos
+     * Usa cache persistente (Redis/File) con TTL de 1 hora
      */
     public function getAllPermissions(): array
     {
@@ -156,20 +150,24 @@ class User extends Authenticatable
             return ['*'];
         }
 
-        // Retornar caché si ya fue calculado en este request
-        if ($this->cachedPermissions !== null) {
-            return $this->cachedPermissions;
-        }
+        // Cache persistente de permisos (1 hora de TTL)
+        return Cache::remember("user.{$this->id}.permissions", now()->addHour(), function () {
+            // Obtener permisos únicos de todos los roles del usuario
+            return $this->roles
+                ->flatMap(fn ($role) => $role->permissions)
+                ->pluck('name')
+                ->unique()
+                ->values()
+                ->toArray();
+        });
+    }
 
-        // Calcular y cachear permisos
-        $this->cachedPermissions = $this->roles
-            ->flatMap(fn ($role) => $role->permissions)
-            ->pluck('name')
-            ->unique()
-            ->values()
-            ->toArray();
-
-        return $this->cachedPermissions;
+    /**
+     * Invalida el cache de permisos del usuario
+     */
+    public function flushPermissionsCache(): void
+    {
+        Cache::forget("user.{$this->id}.permissions");
     }
 
     /**

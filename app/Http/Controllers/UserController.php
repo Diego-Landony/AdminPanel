@@ -249,10 +249,16 @@ class UserController extends Controller
             'created_at' => $user->created_at ? $user->created_at->toISOString() : null,
             'updated_at' => $user->updated_at ? $user->updated_at->toISOString() : null,
             'last_activity_at' => $user->last_activity_at ? $user->last_activity_at->toISOString() : null,
+            'roles' => $user->roles->pluck('id')->toArray(),
         ];
+
+        $allRoles = \App\Models\Role::select('id', 'name', 'description')
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('users/edit', [
             'user' => $userData,
+            'all_roles' => $allRoles,
         ]);
     }
 
@@ -347,6 +353,50 @@ class UserController extends Controller
             \Log::error('Error inesperado al eliminar usuario: '.$e->getMessage());
 
             return back()->with('error', 'Error inesperado al eliminar el usuario. Inténtalo de nuevo o contacta al administrador.');
+        }
+    }
+
+    /**
+     * Actualiza los roles de un usuario
+     */
+    public function updateRoles(Request $request, User $user): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'roles' => 'required|array',
+            'roles.*' => 'exists:roles,id',
+        ]);
+
+        try {
+            $roleIds = $validated['roles'];
+
+            // Si el usuario siendo editado es el usuario autenticado y tiene el rol admin,
+            // asegurar que el rol admin no se pueda remover
+            if ($user->id === auth()->id() && $user->hasRole('admin')) {
+                $adminRole = \App\Models\Role::where('name', 'admin')->first();
+                if ($adminRole && ! in_array($adminRole->id, $roleIds)) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'No puedes remover tu propio rol de administrador',
+                    ], 403);
+                }
+            }
+
+            $user->roles()->sync($roleIds);
+
+            // Invalidar cache de permisos del usuario
+            $user->flushPermissionsCache();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Roles actualizados exitosamente',
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error al actualizar roles del usuario: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al actualizar los roles del usuario',
+            ], 500);
         }
     }
 

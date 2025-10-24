@@ -172,7 +172,7 @@ class ActivityObserver
             default => $eventType,
         };
 
-        $description = "{$modelName} '{$label}' fue {$action}";
+        $description = "{$modelName} '{$label}' {$action}";
 
         // Agregar detalles de cambios para updates
         if ($eventType === 'updated' && $newValues) {

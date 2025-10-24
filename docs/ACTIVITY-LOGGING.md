@@ -320,7 +320,7 @@ class Order extends Model
 
 Resultado en logs:
 ```
-"Orden '#12345' fue creado"  // Usa order_number
+"Orden '#12345' creado"  // Usa order_number
 ```
 
 ### Ejemplo 3: Ver Actividades en la Base de Datos

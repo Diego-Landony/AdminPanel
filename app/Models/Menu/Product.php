@@ -148,6 +148,20 @@ class Product extends Model
     }
 
     /**
+     * Accessor: has_variants se calcula automáticamente desde la categoría
+     * Si el producto tiene categoría, usa uses_variants de la categoría
+     * Si no tiene categoría, usa el valor directo de has_variants (legacy)
+     */
+    public function getHasVariantsAttribute($value): bool
+    {
+        if ($this->category_id && $this->relationLoaded('category') && $this->category) {
+            return (bool) ($this->category->uses_variants ?? false);
+        }
+
+        return (bool) ($value ?? false);
+    }
+
+    /**
      * Verifica si el producto está en algún combo activo
      */
     public function isInActiveCombos(): bool

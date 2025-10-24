@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Menu;
 
+use App\Models\Menu\Category;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -23,7 +24,24 @@ class StoreProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => [
+                'required',
+                'exists:categories,id',
+                function ($attribute, $value, $fail) {
+                    $category = Category::find($value);
+                    if (! $category) {
+                        return;
+                    }
+
+                    if ($category->uses_variants && empty($this->input('variants'))) {
+                        $fail('Esta categoría requiere que definas al menos una variante para el producto.');
+                    }
+
+                    if (! $category->uses_variants && ! empty($this->input('variants'))) {
+                        $fail('Esta categoría no permite variantes. Define un precio único para el producto.');
+                    }
+                },
+            ],
             'name' => 'required|string|max:150',
             'description' => 'nullable|string',
             'image' => 'nullable|string|max:255',
@@ -39,8 +57,29 @@ class StoreProductRequest extends FormRequest
             'precio_domicilio_interior' => 'required_if:has_variants,false|nullable|numeric|min:0',
 
             // Variantes (requeridas si has_variants = true)
-            'variants' => 'required_if:has_variants,true|array',
-            'variants.*' => 'required_if:has_variants,true',
+            'variants' => [
+                'required_if:has_variants,true',
+                'array',
+                function ($attribute, $value, $fail) {
+                    if ($this->input('has_variants') && is_array($value) && count($value) === 0) {
+                        $fail('Debes activar al menos una variante cuando la categoría usa variantes.');
+                    }
+
+                    $category = Category::find($this->input('category_id'));
+                    if (! $category || ! $category->uses_variants) {
+                        return;
+                    }
+
+                    $categoryVariants = $category->variant_definitions ?? [];
+                    foreach ($value as $variant) {
+                        if (! in_array($variant['name'] ?? '', $categoryVariants)) {
+                            $fail("La variante '{$variant['name']}' no existe en las variantes definidas de la categoría.");
+
+                            return;
+                        }
+                    }
+                },
+            ],
             'variants.*.name' => 'required_if:has_variants,true|string|max:150',
             'variants.*.precio_pickup_capital' => 'required_if:has_variants,true|numeric|min:0',
             'variants.*.precio_domicilio_capital' => 'required_if:has_variants,true|numeric|min:0',

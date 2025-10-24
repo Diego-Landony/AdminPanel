@@ -1,30 +1,13 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { useForm } from '@inertiajs/react';
-import React, { useState } from 'react';
-import {
-    DndContext,
-    closestCenter,
-    KeyboardSensor,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    DragEndEvent,
-} from '@dnd-kit/core';
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    useSortable,
-    verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import React, { useState, useEffect } from 'react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
 import { ImageUpload } from '@/components/ImageUpload';
 import { PriceFields } from '@/components/PriceFields';
+import { VariantsFromCategory } from '@/components/VariantsFromCategory';
 import { CreateProductsSkeleton } from '@/components/skeletons';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
@@ -32,13 +15,14 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
-import { generateUniqueId } from '@/utils/generateId';
 import { CategoryCombobox } from '@/components/CategoryCombobox';
-import { Banknote, GripVertical, ListChecks, Package, Plus, X } from 'lucide-react';
+import { Banknote, ListChecks, Package } from 'lucide-react';
 
 interface Category {
     id: number;
     name: string;
+    uses_variants: boolean;
+    variant_definitions: string[];
 }
 
 interface Section {
@@ -46,9 +30,9 @@ interface Section {
     title: string;
 }
 
-interface ProductVariant {
-    id: string;
+interface VariantData {
     name: string;
+    is_active: boolean;
     precio_pickup_capital: string;
     precio_domicilio_capital: string;
     precio_pickup_interior: string;
@@ -58,97 +42,6 @@ interface ProductVariant {
 interface CreateProductPageProps {
     categories: Category[];
     sections: Section[];
-}
-
-interface SortableVariantProps {
-    variant: ProductVariant;
-    index: number;
-    onUpdate: (index: number, field: keyof Omit<ProductVariant, 'id'>, value: string) => void;
-    onRemove: (index: number) => void;
-    errors: Record<string, string>;
-    canDelete: boolean;
-}
-
-function SortableVariant({ variant, index, onUpdate, onRemove, errors, canDelete }: SortableVariantProps) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({ id: variant.id });
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-    };
-
-    return (
-        <div
-            ref={setNodeRef}
-            style={style}
-            className={`border border-border rounded-lg p-4 space-y-4 ${isDragging ? 'shadow-lg bg-muted/50' : ''}`}
-        >
-            <div className="flex items-center gap-3 mb-4">
-                <button
-                    type="button"
-                    className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors"
-                    {...attributes}
-                    {...listeners}
-                >
-                    <GripVertical className="h-5 w-5" />
-                </button>
-
-                <h4 className="text-sm font-medium flex-1">
-                    {variant.name || `Variante ${index + 1}`}
-                </h4>
-
-                {canDelete && (
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onRemove(index)}
-                        className="h-8 w-8 p-0"
-                    >
-                        <X className="h-4 w-4" />
-                    </Button>
-                )}
-            </div>
-
-            <FormField
-                label="Nombre"
-                error={errors[`variants.${index}.name`]}
-                required
-            >
-                <Input
-                    type="text"
-                    value={variant.name}
-                    onChange={(e) => onUpdate(index, 'name', e.target.value)}
-
-                />
-            </FormField>
-
-            <PriceFields
-                capitalPickup={variant.precio_pickup_capital}
-                capitalDomicilio={variant.precio_domicilio_capital}
-                interiorPickup={variant.precio_pickup_interior}
-                interiorDomicilio={variant.precio_domicilio_interior}
-                onChangeCapitalPickup={(value) => onUpdate(index, 'precio_pickup_capital', value)}
-                onChangeCapitalDomicilio={(value) => onUpdate(index, 'precio_domicilio_capital', value)}
-                onChangeInteriorPickup={(value) => onUpdate(index, 'precio_pickup_interior', value)}
-                onChangeInteriorDomicilio={(value) => onUpdate(index, 'precio_domicilio_interior', value)}
-                errors={{
-                    capitalPickup: errors[`variants.${index}.precio_pickup_capital`],
-                    capitalDomicilio: errors[`variants.${index}.precio_domicilio_capital`],
-                    interiorPickup: errors[`variants.${index}.precio_pickup_interior`],
-                    interiorDomicilio: errors[`variants.${index}.precio_domicilio_interior`],
-                }}
-            />
-        </div>
-    );
 }
 
 export default function ProductCreate({ categories, sections }: CreateProductPageProps) {
@@ -163,67 +56,30 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
         precio_domicilio_capital: '',
         precio_pickup_interior: '',
         precio_domicilio_interior: '',
-        variants: [] as ProductVariant[],
+        variants: [] as VariantData[],
         sections: [] as number[],
     });
 
-    const [localVariants, setLocalVariants] = useState<ProductVariant[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
     const [selectedSections, setSelectedSections] = useState<number[]>([]);
 
-    const sensors = useSensors(
-        useSensor(PointerSensor),
-        useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
-        })
-    );
-
-    const addVariant = () => {
-        const newVariant: ProductVariant = {
-            id: generateUniqueId(),
-            name: '',
-            precio_pickup_capital: '',
-            precio_domicilio_capital: '',
-            precio_pickup_interior: '',
-            precio_domicilio_interior: '',
-        };
-        const updated = [...localVariants, newVariant];
-        setLocalVariants(updated);
-        setData('variants', updated);
-    };
-
-    const removeVariant = (index: number) => {
-        const updated = localVariants.filter((_, i) => i !== index);
-        setLocalVariants(updated);
-        setData('variants', updated);
-    };
-
-    const updateVariant = (index: number, field: keyof Omit<ProductVariant, 'id'>, value: string) => {
-        const updated = [...localVariants];
-        updated[index] = { ...updated[index], [field]: value };
-        setLocalVariants(updated);
-        setData('variants', updated);
-    };
-
-    const handleDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-
-        if (over && active.id !== over.id) {
-            setLocalVariants((items) => {
-                const oldIndex = items.findIndex((item) => item.id === active.id);
-                const newIndex = items.findIndex((item) => item.id === over.id);
-
-                const newItems = arrayMove(items, oldIndex, newIndex);
-                setData('variants', newItems);
-                return newItems;
-            });
+    useEffect(() => {
+        if (data.category_id) {
+            const category = categories.find((c) => c.id === Number(data.category_id));
+            setSelectedCategory(category || null);
+            setData('has_variants', category?.uses_variants || false);
+        } else {
+            setSelectedCategory(null);
+            setData('has_variants', false);
         }
+    }, [data.category_id]);
+
+    const handleCategoryChange = (value: number | null) => {
+        setData('category_id', value ? String(value) : '');
     };
 
-    const handleVariantToggle = (checked: boolean) => {
-        setData('has_variants', checked);
-        if (checked && localVariants.length === 0) {
-            addVariant();
-        }
+    const handleVariantsChange = (variants: VariantData[]) => {
+        setData('variants', variants);
     };
 
     const toggleSection = (sectionId: number) => {
@@ -238,15 +94,19 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Actualizar las secciones y variantes en el formulario antes de enviar
-        data.sections = selectedSections;
-        data.variants = localVariants.map(({ id, ...rest }) => ({ ...rest, _tempId: id })) as unknown as typeof data.variants;
+        const submitData = {
+            ...data,
+            sections: selectedSections,
+            variants: data.has_variants
+                ? data.variants.filter((v) => v.is_active).map(({ is_active, ...rest }) => rest)
+                : [],
+        };
 
         post(route('menu.products.store'), {
+            ...submitData,
             onSuccess: () => {
                 reset();
                 setSelectedSections([]);
-                setLocalVariants([]);
             },
             onError: (errors: Record<string, string>) => {
                 if (Object.keys(errors).length === 0) {
@@ -268,10 +128,10 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
             loading={processing}
             loadingSkeleton={CreateProductsSkeleton}
         >
-            <FormSection icon={Package} title="Información Básica" description="Datos principales del producto">
+            <FormSection icon={Package} title="Información Básica">
                 <div className="flex items-center justify-between rounded-lg border p-4">
                     <Label htmlFor="is_active" className="text-base">
-                        Producto activo
+                        Activo
                     </Label>
                     <Switch
                         id="is_active"
@@ -282,7 +142,7 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
 
                 <CategoryCombobox
                     value={data.category_id ? Number(data.category_id) : null}
-                    onChange={(value) => setData('category_id', value ? String(value) : '')}
+                    onChange={handleCategoryChange}
                     categories={categories}
                     label="Categoría"
                     error={errors.category_id}
@@ -295,7 +155,6 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                         type="text"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-
                     />
                 </FormField>
 
@@ -304,37 +163,28 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                         id="description"
                         value={data.description}
                         onChange={(e) => setData('description', e.target.value)}
-
                         rows={2}
                     />
                 </FormField>
 
                 <ImageUpload
-                    label="Imagen del Producto"
+                    label="Imagen"
                     currentImage={data.image}
                     onImageChange={(url) => setData('image', url || '')}
                     error={errors.image}
                 />
             </FormSection>
 
-            <FormSection
-                icon={Banknote}
-                title="Precios y Variantes"
-                description="Define si el producto usa variantes (ej: 15cm, 30cm) o tiene un precio único"
-                className="mt-8"
-            >
-                <div className="flex items-center justify-between rounded-lg border p-4 mb-6">
-                    <Label htmlFor="has_variants" className="text-base">
-                        Producto con variantes
-                    </Label>
-                    <Switch
-                        id="has_variants"
-                        checked={data.has_variants}
-                        onCheckedChange={(checked) => handleVariantToggle(checked as boolean)}
+            <FormSection icon={Banknote} title="Precios" className="mt-8">
+                {!selectedCategory ? (
+                    <p className="text-sm text-muted-foreground">Selecciona una categoría</p>
+                ) : selectedCategory.uses_variants ? (
+                    <VariantsFromCategory
+                        categoryVariants={selectedCategory.variant_definitions || []}
+                        onChange={handleVariantsChange}
+                        errors={errors}
                     />
-                </div>
-
-                {!data.has_variants && (
+                ) : (
                     <PriceFields
                         capitalPickup={data.precio_pickup_capital}
                         capitalDomicilio={data.precio_domicilio_capital}
@@ -352,42 +202,9 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                         }}
                     />
                 )}
-
-                {data.has_variants && (
-                    <div className="space-y-4">
-                        {localVariants.length > 0 && (
-                            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                                <SortableContext items={localVariants.map((v) => v.id)} strategy={verticalListSortingStrategy}>
-                                    <div className="space-y-4">
-                                        {localVariants.map((variant, index) => (
-                                            <SortableVariant
-                                                key={variant.id}
-                                                variant={variant}
-                                                index={index}
-                                                onUpdate={updateVariant}
-                                                onRemove={removeVariant}
-                                                errors={errors}
-                                                canDelete={localVariants.length > 1}
-                                            />
-                                        ))}
-                                    </div>
-                                </SortableContext>
-                            </DndContext>
-                        )}
-
-                        <Button type="button" variant="outline" onClick={addVariant} className="w-full">
-                            <Plus className="h-4 w-4 mr-2" />
-                            Agregar Variante
-                        </Button>
-                    </div>
-                )}
             </FormSection>
 
-            <FormSection
-                icon={ListChecks}
-                title="Secciones"
-                description="Secciones de personalización (ej: vegetales, salsas, quesos)"
-            >
+            <FormSection icon={ListChecks} title="Secciones">
                 <div className="space-y-2">
                     {sections.length === 0 ? (
                         <p className="text-sm text-muted-foreground">No hay secciones disponibles</p>

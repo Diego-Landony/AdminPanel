@@ -17,8 +17,8 @@ class SubwayRealCombosSeeder extends Seeder
     {
         $this->command->info('🎁 Creando combos reales de Subway Guatemala...');
 
-        // Limpiar datos existentes (respetando foreign keys)
-        Combo::query()->delete();
+        // Limpiar datos existentes (respetando foreign keys - force delete por SoftDeletes)
+        Combo::query()->forceDelete();
 
         // Crear categoría especial para combos
         $comboCategory = Category::firstOrCreate(
@@ -43,13 +43,25 @@ class SubwayRealCombosSeeder extends Seeder
         $this->command->info('   ✅ 5 combos reales de Subway Guatemala creados exitosamente');
     }
 
+    /**
+     * Obtiene la variante de un producto por índice (ordenado por sort_order)
+     *
+     * @param Product $product
+     * @param int $index 0 = primera variante (normalmente la más pequeña), 1 = segunda variante, etc.
+     * @return \App\Models\Menu\ProductVariant|null
+     */
+    private function getVariantByIndex(Product $product, int $index = 0)
+    {
+        return $product->variants()->orderBy('sort_order')->skip($index)->first();
+    }
+
     private function createComboPersonal(Category $comboCategory): void
     {
-        // Combo Personal: Sub 15cm + Bebida + Complemento
+        // Combo Personal: Sub (primera variante) + Bebida + Complemento
         $combo = Combo::create([
             'category_id' => $comboCategory->id,
             'name' => 'Combo Personal',
-            'description' => 'Sub de 15cm a elección + Bebida mediana + Papas o Galleta',
+            'description' => 'Sub a elección + Bebida mediana + Papas o Galleta',
             'precio_pickup_capital' => 48.00,
             'precio_domicilio_capital' => 55.00,
             'precio_pickup_interior' => 50.00,
@@ -58,14 +70,14 @@ class SubwayRealCombosSeeder extends Seeder
             'sort_order' => 1,
         ]);
 
-        // Sub 15cm (Italian BMT)
+        // Sub (primera variante - normalmente la más pequeña)
         $italianBMT = Product::where('name', 'Italian B.M.T.')->first();
         if ($italianBMT) {
-            $variant15cm = $italianBMT->variants()->where('size', '15cm')->first();
-            if ($variant15cm) {
+            $firstVariant = $this->getVariantByIndex($italianBMT, 0);
+            if ($firstVariant) {
                 $combo->items()->create([
                     'product_id' => $italianBMT->id,
-                    'variant_id' => $variant15cm->id,
+                    'variant_id' => $firstVariant->id,
                     'quantity' => 1,
                     'sort_order' => 1,
                 ]);
@@ -73,17 +85,14 @@ class SubwayRealCombosSeeder extends Seeder
         }
 
         // Bebida mediana (Coca-Cola)
-        $cocaCola = Product::where('name', 'Coca-Cola')->first();
-        if ($cocaCola) {
-            $variantMediano = $cocaCola->variants()->where('size', 'mediano')->first();
-            if ($variantMediano) {
-                $combo->items()->create([
-                    'product_id' => $cocaCola->id,
-                    'variant_id' => $variantMediano->id,
-                    'quantity' => 1,
-                    'sort_order' => 2,
-                ]);
-            }
+        $cocaColaMediano = Product::where('name', 'Coca-Cola Mediano')->first();
+        if ($cocaColaMediano) {
+            $combo->items()->create([
+                'product_id' => $cocaColaMediano->id,
+                'variant_id' => null,
+                'quantity' => 1,
+                'sort_order' => 2,
+            ]);
         }
 
         // Papas Lays
@@ -102,11 +111,11 @@ class SubwayRealCombosSeeder extends Seeder
 
     private function createComboDoble(Category $comboCategory): void
     {
-        // Combo Doble: 2 Subs 15cm + 2 Bebidas
+        // Combo Doble: 2 Subs (primera variante) + 2 Bebidas
         $combo = Combo::create([
             'category_id' => $comboCategory->id,
             'name' => 'Combo Doble',
-            'description' => '2 Subs de 15cm a elección + 2 Bebidas medianas',
+            'description' => '2 Subs a elección + 2 Bebidas medianas',
             'precio_pickup_capital' => 75.00,
             'precio_domicilio_capital' => 85.00,
             'precio_pickup_interior' => 78.00,
@@ -115,28 +124,28 @@ class SubwayRealCombosSeeder extends Seeder
             'sort_order' => 2,
         ]);
 
-        // Sub 1: Italian BMT 15cm
+        // Sub 1: Italian BMT (primera variante)
         $italianBMT = Product::where('name', 'Italian B.M.T.')->first();
         if ($italianBMT) {
-            $variant15cm = $italianBMT->variants()->where('size', '15cm')->first();
-            if ($variant15cm) {
+            $firstVariant = $this->getVariantByIndex($italianBMT, 0);
+            if ($firstVariant) {
                 $combo->items()->create([
                     'product_id' => $italianBMT->id,
-                    'variant_id' => $variant15cm->id,
+                    'variant_id' => $firstVariant->id,
                     'quantity' => 1,
                     'sort_order' => 1,
                 ]);
             }
         }
 
-        // Sub 2: Pollo Teriyaki 15cm
+        // Sub 2: Pollo Teriyaki (primera variante)
         $polloTeriyaki = Product::where('name', 'Pollo Teriyaki')->first();
         if ($polloTeriyaki) {
-            $variant15cm = $polloTeriyaki->variants()->where('size', '15cm')->first();
-            if ($variant15cm) {
+            $firstVariant = $this->getVariantByIndex($polloTeriyaki, 0);
+            if ($firstVariant) {
                 $combo->items()->create([
                     'product_id' => $polloTeriyaki->id,
-                    'variant_id' => $variant15cm->id,
+                    'variant_id' => $firstVariant->id,
                     'quantity' => 1,
                     'sort_order' => 2,
                 ]);
@@ -144,17 +153,14 @@ class SubwayRealCombosSeeder extends Seeder
         }
 
         // 2 Bebidas medianas
-        $cocaCola = Product::where('name', 'Coca-Cola')->first();
-        if ($cocaCola) {
-            $variantMediano = $cocaCola->variants()->where('size', 'mediano')->first();
-            if ($variantMediano) {
-                $combo->items()->create([
-                    'product_id' => $cocaCola->id,
-                    'variant_id' => $variantMediano->id,
-                    'quantity' => 2,
-                    'sort_order' => 3,
-                ]);
-            }
+        $cocaColaMediano = Product::where('name', 'Coca-Cola Mediano')->first();
+        if ($cocaColaMediano) {
+            $combo->items()->create([
+                'product_id' => $cocaColaMediano->id,
+                'variant_id' => null,
+                'quantity' => 2,
+                'sort_order' => 3,
+            ]);
         }
 
         $this->command->line('      ✓ Combo Doble (Q75 pickup / Q85 delivery)');
@@ -162,11 +168,11 @@ class SubwayRealCombosSeeder extends Seeder
 
     private function createComboFamiliar(Category $comboCategory): void
     {
-        // Combo Familiar: 2 Subs 30cm + 2 Bebidas grandes + 2 Papas
+        // Combo Familiar: 2 Subs (segunda variante si existe, sino primera) + 2 Bebidas grandes + 2 Papas
         $combo = Combo::create([
             'category_id' => $comboCategory->id,
             'name' => 'Combo Familiar',
-            'description' => '2 Subs de 30cm a elección + 2 Bebidas grandes + 2 Papas',
+            'description' => '2 Subs a elección + 2 Bebidas grandes + 2 Papas',
             'precio_pickup_capital' => 145.00,
             'precio_domicilio_capital' => 160.00,
             'precio_pickup_interior' => 150.00,
@@ -175,28 +181,28 @@ class SubwayRealCombosSeeder extends Seeder
             'sort_order' => 3,
         ]);
 
-        // Sub 1: Subway Club 30cm
+        // Sub 1: Subway Club (segunda variante si existe, sino primera - normalmente la mediana)
         $subwayClub = Product::where('name', 'Subway Club')->first();
         if ($subwayClub) {
-            $variant30cm = $subwayClub->variants()->where('size', '30cm')->first();
-            if ($variant30cm) {
+            $secondVariant = $this->getVariantByIndex($subwayClub, 1) ?? $this->getVariantByIndex($subwayClub, 0);
+            if ($secondVariant) {
                 $combo->items()->create([
                     'product_id' => $subwayClub->id,
-                    'variant_id' => $variant30cm->id,
+                    'variant_id' => $secondVariant->id,
                     'quantity' => 1,
                     'sort_order' => 1,
                 ]);
             }
         }
 
-        // Sub 2: Steak & Cheese 30cm
+        // Sub 2: Steak & Cheese (segunda variante si existe, sino primera)
         $steakCheese = Product::where('name', 'Steak & Cheese')->first();
         if ($steakCheese) {
-            $variant30cm = $steakCheese->variants()->where('size', '30cm')->first();
-            if ($variant30cm) {
+            $secondVariant = $this->getVariantByIndex($steakCheese, 1) ?? $this->getVariantByIndex($steakCheese, 0);
+            if ($secondVariant) {
                 $combo->items()->create([
                     'product_id' => $steakCheese->id,
-                    'variant_id' => $variant30cm->id,
+                    'variant_id' => $secondVariant->id,
                     'quantity' => 1,
                     'sort_order' => 2,
                 ]);
@@ -204,17 +210,14 @@ class SubwayRealCombosSeeder extends Seeder
         }
 
         // 2 Bebidas grandes
-        $cocaCola = Product::where('name', 'Coca-Cola')->first();
-        if ($cocaCola) {
-            $variantGrande = $cocaCola->variants()->where('size', 'grande')->first();
-            if ($variantGrande) {
-                $combo->items()->create([
-                    'product_id' => $cocaCola->id,
-                    'variant_id' => $variantGrande->id,
-                    'quantity' => 2,
-                    'sort_order' => 3,
-                ]);
-            }
+        $cocaColaGrande = Product::where('name', 'Coca-Cola Grande')->first();
+        if ($cocaColaGrande) {
+            $combo->items()->create([
+                'product_id' => $cocaColaGrande->id,
+                'variant_id' => null,
+                'quantity' => 2,
+                'sort_order' => 3,
+            ]);
         }
 
         // 2 Papas
@@ -233,11 +236,11 @@ class SubwayRealCombosSeeder extends Seeder
 
     private function createComboDesayuno(Category $comboCategory): void
     {
-        // Combo Desayuno: Desayuno 15cm + Bebida personal + Muffin
+        // Combo Desayuno: Desayuno (primera variante) + Bebida personal + Muffin
         $combo = Combo::create([
             'category_id' => $comboCategory->id,
             'name' => 'Combo Desayuno',
-            'description' => 'Desayuno de 15cm a elección + Bebida personal + Muffin o Galleta',
+            'description' => 'Desayuno a elección + Bebida personal + Muffin o Galleta',
             'precio_pickup_capital' => 42.00,
             'precio_domicilio_capital' => 48.00,
             'precio_pickup_interior' => 44.00,
@@ -246,14 +249,14 @@ class SubwayRealCombosSeeder extends Seeder
             'sort_order' => 4,
         ]);
 
-        // Desayuno con Tocino y Huevo 15cm
+        // Desayuno con Tocino y Huevo (primera variante)
         $desayuno = Product::where('name', 'Desayuno con Tocino y Huevo')->first();
         if ($desayuno) {
-            $variant15cm = $desayuno->variants()->where('size', '15cm')->first();
-            if ($variant15cm) {
+            $firstVariant = $this->getVariantByIndex($desayuno, 0);
+            if ($firstVariant) {
                 $combo->items()->create([
                     'product_id' => $desayuno->id,
-                    'variant_id' => $variant15cm->id,
+                    'variant_id' => $firstVariant->id,
                     'quantity' => 1,
                     'sort_order' => 1,
                 ]);
@@ -261,17 +264,14 @@ class SubwayRealCombosSeeder extends Seeder
         }
 
         // Bebida personal
-        $cocaCola = Product::where('name', 'Coca-Cola')->first();
-        if ($cocaCola) {
-            $variantPersonal = $cocaCola->variants()->where('size', 'personal')->first();
-            if ($variantPersonal) {
-                $combo->items()->create([
-                    'product_id' => $cocaCola->id,
-                    'variant_id' => $variantPersonal->id,
-                    'quantity' => 1,
-                    'sort_order' => 2,
-                ]);
-            }
+        $cocaColaPersonal = Product::where('name', 'Coca-Cola Personal')->first();
+        if ($cocaColaPersonal) {
+            $combo->items()->create([
+                'product_id' => $cocaColaPersonal->id,
+                'variant_id' => null,
+                'quantity' => 1,
+                'sort_order' => 2,
+            ]);
         }
 
         // Muffin de Arándanos
@@ -290,11 +290,11 @@ class SubwayRealCombosSeeder extends Seeder
 
     private function createComboEconomico(Category $comboCategory): void
     {
-        // Combo Económico: Sub 15cm económico + Bebida personal
+        // Combo Económico: Sub (primera variante) económico + Bebida personal
         $combo = Combo::create([
             'category_id' => $comboCategory->id,
             'name' => 'Combo Económico',
-            'description' => 'Sub de 15cm seleccionado + Bebida personal',
+            'description' => 'Sub seleccionado + Bebida personal',
             'precio_pickup_capital' => 38.00,
             'precio_domicilio_capital' => 43.00,
             'precio_pickup_interior' => 40.00,
@@ -303,14 +303,14 @@ class SubwayRealCombosSeeder extends Seeder
             'sort_order' => 5,
         ]);
 
-        // Sub económico: Jamón 15cm
+        // Sub económico: Jamón (primera variante)
         $jamon = Product::where('name', 'Jamón')->first();
         if ($jamon) {
-            $variant15cm = $jamon->variants()->where('size', '15cm')->first();
-            if ($variant15cm) {
+            $firstVariant = $this->getVariantByIndex($jamon, 0);
+            if ($firstVariant) {
                 $combo->items()->create([
                     'product_id' => $jamon->id,
-                    'variant_id' => $variant15cm->id,
+                    'variant_id' => $firstVariant->id,
                     'quantity' => 1,
                     'sort_order' => 1,
                 ]);
@@ -318,17 +318,14 @@ class SubwayRealCombosSeeder extends Seeder
         }
 
         // Bebida personal
-        $cocaCola = Product::where('name', 'Coca-Cola')->first();
-        if ($cocaCola) {
-            $variantPersonal = $cocaCola->variants()->where('size', 'personal')->first();
-            if ($variantPersonal) {
-                $combo->items()->create([
-                    'product_id' => $cocaCola->id,
-                    'variant_id' => $variantPersonal->id,
-                    'quantity' => 1,
-                    'sort_order' => 2,
-                ]);
-            }
+        $cocaColaPersonal = Product::where('name', 'Coca-Cola Personal')->first();
+        if ($cocaColaPersonal) {
+            $combo->items()->create([
+                'product_id' => $cocaColaPersonal->id,
+                'variant_id' => null,
+                'quantity' => 1,
+                'sort_order' => 2,
+            ]);
         }
 
         $this->command->line('      ✓ Combo Económico (Q38 pickup / Q43 delivery)');

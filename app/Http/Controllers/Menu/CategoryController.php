@@ -10,6 +10,7 @@ use App\Http\Requests\Menu\UpdateCategoryRequest;
 use App\Models\Menu\Category;
 use App\Models\Menu\Product;
 use App\Services\Menu\VariantGeneratorService;
+use App\Services\Menu\VariantSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -72,14 +73,40 @@ class CategoryController extends Controller
         ]);
     }
 
-    public function update(UpdateCategoryRequest $request, Category $category): RedirectResponse
+    public function update(UpdateCategoryRequest $request, Category $category, VariantSyncService $variantSync): RedirectResponse
     {
+        $oldDefinitions = $category->variant_definitions ?? [];
         $validated = $request->validated();
 
-        $category->update($validated);
+        try {
+            \DB::transaction(function () use ($category, $validated, $oldDefinitions, $variantSync) {
+                $category->update($validated);
 
-        return redirect()->route('menu.categories.index')
-            ->with('success', 'Categoría actualizada exitosamente.');
+                // Si variant_definitions cambió, sincronizar con productos
+                if (isset($validated['variant_definitions']) && $validated['uses_variants']) {
+                    $newDefinitions = $validated['variant_definitions'];
+
+                    if ($oldDefinitions !== $newDefinitions) {
+                        $changes = $variantSync->syncCategoryVariants($category, $oldDefinitions, $newDefinitions);
+
+                        // Log de cambios para debugging
+                        if (! empty($changes['added']) || ! empty($changes['renamed']) || ! empty($changes['removed'])) {
+                            \Log::info('Variantes sincronizadas', [
+                                'category_id' => $category->id,
+                                'changes' => $changes,
+                            ]);
+                        }
+                    }
+                }
+            });
+
+            return redirect()->route('menu.categories.index')
+                ->with('success', 'Categoría actualizada exitosamente.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['variant_definitions' => $e->getMessage()]);
+        }
     }
 
     public function destroy(Category $category): RedirectResponse

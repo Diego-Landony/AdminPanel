@@ -1,0 +1,199 @@
+import { useState, useEffect } from 'react';
+import { PriceFields } from '@/components/PriceFields';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
+
+interface VariantData {
+    id?: number;
+    name: string;
+    is_active: boolean;
+    precio_pickup_capital: string;
+    precio_domicilio_capital: string;
+    precio_pickup_interior: string;
+    precio_domicilio_interior: string;
+}
+
+interface ExistingVariant {
+    id?: number;
+    name: string;
+    is_active?: boolean;
+    precio_pickup_capital: string | number;
+    precio_domicilio_capital: string | number;
+    precio_pickup_interior: string | number;
+    precio_domicilio_interior: string | number;
+}
+
+interface VariantsFromCategoryProps {
+    categoryVariants: string[];
+    existingVariants?: ExistingVariant[];
+    onChange: (variants: VariantData[]) => void;
+    errors?: Record<string, string>;
+}
+
+export function VariantsFromCategory({
+    categoryVariants,
+    existingVariants = [],
+    onChange,
+    errors = {},
+}: VariantsFromCategoryProps) {
+    const [variants, setVariants] = useState<VariantData[]>([]);
+
+    useEffect(() => {
+        const initializedVariants = categoryVariants.map((variantName) => {
+            const existing = existingVariants.find((v) => v.name === variantName);
+
+            if (existing) {
+                return {
+                    id: existing.id,
+                    name: variantName,
+                    is_active: existing.is_active ?? true,
+                    precio_pickup_capital: String(existing.precio_pickup_capital || ''),
+                    precio_domicilio_capital: String(existing.precio_domicilio_capital || ''),
+                    precio_pickup_interior: String(existing.precio_pickup_interior || ''),
+                    precio_domicilio_interior: String(existing.precio_domicilio_interior || ''),
+                };
+            }
+
+            return {
+                name: variantName,
+                is_active: false,
+                precio_pickup_capital: '',
+                precio_domicilio_capital: '',
+                precio_pickup_interior: '',
+                precio_domicilio_interior: '',
+            };
+        });
+
+        setVariants(initializedVariants);
+        onChange(initializedVariants);
+    }, [categoryVariants, existingVariants]);
+
+    const updateVariant = (index: number, field: keyof VariantData, value: string | boolean) => {
+        const updated = [...variants];
+        updated[index] = { ...updated[index], [field]: value };
+        setVariants(updated);
+        onChange(updated);
+    };
+
+    const toggleVariant = (index: number, checked: boolean) => {
+        updateVariant(index, 'is_active', checked);
+    };
+
+    const activeVariantsCount = variants.filter((v) => v.is_active).length;
+    const hasIncompleteVariants = variants.some((v) => {
+        if (!v.is_active) return false;
+        return (
+            !v.precio_pickup_capital ||
+            !v.precio_domicilio_capital ||
+            !v.precio_pickup_interior ||
+            !v.precio_domicilio_interior
+        );
+    });
+
+    if (categoryVariants.length === 0) {
+        return (
+            <Alert variant="default" className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950">
+                <AlertCircle className="h-4 w-4 text-yellow-600" />
+                <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+                    Esta categoría no tiene variantes definidas.
+                </AlertDescription>
+            </Alert>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            {activeVariantsCount > 0 && (
+                <div className="flex justify-end">
+                    <span className="text-xs text-muted-foreground">
+                        {activeVariantsCount} de {variants.length} activas
+                    </span>
+                </div>
+            )}
+
+            {activeVariantsCount === 0 && (
+                <Alert variant="default" className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950">
+                    <AlertCircle className="h-4 w-4 text-yellow-600" />
+                    <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+                        Activa al menos una variante.
+                    </AlertDescription>
+                </Alert>
+            )}
+
+            {hasIncompleteVariants && (
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                        Las variantes activas deben tener los 4 precios.
+                    </AlertDescription>
+                </Alert>
+            )}
+
+            {variants.map((variant, index) => (
+                <div key={variant.name} className="border border-border rounded-lg p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                            <Checkbox
+                                id={`variant-${index}`}
+                                checked={variant.is_active}
+                                onCheckedChange={(checked) => toggleVariant(index, checked as boolean)}
+                            />
+                            <Label
+                                htmlFor={`variant-${index}`}
+                                className="text-base font-medium cursor-pointer flex items-center gap-2"
+                            >
+                                {variant.is_active ? (
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                )}
+                                {variant.name}
+                            </Label>
+                        </div>
+                        {variant.is_active && (
+                            <span className="text-xs text-muted-foreground">Activa</span>
+                        )}
+                    </div>
+
+                    {variant.is_active && (
+                        <div className="pl-8 pt-2">
+                            <PriceFields
+                                capitalPickup={variant.precio_pickup_capital}
+                                capitalDomicilio={variant.precio_domicilio_capital}
+                                interiorPickup={variant.precio_pickup_interior}
+                                interiorDomicilio={variant.precio_domicilio_interior}
+                                onChangeCapitalPickup={(value) =>
+                                    updateVariant(index, 'precio_pickup_capital', value)
+                                }
+                                onChangeCapitalDomicilio={(value) =>
+                                    updateVariant(index, 'precio_domicilio_capital', value)
+                                }
+                                onChangeInteriorPickup={(value) =>
+                                    updateVariant(index, 'precio_pickup_interior', value)
+                                }
+                                onChangeInteriorDomicilio={(value) =>
+                                    updateVariant(index, 'precio_domicilio_interior', value)
+                                }
+                                errors={{
+                                    capitalPickup: errors[`variants.${index}.precio_pickup_capital`],
+                                    capitalDomicilio: errors[`variants.${index}.precio_domicilio_capital`],
+                                    interiorPickup: errors[`variants.${index}.precio_pickup_interior`],
+                                    interiorDomicilio: errors[`variants.${index}.precio_domicilio_interior`],
+                                }}
+                            />
+                        </div>
+                    )}
+                </div>
+            ))}
+
+            {errors.variants && (
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{errors.variants}</AlertDescription>
+                </Alert>
+            )}
+        </div>
+    );
+}

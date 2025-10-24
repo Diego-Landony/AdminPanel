@@ -111,6 +111,11 @@ class UpdateComboRequest extends FormRequest
             if ($this->category_id) {
                 $this->validateComboCategory($validator);
             }
+
+            // Validar que los productos con variantes tengan variant_id
+            if ($this->items) {
+                $this->validateVariantRequirements($validator);
+            }
         });
     }
 
@@ -145,6 +150,50 @@ class UpdateComboRequest extends FormRequest
                 'category_id',
                 'La categoría seleccionada debe ser de tipo combo.'
             );
+        }
+    }
+
+    /**
+     * Valida que los productos con variantes tengan variant_id y viceversa
+     */
+    protected function validateVariantRequirements($validator): void
+    {
+        foreach ($this->items as $index => $item) {
+            $product = \App\Models\Menu\Product::find($item['product_id']);
+
+            if (! $product) {
+                continue;
+            }
+
+            // Si el producto tiene variantes, variant_id es requerido
+            if ($product->has_variants) {
+                if (empty($item['variant_id'])) {
+                    $validator->errors()->add(
+                        "items.{$index}.variant_id",
+                        "Debes seleccionar una variante para {$product->name}."
+                    );
+                } else {
+                    // Validar que la variante pertenece al producto
+                    $variantExists = $product->variants()
+                        ->where('id', $item['variant_id'])
+                        ->exists();
+
+                    if (! $variantExists) {
+                        $validator->errors()->add(
+                            "items.{$index}.variant_id",
+                            "La variante seleccionada no pertenece a {$product->name}."
+                        );
+                    }
+                }
+            } else {
+                // Si el producto NO tiene variantes, variant_id debe ser null
+                if (! empty($item['variant_id'])) {
+                    $validator->errors()->add(
+                        "items.{$index}.variant_id",
+                        "{$product->name} no tiene variantes. No debes seleccionar una variante."
+                    );
+                }
+            }
         }
     }
 }

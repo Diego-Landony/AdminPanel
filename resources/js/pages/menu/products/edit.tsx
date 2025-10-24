@@ -1,42 +1,26 @@
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
-import {
-    DndContext,
-    closestCenter,
-    KeyboardSensor,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    DragEndEvent,
-} from '@dnd-kit/core';
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    useSortable,
-    verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { useState, useEffect } from 'react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
 import { ImageUpload } from '@/components/ImageUpload';
 import { PriceFields } from '@/components/PriceFields';
+import { VariantsFromCategory } from '@/components/VariantsFromCategory';
 import { EditProductsSkeleton } from '@/components/skeletons';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { generateUniqueId } from '@/utils/generateId';
 import { CategoryCombobox } from '@/components/CategoryCombobox';
-import { Banknote, GripVertical, ListChecks, Package, Plus, X } from 'lucide-react';
+import { Banknote, ListChecks, Package } from 'lucide-react';
 
 interface Category {
     id: number;
     name: string;
+    uses_variants: boolean;
+    variant_definitions: string[];
 }
 
 interface Section {
@@ -47,6 +31,16 @@ interface Section {
 interface ProductVariant {
     id: number | string;
     name: string;
+    is_active?: boolean;
+    precio_pickup_capital: string | number;
+    precio_domicilio_capital: string | number;
+    precio_pickup_interior: string | number;
+    precio_domicilio_interior: string | number;
+}
+
+interface VariantData {
+    name: string;
+    is_active: boolean;
     precio_pickup_capital: string;
     precio_domicilio_capital: string;
     precio_pickup_interior: string;
@@ -88,98 +82,7 @@ interface FormData {
     precio_domicilio_capital: string;
     precio_pickup_interior: string;
     precio_domicilio_interior: string;
-    variants: ProductVariant[];
-}
-
-interface SortableVariantProps {
-    variant: ProductVariant;
-    index: number;
-    onUpdate: (index: number, field: keyof Omit<ProductVariant, 'id'>, value: string) => void;
-    onRemove: (index: number) => void;
-    errors: Record<string, string>;
-    canDelete: boolean;
-}
-
-function SortableVariant({ variant, index, onUpdate, onRemove, errors, canDelete }: SortableVariantProps) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({ id: variant.id });
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-    };
-
-    return (
-        <div
-            ref={setNodeRef}
-            style={style}
-            className={`border border-border rounded-lg p-4 space-y-4 ${isDragging ? 'shadow-lg bg-muted/50' : ''}`}
-        >
-            <div className="flex items-center gap-3 mb-4">
-                <button
-                    type="button"
-                    className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors"
-                    {...attributes}
-                    {...listeners}
-                >
-                    <GripVertical className="h-5 w-5" />
-                </button>
-
-                <h4 className="text-sm font-medium flex-1">
-                    {variant.name || `Variante ${index + 1}`}
-                </h4>
-
-                {canDelete && (
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onRemove(index)}
-                        className="h-8 w-8 p-0"
-                    >
-                        <X className="h-4 w-4" />
-                    </Button>
-                )}
-            </div>
-
-            <FormField
-                label="Nombre"
-                error={errors[`variants.${index}.name`]}
-                required
-            >
-                <Input
-                    type="text"
-                    value={variant.name}
-                    onChange={(e) => onUpdate(index, 'name', e.target.value)}
-
-                />
-            </FormField>
-
-            <PriceFields
-                capitalPickup={variant.precio_pickup_capital}
-                capitalDomicilio={variant.precio_domicilio_capital}
-                interiorPickup={variant.precio_pickup_interior}
-                interiorDomicilio={variant.precio_domicilio_interior}
-                onChangeCapitalPickup={(value) => onUpdate(index, 'precio_pickup_capital', value)}
-                onChangeCapitalDomicilio={(value) => onUpdate(index, 'precio_domicilio_capital', value)}
-                onChangeInteriorPickup={(value) => onUpdate(index, 'precio_pickup_interior', value)}
-                onChangeInteriorDomicilio={(value) => onUpdate(index, 'precio_domicilio_interior', value)}
-                errors={{
-                    capitalPickup: errors[`variants.${index}.precio_pickup_capital`],
-                    capitalDomicilio: errors[`variants.${index}.precio_domicilio_capital`],
-                    interiorPickup: errors[`variants.${index}.precio_pickup_interior`],
-                    interiorDomicilio: errors[`variants.${index}.precio_domicilio_interior`],
-                }}
-            />
-        </div>
-    );
+    variants: VariantData[];
 }
 
 export default function ProductEdit({ product, categories, sections }: EditProductPageProps) {
@@ -194,29 +97,28 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
         precio_domicilio_capital: product.precio_domicilio_capital || '',
         precio_pickup_interior: product.precio_pickup_interior || '',
         precio_domicilio_interior: product.precio_domicilio_interior || '',
-        variants: product.variants.map((v) => ({
-            id: v.id,
-            name: v.name,
-            precio_pickup_capital: String(v.precio_pickup_capital),
-            precio_domicilio_capital: String(v.precio_domicilio_capital),
-            precio_pickup_interior: String(v.precio_pickup_interior),
-            precio_domicilio_interior: String(v.precio_domicilio_interior),
-        })),
+        variants: [],
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedSections, setSelectedSections] = useState<number[]>(product.sections.map((s) => s.id));
-    const [localVariants, setLocalVariants] = useState<ProductVariant[]>(formData.variants);
-
-    const sensors = useSensors(
-        useSensor(PointerSensor),
-        useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
-        })
+    const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+        product.category ? categories.find((c) => c.id === product.category_id) || null : null
     );
 
-    const handleInputChange = (field: keyof FormData, value: string | boolean | ProductVariant[]) => {
+    useEffect(() => {
+        if (formData.category_id) {
+            const category = categories.find((c) => c.id === Number(formData.category_id));
+            setSelectedCategory(category || null);
+            setFormData((prev) => ({ ...prev, has_variants: category?.uses_variants || false }));
+        } else {
+            setSelectedCategory(null);
+            setFormData((prev) => ({ ...prev, has_variants: false }));
+        }
+    }, [formData.category_id]);
+
+    const handleInputChange = (field: keyof FormData, value: string | boolean | VariantData[]) => {
         setFormData((prev) => ({
             ...prev,
             [field]: value,
@@ -231,53 +133,12 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
         }
     };
 
-    const addVariant = () => {
-        const newVariant: ProductVariant = {
-            id: generateUniqueId(),
-            name: '',
-            precio_pickup_capital: '',
-            precio_domicilio_capital: '',
-            precio_pickup_interior: '',
-            precio_domicilio_interior: '',
-        };
-        const updated = [...localVariants, newVariant];
-        setLocalVariants(updated);
-        handleInputChange('variants', updated);
+    const handleCategoryChange = (value: number | null) => {
+        handleInputChange('category_id', value ? String(value) : '');
     };
 
-    const removeVariant = (index: number) => {
-        const updated = localVariants.filter((_, i) => i !== index);
-        setLocalVariants(updated);
-        handleInputChange('variants', updated);
-    };
-
-    const updateVariant = (index: number, field: keyof Omit<ProductVariant, 'id'>, value: string) => {
-        const updated = [...localVariants];
-        updated[index] = { ...updated[index], [field]: value };
-        setLocalVariants(updated);
-        handleInputChange('variants', updated);
-    };
-
-    const handleDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-
-        if (over && active.id !== over.id) {
-            setLocalVariants((items) => {
-                const oldIndex = items.findIndex((item) => item.id === active.id);
-                const newIndex = items.findIndex((item) => item.id === over.id);
-
-                const newItems = arrayMove(items, oldIndex, newIndex);
-                handleInputChange('variants', newItems);
-                return newItems;
-            });
-        }
-    };
-
-    const handleVariantToggle = (checked: boolean) => {
-        handleInputChange('has_variants', checked);
-        if (checked && localVariants.length === 0) {
-            addVariant();
-        }
+    const handleVariantsChange = (variants: VariantData[]) => {
+        handleInputChange('variants', variants);
     };
 
     const toggleSection = (sectionId: number) => {
@@ -291,14 +152,9 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
         const submitData = {
             ...formData,
             sections: selectedSections,
-            variants: localVariants.map((v) => ({
-                ...(typeof v.id === 'number' ? { id: v.id } : {}),
-                name: v.name,
-                precio_pickup_capital: v.precio_pickup_capital,
-                precio_domicilio_capital: v.precio_domicilio_capital,
-                precio_pickup_interior: v.precio_pickup_interior,
-                precio_domicilio_interior: v.precio_domicilio_interior,
-            })),
+            variants: formData.has_variants
+                ? formData.variants.filter((v) => v.is_active).map(({ is_active, ...rest }) => rest)
+                : [],
         };
 
         router.put(`/menu/products/${product.id}`, submitData, {
@@ -325,10 +181,10 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
             loading={false}
             loadingSkeleton={EditProductsSkeleton}
         >
-            <FormSection icon={Package} title="Información Básica" description="Datos principales del producto">
+            <FormSection icon={Package} title="Información Básica">
                 <div className="flex items-center justify-between rounded-lg border p-4">
                     <Label htmlFor="is_active" className="text-base">
-                        Producto activo
+                        Activo
                     </Label>
                     <Switch
                         id="is_active"
@@ -339,7 +195,7 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
 
                 <CategoryCombobox
                     value={formData.category_id ? Number(formData.category_id) : null}
-                    onChange={(value) => handleInputChange('category_id', value ? String(value) : '')}
+                    onChange={handleCategoryChange}
                     categories={categories}
                     label="Categoría"
                     error={errors.category_id}
@@ -354,27 +210,20 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
                     <Textarea id="description" value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} rows={2} />
                 </FormField>
 
-                <ImageUpload label="Imagen del Producto" currentImage={formData.image} onImageChange={(url) => handleInputChange('image', url || '')} error={errors.image} />
+                <ImageUpload label="Imagen" currentImage={formData.image} onImageChange={(url) => handleInputChange('image', url || '')} error={errors.image} />
             </FormSection>
 
-            <FormSection
-                icon={Banknote}
-                title="Precios y Variantes"
-                description="Define si el producto usa variantes (ej: 15cm, 30cm) o tiene un precio único"
-                className="mt-8"
-            >
-                <div className="flex items-center justify-between rounded-lg border p-4 mb-6">
-                    <Label htmlFor="has_variants" className="text-base">
-                        Producto con variantes
-                    </Label>
-                    <Switch
-                        id="has_variants"
-                        checked={formData.has_variants}
-                        onCheckedChange={(checked) => handleVariantToggle(checked as boolean)}
+            <FormSection icon={Banknote} title="Precios" className="mt-8">
+                {!selectedCategory ? (
+                    <p className="text-sm text-muted-foreground">Selecciona una categoría</p>
+                ) : selectedCategory.uses_variants ? (
+                    <VariantsFromCategory
+                        categoryVariants={selectedCategory.variant_definitions || []}
+                        existingVariants={product.variants}
+                        onChange={handleVariantsChange}
+                        errors={errors}
                     />
-                </div>
-
-                {!formData.has_variants && (
+                ) : (
                     <PriceFields
                         capitalPickup={formData.precio_pickup_capital}
                         capitalDomicilio={formData.precio_domicilio_capital}
@@ -392,42 +241,9 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
                         }}
                     />
                 )}
-
-                {formData.has_variants && (
-                    <div className="space-y-4">
-                        {localVariants.length > 0 && (
-                            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                                <SortableContext items={localVariants.map((v) => v.id)} strategy={verticalListSortingStrategy}>
-                                    <div className="space-y-4">
-                                        {localVariants.map((variant, index) => (
-                                            <SortableVariant
-                                                key={variant.id}
-                                                variant={variant}
-                                                index={index}
-                                                onUpdate={updateVariant}
-                                                onRemove={removeVariant}
-                                                errors={errors}
-                                                canDelete={localVariants.length > 1}
-                                            />
-                                        ))}
-                                    </div>
-                                </SortableContext>
-                            </DndContext>
-                        )}
-
-                        <Button type="button" variant="outline" onClick={addVariant} className="w-full">
-                            <Plus className="h-4 w-4 mr-2" />
-                            Agregar Variante
-                        </Button>
-                    </div>
-                )}
             </FormSection>
 
-            <FormSection
-                icon={ListChecks}
-                title="Secciones"
-                description="Secciones de personalización (ej: vegetales, salsas, quesos)"
-            >
+            <FormSection icon={ListChecks} title="Secciones">
                 <div className="space-y-2">
                     {sections.length === 0 ? (
                         <p className="text-sm text-muted-foreground">No hay secciones disponibles</p>

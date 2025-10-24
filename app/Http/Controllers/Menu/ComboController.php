@@ -62,7 +62,7 @@ class ComboController extends Controller
         return Inertia::render('menu/combos/create', [
             'products' => Product::query()
                 ->with([
-                    'category:id,name',
+                    'category:id,name,uses_variants',
                     'variants' => function ($query) {
                         $query->where('is_active', true)
                             ->orderBy('sort_order')
@@ -141,7 +141,7 @@ class ComboController extends Controller
             'combo' => $combo,
             'products' => Product::query()
                 ->with([
-                    'category:id,name',
+                    'category:id,name,uses_variants',
                     'variants' => function ($query) {
                         $query->where('is_active', true)
                             ->orderBy('sort_order')

@@ -45,22 +45,23 @@ class SubwayPromotionsSeeder extends Seeder
         ])->with('variants')->get();
 
         foreach ($subs as $sub) {
-            $variant15cm = $sub->variants->where('size', '15cm')->first();
-            if ($variant15cm) {
+            // Usar la primera variante (ordenada por sort_order) en lugar de buscar hardcoded '15cm'
+            $firstVariant = $sub->variants->sortBy('sort_order')->first();
+            if ($firstVariant) {
                 PromotionItem::create([
                     'promotion_id' => $promotion->id,
                     'product_id' => $sub->id,
-                    'variant_id' => $variant15cm->id,
+                    'variant_id' => $firstVariant->id,
                     'category_id' => null,
-                    'special_price_capital' => $variant15cm->precio_pickup_capital * 0.5,
-                    'special_price_interior' => $variant15cm->precio_pickup_interior * 0.5,
+                    'special_price_capital' => $firstVariant->precio_pickup_capital * 0.5,
+                    'special_price_interior' => $firstVariant->precio_pickup_interior * 0.5,
                 ]);
             }
         }
 
         $this->command->line("      ✓ {$promotion->name}");
 
-        // 2x1 en Bebidas
+        // 2x1 en Bebidas Medianas
         $promotion2 = Promotion::create([
             'name' => '2x1 en Bebidas Medianas',
             'description' => 'Compra una bebida mediana y lleva otra gratis',
@@ -68,22 +69,20 @@ class SubwayPromotionsSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        $bebidas = Product::where('category_id', Category::where('name', 'Bebidas')->first()->id)
-            ->with('variants')
+        // Bebidas medianas (ahora son productos individuales sin variantes)
+        $bebidasMedianas = Product::where('category_id', Category::where('name', 'Bebidas')->first()->id)
+            ->where('name', 'LIKE', '%Mediano%')
             ->get();
 
-        foreach ($bebidas as $bebida) {
-            $variantMediano = $bebida->variants->where('size', 'mediano')->first();
-            if ($variantMediano) {
-                PromotionItem::create([
-                    'promotion_id' => $promotion2->id,
-                    'product_id' => $bebida->id,
-                    'variant_id' => $variantMediano->id,
-                    'category_id' => null,
-                    'special_price_capital' => $variantMediano->precio_pickup_capital * 0.5,
-                    'special_price_interior' => $variantMediano->precio_pickup_interior * 0.5,
-                ]);
-            }
+        foreach ($bebidasMedianas as $bebida) {
+            PromotionItem::create([
+                'promotion_id' => $promotion2->id,
+                'product_id' => $bebida->id,
+                'variant_id' => null,
+                'category_id' => null,
+                'special_price_capital' => $bebida->precio_pickup_capital * 0.5,
+                'special_price_interior' => $bebida->precio_pickup_interior * 0.5,
+            ]);
         }
 
         $this->command->line("      ✓ {$promotion2->name}");
@@ -119,10 +118,11 @@ class SubwayPromotionsSeeder extends Seeder
         foreach ($subsDelDia as $subData) {
             $product = Product::where('name', $subData['name'])->first();
             if ($product) {
-                $variant15cm = $product->variants()->where('size', '15cm')->first();
-                if ($variant15cm) {
+                // Usar la primera variante (ordenada por sort_order) en lugar de buscar hardcoded '15cm'
+                $firstVariant = $product->variants()->orderBy('sort_order')->first();
+                if ($firstVariant) {
                     // Actualizar información en la variante
-                    $variant15cm->update([
+                    $firstVariant->update([
                         'is_daily_special' => true,
                         'daily_special_days' => $subData['days'],
                         'daily_special_precio_pickup_capital' => $precioSubDelDia,
@@ -134,7 +134,7 @@ class SubwayPromotionsSeeder extends Seeder
                     // Crear item en la promoción
                     $promotion->items()->create([
                         'product_id' => $product->id,
-                        'variant_id' => $variant15cm->id,
+                        'variant_id' => $firstVariant->id,
                         'category_id' => null,
                         'special_price_capital' => $precioSubDelDia,
                         'special_price_interior' => $precioSubDelDia + 2,
@@ -143,7 +143,7 @@ class SubwayPromotionsSeeder extends Seeder
                         'weekdays' => $subData['days'],
                     ]);
 
-                    $this->command->line("      ✓ {$product->name} - {$subData['dayName']} (Q{$precioSubDelDia})");
+                    $this->command->line("      ✓ {$product->name} ({$firstVariant->name}) - {$subData['dayName']} (Q{$precioSubDelDia})");
                 }
             }
         }
@@ -169,6 +169,8 @@ class SubwayPromotionsSeeder extends Seeder
             'product_id' => null,
             'variant_id' => null,
             'category_id' => $categoryDesayunos->id,
+            'discount_percentage' => 15.00,
+            'validity_type' => 'time_range',
             'time_from' => '06:00:00',
             'time_until' => '11:00:00',
         ]);
@@ -189,6 +191,8 @@ class SubwayPromotionsSeeder extends Seeder
             'product_id' => null,
             'variant_id' => null,
             'category_id' => $categoryEnsaladas->id,
+            'discount_percentage' => 20.00,
+            'validity_type' => 'permanent',
         ]);
 
         $this->command->line("      ✓ {$promotion2->name}");

@@ -15,6 +15,8 @@ interface Category {
     name: string;
     is_active: boolean;
     is_combo_category: boolean;
+    uses_variants: boolean;
+    variant_definitions: string[];
     sort_order: number;
     created_at: string;
     updated_at: string;
@@ -114,9 +116,29 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
         {
             key: 'name',
             title: 'Categoría',
-            width: 'w-64',
+            width: 'w-48',
             render: (category: Category) => (
                 <div className="text-sm font-medium text-foreground truncate">{category.name}</div>
+            ),
+        },
+        {
+            key: 'variants',
+            title: 'Variantes',
+            width: 'w-64',
+            render: (category: Category) => (
+                <div className="text-sm text-muted-foreground">
+                    {category.uses_variants && category.variant_definitions && category.variant_definitions.length > 0 ? (
+                        <ul className="list-disc list-inside space-y-1">
+                            {category.variant_definitions.map((variant, index) => (
+                                <li key={index} className="text-xs">
+                                    {variant}
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <span className="text-muted-foreground/50">—</span>
+                    )}
+                </div>
             ),
         },
         {
@@ -175,6 +197,12 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
             }}
             dataFields={[
                 { label: 'Tipo', value: category.is_combo_category ? 'Combo' : 'Producto' },
+                {
+                    label: 'Variantes',
+                    value: category.uses_variants && category.variant_definitions?.length > 0
+                        ? category.variant_definitions.join(', ')
+                        : '—',
+                },
             ]}
         />
     );

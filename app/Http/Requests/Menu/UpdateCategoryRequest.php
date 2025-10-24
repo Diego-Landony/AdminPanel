@@ -26,7 +26,21 @@ class UpdateCategoryRequest extends FormRequest
             'is_active' => 'boolean',
             'is_combo_category' => 'boolean',
             'uses_variants' => 'boolean',
-            'variant_definitions' => 'nullable|array',
+            'variant_definitions' => [
+                'nullable',
+                'array',
+                function ($attribute, $value, $fail) {
+                    // Si uses_variants es true, variant_definitions no puede estar vacío
+                    if ($this->input('uses_variants') && empty($value)) {
+                        $fail('Debes definir al menos una variante cuando uses variantes.');
+                    }
+
+                    // Validar que no haya duplicados
+                    if (is_array($value) && count($value) !== count(array_unique($value))) {
+                        $fail('Las variantes no pueden tener nombres duplicados.');
+                    }
+                },
+            ],
             'variant_definitions.*' => 'string|max:50',
         ];
     }

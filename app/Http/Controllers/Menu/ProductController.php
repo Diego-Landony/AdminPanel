@@ -93,7 +93,7 @@ class ProductController extends Controller
         $categories = Category::active()
             ->where('is_combo_category', false)
             ->ordered()
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'uses_variants', 'variant_definitions']);
         $sections = Section::with('options')->orderBy('sort_order')->get();
 
         return Inertia::render('menu/products/create', [
@@ -171,7 +171,7 @@ class ProductController extends Controller
         $categories = Category::active()
             ->where('is_combo_category', false)
             ->ordered()
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'uses_variants', 'variant_definitions']);
         $sections = Section::with('options')->orderBy('sort_order')->get();
 
         return Inertia::render('menu/products/edit', [
@@ -223,6 +223,7 @@ class ProductController extends Controller
                                 'precio_domicilio_capital' => $variantData['precio_domicilio_capital'],
                                 'precio_pickup_interior' => $variantData['precio_pickup_interior'],
                                 'precio_domicilio_interior' => $variantData['precio_domicilio_interior'],
+                                'is_active' => true,
                                 'sort_order' => $index + 1,
                             ]);
                             $existingVariantIds[] = $variant->id;
@@ -245,8 +246,8 @@ class ProductController extends Controller
                     }
                 }
 
-                // Eliminar variantes que ya no están en la lista
-                $product->variants()->whereNotIn('id', $existingVariantIds)->delete();
+                // Desactivar variantes que ya no están en la lista (no eliminar para conservar historial)
+                $product->variants()->whereNotIn('id', $existingVariantIds)->update(['is_active' => false]);
             }
 
             $product->update($validated);

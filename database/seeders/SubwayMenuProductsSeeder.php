@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Menu\Category;
+use App\Models\Menu\ComboItem;
 use App\Models\Menu\Product;
 use App\Models\Menu\ProductVariant;
 use App\Models\Menu\Section;
@@ -16,12 +17,16 @@ class SubwayMenuProductsSeeder extends Seeder
         $this->command->info('🥪 Creando productos del menú de Subway...');
 
         // Limpiar datos existentes (respetando foreign keys)
+        ComboItem::query()->delete();
         ProductVariant::query()->delete();
         Product::query()->delete();
 
         $this->createSubs();
+        $this->createSubwaySeries();
+        $this->createWraps();
         $this->createBebidas();
         $this->createEnsaladas();
+        $this->createPizzasPersonales();
         $this->createComplementos();
         $this->createPostres();
         $this->createDesayunos();
@@ -131,7 +136,7 @@ class SubwayMenuProductsSeeder extends Seeder
             ProductVariant::create([
                 'product_id' => $product->id,
                 'sku' => Str::slug($subData['name']).'-15cm',
-                'name' => '15 cm',
+                'name' => '15cm',
                 'size' => '15cm',
                 'precio_pickup_capital' => $subData['prices_15cm']['pickup_capital'],
                 'precio_domicilio_capital' => $subData['prices_15cm']['domicilio_capital'],
@@ -145,7 +150,7 @@ class SubwayMenuProductsSeeder extends Seeder
             ProductVariant::create([
                 'product_id' => $product->id,
                 'sku' => Str::slug($subData['name']).'-30cm',
-                'name' => '30 cm',
+                'name' => '30cm',
                 'size' => '30cm',
                 'precio_pickup_capital' => $subData['prices_30cm']['pickup_capital'],
                 'precio_domicilio_capital' => $subData['prices_30cm']['domicilio_capital'],
@@ -162,6 +167,115 @@ class SubwayMenuProductsSeeder extends Seeder
         }
     }
 
+    private function createSubwaySeries(): void
+    {
+        $this->command->line('   ⭐ Creando Subway Series...');
+
+        $category = Category::where('name', 'Subway Series')->first();
+
+        $series = [
+            ['name' => 'The Philly 15cm', 'description' => 'Steak, queso americano, pimientos verdes y cebollas (15cm)', 'precio_pickup_capital' => 42, 'precio_domicilio_capital' => 47, 'precio_pickup_interior' => 44, 'precio_domicilio_interior' => 49],
+            ['name' => 'The Philly 30cm', 'description' => 'Steak, queso americano, pimientos verdes y cebollas (30cm)', 'precio_pickup_capital' => 78, 'precio_domicilio_capital' => 83, 'precio_pickup_interior' => 80, 'precio_domicilio_interior' => 85],
+            ['name' => 'The Beast 15cm', 'description' => 'Pepperoni, salami, jamón, roast beef y pavo con doble queso (15cm)', 'precio_pickup_capital' => 48, 'precio_domicilio_capital' => 53, 'precio_pickup_interior' => 50, 'precio_domicilio_interior' => 55],
+            ['name' => 'The Beast 30cm', 'description' => 'Pepperoni, salami, jamón, roast beef y pavo con doble queso (30cm)', 'precio_pickup_capital' => 88, 'precio_domicilio_capital' => 93, 'precio_pickup_interior' => 90, 'precio_domicilio_interior' => 95],
+            ['name' => 'The Boss 15cm', 'description' => 'Salami, pepperoni, jamón con doble queso y vinagreta MVP (15cm)', 'precio_pickup_capital' => 45, 'precio_domicilio_capital' => 50, 'precio_pickup_interior' => 47, 'precio_domicilio_interior' => 52],
+            ['name' => 'The Boss 30cm', 'description' => 'Salami, pepperoni, jamón con doble queso y vinagreta MVP (30cm)', 'precio_pickup_capital' => 82, 'precio_domicilio_capital' => 87, 'precio_pickup_interior' => 84, 'precio_domicilio_interior' => 89],
+            ['name' => 'Titan Turkey 15cm', 'description' => 'Pavo, tocino, queso suizo y peppercorn ranch (15cm)', 'precio_pickup_capital' => 44, 'precio_domicilio_capital' => 49, 'precio_pickup_interior' => 46, 'precio_domicilio_interior' => 51],
+            ['name' => 'Titan Turkey 30cm', 'description' => 'Pavo, tocino, queso suizo y peppercorn ranch (30cm)', 'precio_pickup_capital' => 80, 'precio_domicilio_capital' => 85, 'precio_pickup_interior' => 82, 'precio_domicilio_interior' => 87],
+            ['name' => 'All-American Club 15cm', 'description' => 'Pavo, jamón, tocino con queso americano (15cm)', 'precio_pickup_capital' => 46, 'precio_domicilio_capital' => 51, 'precio_pickup_interior' => 48, 'precio_domicilio_interior' => 53],
+            ['name' => 'All-American Club 30cm', 'description' => 'Pavo, jamón, tocino con queso americano (30cm)', 'precio_pickup_capital' => 84, 'precio_domicilio_capital' => 89, 'precio_pickup_interior' => 86, 'precio_domicilio_interior' => 91],
+            ['name' => 'The Subway Club 15cm', 'description' => 'Pavo, jamón y roast beef clásico (15cm)', 'precio_pickup_capital' => 43, 'precio_domicilio_capital' => 48, 'precio_pickup_interior' => 45, 'precio_domicilio_interior' => 50],
+            ['name' => 'The Subway Club 30cm', 'description' => 'Pavo, jamón y roast beef clásico (30cm)', 'precio_pickup_capital' => 79, 'precio_domicilio_capital' => 84, 'precio_pickup_interior' => 81, 'precio_domicilio_interior' => 86],
+        ];
+
+        foreach ($series as $seriesData) {
+            $product = Product::create([
+                'category_id' => $category->id,
+                'name' => $seriesData['name'],
+                'description' => $seriesData['description'],
+                'image' => null,
+                'has_variants' => false,
+                'precio_pickup_capital' => $seriesData['precio_pickup_capital'],
+                'precio_domicilio_capital' => $seriesData['precio_domicilio_capital'],
+                'precio_pickup_interior' => $seriesData['precio_pickup_interior'],
+                'precio_domicilio_interior' => $seriesData['precio_domicilio_interior'],
+                'is_active' => true,
+                'sort_order' => 0,
+            ]);
+
+            $this->command->line("      ✓ {$product->name}");
+        }
+    }
+
+    private function createWraps(): void
+    {
+        $this->command->line('   🌯 Creando Wraps...');
+
+        $category = Category::where('name', 'Wraps')->first();
+        $sections = Section::whereIn('title', [
+            'Queso',
+            'Vegetales',
+            'Salsas',
+            'Preparación',
+        ])->pluck('id');
+
+        $wraps = [
+            [
+                'name' => 'Wrap de Pollo Teriyaki',
+                'description' => 'Tiras de pollo marinadas en salsa teriyaki envueltas en tortilla de harina con vegetales frescos',
+                'precio_pickup_capital' => 42,
+                'precio_domicilio_capital' => 47,
+                'precio_pickup_interior' => 44,
+                'precio_domicilio_interior' => 49,
+            ],
+            [
+                'name' => 'Wrap Italian B.M.T.',
+                'description' => 'Pepperoni, salami y jamón con vegetales frescos en tortilla de harina',
+                'precio_pickup_capital' => 40,
+                'precio_domicilio_capital' => 45,
+                'precio_pickup_interior' => 42,
+                'precio_domicilio_interior' => 47,
+            ],
+            [
+                'name' => 'Wrap de Pavo',
+                'description' => 'Pechuga de pavo en rebanadas con vegetales frescos en tortilla de harina',
+                'precio_pickup_capital' => 38,
+                'precio_domicilio_capital' => 43,
+                'precio_pickup_interior' => 40,
+                'precio_domicilio_interior' => 45,
+            ],
+            [
+                'name' => 'Wrap Veggie',
+                'description' => 'Vegetales frescos variados envueltos en tortilla de harina',
+                'precio_pickup_capital' => 32,
+                'precio_domicilio_capital' => 37,
+                'precio_pickup_interior' => 34,
+                'precio_domicilio_interior' => 39,
+            ],
+        ];
+
+        foreach ($wraps as $wrapData) {
+            $product = Product::create([
+                'category_id' => $category->id,
+                'name' => $wrapData['name'],
+                'description' => $wrapData['description'],
+                'image' => null,
+                'has_variants' => false,
+                'precio_pickup_capital' => $wrapData['precio_pickup_capital'],
+                'precio_domicilio_capital' => $wrapData['precio_domicilio_capital'],
+                'precio_pickup_interior' => $wrapData['precio_pickup_interior'],
+                'precio_domicilio_interior' => $wrapData['precio_domicilio_interior'],
+                'is_active' => true,
+                'sort_order' => 0,
+            ]);
+
+            // Asociar secciones
+            $product->sections()->attach($sections);
+
+            $this->command->line("      ✓ {$product->name}");
+        }
+    }
+
     private function createBebidas(): void
     {
         $this->command->line('   🥤 Creando Bebidas...');
@@ -169,48 +283,18 @@ class SubwayMenuProductsSeeder extends Seeder
         $category = Category::where('name', 'Bebidas')->first();
 
         $bebidas = [
-            [
-                'name' => 'Coca-Cola',
-                'description' => 'Refresco Coca-Cola',
-                'prices' => [
-                    'personal' => ['pickup_capital' => 8, 'domicilio_capital' => 10, 'pickup_interior' => 9, 'domicilio_interior' => 11],
-                    'mediano' => ['pickup_capital' => 12, 'domicilio_capital' => 14, 'pickup_interior' => 13, 'domicilio_interior' => 15],
-                    'grande' => ['pickup_capital' => 15, 'domicilio_capital' => 17, 'pickup_interior' => 16, 'domicilio_interior' => 18],
-                ],
-            ],
-            [
-                'name' => 'Sprite',
-                'description' => 'Refresco Sprite',
-                'prices' => [
-                    'personal' => ['pickup_capital' => 8, 'domicilio_capital' => 10, 'pickup_interior' => 9, 'domicilio_interior' => 11],
-                    'mediano' => ['pickup_capital' => 12, 'domicilio_capital' => 14, 'pickup_interior' => 13, 'domicilio_interior' => 15],
-                    'grande' => ['pickup_capital' => 15, 'domicilio_capital' => 17, 'pickup_interior' => 16, 'domicilio_interior' => 18],
-                ],
-            ],
-            [
-                'name' => 'Fanta',
-                'description' => 'Refresco Fanta',
-                'prices' => [
-                    'personal' => ['pickup_capital' => 8, 'domicilio_capital' => 10, 'pickup_interior' => 9, 'domicilio_interior' => 11],
-                    'mediano' => ['pickup_capital' => 12, 'domicilio_capital' => 14, 'pickup_interior' => 13, 'domicilio_interior' => 15],
-                    'grande' => ['pickup_capital' => 15, 'domicilio_capital' => 17, 'pickup_interior' => 16, 'domicilio_interior' => 18],
-                ],
-            ],
-            [
-                'name' => 'Agua Pura',
-                'description' => 'Botella de agua purificada',
-                'prices' => [
-                    'personal' => ['pickup_capital' => 6, 'domicilio_capital' => 8, 'pickup_interior' => 7, 'domicilio_interior' => 9],
-                ],
-            ],
-            [
-                'name' => 'Té Helado',
-                'description' => 'Té helado refrescante',
-                'prices' => [
-                    'normal' => ['pickup_capital' => 12, 'domicilio_capital' => 14, 'pickup_interior' => 13, 'domicilio_interior' => 15],
-                    'zero' => ['pickup_capital' => 12, 'domicilio_capital' => 14, 'pickup_interior' => 13, 'domicilio_interior' => 15],
-                ],
-            ],
+            ['name' => 'Coca-Cola Personal', 'description' => 'Refresco Coca-Cola tamaño personal', 'precio_pickup_capital' => 8, 'precio_domicilio_capital' => 10, 'precio_pickup_interior' => 9, 'precio_domicilio_interior' => 11],
+            ['name' => 'Coca-Cola Mediano', 'description' => 'Refresco Coca-Cola tamaño mediano', 'precio_pickup_capital' => 12, 'precio_domicilio_capital' => 14, 'precio_pickup_interior' => 13, 'precio_domicilio_interior' => 15],
+            ['name' => 'Coca-Cola Grande', 'description' => 'Refresco Coca-Cola tamaño grande', 'precio_pickup_capital' => 15, 'precio_domicilio_capital' => 17, 'precio_pickup_interior' => 16, 'precio_domicilio_interior' => 18],
+            ['name' => 'Sprite Personal', 'description' => 'Refresco Sprite tamaño personal', 'precio_pickup_capital' => 8, 'precio_domicilio_capital' => 10, 'precio_pickup_interior' => 9, 'precio_domicilio_interior' => 11],
+            ['name' => 'Sprite Mediano', 'description' => 'Refresco Sprite tamaño mediano', 'precio_pickup_capital' => 12, 'precio_domicilio_capital' => 14, 'precio_pickup_interior' => 13, 'precio_domicilio_interior' => 15],
+            ['name' => 'Sprite Grande', 'description' => 'Refresco Sprite tamaño grande', 'precio_pickup_capital' => 15, 'precio_domicilio_capital' => 17, 'precio_pickup_interior' => 16, 'precio_domicilio_interior' => 18],
+            ['name' => 'Fanta Personal', 'description' => 'Refresco Fanta tamaño personal', 'precio_pickup_capital' => 8, 'precio_domicilio_capital' => 10, 'precio_pickup_interior' => 9, 'precio_domicilio_interior' => 11],
+            ['name' => 'Fanta Mediano', 'description' => 'Refresco Fanta tamaño mediano', 'precio_pickup_capital' => 12, 'precio_domicilio_capital' => 14, 'precio_pickup_interior' => 13, 'precio_domicilio_interior' => 15],
+            ['name' => 'Fanta Grande', 'description' => 'Refresco Fanta tamaño grande', 'precio_pickup_capital' => 15, 'precio_domicilio_capital' => 17, 'precio_pickup_interior' => 16, 'precio_domicilio_interior' => 18],
+            ['name' => 'Agua Pura', 'description' => 'Botella de agua purificada', 'precio_pickup_capital' => 6, 'precio_domicilio_capital' => 8, 'precio_pickup_interior' => 7, 'precio_domicilio_interior' => 9],
+            ['name' => 'Té Helado Mediano', 'description' => 'Té helado refrescante tamaño mediano', 'precio_pickup_capital' => 12, 'precio_domicilio_capital' => 14, 'precio_pickup_interior' => 13, 'precio_domicilio_interior' => 15],
+            ['name' => 'Té Helado Grande', 'description' => 'Té helado refrescante tamaño grande', 'precio_pickup_capital' => 15, 'precio_domicilio_capital' => 17, 'precio_pickup_interior' => 16, 'precio_domicilio_interior' => 18],
         ];
 
         foreach ($bebidas as $bebidaData) {
@@ -219,40 +303,16 @@ class SubwayMenuProductsSeeder extends Seeder
                 'name' => $bebidaData['name'],
                 'description' => $bebidaData['description'],
                 'image' => null,
-                'has_variants' => count($bebidaData['prices']) > 1,
-                'precio_pickup_capital' => 0,
-                'precio_domicilio_capital' => 0,
-                'precio_pickup_interior' => 0,
-                'precio_domicilio_interior' => 0,
+                'has_variants' => false,
+                'precio_pickup_capital' => $bebidaData['precio_pickup_capital'],
+                'precio_domicilio_capital' => $bebidaData['precio_domicilio_capital'],
+                'precio_pickup_interior' => $bebidaData['precio_pickup_interior'],
+                'precio_domicilio_interior' => $bebidaData['precio_domicilio_interior'],
                 'is_active' => true,
                 'sort_order' => 0,
             ]);
 
-            $sortOrder = 1;
-            foreach ($bebidaData['prices'] as $size => $prices) {
-                // Determinar el nombre de la variante
-                $variantName = match ($size) {
-                    'normal' => 'Normal',
-                    'zero' => 'Zero Azúcar',
-                    default => ucfirst($size),
-                };
-
-                ProductVariant::create([
-                    'product_id' => $product->id,
-                    'sku' => Str::slug($bebidaData['name']).'-'.$size,
-                    'name' => $variantName,
-                    'size' => $size,
-                    'precio_pickup_capital' => $prices['pickup_capital'],
-                    'precio_domicilio_capital' => $prices['domicilio_capital'],
-                    'precio_pickup_interior' => $prices['pickup_interior'],
-                    'precio_domicilio_interior' => $prices['domicilio_interior'],
-                    'is_active' => true,
-                    'sort_order' => $sortOrder++,
-                ]);
-            }
-
-            $variantCount = count($bebidaData['prices']);
-            $this->command->line("      ✓ {$product->name} ({$variantCount} variante".($variantCount > 1 ? 's' : '').')');
+            $this->command->line("      ✓ {$product->name}");
         }
     }
 
@@ -300,6 +360,66 @@ class SubwayMenuProductsSeeder extends Seeder
                 'precio_domicilio_capital' => $ensaladaData['precio_domicilio_capital'],
                 'precio_pickup_interior' => $ensaladaData['precio_pickup_interior'],
                 'precio_domicilio_interior' => $ensaladaData['precio_domicilio_interior'],
+                'is_active' => true,
+                'sort_order' => 0,
+            ]);
+
+            $this->command->line("      ✓ {$product->name}");
+        }
+    }
+
+    private function createPizzasPersonales(): void
+    {
+        $this->command->line('   🍕 Creando Pizzas Personales...');
+
+        $category = Category::where('name', 'Pizzas Personales')->first();
+
+        $pizzas = [
+            [
+                'name' => 'Pizza Personal Pepperoni',
+                'description' => 'Pizza personal con pepperoni y queso mozzarella',
+                'precio_pickup_capital' => 38,
+                'precio_domicilio_capital' => 43,
+                'precio_pickup_interior' => 40,
+                'precio_domicilio_interior' => 45,
+            ],
+            [
+                'name' => 'Pizza Personal Vegetariana',
+                'description' => 'Pizza personal con vegetales frescos y queso mozzarella',
+                'precio_pickup_capital' => 35,
+                'precio_domicilio_capital' => 40,
+                'precio_pickup_interior' => 37,
+                'precio_domicilio_interior' => 42,
+            ],
+            [
+                'name' => 'Pizza Personal Jamón y Queso',
+                'description' => 'Pizza personal con jamón y queso mozzarella',
+                'precio_pickup_capital' => 36,
+                'precio_domicilio_capital' => 41,
+                'precio_pickup_interior' => 38,
+                'precio_domicilio_interior' => 43,
+            ],
+            [
+                'name' => 'Pizza Personal Suprema',
+                'description' => 'Pizza personal con pepperoni, salami, jamón, vegetales y queso',
+                'precio_pickup_capital' => 42,
+                'precio_domicilio_capital' => 47,
+                'precio_pickup_interior' => 44,
+                'precio_domicilio_interior' => 49,
+            ],
+        ];
+
+        foreach ($pizzas as $pizzaData) {
+            $product = Product::create([
+                'category_id' => $category->id,
+                'name' => $pizzaData['name'],
+                'description' => $pizzaData['description'],
+                'image' => null,
+                'has_variants' => false,
+                'precio_pickup_capital' => $pizzaData['precio_pickup_capital'],
+                'precio_domicilio_capital' => $pizzaData['precio_domicilio_capital'],
+                'precio_pickup_interior' => $pizzaData['precio_pickup_interior'],
+                'precio_domicilio_interior' => $pizzaData['precio_domicilio_interior'],
                 'is_active' => true,
                 'sort_order' => 0,
             ]);
@@ -465,7 +585,7 @@ class SubwayMenuProductsSeeder extends Seeder
             ProductVariant::create([
                 'product_id' => $product->id,
                 'sku' => Str::slug($desayunoData['name']).'-15cm',
-                'name' => '15 cm',
+                'name' => '15cm',
                 'size' => '15cm',
                 'precio_pickup_capital' => $desayunoData['prices_15cm']['pickup_capital'],
                 'precio_domicilio_capital' => $desayunoData['prices_15cm']['domicilio_capital'],
@@ -479,7 +599,7 @@ class SubwayMenuProductsSeeder extends Seeder
             ProductVariant::create([
                 'product_id' => $product->id,
                 'sku' => Str::slug($desayunoData['name']).'-30cm',
-                'name' => '30 cm',
+                'name' => '30cm',
                 'size' => '30cm',
                 'precio_pickup_capital' => $desayunoData['prices_30cm']['pickup_capital'],
                 'precio_domicilio_capital' => $desayunoData['prices_30cm']['domicilio_capital'],

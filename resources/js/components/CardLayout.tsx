@@ -112,9 +112,9 @@ interface DataFieldProps {
  */
 export const DataField: React.FC<DataFieldProps> = ({ label, value, className = '', truncate = false }) => {
     return (
-        <div className={`min-w-0 flex items-baseline gap-2 ${className}`}>
+        <div className={`flex min-w-0 items-baseline gap-2 ${className}`}>
             <dt className="flex-shrink-0 text-xs font-medium text-muted-foreground">{label}:</dt>
-            <dd className={`break-words text-xs text-foreground ${truncate ? 'line-clamp-2' : ''}`}>{value}</dd>
+            <dd className={`text-xs break-words text-foreground ${truncate ? 'line-clamp-2' : ''}`}>{value}</dd>
         </div>
     );
 };

@@ -14,8 +14,8 @@ export type EmptyStateVariant = 'no-data' | 'no-results' | 'error' | 'no-access'
 const VARIANT_ICONS: Record<Exclude<EmptyStateVariant, 'custom'>, React.ReactNode> = {
     'no-data': <Database className="h-12 w-12 text-muted-foreground" />,
     'no-results': <Search className="h-12 w-12 text-muted-foreground" />,
-    'error': <AlertCircle className="h-12 w-12 text-destructive" />,
-    'no-access': <ShieldAlert className="h-12 w-12 text-warning" />,
+    error: <AlertCircle className="h-12 w-12 text-destructive" />,
+    'no-access': <ShieldAlert className="text-warning h-12 w-12" />,
     'empty-inbox': <Inbox className="h-12 w-12 text-muted-foreground" />,
 };
 
@@ -25,7 +25,7 @@ const VARIANT_ICONS: Record<Exclude<EmptyStateVariant, 'custom'>, React.ReactNod
 const VARIANT_TITLES: Record<Exclude<EmptyStateVariant, 'custom'>, string> = {
     'no-data': 'No hay datos',
     'no-results': 'No se encontraron resultados',
-    'error': 'Ocurrió un error',
+    error: 'Ocurrió un error',
     'no-access': 'Sin acceso',
     'empty-inbox': 'Todo limpio',
 };
@@ -36,7 +36,7 @@ const VARIANT_TITLES: Record<Exclude<EmptyStateVariant, 'custom'>, string> = {
 const VARIANT_DESCRIPTIONS: Record<Exclude<EmptyStateVariant, 'custom'>, string> = {
     'no-data': 'No hay información disponible en este momento',
     'no-results': 'Intenta ajustar tus filtros o criterios de búsqueda',
-    'error': 'Algo salió mal al cargar la información',
+    error: 'Algo salió mal al cargar la información',
     'no-access': 'No tienes permisos para ver este contenido',
     'empty-inbox': 'No hay elementos pendientes',
 };
@@ -131,46 +131,28 @@ export function EmptyState({
     const finalDescription = description || defaultDescription;
 
     const content = (
-        <div
-            className={`flex flex-col items-center justify-center text-center ${className}`}
-            style={{ minHeight }}
-        >
+        <div className={`flex flex-col items-center justify-center text-center ${className}`} style={{ minHeight }}>
             {/* Icono */}
-            <div className="mb-4 rounded-full bg-muted/50 p-4">
-                {finalIcon}
-            </div>
+            <div className="mb-4 rounded-full bg-muted/50 p-4">{finalIcon}</div>
 
             {/* Título */}
-            <h3 className="mb-2 text-lg font-semibold text-foreground">
-                {finalTitle}
-            </h3>
+            <h3 className="mb-2 text-lg font-semibold text-foreground">{finalTitle}</h3>
 
             {/* Descripción */}
-            {finalDescription && (
-                <p className="mb-6 max-w-md text-sm text-muted-foreground">
-                    {finalDescription}
-                </p>
-            )}
+            {finalDescription && <p className="mb-6 max-w-md text-sm text-muted-foreground">{finalDescription}</p>}
 
             {/* Acciones */}
             {(action || secondaryAction) && (
                 <div className="flex flex-col gap-2 sm:flex-row">
                     {action && (
-                        <Button
-                            onClick={action.onClick}
-                            variant="default"
-                            className="gap-2"
-                        >
+                        <Button onClick={action.onClick} variant="default" className="gap-2">
                             {action.icon}
                             {action.label}
                         </Button>
                     )}
 
                     {secondaryAction && (
-                        <Button
-                            onClick={secondaryAction.onClick}
-                            variant="outline"
-                        >
+                        <Button onClick={secondaryAction.onClick} variant="outline">
                             {secondaryAction.label}
                         </Button>
                     )}
@@ -182,9 +164,7 @@ export function EmptyState({
     if (asCard) {
         return (
             <Card>
-                <CardContent className="p-6">
-                    {content}
-                </CardContent>
+                <CardContent className="p-6">{content}</CardContent>
             </Card>
         );
     }
@@ -212,10 +192,14 @@ export function TableEmptyState({
                 variant="no-results"
                 title="No se encontraron resultados"
                 description="Intenta ajustar o limpiar los filtros de búsqueda"
-                secondaryAction={onClearFilters ? {
-                    label: 'Limpiar filtros',
-                    onClick: onClearFilters,
-                } : undefined}
+                secondaryAction={
+                    onClearFilters
+                        ? {
+                              label: 'Limpiar filtros',
+                              onClick: onClearFilters,
+                          }
+                        : undefined
+                }
                 minHeight="300px"
             />
         );
@@ -226,10 +210,14 @@ export function TableEmptyState({
             variant="no-data"
             title="No hay elementos"
             description="Comienza creando tu primer elemento"
-            action={onCreateNew ? {
-                label: createLabel,
-                onClick: onCreateNew,
-            } : undefined}
+            action={
+                onCreateNew
+                    ? {
+                          label: createLabel,
+                          onClick: onCreateNew,
+                      }
+                    : undefined
+            }
             minHeight="300px"
         />
     );
@@ -252,10 +240,14 @@ export function ErrorEmptyState({
             variant="error"
             title={title}
             description={description}
-            action={onRetry ? {
-                label: 'Reintentar',
-                onClick: onRetry,
-            } : undefined}
+            action={
+                onRetry
+                    ? {
+                          label: 'Reintentar',
+                          onClick: onRetry,
+                      }
+                    : undefined
+            }
             minHeight="300px"
         />
     );

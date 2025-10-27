@@ -1,13 +1,13 @@
 import { Head, router } from '@inertiajs/react';
-import { MapPin, Edit, Save, X } from 'lucide-react';
-import React, { useState } from 'react';
-import { MapContainer, TileLayer, Polygon, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
+import { Edit, MapPin, Save, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { MapContainer, Marker, Polygon, Popup, TileLayer } from 'react-leaflet';
 
-import { Button } from '@/components/ui/button';
 import { GeomanControl } from '@/components/GeomanControl';
-import { coordinatesToKML } from '@/utils/kmlParser';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
+import { coordinatesToKML } from '@/utils/kmlParser';
 
 // Fix for default markers in React Leaflet
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl: unknown })._getIconUrl;
@@ -43,17 +43,16 @@ export default function RestaurantsGeofences({ restaurants }: GeofencesOverviewP
     const [originalCoordinates, setOriginalCoordinates] = useState<[number, number][]>([]);
     const [isSaving, setIsSaving] = useState(false);
 
-    const selectedRestaurant = restaurants.find(r => r.id === selectedRestaurantId);
+    const selectedRestaurant = restaurants.find((r) => r.id === selectedRestaurantId);
 
     // Check if coordinates were actually edited
-    const hasChanges = selectedRestaurantId &&
-        JSON.stringify(editedCoordinates) !== JSON.stringify(originalCoordinates);
+    const hasChanges = selectedRestaurantId && JSON.stringify(editedCoordinates) !== JSON.stringify(originalCoordinates);
 
     // Calculate bounds to fit all restaurants and geofences
     const getMapBounds = () => {
         const allCoordinates: Array<{ lat: number; lng: number }> = [];
 
-        restaurants.forEach(restaurant => {
+        restaurants.forEach((restaurant) => {
             // Add restaurant coordinates
             if (restaurant.coordinates) {
                 allCoordinates.push(restaurant.coordinates);
@@ -68,12 +67,12 @@ export default function RestaurantsGeofences({ restaurants }: GeofencesOverviewP
             return undefined;
         }
 
-        const latitudes = allCoordinates.map(coord => coord.lat);
-        const longitudes = allCoordinates.map(coord => coord.lng);
+        const latitudes = allCoordinates.map((coord) => coord.lat);
+        const longitudes = allCoordinates.map((coord) => coord.lng);
 
         const bounds = [
             [Math.min(...latitudes), Math.min(...longitudes)],
-            [Math.max(...latitudes), Math.max(...longitudes)]
+            [Math.max(...latitudes), Math.max(...longitudes)],
         ] as [[number, number], [number, number]];
 
         return bounds;
@@ -89,12 +88,11 @@ export default function RestaurantsGeofences({ restaurants }: GeofencesOverviewP
         return '#6b7280'; // gray-500 for others
     };
 
-
     // Edit mode handlers
     const handleSelectRestaurant = (restaurantId: number) => {
-        const restaurant = restaurants.find(r => r.id === restaurantId);
+        const restaurant = restaurants.find((r) => r.id === restaurantId);
         if (restaurant && restaurant.has_geofence) {
-            const coords = restaurant.geofence_coordinates.map(coord => [coord.lat, coord.lng] as [number, number]);
+            const coords = restaurant.geofence_coordinates.map((coord) => [coord.lat, coord.lng] as [number, number]);
             setSelectedRestaurantId(restaurantId);
             setEditedCoordinates(coords);
             setOriginalCoordinates(coords);
@@ -121,19 +119,23 @@ export default function RestaurantsGeofences({ restaurants }: GeofencesOverviewP
         try {
             const kml = coordinatesToKML(editedCoordinates);
 
-            router.post(route('restaurants.geofence.save', selectedRestaurantId), {
-                geofence_kml: kml,
-            }, {
-                onSuccess: () => {
-                    setSelectedRestaurantId(null);
-                    setEditedCoordinates([]);
-                    setOriginalCoordinates([]);
-                    setIsSaving(false);
+            router.post(
+                route('restaurants.geofence.save', selectedRestaurantId),
+                {
+                    geofence_kml: kml,
                 },
-                onError: () => {
-                    setIsSaving(false);
+                {
+                    onSuccess: () => {
+                        setSelectedRestaurantId(null);
+                        setEditedCoordinates([]);
+                        setOriginalCoordinates([]);
+                        setIsSaving(false);
+                    },
+                    onError: () => {
+                        setIsSaving(false);
+                    },
                 },
-            });
+            );
         } catch (error) {
             console.error('Error al convertir coordenadas a KML:', error);
             setIsSaving(false);
@@ -145,7 +147,7 @@ export default function RestaurantsGeofences({ restaurants }: GeofencesOverviewP
             <Head title="Geocercas" />
 
             <div className="rounded-lg border bg-card">
-                <div className="p-6 border-b">
+                <div className="border-b p-6">
                     <div className="flex items-center gap-2">
                         <MapPin className="h-5 w-5" />
                         <h2 className="font-semibold">Geocercas</h2>
@@ -153,23 +155,14 @@ export default function RestaurantsGeofences({ restaurants }: GeofencesOverviewP
                 </div>
                 <div className="relative">
                     <div className="h-[calc(100vh-220px)]">
-                        <MapContainer
-                            center={guatemalaCenter}
-                            zoom={11}
-                            bounds={bounds}
-                            style={{ height: '100%', width: '100%' }}
-                            className="z-0"
-                        >
+                        <MapContainer center={guatemalaCenter} zoom={11} bounds={bounds} style={{ height: '100%', width: '100%' }} className="z-0">
                             <TileLayer
                                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                             />
 
                             {selectedRestaurantId && editedCoordinates.length > 0 && (
-                                <GeomanControl
-                                    onPolygonEdit={handlePolygonEdit}
-                                    existingPolygon={editedCoordinates}
-                                />
+                                <GeomanControl onPolygonEdit={handlePolygonEdit} existingPolygon={editedCoordinates} />
                             )}
 
                             {restaurants.map((restaurant) => (
@@ -177,30 +170,30 @@ export default function RestaurantsGeofences({ restaurants }: GeofencesOverviewP
                                     {restaurant.has_geofence &&
                                         restaurant.geofence_coordinates.length > 0 &&
                                         restaurant.id !== selectedRestaurantId && (
-                                        <Polygon
-                                            positions={restaurant.geofence_coordinates.map(coord => [coord.lat, coord.lng])}
-                                            pathOptions={{
-                                                fillColor: getPolygonColor(restaurant),
-                                                weight: 2,
-                                                opacity: selectedRestaurantId ? 0.3 : 1,
-                                                color: getPolygonColor(restaurant),
-                                                fillOpacity: selectedRestaurantId ? 0.1 : 0.4,
-                                                className: 'cursor-pointer',
-                                            }}
-                                            eventHandlers={{
-                                                click: () => {
-                                                    if (!selectedRestaurantId) {
-                                                        handleSelectRestaurant(restaurant.id);
-                                                    }
-                                                },
-                                            }}
-                                        >
-                                            <Popup>
-                                                <div className="font-medium">{restaurant.name}</div>
-                                                <div className="text-xs text-muted-foreground">{restaurant.address}</div>
-                                            </Popup>
-                                        </Polygon>
-                                    )}
+                                            <Polygon
+                                                positions={restaurant.geofence_coordinates.map((coord) => [coord.lat, coord.lng])}
+                                                pathOptions={{
+                                                    fillColor: getPolygonColor(restaurant),
+                                                    weight: 2,
+                                                    opacity: selectedRestaurantId ? 0.3 : 1,
+                                                    color: getPolygonColor(restaurant),
+                                                    fillOpacity: selectedRestaurantId ? 0.1 : 0.4,
+                                                    className: 'cursor-pointer',
+                                                }}
+                                                eventHandlers={{
+                                                    click: () => {
+                                                        if (!selectedRestaurantId) {
+                                                            handleSelectRestaurant(restaurant.id);
+                                                        }
+                                                    },
+                                                }}
+                                            >
+                                                <Popup>
+                                                    <div className="font-medium">{restaurant.name}</div>
+                                                    <div className="text-xs text-muted-foreground">{restaurant.address}</div>
+                                                </Popup>
+                                            </Polygon>
+                                        )}
 
                                     {restaurant.coordinates && (
                                         <Marker position={[restaurant.coordinates.lat, restaurant.coordinates.lng]}>
@@ -215,15 +208,13 @@ export default function RestaurantsGeofences({ restaurants }: GeofencesOverviewP
 
                         {/* Floating Action Panel */}
                         {hasChanges && (
-                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000]">
-                                <div className="bg-card border rounded-lg shadow-lg p-4">
-                                    <div className="flex items-center gap-3 mb-3">
+                            <div className="absolute bottom-6 left-1/2 z-[1000] -translate-x-1/2">
+                                <div className="rounded-lg border bg-card p-4 shadow-lg">
+                                    <div className="mb-3 flex items-center gap-3">
                                         <Edit className="h-4 w-4 text-primary" />
                                         <div className="flex-1">
-                                            <div className="font-medium text-sm">{selectedRestaurant?.name}</div>
-                                            <div className="text-xs text-muted-foreground">
-                                                {editedCoordinates.length} puntos
-                                            </div>
+                                            <div className="text-sm font-medium">{selectedRestaurant?.name}</div>
+                                            <div className="text-xs text-muted-foreground">{editedCoordinates.length} puntos</div>
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
@@ -233,15 +224,10 @@ export default function RestaurantsGeofences({ restaurants }: GeofencesOverviewP
                                             disabled={isSaving || editedCoordinates.length < 3}
                                             className="flex-1"
                                         >
-                                            <Save className="h-4 w-4 mr-2" />
+                                            <Save className="mr-2 h-4 w-4" />
                                             {isSaving ? 'Guardando...' : 'Guardar'}
                                         </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={handleCancelEdit}
-                                            disabled={isSaving}
-                                        >
+                                        <Button size="sm" variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
                                             <X className="h-4 w-4" />
                                         </Button>
                                     </div>

@@ -1,7 +1,7 @@
+import { NOTIFICATIONS } from '@/constants/ui-constants';
 import { showNotification } from '@/hooks/useNotifications';
 import { Head, router } from '@inertiajs/react';
-import { Building2, CheckCircle, Clock, MapPin, Phone, ShoppingBag, Truck, FileText } from 'lucide-react';
-import { NOTIFICATIONS } from '@/constants/ui-constants';
+import { Building2, CheckCircle, Clock, FileText, MapPin, Phone, ShoppingBag, Truck } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
 import { DataTable } from '@/components/DataTable';
@@ -72,7 +72,6 @@ const getServiceType = (delivery_active: boolean, pickup_active: boolean): strin
     if (pickup_active) return 'pickup';
     return 'none';
 };
-
 
 /**
  * Página principal de gestión de restaurantes
@@ -156,13 +155,12 @@ export default function RestaurantsIndex({
                 // Geofence badge si existe
                 if (restaurant.has_geofence) {
                     badges.push(
-                        <Badge key="geofence" variant="outline" className="px-2 py-0.5 text-xs bg-green-50 text-green-700 border-green-200">
-                            <FileText className="h-3 w-3 mr-1" />
+                        <Badge key="geofence" variant="outline" className="border-green-200 bg-green-50 px-2 py-0.5 text-xs text-green-700">
+                            <FileText className="mr-1 h-3 w-3" />
                             KML
                         </Badge>,
                     );
                 }
-
 
                 return (
                     <EntityInfoCell
@@ -222,9 +220,7 @@ export default function RestaurantsIndex({
             render: (restaurant: Restaurant) => (
                 <div className="space-y-1">
                     <StatusBadge status={restaurant.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} className="text-xs" />
-                    <div className="text-xs text-muted-foreground">
-                        {restaurant.is_open_now ? 'Abierto ahora' : 'Cerrado'}
-                    </div>
+                    <div className="text-xs text-muted-foreground">{restaurant.is_open_now ? 'Abierto ahora' : 'Cerrado'}</div>
                 </div>
             ),
         },
@@ -297,8 +293,8 @@ export default function RestaurantsIndex({
                 {
                     label: 'Geocerca',
                     value: (
-                        <Badge variant="outline" className="px-2 py-0.5 text-xs bg-green-50 text-green-700 border-green-200">
-                            <FileText className="h-3 w-3 mr-1" />
+                        <Badge variant="outline" className="border-green-200 bg-green-50 px-2 py-0.5 text-xs text-green-700">
+                            <FileText className="mr-1 h-3 w-3" />
                             KML Cargado
                         </Badge>
                     ),

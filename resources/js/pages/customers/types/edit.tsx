@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
 import { Star } from 'lucide-react';
+import { useState } from 'react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
@@ -94,12 +94,8 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
         // Convertir valores string a números antes de enviar
         const submitData = {
             ...formData,
-            points_required: typeof formData.points_required === 'string'
-                ? parseInt(formData.points_required)
-                : formData.points_required,
-            multiplier: typeof formData.multiplier === 'string'
-                ? parseFloat(formData.multiplier)
-                : formData.multiplier,
+            points_required: typeof formData.points_required === 'string' ? parseInt(formData.points_required) : formData.points_required,
+            multiplier: typeof formData.multiplier === 'string' ? parseFloat(formData.multiplier) : formData.multiplier,
         };
 
         router.put(`/customer-types/${customer_type.id}`, submitData, {
@@ -112,7 +108,6 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
             },
         });
     };
-
 
     const colorOptions = [
         { value: 'gray', label: 'Gris', class: 'bg-gray-100 text-gray-800 border border-gray-200' },
@@ -199,7 +194,6 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
                             </SelectContent>
                         </Select>
                     </FormField>
-
                 </div>
 
                 {/* Estado activo */}
@@ -213,7 +207,6 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
                         Tipo activo
                     </Label>
                 </div>
-
             </FormSection>
         </EditPageLayout>
     );

@@ -87,7 +87,6 @@ interface DataTableProps<T> {
     breakpoint?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-
 /**
  * Truncated text component with tooltip for overflow content
  */
@@ -184,9 +183,8 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
     const [sortField, setSortField] = useState<string>(filters.sort_field || 'created_at');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(filters.sort_direction || 'desc');
     const [sortCriteria, setSortCriteria] = useState<SortCriteria[]>(
-        filters.sort_criteria || (filters.sort_field && filters.sort_direction
-            ? [{ field: filters.sort_field, direction: filters.sort_direction }]
-            : [])
+        filters.sort_criteria ||
+            (filters.sort_field && filters.sort_direction ? [{ field: filters.sort_field, direction: filters.sort_direction }] : []),
     );
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -202,19 +200,21 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
         setSortField(filters.sort_field || 'created_at');
         setSortDirection(filters.sort_direction || 'desc');
         setSortCriteria(
-            filters.sort_criteria || (filters.sort_field && filters.sort_direction
-                ? [{ field: filters.sort_field, direction: filters.sort_direction }]
-                : [])
+            filters.sort_criteria ||
+                (filters.sort_field && filters.sort_direction ? [{ field: filters.sort_field, direction: filters.sort_direction }] : []),
         );
     }, [filters]);
 
     /**
      * Get human-readable label for a field based on column definitions
      */
-    const getFieldLabel = useCallback((fieldKey: string): string => {
-        const column = columns.find(col => col.key === fieldKey);
-        return column?.title || fieldKey;
-    }, [columns]);
+    const getFieldLabel = useCallback(
+        (fieldKey: string): string => {
+            const column = columns.find((col) => col.key === fieldKey);
+            return column?.title || fieldKey;
+        },
+        [columns],
+    );
 
     /**
      * Updates filters in URL with state preservation
@@ -272,15 +272,19 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
         setSearch('');
 
         // Apply to backend immediately
-        router.post(routeName, {
-            per_page: perPage,
-            sort_field: sortField,
-            sort_direction: sortDirection,
-            sort_criteria: JSON.stringify(sortCriteria),
-        }, {
-            preserveState: true,
-            replace: true,
-        });
+        router.post(
+            routeName,
+            {
+                per_page: perPage,
+                sort_field: sortField,
+                sort_direction: sortDirection,
+                sort_criteria: JSON.stringify(sortCriteria),
+            },
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     }, [routeName, perPage, sortField, sortDirection, sortCriteria]);
 
     /**
@@ -294,12 +298,16 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
         setSortCriteria([]);
 
         // Navigate to clean state
-        router.post(routeName, {
-            per_page: filters.per_page || 10
-        }, {
-            preserveState: true,
-            replace: true,
-        });
+        router.post(
+            routeName,
+            {
+                per_page: filters.per_page || 10,
+            },
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     }, [routeName, filters.per_page]);
 
     /**
@@ -325,31 +333,39 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                             setSortDirection('desc');
 
                             // Apply to backend immediately
-                            router.post(routeName, {
-                                per_page: perPage,
-                                ...(filters.search && filters.search.trim() ? { search: filters.search.trim() } : {})
-                            }, {
-                                preserveState: true,
-                                replace: true,
-                            });
+                            router.post(
+                                routeName,
+                                {
+                                    per_page: perPage,
+                                    ...(filters.search && filters.search.trim() ? { search: filters.search.trim() } : {}),
+                                },
+                                {
+                                    preserveState: true,
+                                    replace: true,
+                                },
+                            );
                         } else {
                             setSortCriteria(newCriteria);
                             setSortField(newCriteria[0].field);
                             setSortDirection(newCriteria[0].direction);
 
                             // Apply to backend immediately
-                            router.post(routeName, {
-                                per_page: perPage,
-                                sort_field: newCriteria[0].field,
-                                sort_direction: newCriteria[0].direction,
-                                sort_criteria: JSON.stringify(newCriteria),
-                                ...(filters.search && filters.search.trim() ? { search: filters.search.trim() } : {})
-                            }, {
-                                preserveState: true,
-                                replace: true,
-                            });
+                            router.post(
+                                routeName,
+                                {
+                                    per_page: perPage,
+                                    sort_field: newCriteria[0].field,
+                                    sort_direction: newCriteria[0].direction,
+                                    sort_criteria: JSON.stringify(newCriteria),
+                                    ...(filters.search && filters.search.trim() ? { search: filters.search.trim() } : {}),
+                                },
+                                {
+                                    preserveState: true,
+                                    replace: true,
+                                },
+                            );
                         }
-                    }
+                    },
                 });
             });
         }
@@ -364,17 +380,21 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                     setPerPage(defaultPerPage);
 
                     // Apply to backend immediately
-                    router.post(routeName, {
-                        per_page: defaultPerPage,
-                        sort_field: sortField,
-                        sort_direction: sortDirection,
-                        sort_criteria: JSON.stringify(sortCriteria),
-                        ...(filters.search && filters.search.trim() ? { search: filters.search.trim() } : {})
-                    }, {
-                        preserveState: true,
-                        replace: true,
-                    });
-                }
+                    router.post(
+                        routeName,
+                        {
+                            per_page: defaultPerPage,
+                            sort_field: sortField,
+                            sort_direction: sortDirection,
+                            sort_criteria: JSON.stringify(sortCriteria),
+                            ...(filters.search && filters.search.trim() ? { search: filters.search.trim() } : {}),
+                        },
+                        {
+                            preserveState: true,
+                            replace: true,
+                        },
+                    );
+                },
             });
         }
 
@@ -411,16 +431,16 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
      * Handles column sorting with multiple criteria support
      */
     const handleSort = (field: string) => {
-        setSortCriteria(prevCriteria => {
+        setSortCriteria((prevCriteria) => {
             // Check if this field is already in the criteria
-            const existingIndex = prevCriteria.findIndex(criteria => criteria.field === field);
+            const existingIndex = prevCriteria.findIndex((criteria) => criteria.field === field);
 
             if (existingIndex >= 0) {
                 // Field exists, toggle its direction
                 const newCriteria = [...prevCriteria];
                 newCriteria[existingIndex] = {
                     field,
-                    direction: newCriteria[existingIndex].direction === 'asc' ? 'desc' : 'asc'
+                    direction: newCriteria[existingIndex].direction === 'asc' ? 'desc' : 'asc',
                 };
                 return newCriteria;
             } else {
@@ -430,7 +450,7 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
         });
 
         // Also update single field state for backward compatibility
-        const existingCriteria = sortCriteria.find(criteria => criteria.field === field);
+        const existingCriteria = sortCriteria.find((criteria) => criteria.field === field);
         if (existingCriteria) {
             setSortDirection(existingCriteria.direction === 'asc' ? 'desc' : 'asc');
         } else {
@@ -443,25 +463,21 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
      * Returns appropriate sort icon based on current sort state
      */
     const getSortIcon = (field: string) => {
-        const criteria = sortCriteria.find(c => c.field === field);
-        const criteriaIndex = sortCriteria.findIndex(c => c.field === field);
+        const criteria = sortCriteria.find((c) => c.field === field);
+        const criteriaIndex = sortCriteria.findIndex((c) => c.field === field);
 
         if (!criteria) {
             return <ArrowUpDown className="h-4 w-4 text-muted-foreground/50" />;
         }
 
-        const icon = criteria.direction === 'asc' ?
-            <ArrowUp className="h-4 w-4 text-primary" /> :
-            <ArrowDown className="h-4 w-4 text-primary" />;
+        const icon = criteria.direction === 'asc' ? <ArrowUp className="h-4 w-4 text-primary" /> : <ArrowDown className="h-4 w-4 text-primary" />;
 
         // Show order number if there are multiple criteria
         if (sortCriteria.length > 1) {
             return (
                 <div className="flex items-center gap-1">
                     {icon}
-                    <span className="text-xs text-primary font-semibold min-w-[1rem] text-center">
-                        {criteriaIndex + 1}
-                    </span>
+                    <span className="min-w-[1rem] text-center text-xs font-semibold text-primary">{criteriaIndex + 1}</span>
                 </div>
             );
         }
@@ -488,13 +504,11 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                 payload.search = search.trim();
             }
 
-            router.post(routeName, payload,
-                {
-                    preserveState: true,
-                    replace: true,
-                    onFinish: () => setIsRefreshing(false),
-                },
-            );
+            router.post(routeName, payload, {
+                preserveState: true,
+                replace: true,
+                onFinish: () => setIsRefreshing(false),
+            });
         }
     };
 
@@ -517,268 +531,264 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
     return (
         <ErrorBoundary context="tabla de datos" showRetry={true}>
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
-            {/* Page Header */}
-            <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                    <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-                    {description && <p className="text-muted-foreground">{description}</p>}
+                {/* Page Header */}
+                <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                        <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+                        {description && <p className="text-muted-foreground">{description}</p>}
+                    </div>
+                    {createUrl && (
+                        <Link href={createUrl}>
+                            <Button>
+                                <Plus className="mr-2 h-4 w-4" />
+                                {createLabel}
+                            </Button>
+                        </Link>
+                    )}
                 </div>
-                {createUrl && (
-                    <Link href={createUrl}>
-                        <Button>
-                            <Plus className="mr-2 h-4 w-4" />
-                            {createLabel}
-                        </Button>
-                    </Link>
-                )}
-            </div>
 
-            {/* Data Table Card */}
-            <Card>
-                <CardHeader className="pb-6">
-                    <div className="flex flex-col space-y-4">
-                        {/* Stats and Actions Row */}
-                        <div className="flex flex-wrap items-start justify-between gap-4">
-                            {/* Statistics */}
-                            {stats && stats.length > 0 && (
-                                <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                                    {stats.map((stat, index) => (
-                                        <div key={index} className="flex max-w-[200px] min-w-0 flex-shrink-0 items-center gap-2">
-                                            {React.cloneElement(stat.icon as React.ReactElement<{ className?: string }>, {
-                                                className: `flex-shrink-0 ${(stat.icon as React.ReactElement<{ className?: string }>).props.className || ''}`,
-                                            })}
-                                            <span className="flex min-w-0 items-center gap-1 overflow-hidden">
-                                                <span className="truncate overflow-hidden text-ellipsis lowercase" title={stat.title}>
-                                                    {stat.title}
+                {/* Data Table Card */}
+                <Card>
+                    <CardHeader className="pb-6">
+                        <div className="flex flex-col space-y-4">
+                            {/* Stats and Actions Row */}
+                            <div className="flex flex-wrap items-start justify-between gap-4">
+                                {/* Statistics */}
+                                {stats && stats.length > 0 && (
+                                    <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                                        {stats.map((stat, index) => (
+                                            <div key={index} className="flex max-w-[200px] min-w-0 flex-shrink-0 items-center gap-2">
+                                                {React.cloneElement(stat.icon as React.ReactElement<{ className?: string }>, {
+                                                    className: `flex-shrink-0 ${(stat.icon as React.ReactElement<{ className?: string }>).props.className || ''}`,
+                                                })}
+                                                <span className="flex min-w-0 items-center gap-1 overflow-hidden">
+                                                    <span className="truncate overflow-hidden text-ellipsis lowercase" title={stat.title}>
+                                                        {stat.title}
+                                                    </span>
+                                                    <span
+                                                        className="font-medium whitespace-nowrap text-foreground tabular-nums"
+                                                        title={String(stat.value)}
+                                                    >
+                                                        {stat.value}
+                                                    </span>
                                                 </span>
-                                                <span
-                                                    className="font-medium whitespace-nowrap text-foreground tabular-nums"
-                                                    title={String(stat.value)}
-                                                >
-                                                    {stat.value}
-                                                </span>
-                                            </span>
-                                        </div>
-                                    ))}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Refresh Button with Last Sync */}
+                                <div className="flex flex-shrink-0 flex-col items-end gap-1">
+                                    <Button variant="ghost" size="sm" onClick={refreshData} disabled={isRefreshing} className="h-8 px-2">
+                                        <RefreshCw className={`mr-1 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                        {isRefreshing ? 'Sincronizando...' : 'Sincronizar'}
+                                    </Button>
+                                    <span className="text-xs text-muted-foreground">
+                                        Última:{' '}
+                                        {new Date().toLocaleString('es-GT', {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                            second: '2-digit',
+                                            hour12: true,
+                                        })}
+                                    </span>
                                 </div>
-                            )}
-
-                            {/* Refresh Button with Last Sync */}
-                            <div className="flex flex-shrink-0 flex-col items-end gap-1">
-                                <Button variant="ghost" size="sm" onClick={refreshData} disabled={isRefreshing} className="h-8 px-2">
-                                    <RefreshCw className={`mr-1 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                                    {isRefreshing ? 'Sincronizando...' : 'Sincronizar'}
-                                </Button>
-                                <span className="text-xs text-muted-foreground">
-                                    Última:{' '}
-                                    {new Date().toLocaleString('es-GT', {
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        second: '2-digit',
-                                        hour12: true,
-                                    })}
-                                </span>
                             </div>
                         </div>
-                    </div>
-                </CardHeader>
+                    </CardHeader>
 
-                <CardContent>
-                    {/* Active Filters Chips */}
-                    {hasActiveFilters && (
-                        <div className="mb-4 flex flex-wrap items-center gap-2">
-                            {activeFilters.map((filter) => (
-                                <div
-                                    key={filter.key}
-                                    className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800"
-                                >
-                                    <span>{filter.label}</span>
-                                    <button
-                                        type="button"
-                                        onClick={filter.onRemove}
-                                        className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                                        aria-label={`Remover filtro: ${filter.label}`}
+                    <CardContent>
+                        {/* Active Filters Chips */}
+                        {hasActiveFilters && (
+                            <div className="mb-4 flex flex-wrap items-center gap-2">
+                                {activeFilters.map((filter) => (
+                                    <div
+                                        key={filter.key}
+                                        className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
                                     >
-                                        <X className="h-3 w-3" />
-                                    </button>
-                                </div>
-                            ))}
-                            <button
-                                type="button"
-                                onClick={clearAllFilters}
-                                className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700 transition-colors"
-                            >
-                                <X className="h-3 w-3" />
-                                Limpiar todo
-                            </button>
-                        </div>
-                    )}
-                    {/* Search and Filters */}
-                    <div className="mb-6 flex flex-col gap-4 sm:flex-row">
-                        <div className="flex gap-2 flex-1">
-                            <div className="flex-1">
-                                <Label htmlFor="search" className="sr-only">
-                                    Search
-                                </Label>
-                                <div className="relative">
-                                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                    <Input
-                                        id="search"
-                                        placeholder={searchPlaceholder}
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                        className="pl-10 pr-10"
-                                        disabled={isLoading}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                applyFilters();
-                                            }
-                                        }}
-                                    />
-                                    {search && (
+                                        <span>{filter.label}</span>
                                         <button
                                             type="button"
-                                            onClick={clearSearch}
-                                            className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                                            disabled={isLoading}
+                                            onClick={filter.onRemove}
+                                            className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full transition-colors hover:bg-blue-200 dark:hover:bg-blue-800"
+                                            aria-label={`Remover filtro: ${filter.label}`}
                                         >
-                                            <X className="h-4 w-4" />
+                                            <X className="h-3 w-3" />
                                         </button>
-                                    )}
-                                </div>
+                                    </div>
+                                ))}
+                                <button
+                                    type="button"
+                                    onClick={clearAllFilters}
+                                    className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                >
+                                    <X className="h-3 w-3" />
+                                    Limpiar todo
+                                </button>
                             </div>
-                            <Button
-                                onClick={applyFilters}
-                                disabled={isLoading}
-                                className="flex-shrink-0"
-                            >
-                                <Search className="mr-2 h-4 w-4" />
-                                Buscar
-                            </Button>
-                        </div>
-
-                        <div className="flex gap-2">
-                            <Select value={perPage.toString()} onValueChange={(value) => setPerPage(parseInt(value))}>
-                                <SelectTrigger className="w-[100px]">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="10">10</SelectItem>
-                                    <SelectItem value="25">25</SelectItem>
-                                    <SelectItem value="50">50</SelectItem>
-                                    <SelectItem value="100">100</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-
-                    {/* Table Content */}
-                    {isLoading && LoadingSkeleton ? (
-                        <LoadingSkeleton rows={perPage} />
-                    ) : (
-                        <>
-                            {/* Desktop Table View */}
-                            <div className={`hidden ${breakpointClass}block`}>
-                                <div className="rounded-md border">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                {columns.map((column) => (
-                                                    <TableHead
-                                                        key={column.key}
-                                                        className={` ${column.width ? columnWidthConfig[column.width] : columnWidthConfig.auto} ${column.align ? textAlignmentConfig[column.align] : textAlignmentConfig.left} ${column.className || ''} break-words whitespace-normal`}
-                                                    >
-                                                        {column.sortable ? (
-                                                            <Button
-                                                                variant="ghost"
-                                                                onClick={() => handleSort(column.key)}
-                                                                className="flex items-center gap-2 px-0 hover:bg-transparent"
-                                                            >
-                                                                {column.title}
-                                                                {getSortIcon(column.key)}
-                                                            </Button>
-                                                        ) : (
-                                                            column.title
-                                                        )}
-                                                    </TableHead>
-                                                ))}
-                                            </TableRow>
-                                        </TableHeader>
-
-                                        <TableBody>
-                                            {data.data.length === 0 ? (
-                                                <TableRow>
-                                                    <TableCell colSpan={columns.length} className="h-40 md:h-32 text-center">
-                                                        <div className="flex flex-col items-center justify-center space-y-2">
-                                                            <p className="text-sm text-muted-foreground">No se encontraron resultados</p>
-                                                            {search && (
-                                                                <p className="text-xs text-muted-foreground">
-                                                                    Intenta con términos de búsqueda diferentes
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ) : (
-                                                data.data.map((item) => (
-                                                    <TableRow key={item.id}>
-                                                        {columns.map((column) => (
-                                                            <TableCell
-                                                                key={column.key}
-                                                                className={` ${column.align ? textAlignmentConfig[column.align] : textAlignmentConfig.left} ${column.className || ''} py-5 md:py-4 leading-relaxed break-words whitespace-normal`}
-                                                                style={{
-                                                                    wordWrap: 'break-word',
-                                                                    overflowWrap: 'break-word',
-                                                                    hyphens: 'auto',
-                                                                }}
-                                                            >
-                                                                {renderCellContent(column, item)}
-                                                            </TableCell>
-                                                        ))}
-                                                    </TableRow>
-                                                ))
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            </div>
-
-                            {/* Mobile/Tablet Card View */}
-                            {renderMobileCard && (
-                                <div className={`${breakpointClass}hidden`}>
-                                    <div className="grid gap-4">
-                                        {data.data.length === 0 ? (
-                                            <div className="flex flex-col items-center justify-center space-y-3 py-16 md:py-12">
-                                                <p className="text-base text-muted-foreground">No se encontraron resultados</p>
-                                                {search && (
-                                                    <p className="text-center text-sm text-muted-foreground">
-                                                        Intenta con términos de búsqueda diferentes
-                                                    </p>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            data.data.map((item) => <div key={item.id}>{renderMobileCard(item)}</div>)
+                        )}
+                        {/* Search and Filters */}
+                        <div className="mb-6 flex flex-col gap-4 sm:flex-row">
+                            <div className="flex flex-1 gap-2">
+                                <div className="flex-1">
+                                    <Label htmlFor="search" className="sr-only">
+                                        Search
+                                    </Label>
+                                    <div className="relative">
+                                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                        <Input
+                                            id="search"
+                                            placeholder={searchPlaceholder}
+                                            value={search}
+                                            onChange={(e) => setSearch(e.target.value)}
+                                            className="pr-10 pl-10"
+                                            disabled={isLoading}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    applyFilters();
+                                                }
+                                            }}
+                                        />
+                                        {search && (
+                                            <button
+                                                type="button"
+                                                onClick={clearSearch}
+                                                className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                                                disabled={isLoading}
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </button>
                                         )}
                                     </div>
                                 </div>
-                            )}
+                                <Button onClick={applyFilters} disabled={isLoading} className="flex-shrink-0">
+                                    <Search className="mr-2 h-4 w-4" />
+                                    Buscar
+                                </Button>
+                            </div>
 
-                            {/* Pagination */}
-                            <PaginationWrapper
-                                data={data}
-                                routeName={routeName}
-                                filters={{
-                                    search,
-                                    per_page: perPage,
-                                    sort_field: sortField,
-                                    sort_direction: sortDirection,
-                                }}
-                                className="mt-8"
-                            />
-                        </>
-                    )}
-                </CardContent>
-            </Card>
+                            <div className="flex gap-2">
+                                <Select value={perPage.toString()} onValueChange={(value) => setPerPage(parseInt(value))}>
+                                    <SelectTrigger className="w-[100px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="10">10</SelectItem>
+                                        <SelectItem value="25">25</SelectItem>
+                                        <SelectItem value="50">50</SelectItem>
+                                        <SelectItem value="100">100</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {/* Table Content */}
+                        {isLoading && LoadingSkeleton ? (
+                            <LoadingSkeleton rows={perPage} />
+                        ) : (
+                            <>
+                                {/* Desktop Table View */}
+                                <div className={`hidden ${breakpointClass}block`}>
+                                    <div className="rounded-md border">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    {columns.map((column) => (
+                                                        <TableHead
+                                                            key={column.key}
+                                                            className={` ${column.width ? columnWidthConfig[column.width] : columnWidthConfig.auto} ${column.align ? textAlignmentConfig[column.align] : textAlignmentConfig.left} ${column.className || ''} break-words whitespace-normal`}
+                                                        >
+                                                            {column.sortable ? (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    onClick={() => handleSort(column.key)}
+                                                                    className="flex items-center gap-2 px-0 hover:bg-transparent"
+                                                                >
+                                                                    {column.title}
+                                                                    {getSortIcon(column.key)}
+                                                                </Button>
+                                                            ) : (
+                                                                column.title
+                                                            )}
+                                                        </TableHead>
+                                                    ))}
+                                                </TableRow>
+                                            </TableHeader>
+
+                                            <TableBody>
+                                                {data.data.length === 0 ? (
+                                                    <TableRow>
+                                                        <TableCell colSpan={columns.length} className="h-40 text-center md:h-32">
+                                                            <div className="flex flex-col items-center justify-center space-y-2">
+                                                                <p className="text-sm text-muted-foreground">No se encontraron resultados</p>
+                                                                {search && (
+                                                                    <p className="text-xs text-muted-foreground">
+                                                                        Intenta con términos de búsqueda diferentes
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ) : (
+                                                    data.data.map((item) => (
+                                                        <TableRow key={item.id}>
+                                                            {columns.map((column) => (
+                                                                <TableCell
+                                                                    key={column.key}
+                                                                    className={` ${column.align ? textAlignmentConfig[column.align] : textAlignmentConfig.left} ${column.className || ''} py-5 leading-relaxed break-words whitespace-normal md:py-4`}
+                                                                    style={{
+                                                                        wordWrap: 'break-word',
+                                                                        overflowWrap: 'break-word',
+                                                                        hyphens: 'auto',
+                                                                    }}
+                                                                >
+                                                                    {renderCellContent(column, item)}
+                                                                </TableCell>
+                                                            ))}
+                                                        </TableRow>
+                                                    ))
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                </div>
+
+                                {/* Mobile/Tablet Card View */}
+                                {renderMobileCard && (
+                                    <div className={`${breakpointClass}hidden`}>
+                                        <div className="grid gap-4">
+                                            {data.data.length === 0 ? (
+                                                <div className="flex flex-col items-center justify-center space-y-3 py-16 md:py-12">
+                                                    <p className="text-base text-muted-foreground">No se encontraron resultados</p>
+                                                    {search && (
+                                                        <p className="text-center text-sm text-muted-foreground">
+                                                            Intenta con términos de búsqueda diferentes
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                data.data.map((item) => <div key={item.id}>{renderMobileCard(item)}</div>)
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Pagination */}
+                                <PaginationWrapper
+                                    data={data}
+                                    routeName={routeName}
+                                    filters={{
+                                        search,
+                                        per_page: perPage,
+                                        sort_field: sortField,
+                                        sort_direction: sortDirection,
+                                    }}
+                                    className="mt-8"
+                                />
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         </ErrorBoundary>
     );

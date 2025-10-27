@@ -1,30 +1,23 @@
 import { useForm } from '@inertiajs/react';
-import { Building2, Clock, Mail, MapPin, Phone, Settings, Search, Navigation, Pentagon } from 'lucide-react';
-import React, { useState } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import { Building2, Clock, Mail, MapPin, Navigation, Pentagon, Phone, Search, Settings } from 'lucide-react';
+import React, { useState } from 'react';
+import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
+import { GeomanControl } from '@/components/GeomanControl';
 import { CreateRestaurantsSkeleton } from '@/components/skeletons';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import { GeomanControl } from '@/components/GeomanControl';
+import { AUTOCOMPLETE, PLACEHOLDERS } from '@/constants/ui-constants';
 import { coordinatesToKML } from '@/utils/kmlParser';
-import { PLACEHOLDERS, AUTOCOMPLETE } from '@/constants/ui-constants';
 
 // Fix for default markers in React Leaflet
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl: unknown })._getIconUrl;
@@ -184,15 +177,12 @@ export default function RestaurantCreate() {
                 countrycodes: 'gt',
             });
 
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?${searchParams.toString()}`,
-                {
-                    headers: {
-                        'Accept': 'application/json',
-                        'User-Agent': 'RestaurantLocationPicker/1.0',
-                    },
-                }
-            );
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?${searchParams.toString()}`, {
+                headers: {
+                    Accept: 'application/json',
+                    'User-Agent': 'RestaurantLocationPicker/1.0',
+                },
+            });
 
             if (!response.ok) {
                 throw new Error('Error en la búsqueda');
@@ -234,15 +224,12 @@ export default function RestaurantCreate() {
                 countrycodes: 'gt',
             });
 
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?${searchParams.toString()}`,
-                {
-                    headers: {
-                        'Accept': 'application/json',
-                        'User-Agent': 'RestaurantLocationPicker/1.0',
-                    },
-                }
-            );
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?${searchParams.toString()}`, {
+                headers: {
+                    Accept: 'application/json',
+                    'User-Agent': 'RestaurantLocationPicker/1.0',
+                },
+            });
 
             if (!response.ok) {
                 throw new Error('Error en la búsqueda');
@@ -301,9 +288,13 @@ export default function RestaurantCreate() {
         >
             <FormSection icon={Building2} title="Información Básica">
                 <FormField label="Nombre" error={errors.name} required>
-                    <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)}  autoComplete={AUTOCOMPLETE.organizationName} />
+                    <Input
+                        id="name"
+                        value={data.name}
+                        onChange={(e) => setData('name', e.target.value)}
+                        autoComplete={AUTOCOMPLETE.organizationName}
+                    />
                 </FormField>
-
 
                 <FormField label="Dirección" error={errors.address} required>
                     <div className="relative">
@@ -347,7 +338,6 @@ export default function RestaurantCreate() {
                         />
                     </div>
                 </FormField>
-
             </FormSection>
 
             <FormSection icon={MapPin} title="Ubicación del Restaurante" description="Selecciona la ubicación exacta del restaurante">
@@ -355,21 +345,19 @@ export default function RestaurantCreate() {
                     <Dialog open={isMapModalOpen} onOpenChange={setIsMapModalOpen}>
                         <DialogTrigger asChild>
                             <Button type="button" variant="outline" className="w-full">
-                                <MapPin className="h-4 w-4 mr-2" />
+                                <MapPin className="mr-2 h-4 w-4" />
                                 Seleccionar Ubicación en Mapa
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-6xl h-[90vh] flex flex-col">
+                        <DialogContent className="flex h-[90vh] flex-col sm:max-w-6xl">
                             <DialogHeader>
                                 <DialogTitle>Seleccionar Ubicación del Restaurante</DialogTitle>
-                                <DialogDescription>
-                                    Haz doble clic en el mapa para seleccionar la ubicación exacta
-                                </DialogDescription>
+                                <DialogDescription>Haz doble clic en el mapa para seleccionar la ubicación exacta</DialogDescription>
                             </DialogHeader>
 
-                            <div className="flex flex-col gap-4 flex-1 min-h-0">
+                            <div className="flex min-h-0 flex-1 flex-col gap-4">
                                 {/* Search Control - Always visible */}
-                                <div className="flex gap-2 flex-shrink-0">
+                                <div className="flex flex-shrink-0 gap-2">
                                     <div className="relative flex-1">
                                         <Search className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                                         <Input
@@ -386,31 +374,21 @@ export default function RestaurantCreate() {
                                             className="pl-10"
                                         />
                                     </div>
-                                    <Button
-                                        type="button"
-                                        variant="default"
-                                        onClick={handleSearch}
-                                        disabled={isSearching || !searchQuery.trim()}
-                                    >
+                                    <Button type="button" variant="default" onClick={handleSearch} disabled={isSearching || !searchQuery.trim()}>
                                         {isSearching ? 'Buscando...' : 'Buscar'}
                                     </Button>
                                 </div>
 
                                 {/* Error message */}
                                 {searchError && (
-                                    <div className="bg-destructive/10 border border-destructive/20 text-destructive px-3 py-2 rounded-md text-sm flex-shrink-0">
+                                    <div className="flex-shrink-0 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                                         {searchError}
                                     </div>
                                 )}
 
                                 {/* Map Container - Takes remaining space */}
-                                <div className="flex-1 rounded-lg overflow-hidden border min-h-0">
-                                    <MapContainer
-                                        center={mapCenter}
-                                        zoom={13}
-                                        style={{ height: '100%', width: '100%' }}
-                                        className="z-0"
-                                    >
+                                <div className="min-h-0 flex-1 overflow-hidden rounded-lg border">
+                                    <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }} className="z-0">
                                         <TileLayer
                                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -423,7 +401,7 @@ export default function RestaurantCreate() {
 
                                 {/* Coordinates Display - Always at bottom */}
                                 {markerPosition && (
-                                    <div className="flex items-center gap-4 text-sm text-muted-foreground flex-shrink-0">
+                                    <div className="flex flex-shrink-0 items-center gap-4 text-sm text-muted-foreground">
                                         <span>Coordenadas seleccionadas:</span>
                                         <Badge variant="outline">Lat: {parseFloat(data.latitude).toFixed(6)}</Badge>
                                         <Badge variant="outline">Lng: {parseFloat(data.longitude).toFixed(6)}</Badge>
@@ -437,21 +415,19 @@ export default function RestaurantCreate() {
                     <Dialog open={isGeofenceModalOpen} onOpenChange={setIsGeofenceModalOpen}>
                         <DialogTrigger asChild>
                             <Button type="button" variant="outline" className="w-full">
-                                <Pentagon className="h-4 w-4 mr-2" />
+                                <Pentagon className="mr-2 h-4 w-4" />
                                 {geofenceCoordinates.length > 0 ? 'Editar Geocerca' : 'Crear Geocerca'} (Opcional)
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-6xl h-[90vh] flex flex-col">
+                        <DialogContent className="flex h-[90vh] flex-col sm:max-w-6xl">
                             <DialogHeader>
                                 <DialogTitle>Geocerca del Restaurante</DialogTitle>
-                                <DialogDescription>
-                                    Dibuja un polígono haciendo clic en el mapa para delimitar el área de entrega
-                                </DialogDescription>
+                                <DialogDescription>Dibuja un polígono haciendo clic en el mapa para delimitar el área de entrega</DialogDescription>
                             </DialogHeader>
 
-                            <div className="flex flex-col gap-4 flex-1 min-h-0">
+                            <div className="flex min-h-0 flex-1 flex-col gap-4">
                                 {/* Search Control */}
-                                <div className="flex gap-2 flex-shrink-0">
+                                <div className="flex flex-shrink-0 gap-2">
                                     <div className="relative flex-1">
                                         <Search className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                                         <Input
@@ -480,19 +456,14 @@ export default function RestaurantCreate() {
 
                                 {/* Error message */}
                                 {geofenceSearchError && (
-                                    <div className="bg-destructive/10 border border-destructive/20 text-destructive px-3 py-2 rounded-md text-sm flex-shrink-0">
+                                    <div className="flex-shrink-0 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                                         {geofenceSearchError}
                                     </div>
                                 )}
 
                                 {/* Map Container */}
-                                <div className="flex-1 rounded-lg overflow-hidden border min-h-0">
-                                    <MapContainer
-                                        center={geofenceCenter}
-                                        zoom={13}
-                                        style={{ height: '100%', width: '100%' }}
-                                        className="z-0"
-                                    >
+                                <div className="min-h-0 flex-1 overflow-hidden rounded-lg border">
+                                    <MapContainer center={geofenceCenter} zoom={13} style={{ height: '100%', width: '100%' }} className="z-0">
                                         <TileLayer
                                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -507,16 +478,14 @@ export default function RestaurantCreate() {
                                 </div>
 
                                 {/* Polygon Info */}
-                                <div className="flex items-center justify-between flex-shrink-0">
+                                <div className="flex flex-shrink-0 items-center justify-between">
                                     {geofenceCoordinates.length > 0 ? (
                                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                             <Pentagon className="h-4 w-4" />
                                             <span>Polígono con {geofenceCoordinates.length} puntos</span>
                                         </div>
                                     ) : (
-                                        <div className="text-sm text-muted-foreground">
-                                            Usa las herramientas del mapa para dibujar la geocerca
-                                        </div>
+                                        <div className="text-sm text-muted-foreground">Usa las herramientas del mapa para dibujar la geocerca</div>
                                     )}
                                     <Button
                                         type="button"
@@ -565,16 +534,16 @@ export default function RestaurantCreate() {
             <FormSection icon={Settings} title="Configuración de Servicios">
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <Label htmlFor="is_active" className="cursor-pointer">Restaurante Activo</Label>
-                        <Switch
-                            id="is_active"
-                            checked={data.is_active}
-                            onCheckedChange={(checked) => setData('is_active', checked as boolean)}
-                        />
+                        <Label htmlFor="is_active" className="cursor-pointer">
+                            Restaurante Activo
+                        </Label>
+                        <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked as boolean)} />
                     </div>
 
                     <div className="flex items-center justify-between">
-                        <Label htmlFor="delivery_active" className="cursor-pointer">Servicio de Delivery</Label>
+                        <Label htmlFor="delivery_active" className="cursor-pointer">
+                            Servicio de Delivery
+                        </Label>
                         <Switch
                             id="delivery_active"
                             checked={data.delivery_active}
@@ -583,7 +552,9 @@ export default function RestaurantCreate() {
                     </div>
 
                     <div className="flex items-center justify-between">
-                        <Label htmlFor="pickup_active" className="cursor-pointer">Servicio de Pickup</Label>
+                        <Label htmlFor="pickup_active" className="cursor-pointer">
+                            Servicio de Pickup
+                        </Label>
                         <Switch
                             id="pickup_active"
                             checked={data.pickup_active}
@@ -604,7 +575,6 @@ export default function RestaurantCreate() {
                         />
                     </FormField>
 
-
                     <FormField label="Tiempo Estimado de Entrega (min)" error={errors.estimated_delivery_time}>
                         <Input
                             id="estimated_delivery_time"
@@ -614,7 +584,6 @@ export default function RestaurantCreate() {
                             placeholder={PLACEHOLDERS.estimatedTime}
                         />
                     </FormField>
-
                 </div>
             </FormSection>
 

@@ -15,11 +15,7 @@ interface CreatePageSkeletonProps {
     showSubmitButton?: boolean;
 }
 
-export function CreatePageSkeleton({
-    sections = [{ fields: 3 }],
-    showBackButton = true,
-    showSubmitButton = true
-}: CreatePageSkeletonProps) {
+export function CreatePageSkeleton({ sections = [{ fields: 3 }], showBackButton = true, showSubmitButton = true }: CreatePageSkeletonProps) {
     return (
         <div className="space-y-6">
             {/* Page Header */}

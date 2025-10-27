@@ -7,12 +7,7 @@ interface DataTableSkeletonProps {
     hasActions?: boolean;
 }
 
-export function DataTableSkeleton({
-    rows = 10,
-    columns = 5,
-    hasAvatar = true,
-    hasActions = true
-}: DataTableSkeletonProps) {
+export function DataTableSkeleton({ rows = 10, columns = 5, hasAvatar = true, hasActions = true }: DataTableSkeletonProps) {
     return (
         <div className="overflow-x-auto">
             <table className="w-full">

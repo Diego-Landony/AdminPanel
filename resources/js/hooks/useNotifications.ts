@@ -127,11 +127,7 @@ export function useNotifications() {
         if (flash.status) {
             const statusConfig = STATUS_MESSAGES[flash.status as keyof typeof STATUS_MESSAGES];
             if (statusConfig) {
-                showNotification(
-                    statusConfig.type,
-                    statusConfig.message,
-                    'description' in statusConfig ? statusConfig.description : undefined
-                );
+                showNotification(statusConfig.type, statusConfig.message, 'description' in statusConfig ? statusConfig.description : undefined);
             } else {
                 // Status no reconocido, mostrar como info
                 showNotification('info', flash.status);

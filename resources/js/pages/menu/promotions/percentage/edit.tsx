@@ -1,27 +1,21 @@
-import { router } from '@inertiajs/react';
-import React, { useState } from 'react';
 import { PLACEHOLDERS } from '@/constants/ui-constants';
-import { Plus, Trash2, Store, Truck } from 'lucide-react';
+import { router } from '@inertiajs/react';
+import { Plus, Store, Trash2, Truck } from 'lucide-react';
+import React, { useState } from 'react';
 import { route } from 'ziggy-js';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
-import { FormField } from '@/components/ui/form-field';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { ProductCombobox } from '@/components/ProductCombobox';
 import { EditPageSkeleton } from '@/components/skeletons';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { generateUniqueId } from '@/utils/generateId';
 
 interface ProductVariant {
@@ -131,9 +125,7 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
     };
 
     const updateItem = (id: string, field: keyof LocalItem, value: string | number | number[] | null) => {
-        setLocalItems(
-            localItems.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
-        );
+        setLocalItems(localItems.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -209,18 +201,14 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
                         <Switch
                             id="is-active"
                             checked={formData.is_active}
-                            onCheckedChange={(checked) =>
-                                setFormData({ ...formData, is_active: checked })
-                            }
+                            onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                         />
                     </div>
 
                     <FormField label="Nombre" required error={errors.name}>
                         <Input
                             value={formData.name}
-                            onChange={(e) =>
-                                setFormData({ ...formData, name: e.target.value })
-                            }
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             placeholder={PLACEHOLDERS.name}
                             required
                         />
@@ -229,9 +217,7 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
                     <FormField label="Descripción" error={errors.description}>
                         <Textarea
                             value={formData.description}
-                            onChange={(e) =>
-                                setFormData({ ...formData, description: e.target.value })
-                            }
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             placeholder={PLACEHOLDERS.description}
                             rows={3}
                         />
@@ -243,10 +229,7 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
             <FormSection title="Productos con Descuento">
                 <div className="space-y-6">
                     {localItems.map((item, index) => (
-                        <div
-                            key={item.id}
-                            className="relative rounded-lg border border-border bg-card p-6"
-                        >
+                        <div key={item.id} className="relative rounded-lg border border-border bg-card p-6">
                             {/* Botón Eliminar */}
                             {localItems.length > 1 && (
                                 <Button
@@ -254,7 +237,7 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => removeItem(item.id)}
-                                    className="absolute right-2 top-2"
+                                    className="absolute top-2 right-2"
                                 >
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -264,26 +247,16 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
                                 <h4 className="font-medium">Producto {index + 1}</h4>
 
                                 {/* Selector de Producto */}
-                                <FormField
-                                    label="Producto"
-                                    required
-                                    error={getItemError(index, 'product_id')}
-                                >
+                                <FormField label="Producto" required error={getItemError(index, 'product_id')}>
                                     <ProductCombobox
-                                        products={products.filter(
-                                            (product) => {
-                                                // Si el producto NO tiene variantes, eliminar si ya está en uso
-                                                if (!product.has_variants) {
-                                                    return !localItems.some(
-                                                        (i) =>
-                                                            i.id !== item.id &&
-                                                            i.product_id === product.id,
-                                                    );
-                                                }
-                                                // Si el producto TIENE variantes, siempre permitir (se valida por variante)
-                                                return true;
+                                        products={products.filter((product) => {
+                                            // Si el producto NO tiene variantes, eliminar si ya está en uso
+                                            if (!product.has_variants) {
+                                                return !localItems.some((i) => i.id !== item.id && i.product_id === product.id);
                                             }
-                                        )}
+                                            // Si el producto TIENE variantes, siempre permitir (se valida por variante)
+                                            return true;
+                                        })}
                                         value={item.product_id}
                                         onChange={(value) => {
                                             updateItem(item.id, 'product_id', value);
@@ -295,76 +268,56 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
                                 </FormField>
 
                                 {/* Selector de Variantes con Checkboxes */}
-                                {item.product_id && (() => {
-                                    const selectedProduct = products.find(p => p.id === item.product_id);
-                                    const hasVariants = selectedProduct?.has_variants && selectedProduct?.variants && selectedProduct.variants.length > 0;
+                                {item.product_id &&
+                                    (() => {
+                                        const selectedProduct = products.find((p) => p.id === item.product_id);
+                                        const hasVariants =
+                                            selectedProduct?.has_variants && selectedProduct?.variants && selectedProduct.variants.length > 0;
 
-                                    if (!hasVariants) {
-                                        return null;
-                                    }
+                                        if (!hasVariants) {
+                                            return null;
+                                        }
 
-                                    return (
-                                        <div className="space-y-2 rounded-lg border border-border bg-card p-4">
-                                            {selectedProduct.variants?.map((variant) => (
-                                                <div key={variant.id} className="flex items-center space-x-2">
-                                                    <Checkbox
-                                                        id={`variant-${item.id}-${variant.id}`}
-                                                        checked={item.variant_ids.includes(variant.id)}
-                                                        onCheckedChange={(checked) => {
-                                                            const newVariantIds = checked
-                                                                ? [...item.variant_ids, variant.id]
-                                                                : item.variant_ids.filter((vid) => vid !== variant.id);
-                                                            updateItem(item.id, 'variant_ids', newVariantIds as number[]);
-                                                        }}
-                                                    />
-                                                    <label
-                                                        htmlFor={`variant-${item.id}-${variant.id}`}
-                                                        className="text-sm cursor-pointer"
-                                                    >
-                                                        {variant.name} {variant.size && `- ${variant.size}`}
-                                                    </label>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    );
-                                })()}
+                                        return (
+                                            <div className="space-y-2 rounded-lg border border-border bg-card p-4">
+                                                {selectedProduct.variants?.map((variant) => (
+                                                    <div key={variant.id} className="flex items-center space-x-2">
+                                                        <Checkbox
+                                                            id={`variant-${item.id}-${variant.id}`}
+                                                            checked={item.variant_ids.includes(variant.id)}
+                                                            onCheckedChange={(checked) => {
+                                                                const newVariantIds = checked
+                                                                    ? [...item.variant_ids, variant.id]
+                                                                    : item.variant_ids.filter((vid) => vid !== variant.id);
+                                                                updateItem(item.id, 'variant_ids', newVariantIds as number[]);
+                                                            }}
+                                                        />
+                                                        <label htmlFor={`variant-${item.id}-${variant.id}`} className="cursor-pointer text-sm">
+                                                            {variant.name} {variant.size && `- ${variant.size}`}
+                                                        </label>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        );
+                                    })()}
 
                                 {/* Porcentaje de Descuento */}
-                                <FormField
-                                    label="Porcentaje"
-                                    required
-                                    error={getItemError(index, 'discount_percentage')}
-                                >
+                                <FormField label="Porcentaje" required error={getItemError(index, 'discount_percentage')}>
                                     <Input
                                         type="number"
                                         min="1"
                                         max="100"
                                         step="0.01"
                                         value={item.discount_percentage}
-                                        onChange={(e) =>
-                                            updateItem(
-                                                item.id,
-                                                'discount_percentage',
-                                                e.target.value,
-                                            )
-                                        }
+                                        onChange={(e) => updateItem(item.id, 'discount_percentage', e.target.value)}
                                         placeholder={PLACEHOLDERS.percentage}
                                         required
                                     />
                                 </FormField>
 
                                 {/* Tipo de Servicio */}
-                                <FormField
-                                    label="Tipo de servicio"
-                                    required
-                                    error={getItemError(index, 'service_type')}
-                                >
-                                    <Select
-                                        value={item.service_type}
-                                        onValueChange={(value) =>
-                                            updateItem(item.id, 'service_type', value)
-                                        }
-                                    >
+                                <FormField label="Tipo de servicio" required error={getItemError(index, 'service_type')}>
+                                    <Select value={item.service_type} onValueChange={(value) => updateItem(item.id, 'service_type', value)}>
                                         <SelectTrigger>
                                             <SelectValue />
                                         </SelectTrigger>
@@ -393,114 +346,59 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
                                 </FormField>
 
                                 {/* Tipo de Vigencia */}
-                                <FormField
-                                    label="Vigencia"
-                                    required
-                                    error={getItemError(index, 'validity_type')}
-                                >
-                                    <Select
-                                        value={item.validity_type}
-                                        onValueChange={(value) =>
-                                            updateItem(item.id, 'validity_type', value)
-                                        }
-                                    >
+                                <FormField label="Vigencia" required error={getItemError(index, 'validity_type')}>
+                                    <Select value={item.validity_type} onValueChange={(value) => updateItem(item.id, 'validity_type', value)}>
                                         <SelectTrigger>
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="permanent">Permanente</SelectItem>
-                                            <SelectItem value="date_range">
-                                                Rango de Fechas
-                                            </SelectItem>
+                                            <SelectItem value="date_range">Rango de Fechas</SelectItem>
                                             <SelectItem value="time_range">Rango de Horario</SelectItem>
-                                            <SelectItem value="date_time_range">
-                                                Fechas + Horario
-                                            </SelectItem>
+                                            <SelectItem value="date_time_range">Fechas + Horario</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </FormField>
 
                                 {/* Campos condicionales según validity_type */}
-                                {(item.validity_type === 'date_range' ||
-                                    item.validity_type === 'date_time_range') && (
+                                {(item.validity_type === 'date_range' || item.validity_type === 'date_time_range') && (
                                     <div className="grid gap-4 sm:grid-cols-2">
-                                        <FormField
-                                            label="Fecha Inicio"
-                                            required
-                                            error={getItemError(index, 'valid_from')}
-                                        >
+                                        <FormField label="Fecha Inicio" required error={getItemError(index, 'valid_from')}>
                                             <Input
                                                 type="date"
                                                 value={item.valid_from}
-                                                onChange={(e) =>
-                                                    updateItem(
-                                                        item.id,
-                                                        'valid_from',
-                                                        e.target.value,
-                                                    )
-                                                }
+                                                onChange={(e) => updateItem(item.id, 'valid_from', e.target.value)}
                                                 required
                                             />
                                         </FormField>
 
-                                        <FormField
-                                            label="Fecha Fin"
-                                            required
-                                            error={getItemError(index, 'valid_until')}
-                                        >
+                                        <FormField label="Fecha Fin" required error={getItemError(index, 'valid_until')}>
                                             <Input
                                                 type="date"
                                                 value={item.valid_until}
-                                                onChange={(e) =>
-                                                    updateItem(
-                                                        item.id,
-                                                        'valid_until',
-                                                        e.target.value,
-                                                    )
-                                                }
+                                                onChange={(e) => updateItem(item.id, 'valid_until', e.target.value)}
                                                 required
                                             />
                                         </FormField>
                                     </div>
                                 )}
 
-                                {(item.validity_type === 'time_range' ||
-                                    item.validity_type === 'date_time_range') && (
+                                {(item.validity_type === 'time_range' || item.validity_type === 'date_time_range') && (
                                     <div className="grid gap-4 sm:grid-cols-2">
-                                        <FormField
-                                            label="Hora Inicio"
-                                            required
-                                            error={getItemError(index, 'time_from')}
-                                        >
+                                        <FormField label="Hora Inicio" required error={getItemError(index, 'time_from')}>
                                             <Input
                                                 type="time"
                                                 value={item.time_from}
-                                                onChange={(e) =>
-                                                    updateItem(
-                                                        item.id,
-                                                        'time_from',
-                                                        e.target.value,
-                                                    )
-                                                }
+                                                onChange={(e) => updateItem(item.id, 'time_from', e.target.value)}
                                                 required
                                             />
                                         </FormField>
 
-                                        <FormField
-                                            label="Hora Fin"
-                                            required
-                                            error={getItemError(index, 'time_until')}
-                                        >
+                                        <FormField label="Hora Fin" required error={getItemError(index, 'time_until')}>
                                             <Input
                                                 type="time"
                                                 value={item.time_until}
-                                                onChange={(e) =>
-                                                    updateItem(
-                                                        item.id,
-                                                        'time_until',
-                                                        e.target.value,
-                                                    )
-                                                }
+                                                onChange={(e) => updateItem(item.id, 'time_until', e.target.value)}
                                                 required
                                             />
                                         </FormField>
@@ -510,12 +408,7 @@ export default function EditPercentagePromotion({ promotion, products }: EditPro
                         </div>
                     ))}
 
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={addItem}
-                        className="w-full"
-                    >
+                    <Button type="button" variant="outline" onClick={addItem} className="w-full">
                         <Plus className="mr-2 h-4 w-4" />
                         Agregar producto
                     </Button>

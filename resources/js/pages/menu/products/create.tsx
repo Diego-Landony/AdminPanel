@@ -1,12 +1,12 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { useForm } from '@inertiajs/react';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
+import { CategoryCombobox } from '@/components/CategoryCombobox';
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
 import { ImageUpload } from '@/components/ImageUpload';
 import { PriceFields } from '@/components/PriceFields';
-import { VariantsFromCategory } from '@/components/VariantsFromCategory';
 import { CreateProductsSkeleton } from '@/components/skeletons';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
@@ -14,8 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { VariantsFromCategory } from '@/components/VariantsFromCategory';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
-import { CategoryCombobox } from '@/components/CategoryCombobox';
 import { Banknote, ListChecks, Package } from 'lucide-react';
 
 interface Category {
@@ -97,9 +97,7 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
         const submitData = {
             ...data,
             sections: selectedSections,
-            variants: data.has_variants
-                ? data.variants.filter((v) => v.is_active).map(({ is_active, ...rest }) => rest)
-                : [],
+            variants: data.has_variants ? data.variants.filter((v) => v.is_active).map(({ is_active, ...rest }) => rest) : [],
         };
 
         post(route('menu.products.store'), {
@@ -133,11 +131,7 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                     <Label htmlFor="is_active" className="text-base">
                         Activo
                     </Label>
-                    <Switch
-                        id="is_active"
-                        checked={data.is_active}
-                        onCheckedChange={(checked) => setData('is_active', checked as boolean)}
-                    />
+                    <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked as boolean)} />
                 </div>
 
                 <CategoryCombobox
@@ -150,29 +144,14 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                 />
 
                 <FormField label="Nombre" error={errors.name} required>
-                    <Input
-                        id="name"
-                        type="text"
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
-                    />
+                    <Input id="name" type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} />
                 </FormField>
 
                 <FormField label="Descripción" error={errors.description}>
-                    <Textarea
-                        id="description"
-                        value={data.description}
-                        onChange={(e) => setData('description', e.target.value)}
-                        rows={2}
-                    />
+                    <Textarea id="description" value={data.description} onChange={(e) => setData('description', e.target.value)} rows={2} />
                 </FormField>
 
-                <ImageUpload
-                    label="Imagen"
-                    currentImage={data.image}
-                    onImageChange={(url) => setData('image', url || '')}
-                    error={errors.image}
-                />
+                <ImageUpload label="Imagen" currentImage={data.image} onImageChange={(url) => setData('image', url || '')} error={errors.image} />
             </FormSection>
 
             <FormSection icon={Banknote} title="Precios" className="mt-8">
@@ -216,10 +195,7 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                                     checked={selectedSections.includes(section.id)}
                                     onCheckedChange={() => toggleSection(section.id)}
                                 />
-                                <Label
-                                    htmlFor={`section-${section.id}`}
-                                    className="text-sm leading-none font-medium cursor-pointer"
-                                >
+                                <Label htmlFor={`section-${section.id}`} className="cursor-pointer text-sm leading-none font-medium">
                                     {section.title}
                                 </Label>
                             </div>

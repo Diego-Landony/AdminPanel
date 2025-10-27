@@ -1,23 +1,9 @@
+import { closestCenter, DndContext, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Link } from '@inertiajs/react';
 import { Plus, RefreshCw, Search, X } from 'lucide-react';
 import React, { useState } from 'react';
-import {
-    DndContext,
-    closestCenter,
-    KeyboardSensor,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    DragEndEvent,
-} from '@dnd-kit/core';
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    useSortable,
-    verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Button } from '@/components/ui/button';
@@ -69,14 +55,7 @@ interface SortableRowProps<T> {
  * Fila sortable individual
  */
 function SortableRow<T extends { id: number | string }>({ item, columns }: SortableRowProps<T>) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({ id: item.id });
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -85,10 +64,10 @@ function SortableRow<T extends { id: number | string }>({ item, columns }: Sorta
     };
 
     return (
-        <TableRow ref={setNodeRef} style={style} className={isDragging ? 'shadow-lg bg-muted/50' : ''}>
-            <TableCell className="text-center w-16">
+        <TableRow ref={setNodeRef} style={style} className={isDragging ? 'bg-muted/50 shadow-lg' : ''}>
+            <TableCell className="w-16 text-center">
                 <button
-                    className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors"
+                    className="cursor-grab text-muted-foreground transition-colors hover:text-foreground active:cursor-grabbing"
                     {...attributes}
                     {...listeners}
                 >
@@ -145,18 +124,17 @@ function SortableTableComponent<T extends { id: number | string; sort_order?: nu
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
-        })
+        }),
     );
 
     // Filtrar items por búsqueda
-    const filteredItems = searchable && search.trim()
-        ? localItems.filter((item) => {
-            const searchLower = search.toLowerCase();
-            return Object.values(item).some((value) =>
-                String(value).toLowerCase().includes(searchLower)
-            );
-        })
-        : localItems;
+    const filteredItems =
+        searchable && search.trim()
+            ? localItems.filter((item) => {
+                  const searchLower = search.toLowerCase();
+                  return Object.values(item).some((value) => String(value).toLowerCase().includes(searchLower));
+              })
+            : localItems;
 
     // Sincronizar con data prop cuando cambia
     React.useEffect(() => {
@@ -229,7 +207,10 @@ function SortableTableComponent<T extends { id: number | string; sort_order?: nu
                                                     <span className="truncate overflow-hidden text-ellipsis lowercase" title={stat.title}>
                                                         {stat.title}
                                                     </span>
-                                                    <span className="font-medium whitespace-nowrap text-foreground tabular-nums" title={String(stat.value)}>
+                                                    <span
+                                                        className="font-medium whitespace-nowrap text-foreground tabular-nums"
+                                                        title={String(stat.value)}
+                                                    >
                                                         {stat.value}
                                                     </span>
                                                 </span>
@@ -274,13 +255,13 @@ function SortableTableComponent<T extends { id: number | string; sort_order?: nu
                                         placeholder={searchPlaceholder}
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
-                                        className="pl-10 pr-10"
+                                        className="pr-10 pl-10"
                                     />
                                     {search && (
                                         <button
                                             type="button"
                                             onClick={handleClearSearch}
-                                            className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                            className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                                         >
                                             <X className="h-4 w-4" />
                                         </button>
@@ -307,7 +288,7 @@ function SortableTableComponent<T extends { id: number | string; sort_order?: nu
                                         </TableRow>
                                     </TableHeader>
                                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                                        <SortableContext items={filteredItems.map(item => item.id)} strategy={verticalListSortingStrategy}>
+                                        <SortableContext items={filteredItems.map((item) => item.id)} strategy={verticalListSortingStrategy}>
                                             <TableBody>
                                                 {filteredItems.length === 0 ? (
                                                     <TableRow>
@@ -323,9 +304,7 @@ function SortableTableComponent<T extends { id: number | string; sort_order?: nu
                                                         </TableCell>
                                                     </TableRow>
                                                 ) : (
-                                                    filteredItems.map((item) => (
-                                                        <SortableRow key={item.id} item={item} columns={columns} />
-                                                    ))
+                                                    filteredItems.map((item) => <SortableRow key={item.id} item={item} columns={columns} />)
                                                 )}
                                             </TableBody>
                                         </SortableContext>
@@ -377,5 +356,5 @@ function SortableTableComponent<T extends { id: number | string; sort_order?: nu
 
 // Export con tipado genérico
 export const SortableTable = SortableTableComponent as <T extends { id: number | string; sort_order?: number }>(
-    props: SortableTableProps<T>
+    props: SortableTableProps<T>,
 ) => React.ReactElement;

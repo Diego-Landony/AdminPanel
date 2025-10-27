@@ -14,7 +14,7 @@ import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { PLACEHOLDERS, AUTOCOMPLETE, FIELD_DESCRIPTIONS, NOTIFICATIONS } from '@/constants/ui-constants';
+import { AUTOCOMPLETE, FIELD_DESCRIPTIONS, NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
 /**
  * Interfaz para el rol
@@ -62,7 +62,7 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
     const isCurrentUser = auth?.user?.id === user?.id;
 
     // Encontrar el rol admin
-    const adminRole = all_roles.find(role => role.name === 'admin');
+    const adminRole = all_roles.find((role) => role.name === 'admin');
 
     // Siempre llamar hooks antes de cualquier early return
     const { data, setData, patch, processing, errors } = useForm({
@@ -87,9 +87,7 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
                 loading={false}
                 loadingSkeleton={EditUsersSkeleton}
             >
-                <div className="text-center text-red-600">
-                    Error al cargar los datos del usuario.
-                </div>
+                <div className="text-center text-red-600">Error al cargar los datos del usuario.</div>
             </EditPageLayout>
         );
     }
@@ -135,9 +133,7 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
             return;
         }
 
-        const newSelectedRoles = checked
-            ? [...selectedRoles, roleId]
-            : selectedRoles.filter(id => id !== roleId);
+        const newSelectedRoles = checked ? [...selectedRoles, roleId] : selectedRoles.filter((id) => id !== roleId);
 
         setSelectedRoles(newSelectedRoles);
 
@@ -147,7 +143,7 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
                 body: JSON.stringify({ roles: newSelectedRoles }),
@@ -173,8 +169,9 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
      * Filtra roles basado en el término de búsqueda
      */
     const filteredRoles = all_roles.filter(
-        (role) => role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  (role.description && role.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        (role) =>
+            role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (role.description && role.description.toLowerCase().includes(searchTerm.toLowerCase())),
     );
 
     /**
@@ -273,9 +270,7 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
                                             <div
                                                 key={role.id}
                                                 className={`flex items-center gap-3 rounded-md p-2 transition-colors ${
-                                                    selectedRoles.includes(role.id)
-                                                        ? 'border border-primary/20 bg-primary/5'
-                                                        : 'hover:bg-muted/50'
+                                                    selectedRoles.includes(role.id) ? 'border border-primary/20 bg-primary/5' : 'hover:bg-muted/50'
                                                 } ${isAdminRoleForCurrentUser ? 'opacity-60' : ''}`}
                                             >
                                                 <Checkbox
@@ -292,16 +287,13 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
                                                     >
                                                         {role.name}
                                                         {isAdminRoleForCurrentUser && (
-                                                            <span className="ml-2 text-xs font-normal text-amber-600">
-                                                                (No removible)
-                                                            </span>
+                                                            <span className="ml-2 text-xs font-normal text-amber-600">(No removible)</span>
                                                         )}
                                                     </Label>
                                                     <p className="truncate text-xs text-muted-foreground">
                                                         {isAdminRoleForCurrentUser
                                                             ? NOTIFICATIONS.error.removeOwnAdminRole
-                                                            : (role.description || 'Sin descripción')
-                                                        }
+                                                            : role.description || 'Sin descripción'}
                                                     </p>
                                                 </div>
                                             </div>
@@ -343,7 +335,7 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
                                         type="button"
                                         variant="ghost"
                                         size="sm"
-                                        className="absolute top-1 right-1 h-11 w-11 md:h-8 md:w-8 p-0"
+                                        className="absolute top-1 right-1 h-11 w-11 p-0 md:h-8 md:w-8"
                                         onClick={() => setShowPassword(!showPassword)}
                                     >
                                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -404,7 +396,6 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
                     </div>
                 </div>
             </FormSection>
-
         </EditPageLayout>
     );
 }

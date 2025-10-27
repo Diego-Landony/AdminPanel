@@ -75,13 +75,28 @@ class Combo extends Model
     }
 
     /**
-     * Scope: Combos disponibles (activos + todos productos activos)
+     * Scope: Combos disponibles (activos + validación de disponibilidad de items)
      */
     public function scopeAvailable($query)
     {
         return $query->active()
-            ->whereDoesntHave('products', function ($q) {
-                $q->where('is_active', false);
+            ->where(function ($q) {
+                // Items fijos: todos activos
+                $q->whereDoesntHave('items', function ($itemQuery) {
+                    $itemQuery->where('is_choice_group', false)
+                        ->whereHas('product', function ($productQuery) {
+                            $productQuery->where('is_active', false);
+                        });
+                })
+                // Grupos de elección: al menos 1 opción activa
+                    ->whereDoesntHave('items', function ($itemQuery) {
+                        $itemQuery->where('is_choice_group', true)
+                            ->whereDoesntHave('options', function ($optionQuery) {
+                                $optionQuery->whereHas('product', function ($productQuery) {
+                                    $productQuery->where('is_active', true);
+                                });
+                            });
+                    });
             });
     }
 
@@ -96,8 +111,20 @@ class Combo extends Model
     }
 
     /**
+     * Scope: Combos disponibles con relaciones cargadas para mostrar advertencias
+     */
+    public function scopeAvailableWithWarnings($query)
+    {
+        return $query->active()
+            ->with([
+                'items.options.product',
+                'items.product',
+            ]);
+    }
+
+    /**
      * Verifica si el combo está disponible
-     * (activo + todos los productos activos)
+     * (activo + validación de disponibilidad de items)
      */
     public function isAvailable(): bool
     {
@@ -105,8 +132,42 @@ class Combo extends Model
             return false;
         }
 
-        // Verificar que TODOS los productos estén activos
-        return $this->products()->where('is_active', false)->doesntExist();
+        // Validar cada item del combo
+        foreach ($this->items as $item) {
+            if ($item->isChoiceGroup()) {
+                // Para grupos de elección: debe tener al menos una opción con producto activo
+                $hasActiveOption = $item->options()
+                    ->whereHas('product', fn ($q) => $q->where('is_active', true))
+                    ->exists();
+
+                if (! $hasActiveOption) {
+                    return false;
+                }
+            } else {
+                // Para items fijos: el producto debe estar activo
+                if (! $item->product || ! $item->product->is_active) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Obtiene el número de opciones inactivas en grupos de elección
+     */
+    public function getInactiveOptionsCount(): int
+    {
+        return $this->items()
+            ->where('is_choice_group', true)
+            ->with('options.product')
+            ->get()
+            ->sum(function ($item) {
+                return $item->options->filter(function ($option) {
+                    return ! $option->product->is_active;
+                })->count();
+            });
     }
 
     /**

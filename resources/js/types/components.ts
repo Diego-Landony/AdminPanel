@@ -92,10 +92,7 @@ export interface DataTableFilters extends BaseComponentProps {
     readonly sort_direction?: 'asc' | 'desc';
 }
 
-export interface DataTableProps<T extends Record<string, unknown>>
-    extends BaseComponentProps,
-        LoadingStateProps,
-        ErrorStateProps {
+export interface DataTableProps<T extends Record<string, unknown>> extends BaseComponentProps, LoadingStateProps, ErrorStateProps {
     /** Título de la tabla */
     readonly title: string;
     /** Descripción de la tabla */

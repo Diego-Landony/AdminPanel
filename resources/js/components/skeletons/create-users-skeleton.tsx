@@ -8,8 +8,8 @@ export function CreateUsersSkeleton() {
                     fields: 4, // name, email, password, password_confirmation
                     hasTextarea: false,
                     hasSelect: false,
-                    hasCheckboxes: 0
-                }
+                    hasCheckboxes: 0,
+                },
             ]}
         />
     );

@@ -1,23 +1,9 @@
+import { PLACEHOLDERS } from '@/constants/ui-constants';
+import { closestCenter, DndContext, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import { PLACEHOLDERS } from '@/constants/ui-constants';
-import {
-    DndContext,
-    closestCenter,
-    KeyboardSensor,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    DragEndEvent,
-} from '@dnd-kit/core';
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    useSortable,
-    verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
@@ -47,14 +33,7 @@ interface SortableItemProps {
 }
 
 function SortableItem({ option, index, onUpdate, onRemove }: SortableItemProps) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({ id: option.id });
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: option.id });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -63,26 +42,17 @@ function SortableItem({ option, index, onUpdate, onRemove }: SortableItemProps) 
     };
 
     return (
-        <div
-            ref={setNodeRef}
-            style={style}
-            className={`p-3 border rounded-lg space-y-2 ${isDragging ? 'shadow-lg bg-muted/50' : ''}`}
-        >
+        <div ref={setNodeRef} style={style} className={`space-y-2 rounded-lg border p-3 ${isDragging ? 'bg-muted/50 shadow-lg' : ''}`}>
             <div className="flex items-center gap-2">
                 <button
                     type="button"
-                    className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors"
+                    className="cursor-grab text-muted-foreground transition-colors hover:text-foreground active:cursor-grabbing"
                     {...attributes}
                     {...listeners}
                 >
                     <GripVertical className="h-5 w-5" />
                 </button>
-                <Input
-                    value={option.name}
-                    onChange={(e) => onUpdate(index, 'name', e.target.value)}
-
-                    className="flex-1"
-                />
+                <Input value={option.name} onChange={(e) => onUpdate(index, 'name', e.target.value)} className="flex-1" />
                 <Button type="button" variant="ghost" size="icon" onClick={() => onRemove(index)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
@@ -90,14 +60,18 @@ function SortableItem({ option, index, onUpdate, onRemove }: SortableItemProps) 
 
             <div className="flex items-center gap-4">
                 <div className="flex items-center space-x-2">
-                    <Checkbox id={`is_extra_${option.id}`} checked={option.is_extra} onCheckedChange={(checked) => onUpdate(index, 'is_extra', checked as boolean)} />
-                    <Label htmlFor={`is_extra_${option.id}`} className="text-sm leading-none font-medium cursor-pointer">
+                    <Checkbox
+                        id={`is_extra_${option.id}`}
+                        checked={option.is_extra}
+                        onCheckedChange={(checked) => onUpdate(index, 'is_extra', checked as boolean)}
+                    />
+                    <Label htmlFor={`is_extra_${option.id}`} className="cursor-pointer text-sm leading-none font-medium">
                         Tiene costo extra
                     </Label>
                 </div>
 
                 {option.is_extra && (
-                    <div className="flex items-center gap-1 flex-1">
+                    <div className="flex flex-1 items-center gap-1">
                         <Banknote className="h-4 w-4 text-muted-foreground" />
                         <Input
                             type="number"
@@ -170,14 +144,14 @@ export default function SectionEdit({ section }: EditPageProps) {
             name: opt.name,
             is_extra: opt.is_extra,
             price_modifier: opt.price_modifier,
-        }))
+        })),
     );
 
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
-        })
+        }),
     );
 
     const handleInputChange = (field: keyof FormData, value: string | boolean | number) => {
@@ -294,7 +268,6 @@ export default function SectionEdit({ section }: EditPageProps) {
                         id="description"
                         value={formData.description}
                         onChange={(e) => handleInputChange('description', e.target.value)}
-
                         rows={2}
                     />
                 </FormField>
@@ -302,24 +275,36 @@ export default function SectionEdit({ section }: EditPageProps) {
                 <div className="space-y-3">
                     {/* Es requerida */}
                     <div className="flex items-center space-x-2">
-                        <Checkbox id="is_required" checked={formData.is_required} onCheckedChange={(checked) => handleInputChange('is_required', checked as boolean)} />
-                        <Label htmlFor="is_required" className="text-sm leading-none font-medium cursor-pointer">
+                        <Checkbox
+                            id="is_required"
+                            checked={formData.is_required}
+                            onCheckedChange={(checked) => handleInputChange('is_required', checked as boolean)}
+                        />
+                        <Label htmlFor="is_required" className="cursor-pointer text-sm leading-none font-medium">
                             Obligatoria
                         </Label>
                     </div>
 
                     {/* Permite múltiples selecciones */}
                     <div className="flex items-center space-x-2">
-                        <Checkbox id="allow_multiple" checked={formData.allow_multiple} onCheckedChange={(checked) => handleInputChange('allow_multiple', checked as boolean)} />
-                        <Label htmlFor="allow_multiple" className="text-sm leading-none font-medium cursor-pointer">
+                        <Checkbox
+                            id="allow_multiple"
+                            checked={formData.allow_multiple}
+                            onCheckedChange={(checked) => handleInputChange('allow_multiple', checked as boolean)}
+                        />
+                        <Label htmlFor="allow_multiple" className="cursor-pointer text-sm leading-none font-medium">
                             Selección múltiple
                         </Label>
                     </div>
 
                     {/* Sección activa */}
                     <div className="flex items-center space-x-2">
-                        <Checkbox id="is_active" checked={formData.is_active} onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)} />
-                        <Label htmlFor="is_active" className="text-sm leading-none font-medium cursor-pointer">
+                        <Checkbox
+                            id="is_active"
+                            checked={formData.is_active}
+                            onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)}
+                        />
+                        <Label htmlFor="is_active" className="cursor-pointer text-sm leading-none font-medium">
                             Sección activa
                         </Label>
                     </div>
@@ -327,7 +312,7 @@ export default function SectionEdit({ section }: EditPageProps) {
 
                 {/* Selecciones mínimas/máximas - solo si allow_multiple */}
                 {formData.allow_multiple && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                         <FormField label="Mínimo de items seleccionables" error={errors.min_selections}>
                             <Input
                                 id="min_selections"
@@ -360,13 +345,7 @@ export default function SectionEdit({ section }: EditPageProps) {
                             <SortableContext items={localOptions.map((opt) => opt.id)} strategy={verticalListSortingStrategy}>
                                 <div className="space-y-3">
                                     {localOptions.map((option, index) => (
-                                        <SortableItem
-                                            key={option.id}
-                                            option={option}
-                                            index={index}
-                                            onUpdate={updateOption}
-                                            onRemove={removeOption}
-                                        />
+                                        <SortableItem key={option.id} option={option} index={index} onUpdate={updateOption} onRemove={removeOption} />
                                     ))}
                                 </div>
                             </SortableContext>
@@ -374,7 +353,7 @@ export default function SectionEdit({ section }: EditPageProps) {
                     )}
 
                     <Button type="button" onClick={addOption} size="sm" variant="outline" className="w-full">
-                        <Plus className="h-4 w-4 mr-2" />
+                        <Plus className="mr-2 h-4 w-4" />
                         Agregar Item
                     </Button>
                 </div>

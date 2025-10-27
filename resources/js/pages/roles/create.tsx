@@ -71,7 +71,6 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
         }
     };
 
-
     return (
         <CreatePageLayout
             title="Nuevo Rol"
@@ -84,7 +83,7 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
         >
             <FormSection icon={ENTITY_ICONS.role.info} title="Información del Rol">
                 <FormField label="Nombre del Rol" error={errors.name} required>
-                    <Input id="name" type="text" value={data.name} onChange={(e) => setData('name', e.target.value)}  />
+                    <Input id="name" type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} />
                 </FormField>
 
                 <FormField label="Descripción" error={errors.description}>
@@ -102,11 +101,7 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
                 title="Permisos del Rol"
                 description="Selecciona las acciones que este rol puede realizar"
             >
-                <PermissionsTable
-                    selectedPermissions={data.permissions}
-                    onPermissionChange={handlePermissionChange}
-                    permissions={permissions}
-                />
+                <PermissionsTable selectedPermissions={data.permissions} onPermissionChange={handlePermissionChange} permissions={permissions} />
                 {errors.permissions && <FormError message={errors.permissions} />}
             </FormSection>
         </CreatePageLayout>

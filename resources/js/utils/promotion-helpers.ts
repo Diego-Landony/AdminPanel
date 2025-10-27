@@ -31,16 +31,14 @@ export const formatWeekdays = (weekdays: number[] | null): string => {
     }
 
     // Si son días consecutivos, mostrar rango
-    const isConsecutive = sortedDays.every((day, i) =>
-        i === 0 || day === sortedDays[i - 1] + 1
-    );
+    const isConsecutive = sortedDays.every((day, i) => i === 0 || day === sortedDays[i - 1] + 1);
 
     if (isConsecutive && sortedDays.length > 2) {
         return `${dayNames[sortedDays[0]]} - ${dayNames[sortedDays[sortedDays.length - 1]]}`;
     }
 
     // Mostrar días separados por comas
-    return sortedDays.map(d => dayNames[d]).join(', ');
+    return sortedDays.map((d) => dayNames[d]).join(', ');
 };
 
 /**
@@ -49,10 +47,7 @@ export const formatWeekdays = (weekdays: number[] | null): string => {
  * @param until Fecha de fin
  * @returns String formateado con el rango o null si no hay fechas
  */
-export const formatPromotionDateRange = (
-    from: string | null,
-    until: string | null
-): string | null => {
+export const formatPromotionDateRange = (from: string | null, until: string | null): string | null => {
     if (!from && !until) {
         return null;
     }
@@ -78,10 +73,7 @@ export const formatPromotionDateRange = (
  * @param until Hora de fin
  * @returns String formateado con el rango o null si no hay horarios
  */
-export const formatPromotionTimeRange = (
-    from: string | null,
-    until: string | null
-): string | null => {
+export const formatPromotionTimeRange = (from: string | null, until: string | null): string | null => {
     if (!from && !until) {
         return null;
     }

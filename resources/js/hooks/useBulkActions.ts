@@ -95,51 +95,61 @@ export interface BulkActionsActions {
  * )}
  * ```
  */
-export function useBulkActions<T = unknown>(
-    config: BulkActionsConfig<T>
-): [BulkActionsState<T>, BulkActionsActions] {
+export function useBulkActions<T = unknown>(config: BulkActionsConfig<T>): [BulkActionsState<T>, BulkActionsActions] {
     const { items, getItemId, onSelectionChange } = config;
 
     const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
 
     // Notificar cambios
-    const notifyChange = useCallback((newSelectedIds: Set<string | number>) => {
-        onSelectionChange?.(newSelectedIds);
-    }, [onSelectionChange]);
+    const notifyChange = useCallback(
+        (newSelectedIds: Set<string | number>) => {
+            onSelectionChange?.(newSelectedIds);
+        },
+        [onSelectionChange],
+    );
 
     // Seleccionar un item
-    const selectItem = useCallback((id: string | number) => {
-        setSelectedIds(prev => {
-            const newSet = new Set(prev);
-            newSet.add(id);
-            notifyChange(newSet);
-            return newSet;
-        });
-    }, [notifyChange]);
+    const selectItem = useCallback(
+        (id: string | number) => {
+            setSelectedIds((prev) => {
+                const newSet = new Set(prev);
+                newSet.add(id);
+                notifyChange(newSet);
+                return newSet;
+            });
+        },
+        [notifyChange],
+    );
 
     // Deseleccionar un item
-    const deselectItem = useCallback((id: string | number) => {
-        setSelectedIds(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(id);
-            notifyChange(newSet);
-            return newSet;
-        });
-    }, [notifyChange]);
+    const deselectItem = useCallback(
+        (id: string | number) => {
+            setSelectedIds((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(id);
+                notifyChange(newSet);
+                return newSet;
+            });
+        },
+        [notifyChange],
+    );
 
     // Toggle selección de un item
-    const toggleItem = useCallback((id: string | number) => {
-        setSelectedIds(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(id)) {
-                newSet.delete(id);
-            } else {
-                newSet.add(id);
-            }
-            notifyChange(newSet);
-            return newSet;
-        });
-    }, [notifyChange]);
+    const toggleItem = useCallback(
+        (id: string | number) => {
+            setSelectedIds((prev) => {
+                const newSet = new Set(prev);
+                if (newSet.has(id)) {
+                    newSet.delete(id);
+                } else {
+                    newSet.add(id);
+                }
+                notifyChange(newSet);
+                return newSet;
+            });
+        },
+        [notifyChange],
+    );
 
     // Seleccionar todos los items
     const selectAll = useCallback(() => {
@@ -165,32 +175,41 @@ export function useBulkActions<T = unknown>(
     }, [selectedIds.size, items.length, selectAll, deselectAll]);
 
     // Verificar si un item está seleccionado
-    const isSelected = useCallback((id: string | number): boolean => {
-        return selectedIds.has(id);
-    }, [selectedIds]);
+    const isSelected = useCallback(
+        (id: string | number): boolean => {
+            return selectedIds.has(id);
+        },
+        [selectedIds],
+    );
 
     // Seleccionar múltiples items
-    const selectMultiple = useCallback((ids: (string | number)[]) => {
-        setSelectedIds(prev => {
-            const newSet = new Set(prev);
-            ids.forEach(id => newSet.add(id));
-            notifyChange(newSet);
-            return newSet;
-        });
-    }, [notifyChange]);
+    const selectMultiple = useCallback(
+        (ids: (string | number)[]) => {
+            setSelectedIds((prev) => {
+                const newSet = new Set(prev);
+                ids.forEach((id) => newSet.add(id));
+                notifyChange(newSet);
+                return newSet;
+            });
+        },
+        [notifyChange],
+    );
 
     // Deseleccionar múltiples items
-    const deselectMultiple = useCallback((ids: (string | number)[]) => {
-        setSelectedIds(prev => {
-            const newSet = new Set(prev);
-            ids.forEach(id => newSet.delete(id));
-            notifyChange(newSet);
-            return newSet;
-        });
-    }, [notifyChange]);
+    const deselectMultiple = useCallback(
+        (ids: (string | number)[]) => {
+            setSelectedIds((prev) => {
+                const newSet = new Set(prev);
+                ids.forEach((id) => newSet.delete(id));
+                notifyChange(newSet);
+                return newSet;
+            });
+        },
+        [notifyChange],
+    );
 
     // Obtener items seleccionados
-    const selectedItems = items.filter(item => selectedIds.has(getItemId(item)));
+    const selectedItems = items.filter((item) => selectedIds.has(getItemId(item)));
 
     // Estados derivados
     const selectedCount = selectedIds.size;

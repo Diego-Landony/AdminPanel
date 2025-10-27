@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { ActivitySkeleton } from '@/components/skeletons';
 import { Badge } from '@/components/ui/badge';
@@ -220,18 +220,22 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
     // Apply filters function - only called when search button is clicked
     const applyFilters = useCallback(() => {
         setIsLoading(true);
-        router.post('/activity', {
-            search: search || undefined,
-            per_page: perPage,
-            event_type: localFilters.event_types.join(',') || undefined,
-            user_id: localFilters.user_ids.join(',') || undefined,
-            start_date: localFilters.dateRange?.from ? format(localFilters.dateRange.from, 'yyyy-MM-dd') : undefined,
-            end_date: localFilters.dateRange?.to ? format(localFilters.dateRange.to, 'yyyy-MM-dd') : undefined,
-        }, {
-            preserveState: true,
-            replace: true,
-            onFinish: () => setIsLoading(false),
-        });
+        router.post(
+            '/activity',
+            {
+                search: search || undefined,
+                per_page: perPage,
+                event_type: localFilters.event_types.join(',') || undefined,
+                user_id: localFilters.user_ids.join(',') || undefined,
+                start_date: localFilters.dateRange?.from ? format(localFilters.dateRange.from, 'yyyy-MM-dd') : undefined,
+                end_date: localFilters.dateRange?.to ? format(localFilters.dateRange.to, 'yyyy-MM-dd') : undefined,
+            },
+            {
+                preserveState: true,
+                replace: true,
+                onFinish: () => setIsLoading(false),
+            },
+        );
     }, [search, perPage, localFilters.event_types, localFilters.user_ids, localFilters.dateRange]);
 
     // Clear all filters function
@@ -246,32 +250,41 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
 
         // Apply cleared filters immediately
         setIsLoading(true);
-        router.post('/activity', {
-            per_page: 10,
-        }, {
-            preserveState: true,
-            replace: true,
-            onFinish: () => setIsLoading(false),
-        });
+        router.post(
+            '/activity',
+            {
+                per_page: 10,
+            },
+            {
+                preserveState: true,
+                replace: true,
+                onFinish: () => setIsLoading(false),
+            },
+        );
     }, []);
 
     // Check if any filters are active
-    const hasActiveFilters = search || localFilters.event_types.length > 0 || localFilters.user_ids.length > 0 || localFilters.dateRange || perPage !== 10;
+    const hasActiveFilters =
+        search || localFilters.event_types.length > 0 || localFilters.user_ids.length > 0 || localFilters.dateRange || perPage !== 10;
 
     const refreshData = () => {
         setIsRefreshing(true);
-        router.post('/activity', {
-            search: search || undefined,
-            per_page: perPage,
-            event_type: localFilters.event_types.join(',') || undefined,
-            user_id: localFilters.user_ids.join(',') || undefined,
-            start_date: localFilters.dateRange?.from ? format(localFilters.dateRange.from, 'yyyy-MM-dd') : undefined,
-            end_date: localFilters.dateRange?.to ? format(localFilters.dateRange.to, 'yyyy-MM-dd') : undefined,
-        }, {
-            preserveState: true,
-            replace: true,
-            onFinish: () => setIsRefreshing(false),
-        });
+        router.post(
+            '/activity',
+            {
+                search: search || undefined,
+                per_page: perPage,
+                event_type: localFilters.event_types.join(',') || undefined,
+                user_id: localFilters.user_ids.join(',') || undefined,
+                start_date: localFilters.dateRange?.from ? format(localFilters.dateRange.from, 'yyyy-MM-dd') : undefined,
+                end_date: localFilters.dateRange?.to ? format(localFilters.dateRange.to, 'yyyy-MM-dd') : undefined,
+            },
+            {
+                preserveState: true,
+                replace: true,
+                onFinish: () => setIsRefreshing(false),
+            },
+        );
     };
 
     const columns: ColumnDefinition[] = [
@@ -355,7 +368,10 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
                                                 <span className="truncate overflow-hidden text-ellipsis lowercase" title={stat.title}>
                                                     {stat.title}
                                                 </span>
-                                                <span className="font-medium whitespace-nowrap text-foreground tabular-nums" title={String(stat.value)}>
+                                                <span
+                                                    className="font-medium whitespace-nowrap text-foreground tabular-nums"
+                                                    title={String(stat.value)}
+                                                >
                                                     {stat.value}
                                                 </span>
                                             </span>
@@ -396,7 +412,7 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
                                                 placeholder={PLACEHOLDERS.searchUserEventDescription}
                                                 value={search}
                                                 onChange={(e) => setSearch(e.target.value)}
-                                                className="pl-10 pr-10"
+                                                className="pr-10 pl-10"
                                                 disabled={isLoading}
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {
@@ -408,7 +424,7 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
                                                 <button
                                                     type="button"
                                                     onClick={() => setSearch('')}
-                                                    className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                                    className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                                                     disabled={isLoading}
                                                 >
                                                     <X className="h-4 w-4" />
@@ -416,21 +432,12 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
                                             )}
                                         </div>
                                     </div>
-                                    <Button
-                                        onClick={applyFilters}
-                                        disabled={isLoading}
-                                        className="flex-shrink-0"
-                                    >
+                                    <Button onClick={applyFilters} disabled={isLoading} className="flex-shrink-0">
                                         <Search className="mr-2 h-4 w-4" />
                                         Buscar
                                     </Button>
                                     {hasActiveFilters && (
-                                        <Button
-                                            variant="outline"
-                                            onClick={clearFilters}
-                                            disabled={isLoading}
-                                            className="flex-shrink-0"
-                                        >
+                                        <Button variant="outline" onClick={clearFilters} disabled={isLoading} className="flex-shrink-0">
                                             <X className="mr-2 h-4 w-4" />
                                             Limpiar
                                         </Button>
@@ -537,7 +544,7 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
                                             <TableBody>
                                                 {activities.data.length === 0 ? (
                                                     <TableRow>
-                                                        <TableCell colSpan={columns.length} className="h-40 md:h-32 text-center">
+                                                        <TableCell colSpan={columns.length} className="h-40 text-center md:h-32">
                                                             <div className="flex flex-col items-center justify-center space-y-2">
                                                                 <p className="text-sm text-muted-foreground">No se encontraron resultados</p>
                                                                 {search && (
@@ -554,7 +561,7 @@ export default function ActivityIndex({ activities, filters, options, stats }: A
                                                             {columns.map((column) => (
                                                                 <TableCell
                                                                     key={column.key}
-                                                                    className="py-5 md:py-4 leading-relaxed break-words whitespace-normal"
+                                                                    className="py-5 leading-relaxed break-words whitespace-normal md:py-4"
                                                                 >
                                                                     {column.render(activity)}
                                                                 </TableCell>

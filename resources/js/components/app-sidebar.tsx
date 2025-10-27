@@ -3,7 +3,26 @@ import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton,
 import { usePermissions } from '@/hooks/use-permissions';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Activity, HandPlatter, Home, Layers, ListChecks, LucideIcon, MapPin, Package, Package2, Percent, Settings, Shield, Star, Tag, UserCircle, UserCog, Users, Utensils } from 'lucide-react';
+import {
+    Activity,
+    HandPlatter,
+    Home,
+    Layers,
+    ListChecks,
+    LucideIcon,
+    MapPin,
+    Package,
+    Package2,
+    Percent,
+    Settings,
+    Shield,
+    Star,
+    Tag,
+    UserCircle,
+    UserCog,
+    Users,
+    Utensils,
+} from 'lucide-react';
 import AppLogo from './app-logo';
 
 /**
@@ -151,11 +170,11 @@ export const systemPages: PageConfig[] = [
  * Iconos de grupos para la sidebar
  */
 export const groupIcons: Record<string, LucideIcon> = {
-    'Usuarios': UserCog,
-    'Clientes': UserCircle,
-    'Restaurantes': Utensils,
-    'Menú': HandPlatter,
-    'Promociones': Percent,
+    Usuarios: UserCog,
+    Clientes: UserCircle,
+    Restaurantes: Utensils,
+    Menú: HandPlatter,
+    Promociones: Percent,
 };
 
 /**

@@ -1,7 +1,7 @@
+import { PLACEHOLDERS } from '@/constants/ui-constants';
 import { showNotification } from '@/hooks/useNotifications';
 import { useForm } from '@inertiajs/react';
 import React from 'react';
-import { PLACEHOLDERS } from '@/constants/ui-constants';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
@@ -95,21 +95,13 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                             ))}
                         </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground mt-1">
-                        Cada producto puede tener solo una variante por categoría.
-                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">Cada producto puede tener solo una variante por categoría.</p>
                 </FormField>
 
                 {/* SKU */}
                 <FormField label="SKU (Código único)" error={errors.sku}>
-                    <Input
-                        id="sku"
-                        type="text"
-                        value={data.sku}
-                        onChange={(e) => setData('sku', e.target.value)}
-                        placeholder={PLACEHOLDERS.sku}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <Input id="sku" type="text" value={data.sku} onChange={(e) => setData('sku', e.target.value)} placeholder={PLACEHOLDERS.sku} />
+                    <p className="mt-1 text-xs text-muted-foreground">
                         Identificador único de la variante. Se generará automáticamente combinando el producto y la categoría si no se especifica.
                     </p>
                 </FormField>
@@ -128,10 +120,10 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
             </FormSection>
 
             <FormSection icon={Banknote} title="Precios Base (4 Tipos)">
-                <p className="text-sm text-muted-foreground mb-4">
+                <p className="mb-4 text-sm text-muted-foreground">
                     Define los 4 tipos de precios para esta variante. Estos son los precios base antes de aplicar promociones.
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {/* Precio Base (Pickup) */}
                     <FormField label="Precio Pickup" error={errors.base_price} required>
                         <div className="relative">
@@ -147,9 +139,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                                 placeholder={PLACEHOLDERS.price}
                             />
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Precio para recoger en tienda (capital)
-                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">Precio para recoger en tienda (capital)</p>
                     </FormField>
 
                     {/* Precio Domicilio */}
@@ -167,9 +157,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                                 placeholder={PLACEHOLDERS.price}
                             />
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Precio para entrega a domicilio (capital)
-                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">Precio para entrega a domicilio (capital)</p>
                     </FormField>
 
                     {/* Precio Interior Pickup */}
@@ -187,9 +175,7 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                                 placeholder={PLACEHOLDERS.price}
                             />
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Precio para recoger en tienda (interior del país)
-                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">Precio para recoger en tienda (interior del país)</p>
                     </FormField>
 
                     {/* Precio Interior Domicilio */}
@@ -207,27 +193,19 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                                 placeholder={PLACEHOLDERS.price}
                             />
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Precio para entrega a domicilio (interior del país)
-                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">Precio para entrega a domicilio (interior del país)</p>
                     </FormField>
                 </div>
             </FormSection>
 
             <FormSection icon={ENTITY_ICONS.menu.productInfo} title="Configuración">
                 <div className="flex items-center space-x-2">
-                    <Checkbox
-                        id="is_active"
-                        checked={data.is_active}
-                        onCheckedChange={(checked) => setData('is_active', checked as boolean)}
-                    />
+                    <Checkbox id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked as boolean)} />
                     <Label htmlFor="is_active" className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                         Variante activa
                     </Label>
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                    Las variantes inactivas no se mostrarán en el menú del cliente.
-                </p>
+                <p className="mt-2 text-sm text-muted-foreground">Las variantes inactivas no se mostrarán en el menú del cliente.</p>
             </FormSection>
         </CreatePageLayout>
     );

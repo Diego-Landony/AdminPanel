@@ -45,7 +45,7 @@ class SubwayMenuProductsSeeder extends Seeder
             'Vegetales',
             'Salsas',
             'Preparación',
-            'Extras de Proteína',
+            'Extras',
         ])->pluck('id');
 
         $subs = [
@@ -283,18 +283,17 @@ class SubwayMenuProductsSeeder extends Seeder
         $category = Category::where('name', 'Bebidas')->first();
 
         $bebidas = [
-            ['name' => 'Coca-Cola Personal', 'description' => 'Refresco Coca-Cola tamaño personal', 'precio_pickup_capital' => 8, 'precio_domicilio_capital' => 10, 'precio_pickup_interior' => 9, 'precio_domicilio_interior' => 11],
-            ['name' => 'Coca-Cola Mediano', 'description' => 'Refresco Coca-Cola tamaño mediano', 'precio_pickup_capital' => 12, 'precio_domicilio_capital' => 14, 'precio_pickup_interior' => 13, 'precio_domicilio_interior' => 15],
-            ['name' => 'Coca-Cola Grande', 'description' => 'Refresco Coca-Cola tamaño grande', 'precio_pickup_capital' => 15, 'precio_domicilio_capital' => 17, 'precio_pickup_interior' => 16, 'precio_domicilio_interior' => 18],
-            ['name' => 'Sprite Personal', 'description' => 'Refresco Sprite tamaño personal', 'precio_pickup_capital' => 8, 'precio_domicilio_capital' => 10, 'precio_pickup_interior' => 9, 'precio_domicilio_interior' => 11],
-            ['name' => 'Sprite Mediano', 'description' => 'Refresco Sprite tamaño mediano', 'precio_pickup_capital' => 12, 'precio_domicilio_capital' => 14, 'precio_pickup_interior' => 13, 'precio_domicilio_interior' => 15],
-            ['name' => 'Sprite Grande', 'description' => 'Refresco Sprite tamaño grande', 'precio_pickup_capital' => 15, 'precio_domicilio_capital' => 17, 'precio_pickup_interior' => 16, 'precio_domicilio_interior' => 18],
-            ['name' => 'Fanta Personal', 'description' => 'Refresco Fanta tamaño personal', 'precio_pickup_capital' => 8, 'precio_domicilio_capital' => 10, 'precio_pickup_interior' => 9, 'precio_domicilio_interior' => 11],
-            ['name' => 'Fanta Mediano', 'description' => 'Refresco Fanta tamaño mediano', 'precio_pickup_capital' => 12, 'precio_domicilio_capital' => 14, 'precio_pickup_interior' => 13, 'precio_domicilio_interior' => 15],
-            ['name' => 'Fanta Grande', 'description' => 'Refresco Fanta tamaño grande', 'precio_pickup_capital' => 15, 'precio_domicilio_capital' => 17, 'precio_pickup_interior' => 16, 'precio_domicilio_interior' => 18],
-            ['name' => 'Agua Pura', 'description' => 'Botella de agua purificada', 'precio_pickup_capital' => 6, 'precio_domicilio_capital' => 8, 'precio_pickup_interior' => 7, 'precio_domicilio_interior' => 9],
-            ['name' => 'Té Helado Mediano', 'description' => 'Té helado refrescante tamaño mediano', 'precio_pickup_capital' => 12, 'precio_domicilio_capital' => 14, 'precio_pickup_interior' => 13, 'precio_domicilio_interior' => 15],
-            ['name' => 'Té Helado Grande', 'description' => 'Té helado refrescante tamaño grande', 'precio_pickup_capital' => 15, 'precio_domicilio_capital' => 17, 'precio_pickup_interior' => 16, 'precio_domicilio_interior' => 18],
+            ['name' => 'Jugo Petit', 'description' => 'Jugo Petit en presentación individual', 'precio_pickup_capital' => 13, 'precio_domicilio_capital' => 15, 'precio_pickup_interior' => 14, 'precio_domicilio_interior' => 16],
+            ['name' => 'Agua Pura', 'description' => 'Botella de agua purificada', 'precio_pickup_capital' => 10, 'precio_domicilio_capital' => 12, 'precio_pickup_interior' => 11, 'precio_domicilio_interior' => 13],
+            ['name' => 'Gaseosa Lata', 'description' => 'Gaseosa en lata', 'precio_pickup_capital' => 10, 'precio_domicilio_capital' => 12, 'precio_pickup_interior' => 11, 'precio_domicilio_interior' => 13],
+            ['name' => 'Be Light', 'description' => 'Be Light sabor original', 'precio_pickup_capital' => 15, 'precio_domicilio_capital' => 17, 'precio_pickup_interior' => 16, 'precio_domicilio_interior' => 18],
+            ['name' => 'Té Lipton', 'description' => 'Té frío Lipton', 'precio_pickup_capital' => 15, 'precio_domicilio_capital' => 17, 'precio_pickup_interior' => 16, 'precio_domicilio_interior' => 18],
+            ['name' => 'Grapette', 'description' => 'Gaseosa Grapette sabor uva', 'precio_pickup_capital' => 10, 'precio_domicilio_capital' => 12, 'precio_pickup_interior' => 11, 'precio_domicilio_interior' => 13],
+            ['name' => 'Seven up', 'description' => 'Gaseosa Seven up limón-lima', 'precio_pickup_capital' => 10, 'precio_domicilio_capital' => 12, 'precio_pickup_interior' => 11, 'precio_domicilio_interior' => 13],
+            ['name' => 'Pepsi lata', 'description' => 'Pepsi en lata', 'precio_pickup_capital' => 10, 'precio_domicilio_capital' => 12, 'precio_pickup_interior' => 11, 'precio_domicilio_interior' => 13],
+            ['name' => 'Be light manzana', 'description' => 'Be Light sabor manzana', 'precio_pickup_capital' => 15, 'precio_domicilio_capital' => 17, 'precio_pickup_interior' => 16, 'precio_domicilio_interior' => 18],
+            ['name' => 'Be light jamaica', 'description' => 'Be Light sabor jamaica', 'precio_pickup_capital' => 15, 'precio_domicilio_capital' => 17, 'precio_pickup_interior' => 16, 'precio_domicilio_interior' => 18],
+            ['name' => 'Be light limón', 'description' => 'Be Light sabor limón', 'precio_pickup_capital' => 15, 'precio_domicilio_capital' => 17, 'precio_pickup_interior' => 16, 'precio_domicilio_interior' => 18],
         ];
 
         foreach ($bebidas as $bebidaData) {

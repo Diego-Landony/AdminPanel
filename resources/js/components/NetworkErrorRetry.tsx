@@ -116,13 +116,9 @@ export const NetworkErrorRetry: React.FC<NetworkErrorRetryProps> = ({
                 <CardTitle className={classes.title}>{title}</CardTitle>
             </CardHeader>
             <CardContent className={`${classes.spacing} text-center`}>
-                <p className="text-muted-foreground">
-                    {description || getErrorMessage()}
-                </p>
+                <p className="text-muted-foreground">{description || getErrorMessage()}</p>
 
-                <p className="text-sm text-muted-foreground">
-                    {getRecommendation()}
-                </p>
+                <p className="text-sm text-muted-foreground">{getRecommendation()}</p>
 
                 {showConnectionStatus && (
                     <div className="flex items-center justify-center gap-2 text-sm">
@@ -142,12 +138,7 @@ export const NetworkErrorRetry: React.FC<NetworkErrorRetryProps> = ({
 
                 <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
                     {canRetry && (
-                        <Button
-                            onClick={handleRetry}
-                            disabled={isRetrying}
-                            variant="default"
-                            size="sm"
-                        >
+                        <Button onClick={handleRetry} disabled={isRetrying} variant="default" size="sm">
                             {isRetrying ? (
                                 <>
                                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -163,11 +154,7 @@ export const NetworkErrorRetry: React.FC<NetworkErrorRetryProps> = ({
                         </Button>
                     )}
 
-                    <Button
-                        onClick={() => window.location.reload()}
-                        variant="outline"
-                        size="sm"
-                    >
+                    <Button onClick={() => window.location.reload()} variant="outline" size="sm">
                         Recargar página
                     </Button>
                 </div>
@@ -193,20 +180,23 @@ export const useNetworkRetry = (maxRetries: number = 3) => {
     const [retryCount, setRetryCount] = useState(0);
     const [isRetrying, setIsRetrying] = useState(false);
 
-    const retry = useCallback(async (retryFunction: () => Promise<void> | void) => {
-        if (retryCount >= maxRetries || isRetrying) return;
+    const retry = useCallback(
+        async (retryFunction: () => Promise<void> | void) => {
+            if (retryCount >= maxRetries || isRetrying) return;
 
-        setIsRetrying(true);
-        try {
-            await retryFunction();
-            setRetryCount(0); // Reset on success
-        } catch (error) {
-            setRetryCount(prev => prev + 1);
-            throw error; // Re-throw to let caller handle
-        } finally {
-            setIsRetrying(false);
-        }
-    }, [retryCount, maxRetries, isRetrying]);
+            setIsRetrying(true);
+            try {
+                await retryFunction();
+                setRetryCount(0); // Reset on success
+            } catch (error) {
+                setRetryCount((prev) => prev + 1);
+                throw error; // Re-throw to let caller handle
+            } finally {
+                setIsRetrying(false);
+            }
+        },
+        [retryCount, maxRetries, isRetrying],
+    );
 
     const reset = useCallback(() => {
         setRetryCount(0);

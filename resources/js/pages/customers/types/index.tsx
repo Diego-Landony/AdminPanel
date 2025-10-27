@@ -46,9 +46,7 @@ interface CustomerTypesPageProps {
     };
 }
 
-const CustomerTypeInfoCell: React.FC<{ type: CustomerType }> = ({ type }) => (
-    <EntityInfoCell icon={Shield} primaryText={type.name} />
-);
+const CustomerTypeInfoCell: React.FC<{ type: CustomerType }> = ({ type }) => <EntityInfoCell icon={Shield} primaryText={type.name} />;
 
 const CustomerTypeMobileCard: React.FC<{ type: CustomerType; onDelete: (type: CustomerType) => void; isDeleting: boolean }> = ({
     type,

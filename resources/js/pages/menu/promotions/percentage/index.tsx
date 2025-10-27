@@ -57,13 +57,7 @@ const PromotionMobileCard: React.FC<{
     <StandardMobileCard
         title={promotion.name}
         badge={{
-            children: (
-                <StatusBadge
-                    status={promotion.is_active ? 'active' : 'inactive'}
-                    configs={PROMOTION_STATUS_CONFIGS}
-                    showIcon={false}
-                />
-            ),
+            children: <StatusBadge status={promotion.is_active ? 'active' : 'inactive'} configs={PROMOTION_STATUS_CONFIGS} showIcon={false} />,
         }}
         dataFields={[]}
         actions={{
@@ -116,18 +110,14 @@ export default function PercentageIndex({ promotions, stats, filters }: Promotio
             title: 'Promoción',
             width: 'full' as const,
             sortable: true,
-            render: (promotion: Promotion) => (
-                <div className="text-sm font-medium text-foreground">{promotion.name}</div>
-            ),
+            render: (promotion: Promotion) => <div className="text-sm font-medium text-foreground">{promotion.name}</div>,
         },
         {
             key: 'created_at',
             title: 'Creado',
             width: 'lg' as const,
             sortable: true,
-            render: (promotion: Promotion) => (
-                <div className="text-sm text-muted-foreground">{formatDate(promotion.created_at)}</div>
-            ),
+            render: (promotion: Promotion) => <div className="text-sm text-muted-foreground">{formatDate(promotion.created_at)}</div>,
         },
         {
             key: 'status',
@@ -136,11 +126,7 @@ export default function PercentageIndex({ promotions, stats, filters }: Promotio
             textAlign: 'center' as const,
             render: (promotion: Promotion) => (
                 <div className="flex justify-center">
-                    <StatusBadge
-                        status={promotion.is_active ? 'active' : 'inactive'}
-                        configs={PROMOTION_STATUS_CONFIGS}
-                        showIcon={false}
-                    />
+                    <StatusBadge status={promotion.is_active ? 'active' : 'inactive'} configs={PROMOTION_STATUS_CONFIGS} showIcon={false} />
                 </div>
             ),
         },

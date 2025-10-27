@@ -52,8 +52,10 @@ return new class extends Migration
             Schema::create('combo_items', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('combo_id')->constrained('combos')->onDelete('cascade');
-                $table->foreignId('product_id')->constrained('products')->onDelete('restrict');
+                $table->foreignId('product_id')->nullable()->constrained('products')->onDelete('restrict');
                 $table->foreignId('variant_id')->nullable()->constrained('product_variants')->onDelete('restrict');
+                $table->boolean('is_choice_group')->default(false);
+                $table->string('choice_label', 255)->nullable();
                 $table->unsignedInteger('quantity')->default(1);
                 $table->integer('sort_order')->default(0);
                 $table->timestamps();
@@ -62,6 +64,7 @@ return new class extends Migration
                 $table->index('product_id');
                 $table->index('variant_id');
                 $table->index('sort_order');
+                $table->index(['combo_id', 'is_choice_group'], 'idx_combo_choice_group');
             });
         }
     }

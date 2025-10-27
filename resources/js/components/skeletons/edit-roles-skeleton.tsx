@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { EditPageSkeleton } from './EditPageSkeleton';
 
 export function EditRolesSkeleton() {

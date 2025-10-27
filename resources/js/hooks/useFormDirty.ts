@@ -47,10 +47,7 @@ function deepEqual(obj1: unknown, obj2: unknown): boolean {
 
     for (const key of keys1) {
         if (!keys2.includes(key)) return false;
-        if (!deepEqual(
-            (obj1 as Record<string, unknown>)[key],
-            (obj2 as Record<string, unknown>)[key]
-        )) {
+        if (!deepEqual((obj1 as Record<string, unknown>)[key], (obj2 as Record<string, unknown>)[key])) {
             return false;
         }
     }
@@ -62,17 +59,8 @@ function deepEqual(obj1: unknown, obj2: unknown): boolean {
  * Custom hook for tracking form dirty state with Inertia.js forms
  * Provides detection of unsaved changes and prevents accidental navigation
  */
-export function useFormDirty<T extends Record<string, unknown>>(
-    currentData: T,
-    originalData: T,
-    config: FormDirtyConfig = {}
-): FormDirtyState {
-    const {
-        onDirtyChange,
-        compareFunction = deepEqual,
-        ignoreFields = [],
-        preventNavigation = true,
-    } = config;
+export function useFormDirty<T extends Record<string, unknown>>(currentData: T, originalData: T, config: FormDirtyConfig = {}): FormDirtyState {
+    const { onDirtyChange, compareFunction = deepEqual, ignoreFields = [], preventNavigation = true } = config;
 
     const [isDirty, setIsDirty] = useState(false);
     const [changedFields, setChangedFields] = useState<string[]>([]);
@@ -90,7 +78,7 @@ export function useFormDirty<T extends Record<string, unknown>>(
         const filteredOriginalData = { ...originalDataRef.current };
 
         // Remove ignored fields from comparison
-        ignoreFields.forEach(field => {
+        ignoreFields.forEach((field) => {
             delete filteredCurrentData[field];
             delete filteredOriginalData[field];
         });
@@ -99,11 +87,8 @@ export function useFormDirty<T extends Record<string, unknown>>(
 
         // Calculate which fields have changed
         const newChangedFields: string[] = [];
-        Object.keys(filteredCurrentData).forEach(key => {
-            if (!compareFunction(
-                filteredCurrentData[key],
-                filteredOriginalData[key]
-            )) {
+        Object.keys(filteredCurrentData).forEach((key) => {
+            if (!compareFunction(filteredCurrentData[key], filteredOriginalData[key])) {
                 newChangedFields.push(key);
             }
         });
@@ -133,9 +118,7 @@ export function useFormDirty<T extends Record<string, unknown>>(
         // Prevent navigation using Inertia router
         const preventInertiaNavigation = (e: Event) => {
             if (isDirty) {
-                const confirmLeave = window.confirm(
-                    '¿Estás seguro de que quieres salir? Los cambios no guardados se perderán.'
-                );
+                const confirmLeave = window.confirm('¿Estás seguro de que quieres salir? Los cambios no guardados se perderán.');
                 if (!confirmLeave) {
                     e.preventDefault();
                     return false;
@@ -171,9 +154,12 @@ export function useFormDirty<T extends Record<string, unknown>>(
         setChangedFields([]);
     }, []);
 
-    const isFieldDirty = useCallback((fieldName: string) => {
-        return changedFields.includes(fieldName);
-    }, [changedFields]);
+    const isFieldDirty = useCallback(
+        (fieldName: string) => {
+            return changedFields.includes(fieldName);
+        },
+        [changedFields],
+    );
 
     return {
         isDirty,
@@ -192,7 +178,7 @@ export function useFormDirty<T extends Record<string, unknown>>(
 export function useInertiaFormDirty<T extends Record<string, unknown>>(
     formData: T,
     originalData: T,
-    config: Omit<FormDirtyConfig, 'compareFunction'> = {}
+    config: Omit<FormDirtyConfig, 'compareFunction'> = {},
 ) {
     return useFormDirty(formData, originalData, {
         ...config,
@@ -217,7 +203,7 @@ export function useFormSubmissionState() {
 
     const startSubmission = useCallback(() => {
         setIsSubmitting(true);
-        setSubmitCount(prev => prev + 1);
+        setSubmitCount((prev) => prev + 1);
     }, []);
 
     const endSubmission = useCallback((success: boolean = true) => {
@@ -230,9 +216,12 @@ export function useFormSubmissionState() {
         }
     }, []);
 
-    const canSubmit = useCallback((isDirty: boolean) => {
-        return isDirty && !isSubmitting;
-    }, [isSubmitting]);
+    const canSubmit = useCallback(
+        (isDirty: boolean) => {
+            return isDirty && !isSubmitting;
+        },
+        [isSubmitting],
+    );
 
     return {
         isSubmitting,

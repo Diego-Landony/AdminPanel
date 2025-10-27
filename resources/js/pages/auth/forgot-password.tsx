@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
-import AuthLayout from '@/layouts/auth-layout';
 import { PLACEHOLDERS } from '@/constants/ui-constants';
+import AuthLayout from '@/layouts/auth-layout';
 
 /**
  * Página de recuperación de contraseña

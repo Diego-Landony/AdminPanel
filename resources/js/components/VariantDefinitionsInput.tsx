@@ -1,25 +1,11 @@
-import { useState } from 'react';
-import {
-    DndContext,
-    closestCenter,
-    KeyboardSensor,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    DragEndEvent,
-} from '@dnd-kit/core';
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    useSortable,
-    verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { GripVertical, Plus, X, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { closestCenter, DndContext, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { AlertCircle, GripVertical, Plus, X } from 'lucide-react';
+import { useState } from 'react';
 
 interface VariantDefinitionsInputProps {
     variants: string[];
@@ -36,14 +22,7 @@ interface SortableVariantItemProps {
     hasDuplicate: boolean;
 }
 
-function SortableVariantItem({
-    variant,
-    index,
-    onUpdate,
-    onRemove,
-    canDelete,
-    hasDuplicate,
-}: SortableVariantItemProps) {
+function SortableVariantItem({ variant, index, onUpdate, onRemove, canDelete, hasDuplicate }: SortableVariantItemProps) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `variant-${index}`,
     });
@@ -59,12 +38,12 @@ function SortableVariantItem({
             ref={setNodeRef}
             style={style}
             className={`flex items-center gap-3 rounded-lg border p-3 ${
-                isDragging ? 'shadow-lg bg-muted/50' : ''
+                isDragging ? 'bg-muted/50 shadow-lg' : ''
             } ${hasDuplicate ? 'border-destructive' : 'border-border'}`}
         >
             <button
                 type="button"
-                className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors"
+                className="cursor-grab text-muted-foreground transition-colors hover:text-foreground active:cursor-grabbing"
                 {...attributes}
                 {...listeners}
             >
@@ -80,13 +59,7 @@ function SortableVariantItem({
             />
 
             {canDelete && (
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onRemove(index)}
-                    className="h-9 w-9 p-0"
-                >
+                <Button type="button" variant="ghost" size="sm" onClick={() => onRemove(index)} className="h-9 w-9 p-0">
                     <X className="h-4 w-4" />
                 </Button>
             )}
@@ -101,7 +74,7 @@ export function VariantDefinitionsInput({ variants, onChange, error }: VariantDe
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
-        })
+        }),
     );
 
     // Detectar duplicados
@@ -158,10 +131,8 @@ export function VariantDefinitionsInput({ variants, onChange, error }: VariantDe
     return (
         <div className="space-y-4">
             {localVariants.length === 0 ? (
-                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-                    <p className="text-muted-foreground text-sm mb-4">
-                        Agrega al menos una variante.
-                    </p>
+                <div className="rounded-lg border-2 border-dashed border-border p-8 text-center">
+                    <p className="mb-4 text-sm text-muted-foreground">Agrega al menos una variante.</p>
                     <Button type="button" variant="outline" size="sm" onClick={handleAdd}>
                         <Plus className="mr-2 h-4 w-4" />
                         Agregar variante
@@ -169,15 +140,8 @@ export function VariantDefinitionsInput({ variants, onChange, error }: VariantDe
                 </div>
             ) : (
                 <>
-                    <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={handleDragEnd}
-                    >
-                        <SortableContext
-                            items={localVariants.map((_, i) => `variant-${i}`)}
-                            strategy={verticalListSortingStrategy}
-                        >
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                        <SortableContext items={localVariants.map((_, i) => `variant-${i}`)} strategy={verticalListSortingStrategy}>
                             <div className="space-y-2">
                                 {localVariants.map((variant, index) => (
                                     <SortableVariantItem
@@ -204,9 +168,7 @@ export function VariantDefinitionsInput({ variants, onChange, error }: VariantDe
             {duplicates.size > 0 && (
                 <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                        Las variantes no pueden tener nombres duplicados. Revisa y corrige.
-                    </AlertDescription>
+                    <AlertDescription>Las variantes no pueden tener nombres duplicados. Revisa y corrige.</AlertDescription>
                 </Alert>
             )}
 

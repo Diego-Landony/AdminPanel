@@ -7,9 +7,9 @@ import { SortableTable } from '@/components/SortableTable';
 import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { TableActions } from '@/components/TableActions';
 import { ACTIVE_STATUS_CONFIGS, StatusBadge } from '@/components/status-badge';
-import AppLayout from '@/layouts/app-layout';
 import { Badge } from '@/components/ui/badge';
-import { Package2, CheckCircle2 } from 'lucide-react';
+import AppLayout from '@/layouts/app-layout';
+import { CheckCircle2, ListChecks, Package2 } from 'lucide-react';
 
 interface Category {
     id: number;
@@ -18,14 +18,16 @@ interface Category {
 
 interface ComboItem {
     id: number;
-    product_id: number;
-    variant_id: number | null;
+    is_choice_group: boolean;
+    choice_label?: string | null;
+    product_id?: number | null;
+    variant_id?: number | null;
     quantity: number;
     sort_order: number;
-    product: {
+    product?: {
         id: number;
         name: string;
-    };
+    } | null;
     variant?: {
         id: number;
         name: string;
@@ -86,7 +88,7 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
                 onFinish: () => {
                     setIsSaving(false);
                 },
-            }
+            },
         );
     };
 
@@ -139,7 +141,7 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
                 onFinish: () => {
                     setTogglingCombo(null);
                 },
-            }
+            },
         );
     };
 
@@ -150,49 +152,52 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
             width: 'w-72',
             render: (combo: Combo) => (
                 <div className="flex items-center gap-3">
-                    {combo.image && (
-                        <img
-                            src={combo.image}
-                            alt={combo.name}
-                            className="h-10 w-10 rounded-md object-cover flex-shrink-0"
-                        />
-                    )}
+                    {combo.image && <img src={combo.image} alt={combo.name} className="h-10 w-10 flex-shrink-0 rounded-md object-cover" />}
                     <div className="min-w-0">
-                        <div className="text-sm font-medium text-foreground truncate">{combo.name}</div>
-                        {combo.description && (
-                            <div className="text-xs text-muted-foreground truncate">{combo.description}</div>
-                        )}
+                        <div className="truncate text-sm font-medium text-foreground">{combo.name}</div>
+                        {combo.description && <div className="truncate text-xs text-muted-foreground">{combo.description}</div>}
                     </div>
                 </div>
             ),
         },
         {
             key: 'items',
-            title: 'Productos',
-            width: 'w-24',
+            title: 'Items',
+            width: 'w-32',
             textAlign: 'center' as const,
-            render: (combo: Combo) => (
-                <div className="flex justify-center">
-                    <Badge variant="secondary" className="font-mono">
-                        {combo.items_count}
-                    </Badge>
-                </div>
-            ),
+            render: (combo: Combo) => {
+                const choiceGroupsCount = combo.items?.filter((item) => item.is_choice_group).length || 0;
+                const totalItems = combo.items_count;
+
+                return (
+                    <div className="flex justify-center gap-2">
+                        <Badge variant="secondary" className="font-mono">
+                            {totalItems}
+                        </Badge>
+                        {choiceGroupsCount > 0 && (
+                            <Badge variant="outline" className="gap-1 font-mono">
+                                <ListChecks className="h-3 w-3" />
+                                {choiceGroupsCount}
+                            </Badge>
+                        )}
+                    </div>
+                );
+            },
         },
         {
             key: 'prices',
             title: 'Precios',
             width: 'w-80',
             render: (combo: Combo) => (
-                <div className="text-xs space-y-0.5">
+                <div className="space-y-0.5 text-xs">
                     <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground min-w-[3.5rem]">Capital:</span>
+                        <span className="min-w-[3.5rem] text-muted-foreground">Capital:</span>
                         <span className="font-medium tabular-nums">
                             Q{Number(combo.precio_pickup_capital).toFixed(2)} / Q{Number(combo.precio_domicilio_capital).toFixed(2)}
                         </span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground min-w-[3.5rem]">Interior:</span>
+                        <span className="min-w-[3.5rem] text-muted-foreground">Interior:</span>
                         <span className="font-medium tabular-nums">
                             Q{Number(combo.precio_pickup_interior).toFixed(2)} / Q{Number(combo.precio_domicilio_interior).toFixed(2)}
                         </span>
@@ -212,11 +217,7 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
                         disabled={togglingCombo === combo.id}
                         className="transition-opacity hover:opacity-70 disabled:opacity-50"
                     >
-                        <StatusBadge
-                            status={combo.is_active ? 'active' : 'inactive'}
-                            configs={ACTIVE_STATUS_CONFIGS}
-                            showIcon={false}
-                        />
+                        <StatusBadge status={combo.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />
                     </button>
                 </div>
             ),
@@ -238,57 +239,62 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
         },
     ];
 
-    const renderMobileCard = (combo: Combo) => (
-        <StandardMobileCard
-            title={combo.name}
-            subtitle={combo.description || `${combo.items_count} productos`}
-            image={combo.image}
-            badge={{
-                children: (
-                    <button
-                        onClick={() => handleToggleActive(combo)}
-                        disabled={togglingCombo === combo.id}
-                        className="transition-opacity hover:opacity-70 disabled:opacity-50"
-                    >
-                        <StatusBadge
-                            status={combo.is_active ? 'active' : 'inactive'}
-                            configs={ACTIVE_STATUS_CONFIGS}
-                            showIcon={false}
-                        />
-                    </button>
-                ),
-            }}
-            actions={{
-                editHref: route('menu.combos.edit', combo.id),
-                onDelete: () => openDeleteDialog(combo),
-                isDeleting: deletingCombo === combo.id,
-                editTooltip: 'Editar combo',
-                deleteTooltip: 'Eliminar combo',
-            }}
-            dataFields={[
-                { label: 'Productos', value: combo.items_count.toString() },
-                {
-                    label: 'Precios',
-                    value: (
-                        <div className="space-y-1 text-xs">
-                            <div className="flex justify-between gap-2">
-                                <span className="text-muted-foreground">Capital:</span>
-                                <span className="font-medium tabular-nums">
-                                    Q{Number(combo.precio_pickup_capital).toFixed(2)} / Q{Number(combo.precio_domicilio_capital).toFixed(2)}
-                                </span>
-                            </div>
-                            <div className="flex justify-between gap-2">
-                                <span className="text-muted-foreground">Interior:</span>
-                                <span className="font-medium tabular-nums">
-                                    Q{Number(combo.precio_pickup_interior).toFixed(2)} / Q{Number(combo.precio_domicilio_interior).toFixed(2)}
-                                </span>
-                            </div>
-                        </div>
+    const renderMobileCard = (combo: Combo) => {
+        const choiceGroupsCount = combo.items?.filter((item) => item.is_choice_group).length || 0;
+        const subtitleText =
+            combo.description || (choiceGroupsCount > 0 ? `${combo.items_count} items (${choiceGroupsCount} grupos)` : `${combo.items_count} items`);
+
+        return (
+            <StandardMobileCard
+                title={combo.name}
+                subtitle={subtitleText}
+                image={combo.image}
+                badge={{
+                    children: (
+                        <button
+                            onClick={() => handleToggleActive(combo)}
+                            disabled={togglingCombo === combo.id}
+                            className="transition-opacity hover:opacity-70 disabled:opacity-50"
+                        >
+                            <StatusBadge status={combo.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />
+                        </button>
                     ),
-                },
-            ]}
-        />
-    );
+                }}
+                actions={{
+                    editHref: route('menu.combos.edit', combo.id),
+                    onDelete: () => openDeleteDialog(combo),
+                    isDeleting: deletingCombo === combo.id,
+                    editTooltip: 'Editar combo',
+                    deleteTooltip: 'Eliminar combo',
+                }}
+                dataFields={[
+                    {
+                        label: 'Items',
+                        value: choiceGroupsCount > 0 ? `${combo.items_count} (${choiceGroupsCount} grupos)` : combo.items_count.toString(),
+                    },
+                    {
+                        label: 'Precios',
+                        value: (
+                            <div className="space-y-1 text-xs">
+                                <div className="flex justify-between gap-2">
+                                    <span className="text-muted-foreground">Capital:</span>
+                                    <span className="font-medium tabular-nums">
+                                        Q{Number(combo.precio_pickup_capital).toFixed(2)} / Q{Number(combo.precio_domicilio_capital).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between gap-2">
+                                    <span className="text-muted-foreground">Interior:</span>
+                                    <span className="font-medium tabular-nums">
+                                        Q{Number(combo.precio_pickup_interior).toFixed(2)} / Q{Number(combo.precio_domicilio_interior).toFixed(2)}
+                                    </span>
+                                </div>
+                            </div>
+                        ),
+                    },
+                ]}
+            />
+        );
+    };
 
     const comboStats = [
         {

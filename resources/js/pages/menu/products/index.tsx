@@ -59,10 +59,10 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
 
     const getPriceRange = (product: Product) => {
         if (product.has_variants && product.variants && product.variants.length > 0) {
-            const pickupCapital = product.variants.map(v => Number(v.precio_pickup_capital));
-            const domicilioCapital = product.variants.map(v => Number(v.precio_domicilio_capital));
-            const pickupInterior = product.variants.map(v => Number(v.precio_pickup_interior));
-            const domicilioInterior = product.variants.map(v => Number(v.precio_domicilio_interior));
+            const pickupCapital = product.variants.map((v) => Number(v.precio_pickup_capital));
+            const domicilioCapital = product.variants.map((v) => Number(v.precio_domicilio_capital));
+            const pickupInterior = product.variants.map((v) => Number(v.precio_pickup_interior));
+            const domicilioInterior = product.variants.map((v) => Number(v.precio_domicilio_interior));
 
             const minPickupCapital = Math.min(...pickupCapital);
             const maxPickupCapital = Math.max(...pickupCapital);
@@ -75,20 +75,24 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
 
             return {
                 capital: {
-                    pickup: minPickupCapital === maxPickupCapital
-                        ? `Q${minPickupCapital.toFixed(2)}`
-                        : `Q${minPickupCapital.toFixed(2)} - Q${maxPickupCapital.toFixed(2)}`,
-                    domicilio: minDomicilioCapital === maxDomicilioCapital
-                        ? `Q${minDomicilioCapital.toFixed(2)}`
-                        : `Q${minDomicilioCapital.toFixed(2)} - Q${maxDomicilioCapital.toFixed(2)}`,
+                    pickup:
+                        minPickupCapital === maxPickupCapital
+                            ? `Q${minPickupCapital.toFixed(2)}`
+                            : `Q${minPickupCapital.toFixed(2)} - Q${maxPickupCapital.toFixed(2)}`,
+                    domicilio:
+                        minDomicilioCapital === maxDomicilioCapital
+                            ? `Q${minDomicilioCapital.toFixed(2)}`
+                            : `Q${minDomicilioCapital.toFixed(2)} - Q${maxDomicilioCapital.toFixed(2)}`,
                 },
                 interior: {
-                    pickup: minPickupInterior === maxPickupInterior
-                        ? `Q${minPickupInterior.toFixed(2)}`
-                        : `Q${minPickupInterior.toFixed(2)} - Q${maxPickupInterior.toFixed(2)}`,
-                    domicilio: minDomicilioInterior === maxDomicilioInterior
-                        ? `Q${minDomicilioInterior.toFixed(2)}`
-                        : `Q${minDomicilioInterior.toFixed(2)} - Q${maxDomicilioInterior.toFixed(2)}`,
+                    pickup:
+                        minPickupInterior === maxPickupInterior
+                            ? `Q${minPickupInterior.toFixed(2)}`
+                            : `Q${minPickupInterior.toFixed(2)} - Q${maxPickupInterior.toFixed(2)}`,
+                    domicilio:
+                        minDomicilioInterior === maxDomicilioInterior
+                            ? `Q${minDomicilioInterior.toFixed(2)}`
+                            : `Q${minDomicilioInterior.toFixed(2)} - Q${maxDomicilioInterior.toFixed(2)}`,
                 },
             };
         }
@@ -126,7 +130,7 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
                 onFinish: () => {
                     setIsSaving(false);
                 },
-            }
+            },
         );
     };
 
@@ -170,14 +174,8 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
             width: 'w-64',
             render: (product: Product) => (
                 <div className="flex items-center gap-3">
-                    {product.image && (
-                        <img
-                            src={product.image}
-                            alt={product.name}
-                            className="h-10 w-10 rounded-md object-cover"
-                        />
-                    )}
-                    <div className="text-sm font-medium text-foreground truncate">{product.name}</div>
+                    {product.image && <img src={product.image} alt={product.name} className="h-10 w-10 rounded-md object-cover" />}
+                    <div className="truncate text-sm font-medium text-foreground">{product.name}</div>
                 </div>
             ),
         },
@@ -188,7 +186,7 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
             render: (product: Product) => (
                 <div className="text-sm text-muted-foreground">
                     {product.has_variants && product.variants && product.variants.length > 0 ? (
-                        <ul className="list-disc list-inside space-y-1">
+                        <ul className="list-inside list-disc space-y-1">
                             {product.variants.map((variant) => (
                                 <li key={variant.id} className="text-xs">
                                     {variant.name}
@@ -208,15 +206,15 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
             render: (product: Product) => {
                 const prices = getPriceRange(product);
                 return (
-                    <div className="text-xs space-y-0.5">
+                    <div className="space-y-0.5 text-xs">
                         <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground min-w-[3.5rem]">Capital:</span>
+                            <span className="min-w-[3.5rem] text-muted-foreground">Capital:</span>
                             <span className="font-medium tabular-nums">
                                 {prices.capital.pickup} / {prices.capital.domicilio}
                             </span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground min-w-[3.5rem]">Interior:</span>
+                            <span className="min-w-[3.5rem] text-muted-foreground">Interior:</span>
                             <span className="font-medium tabular-nums">
                                 {prices.interior.pickup} / {prices.interior.domicilio}
                             </span>

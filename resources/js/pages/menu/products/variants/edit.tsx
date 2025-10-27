@@ -1,6 +1,6 @@
+import { PLACEHOLDERS } from '@/constants/ui-constants';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import { PLACEHOLDERS } from '@/constants/ui-constants';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
@@ -12,7 +12,7 @@ import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Calendar, Banknote, Package, Star } from 'lucide-react';
+import { Banknote, Calendar, Package, Star } from 'lucide-react';
 
 interface Product {
     id: number;
@@ -116,12 +116,18 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
 
         const submitData = {
             ...formData,
-            precio_pickup_capital: typeof formData.precio_pickup_capital === 'string' ? parseFloat(formData.precio_pickup_capital) : formData.precio_pickup_capital,
+            precio_pickup_capital:
+                typeof formData.precio_pickup_capital === 'string' ? parseFloat(formData.precio_pickup_capital) : formData.precio_pickup_capital,
             precio_domicilio_capital:
-                typeof formData.precio_domicilio_capital === 'string' ? parseFloat(formData.precio_domicilio_capital) : formData.precio_domicilio_capital,
-            precio_pickup_interior: typeof formData.precio_pickup_interior === 'string' ? parseFloat(formData.precio_pickup_interior) : formData.precio_pickup_interior,
+                typeof formData.precio_domicilio_capital === 'string'
+                    ? parseFloat(formData.precio_domicilio_capital)
+                    : formData.precio_domicilio_capital,
+            precio_pickup_interior:
+                typeof formData.precio_pickup_interior === 'string' ? parseFloat(formData.precio_pickup_interior) : formData.precio_pickup_interior,
             precio_domicilio_interior:
-                typeof formData.precio_domicilio_interior === 'string' ? parseFloat(formData.precio_domicilio_interior) : formData.precio_domicilio_interior,
+                typeof formData.precio_domicilio_interior === 'string'
+                    ? parseFloat(formData.precio_domicilio_interior)
+                    : formData.precio_domicilio_interior,
             daily_special_precio_pickup_capital:
                 formData.daily_special_precio_pickup_capital !== ''
                     ? typeof formData.daily_special_precio_pickup_capital === 'string'
@@ -187,7 +193,7 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
 
             {/* Precios Regulares */}
             <FormSection icon={Banknote} title="Precios Regulares" description="Precios normales de esta variante">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <FormField label="Precio Pickup Capital" error={errors.precio_pickup_capital} required>
                         <Input
                             type="number"
@@ -259,19 +265,18 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                                     <Calendar className="h-4 w-4" />
                                     Días activos del Sub del Día
                                 </Label>
-                                <p className="text-sm text-muted-foreground">Selecciona los días en los que esta variante estará disponible como Sub del Día</p>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <p className="text-sm text-muted-foreground">
+                                    Selecciona los días en los que esta variante estará disponible como Sub del Día
+                                </p>
+                                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                                     {daysOfWeek.map((day) => (
                                         <div
                                             key={day.value}
-                                            className={`
-                                                flex items-center justify-center p-3 rounded-lg border-2 cursor-pointer transition-all
-                                                ${
-                                                    formData.daily_special_days.includes(day.value)
-                                                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-950'
-                                                        : 'border-border hover:border-amber-300'
-                                                }
-                                            `}
+                                            className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-all ${
+                                                formData.daily_special_days.includes(day.value)
+                                                    ? 'border-amber-500 bg-amber-50 dark:bg-amber-950'
+                                                    : 'border-border hover:border-amber-300'
+                                            } `}
                                             onClick={() => handleDayToggle(day.value)}
                                         >
                                             <span className="text-sm font-medium">{day.label}</span>
@@ -279,17 +284,15 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                                     ))}
                                 </div>
                                 {formData.daily_special_days.length > 0 && (
-                                    <div className="flex flex-wrap gap-2 mt-2">
-                                        {formData.daily_special_days
-                                            .sort()
-                                            .map((dayValue) => {
-                                                const day = daysOfWeek.find((d) => d.value === dayValue);
-                                                return (
-                                                    <Badge key={dayValue} variant="default" className="bg-amber-500">
-                                                        {day?.label}
-                                                    </Badge>
-                                                );
-                                            })}
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        {formData.daily_special_days.sort().map((dayValue) => {
+                                            const day = daysOfWeek.find((d) => d.value === dayValue);
+                                            return (
+                                                <Badge key={dayValue} variant="default" className="bg-amber-500">
+                                                    {day?.label}
+                                                </Badge>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
@@ -300,10 +303,10 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                             <div className="space-y-4">
                                 <div>
                                     <Label>Precios Especiales del Sub del Día</Label>
-                                    <p className="text-sm text-muted-foreground mt-1">Deja en blanco para usar los precios regulares</p>
+                                    <p className="mt-1 text-sm text-muted-foreground">Deja en blanco para usar los precios regulares</p>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                     <FormField label="Precio Especial Pickup Capital" error={errors.daily_special_precio_pickup_capital}>
                                         <Input
                                             type="number"
@@ -357,7 +360,11 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
             {/* Estado */}
             <FormSection icon={Package} title="Estado" description="Configuración de activación">
                 <div className="flex items-center space-x-2">
-                    <Checkbox id="is_active" checked={formData.is_active} onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)} />
+                    <Checkbox
+                        id="is_active"
+                        checked={formData.is_active}
+                        onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)}
+                    />
                     <Label htmlFor="is_active" className="text-sm leading-none font-medium">
                         Variante activa
                     </Label>

@@ -97,7 +97,7 @@ const StandardMobileCardComponent: React.FC<StandardMobileCardProps> = ({
     className = '',
 }) => {
     const headerIcon = image ? (
-        <div className="h-8 w-8 rounded-full overflow-hidden">
+        <div className="h-8 w-8 overflow-hidden rounded-full">
             <img src={image} alt={typeof title === 'string' ? title : 'Entity'} className="h-full w-full object-cover" />
         </div>
     ) : IconComponent ? (

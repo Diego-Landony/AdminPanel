@@ -9,7 +9,7 @@ import { CreateUsersSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
-import { PLACEHOLDERS, AUTOCOMPLETE, FIELD_DESCRIPTIONS, NOTIFICATIONS } from '@/constants/ui-constants';
+import { AUTOCOMPLETE, FIELD_DESCRIPTIONS, NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
 /**
  * Página para crear un nuevo usuario
@@ -96,7 +96,7 @@ export default function CreateUser() {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="absolute top-1 right-1 h-11 w-11 md:h-8 md:w-8 p-0"
+                            className="absolute top-1 right-1 h-11 w-11 p-0 md:h-8 md:w-8"
                             onClick={() => setShowPassword(!showPassword)}
                         >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

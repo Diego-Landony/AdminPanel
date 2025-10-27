@@ -27,10 +27,10 @@ export function FormSectionSkeleton({
     hasCheckboxes = 0,
     hasTable = false,
     showIcon = true,
-    showTitle = true
+    showTitle = true,
 }: FormSectionSkeletonProps) {
     return (
-        <div className="space-y-6 rounded-lg border border-border bg-card p-6 animate-pulse">
+        <div className="animate-pulse space-y-6 rounded-lg border border-border bg-card p-6">
             {/* Section Header */}
             {(showIcon || showTitle) && (
                 <div className="flex items-center gap-3 border-b border-border pb-4">

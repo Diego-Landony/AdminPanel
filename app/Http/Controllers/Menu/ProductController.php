@@ -9,6 +9,7 @@ use App\Models\Menu\Category;
 use App\Models\Menu\Product;
 use App\Models\Menu\ProductVariant;
 use App\Models\Menu\Section;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -270,15 +271,56 @@ class ProductController extends Controller
     /**
      * Eliminar producto
      */
-    public function destroy(Product $product): RedirectResponse
+    public function destroy(Request $request, Product $product): RedirectResponse|JsonResponse
     {
         try {
+            // Validar uso en combo_item_options
+            $usedInChoiceGroups = \App\Models\Menu\ComboItemOption::where('product_id', $product->id)
+                ->with('comboItem.combo')
+                ->get();
+
+            if ($usedInChoiceGroups->isNotEmpty()) {
+                $comboNames = $usedInChoiceGroups
+                    ->pluck('comboItem.combo.name')
+                    ->unique()
+                    ->sort()
+                    ->values();
+
+                $errorMessage = sprintf(
+                    'No puedes eliminar este producto. Está usado en %d combo(s): %s',
+                    $comboNames->count(),
+                    $comboNames->join(', ')
+                );
+
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => $errorMessage,
+                    ], 422);
+                }
+
+                return back()->withErrors([
+                    'error' => $errorMessage,
+                ]);
+            }
+
             $product->delete();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Producto eliminado exitosamente.',
+                ], 200);
+            }
 
             return redirect()
                 ->route('menu.products.index')
                 ->with('success', 'Producto eliminado exitosamente.');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Error al eliminar el producto: '.$e->getMessage(),
+                ], 500);
+            }
+
             return back()
                 ->withErrors(['error' => 'Error al eliminar el producto: '.$e->getMessage()]);
         }

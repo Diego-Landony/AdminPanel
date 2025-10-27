@@ -1,23 +1,9 @@
+import { closestCenter, DndContext, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Link } from '@inertiajs/react';
 import { Plus, RefreshCw, Search, X } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
-import {
-    DndContext,
-    closestCenter,
-    KeyboardSensor,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    DragEndEvent,
-} from '@dnd-kit/core';
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    useSortable,
-    verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import React, { useEffect, useState } from 'react';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Button } from '@/components/ui/button';
@@ -76,14 +62,7 @@ interface SortableRowProps<T> {
  * Fila sortable individual
  */
 function SortableRow<T extends { id: number | string }>({ item, columns }: SortableRowProps<T>) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({ id: item.id });
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -92,10 +71,10 @@ function SortableRow<T extends { id: number | string }>({ item, columns }: Sorta
     };
 
     return (
-        <TableRow ref={setNodeRef} style={style} className={isDragging ? 'shadow-lg bg-muted/50' : ''}>
-            <TableCell className="text-center w-16">
+        <TableRow ref={setNodeRef} style={style} className={isDragging ? 'bg-muted/50 shadow-lg' : ''}>
+            <TableCell className="w-16 text-center">
                 <button
-                    className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors"
+                    className="cursor-grab text-muted-foreground transition-colors hover:text-foreground active:cursor-grabbing"
                     {...attributes}
                     {...listeners}
                 >
@@ -153,7 +132,7 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
-        })
+        }),
     );
 
     // Sincronizar cuando cambian los datos externos
@@ -199,10 +178,13 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
         if (!categoryGroup) return;
 
         // Preparar productos de esta categoría con su nuevo sort_order
-        const productsToSave: T[] = categoryGroup.products.map((product, index) => ({
-            ...product,
-            sort_order: index + 1,
-        } as T));
+        const productsToSave: T[] = categoryGroup.products.map(
+            (product, index) =>
+                ({
+                    ...product,
+                    sort_order: index + 1,
+                }) as T,
+        );
 
         // Enviar al backend
         onReorder(productsToSave);
@@ -218,14 +200,15 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
     /**
      * Filtrar grupos por búsqueda
      */
-    const filteredGroups = searchable && search
-        ? localGroups.map((group) => ({
-            ...group,
-            products: group.products.filter((item: T) =>
-                (item as { name?: string }).name?.toLowerCase().includes(search.toLowerCase())
-            ),
-        })).filter((group) => group.products.length > 0)
-        : localGroups;
+    const filteredGroups =
+        searchable && search
+            ? localGroups
+                  .map((group) => ({
+                      ...group,
+                      products: group.products.filter((item: T) => (item as { name?: string }).name?.toLowerCase().includes(search.toLowerCase())),
+                  }))
+                  .filter((group) => group.products.length > 0)
+            : localGroups;
 
     return (
         <ErrorBoundary>
@@ -257,7 +240,6 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
                 <Card>
                     <CardHeader className="pb-6">
                         <div className="flex flex-col space-y-4">
-
                             {/* Stats */}
                             {stats && stats.length > 0 && (
                                 <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
@@ -274,18 +256,18 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
                             {/* Search */}
                             {searchable && (
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                                     <Input
                                         type="text"
                                         placeholder={searchPlaceholder}
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
-                                        className="pl-10 pr-10"
+                                        className="pr-10 pl-10"
                                     />
                                     {search && (
                                         <button
                                             onClick={() => setSearch('')}
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                            className="absolute top-1/2 right-3 -translate-y-1/2 transform text-muted-foreground transition-colors hover:text-foreground"
                                         >
                                             <X className="h-4 w-4" />
                                         </button>
@@ -301,8 +283,8 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
                             {filteredGroups.map((group) => (
                                 <div key={group.category.id ?? 'no-category'} className="border-b last:border-b-0">
                                     {/* Category Header */}
-                                    <div className="bg-muted/50 px-6 py-3 border-b">
-                                        <h3 className="font-semibold text-sm text-foreground">{group.category.name}</h3>
+                                    <div className="border-b bg-muted/50 px-6 py-3">
+                                        <h3 className="text-sm font-semibold text-foreground">{group.category.name}</h3>
                                     </div>
 
                                     {/* Products in this category */}
@@ -337,7 +319,7 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
 
                                     {/* Save Button for this group - solo si esta categoría cambió */}
                                     {changedCategories.has(group.category.id) && (
-                                        <div className="flex items-center justify-end gap-4 px-6 py-3 bg-muted/30">
+                                        <div className="flex items-center justify-end gap-4 bg-muted/30 px-6 py-3">
                                             <Button onClick={() => handleSaveOrder(group.category.id)} disabled={isSaving} size="sm">
                                                 <Save className="mr-2 h-4 w-4" />
                                                 {isSaving ? 'Guardando...' : 'Guardar Orden'}
@@ -361,8 +343,8 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
                                     {filteredGroups.map((group) => (
                                         <div key={group.category.id ?? 'no-category'} className="space-y-4">
                                             {/* Category Header */}
-                                            <div className="bg-muted/50 px-4 py-2 rounded-md">
-                                                <h3 className="font-semibold text-sm text-foreground">{group.category.name}</h3>
+                                            <div className="rounded-md bg-muted/50 px-4 py-2">
+                                                <h3 className="text-sm font-semibold text-foreground">{group.category.name}</h3>
                                             </div>
 
                                             {/* Products */}
@@ -393,8 +375,6 @@ function GroupedSortableTableComponent<T extends { id: number | string; sort_ord
     );
 }
 
-export function GroupedSortableTable<T extends { id: number | string; sort_order?: number }>(
-    props: GroupedSortableTableProps<T>
-) {
+export function GroupedSortableTable<T extends { id: number | string; sort_order?: number }>(props: GroupedSortableTableProps<T>) {
     return <GroupedSortableTableComponent {...props} />;
 }

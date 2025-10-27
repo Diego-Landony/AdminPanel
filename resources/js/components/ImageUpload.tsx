@@ -44,9 +44,7 @@ export function ImageUpload({
         console.log('   Formatos aceptados:', acceptedFormats);
         if (!acceptedFormats.includes(file.type)) {
             console.error('❌ Formato no válido');
-            showNotification.error(
-                `Formato no válido. Usa: ${acceptedFormats.map(f => f.split('/')[1]).join(', ')}`
-            );
+            showNotification.error(`Formato no válido. Usa: ${acceptedFormats.map((f) => f.split('/')[1]).join(', ')}`);
             return;
         }
         console.log('✅ Formato válido');
@@ -87,7 +85,7 @@ export function ImageUpload({
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                 },
             });
@@ -140,7 +138,7 @@ export function ImageUpload({
             {label && (
                 <Label>
                     {label}
-                    {required && <span className="text-destructive ml-1">*</span>}
+                    {required && <span className="ml-1 text-destructive">*</span>}
                 </Label>
             )}
 
@@ -148,30 +146,14 @@ export function ImageUpload({
                 {/* Preview o placeholder */}
                 <div className="relative w-full max-w-xs">
                     {preview ? (
-                        <div className="relative group">
-                            <img
-                                src={preview}
-                                alt="Preview"
-                                className="w-full h-48 object-cover rounded-lg border border-border"
-                            />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={handleClickUpload}
-                                    disabled={isUploading}
-                                >
-                                    <Upload className="h-4 w-4 mr-2" />
+                        <div className="group relative">
+                            <img src={preview} alt="Preview" className="h-48 w-full rounded-lg border border-border object-cover" />
+                            <div className="absolute inset-0 flex items-center justify-center gap-2 rounded-lg bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                                <Button type="button" variant="secondary" size="sm" onClick={handleClickUpload} disabled={isUploading}>
+                                    <Upload className="mr-2 h-4 w-4" />
                                     Cambiar
                                 </Button>
-                                <Button
-                                    type="button"
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={handleRemoveImage}
-                                    disabled={isUploading}
-                                >
+                                <Button type="button" variant="destructive" size="sm" onClick={handleRemoveImage} disabled={isUploading}>
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
                             </div>
@@ -181,11 +163,11 @@ export function ImageUpload({
                             type="button"
                             onClick={handleClickUpload}
                             disabled={isUploading}
-                            className="w-full h-48 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 hover:border-primary hover:bg-accent/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex h-48 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border transition-colors hover:border-primary hover:bg-accent/50 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {isUploading ? (
                                 <>
-                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
                                     <p className="text-sm text-muted-foreground">Subiendo imagen...</p>
                                 </>
                             ) : (
@@ -193,7 +175,7 @@ export function ImageUpload({
                                     <ImageIcon className="h-8 w-8 text-muted-foreground" />
                                     <p className="text-sm text-muted-foreground">Click para subir imagen</p>
                                     <p className="text-xs text-muted-foreground">
-                                        Máx {maxSizeMB}MB • {acceptedFormats.map(f => f.split('/')[1].toUpperCase()).join(', ')}
+                                        Máx {maxSizeMB}MB • {acceptedFormats.map((f) => f.split('/')[1].toUpperCase()).join(', ')}
                                     </p>
                                 </>
                             )}
@@ -202,18 +184,10 @@ export function ImageUpload({
                 </div>
 
                 {/* Input oculto */}
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept={acceptedFormats.join(',')}
-                    onChange={handleFileSelect}
-                    className="hidden"
-                />
+                <input ref={fileInputRef} type="file" accept={acceptedFormats.join(',')} onChange={handleFileSelect} className="hidden" />
 
                 {/* Error */}
-                {error && (
-                    <p className="text-sm text-destructive">{error}</p>
-                )}
+                {error && <p className="text-sm text-destructive">{error}</p>}
             </div>
         </div>
     );

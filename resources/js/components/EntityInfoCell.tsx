@@ -55,7 +55,7 @@ export const EntityInfoCell: React.FC<EntityInfoCellProps> = ({ icon: IconCompon
     return (
         <div className={`flex items-center gap-3 ${className}`}>
             {(IconComponent || image) && (
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 overflow-hidden">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
                     {image ? (
                         <img src={image} alt={primaryText} className="h-full w-full object-cover" />
                     ) : IconComponent ? (

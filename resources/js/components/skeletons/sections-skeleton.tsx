@@ -5,15 +5,5 @@ interface SectionsSkeletonProps {
 }
 
 export function SectionsSkeleton({ rows = 5 }: SectionsSkeletonProps) {
-    return (
-        <IndexPageSkeleton
-            rows={rows}
-            columns={7}
-            breakpoint="lg"
-            hasAvatar={false}
-            hasBadge={true}
-            dataFields={3}
-            hasActions={true}
-        />
-    );
+    return <IndexPageSkeleton rows={rows} columns={7} breakpoint="lg" hasAvatar={false} hasBadge={true} dataFields={3} hasActions={true} />;
 }

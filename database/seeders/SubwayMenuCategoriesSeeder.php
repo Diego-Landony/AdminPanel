@@ -74,8 +74,8 @@ class SubwayMenuCategoriesSeeder extends Seeder
             [
                 'name' => 'Desayunos',
                 'is_active' => true,
-                'uses_variants' => true,
-                'variant_definitions' => ['15cm', '30cm'],
+                'uses_variants' => false,
+                'variant_definitions' => null,
                 'sort_order' => 9,
             ],
             [

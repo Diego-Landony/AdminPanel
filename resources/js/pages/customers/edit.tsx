@@ -12,7 +12,7 @@ import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { PLACEHOLDERS, AUTOCOMPLETE, FIELD_DESCRIPTIONS, NOTIFICATIONS } from '@/constants/ui-constants';
+import { AUTOCOMPLETE, FIELD_DESCRIPTIONS, NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
 /**
  * Interfaz para el tipo de cliente
@@ -148,12 +148,7 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
         >
             <FormSection icon={User} title="Información Personal">
                 <FormField label="Nombre Completo" error={errors.name} required>
-                    <Input
-                        type="text"
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
-                        autoComplete={AUTOCOMPLETE.name}
-                    />
+                    <Input type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} autoComplete={AUTOCOMPLETE.name} />
                 </FormField>
 
                 <FormField label="Email" error={errors.email} required>
@@ -256,12 +251,7 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
                 </FormField>
 
                 <FormField label="Dirección" error={errors.address}>
-                    <Textarea
-                        value={data.address}
-                        onChange={(e) => setData('address', e.target.value)}
-                        placeholder={PLACEHOLDERS.address}
-                        rows={3}
-                    />
+                    <Textarea value={data.address} onChange={(e) => setData('address', e.target.value)} placeholder={PLACEHOLDERS.address} rows={3} />
                 </FormField>
             </FormSection>
 
@@ -338,7 +328,6 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
                     </div>
                 </div>
             </FormSection>
-
         </EditPageLayout>
     );
 }

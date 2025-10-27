@@ -32,15 +32,9 @@ export interface TableFiltersActions<T = Record<string, unknown>> {
  * Provides consistent state management and API calls across different tables
  */
 export function useTableFilters<T extends Record<string, unknown> = Record<string, unknown>>(
-    config: TableFiltersConfig<T>
+    config: TableFiltersConfig<T>,
 ): [TableFiltersState<T>, TableFiltersActions<T>] {
-    const {
-        initialFilters,
-        endpoint,
-        defaultPerPage = 10,
-        preserveState = true,
-        replace = true,
-    } = config;
+    const { initialFilters, endpoint, defaultPerPage = 10, preserveState = true, replace = true } = config;
 
     // State management
     const [filters, setFiltersState] = useState<T>(initialFilters);
@@ -121,7 +115,7 @@ export function useTableFilters<T extends Record<string, unknown> = Record<strin
 
     // Actions
     const setFilters = useCallback((newFilters: Partial<T>) => {
-        setFiltersState(prev => ({ ...prev, ...newFilters }));
+        setFiltersState((prev) => ({ ...prev, ...newFilters }));
     }, []);
 
     const setSearch = useCallback((newSearch: string) => {
@@ -133,7 +127,7 @@ export function useTableFilters<T extends Record<string, unknown> = Record<strin
     }, []);
 
     const updateFilter = useCallback(<K extends keyof T>(key: K, value: T[K]) => {
-        setFiltersState(prev => ({ ...prev, [key]: value }));
+        setFiltersState((prev) => ({ ...prev, [key]: value }));
     }, []);
 
     const state: TableFiltersState<T> = {

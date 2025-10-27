@@ -5,8 +5,8 @@ import { FormEventHandler, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
+import { FIELD_DESCRIPTIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 import AuthLayout from '@/layouts/auth-layout';
-import { PLACEHOLDERS, FIELD_DESCRIPTIONS } from '@/constants/ui-constants';
 
 /**
  * Props de la página de restablecimiento de contraseña

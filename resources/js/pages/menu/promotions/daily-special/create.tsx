@@ -1,26 +1,20 @@
-import { router, useForm } from '@inertiajs/react';
-import React, { useState } from 'react';
 import { CURRENCY, PLACEHOLDERS } from '@/constants/ui-constants';
-import { Plus, Trash2, Store, Truck, Calendar } from 'lucide-react';
+import { router, useForm } from '@inertiajs/react';
+import { Calendar, Plus, Store, Trash2, Truck } from 'lucide-react';
+import React, { useState } from 'react';
 
-import { CreatePageLayout } from '@/components/create-page-layout';
-import { FormSection } from '@/components/form-section';
-import { FormField } from '@/components/ui/form-field';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { ProductCombobox } from '@/components/ProductCombobox';
 import { WeekdaySelector } from '@/components/WeekdaySelector';
+import { CreatePageLayout } from '@/components/create-page-layout';
+import { FormSection } from '@/components/form-section';
 import { CreatePageSkeleton } from '@/components/skeletons';
+import { Button } from '@/components/ui/button';
+import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { generateUniqueId } from '@/utils/generateId';
 
 interface ProductVariant {
@@ -138,11 +132,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
         setData('items', updated as unknown as DailySpecialItem[]);
     };
 
-    const updateItem = (
-        index: number,
-        field: keyof Omit<DailySpecialItem, 'id'>,
-        value: string | number | number[] | boolean
-    ) => {
+    const updateItem = (index: number, field: keyof Omit<DailySpecialItem, 'id'>, value: string | number | number[] | boolean) => {
         const updated = [...localItems];
         updated[index] = { ...updated[index], [field]: value };
         setLocalItems(updated);
@@ -251,20 +241,11 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                     <Label htmlFor="is_active" className="text-base">
                         Promoción activa
                     </Label>
-                    <Switch
-                        id="is_active"
-                        checked={data.is_active}
-                        onCheckedChange={(checked) => setData('is_active', checked)}
-                    />
+                    <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked)} />
                 </div>
 
                 <FormField label="Nombre" error={errors.name} required>
-                    <Input
-                        type="text"
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
-                        placeholder={PLACEHOLDERS.name}
-                    />
+                    <Input type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder={PLACEHOLDERS.name} />
                 </FormField>
 
                 <FormField label="Descripción" error={errors.description}>
@@ -281,20 +262,12 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
             <FormSection title="Productos">
                 <div className="space-y-4">
                     {localItems.map((item, index) => (
-                        <div
-                            key={item.id}
-                            className="border border-border rounded-lg p-4 space-y-4 relative"
-                        >
+                        <div key={item.id} className="relative space-y-4 rounded-lg border border-border p-4">
                             {/* Header */}
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="mb-2 flex items-center justify-between">
                                 <h4 className="text-sm font-medium">Producto {index + 1}</h4>
                                 {localItems.length > 1 && (
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => removeItem(index)}
-                                    >
+                                    <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)}>
                                         <Trash2 className="h-4 w-4 text-destructive" />
                                     </Button>
                                 )}
@@ -313,14 +286,15 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                                         variant_ids: [], // Resetear variantes cuando cambia el producto
                                     };
                                     setLocalItems(updated);
-                                    setData('items', updated.map(({ id: _id, ...rest }) => rest));
+                                    setData(
+                                        'items',
+                                        updated.map(({ id: _id, ...rest }) => rest),
+                                    );
                                 }}
                                 products={products.filter((product) => {
                                     // Si el producto NO tiene variantes, eliminar si ya está en uso
                                     if (!product.has_variants) {
-                                        return !localItems.some(
-                                            (i, idx) => idx !== index && i.product_id === String(product.id)
-                                        );
+                                        return !localItems.some((i, idx) => idx !== index && i.product_id === String(product.id));
                                     }
                                     // Si el producto TIENE variantes, siempre permitir
                                     return true;
@@ -331,92 +305,69 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                             />
 
                             {/* Selector de Variantes */}
-                            {item.product_id && (() => {
-                                const selectedProduct = products.find(p => p.id === Number(item.product_id));
-                                const hasVariants = selectedProduct?.has_variants && selectedProduct?.variants && selectedProduct.variants.length > 0;
+                            {item.product_id &&
+                                (() => {
+                                    const selectedProduct = products.find((p) => p.id === Number(item.product_id));
+                                    const hasVariants =
+                                        selectedProduct?.has_variants && selectedProduct?.variants && selectedProduct.variants.length > 0;
 
-                                if (!hasVariants) return null;
+                                    if (!hasVariants) return null;
 
-                                return (
-                                    <FormField
-                                        label="Variante"
-                                        error={dynamicErrors[`items.${index}.variant_ids`]}
-                                        required
-                                    >
-                                        <Select
-                                            value={item.variant_ids[0] || ''}
-                                            onValueChange={(value) => {
-                                                const updated = [...localItems];
-                                                updated[index] = { ...updated[index], variant_ids: [value] };
-                                                setLocalItems(updated);
-                                                setData('items', updated.map(({ id: _id, ...rest }) => rest));
-                                            }}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Selecciona una variante" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {selectedProduct.variants?.map((variant) => (
-                                                    <SelectItem key={variant.id} value={variant.id.toString()}>
-                                                        {variant.name} {variant.size && `- ${variant.size}`}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </FormField>
-                                );
-                            })()}
+                                    return (
+                                        <FormField label="Variante" error={dynamicErrors[`items.${index}.variant_ids`]} required>
+                                            <Select
+                                                value={item.variant_ids[0] || ''}
+                                                onValueChange={(value) => {
+                                                    const updated = [...localItems];
+                                                    updated[index] = { ...updated[index], variant_ids: [value] };
+                                                    setLocalItems(updated);
+                                                    setData(
+                                                        'items',
+                                                        updated.map(({ id: _id, ...rest }) => rest),
+                                                    );
+                                                }}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Selecciona una variante" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {selectedProduct.variants?.map((variant) => (
+                                                        <SelectItem key={variant.id} value={variant.id.toString()}>
+                                                            {variant.name} {variant.size && `- ${variant.size}`}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </FormField>
+                                    );
+                                })()}
 
                             {/* Precios */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField
-                                    label="Precio Capital"
-                                    error={dynamicErrors[`items.${index}.special_price_capital`]}
-                                    required
-                                >
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <FormField label="Precio Capital" error={dynamicErrors[`items.${index}.special_price_capital`]} required>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                                            {CURRENCY.symbol}
-                                        </span>
+                                        <span className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
                                         <Input
                                             type="number"
                                             step="0.01"
                                             min="0"
                                             value={item.special_price_capital}
-                                            onChange={(e) =>
-                                                updateItem(
-                                                    index,
-                                                    'special_price_capital',
-                                                    e.target.value
-                                                )
-                                            }
+                                            onChange={(e) => updateItem(index, 'special_price_capital', e.target.value)}
                                             className="pl-7"
                                             placeholder={PLACEHOLDERS.price}
                                         />
                                     </div>
                                 </FormField>
 
-                                <FormField
-                                    label="Precio Interior"
-                                    error={dynamicErrors[`items.${index}.special_price_interior`]}
-                                    required
-                                >
+                                <FormField label="Precio Interior" error={dynamicErrors[`items.${index}.special_price_interior`]} required>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                                            {CURRENCY.symbol}
-                                        </span>
+                                        <span className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
                                         <Input
                                             type="number"
                                             step="0.01"
                                             min="0"
                                             value={item.special_price_interior}
-                                            onChange={(e) =>
-                                                updateItem(
-                                                    index,
-                                                    'special_price_interior',
-                                                    e.target.value
-                                                )
-                                            }
+                                            onChange={(e) => updateItem(index, 'special_price_interior', e.target.value)}
                                             className="pl-7"
                                             placeholder={PLACEHOLDERS.price}
                                         />
@@ -425,16 +376,10 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                             </div>
 
                             {/* Tipo de Servicio */}
-                            <FormField
-                                label="Tipo de servicio"
-                                error={dynamicErrors[`items.${index}.service_type`]}
-                                required
-                            >
+                            <FormField label="Tipo de servicio" error={dynamicErrors[`items.${index}.service_type`]} required>
                                 <Select
                                     value={item.service_type}
-                                    onValueChange={(value: 'both' | 'delivery_only' | 'pickup_only') =>
-                                        updateItem(index, 'service_type', value)
-                                    }
+                                    onValueChange={(value: 'both' | 'delivery_only' | 'pickup_only') => updateItem(index, 'service_type', value)}
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
@@ -464,7 +409,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                             </FormField>
 
                             {/* VIGENCIA */}
-                            <div className="space-y-4 rounded-lg border border-border p-4 bg-muted/30">
+                            <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
                                 <div className="flex items-center gap-2">
                                     <Calendar className="h-4 w-4 text-muted-foreground" />
                                     <h5 className="text-sm font-medium">Vigencia</h5>
@@ -485,14 +430,12 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                                         type="checkbox"
                                         id={`has_schedule_${index}`}
                                         checked={item.has_schedule}
-                                        onChange={(e) =>
-                                            updateItem(index, 'has_schedule', e.target.checked)
-                                        }
+                                        onChange={(e) => updateItem(index, 'has_schedule', e.target.checked)}
                                         className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                                     />
                                     <label
                                         htmlFor={`has_schedule_${index}`}
-                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                        className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                     >
                                         Restringir por fechas u horarios
                                     </label>
@@ -500,33 +443,23 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
 
                                 {/* Campos condicionales */}
                                 {item.has_schedule && (
-                                    <div className="space-y-4 pl-6 border-l-2 border-primary/20">
+                                    <div className="space-y-4 border-l-2 border-primary/20 pl-6">
                                         {/* Rango de fechas */}
                                         <div className="space-y-2">
                                             <p className="text-sm font-medium">Fechas</p>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <FormField
-                                                    label="Desde"
-                                                    error={dynamicErrors[`items.${index}.valid_from`]}
-                                                >
+                                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                                <FormField label="Desde" error={dynamicErrors[`items.${index}.valid_from`]}>
                                                     <Input
                                                         type="date"
                                                         value={item.valid_from}
-                                                        onChange={(e) =>
-                                                            updateItem(index, 'valid_from', e.target.value)
-                                                        }
+                                                        onChange={(e) => updateItem(index, 'valid_from', e.target.value)}
                                                     />
                                                 </FormField>
-                                                <FormField
-                                                    label="Hasta"
-                                                    error={dynamicErrors[`items.${index}.valid_until`]}
-                                                >
+                                                <FormField label="Hasta" error={dynamicErrors[`items.${index}.valid_until`]}>
                                                     <Input
                                                         type="date"
                                                         value={item.valid_until}
-                                                        onChange={(e) =>
-                                                            updateItem(index, 'valid_until', e.target.value)
-                                                        }
+                                                        onChange={(e) => updateItem(index, 'valid_until', e.target.value)}
                                                     />
                                                 </FormField>
                                             </div>
@@ -535,29 +468,19 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                                         {/* Horario */}
                                         <div className="space-y-2">
                                             <p className="text-sm font-medium">Horarios</p>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <FormField
-                                                    label="Desde"
-                                                    error={dynamicErrors[`items.${index}.time_from`]}
-                                                >
+                                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                                <FormField label="Desde" error={dynamicErrors[`items.${index}.time_from`]}>
                                                     <Input
                                                         type="time"
                                                         value={item.time_from}
-                                                        onChange={(e) =>
-                                                            updateItem(index, 'time_from', e.target.value)
-                                                        }
+                                                        onChange={(e) => updateItem(index, 'time_from', e.target.value)}
                                                     />
                                                 </FormField>
-                                                <FormField
-                                                    label="Hasta"
-                                                    error={dynamicErrors[`items.${index}.time_until`]}
-                                                >
+                                                <FormField label="Hasta" error={dynamicErrors[`items.${index}.time_until`]}>
                                                     <Input
                                                         type="time"
                                                         value={item.time_until}
-                                                        onChange={(e) =>
-                                                            updateItem(index, 'time_until', e.target.value)
-                                                        }
+                                                        onChange={(e) => updateItem(index, 'time_until', e.target.value)}
                                                     />
                                                 </FormField>
                                             </div>
@@ -569,13 +492,8 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                     ))}
 
                     {/* Botón agregar */}
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={addItem}
-                        className="w-full"
-                    >
-                        <Plus className="h-4 w-4 mr-2" />
+                    <Button type="button" variant="outline" onClick={addItem} className="w-full">
+                        <Plus className="mr-2 h-4 w-4" />
                         Agregar otro producto
                     </Button>
                 </div>

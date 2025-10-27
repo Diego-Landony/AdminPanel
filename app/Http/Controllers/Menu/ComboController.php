@@ -8,6 +8,7 @@ use App\Http\Requests\Menu\UpdateComboRequest;
 use App\Models\Menu\Category;
 use App\Models\Menu\Combo;
 use App\Models\Menu\Product;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -83,7 +84,7 @@ class ComboController extends Controller
     /**
      * Almacena un nuevo combo con sus items
      */
-    public function store(StoreComboRequest $request): RedirectResponse
+    public function store(StoreComboRequest $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validated();
 
@@ -97,15 +98,37 @@ class ComboController extends Controller
 
             if (! empty($items)) {
                 foreach ($items as $item) {
-                    $combo->items()->create([
-                        'product_id' => $item['product_id'],
-                        'variant_id' => $item['variant_id'] ?? null,
+                    $isChoiceGroup = $item['is_choice_group'] ?? false;
+
+                    $comboItem = $combo->items()->create([
+                        'product_id' => $isChoiceGroup ? null : ($item['product_id'] ?? null),
+                        'variant_id' => $isChoiceGroup ? null : ($item['variant_id'] ?? null),
                         'quantity' => $item['quantity'],
                         'sort_order' => $item['sort_order'] ?? 0,
+                        'is_choice_group' => $isChoiceGroup,
+                        'choice_label' => $isChoiceGroup ? ($item['choice_label'] ?? null) : null,
                     ]);
+
+                    // Si es un grupo de elección, crear las opciones
+                    if ($isChoiceGroup && ! empty($item['options'])) {
+                        foreach ($item['options'] as $option) {
+                            $comboItem->options()->create([
+                                'product_id' => $option['product_id'],
+                                'variant_id' => $option['variant_id'] ?? null,
+                                'sort_order' => $option['sort_order'] ?? 0,
+                            ]);
+                        }
+                    }
                 }
             }
         });
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Combo creado exitosamente.',
+                'combo' => $combo->load(['items.options']),
+            ], 201);
+        }
 
         return redirect()->route('menu.combos.index')
             ->with('success', 'Combo creado exitosamente.');
@@ -134,6 +157,8 @@ class ComboController extends Controller
         $combo->load([
             'items.product',
             'items.variant',
+            'items.options.product',
+            'items.options.variant',
             'category:id,name',
         ]);
 
@@ -162,7 +187,7 @@ class ComboController extends Controller
     /**
      * Actualiza un combo existente
      */
-    public function update(UpdateComboRequest $request, Combo $combo): RedirectResponse
+    public function update(UpdateComboRequest $request, Combo $combo): RedirectResponse|JsonResponse
     {
         $validated = $request->validated();
 
@@ -176,15 +201,37 @@ class ComboController extends Controller
 
             if (! empty($items)) {
                 foreach ($items as $item) {
-                    $combo->items()->create([
-                        'product_id' => $item['product_id'],
-                        'variant_id' => $item['variant_id'] ?? null,
+                    $isChoiceGroup = $item['is_choice_group'] ?? false;
+
+                    $comboItem = $combo->items()->create([
+                        'product_id' => $isChoiceGroup ? null : ($item['product_id'] ?? null),
+                        'variant_id' => $isChoiceGroup ? null : ($item['variant_id'] ?? null),
                         'quantity' => $item['quantity'],
                         'sort_order' => $item['sort_order'] ?? 0,
+                        'is_choice_group' => $isChoiceGroup,
+                        'choice_label' => $isChoiceGroup ? ($item['choice_label'] ?? null) : null,
                     ]);
+
+                    // Si es un grupo de elección, crear las opciones
+                    if ($isChoiceGroup && ! empty($item['options'])) {
+                        foreach ($item['options'] as $option) {
+                            $comboItem->options()->create([
+                                'product_id' => $option['product_id'],
+                                'variant_id' => $option['variant_id'] ?? null,
+                                'sort_order' => $option['sort_order'] ?? 0,
+                            ]);
+                        }
+                    }
                 }
             }
         });
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Combo actualizado exitosamente.',
+                'combo' => $combo->fresh()->load(['items.options']),
+            ], 200);
+        }
 
         return redirect()->route('menu.combos.index')
             ->with('success', 'Combo actualizado exitosamente.');

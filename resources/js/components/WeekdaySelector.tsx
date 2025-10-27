@@ -32,14 +32,11 @@ export function WeekdaySelector({ value, onChange, error, label = 'Días de la s
         <div className="space-y-2">
             <Label>
                 {label}
-                {required && <span className="text-destructive ml-1">*</span>}
+                {required && <span className="ml-1 text-destructive">*</span>}
             </Label>
             <div className="flex gap-2">
                 {WEEKDAYS.map((day) => (
-                    <div
-                        key={day.value}
-                        className="flex flex-col items-center gap-1"
-                    >
+                    <div key={day.value} className="flex flex-col items-center gap-1">
                         <div
                             className={`flex h-10 w-10 items-center justify-center rounded-md border-2 transition-colors ${
                                 value.includes(day.value)
@@ -49,30 +46,16 @@ export function WeekdaySelector({ value, onChange, error, label = 'Días de la s
                             onClick={() => handleToggle(day.value)}
                             title={day.fullName}
                         >
-                            <span className="text-sm font-semibold">
-                                {day.label}
-                            </span>
+                            <span className="text-sm font-semibold">{day.label}</span>
                         </div>
-                        <Checkbox
-                            checked={value.includes(day.value)}
-                            onCheckedChange={() => handleToggle(day.value)}
-                            className="sr-only"
-                        />
+                        <Checkbox checked={value.includes(day.value)} onCheckedChange={() => handleToggle(day.value)} className="sr-only" />
                     </div>
                 ))}
             </div>
-            {error && (
-                <p className="text-sm font-medium text-destructive">{error}</p>
-            )}
+            {error && <p className="text-sm font-medium text-destructive">{error}</p>}
             {value.length > 0 && (
                 <p className="text-sm text-muted-foreground">
-                    Seleccionados:{' '}
-                    {value
-                        .map(
-                            (d) =>
-                                WEEKDAYS.find((w) => w.value === d)?.fullName
-                        )
-                        .join(', ')}
+                    Seleccionados: {value.map((d) => WEEKDAYS.find((w) => w.value === d)?.fullName).join(', ')}
                 </p>
             )}
         </div>

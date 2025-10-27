@@ -1,16 +1,16 @@
 import { router } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
 import { EditCategoriesSkeleton } from '@/components/skeletons';
-import { VariantDefinitionsInput } from '@/components/VariantDefinitionsInput';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Layers, ListOrdered, AlertCircle } from 'lucide-react';
+import { VariantDefinitionsInput } from '@/components/VariantDefinitionsInput';
+import { AlertCircle, Layers, ListOrdered } from 'lucide-react';
 
 interface Category {
     id: number;
@@ -125,12 +125,7 @@ export default function CategoryEdit({ category }: EditPageProps) {
                 </div>
 
                 <FormField label="Nombre" error={errors.name} required>
-                    <Input
-                        id="name"
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => handleInputChange('name', e.target.value)}
-                    />
+                    <Input id="name" type="text" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} />
                 </FormField>
             </FormSection>
 

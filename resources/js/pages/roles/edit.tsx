@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
-import React, { useState } from 'react';
 import { Users } from 'lucide-react';
+import React, { useState } from 'react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
@@ -15,9 +15,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { showNotification } from '@/hooks/useNotifications';
 import { ENTITY_ICONS } from '@/constants/section-icons';
-import { PLACEHOLDERS, NOTIFICATIONS } from '@/constants/ui-constants';
+import { NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
+import { showNotification } from '@/hooks/useNotifications';
 
 interface User {
     id: number;
@@ -107,7 +107,6 @@ export default function EditRole({ role, all_users, permissions }: EditRolePageP
         }
     };
 
-
     /**
      * Maneja el cambio de usuarios asignados y guarda automáticamente
      */
@@ -123,7 +122,7 @@ export default function EditRole({ role, all_users, permissions }: EditRolePageP
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
                 body: JSON.stringify({ users: newSelectedUsers }),
@@ -155,7 +154,6 @@ export default function EditRole({ role, all_users, permissions }: EditRolePageP
     const filteredUsers = all_users.filter(
         (user) => user.name.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase()),
     );
-
 
     return (
         <EditPageLayout
@@ -231,9 +229,7 @@ export default function EditRole({ role, all_users, permissions }: EditRolePageP
                                         <div
                                             key={user.id}
                                             className={`flex items-center gap-3 rounded-md p-2 transition-colors ${
-                                                selectedUsers.includes(user.id)
-                                                    ? 'border border-primary/20 bg-primary/5'
-                                                    : 'hover:bg-muted/50'
+                                                selectedUsers.includes(user.id) ? 'border border-primary/20 bg-primary/5' : 'hover:bg-muted/50'
                                             }`}
                                         >
                                             <Checkbox
@@ -243,10 +239,7 @@ export default function EditRole({ role, all_users, permissions }: EditRolePageP
                                                 className="data-[state=checked]:border-primary data-[state=checked]:bg-primary"
                                             />
                                             <div className="min-w-0 flex-1">
-                                                <Label
-                                                    htmlFor={`user-${user.id}`}
-                                                    className="block cursor-pointer text-sm font-medium"
-                                                >
+                                                <Label htmlFor={`user-${user.id}`} className="block cursor-pointer text-sm font-medium">
                                                     {user.name}
                                                 </Label>
                                                 <p className="truncate text-xs text-muted-foreground">{user.email}</p>
@@ -260,13 +253,20 @@ export default function EditRole({ role, all_users, permissions }: EditRolePageP
                 </Dialog>
             </div>
 
-            <FormSection icon={ENTITY_ICONS.role.permissions} title="Permisos del Rol" description={role.name === 'admin' ? 'Este rol tiene automáticamente todos los permisos del sistema' : 'Selecciona las acciones que este rol puede realizar en cada página'}>
-
+            <FormSection
+                icon={ENTITY_ICONS.role.permissions}
+                title="Permisos del Rol"
+                description={
+                    role.name === 'admin'
+                        ? 'Este rol tiene automáticamente todos los permisos del sistema'
+                        : 'Selecciona las acciones que este rol puede realizar en cada página'
+                }
+            >
                 {role.name === 'admin' && (
                     <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-3">
                         <p className="text-sm text-green-800">
-                            <strong>Permisos Automáticos:</strong> El rol Administrador tiene acceso completo a todas las funcionalidades
-                            del sistema y se actualiza automáticamente cuando se agregan nuevas páginas o funcionalidades.
+                            <strong>Permisos Automáticos:</strong> El rol Administrador tiene acceso completo a todas las funcionalidades del sistema
+                            y se actualiza automáticamente cuando se agregan nuevas páginas o funcionalidades.
                         </p>
                     </div>
                 )}

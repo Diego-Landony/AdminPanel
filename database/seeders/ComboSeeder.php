@@ -123,6 +123,104 @@ class ComboSeeder extends Seeder
 
         $this->command->info('Combo "Personal" creado con 2 productos.');
 
-        $this->command->info('✅ 3 combos creados exitosamente.');
+        // Combo 4: Combo con Grupo de Elección
+        $combo4 = Combo::create([
+            'name' => 'Combo Flex',
+            'description' => 'Elige 1 producto + Bebida',
+            'precio_pickup_capital' => 95.00,
+            'precio_domicilio_capital' => 105.00,
+            'precio_pickup_interior' => 90.00,
+            'precio_domicilio_interior' => 100.00,
+            'is_active' => true,
+            'sort_order' => 4,
+        ]);
+
+        // Crear grupo de elección con 3 opciones
+        $choiceGroup = $combo4->items()->create([
+            'is_choice_group' => true,
+            'choice_label' => 'Elige tu producto principal',
+            'product_id' => null,
+            'variant_id' => null,
+            'quantity' => 1,
+            'sort_order' => 1,
+        ]);
+
+        // Agregar 3 opciones al grupo
+        $productOptions = $products->random(3);
+        $sortOrder = 1;
+        foreach ($productOptions as $product) {
+            $choiceGroup->options()->create([
+                'product_id' => $product->id,
+                'variant_id' => null,
+                'sort_order' => $sortOrder++,
+            ]);
+        }
+
+        // Agregar bebida como item fijo
+        $combo4->items()->create([
+            'is_choice_group' => false,
+            'product_id' => $products->random()->id,
+            'variant_id' => null,
+            'quantity' => 1,
+            'sort_order' => 2,
+        ]);
+
+        $this->command->info('Combo "Flex" creado con 1 grupo de elección (3 opciones) + 1 item fijo.');
+
+        // Combo 5: Combo Mixto con 2 grupos de elección
+        $combo5 = Combo::create([
+            'name' => 'Combo Personalizable',
+            'description' => 'Elige 2 productos de categorías diferentes',
+            'precio_pickup_capital' => 150.00,
+            'precio_domicilio_capital' => 165.00,
+            'precio_pickup_interior' => 145.00,
+            'precio_domicilio_interior' => 160.00,
+            'is_active' => true,
+            'sort_order' => 5,
+        ]);
+
+        // Grupo 1: Elige producto principal
+        $choiceGroup1 = $combo5->items()->create([
+            'is_choice_group' => true,
+            'choice_label' => 'Elige tu plato principal',
+            'product_id' => null,
+            'variant_id' => null,
+            'quantity' => 1,
+            'sort_order' => 1,
+        ]);
+
+        $mainOptions = $products->random(4);
+        $sortOrder = 1;
+        foreach ($mainOptions as $product) {
+            $choiceGroup1->options()->create([
+                'product_id' => $product->id,
+                'variant_id' => null,
+                'sort_order' => $sortOrder++,
+            ]);
+        }
+
+        // Grupo 2: Elige bebida
+        $choiceGroup2 = $combo5->items()->create([
+            'is_choice_group' => true,
+            'choice_label' => 'Elige tu bebida',
+            'product_id' => null,
+            'variant_id' => null,
+            'quantity' => 1,
+            'sort_order' => 2,
+        ]);
+
+        $drinkOptions = $products->random(3);
+        $sortOrder = 1;
+        foreach ($drinkOptions as $product) {
+            $choiceGroup2->options()->create([
+                'product_id' => $product->id,
+                'variant_id' => null,
+                'sort_order' => $sortOrder++,
+            ]);
+        }
+
+        $this->command->info('Combo "Personalizable" creado con 2 grupos de elección (4 opciones + 3 opciones).');
+
+        $this->command->info('✅ 5 combos creados exitosamente (3 fijos + 2 con grupos de elección).');
     }
 }

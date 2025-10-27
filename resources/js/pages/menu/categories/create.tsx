@@ -5,11 +5,11 @@ import React, { useEffect } from 'react';
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
 import { CreateCategoriesSkeleton } from '@/components/skeletons';
-import { VariantDefinitionsInput } from '@/components/VariantDefinitionsInput';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { VariantDefinitionsInput } from '@/components/VariantDefinitionsInput';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
 import { Layers, ListOrdered } from 'lucide-react';
 
@@ -67,11 +67,7 @@ export default function CategoryCreate() {
                     <Label htmlFor="is_active" className="text-base">
                         Activa
                     </Label>
-                    <Switch
-                        id="is_active"
-                        checked={data.is_active}
-                        onCheckedChange={(checked) => setData('is_active', checked as boolean)}
-                    />
+                    <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked as boolean)} />
                 </div>
 
                 <div className="flex items-center justify-between rounded-lg border p-4">
@@ -86,12 +82,7 @@ export default function CategoryCreate() {
                 </div>
 
                 <FormField label="Nombre" error={errors.name} required>
-                    <Input
-                        id="name"
-                        type="text"
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
-                    />
+                    <Input id="name" type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} />
                 </FormField>
             </FormSection>
 

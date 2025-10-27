@@ -13,8 +13,8 @@ import { UsersSkeleton } from '@/components/skeletons';
 import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { StatusBadge, USER_STATUS_CONFIGS } from '@/components/status-badge';
 import { TableActions } from '@/components/TableActions';
-import { Clock, Users } from 'lucide-react';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
+import { Clock, Users } from 'lucide-react';
 
 /**
  * Interfaz para los roles

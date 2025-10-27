@@ -26,7 +26,6 @@ export default function CustomerTypeCreate() {
         is_active: true,
     });
 
-
     /**
      * Maneja el envío del formulario
      */
@@ -143,7 +142,6 @@ export default function CustomerTypeCreate() {
                             </SelectContent>
                         </Select>
                     </FormField>
-
                 </div>
 
                 {/* Estado activo */}

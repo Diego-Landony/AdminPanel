@@ -49,17 +49,12 @@ export function coordinatesToKML(coordinates: [number, number][]): string {
 
     // Ensure polygon is closed (first point = last point)
     const coords = [...coordinates];
-    if (
-        coords[0][0] !== coords[coords.length - 1][0] ||
-        coords[0][1] !== coords[coords.length - 1][1]
-    ) {
+    if (coords[0][0] !== coords[coords.length - 1][0] || coords[0][1] !== coords[coords.length - 1][1]) {
         coords.push(coords[0]);
     }
 
     // Convert to KML format: lng,lat,0
-    const kmlCoordinates = coords
-        .map(([lat, lng]) => `${lng},${lat},0`)
-        .join(' ');
+    const kmlCoordinates = coords.map(([lat, lng]) => `${lng},${lat},0`).join(' ');
 
     const kml = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">

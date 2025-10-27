@@ -1,40 +1,24 @@
+import { closestCenter, DndContext, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import {
-    DndContext,
-    closestCenter,
-    KeyboardSensor,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    DragEndEvent,
-} from '@dnd-kit/core';
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    useSortable,
-    verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
+import { CategoryCombobox } from '@/components/CategoryCombobox';
+import { ComboItemCard } from '@/components/combos/ComboItemCard';
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
 import { ImageUpload } from '@/components/ImageUpload';
 import { PriceFields } from '@/components/PriceFields';
 import { EditProductsSkeleton } from '@/components/skeletons';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PLACEHOLDERS } from '@/constants/ui-constants';
-import { generateUniqueId } from '@/utils/generateId';
-import { CategoryCombobox } from '@/components/CategoryCombobox';
-import { ProductCombobox } from '@/components/ProductCombobox';
-import { Banknote, GripVertical, Package, Package2, Plus, X } from 'lucide-react';
+import { generateUniqueItemId, prepareComboDataForSubmit, validateMinimumComboStructure } from '@/utils/comboHelpers';
+import { AlertCircle, Banknote, Package, Package2, Plus } from 'lucide-react';
 
 interface ProductVariant {
     id: number;
@@ -60,21 +44,40 @@ interface Category {
     name: string;
 }
 
-interface ComboItem {
-    id: number | string;
+interface ChoiceOption {
+    id: number;
     product_id: number;
     variant_id?: number | null;
-    quantity: number;
     sort_order: number;
     product: {
         id: number;
         name: string;
+        is_active: boolean;
     };
+    variant?: {
+        id: number;
+        name: string;
+    } | null;
+}
+
+interface ComboItem {
+    id: number | string;
+    is_choice_group: boolean;
+    choice_label?: string | null;
+    product_id?: number | null;
+    variant_id?: number | null;
+    quantity: number;
+    sort_order: number;
+    product?: {
+        id: number;
+        name: string;
+    } | null;
     variant?: {
         id: number;
         name: string;
         size: string;
     } | null;
+    options?: ChoiceOption[];
 }
 
 interface Combo {
@@ -98,152 +101,42 @@ interface EditComboPageProps {
     categories: Category[];
 }
 
-interface FormData {
-    category_id: string;
-    name: string;
-    description: string;
-    image: string;
-    is_active: boolean;
-    precio_pickup_capital: string;
-    precio_domicilio_capital: string;
-    precio_pickup_interior: string;
-    precio_domicilio_interior: string;
-    items: {
-        id: number | string;
-        product_id: string;
-        variant_id: string;
-        quantity: string;
+interface LocalComboItem {
+    id: string;
+    is_choice_group: boolean;
+    choice_label?: string;
+    product_id?: number | null;
+    variant_id?: number | null;
+    quantity: number;
+    sort_order: number;
+    options?: {
+        id: string;
+        product_id: number;
+        variant_id?: number | null;
         sort_order: number;
     }[];
 }
 
-interface SortableItemProps {
-    item: {
-        id: number | string;
-        product_id: string;
-        variant_id: string;
-        quantity: string;
-        sort_order: number;
-    };
-    index: number;
-    products: Product[];
-    onUpdate: (index: number, field: 'product_id' | 'variant_id' | 'quantity', value: string) => void;
-    onUpdateMultiple: (index: number, fields: Partial<{ product_id: string; variant_id: string; quantity: string }>) => void;
-    onRemove: (index: number) => void;
-    errors: Record<string, string>;
-    canDelete: boolean;
-}
-
-function SortableItem({ item, index, products, onUpdate, onUpdateMultiple, onRemove, errors, canDelete }: SortableItemProps) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({ id: item.id });
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-    };
-
-    const selectedProduct = products.find(p => p.id === Number(item.product_id));
-    const hasVariants = selectedProduct?.has_variants && selectedProduct?.variants && selectedProduct.variants.length > 0;
-
-    return (
-        <div
-            ref={setNodeRef}
-            style={style}
-            className={`border border-border rounded-lg p-4 space-y-4 ${isDragging ? 'shadow-lg bg-muted/50' : ''}`}
-        >
-            <div className="flex items-center gap-3 mb-4">
-                <button
-                    type="button"
-                    className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors"
-                    {...attributes}
-                    {...listeners}
-                >
-                    <GripVertical className="h-5 w-5" />
-                </button>
-
-                <h4 className="text-sm font-medium flex-1">
-                    {selectedProduct?.name || `Producto ${index + 1}`}
-                </h4>
-
-                {canDelete && (
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onRemove(index)}
-                        className="h-8 w-8 p-0"
-                    >
-                        <X className="h-4 w-4" />
-                    </Button>
-                )}
-            </div>
-
-            <ProductCombobox
-                value={item.product_id ? Number(item.product_id) : null}
-                onChange={(value) => {
-                    // Actualizar product_id y resetear variant_id en una sola operación
-                    onUpdateMultiple(index, {
-                        product_id: value ? String(value) : '',
-                        variant_id: '',
-                    });
-                }}
-                products={products}
-                label="Producto"
-                error={errors[`items.${index}.product_id`]}
-                required
-            />
-
-            {hasVariants && (
-                <FormField
-                    label="Variante"
-                    error={errors[`items.${index}.variant_id`]}
-                    required
-                >
-                    <Select
-                        value={item.variant_id}
-                        onValueChange={(value) => onUpdate(index, 'variant_id', value)}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder={PLACEHOLDERS.selectVariant} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {selectedProduct.variants?.map((variant) => (
-                                <SelectItem key={variant.id} value={String(variant.id)}>
-                                    {variant.name} {variant.size && `- ${variant.size}`}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </FormField>
-            )}
-
-            <FormField
-                label="Cantidad"
-                error={errors[`items.${index}.quantity`]}
-                required
-            >
-                <Input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={item.quantity}
-                    onChange={(e) => onUpdate(index, 'quantity', e.target.value)}
-                />
-            </FormField>
-        </div>
-    );
-}
-
 export default function ComboEdit({ combo, products, categories }: EditComboPageProps) {
-    const [formData, setFormData] = useState<FormData>({
+    // Map server data to local format
+    const initialItems: LocalComboItem[] = combo.items.map((item) => ({
+        id: `item-${item.id}`,
+        is_choice_group: item.is_choice_group,
+        choice_label: item.choice_label || undefined,
+        product_id: item.product_id || null,
+        variant_id: item.variant_id || null,
+        quantity: item.quantity,
+        sort_order: item.sort_order,
+        options:
+            item.options?.map((opt) => ({
+                id: `option-${opt.id}`,
+                product_id: opt.product_id,
+                variant_id: opt.variant_id || null,
+                sort_order: opt.sort_order,
+            })) || [],
+    }));
+
+    const [formData, setFormData] = useState({
         category_id: String(combo.category?.id || ''),
         name: combo.name,
         description: combo.description || '',
@@ -253,113 +146,102 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
         precio_domicilio_capital: String(combo.precio_domicilio_capital),
         precio_pickup_interior: String(combo.precio_pickup_interior),
         precio_domicilio_interior: String(combo.precio_domicilio_interior),
-        items: combo.items.map((item) => ({
-            id: item.id,
-            product_id: String(item.product_id),
-            variant_id: String(item.variant_id || ''),
-            quantity: String(item.quantity),
-            sort_order: item.sort_order,
-        })),
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [localItems, setLocalItems] = useState(formData.items);
+    const [localItems, setLocalItems] = useState<LocalComboItem[]>(initialItems);
 
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
-        })
+        }),
     );
 
-    const handleInputChange = (field: keyof FormData, value: string | boolean | typeof formData.items) => {
-        setFormData((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
-
-        if (errors[field]) {
-            setErrors((prev) => {
-                const newErrors = { ...prev };
-                delete newErrors[field];
-                return newErrors;
-            });
-        }
-    };
-
     const addItem = () => {
-        const newItem = {
-            id: generateUniqueId(),
-            product_id: '',
-            variant_id: '',
-            quantity: '1',
+        const newItem: LocalComboItem = {
+            id: generateUniqueItemId(),
+            is_choice_group: false,
+            product_id: null,
+            variant_id: null,
+            quantity: 1,
             sort_order: localItems.length + 1,
+            options: [],
         };
-        const updated = [...localItems, newItem];
-        setLocalItems(updated);
-        handleInputChange('items', updated);
+        setLocalItems([...localItems, newItem]);
     };
 
     const removeItem = (index: number) => {
-        const updated = localItems.filter((_, i) => i !== index);
-        setLocalItems(updated);
-        handleInputChange('items', updated);
+        setLocalItems(localItems.filter((_, i) => i !== index));
     };
 
-    const updateItem = (index: number, field: 'product_id' | 'variant_id' | 'quantity', value: string) => {
+    const updateItem = (index: number, field: string, value: any) => {
         const updated = [...localItems];
         updated[index] = { ...updated[index], [field]: value };
         setLocalItems(updated);
-        handleInputChange('items', updated);
     };
 
-    const updateMultipleFields = (index: number, fields: Partial<{ product_id: string; variant_id: string; quantity: string }>) => {
+    const batchUpdateItem = (index: number, updates: Partial<LocalComboItem>) => {
+        console.log('🔄 [Edit] batchUpdateItem called:', { index, updates });
         const updated = [...localItems];
-        updated[index] = { ...updated[index], ...fields };
+        updated[index] = { ...updated[index], ...updates };
+        console.log('🔄 [Edit] Updated item after batch:', updated[index]);
         setLocalItems(updated);
-        handleInputChange('items', updated);
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
 
         if (over && active.id !== over.id) {
-            setLocalItems((items) => {
-                const oldIndex = items.findIndex((item) => item.id === active.id);
-                const newIndex = items.findIndex((item) => item.id === over.id);
-
-                const newItems = arrayMove(items, oldIndex, newIndex);
-                handleInputChange('items', newItems);
-                return newItems;
-            });
+            const oldIndex = localItems.findIndex((item) => item.id === active.id);
+            const newIndex = localItems.findIndex((item) => item.id === over.id);
+            setLocalItems(arrayMove(localItems, oldIndex, newIndex));
         }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        const validation = validateMinimumComboStructure(localItems);
+        if (!validation.valid) {
+            setErrors({ items: validation.errors[0] });
+            return;
+        }
+
         setIsSubmitting(true);
 
-        const submitData = {
-            ...formData,
-            items: localItems.map((item, index) => ({
-                product_id: item.product_id,
-                variant_id: item.variant_id || null,
-                quantity: item.quantity,
-                sort_order: index + 1,
-            })),
-        };
+        const preparedItems = prepareComboDataForSubmit(localItems);
 
-        router.put(`/menu/combos/${combo.id}`, submitData, {
-            onSuccess: () => {
-                // Redirección manejada por el controlador
+        router.put(
+            `/menu/combos/${combo.id}`,
+            {
+                ...formData,
+                items: preparedItems,
             },
-            onError: (errors) => {
-                setErrors(errors as Record<string, string>);
-                setIsSubmitting(false);
+            {
+                onSuccess: () => {
+                    // Redirección manejada por el controlador
+                },
+                onError: (errors) => {
+                    setErrors(errors as Record<string, string>);
+                    setIsSubmitting(false);
+                },
             },
-        });
+        );
     };
+
+    // Detect inactive options in choice groups
+    const inactiveOptions = combo.items
+        .filter((item) => item.is_choice_group)
+        .flatMap((item) =>
+            (item.options || [])
+                .filter((opt) => opt.product && !opt.product.is_active)
+                .map((opt) => ({
+                    groupLabel: item.choice_label || 'Grupo sin nombre',
+                    productName: opt.product?.name || 'Producto desconocido',
+                })),
+        );
 
     return (
         <EditPageLayout
@@ -374,6 +256,25 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
             loading={false}
             loadingSkeleton={EditProductsSkeleton}
         >
+            {inactiveOptions.length > 0 && (
+                <Alert variant="warning" className="mb-6">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Opciones Inactivas Detectadas</AlertTitle>
+                    <AlertDescription>
+                        Algunos grupos tienen productos inactivos que no estarán disponibles para los clientes:
+                        <ul className="mt-2 list-inside list-disc space-y-1">
+                            {inactiveOptions.map((opt, index) => (
+                                <li key={index}>
+                                    <span className="font-medium">{opt.productName}</span>
+                                    {' en '}
+                                    <span className="text-muted-foreground">{opt.groupLabel}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </AlertDescription>
+                </Alert>
+            )}
+
             <FormSection icon={Package2} title="Información Básica" description="Datos principales del combo">
                 <div className="flex items-center justify-between rounded-lg border p-4">
                     <Label htmlFor="is_active" className="text-base">
@@ -382,13 +283,13 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
                     <Switch
                         id="is_active"
                         checked={formData.is_active}
-                        onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)}
+                        onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked as boolean })}
                     />
                 </div>
 
                 <CategoryCombobox
                     value={formData.category_id ? Number(formData.category_id) : null}
-                    onChange={(value) => handleInputChange('category_id', value ? String(value) : '')}
+                    onChange={(value) => setFormData({ ...formData, category_id: value ? String(value) : '' })}
                     categories={categories}
                     label="Categoría"
                     error={errors.category_id}
@@ -396,31 +297,36 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
                 />
 
                 <FormField label="Nombre" error={errors.name} required>
-                    <Input id="name" type="text" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} />
+                    <Input id="name" type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
                 </FormField>
 
                 <FormField label="Descripción" error={errors.description}>
-                    <Textarea id="description" value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} rows={2} />
+                    <Textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        rows={2}
+                    />
                 </FormField>
 
-                <ImageUpload label="Imagen del Combo" currentImage={formData.image} onImageChange={(url) => handleInputChange('image', url || '')} error={errors.image} />
+                <ImageUpload
+                    label="Imagen del Combo"
+                    currentImage={formData.image}
+                    onImageChange={(url) => setFormData({ ...formData, image: url || '' })}
+                    error={errors.image}
+                />
             </FormSection>
 
-            <FormSection
-                icon={Banknote}
-                title="Precios del Combo"
-                description="Define el precio del combo completo"
-                className="mt-8"
-            >
+            <FormSection icon={Banknote} title="Precios del Combo" description="Define el precio del combo completo" className="mt-8">
                 <PriceFields
                     capitalPickup={formData.precio_pickup_capital}
                     capitalDomicilio={formData.precio_domicilio_capital}
                     interiorPickup={formData.precio_pickup_interior}
                     interiorDomicilio={formData.precio_domicilio_interior}
-                    onChangeCapitalPickup={(value) => handleInputChange('precio_pickup_capital', value)}
-                    onChangeCapitalDomicilio={(value) => handleInputChange('precio_domicilio_capital', value)}
-                    onChangeInteriorPickup={(value) => handleInputChange('precio_pickup_interior', value)}
-                    onChangeInteriorDomicilio={(value) => handleInputChange('precio_domicilio_interior', value)}
+                    onChangeCapitalPickup={(value) => setFormData({ ...formData, precio_pickup_capital: value })}
+                    onChangeCapitalDomicilio={(value) => setFormData({ ...formData, precio_domicilio_capital: value })}
+                    onChangeInteriorPickup={(value) => setFormData({ ...formData, precio_pickup_interior: value })}
+                    onChangeInteriorDomicilio={(value) => setFormData({ ...formData, precio_domicilio_interior: value })}
                     errors={{
                         capitalPickup: errors.precio_pickup_capital,
                         capitalDomicilio: errors.precio_domicilio_capital,
@@ -430,26 +336,22 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
                 />
             </FormSection>
 
-            <FormSection
-                icon={Package}
-                title="Productos del Combo"
-                description="Agrega al menos 2 productos al combo. Si el producto tiene variantes, debes seleccionar una."
-            >
+            <FormSection icon={Package} title="Items del Combo" description="Define productos fijos o grupos de elección">
                 {localItems.length > 0 && (
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                         <SortableContext items={localItems.map((item) => item.id)} strategy={verticalListSortingStrategy}>
                             <div className="space-y-4">
                                 {localItems.map((item, index) => (
-                                    <SortableItem
+                                    <ComboItemCard
                                         key={item.id}
                                         item={item}
                                         index={index}
                                         products={products}
-                                        onUpdate={updateItem}
-                                        onUpdateMultiple={updateMultipleFields}
-                                        onRemove={removeItem}
+                                        onUpdate={(field, value) => updateItem(index, field, value)}
+                                        onBatchUpdate={(updates) => batchUpdateItem(index, updates)}
+                                        onRemove={() => removeItem(index)}
                                         errors={errors}
-                                        canDelete={localItems.length > 1}
+                                        canDelete={localItems.length > 2}
                                     />
                                 ))}
                             </div>
@@ -457,19 +359,12 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
                     </DndContext>
                 )}
 
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addItem}
-                    className="w-full mt-4"
-                >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Agregar Producto
+                <Button type="button" variant="outline" onClick={addItem} className="mt-4 w-full">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Agregar Item
                 </Button>
 
-                {errors.items && (
-                    <p className="text-sm text-destructive mt-2">{errors.items}</p>
-                )}
+                {errors.items && <p className="mt-2 text-sm text-destructive">{errors.items}</p>}
             </FormSection>
         </EditPageLayout>
     );

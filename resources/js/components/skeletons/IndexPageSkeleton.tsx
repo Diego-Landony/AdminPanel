@@ -18,13 +18,13 @@ export function IndexPageSkeleton({
     hasAvatar = true,
     hasBadge = true,
     dataFields = 3,
-    hasActions = true
+    hasActions = true,
 }: IndexPageSkeletonProps) {
     const breakpointClasses = {
         sm: { desktop: 'hidden sm:block', mobile: 'sm:hidden' },
         md: { desktop: 'hidden md:block', mobile: 'md:hidden' },
         lg: { desktop: 'hidden lg:block', mobile: 'lg:hidden' },
-        xl: { desktop: 'hidden xl:block', mobile: 'xl:hidden' }
+        xl: { desktop: 'hidden xl:block', mobile: 'xl:hidden' },
     };
 
     const { desktop, mobile } = breakpointClasses[breakpoint];
@@ -33,23 +33,12 @@ export function IndexPageSkeleton({
         <>
             {/* Desktop Table View */}
             <div className={desktop}>
-                <DataTableSkeleton
-                    rows={rows}
-                    columns={columns}
-                    hasAvatar={hasAvatar}
-                    hasActions={hasActions}
-                />
+                <DataTableSkeleton rows={rows} columns={columns} hasAvatar={hasAvatar} hasActions={hasActions} />
             </div>
 
             {/* Mobile Card View */}
             <div className={mobile}>
-                <MobileCardSkeleton
-                    rows={rows}
-                    hasIcon={hasAvatar}
-                    hasBadge={hasBadge}
-                    dataFields={dataFields}
-                    hasActions={hasActions}
-                />
+                <MobileCardSkeleton rows={rows} hasIcon={hasAvatar} hasBadge={hasBadge} dataFields={dataFields} hasActions={hasActions} />
             </div>
         </>
     );

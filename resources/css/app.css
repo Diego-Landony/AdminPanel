@@ -70,26 +70,26 @@
     }
 
     /* Fix para iconos nativos de date/time inputs en modo oscuro */
-    .dark input[type="date"]::-webkit-calendar-picker-indicator,
-    .dark input[type="time"]::-webkit-calendar-picker-indicator,
-    .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    .dark input[type='date']::-webkit-calendar-picker-indicator,
+    .dark input[type='time']::-webkit-calendar-picker-indicator,
+    .dark input[type='datetime-local']::-webkit-calendar-picker-indicator {
         filter: invert(1);
         opacity: 0.8;
     }
 
     /* Firefox */
     @-moz-document url-prefix() {
-        .dark input[type="date"],
-        .dark input[type="time"],
-        .dark input[type="datetime-local"] {
+        .dark input[type='date'],
+        .dark input[type='time'],
+        .dark input[type='datetime-local'] {
             color-scheme: dark;
         }
     }
 
     /* Safari adicional */
-    .dark input[type="date"]::-webkit-clear-button,
-    .dark input[type="time"]::-webkit-clear-button,
-    .dark input[type="datetime-local"]::-webkit-clear-button {
+    .dark input[type='date']::-webkit-clear-button,
+    .dark input[type='time']::-webkit-clear-button,
+    .dark input[type='datetime-local']::-webkit-clear-button {
         filter: invert(1);
     }
 }

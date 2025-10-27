@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
-use App\Services\PermissionDiscoveryService;
+use App\Services\PermissionService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -20,8 +20,8 @@ class DatabaseSeeder extends Seeder
 
         // 1. Descubrir y crear permisos automáticamente
         $this->command->info('🔍 Descubriendo permisos del sistema...');
-        $discoveryService = new PermissionDiscoveryService;
-        $permissionsResult = $discoveryService->syncPermissions();
+        $permissionService = new PermissionService;
+        $permissionsResult = $permissionService->syncPermissions();
 
         $this->command->info("   ✅ {$permissionsResult['total_permissions']} permisos sincronizados");
         $this->command->info("   ➕ {$permissionsResult['created']} permisos creados");
@@ -100,7 +100,7 @@ class DatabaseSeeder extends Seeder
 
         $this->command->line('');
         $this->command->info('🎉 Configuración del sistema completada exitosamente:');
-        $this->command->line("   📄 Páginas detectadas: {$permissionsResult['discovered_pages']}");
+        $this->command->line("   📄 Páginas detectadas: {$permissionsResult['total_pages']}");
         $this->command->line("   🔑 Permisos totales: {$permissionsResult['total_permissions']}");
         $this->command->line('   🛡️  Rol: admin (acceso completo)');
         $this->command->line('   👤 Usuario: admin@admin.com (contraseña: admin)');

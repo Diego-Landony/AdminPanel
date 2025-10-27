@@ -245,9 +245,11 @@ test('puede activar o desactivar un combo', function () {
 test('no puede activar combo con productos inactivos', function () {
     $activeProduct = Product::factory()->create(['is_active' => true]);
     $inactiveProduct = Product::factory()->create(['is_active' => false, 'name' => 'Producto Inactivo']);
+    $category = Category::factory()->create(['is_combo_category' => true]);
 
     $comboData = [
         'name' => 'Combo Test',
+        'category_id' => $category->id,
         'precio_pickup_capital' => 100.00,
         'precio_domicilio_capital' => 110.00,
         'precio_pickup_interior' => 95.00,
@@ -271,7 +273,8 @@ test('no puede activar combo con productos inactivos', function () {
 
     $response = $this->post(route('menu.combos.store'), $comboData);
 
-    $response->assertSessionHasErrors(['is_active']);
+    $response->assertSessionHasErrors();
+    expect($response->getSession()->get('errors')->has('items.1.product_id'))->toBeTrue();
 });
 
 test('puede crear combo con productos duplicados en diferentes cantidades', function () {

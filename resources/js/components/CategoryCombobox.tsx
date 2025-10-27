@@ -2,21 +2,9 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from '@/components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 
 interface Category {
@@ -60,7 +48,7 @@ export function CategoryCombobox({
             {label && (
                 <Label>
                     {label}
-                    {required && <span className="text-destructive ml-1">*</span>}
+                    {required && <span className="ml-1 text-destructive">*</span>}
                 </Label>
             )}
 
@@ -87,11 +75,7 @@ export function CategoryCombobox({
                         <DialogDescription>Busca y selecciona una categoría de la lista</DialogDescription>
                     </VisuallyHidden>
                     <Command shouldFilter={false}>
-                        <CommandInput
-                            placeholder={placeholder}
-                            value={search}
-                            onValueChange={setSearch}
-                        />
+                        <CommandInput placeholder={placeholder} value={search} onValueChange={setSearch} />
                         <CommandList>
                             <CommandEmpty>No se encontraron categorías</CommandEmpty>
                             <CommandGroup>
@@ -105,11 +89,7 @@ export function CategoryCombobox({
                                             setSearch('');
                                         }}
                                     >
-                                        <Check
-                                            className={`mr-2 h-4 w-4 ${
-                                                category.id === value ? 'opacity-100' : 'opacity-0'
-                                            }`}
-                                        />
+                                        <Check className={`mr-2 h-4 w-4 ${category.id === value ? 'opacity-100' : 'opacity-0'}`} />
                                         <span>{category.name}</span>
                                     </CommandItem>
                                 ))}

@@ -63,7 +63,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     handleRetry = () => {
         if (this.state.retryCount < this.maxRetries) {
-            this.setState(prevState => ({
+            this.setState((prevState) => ({
                 hasError: false,
                 error: null,
                 errorInfo: null,
@@ -92,9 +92,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                         <CardTitle className="text-lg">Error en {context}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4 text-center">
-                        <p className="text-muted-foreground">
-                            Ha ocurrido un error inesperado. Por favor, intenta nuevamente.
-                        </p>
+                        <p className="text-muted-foreground">Ha ocurrido un error inesperado. Por favor, intenta nuevamente.</p>
 
                         {process.env.NODE_ENV === 'development' && this.state.error && (
                             <details className="mt-4 text-left">
@@ -116,11 +114,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                                 </Button>
                             )}
 
-                            <Button
-                                onClick={() => window.location.reload()}
-                                variant="outline"
-                                size="sm"
-                            >
+                            <Button onClick={() => window.location.reload()} variant="outline" size="sm">
                                 Recargar página
                             </Button>
                         </div>
@@ -137,10 +131,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
  * React Hook wrapper for ErrorBoundary
  * Provides a simple way to wrap components with error handling
  */
-export const withErrorBoundary = <P extends object>(
-    Component: React.ComponentType<P>,
-    errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
-) => {
+export const withErrorBoundary = <P extends object>(Component: React.ComponentType<P>, errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>) => {
     const WrappedComponent = (props: P) => (
         <ErrorBoundary {...errorBoundaryProps}>
             <Component {...props} />

@@ -8,13 +8,7 @@ interface MobileCardSkeletonProps {
     hasActions?: boolean;
 }
 
-export function MobileCardSkeleton({
-    rows = 5,
-    hasIcon = true,
-    hasBadge = true,
-    dataFields = 3,
-    hasActions = true
-}: MobileCardSkeletonProps) {
+export function MobileCardSkeleton({ rows = 5, hasIcon = true, hasBadge = true, dataFields = 3, hasActions = true }: MobileCardSkeletonProps) {
     return (
         <div className="space-y-3">
             {Array.from({ length: rows }).map((_, index) => (

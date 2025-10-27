@@ -2,21 +2,9 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from '@/components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 
 interface Product {
@@ -71,9 +59,7 @@ export function ProductCombobox({
 
         Object.entries(productsByCategory).forEach(([category, prods]) => {
             const matchingProds = prods.filter(
-                (p) =>
-                    p.name.toLowerCase().includes(searchLower) ||
-                    p.category?.name.toLowerCase().includes(searchLower)
+                (p) => p.name.toLowerCase().includes(searchLower) || p.category?.name.toLowerCase().includes(searchLower),
             );
 
             if (matchingProds.length > 0) {
@@ -89,7 +75,7 @@ export function ProductCombobox({
             {label && (
                 <Label>
                     {label}
-                    {required && <span className="text-destructive ml-1">*</span>}
+                    {required && <span className="ml-1 text-destructive">*</span>}
                 </Label>
             )}
 
@@ -105,11 +91,7 @@ export function ProductCombobox({
                     {selectedProduct ? (
                         <span className="truncate">
                             {selectedProduct.name}
-                            {selectedProduct.category && (
-                                <span className="text-muted-foreground ml-2">
-                                    ({selectedProduct.category.name})
-                                </span>
-                            )}
+                            {selectedProduct.category && <span className="ml-2 text-muted-foreground">({selectedProduct.category.name})</span>}
                         </span>
                     ) : (
                         <span className="text-muted-foreground">{placeholder}</span>
@@ -123,11 +105,7 @@ export function ProductCombobox({
                         <DialogDescription>Busca y selecciona un producto de la lista</DialogDescription>
                     </VisuallyHidden>
                     <Command shouldFilter={false}>
-                        <CommandInput
-                            placeholder={placeholder}
-                            value={search}
-                            onValueChange={setSearch}
-                        />
+                        <CommandInput placeholder={placeholder} value={search} onValueChange={setSearch} />
                         <CommandList>
                             <CommandEmpty>No se encontraron productos</CommandEmpty>
                             {Object.entries(filteredProducts).map(([categoryName, prods]) => (
@@ -142,18 +120,10 @@ export function ProductCombobox({
                                                 setSearch('');
                                             }}
                                         >
-                                            <Check
-                                                className={`mr-2 h-4 w-4 ${
-                                                    product.id === value ? 'opacity-100' : 'opacity-0'
-                                                }`}
-                                            />
+                                            <Check className={`mr-2 h-4 w-4 ${product.id === value ? 'opacity-100' : 'opacity-0'}`} />
                                             <div className="flex flex-col">
                                                 <span>{product.name}</span>
-                                                {product.category && (
-                                                    <span className="text-xs text-muted-foreground">
-                                                        {product.category.name}
-                                                    </span>
-                                                )}
+                                                {product.category && <span className="text-xs text-muted-foreground">{product.category.name}</span>}
                                             </div>
                                         </CommandItem>
                                     ))}

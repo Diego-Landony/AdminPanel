@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
+import { AUTOCOMPLETE, PLACEHOLDERS } from '@/constants/ui-constants';
 import AuthLayout from '@/layouts/auth-layout';
-import { PLACEHOLDERS, AUTOCOMPLETE } from '@/constants/ui-constants';
 
 /**
  * Tipo para el formulario de registro

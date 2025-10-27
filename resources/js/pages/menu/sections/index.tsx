@@ -60,7 +60,7 @@ export default function SectionsIndex({ sections, stats }: SectionsPageProps) {
                 onFinish: () => {
                     setIsSaving(false);
                 },
-            }
+            },
         );
     };
 
@@ -128,9 +128,7 @@ export default function SectionsIndex({ sections, stats }: SectionsPageProps) {
             key: 'name',
             title: 'Sección',
             width: 'w-64',
-            render: (section: Section) => (
-                <div className="text-sm font-medium text-foreground truncate">{section.title}</div>
-            ),
+            render: (section: Section) => <div className="truncate text-sm font-medium text-foreground">{section.title}</div>,
         },
         {
             key: 'status',

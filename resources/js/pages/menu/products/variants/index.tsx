@@ -65,12 +65,12 @@ const VariantInfoCell: React.FC<{ variant: ProductVariant }> = ({ variant }) => 
     <EntityInfoCell icon={Package} primaryText={variant.size} secondaryText={`SKU: ${variant.sku}`} />
 );
 
-const VariantMobileCard: React.FC<{ variant: ProductVariant; onDelete: (variant: ProductVariant) => void; isDeleting: boolean; productId: number }> = ({
-    variant,
-    onDelete,
-    isDeleting,
-    productId,
-}) => (
+const VariantMobileCard: React.FC<{
+    variant: ProductVariant;
+    onDelete: (variant: ProductVariant) => void;
+    isDeleting: boolean;
+    productId: number;
+}> = ({ variant, onDelete, isDeleting, productId }) => (
     <StandardMobileCard
         icon={Package}
         title={variant.size}
@@ -81,7 +81,7 @@ const VariantMobileCard: React.FC<{ variant: ProductVariant; onDelete: (variant:
                     <StatusBadge status={variant.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />
                     {variant.is_daily_special && (
                         <Badge variant="default" className="bg-amber-500">
-                            <Star className="h-3 w-3 mr-1" />
+                            <Star className="mr-1 h-3 w-3" />
                             Sub del Día
                         </Badge>
                     )}
@@ -220,7 +220,7 @@ export default function VariantsIndex({ product, variants, stats, filters }: Var
             render: (variant: ProductVariant) =>
                 variant.is_daily_special ? (
                     <Badge variant="default" className="bg-amber-500">
-                        <Star className="h-3 w-3 mr-1" />
+                        <Star className="mr-1 h-3 w-3" />
                         Sí
                     </Badge>
                 ) : (
@@ -296,7 +296,14 @@ export default function VariantsIndex({ product, variants, stats, filters }: Var
                 createUrl={undefined}
                 searchPlaceholder="Buscar por tamaño o SKU..."
                 loadingSkeleton={ProductsSkeleton}
-                renderMobileCard={(variant) => <VariantMobileCard variant={variant} onDelete={openDeleteDialog} isDeleting={deletingVariant === variant.id} productId={product.id} />}
+                renderMobileCard={(variant) => (
+                    <VariantMobileCard
+                        variant={variant}
+                        onDelete={openDeleteDialog}
+                        isDeleting={deletingVariant === variant.id}
+                        productId={product.id}
+                    />
+                )}
                 routeName={`/menu/products/${product.id}/variants`}
                 breakpoint="lg"
             />

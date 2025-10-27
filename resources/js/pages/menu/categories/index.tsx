@@ -57,7 +57,7 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
                 onFinish: () => {
                     setIsSaving(false);
                 },
-            }
+            },
         );
     };
 
@@ -117,9 +117,7 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
             key: 'name',
             title: 'Categoría',
             width: 'w-48',
-            render: (category: Category) => (
-                <div className="text-sm font-medium text-foreground truncate">{category.name}</div>
-            ),
+            render: (category: Category) => <div className="truncate text-sm font-medium text-foreground">{category.name}</div>,
         },
         {
             key: 'variants',
@@ -128,7 +126,7 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
             render: (category: Category) => (
                 <div className="text-sm text-muted-foreground">
                     {category.uses_variants && category.variant_definitions && category.variant_definitions.length > 0 ? (
-                        <ul className="list-disc list-inside space-y-1">
+                        <ul className="list-inside list-disc space-y-1">
                             {category.variant_definitions.map((variant, index) => (
                                 <li key={index} className="text-xs">
                                     {variant}
@@ -146,11 +144,7 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
             title: 'Tipo',
             width: 'w-24',
             textAlign: 'center' as const,
-            render: (category: Category) => (
-                <div className="text-sm text-muted-foreground">
-                    {category.is_combo_category ? 'Combo' : '-'}
-                </div>
-            ),
+            render: (category: Category) => <div className="text-sm text-muted-foreground">{category.is_combo_category ? 'Combo' : '-'}</div>,
         },
         {
             key: 'status',
@@ -199,9 +193,7 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
                 { label: 'Tipo', value: category.is_combo_category ? 'Combo' : 'Producto' },
                 {
                     label: 'Variantes',
-                    value: category.uses_variants && category.variant_definitions?.length > 0
-                        ? category.variant_definitions.join(', ')
-                        : '—',
+                    value: category.uses_variants && category.variant_definitions?.length > 0 ? category.variant_definitions.join(', ') : '—',
                 },
             ]}
         />

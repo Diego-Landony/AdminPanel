@@ -40,14 +40,17 @@ class SubwayRealCombosSeeder extends Seeder
         $this->createComboDesayuno($comboCategory);
         $this->createComboEconomico($comboCategory);
 
-        $this->command->info('   ✅ 5 combos reales de Subway Guatemala creados exitosamente');
+        // Nuevos combos con choice groups (grupos de elección)
+        $this->createComboSubAEleccion($comboCategory);
+        $this->createComboMixto($comboCategory);
+
+        $this->command->info('   ✅ 7 combos reales de Subway Guatemala creados exitosamente (5 fijos + 2 con grupos de elección)');
     }
 
     /**
      * Obtiene la variante de un producto por índice (ordenado por sort_order)
      *
-     * @param Product $product
-     * @param int $index 0 = primera variante (normalmente la más pequeña), 1 = segunda variante, etc.
+     * @param  int  $index  0 = primera variante (normalmente la más pequeña), 1 = segunda variante, etc.
      * @return \App\Models\Menu\ProductVariant|null
      */
     private function getVariantByIndex(Product $product, int $index = 0)
@@ -84,12 +87,13 @@ class SubwayRealCombosSeeder extends Seeder
             }
         }
 
-        // Bebida mediana (Coca-Cola)
-        $cocaColaMediano = Product::where('name', 'Coca-Cola Mediano')->first();
-        if ($cocaColaMediano) {
+        // Bebida mediana (Coca-Cola - variante mediana)
+        $cocaCola = Product::where('name', 'Coca-Cola')->first();
+        if ($cocaCola) {
+            $variantMediano = $this->getVariantByIndex($cocaCola, 1); // Índice 1 = Mediano
             $combo->items()->create([
-                'product_id' => $cocaColaMediano->id,
-                'variant_id' => null,
+                'product_id' => $cocaCola->id,
+                'variant_id' => $variantMediano?->id,
                 'quantity' => 1,
                 'sort_order' => 2,
             ]);
@@ -152,12 +156,13 @@ class SubwayRealCombosSeeder extends Seeder
             }
         }
 
-        // 2 Bebidas medianas
-        $cocaColaMediano = Product::where('name', 'Coca-Cola Mediano')->first();
-        if ($cocaColaMediano) {
+        // 2 Bebidas medianas (Coca-Cola - variante mediana)
+        $cocaCola = Product::where('name', 'Coca-Cola')->first();
+        if ($cocaCola) {
+            $variantMediano = $this->getVariantByIndex($cocaCola, 1); // Índice 1 = Mediano
             $combo->items()->create([
-                'product_id' => $cocaColaMediano->id,
-                'variant_id' => null,
+                'product_id' => $cocaCola->id,
+                'variant_id' => $variantMediano?->id,
                 'quantity' => 2,
                 'sort_order' => 3,
             ]);
@@ -209,12 +214,13 @@ class SubwayRealCombosSeeder extends Seeder
             }
         }
 
-        // 2 Bebidas grandes
-        $cocaColaGrande = Product::where('name', 'Coca-Cola Grande')->first();
-        if ($cocaColaGrande) {
+        // 2 Bebidas grandes (Coca-Cola - variante grande)
+        $cocaCola = Product::where('name', 'Coca-Cola')->first();
+        if ($cocaCola) {
+            $variantGrande = $this->getVariantByIndex($cocaCola, 2); // Índice 2 = Grande
             $combo->items()->create([
-                'product_id' => $cocaColaGrande->id,
-                'variant_id' => null,
+                'product_id' => $cocaCola->id,
+                'variant_id' => $variantGrande?->id,
                 'quantity' => 2,
                 'sort_order' => 3,
             ]);
@@ -263,12 +269,13 @@ class SubwayRealCombosSeeder extends Seeder
             }
         }
 
-        // Bebida personal
-        $cocaColaPersonal = Product::where('name', 'Coca-Cola Personal')->first();
-        if ($cocaColaPersonal) {
+        // Bebida personal (Coca-Cola - variante personal)
+        $cocaCola = Product::where('name', 'Coca-Cola')->first();
+        if ($cocaCola) {
+            $variantPersonal = $this->getVariantByIndex($cocaCola, 0); // Índice 0 = Personal
             $combo->items()->create([
-                'product_id' => $cocaColaPersonal->id,
-                'variant_id' => null,
+                'product_id' => $cocaCola->id,
+                'variant_id' => $variantPersonal?->id,
                 'quantity' => 1,
                 'sort_order' => 2,
             ]);
@@ -317,17 +324,185 @@ class SubwayRealCombosSeeder extends Seeder
             }
         }
 
-        // Bebida personal
-        $cocaColaPersonal = Product::where('name', 'Coca-Cola Personal')->first();
-        if ($cocaColaPersonal) {
+        // Bebida personal (Coca-Cola - variante personal)
+        $cocaCola = Product::where('name', 'Coca-Cola')->first();
+        if ($cocaCola) {
+            $variantPersonal = $this->getVariantByIndex($cocaCola, 0); // Índice 0 = Personal
             $combo->items()->create([
-                'product_id' => $cocaColaPersonal->id,
-                'variant_id' => null,
+                'product_id' => $cocaCola->id,
+                'variant_id' => $variantPersonal?->id,
                 'quantity' => 1,
                 'sort_order' => 2,
             ]);
         }
 
         $this->command->line('      ✓ Combo Económico (Q38 pickup / Q43 delivery)');
+    }
+
+    private function createComboSubAEleccion(Category $comboCategory): void
+    {
+        // Combo basado en "Sub de 30 + Gaseosa + Galleta" real
+        $combo = Combo::create([
+            'category_id' => $comboCategory->id,
+            'name' => 'Sub de 30 + Gaseosa + Galleta',
+            'description' => 'Elige tu sub favorito de 15cm + Gaseosa + Cookie',
+            'precio_pickup_capital' => 45.00,
+            'precio_domicilio_capital' => 50.00,
+            'precio_pickup_interior' => 47.00,
+            'precio_domicilio_interior' => 52.00,
+            'is_active' => true,
+            'sort_order' => 6,
+        ]);
+
+        // GRUPO DE ELECCIÓN: Elige tu sub de 15cm
+        $comboItem = $combo->items()->create([
+            'is_choice_group' => true,
+            'choice_label' => 'Elige tu Sub de 15cm',
+            'product_id' => null,
+            'variant_id' => null,
+            'quantity' => 1,
+            'sort_order' => 1,
+        ]);
+
+        // Opciones del grupo: 3 subs populares en variante 15cm (igual que el combo real)
+        $subsOptions = [
+            'Pechuga de Pollo',
+            'Pollo BBQ',
+            'Veggie Delite',
+        ];
+
+        $sortOrder = 1;
+        foreach ($subsOptions as $subName) {
+            $product = Product::where('name', $subName)->first();
+            if ($product) {
+                $firstVariant = $this->getVariantByIndex($product, 0); // 15cm
+                if ($firstVariant) {
+                    $comboItem->options()->create([
+                        'product_id' => $product->id,
+                        'variant_id' => $firstVariant->id,
+                        'sort_order' => $sortOrder++,
+                    ]);
+                }
+            }
+        }
+
+        // ITEM FIJO: Cookie de Avena con Pasas
+        $cookie = Product::where('name', 'Cookie de Avena con Pasas')->first();
+        if ($cookie) {
+            $combo->items()->create([
+                'is_choice_group' => false,
+                'product_id' => $cookie->id,
+                'variant_id' => null,
+                'quantity' => 1,
+                'sort_order' => 2,
+            ]);
+        }
+
+        // ITEM FIJO: Gaseosa Lata
+        $gaseosa = Product::where('name', 'Gaseosa Lata')->first();
+        if ($gaseosa) {
+            $combo->items()->create([
+                'is_choice_group' => false,
+                'product_id' => $gaseosa->id,
+                'variant_id' => null,
+                'quantity' => 1,
+                'sort_order' => 3,
+            ]);
+        }
+
+        $this->command->line('      ✓ Sub de 30 + Gaseosa + Galleta (Q45 pickup / Q50 delivery) - 3 opciones de subs');
+    }
+
+    private function createComboMixto(Category $comboCategory): void
+    {
+        // Combo con 2 grupos de elección + item fijo
+        $combo = Combo::create([
+            'category_id' => $comboCategory->id,
+            'name' => 'Combo Personalizado',
+            'description' => 'Elige tu sub de 30cm + Elige tu bebida + Cookie de regalo',
+            'precio_pickup_capital' => 75.00,
+            'precio_domicilio_capital' => 82.00,
+            'precio_pickup_interior' => 77.00,
+            'precio_domicilio_interior' => 84.00,
+            'is_active' => true,
+            'sort_order' => 7,
+        ]);
+
+        // GRUPO DE ELECCIÓN 1: Elige tu sub de 30cm
+        $comboItemSub = $combo->items()->create([
+            'is_choice_group' => true,
+            'choice_label' => 'Elige tu Sub de 30cm',
+            'product_id' => null,
+            'variant_id' => null,
+            'quantity' => 1,
+            'sort_order' => 1,
+        ]);
+
+        // Opciones del grupo: Subs premium en variante 30cm
+        $subsPremium = [
+            'Subway Club',
+            'Steak & Cheese',
+            'Pollo Teriyaki',
+            'Italian B.M.T.',
+        ];
+
+        $sortOrder = 1;
+        foreach ($subsPremium as $subName) {
+            $product = Product::where('name', $subName)->first();
+            if ($product) {
+                $secondVariant = $this->getVariantByIndex($product, 1); // 30cm
+                if ($secondVariant) {
+                    $comboItemSub->options()->create([
+                        'product_id' => $product->id,
+                        'variant_id' => $secondVariant->id,
+                        'sort_order' => $sortOrder++,
+                    ]);
+                }
+            }
+        }
+
+        // GRUPO DE ELECCIÓN 2: Elige tu bebida (sin variantes - las bebidas no tienen categoría)
+        $comboItemBebida = $combo->items()->create([
+            'is_choice_group' => true,
+            'choice_label' => 'Elige tu Bebida',
+            'product_id' => null,
+            'variant_id' => null,
+            'quantity' => 1,
+            'sort_order' => 2,
+        ]);
+
+        // Opciones del grupo: Bebidas populares (sin variantes)
+        $bebidas = [
+            'Pepsi lata',
+            'Seven up',
+            'Grapette',
+            'Gaseosa Lata',
+        ];
+
+        $sortOrder = 1;
+        foreach ($bebidas as $bebidaName) {
+            $product = Product::where('name', $bebidaName)->first();
+            if ($product) {
+                $comboItemBebida->options()->create([
+                    'product_id' => $product->id,
+                    'variant_id' => null, // Bebidas sin variantes
+                    'sort_order' => $sortOrder++,
+                ]);
+            }
+        }
+
+        // ITEM FIJO: Cookie de regalo
+        $cookie = Product::where('name', 'Cookie con Chispas de Chocolate')->first();
+        if ($cookie) {
+            $combo->items()->create([
+                'is_choice_group' => false,
+                'product_id' => $cookie->id,
+                'variant_id' => null,
+                'quantity' => 1,
+                'sort_order' => 3,
+            ]);
+        }
+
+        $this->command->line('      ✓ Combo Personalizado (Q75 pickup / Q82 delivery) - 2 grupos de elección + 1 item fijo');
     }
 }

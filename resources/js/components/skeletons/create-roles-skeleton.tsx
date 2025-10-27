@@ -8,12 +8,12 @@ export function CreateRolesSkeleton() {
                     fields: 2, // name, description
                     hasTextarea: true,
                     hasSelect: false,
-                    hasCheckboxes: 0
+                    hasCheckboxes: 0,
                 },
                 {
                     fields: 0, // permissions section has table
-                    hasTable: true
-                }
+                    hasTable: true,
+                },
             ]}
         />
     );

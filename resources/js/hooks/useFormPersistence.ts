@@ -97,17 +97,9 @@ const DRAFT_VERSION = 1;
  * ```
  */
 export function useFormPersistence<T extends Record<string, unknown>>(
-    config: FormPersistenceConfig<T>
+    config: FormPersistenceConfig<T>,
 ): [FormPersistenceState<T>, FormPersistenceActions<T>] {
-    const {
-        storageKey,
-        initialValues,
-        autoSaveInterval = 30000,
-        autoSave = true,
-        onRestore,
-        onSave,
-        onClear,
-    } = config;
+    const { storageKey, initialValues, autoSaveInterval = 30000, autoSave = true, onRestore, onSave, onClear } = config;
 
     const [values, setValuesState] = useState<T>(initialValues);
     const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
@@ -243,7 +235,7 @@ export function useFormPersistence<T extends Record<string, unknown>>(
     }, []);
 
     const updateField = useCallback(<K extends keyof T>(field: K, value: T[K]) => {
-        setValuesState(prev => ({ ...prev, [field]: value }));
+        setValuesState((prev) => ({ ...prev, [field]: value }));
     }, []);
 
     const state: FormPersistenceState<T> = {

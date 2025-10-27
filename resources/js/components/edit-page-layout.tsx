@@ -106,13 +106,11 @@ export function EditPageLayout({
                                     className={`w-full sm:w-auto ${processing ? 'cursor-not-allowed' : ''}`}
                                 >
                                     {processing ? (
-                                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent flex-shrink-0" />
+                                        <div className="mr-2 h-4 w-4 flex-shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent" />
                                     ) : (
                                         <Save className="mr-2 h-4 w-4 flex-shrink-0" />
                                     )}
-                                    <span className="truncate">
-                                        {processing ? 'Guardando...' : disabled ? 'No Editable' : submitLabel}
-                                    </span>
+                                    <span className="truncate">{processing ? 'Guardando...' : disabled ? 'No Editable' : submitLabel}</span>
                                 </Button>
                             </div>
                         </form>

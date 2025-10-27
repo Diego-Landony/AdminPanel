@@ -118,24 +118,18 @@ export function BulkActionsBar({
     };
 
     // Clases de animación
-    const animationClasses = animated
-        ? isVisible
-            ? 'opacity-100 translate-y-0 scale-100'
-            : 'opacity-0 translate-y-4 scale-95'
-        : '';
+    const animationClasses = animated ? (isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95') : '';
 
     const message = totalCount
         ? selectedCount === totalCount
             ? `Todos los ${totalCount} elementos seleccionados`
             : `${selectedCount} de ${totalCount} elementos seleccionados`
         : selectedCount === 1
-            ? '1 elemento seleccionado'
-            : `${selectedCount} elementos seleccionados`;
+          ? '1 elemento seleccionado'
+          : `${selectedCount} elementos seleccionados`;
 
     return (
-        <div
-            className={`${positionClasses[position]} transition-all duration-300 ease-out ${animationClasses} ${className}`}
-        >
+        <div className={`${positionClasses[position]} transition-all duration-300 ease-out ${animationClasses} ${className}`}>
             <Card className="shadow-lg">
                 <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
                     {/* Contador y cancelar */}
@@ -145,17 +139,10 @@ export function BulkActionsBar({
                         </div>
 
                         <div className="flex-1">
-                            <p className="text-sm font-medium text-foreground">
-                                {message}
-                            </p>
+                            <p className="text-sm font-medium text-foreground">{message}</p>
                         </div>
 
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={onCancel}
-                            className="h-8 w-8 p-0 sm:ml-2"
-                        >
+                        <Button variant="ghost" size="sm" onClick={onCancel} className="h-8 w-8 p-0 sm:ml-2">
                             <X className="h-4 w-4" />
                             <span className="sr-only">Cancelar selección</span>
                         </Button>
@@ -181,18 +168,11 @@ export function BulkActionsBar({
                         ))}
 
                         {/* Separador si hay acciones personalizadas y acciones por defecto */}
-                        {actions.length > 0 && (onExport || onDelete) && (
-                            <Separator orientation="vertical" className="h-6" />
-                        )}
+                        {actions.length > 0 && (onExport || onDelete) && <Separator orientation="vertical" className="h-6" />}
 
                         {/* Exportar */}
                         {onExport && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={onExport}
-                                className="gap-2"
-                            >
+                            <Button variant="outline" size="sm" onClick={onExport} className="gap-2">
                                 <Download className="h-4 w-4" />
                                 <span className="hidden sm:inline">Exportar</span>
                             </Button>
@@ -200,12 +180,7 @@ export function BulkActionsBar({
 
                         {/* Eliminar */}
                         {onDelete && (
-                            <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={onDelete}
-                                className="gap-2"
-                            >
+                            <Button variant="destructive" size="sm" onClick={onDelete} className="gap-2">
                                 <Trash2 className="h-4 w-4" />
                                 <span className="hidden sm:inline">Eliminar</span>
                             </Button>
@@ -254,12 +229,7 @@ export function CompactBulkActionsBar({
                     </Button>
                 )}
 
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onCancel}
-                    className="h-7 w-7 p-0"
-                >
+                <Button variant="ghost" size="sm" onClick={onCancel} className="h-7 w-7 p-0">
                     <X className="h-3.5 w-3.5" />
                 </Button>
             </div>

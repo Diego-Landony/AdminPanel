@@ -4,20 +4,20 @@
  */
 
 import {
-    User,
-    Lock,
-    Phone,
-    Shield,
-    Key,
     Building2,
-    Settings,
     Clock,
-    Tag,
     CreditCard,
+    Key,
     Layers,
-    Package,
     ListChecks,
-    UtensilsCrossed
+    Lock,
+    Package,
+    Phone,
+    Settings,
+    Shield,
+    Tag,
+    User,
+    UtensilsCrossed,
 } from 'lucide-react';
 
 // Iconos por tipo de sección
@@ -82,7 +82,7 @@ export const ENTITY_ICONS = {
         section: ListChecks,
         sectionOptions: ListChecks,
         productInfo: UtensilsCrossed,
-    }
+    },
 } as const;
 
 export type SectionIconKey = keyof typeof SECTION_ICONS;

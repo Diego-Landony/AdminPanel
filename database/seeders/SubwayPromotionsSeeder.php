@@ -61,27 +61,24 @@ class SubwayPromotionsSeeder extends Seeder
 
         $this->command->line("      ✓ {$promotion->name}");
 
-        // 2x1 en Bebidas Medianas
+        // 2x1 en Gaseosa Lata
         $promotion2 = Promotion::create([
-            'name' => '2x1 en Bebidas Medianas',
-            'description' => 'Compra una bebida mediana y lleva otra gratis',
+            'name' => '2x1 en Gaseosa Lata',
+            'description' => 'Compra una gaseosa en lata y lleva otra gratis',
             'type' => 'two_for_one',
             'is_active' => true,
         ]);
 
-        // Bebidas medianas (ahora son productos individuales sin variantes)
-        $bebidasMedianas = Product::where('category_id', Category::where('name', 'Bebidas')->first()->id)
-            ->where('name', 'LIKE', '%Mediano%')
-            ->get();
-
-        foreach ($bebidasMedianas as $bebida) {
+        // Gaseosa Lata (sin variantes)
+        $gaseosa = Product::where('name', 'Gaseosa Lata')->first();
+        if ($gaseosa) {
             PromotionItem::create([
                 'promotion_id' => $promotion2->id,
-                'product_id' => $bebida->id,
-                'variant_id' => null,
+                'product_id' => $gaseosa->id,
+                'variant_id' => null, // Sin variantes
                 'category_id' => null,
-                'special_price_capital' => $bebida->precio_pickup_capital * 0.5,
-                'special_price_interior' => $bebida->precio_pickup_interior * 0.5,
+                'special_price_capital' => $gaseosa->precio_pickup_capital * 0.5,
+                'special_price_interior' => $gaseosa->precio_pickup_interior * 0.5,
             ]);
         }
 

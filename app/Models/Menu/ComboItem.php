@@ -5,6 +5,7 @@ namespace App\Models\Menu;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ComboItem extends Model
 {
@@ -16,6 +17,8 @@ class ComboItem extends Model
         'variant_id',
         'quantity',
         'sort_order',
+        'is_choice_group',
+        'choice_label',
     ];
 
     protected function casts(): array
@@ -26,6 +29,7 @@ class ComboItem extends Model
             'variant_id' => 'integer',
             'quantity' => 'integer',
             'sort_order' => 'integer',
+            'is_choice_group' => 'boolean',
         ];
     }
 
@@ -54,10 +58,30 @@ class ComboItem extends Model
     }
 
     /**
+     * Relación: Un item de tipo choice group tiene múltiples opciones
+     */
+    public function options(): HasMany
+    {
+        return $this->hasMany(ComboItemOption::class)->orderBy('sort_order');
+    }
+
+    /**
+     * Verifica si este item es un grupo de elección
+     */
+    public function isChoiceGroup(): bool
+    {
+        return $this->is_choice_group === true;
+    }
+
+    /**
      * Obtiene el producto con todas sus secciones cargadas
      */
     public function getProductWithSections(): ?Product
     {
+        if ($this->isChoiceGroup()) {
+            return null;
+        }
+
         return $this->product()->with('sections.options')->first();
     }
 }

@@ -136,9 +136,7 @@ export function useDataTable(config: DataTableConfig): [DataTableState, DataTabl
                 currentPage: parseInt(params.get('page') || '1', 10),
                 sortField: params.get('sort_field') || defaultSortField,
                 sortDirection: (params.get('sort_direction') as 'asc' | 'desc') || defaultSortDirection,
-                multipleSortCriteria: params.get('sort_criteria')
-                    ? JSON.parse(params.get('sort_criteria')!)
-                    : defaultMultipleSortCriteria,
+                multipleSortCriteria: params.get('sort_criteria') ? JSON.parse(params.get('sort_criteria')!) : defaultMultipleSortCriteria,
                 isLoading: false,
                 filters: {},
             };
@@ -169,109 +167,133 @@ export function useDataTable(config: DataTableConfig): [DataTableState, DataTabl
     }, [state.search, searchDebounceMs]);
 
     // Build query params for API request
-    const buildQueryParams = useCallback((currentState: DataTableState) => {
-        const params: Record<string, string | number> = {
-            page: currentState.currentPage,
-            per_page: currentState.perPage,
-        };
+    const buildQueryParams = useCallback(
+        (currentState: DataTableState) => {
+            const params: Record<string, string | number> = {
+                page: currentState.currentPage,
+                per_page: currentState.perPage,
+            };
 
-        if (debouncedSearch.trim()) {
-            params.search = debouncedSearch.trim();
-        }
-
-        // Add sorting
-        if (currentState.multipleSortCriteria.length > 0) {
-            params.sort_criteria = JSON.stringify(currentState.multipleSortCriteria);
-        } else if (currentState.sortField) {
-            params.sort_field = currentState.sortField;
-            params.sort_direction = currentState.sortDirection;
-        }
-
-        // Add filters
-        Object.entries(currentState.filters).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== '') {
-                params[key] = typeof value === 'string' || typeof value === 'number' ? value : String(value);
+            if (debouncedSearch.trim()) {
+                params.search = debouncedSearch.trim();
             }
-        });
 
-        return params;
-    }, [debouncedSearch]);
+            // Add sorting
+            if (currentState.multipleSortCriteria.length > 0) {
+                params.sort_criteria = JSON.stringify(currentState.multipleSortCriteria);
+            } else if (currentState.sortField) {
+                params.sort_field = currentState.sortField;
+                params.sort_direction = currentState.sortDirection;
+            }
+
+            // Add filters
+            Object.entries(currentState.filters).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    params[key] = typeof value === 'string' || typeof value === 'number' ? value : String(value);
+                }
+            });
+
+            return params;
+        },
+        [debouncedSearch],
+    );
 
     // Make API request
-    const makeRequest = useCallback((newState: DataTableState) => {
-        setState(prev => ({ ...prev, isLoading: true }));
-        const params = buildQueryParams(newState);
+    const makeRequest = useCallback(
+        (newState: DataTableState) => {
+            setState((prev) => ({ ...prev, isLoading: true }));
+            const params = buildQueryParams(newState);
 
-        router.visit(endpoint, {
-            method: 'get',
-            data: params,
-            preserveState,
-            replace,
-            onFinish: () => setState(prev => ({ ...prev, isLoading: false })),
-        });
-    }, [endpoint, preserveState, replace, buildQueryParams]);
+            router.visit(endpoint, {
+                method: 'get',
+                data: params,
+                preserveState,
+                replace,
+                onFinish: () => setState((prev) => ({ ...prev, isLoading: false })),
+            });
+        },
+        [endpoint, preserveState, replace, buildQueryParams],
+    );
 
     // Actions
     const setSearch = useCallback((search: string) => {
-        setState(prev => ({ ...prev, search, currentPage: 1 }));
+        setState((prev) => ({ ...prev, search, currentPage: 1 }));
     }, []);
 
-    const setPerPage = useCallback((perPage: number) => {
-        const newState = { ...state, perPage, currentPage: 1 };
-        setState(newState);
-        makeRequest(newState);
-    }, [state, makeRequest]);
+    const setPerPage = useCallback(
+        (perPage: number) => {
+            const newState = { ...state, perPage, currentPage: 1 };
+            setState(newState);
+            makeRequest(newState);
+        },
+        [state, makeRequest],
+    );
 
-    const goToPage = useCallback((page: number) => {
-        const newState = { ...state, currentPage: page };
-        setState(newState);
-        makeRequest(newState);
-    }, [state, makeRequest]);
+    const goToPage = useCallback(
+        (page: number) => {
+            const newState = { ...state, currentPage: page };
+            setState(newState);
+            makeRequest(newState);
+        },
+        [state, makeRequest],
+    );
 
-    const setSort = useCallback((field: string, direction: 'asc' | 'desc' = 'asc') => {
-        const newState = {
-            ...state,
-            sortField: field,
-            sortDirection: direction,
-            multipleSortCriteria: [],
-            currentPage: 1,
-        };
-        setState(newState);
-        makeRequest(newState);
-    }, [state, makeRequest]);
+    const setSort = useCallback(
+        (field: string, direction: 'asc' | 'desc' = 'asc') => {
+            const newState = {
+                ...state,
+                sortField: field,
+                sortDirection: direction,
+                multipleSortCriteria: [],
+                currentPage: 1,
+            };
+            setState(newState);
+            makeRequest(newState);
+        },
+        [state, makeRequest],
+    );
 
-    const toggleSort = useCallback((field: string) => {
-        const newDirection = state.sortField === field && state.sortDirection === 'asc' ? 'desc' : 'asc';
-        setSort(field, newDirection);
-    }, [state.sortField, state.sortDirection, setSort]);
+    const toggleSort = useCallback(
+        (field: string) => {
+            const newDirection = state.sortField === field && state.sortDirection === 'asc' ? 'desc' : 'asc';
+            setSort(field, newDirection);
+        },
+        [state.sortField, state.sortDirection, setSort],
+    );
 
-    const addSortCriterion = useCallback((field: string, direction: 'asc' | 'desc') => {
-        const existing = state.multipleSortCriteria.find(c => c.field === field);
+    const addSortCriterion = useCallback(
+        (field: string, direction: 'asc' | 'desc') => {
+            const existing = state.multipleSortCriteria.find((c) => c.field === field);
 
-        const newCriteria = existing
-            ? state.multipleSortCriteria.map(c => c.field === field ? { field, direction } : c)
-            : [...state.multipleSortCriteria, { field, direction }];
+            const newCriteria = existing
+                ? state.multipleSortCriteria.map((c) => (c.field === field ? { field, direction } : c))
+                : [...state.multipleSortCriteria, { field, direction }];
 
-        const newState = {
-            ...state,
-            multipleSortCriteria: newCriteria,
-            sortField: null,
-            currentPage: 1,
-        };
-        setState(newState);
-        makeRequest(newState);
-    }, [state, makeRequest]);
+            const newState = {
+                ...state,
+                multipleSortCriteria: newCriteria,
+                sortField: null,
+                currentPage: 1,
+            };
+            setState(newState);
+            makeRequest(newState);
+        },
+        [state, makeRequest],
+    );
 
-    const removeSortCriterion = useCallback((field: string) => {
-        const newCriteria = state.multipleSortCriteria.filter(c => c.field !== field);
-        const newState = {
-            ...state,
-            multipleSortCriteria: newCriteria,
-            currentPage: 1,
-        };
-        setState(newState);
-        makeRequest(newState);
-    }, [state, makeRequest]);
+    const removeSortCriterion = useCallback(
+        (field: string) => {
+            const newCriteria = state.multipleSortCriteria.filter((c) => c.field !== field);
+            const newState = {
+                ...state,
+                multipleSortCriteria: newCriteria,
+                currentPage: 1,
+            };
+            setState(newState);
+            makeRequest(newState);
+        },
+        [state, makeRequest],
+    );
 
     const clearMultipleSort = useCallback(() => {
         const newState = {
@@ -284,11 +306,11 @@ export function useDataTable(config: DataTableConfig): [DataTableState, DataTabl
     }, [state, makeRequest]);
 
     const setFilters = useCallback((filters: Record<string, unknown>) => {
-        setState(prev => ({ ...prev, filters, currentPage: 1 }));
+        setState((prev) => ({ ...prev, filters, currentPage: 1 }));
     }, []);
 
     const updateFilter = useCallback((key: string, value: unknown) => {
-        setState(prev => ({
+        setState((prev) => ({
             ...prev,
             filters: { ...prev.filters, [key]: value },
             currentPage: 1,

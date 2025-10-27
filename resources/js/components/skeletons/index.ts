@@ -11,21 +11,21 @@ export { FormSectionSkeleton } from './FormSectionSkeleton';
 export { EditPageSkeleton } from './EditPageSkeleton';
 
 // Index page skeletons (using universal components)
+export { RestaurantsSkeleton } from '../restaurants/restaurants-skeleton';
 export { ActivitySkeleton } from './activity-skeleton';
 export { CategoriesSkeleton } from './categories-skeleton';
 export { CustomerTypesSkeleton } from './customer-types-skeleton';
 export { CustomersSkeleton } from './customers-skeleton';
 export { HomeSkeleton } from './home-skeleton';
 export { ProductsSkeleton } from './products-skeleton';
-export { RestaurantsSkeleton } from '../restaurants/restaurants-skeleton';
 export { RolesSkeleton } from './roles-skeleton';
 export { SectionsSkeleton } from './sections-skeleton';
 export { UsersSkeleton } from './users-skeleton';
 
 // Create page skeletons (using universal components)
 export { CreateCategoriesSkeleton } from './create-categories-skeleton';
-export { CreateCustomersSkeleton } from './create-customers-skeleton';
 export { CreateCustomerTypesSkeleton } from './create-customer-types-skeleton';
+export { CreateCustomersSkeleton } from './create-customers-skeleton';
 export { CreateProductsSkeleton } from './create-products-skeleton';
 export { CreateRestaurantsSkeleton } from './create-restaurants-skeleton';
 export { CreateRolesSkeleton } from './create-roles-skeleton';
@@ -34,8 +34,8 @@ export { CreateUsersSkeleton } from './create-users-skeleton';
 
 // Edit page skeletons (using universal components)
 export { EditCategoriesSkeleton } from './edit-categories-skeleton';
-export { EditCustomersSkeleton } from './edit-customers-skeleton';
 export { EditCustomerTypesSkeleton } from './edit-customer-types-skeleton';
+export { EditCustomersSkeleton } from './edit-customers-skeleton';
 export { EditProductsSkeleton } from './edit-products-skeleton';
 export { EditRestaurantsSkeleton } from './edit-restaurants-skeleton';
 export { EditRolesSkeleton } from './edit-roles-skeleton';

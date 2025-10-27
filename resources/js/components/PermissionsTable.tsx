@@ -1,7 +1,7 @@
-import React from 'react';
+import { groupIcons, systemPages } from '@/components/app-sidebar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { systemPages, groupIcons } from '@/components/app-sidebar';
+import React from 'react';
 
 /**
  * Interfaz para los permisos del backend
@@ -28,7 +28,7 @@ export function PermissionsTable({ selectedPermissions, onPermissionChange, perm
     // Reorganizar permisos según la estructura del sidebar
     const organizedPermissions = React.useMemo(() => {
         const result: Record<string, Array<{ resource: string; title: string; permissions: Permission[] }>> = {
-            '__individual__': []
+            __individual__: [],
         };
 
         // Aplanar todos los permisos
@@ -41,13 +41,13 @@ export function PermissionsTable({ selectedPermissions, onPermissionChange, perm
             const permissionGroup = page.permission.split('.').slice(0, -1).join('.');
 
             // Buscar permisos que correspondan a esta página
-            const pagePerms = allPermissions.filter(perm => perm.name.startsWith(permissionGroup + '.'));
+            const pagePerms = allPermissions.filter((perm) => perm.name.startsWith(permissionGroup + '.'));
 
             if (pagePerms.length > 0) {
                 const item = {
                     resource: permissionGroup,
                     title: page.title,
-                    permissions: pagePerms
+                    permissions: pagePerms,
                 };
 
                 if (page.group) {
@@ -80,7 +80,7 @@ export function PermissionsTable({ selectedPermissions, onPermissionChange, perm
                     <TableBody>
                         {/* Páginas individuales (sin grupo) */}
                         {organizedPermissions['__individual__']?.map((item) => {
-                            const page = systemPages.find(p => p.permission.split('.').slice(0, -1).join('.') === item.resource);
+                            const page = systemPages.find((p) => p.permission.split('.').slice(0, -1).join('.') === item.resource);
                             const Icon = page?.icon;
 
                             return (
@@ -93,16 +93,14 @@ export function PermissionsTable({ selectedPermissions, onPermissionChange, perm
                                     </TableCell>
                                     {['view', 'create', 'edit', 'delete'].map((action) => {
                                         const permName = `${item.resource}.${action}`;
-                                        const permExists = item.permissions.some(p => p.name === permName);
+                                        const permExists = item.permissions.some((p) => p.name === permName);
 
                                         return (
                                             <TableCell key={action} className="w-[15%] text-center">
                                                 {permExists ? (
                                                     <Checkbox
                                                         checked={selectedPermissions.includes(permName)}
-                                                        onCheckedChange={(checked) =>
-                                                            onPermissionChange(permName, checked as boolean)
-                                                        }
+                                                        onCheckedChange={(checked) => onPermissionChange(permName, checked as boolean)}
                                                         disabled={disabled}
                                                     />
                                                 ) : (
@@ -139,16 +137,14 @@ export function PermissionsTable({ selectedPermissions, onPermissionChange, perm
                                                 <TableCell className="w-[40%] pl-8">{item.title}</TableCell>
                                                 {['view', 'create', 'edit', 'delete'].map((action) => {
                                                     const permName = `${item.resource}.${action}`;
-                                                    const permExists = item.permissions.some(p => p.name === permName);
+                                                    const permExists = item.permissions.some((p) => p.name === permName);
 
                                                     return (
                                                         <TableCell key={action} className="w-[15%] text-center">
                                                             {permExists ? (
                                                                 <Checkbox
                                                                     checked={selectedPermissions.includes(permName)}
-                                                                    onCheckedChange={(checked) =>
-                                                                        onPermissionChange(permName, checked as boolean)
-                                                                    }
+                                                                    onCheckedChange={(checked) => onPermissionChange(permName, checked as boolean)}
                                                                     disabled={disabled}
                                                                 />
                                                             ) : (

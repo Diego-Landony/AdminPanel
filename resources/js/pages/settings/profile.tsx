@@ -7,9 +7,9 @@ import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
+import { AUTOCOMPLETE, PLACEHOLDERS } from '@/constants/ui-constants';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
-import { PLACEHOLDERS, AUTOCOMPLETE } from '@/constants/ui-constants';
 
 /**
  * Formulario de perfil del usuario
@@ -53,12 +53,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
                     <form onSubmit={submit} className="space-y-6">
                         <FormField label="Nombre" error={errors.name} required>
-                            <Input
-                                id="name"
-                                value={data.name}
-                                onChange={(e) => setData('name', e.target.value)}
-                                autoComplete={AUTOCOMPLETE.name}
-                            />
+                            <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} autoComplete={AUTOCOMPLETE.name} />
                         </FormField>
 
                         <FormField label="Dirección de Correo" error={errors.email} required>

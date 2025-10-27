@@ -1,24 +1,11 @@
 import { showNotification } from '@/hooks/useNotifications';
+import { closestCenter, DndContext, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import {
-    DndContext,
-    closestCenter,
-    KeyboardSensor,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    DragEndEvent,
-} from '@dnd-kit/core';
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    useSortable,
-    verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
+import { CategoryCombobox } from '@/components/CategoryCombobox';
+import { ComboItemCard } from '@/components/combos/ComboItemCard';
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
 import { ImageUpload } from '@/components/ImageUpload';
@@ -30,12 +17,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
-import { generateUniqueId } from '@/utils/generateId';
-import { CategoryCombobox } from '@/components/CategoryCombobox';
-import { ProductCombobox } from '@/components/ProductCombobox';
-import { Banknote, GripVertical, Package, Package2, Plus, X } from 'lucide-react';
+import { NOTIFICATIONS } from '@/constants/ui-constants';
+import { generateUniqueItemId, prepareComboDataForSubmit, validateMinimumComboStructure } from '@/utils/comboHelpers';
+import { Banknote, Package, Package2, Plus } from 'lucide-react';
 
 interface ProductVariant {
     id: number;
@@ -61,136 +45,27 @@ interface Category {
     name: string;
 }
 
+interface ChoiceOption {
+    id: string;
+    product_id: number;
+    variant_id?: number | null;
+    sort_order: number;
+}
+
 interface ComboItem {
     id: string;
-    product_id: string;
-    variant_id: string;
-    quantity: string;
+    is_choice_group: boolean;
+    choice_label?: string;
+    product_id?: number | null;
+    variant_id?: number | null;
+    quantity: number;
     sort_order: number;
+    options?: ChoiceOption[];
 }
 
 interface CreateComboPageProps {
     products: Product[];
     categories: Category[];
-}
-
-interface SortableItemProps {
-    item: ComboItem;
-    index: number;
-    products: Product[];
-    onUpdate: (index: number, field: keyof Omit<ComboItem, 'id' | 'sort_order'>, value: string) => void;
-    onUpdateMultiple: (index: number, fields: Partial<Omit<ComboItem, 'id' | 'sort_order'>>) => void;
-    onRemove: (index: number) => void;
-    errors: Record<string, string>;
-    canDelete: boolean;
-}
-
-function SortableItem({ item, index, products, onUpdate, onUpdateMultiple, onRemove, errors, canDelete }: SortableItemProps) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({ id: item.id });
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-    };
-
-    const selectedProduct = products.find(p => p.id === Number(item.product_id));
-    const hasVariants = selectedProduct?.has_variants && selectedProduct?.variants && selectedProduct.variants.length > 0;
-
-    return (
-        <div
-            ref={setNodeRef}
-            style={style}
-            className={`border border-border rounded-lg p-4 space-y-4 ${isDragging ? 'shadow-lg bg-muted/50' : ''}`}
-        >
-            <div className="flex items-center gap-3 mb-4">
-                <button
-                    type="button"
-                    className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors"
-                    {...attributes}
-                    {...listeners}
-                >
-                    <GripVertical className="h-5 w-5" />
-                </button>
-
-                <h4 className="text-sm font-medium flex-1">
-                    {selectedProduct?.name || `Producto ${index + 1}`}
-                </h4>
-
-                {canDelete && (
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onRemove(index)}
-                        className="h-8 w-8 p-0"
-                    >
-                        <X className="h-4 w-4" />
-                    </Button>
-                )}
-            </div>
-
-            <ProductCombobox
-                value={item.product_id ? Number(item.product_id) : null}
-                onChange={(value) => {
-                    // Actualizar product_id y resetear variant_id en una sola operación
-                    onUpdateMultiple(index, {
-                        product_id: value ? String(value) : '',
-                        variant_id: '',
-                    });
-                }}
-                products={products}
-                label="Producto"
-                error={errors[`items.${index}.product_id`]}
-                required
-            />
-
-            {hasVariants && (
-                <FormField
-                    label="Variante"
-                    error={errors[`items.${index}.variant_id`]}
-                    required
-                >
-                    <Select
-                        value={item.variant_id}
-                        onValueChange={(value) => onUpdate(index, 'variant_id', value)}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder={PLACEHOLDERS.selectVariant} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {selectedProduct.variants?.map((variant) => (
-                                <SelectItem key={variant.id} value={String(variant.id)}>
-                                    {variant.name} {variant.size && `- ${variant.size}`}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </FormField>
-            )}
-
-            <FormField
-                label="Cantidad"
-                error={errors[`items.${index}.quantity`]}
-                required
-            >
-                <Input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={item.quantity}
-                    onChange={(e) => onUpdate(index, 'quantity', e.target.value)}
-                />
-            </FormField>
-        </div>
-    );
 }
 
 export default function ComboCreate({ products, categories }: CreateComboPageProps) {
@@ -213,16 +88,18 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
-        })
+        }),
     );
 
     const addItem = () => {
         const newItem: ComboItem = {
-            id: generateUniqueId(),
-            product_id: '',
-            variant_id: '',
-            quantity: '1',
+            id: generateUniqueItemId(),
+            is_choice_group: false,
+            product_id: null,
+            variant_id: null,
+            quantity: 1,
             sort_order: localItems.length + 1,
+            options: [],
         };
         const updated = [...localItems, newItem];
         setLocalItems(updated);
@@ -235,16 +112,16 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
         setData('items', updated);
     };
 
-    const updateItem = (index: number, field: keyof Omit<ComboItem, 'id' | 'sort_order'>, value: string) => {
+    const updateItem = (index: number, field: string, value: any) => {
         const updated = [...localItems];
         updated[index] = { ...updated[index], [field]: value };
         setLocalItems(updated);
         setData('items', updated);
     };
 
-    const updateMultipleFields = (index: number, fields: Partial<Omit<ComboItem, 'id' | 'sort_order'>>) => {
+    const batchUpdateItem = (index: number, updates: Partial<ComboItem>) => {
         const updated = [...localItems];
-        updated[index] = { ...updated[index], ...fields };
+        updated[index] = { ...updated[index], ...updates };
         setLocalItems(updated);
         setData('items', updated);
     };
@@ -267,7 +144,21 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        post(route('menu.combos.store'), {
+        const validation = validateMinimumComboStructure(localItems);
+
+        if (!validation.valid) {
+            showNotification.error(validation.errors[0]);
+            return;
+        }
+
+        const preparedItems = prepareComboDataForSubmit(localItems);
+
+        const submitData = {
+            ...data,
+            items: preparedItems,
+        };
+
+        post(route('menu.combos.store'), submitData, {
             onSuccess: () => {
                 reset();
                 setLocalItems([]);
@@ -298,11 +189,7 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
                     <Label htmlFor="is_active" className="text-base">
                         Combo activo
                     </Label>
-                    <Switch
-                        id="is_active"
-                        checked={data.is_active}
-                        onCheckedChange={(checked) => setData('is_active', checked as boolean)}
-                    />
+                    <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked as boolean)} />
                 </div>
 
                 <CategoryCombobox
@@ -315,21 +202,11 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
                 />
 
                 <FormField label="Nombre" error={errors.name} required>
-                    <Input
-                        id="name"
-                        type="text"
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
-                    />
+                    <Input id="name" type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} />
                 </FormField>
 
                 <FormField label="Descripción" error={errors.description}>
-                    <Textarea
-                        id="description"
-                        value={data.description}
-                        onChange={(e) => setData('description', e.target.value)}
-                        rows={2}
-                    />
+                    <Textarea id="description" value={data.description} onChange={(e) => setData('description', e.target.value)} rows={2} />
                 </FormField>
 
                 <ImageUpload
@@ -340,12 +217,7 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
                 />
             </FormSection>
 
-            <FormSection
-                icon={Banknote}
-                title="Precios del Combo"
-                description="Define el precio del combo completo"
-                className="mt-8"
-            >
+            <FormSection icon={Banknote} title="Precios del Combo" description="Define el precio del combo completo" className="mt-8">
                 <PriceFields
                     capitalPickup={data.precio_pickup_capital}
                     capitalDomicilio={data.precio_domicilio_capital}
@@ -364,46 +236,45 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
                 />
             </FormSection>
 
-            <FormSection
-                icon={Package}
-                title="Productos del Combo"
-                description="Agrega al menos 2 productos al combo. Si el producto tiene variantes, debes seleccionar una."
-            >
-                {localItems.length > 0 && (
+            <FormSection icon={Package} title="Items del Combo" description="Define productos fijos o grupos de elección">
+                <div className="mb-4 flex items-center justify-between rounded-lg border border-muted bg-muted/50 px-4 py-2">
+                    <p className="text-sm text-muted-foreground">Un combo debe tener al menos 2 items</p>
+                    <span className="text-xs font-medium text-muted-foreground">Actual: {localItems.length}</span>
+                </div>
+
+                {localItems.length > 0 ? (
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                         <SortableContext items={localItems.map((item) => item.id)} strategy={verticalListSortingStrategy}>
                             <div className="space-y-4">
                                 {localItems.map((item, index) => (
-                                    <SortableItem
+                                    <ComboItemCard
                                         key={item.id}
                                         item={item}
                                         index={index}
                                         products={products}
-                                        onUpdate={updateItem}
-                                        onUpdateMultiple={updateMultipleFields}
-                                        onRemove={removeItem}
+                                        onUpdate={(field, value) => updateItem(index, field, value)}
+                                        onBatchUpdate={(updates) => batchUpdateItem(index, updates)}
+                                        onRemove={() => removeItem(index)}
                                         errors={errors}
-                                        canDelete={localItems.length > 1}
+                                        canDelete={true}
                                     />
                                 ))}
                             </div>
                         </SortableContext>
                     </DndContext>
+                ) : (
+                    <div className="rounded-lg border border-dashed border-muted-foreground/25 p-8 text-center">
+                        <p className="text-sm text-muted-foreground">No hay items en el combo</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Agrega al menos 2 items para crear el combo</p>
+                    </div>
                 )}
 
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addItem}
-                    className="w-full mt-4"
-                >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Agregar Producto
+                <Button type="button" variant="outline" onClick={addItem} className="mt-4 w-full">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Agregar Item
                 </Button>
 
-                {errors.items && (
-                    <p className="text-sm text-destructive mt-2">{errors.items}</p>
-                )}
+                {errors.items && <p className="mt-2 text-sm text-destructive">{errors.items}</p>}
             </FormSection>
         </CreatePageLayout>
     );

@@ -194,9 +194,7 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
                             {customer.customer_type && (
                                 <span className="flex items-center">{getCustomerTypeIcon(customer.customer_type.color || 'gray', 'h-3 w-3')}</span>
                             )}
-                            <Badge className={getClientTypeColor(customer.customer_type)}>
-                                {customer.customer_type?.name || 'Sin tipo'}
-                            </Badge>
+                            <Badge className={getClientTypeColor(customer.customer_type)}>{customer.customer_type?.name || 'Sin tipo'}</Badge>
                             {customer.customer_type && <span className="text-xs text-muted-foreground">{customer.customer_type.multiplier}x</span>}
                         </div>
                     </div>
@@ -207,9 +205,7 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
             key: 'phone',
             title: 'Teléfono',
             width: 'md' as const,
-            render: (customer: Customer) => (
-                <div className="text-sm">{customer.phone || 'N/A'}</div>
-            ),
+            render: (customer: Customer) => <div className="text-sm">{customer.phone || 'N/A'}</div>,
         },
         {
             key: 'last_purchase',
@@ -249,12 +245,7 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
             title: 'Acciones',
             width: 'xs' as const,
             textAlign: 'right' as const,
-            render: (customer: Customer) => (
-                <TableActions
-                    editHref={`/customers/${customer.id}/edit`}
-                    editTooltip="Editar cliente"
-                />
-            ),
+            render: (customer: Customer) => <TableActions editHref={`/customers/${customer.id}/edit`} editTooltip="Editar cliente" />,
         },
     ];
 
@@ -286,9 +277,7 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
                     value: (
                         <div className="flex items-center gap-2">
                             {getCustomerTypeIcon(customer.customer_type?.color || 'gray', 'h-4 w-4')}
-                            <Badge className={getClientTypeColor(customer.customer_type)}>
-                                {customer.customer_type?.name || 'Sin tipo'}
-                            </Badge>
+                            <Badge className={getClientTypeColor(customer.customer_type)}>{customer.customer_type?.name || 'Sin tipo'}</Badge>
                             {customer.customer_type && <span className="text-xs text-muted-foreground">{customer.customer_type.multiplier}x</span>}
                         </div>
                     ),

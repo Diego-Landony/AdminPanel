@@ -42,6 +42,7 @@ export const PLACEHOLDERS = {
     categoryName: 'Nombre de la categoría',
     productName: 'Nombre del producto',
     comboLabel: 'Etiqueta del elemento',
+    choiceGroupLabel: 'Ej: Elige tu sub de 15cm',
 
     // Selects genéricos
     selectGender: 'Selecciona el género',
@@ -71,6 +72,10 @@ export const NOTIFICATIONS = {
         roleRemoved: 'Rol removido exitosamente',
         customerCreated: 'Cliente creado exitosamente',
         customerUpdated: 'Cliente actualizado exitosamente',
+        optionAdded: 'Opción agregada al grupo',
+        optionRemoved: 'Opción eliminada del grupo',
+        itemAdded: 'Item agregado al combo',
+        itemRemoved: 'Item eliminado del combo',
     },
     error: {
         server: 'Error del servidor. Inténtalo de nuevo.',
@@ -96,7 +101,19 @@ export const NOTIFICATIONS = {
         permissionDenied: 'No tienes permisos para realizar esta acción.',
         sessionExpired: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
         rateLimited: 'Demasiadas solicitudes. Espera unos momentos antes de intentar de nuevo.',
-    }
+        // Choice groups errors
+        minOptionsRequired: 'Se requieren al menos 2 opciones en el grupo',
+        duplicateOption: 'Esta opción ya existe en el grupo',
+        variantInconsistency: 'Todas las variantes deben ser del mismo tamaño',
+        cannotDeleteProductInUse: 'No se puede eliminar un producto usado en combos',
+        choiceGroupLabelRequired: 'La etiqueta del grupo es obligatoria',
+        choiceGroupOptionsRequired: 'Cada grupo debe tener al menos 2 opciones',
+        fixedItemProductRequired: 'Los items fijos deben tener un producto seleccionado',
+    },
+    warning: {
+        inactiveOptionsDetected: 'El grupo tiene opciones inactivas',
+        comboPartiallyAvailable: 'Combo disponible con opciones limitadas',
+    },
 } as const;
 
 // Descripciones de validación estandarizadas
@@ -116,52 +133,60 @@ export const FIELD_DESCRIPTIONS = {
 export const FORM_SECTIONS = {
     personalInfo: {
         title: 'Información Personal',
-        description: 'Datos básicos del cliente'
+        description: 'Datos básicos del cliente',
     },
     userInfo: {
         title: 'Información del Usuario',
-        description: 'Datos básicos del usuario'
+        description: 'Datos básicos del usuario',
     },
     contactInfo: {
         title: 'Información de Contacto',
-        description: 'Datos de contacto y ubicación del cliente'
+        description: 'Datos de contacto y ubicación del cliente',
     },
     security: {
         title: 'Seguridad',
-        description: 'Configuración de acceso del cliente'
+        description: 'Configuración de acceso del cliente',
     },
     changePassword: {
         title: 'Cambiar Contraseña',
-        description: 'Opcional: Cambiar la contraseña del usuario'
+        description: 'Opcional: Cambiar la contraseña del usuario',
     },
     roleInfo: {
         title: 'Información del Rol',
-        description: 'Datos básicos del nuevo rol'
+        description: 'Datos básicos del nuevo rol',
     },
     roleInfoEdit: {
         title: 'Información Básica',
-        description: 'Datos principales del rol'
+        description: 'Datos principales del rol',
     },
     permissions: {
         title: 'Permisos del Rol',
-        description: 'Selecciona las acciones que este rol puede realizar en cada página'
+        description: 'Selecciona las acciones que este rol puede realizar en cada página',
     },
     basicInfo: {
         title: 'Información Básica',
-        description: 'Datos principales del restaurante'
+        description: 'Datos principales del restaurante',
     },
     services: {
         title: 'Configuración de Servicios',
-        description: 'Servicios y configuración operativa'
+        description: 'Servicios y configuración operativa',
     },
     schedule: {
         title: 'Horarios de Atención',
-        description: 'Define los horarios de atención para cada día de la semana'
+        description: 'Define los horarios de atención para cada día de la semana',
     },
     systemInfo: {
         title: 'Información del Sistema',
-        description: 'Datos del sistema y metadatos'
-    }
+        description: 'Datos del sistema y metadatos',
+    },
+    comboItems: {
+        title: 'Items del Combo',
+        description: 'Define productos fijos o grupos de elección para el combo',
+    },
+    choiceGroupOptions: {
+        title: 'Opciones Disponibles',
+        description: 'Mínimo 2 opciones requeridas para el grupo de elección',
+    },
 } as const;
 
 // Descripciones de páginas estandarizadas
@@ -187,4 +212,31 @@ export const CURRENCY = {
     symbol: 'Q',
     code: 'GTQ',
     name: 'Quetzal',
+} as const;
+
+// Tipos de items de combo
+export const COMBO_ITEM_TYPES = {
+    fixed: 'fixed',
+    choiceGroup: 'choice_group',
+} as const;
+
+// Labels y textos para Combos
+export const COMBO_LABELS = {
+    itemTypes: {
+        fixed: 'Item Fijo',
+        choiceGroup: 'Grupo de Elección',
+    },
+    itemTypesDescription: {
+        fixed: 'Producto específico incluido en el combo',
+        choiceGroup: 'Grupo de productos donde el cliente elige uno',
+    },
+    addFixedItem: 'Agregar Item Fijo',
+    addChoiceGroup: 'Agregar Grupo de Elección',
+    addOption: 'Agregar Opción',
+    removeOption: 'Eliminar Opción',
+    minOptionsRequired: 'Mínimo 2 opciones requeridas',
+    choiceGroupLabelRequired: 'La etiqueta es obligatoria',
+    choiceGroupOptionsRequired: 'Debes agregar al menos 2 opciones',
+    variantConsistencyError: 'Todas las opciones deben ser de la misma variante',
+    choiceGroupExample: 'Ej: Elige tu bebida',
 } as const;

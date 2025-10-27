@@ -1,7 +1,5 @@
-import React from 'react';
-
-import { FormSectionSkeleton, type FormSectionConfig } from './FormSectionSkeleton';
 import { Skeleton } from '@/components/ui/skeleton';
+import { FormSectionSkeleton, type FormSectionConfig } from './FormSectionSkeleton';
 
 interface EditPageSkeletonProps {
     sections?: FormSectionConfig[];

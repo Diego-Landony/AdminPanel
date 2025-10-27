@@ -49,7 +49,7 @@ Esta extensión al sistema de combos permite crear **items con múltiples opcion
 ```
 Combo Personal: Q48
 ├─ Item 1: Italian B.M.T. 15cm (FIJO)
-├─ Item 2: Coca-Cola Mediano (FIJO)
+├─ Item 2: Bebida 1 (FIJO)
 └─ Item 3: Papas Lays (FIJO)
 ```
 
@@ -66,12 +66,11 @@ Combo Personal: Q48
 │   ├─ Opción: Roast Beef 15cm
 │   └─ Opción: Club 15cm
 │
-├─ Item 2: "Bebida Mediana" (GRUPO CON 5 OPCIONES)
-│   ├─ Opción: Coca-Cola Mediano
-│   ├─ Opción: Pepsi Mediano
-│   ├─ Opción: Sprite Mediano
-│   ├─ Opción: Fanta Mediano
-│   └─ Opción: Agua 500ml
+├─ Item 2: "Bebida" (GRUPO CON 4 OPCIONES)
+│   ├─ Opción: Bebida 1
+│   ├─ Opción: Bebida 2
+│   ├─ Opción: Bebida 3
+│   └─ Opción: Bebida 4
 │
 └─ Item 3: "Complemento" (GRUPO CON 3 OPCIONES)
     ├─ Opción: Papas Lays
@@ -165,19 +164,15 @@ Cantidad: 1
 #### Item de Elección (Sistema Nuevo)
 ```
 Tipo: Grupo de Elección
-Etiqueta: "Sub de 15cm a elección"
+Etiqueta: "Bebida a elección"
 Cantidad: 1
-Elige: 1 de 8 opciones
+Elige: 1 de 4 opciones
 
 Opciones:
-├─ Italian B.M.T. 15cm
-├─ Pollo Teriyaki 15cm
-├─ Atún 15cm
-├─ Pavo 15cm
-├─ Jamón 15cm
-├─ Vegetariano 15cm
-├─ Roast Beef 15cm
-└─ Club 15cm
+├─ Bebida 1
+├─ Bebida 2
+├─ Bebida 3
+└─ Bebida 4
 
 → Cliente elige UNO de estos
 ```
@@ -233,16 +228,15 @@ Item: Papas Lays Originales
 
 **Ejemplo:**
 ```
-Item: "Bebida Mediana"
-├─ Etiqueta: "Elige tu bebida mediana"
+Item: "Bebida"
+├─ Etiqueta: "Elige tu bebida"
 ├─ Cantidad: 1
-├─ Elige: 1 de 5
+├─ Elige: 1 de 4
 └─ Opciones:
-    ├─ Coca-Cola Mediano
-    ├─ Pepsi Mediano
-    ├─ Sprite Mediano
-    ├─ Fanta Mediano
-    └─ Agua 500ml
+    ├─ Bebida 1
+    ├─ Bebida 2
+    ├─ Bebida 3
+    └─ Bebida 4
 ```
 
 **Cuándo usar:**
@@ -302,14 +296,13 @@ Items:
    ├─ Roast Beef 15cm
    └─ Club 15cm
 
-2. Grupo: "Bebida Mediana"
-   Elige: 1 de 5 opciones
+2. Grupo: "Bebida"
+   Elige: 1 de 4 opciones
    Opciones:
-   ├─ Coca-Cola Mediano
-   ├─ Pepsi Mediano
-   ├─ Sprite Mediano
-   ├─ Fanta Mediano
-   └─ Agua 500ml
+   ├─ Bebida 1
+   ├─ Bebida 2
+   ├─ Bebida 3
+   └─ Bebida 4
 
 3. Grupo: "Complemento"
    Elige: 1 de 3 opciones
@@ -322,7 +315,7 @@ Items:
 **Experiencia del Cliente (Conceptual - Futura):**
 1. Selecciona "Combo Personal"
 2. Elige: Pollo Teriyaki 15cm
-3. Elige: Sprite Mediano
+3. Elige: Bebida 2
 4. Elige: Papas Lays
 5. Personaliza el sub (salsas, vegetales)
 6. Precio final: Q48 + extras de personalización
@@ -342,7 +335,7 @@ Items:
 1. FIJO: Sub Italian B.M.T. 30cm
    (Producto específico, no cambia)
 
-2. FIJO: Coca-Cola Grande
+2. FIJO: Bebida 1
    (Producto específico, no cambia)
 
 3. Grupo: "Elige tu complemento"
@@ -356,7 +349,7 @@ Items:
 
 **Experiencia del Cliente (Conceptual - Futura):**
 1. Recibe Italian B.M.T. 30cm (fijo)
-2. Recibe Coca-Cola Grande (fijo)
+2. Recibe Bebida 1 (fijo)
 3. **Elige** su complemento
 4. Personaliza el sub
 
@@ -380,8 +373,8 @@ Items:
    ├─ Pavo 15cm
    └─ Vegetariano 15cm
 
-2. FIJO: Refresco Mediano
-   (Cualquier sabor, pero tamaño fijo)
+2. FIJO: Bebida 1
+   (Producto específico)
 ```
 
 ---
@@ -407,14 +400,12 @@ Items:
    └─ Wrap Vegetariano
 
 2. Grupo: "Bebida"
-   Elige: 1 de 6 opciones
+   Elige: 1 de 4 opciones
    Opciones:
-   ├─ Coca-Cola (Mediano/Grande)
-   ├─ Pepsi (Mediano/Grande)
-   ├─ Sprite (Mediano/Grande)
-   ├─ Fanta (Mediano/Grande)
-   ├─ Agua 500ml
-   └─ Té Helado
+   ├─ Bebida 1
+   ├─ Bebida 2
+   ├─ Bebida 3
+   └─ Bebida 4
 
 3. Grupo: "Extra"
    Elige: 1 de 5 opciones
@@ -453,14 +444,14 @@ Items:
    ├─ Albóndiga 15cm
    └─ BBQ Rib 15cm
 
-2. Grupo: "Bebida Grande"
+2. Grupo: "Bebida"
    **CANTIDAD: 4**
    Elige: 1 de 4 opciones (por cada cantidad)
    Opciones:
-   ├─ Coca-Cola Grande
-   ├─ Pepsi Grande
-   ├─ Sprite Grande
-   └─ Fanta Grande
+   ├─ Bebida 1
+   ├─ Bebida 2
+   ├─ Bebida 3
+   └─ Bebida 4
 ```
 
 **Experiencia del Cliente (Conceptual - Futura):**
@@ -469,7 +460,7 @@ Items:
    - Elige el tipo de sub
    - Personaliza (salsas, vegetales)
 3. **Para cada una de las 4 bebidas:**
-   - Elige el sabor
+   - Elige la bebida
 4. Precio final: Q180 + personalizaciones
 
 ---

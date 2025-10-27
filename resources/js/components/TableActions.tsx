@@ -79,7 +79,12 @@ export const TableActions: React.FC<TableActionsProps> = ({
                 {showEdit && editHref && (
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-11 w-11 md:h-8 md:w-8 p-0 text-muted-foreground hover:text-foreground" asChild>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-11 w-11 p-0 text-muted-foreground hover:text-foreground md:h-8 md:w-8"
+                                asChild
+                            >
                                 <Link href={editHref} aria-label={editTooltip}>
                                     <Edit className="h-4 w-4" />
                                 </Link>
@@ -98,13 +103,16 @@ export const TableActions: React.FC<TableActionsProps> = ({
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-11 w-11 md:h-8 md:w-8 p-0 text-muted-foreground hover:text-destructive disabled:opacity-50"
+                                className="h-11 w-11 p-0 text-muted-foreground hover:text-destructive disabled:opacity-50 md:h-8 md:w-8"
                                 onClick={onDelete}
                                 disabled={isDeleting || !canDelete}
                                 aria-label={canDelete ? deleteTooltip : 'No se puede eliminar'}
                             >
                                 {isDeleting ? (
-                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" aria-label="Eliminando..." />
+                                    <div
+                                        className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
+                                        aria-label="Eliminando..."
+                                    />
                                 ) : (
                                     <Trash2 className="h-4 w-4" />
                                 )}

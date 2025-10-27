@@ -1,11 +1,11 @@
 import { router } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
+import { CategoryCombobox } from '@/components/CategoryCombobox';
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
 import { ImageUpload } from '@/components/ImageUpload';
 import { PriceFields } from '@/components/PriceFields';
-import { VariantsFromCategory } from '@/components/VariantsFromCategory';
 import { EditProductsSkeleton } from '@/components/skeletons';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { CategoryCombobox } from '@/components/CategoryCombobox';
+import { VariantsFromCategory } from '@/components/VariantsFromCategory';
 import { Banknote, ListChecks, Package } from 'lucide-react';
 
 interface Category {
@@ -104,7 +104,7 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedSections, setSelectedSections] = useState<number[]>(product.sections.map((s) => s.id));
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-        product.category ? categories.find((c) => c.id === product.category_id) || null : null
+        product.category ? categories.find((c) => c.id === product.category_id) || null : null,
     );
 
     useEffect(() => {
@@ -152,9 +152,7 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
         const submitData = {
             ...formData,
             sections: selectedSections,
-            variants: formData.has_variants
-                ? formData.variants.filter((v) => v.is_active).map(({ is_active, ...rest }) => rest)
-                : [],
+            variants: formData.has_variants ? formData.variants.filter((v) => v.is_active).map(({ is_active, ...rest }) => rest) : [],
         };
 
         router.put(`/menu/products/${product.id}`, submitData, {
@@ -207,10 +205,20 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
                 </FormField>
 
                 <FormField label="Descripción" error={errors.description}>
-                    <Textarea id="description" value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} rows={2} />
+                    <Textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => handleInputChange('description', e.target.value)}
+                        rows={2}
+                    />
                 </FormField>
 
-                <ImageUpload label="Imagen" currentImage={formData.image} onImageChange={(url) => handleInputChange('image', url || '')} error={errors.image} />
+                <ImageUpload
+                    label="Imagen"
+                    currentImage={formData.image}
+                    onImageChange={(url) => handleInputChange('image', url || '')}
+                    error={errors.image}
+                />
             </FormSection>
 
             <FormSection icon={Banknote} title="Precios" className="mt-8">
@@ -255,10 +263,7 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
                                     checked={selectedSections.includes(section.id)}
                                     onCheckedChange={() => toggleSection(section.id)}
                                 />
-                                <Label
-                                    htmlFor={`section-${section.id}`}
-                                    className="text-sm leading-none font-medium cursor-pointer"
-                                >
+                                <Label htmlFor={`section-${section.id}`} className="cursor-pointer text-sm leading-none font-medium">
                                     {section.title}
                                 </Label>
                             </div>

@@ -9,7 +9,7 @@ import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
-import { PLACEHOLDERS, AUTOCOMPLETE, FIELD_DESCRIPTIONS } from '@/constants/ui-constants';
+import { AUTOCOMPLETE, FIELD_DESCRIPTIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
 /**
  * Página de configuración de contraseña
@@ -57,10 +57,7 @@ export default function Password() {
 
             <SettingsLayout>
                 <div className="space-y-6">
-                    <HeadingSmall
-                        title="Actualizar Contraseña"
-                        description={FIELD_DESCRIPTIONS.passwordSecurity6}
-                    />
+                    <HeadingSmall title="Actualizar Contraseña" description={FIELD_DESCRIPTIONS.passwordSecurity6} />
 
                     <form onSubmit={updatePassword} className="space-y-6">
                         <FormField label="Contraseña Actual" error={errors.current_password} required>

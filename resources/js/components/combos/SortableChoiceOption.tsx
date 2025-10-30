@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -6,6 +7,7 @@ import { GripVertical, X } from 'lucide-react';
 interface Product {
     id: number;
     name: string;
+    is_active: boolean;
     category?: {
         name: string;
     };
@@ -59,9 +61,16 @@ export function SortableChoiceOption({ option, products, onRemove, canDelete }: 
             </button>
 
             <div className="min-w-0 flex-1">
-                <div className="flex flex-col">
-                    <span className="truncate font-medium">{product?.name || 'Producto no encontrado'}</span>
-                    {product?.category && <span className="truncate text-xs text-muted-foreground">{product.category.name}</span>}
+                <div className="flex items-center gap-2">
+                    <div className="flex min-w-0 flex-1 flex-col">
+                        <span className="truncate font-medium">{product?.name || 'Producto no encontrado'}</span>
+                        {product?.category && <span className="truncate text-xs text-muted-foreground">{product.category.name}</span>}
+                    </div>
+                    {product && (
+                        <Badge variant={product.is_active ? 'default' : 'secondary'} className="shrink-0">
+                            {product.is_active ? 'Activo' : 'Inactivo'}
+                        </Badge>
+                    )}
                 </div>
                 {variant && <div className="truncate text-sm text-muted-foreground">{variant.name}</div>}
             </div>

@@ -1,14 +1,16 @@
-import { PLACEHOLDERS } from '@/constants/ui-constants';
+import { showNotification } from '@/hooks/useNotifications';
 import { router, useForm } from '@inertiajs/react';
-import { Percent, Plus, Store, Trash2, Truck } from 'lucide-react';
-import React, { useState } from 'react';
+import { Banknote, Package, Plus, Store, Truck } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
-import { ProductCombobox } from '@/components/ProductCombobox';
+import { ConfirmationDialog } from '@/components/promotions/ConfirmationDialog';
+import { PromotionItemEditor } from '@/components/promotions/PromotionItemEditor';
 import { CreatePageSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,6 +32,7 @@ interface Product {
     name: string;
     category_id: number;
     has_variants: boolean;
+    is_active: boolean;
     category?: {
         id: number;
         name: string;
@@ -47,17 +50,12 @@ interface CreatePromotionPageProps {
     categories: Category[];
 }
 
-interface PercentageItem {
+interface LocalPromotionItem {
     id: string;
-    product_id: string;
-    variant_ids: string[]; // Ahora es un array de IDs de variantes
+    category_id: number | null;
+    variant_id: number | null;
+    selected_product_ids: number[];
     discount_percentage: string;
-    service_type: 'both' | 'delivery_only' | 'pickup_only';
-    validity_type: 'permanent' | 'date_range' | 'time_range' | 'date_time_range';
-    valid_from: string;
-    valid_until: string;
-    time_from: string;
-    time_until: string;
 }
 
 export default function CreatePercentage({ products, categories }: CreatePromotionPageProps) {
@@ -66,60 +64,157 @@ export default function CreatePercentage({ products, categories }: CreatePromoti
         name: '',
         description: '',
         type: 'percentage_discount' as const,
-        items: [] as PercentageItem[],
+        items: [] as LocalPromotionItem[],
+        service_type: 'both' as 'both' | 'delivery_only' | 'pickup_only',
+        validity_type: 'permanent' as 'permanent' | 'date_range' | 'time_range' | 'date_time_range',
+        valid_from: '',
+        valid_until: '',
+        time_from: '',
+        time_until: '',
     });
 
-    const [localItems, setLocalItems] = useState<PercentageItem[]>([
+    const [localItems, setLocalItems] = useState<LocalPromotionItem[]>([
         {
             id: generateUniqueId(),
-            product_id: '',
-            variant_ids: [],
+            category_id: null,
+            variant_id: null,
+            selected_product_ids: [],
             discount_percentage: '',
-            service_type: 'both',
-            validity_type: 'permanent',
-            valid_from: '',
-            valid_until: '',
-            time_from: '',
-            time_until: '',
         },
     ]);
 
-    const addItem = () => {
-        const newItem: PercentageItem = {
+    const [confirmDialog, setConfirmDialog] = useState<{
+        open: boolean;
+        title: string;
+        description: string;
+        onConfirm: () => void;
+        onCancel: () => void;
+    }>({
+        open: false,
+        title: '',
+        description: '',
+        onConfirm: () => {},
+        onCancel: () => {},
+    });
+
+    const lastItemRef = useRef<HTMLDivElement>(null);
+
+    // Scroll al primer error cuando aparezcan errores de validación
+    useEffect(() => {
+        if (Object.keys(errors).length > 0) {
+            const firstErrorKey = Object.keys(errors)[0];
+            const errorElement = document.querySelector(`[name="${firstErrorKey}"]`) || document.querySelector(`[data-error="${firstErrorKey}"]`);
+
+            if (errorElement) {
+                errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }, [errors]);
+
+    const addItem = useCallback(() => {
+        const newItem: LocalPromotionItem = {
             id: generateUniqueId(),
-            product_id: '',
-            variant_ids: [],
+            category_id: null,
+            variant_id: null,
+            selected_product_ids: [],
             discount_percentage: '',
-            service_type: 'both',
-            validity_type: 'permanent',
-            valid_from: '',
-            valid_until: '',
-            time_from: '',
-            time_until: '',
         };
-        const updated = [...localItems, newItem];
-        setLocalItems(updated);
-        setData('items', updated);
-    };
+        setLocalItems((prev) => {
+            const updated = [...prev, newItem];
+            setData('items', updated);
+            return updated;
+        });
 
-    const removeItem = (id: string) => {
-        const updated = localItems.filter((item) => item.id !== id);
-        setLocalItems(updated);
-        setData('items', updated);
-    };
+        // Scroll automático al nuevo item
+        setTimeout(() => {
+            lastItemRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+    }, [setData]);
 
-    const updateItem = (id: string, field: keyof PercentageItem, value: string | number | null) => {
-        const updated = localItems.map((item) => (item.id === id ? { ...item, [field]: value } : item));
-        setLocalItems(updated);
-        setData('items', updated);
-    };
+    const removeItem = useCallback(
+        (id: string) => {
+            if (localItems.length === 1) {
+                showNotification.error(NOTIFICATIONS.error.minItemRequired);
+                return;
+            }
+            setLocalItems((prev) => {
+                const updated = prev.filter((item) => item.id !== id);
+                setData('items', updated);
+                return updated;
+            });
+        },
+        [localItems.length, setData]
+    );
+
+    const applyUpdate = useCallback(
+        (id: string, field: keyof LocalPromotionItem, value: number | number[] | string | null) => {
+            setLocalItems((prev) => {
+                const updated = prev.map((item) => {
+                    if (item.id !== id) return item;
+
+                    const updatedItem = { ...item, [field]: value };
+
+                    if (field === 'category_id' && value !== item.category_id) {
+                        updatedItem.variant_id = null;
+                        updatedItem.selected_product_ids = [];
+                    }
+
+                    if (field === 'variant_id' && value !== item.variant_id) {
+                        updatedItem.selected_product_ids = [];
+                    }
+
+                    return updatedItem;
+                });
+
+                setData('items', updated);
+                return updated;
+            });
+        },
+        [setData]
+    );
+
+    const updateItem = useCallback(
+        (id: string, field: keyof LocalPromotionItem, value: number | number[] | string | null) => {
+            const currentItem = localItems.find((item) => item.id === id);
+            if (!currentItem) return;
+
+            // Caso 1: Cambiar categoría con productos seleccionados
+            if (field === 'category_id' && value !== currentItem.category_id && currentItem.selected_product_ids.length > 0) {
+                setConfirmDialog({
+                    open: true,
+                    title: '¿Cambiar de categoría?',
+                    description: 'Se perderán los productos seleccionados y la variante si continúas.',
+                    onConfirm: () => applyUpdate(id, field, value),
+                    onCancel: () => {},
+                });
+                return;
+            }
+
+            // Caso 2: Cambiar variante con productos seleccionados
+            if (field === 'variant_id' && value !== currentItem.variant_id && currentItem.selected_product_ids.length > 0) {
+                setConfirmDialog({
+                    open: true,
+                    title: '¿Cambiar de variante?',
+                    description: 'Se perderán los productos seleccionados si continúas.',
+                    onConfirm: () => applyUpdate(id, field, value),
+                    onCancel: () => {},
+                });
+                return;
+            }
+
+            // Aplicar actualización sin confirmación
+            applyUpdate(id, field, value);
+        },
+        [localItems, applyUpdate]
+    );
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
         interface SubmitItem {
-            product_id: string;
-            variant_id: string | null;
+            product_id: number;
+            variant_id: number | null;
+            category_id: number;
             discount_percentage: string;
             service_type: 'both' | 'delivery_only' | 'pickup_only';
             validity_type: 'permanent' | 'date_range' | 'time_range' | 'date_time_range';
@@ -129,37 +224,23 @@ export default function CreatePercentage({ products, categories }: CreatePromoti
             time_until: string;
         }
 
-        // Expandir cada item con variant_ids a múltiples items (uno por variante)
-        const expandedItems: SubmitItem[] = localItems.flatMap<SubmitItem>(({ id: _id, variant_ids, ...rest }) => {
-            // Si tiene variantes seleccionadas, crear un item por cada variante
-            if (variant_ids.length > 0) {
-                return variant_ids.map<SubmitItem>((variant_id) => ({
-                    product_id: rest.product_id,
-                    variant_id: variant_id,
-                    discount_percentage: rest.discount_percentage,
-                    service_type: rest.service_type,
-                    validity_type: rest.validity_type,
-                    valid_from: rest.valid_from,
-                    valid_until: rest.valid_until,
-                    time_from: rest.time_from,
-                    time_until: rest.time_until,
-                }));
-            }
+        const expandedItems: SubmitItem[] = localItems.flatMap<SubmitItem>((item) => {
+            const globalConfig = {
+                service_type: data.service_type,
+                validity_type: data.validity_type,
+                valid_from: data.valid_from,
+                valid_until: data.valid_until,
+                time_from: data.time_from,
+                time_until: data.time_until,
+            };
 
-            // Si no tiene variantes (producto simple), crear un solo item
-            return [
-                {
-                    product_id: rest.product_id,
-                    variant_id: null,
-                    discount_percentage: rest.discount_percentage,
-                    service_type: rest.service_type,
-                    validity_type: rest.validity_type,
-                    valid_from: rest.valid_from,
-                    valid_until: rest.valid_until,
-                    time_from: rest.time_from,
-                    time_until: rest.time_until,
-                },
-            ] as SubmitItem[];
+            return item.selected_product_ids.map<SubmitItem>((product_id) => ({
+                product_id,
+                variant_id: item.variant_id,
+                category_id: item.category_id!,
+                discount_percentage: item.discount_percentage,
+                ...globalConfig,
+            }));
         });
 
         router.post(route('menu.promotions.store'), {
@@ -168,14 +249,20 @@ export default function CreatePercentage({ products, categories }: CreatePromoti
             description: data.description,
             type: data.type,
             items: expandedItems,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any);
+        });
     };
 
     const getItemError = (index: number, field: string) => {
         const error = errors[`items.${index}.${field}` as keyof typeof errors];
         return error as string | undefined;
     };
+
+    const hasInactiveProducts = useMemo(() => {
+        return localItems.some((item) => {
+            const selectedProducts = products.filter((p) => item.selected_product_ids.includes(p.id));
+            return selectedProducts.some((p) => !p.is_active);
+        });
+    }, [localItems, products]);
 
     if (!products || !categories) {
         return <CreatePageSkeleton />;
@@ -194,10 +281,8 @@ export default function CreatePercentage({ products, categories }: CreatePromoti
             loading={processing}
             loadingSkeleton={CreatePageSkeleton}
         >
-            {/* Información Básica */}
-            <FormSection title="Información Básica">
+            <FormSection icon={Package} title="Información Básica">
                 <div className="space-y-4">
-                    {/* Switch de Promoción Activa */}
                     <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
                         <Label htmlFor="is-active" className="text-base">
                             Promoción activa
@@ -220,213 +305,126 @@ export default function CreatePercentage({ products, categories }: CreatePromoti
                 </div>
             </FormSection>
 
-            {/* Items de la Promoción */}
-            <FormSection title="Productos con Descuento">
-                <div className="space-y-6">
-                    {localItems.map((item, index) => (
-                        <div key={item.id} className="relative rounded-lg border border-border bg-card p-6">
-                            {/* Botón Eliminar */}
-                            {localItems.length > 1 && (
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeItem(item.id)}
-                                    className="absolute top-2 right-2"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            )}
+            {hasInactiveProducts && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                        ⚠ Advertencia: Esta promoción tiene productos inactivos seleccionados. La promoción no se aplicará a esos productos hasta que se activen.
+                    </p>
+                </div>
+            )}
 
-                            <div className="space-y-4">
-                                <h4 className="font-medium">Producto {index + 1}</h4>
-
-                                {/* Selector de Producto */}
-                                <ProductCombobox
-                                    label="Producto"
-                                    value={item.product_id ? Number(item.product_id) : null}
-                                    onChange={(value) => {
-                                        // Actualizar producto y resetear variantes seleccionadas
-                                        const updated = localItems.map((i) =>
-                                            i.id === item.id ? { ...i, product_id: value ? String(value) : '', variant_ids: [] } : i,
-                                        );
-                                        setLocalItems(updated);
-                                        setData('items', updated);
-                                    }}
-                                    products={products.filter((product) => {
-                                        // Si el producto NO tiene variantes, eliminar si ya está en uso
-                                        if (!product.has_variants) {
-                                            return !localItems.some((i) => i.id !== item.id && i.product_id === String(product.id));
-                                        }
-                                        // Si el producto TIENE variantes, siempre permitir (se valida por variante)
-                                        return true;
-                                    })}
-                                    placeholder={PLACEHOLDERS.search}
-                                    error={getItemError(index, 'product_id')}
-                                    required
-                                />
-
-                                {/* Selector de Variantes con Checkboxes (solo si el producto tiene variantes) */}
-                                {item.product_id &&
-                                    (() => {
-                                        const selectedProduct = products.find((p) => p.id === Number(item.product_id));
-                                        const hasVariants =
-                                            selectedProduct?.has_variants && selectedProduct?.variants && selectedProduct.variants.length > 0;
-
-                                        if (!hasVariants) return null;
-
-                                        return (
-                                            <FormField label="Variantes" error={getItemError(index, 'variant_ids')} required>
-                                                <div className="space-y-2 rounded-lg border border-border bg-card p-4">
-                                                    {selectedProduct.variants?.map((variant) => (
-                                                        <div key={variant.id} className="flex items-center space-x-2">
-                                                            <Checkbox
-                                                                id={`variant-${item.id}-${variant.id}`}
-                                                                checked={item.variant_ids.includes(String(variant.id))}
-                                                                onCheckedChange={(checked) => {
-                                                                    const updated = localItems.map((i) => {
-                                                                        if (i.id !== item.id) return i;
-
-                                                                        const newVariantIds = checked
-                                                                            ? [...i.variant_ids, String(variant.id)]
-                                                                            : i.variant_ids.filter((vid) => vid !== String(variant.id));
-
-                                                                        return { ...i, variant_ids: newVariantIds };
-                                                                    });
-                                                                    setLocalItems(updated);
-                                                                    setData('items', updated);
-                                                                }}
-                                                            />
-                                                            <label
-                                                                htmlFor={`variant-${item.id}-${variant.id}`}
-                                                                className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                                            >
-                                                                {variant.name} {variant.size && `- ${variant.size}`}
-                                                            </label>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </FormField>
-                                        );
-                                    })()}
-
-                                {/* Porcentaje de Descuento */}
-                                <FormField label="Porcentaje" required error={getItemError(index, 'discount_percentage')}>
-                                    <div className="relative">
-                                        <Input
-                                            type="number"
-                                            min="1"
-                                            max="100"
-                                            step="0.01"
-                                            value={item.discount_percentage}
-                                            onChange={(e) => updateItem(item.id, 'discount_percentage', e.target.value)}
-                                            placeholder={PLACEHOLDERS.percentage}
-                                            className="pr-8"
-                                            required
-                                        />
-                                        <Percent className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <FormSection icon={Store} title="Configuración Global">
+                <div className="space-y-4">
+                    <FormField label="Tipo de servicio" required error={errors.service_type}>
+                        <Select value={data.service_type} onValueChange={(value) => setData('service_type', value as typeof data.service_type)}>
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="both">
+                                    <div className="flex items-center gap-2">
+                                        <Truck className="h-4 w-4" />
+                                        <Store className="h-4 w-4" />
+                                        <span>Delivery y Pickup</span>
                                     </div>
-                                </FormField>
-
-                                {/* Tipo de Servicio */}
-                                <FormField label="Tipo de servicio" required error={getItemError(index, 'service_type')}>
-                                    <Select value={item.service_type} onValueChange={(value) => updateItem(item.id, 'service_type', value)}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="both">
-                                                <div className="flex items-center gap-2">
-                                                    <Truck className="h-4 w-4" />
-                                                    <Store className="h-4 w-4" />
-                                                    <span>Delivery y Pickup</span>
-                                                </div>
-                                            </SelectItem>
-                                            <SelectItem value="delivery_only">
-                                                <div className="flex items-center gap-2">
-                                                    <Truck className="h-4 w-4" />
-                                                    <span>Solo Delivery</span>
-                                                </div>
-                                            </SelectItem>
-                                            <SelectItem value="pickup_only">
-                                                <div className="flex items-center gap-2">
-                                                    <Store className="h-4 w-4" />
-                                                    <span>Solo Pickup</span>
-                                                </div>
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </FormField>
-
-                                {/* Tipo de Vigencia */}
-                                <FormField label="Vigencia" required error={getItemError(index, 'validity_type')}>
-                                    <Select value={item.validity_type} onValueChange={(value) => updateItem(item.id, 'validity_type', value)}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="permanent">Permanente</SelectItem>
-                                            <SelectItem value="date_range">Rango de Fechas</SelectItem>
-                                            <SelectItem value="time_range">Rango de Horario</SelectItem>
-                                            <SelectItem value="date_time_range">Fechas + Horario</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </FormField>
-
-                                {/* Campos condicionales según validity_type */}
-                                {(item.validity_type === 'date_range' || item.validity_type === 'date_time_range') && (
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        <FormField label="Fecha Inicio" required error={getItemError(index, 'valid_from')}>
-                                            <Input
-                                                type="date"
-                                                value={item.valid_from}
-                                                onChange={(e) => updateItem(item.id, 'valid_from', e.target.value)}
-                                                required
-                                            />
-                                        </FormField>
-
-                                        <FormField label="Fecha Fin" required error={getItemError(index, 'valid_until')}>
-                                            <Input
-                                                type="date"
-                                                value={item.valid_until}
-                                                onChange={(e) => updateItem(item.id, 'valid_until', e.target.value)}
-                                                required
-                                            />
-                                        </FormField>
+                                </SelectItem>
+                                <SelectItem value="delivery_only">
+                                    <div className="flex items-center gap-2">
+                                        <Truck className="h-4 w-4" />
+                                        <span>Solo Delivery</span>
                                     </div>
-                                )}
-
-                                {(item.validity_type === 'time_range' || item.validity_type === 'date_time_range') && (
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        <FormField label="Hora Inicio" required error={getItemError(index, 'time_from')}>
-                                            <Input
-                                                type="time"
-                                                value={item.time_from}
-                                                onChange={(e) => updateItem(item.id, 'time_from', e.target.value)}
-                                                required
-                                            />
-                                        </FormField>
-
-                                        <FormField label="Hora Fin" required error={getItemError(index, 'time_until')}>
-                                            <Input
-                                                type="time"
-                                                value={item.time_until}
-                                                onChange={(e) => updateItem(item.id, 'time_until', e.target.value)}
-                                                required
-                                            />
-                                        </FormField>
+                                </SelectItem>
+                                <SelectItem value="pickup_only">
+                                    <div className="flex items-center gap-2">
+                                        <Store className="h-4 w-4" />
+                                        <span>Solo Pickup</span>
                                     </div>
-                                )}
-                            </div>
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </FormField>
+
+                    <FormField label="Vigencia" required error={errors.validity_type}>
+                        <Select value={data.validity_type} onValueChange={(value) => setData('validity_type', value as typeof data.validity_type)}>
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="permanent">Permanente</SelectItem>
+                                <SelectItem value="date_range">Rango de Fechas</SelectItem>
+                                <SelectItem value="time_range">Rango de Horario</SelectItem>
+                                <SelectItem value="date_time_range">Fechas + Horario</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </FormField>
+
+                    {(data.validity_type === 'date_range' || data.validity_type === 'date_time_range') && (
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <FormField label="Fecha Inicio" required error={errors.valid_from}>
+                                <Input type="date" value={data.valid_from} onChange={(e) => setData('valid_from', e.target.value)} required />
+                            </FormField>
+
+                            <FormField label="Fecha Fin" required error={errors.valid_until}>
+                                <Input type="date" value={data.valid_until} onChange={(e) => setData('valid_until', e.target.value)} required />
+                            </FormField>
                         </div>
-                    ))}
+                    )}
+
+                    {(data.validity_type === 'time_range' || data.validity_type === 'date_time_range') && (
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <FormField label="Hora Inicio" required error={errors.time_from}>
+                                <Input type="time" value={data.time_from} onChange={(e) => setData('time_from', e.target.value)} required />
+                            </FormField>
+
+                            <FormField label="Hora Fin" required error={errors.time_until}>
+                                <Input type="time" value={data.time_until} onChange={(e) => setData('time_until', e.target.value)} required />
+                            </FormField>
+                        </div>
+                    )}
+                </div>
+            </FormSection>
+
+            <FormSection icon={Banknote} title="Items de la Promoción">
+                <div className="space-y-6">
+                    {localItems.map((item, index) => {
+                        const excludedVariantIds = localItems
+                            .filter((i) => i.id !== item.id && i.variant_id !== null)
+                            .map((i) => i.variant_id!);
+
+                        return (
+                            <div key={item.id} ref={index === localItems.length - 1 ? lastItemRef : null}>
+                                <PromotionItemEditor
+                                    item={item}
+                                    index={index}
+                                    categories={categories}
+                                    products={products}
+                                    onUpdate={updateItem}
+                                    onRemove={removeItem}
+                                    canRemove={localItems.length > 1}
+                                    getItemError={getItemError}
+                                    excludedVariantIds={excludedVariantIds}
+                                />
+                            </div>
+                        );
+                    })}
 
                     <Button type="button" variant="outline" onClick={addItem} className="w-full">
                         <Plus className="mr-2 h-4 w-4" />
-                        Agregar producto
+                        Agregar Item
                     </Button>
                 </div>
             </FormSection>
+
+            <ConfirmationDialog
+                open={confirmDialog.open}
+                onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}
+                title={confirmDialog.title}
+                description={confirmDialog.description}
+                confirmLabel="Cambiar"
+                cancelLabel="Cancelar"
+                onConfirm={confirmDialog.onConfirm}
+                onCancel={confirmDialog.onCancel}
+            />
         </CreatePageLayout>
     );
 }

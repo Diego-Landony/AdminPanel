@@ -32,7 +32,7 @@ return new class extends Migration
             $table->id();
 
             // Información básica
-            $table->string('full_name');
+            $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
@@ -46,7 +46,6 @@ return new class extends Migration
             // Información de contacto
             $table->string('phone')->nullable();
             $table->text('address')->nullable();
-            $table->string('location')->nullable();
             $table->string('nit')->nullable();
 
             // Tokens y sesiones
@@ -59,8 +58,8 @@ return new class extends Migration
             $table->timestamp('last_purchase_at')->nullable();
 
             // Sistema de puntos
-            $table->integer('puntos')->default(0);
-            $table->timestamp('puntos_updated_at')->nullable();
+            $table->integer('points')->default(0);
+            $table->timestamp('points_updated_at')->nullable();
 
             // Configuración
             $table->string('timezone')->default('America/Guatemala');

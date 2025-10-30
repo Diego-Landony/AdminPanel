@@ -41,11 +41,7 @@ class StorePromotionRequest extends FormRequest
                     }
                 },
             ],
-            'items.*.category_id' => [
-                'required_if:type,two_for_one',
-                'nullable',
-                'exists:categories,id',
-            ],
+            'items.*.category_id' => 'required|exists:categories,id',
 
             // Para Sub del Día - Campos a nivel de item
             'items.*.special_price_capital' => 'required_if:type,daily_special|nullable|numeric|min:0',
@@ -160,6 +156,51 @@ class StorePromotionRequest extends FormRequest
 
                     return;
                 }
+            }
+        }
+    }
+
+    /**
+     * Validación adicional después de las reglas básicas
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $this->validateNoDuplicateProductVariantCombinations($validator);
+        });
+    }
+
+    /**
+     * Validar que no haya combinaciones (product_id, variant_id) duplicadas
+     */
+    protected function validateNoDuplicateProductVariantCombinations($validator): void
+    {
+        $items = $this->input('items', []);
+        $combinations = [];
+        $duplicates = [];
+
+        foreach ($items as $index => $item) {
+            if (! isset($item['product_id'])) {
+                continue;
+            }
+
+            $productId = $item['product_id'];
+            $variantId = $item['variant_id'] ?? 'null';
+            $key = "{$productId}_{$variantId}";
+
+            if (in_array($key, $combinations)) {
+                $duplicates[$index] = $key;
+            } else {
+                $combinations[] = $key;
+            }
+        }
+
+        if (count($duplicates) > 0) {
+            foreach ($duplicates as $index => $key) {
+                $validator->errors()->add(
+                    "items.{$index}.product_id",
+                    'Esta combinación de producto y variante ya existe en otro item de la promoción.'
+                );
             }
         }
     }

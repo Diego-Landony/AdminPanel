@@ -67,6 +67,25 @@ return new class extends Migration
                 $table->index(['combo_id', 'is_choice_group'], 'idx_combo_choice_group');
             });
         }
+
+        // Crear tabla combo_item_options (para grupos de elección)
+        if (! Schema::hasTable('combo_item_options')) {
+            Schema::create('combo_item_options', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('combo_item_id')->constrained('combo_items')->onDelete('cascade');
+                $table->foreignId('product_id')->constrained('products')->onDelete('restrict');
+                $table->foreignId('variant_id')->nullable()->constrained('product_variants')->onDelete('restrict');
+                $table->integer('sort_order')->default(0);
+                $table->timestamps();
+
+                $table->index('combo_item_id', 'idx_combo_item');
+                $table->index('product_id', 'idx_product');
+                $table->index('variant_id', 'idx_variant');
+                $table->index('sort_order', 'idx_sort_order');
+
+                $table->unique(['combo_item_id', 'product_id', 'variant_id'], 'unique_option');
+            });
+        }
     }
 
     /**
@@ -74,6 +93,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('combo_item_options');
         Schema::dropIfExists('combo_items');
         Schema::dropIfExists('combos');
 

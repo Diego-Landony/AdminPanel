@@ -252,9 +252,8 @@ class PromotionController extends Controller
                     $query->select(['id', 'product_id', 'name', 'size', 'precio_pickup_capital', 'precio_pickup_interior'])
                         ->orderBy('sort_order');
                 }])
-                ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name', 'category_id', 'has_variants']),
+                ->get(['id', 'name', 'category_id', 'has_variants', 'is_active']),
             'categories' => Category::query()
                 ->where('is_active', true)
                 ->orderBy('name')
@@ -475,6 +474,13 @@ class PromotionController extends Controller
     public function createTwoForOne(): Response
     {
         return Inertia::render('menu/promotions/two-for-one/create', [
+            'products' => Product::query()
+                ->with(['category:id,name', 'variants' => function ($query) {
+                    $query->select(['id', 'product_id', 'name', 'size', 'precio_pickup_capital', 'precio_pickup_interior'])
+                        ->orderBy('sort_order');
+                }])
+                ->orderBy('name')
+                ->get(['id', 'name', 'category_id', 'has_variants', 'is_active']),
             'categories' => Category::query()
                 ->where('is_active', true)
                 ->orderBy('name')
@@ -501,9 +507,8 @@ class PromotionController extends Controller
                     $query->select(['id', 'product_id', 'name', 'size', 'precio_pickup_capital', 'precio_pickup_interior'])
                         ->orderBy('sort_order');
                 }])
-                ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name', 'category_id', 'has_variants']),
+                ->get(['id', 'name', 'category_id', 'has_variants', 'is_active']),
             'categories' => Category::query()
                 ->where('is_active', true)
                 ->orderBy('name')

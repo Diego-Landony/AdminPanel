@@ -1,9 +1,13 @@
-import { CURRENCY, PLACEHOLDERS } from '@/constants/ui-constants';
+import { showNotification } from '@/hooks/useNotifications';
 import { router } from '@inertiajs/react';
 import { Calendar, Plus, Store, Trash2, Truck } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+
+import { CURRENCY, NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
 import { ProductCombobox } from '@/components/ProductCombobox';
+import { ConfirmationDialog } from '@/components/promotions/ConfirmationDialog';
+import { VariantSelector } from '@/components/promotions/VariantSelector';
 import { WeekdaySelector } from '@/components/WeekdaySelector';
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
@@ -75,12 +79,12 @@ interface EditPromotionPageProps {
 interface LocalItem {
     id: string;
     product_id: string;
-    variant_ids: string[]; // Changed from variant_id to support multiple variants
+    variant_id: number | null;
     special_price_capital: string;
     special_price_interior: string;
     service_type: 'both' | 'delivery_only' | 'pickup_only';
-    weekdays: number[]; // Siempre requerido
-    has_schedule: boolean; // Indica si tiene programación adicional
+    weekdays: number[];
+    has_schedule: boolean;
     valid_from: string;
     valid_until: string;
     time_from: string;
@@ -103,12 +107,12 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
             return {
                 id: generateUniqueId(),
                 product_id: item.product_id ? String(item.product_id) : '',
-                variant_ids: item.variant_id ? [String(item.variant_id)] : [], // Convert single variant to array
+                variant_id: item.variant_id,
                 special_price_capital: String(item.special_price_capital || ''),
                 special_price_interior: String(item.special_price_interior || ''),
                 service_type: item.service_type || 'both',
                 weekdays: item.weekdays || [],
-                has_schedule: hasDates || hasTimes, // Detectar si ya tiene programación
+                has_schedule: hasDates || hasTimes,
                 valid_from: item.valid_from || '',
                 valid_until: item.valid_until || '',
                 time_from: item.time_from || '',
@@ -120,11 +124,38 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [processing, setProcessing] = useState(false);
 
+    const [confirmDialog, setConfirmDialog] = useState<{
+        open: boolean;
+        title: string;
+        description: string;
+        onConfirm: () => void;
+        onCancel: () => void;
+    }>({
+        open: false,
+        title: '',
+        description: '',
+        onConfirm: () => {},
+        onCancel: () => {},
+    });
+
+    const lastItemRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (Object.keys(errors).length > 0) {
+            const firstErrorKey = Object.keys(errors)[0];
+            const errorElement = document.querySelector(`[name="${firstErrorKey}"]`) || document.querySelector(`[data-error="${firstErrorKey}"]`);
+
+            if (errorElement) {
+                errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }, [errors]);
+
     const addItem = () => {
         const newItem: LocalItem = {
             id: generateUniqueId(),
             product_id: '',
-            variant_ids: [], // Changed from variant_id to variant_ids
+            variant_id: null,
             special_price_capital: '',
             special_price_interior: '',
             service_type: 'both',
@@ -136,13 +167,49 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
             time_until: '',
         };
         setLocalItems([...localItems, newItem]);
+
+        setTimeout(() => {
+            lastItemRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
     };
 
     const removeItem = (index: number) => {
+        if (localItems.length === 1) {
+            showNotification.error(NOTIFICATIONS.error.minItemRequired);
+            return;
+        }
         setLocalItems(localItems.filter((_, i) => i !== index));
     };
 
-    const updateItem = (index: number, field: keyof Omit<LocalItem, 'id'>, value: string | number | number[] | boolean) => {
+    const updateItem = (index: number, field: keyof Omit<LocalItem, 'id'>, value: string | number | number[] | boolean | null) => {
+        const currentItem = localItems[index];
+
+        if (field === 'product_id' && value !== currentItem.product_id) {
+            const hasData = currentItem.variant_id || currentItem.special_price_capital || currentItem.special_price_interior;
+
+            if (hasData) {
+                setConfirmDialog({
+                    open: true,
+                    title: '¿Cambiar de producto?',
+                    description: 'Se perderán la variante y precios seleccionados si continúas.',
+                    onConfirm: () => {
+                        const updated = [...localItems];
+                        updated[index] = {
+                            ...updated[index],
+                            product_id: value as string,
+                            variant_id: null,
+                            special_price_capital: '',
+                            special_price_interior: '',
+                        };
+                        setLocalItems(updated);
+                        setConfirmDialog({ ...confirmDialog, open: false });
+                    },
+                    onCancel: () => setConfirmDialog({ ...confirmDialog, open: false }),
+                });
+                return;
+            }
+        }
+
         const updated = [...localItems];
         updated[index] = { ...updated[index], [field]: value };
         setLocalItems(updated);
@@ -152,39 +219,10 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
         e.preventDefault();
         setProcessing(true);
 
-        // Expandir cada item con variant_ids a múltiples items (uno por variante)
-        const expandedItems = localItems.flatMap(({ id: _id, has_schedule: _has_schedule, variant_ids, ...rest }: LocalItem) => {
-            // Si tiene variantes seleccionadas, crear un item por cada variante
-            if (variant_ids.length > 0) {
-                return variant_ids.map((variant_id) => {
-                    // Calcular validity_type automáticamente basado en los campos
-                    const hasDates = rest.valid_from || rest.valid_until;
-                    const hasTimes = rest.time_from || rest.time_until;
-
-                    let validity_type;
-                    if (hasDates && hasTimes) {
-                        validity_type = 'date_time_range';
-                    } else if (hasDates) {
-                        validity_type = 'date_range';
-                    } else if (hasTimes) {
-                        validity_type = 'time_range';
-                    } else {
-                        validity_type = 'weekdays';
-                    }
-
-                    return {
-                        ...rest,
-                        variant_id: variant_id,
-                        validity_type,
-                        special_price_capital: parseFloat(rest.special_price_capital) || 0,
-                        special_price_interior: parseFloat(rest.special_price_interior) || 0,
-                    };
-                });
-            }
-
-            // Si no tiene variantes (producto simple), crear un solo item
-            const hasDates = rest.valid_from || rest.valid_until;
-            const hasTimes = rest.time_from || rest.time_until;
+        const expandedItems = localItems.map(({ id: _id, has_schedule: _has_schedule, ...item }) => {
+            const product = products.find((p) => p.id === Number(item.product_id));
+            const hasDates = item.valid_from || item.valid_until;
+            const hasTimes = item.time_from || item.time_until;
 
             let validity_type;
             if (hasDates && hasTimes) {
@@ -197,15 +235,13 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
                 validity_type = 'weekdays';
             }
 
-            return [
-                {
-                    ...rest,
-                    variant_id: null,
-                    validity_type,
-                    special_price_capital: parseFloat(rest.special_price_capital) || 0,
-                    special_price_interior: parseFloat(rest.special_price_interior) || 0,
-                },
-            ];
+            return {
+                ...item,
+                category_id: product?.category_id || 0,
+                validity_type,
+                special_price_capital: parseFloat(item.special_price_capital) || 0,
+                special_price_interior: parseFloat(item.special_price_interior) || 0,
+            };
         });
 
         const submitData = {
@@ -272,78 +308,53 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
             {/* PRODUCTOS */}
             <FormSection title="Productos">
                 <div className="space-y-4">
-                    {localItems.map((item, index) => (
-                        <div key={item.id} className="relative space-y-4 rounded-lg border border-border p-4">
-                            {/* Header */}
-                            <div className="mb-2 flex items-center justify-between">
-                                <h4 className="text-sm font-medium">Producto {index + 1}</h4>
-                                {localItems.length > 1 && (
-                                    <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)}>
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                    </Button>
+                    {localItems.map((item, index) => {
+                        const selectedProduct = item.product_id ? products.find((p) => p.id === Number(item.product_id)) : null;
+                        const hasVariants = selectedProduct?.variants && selectedProduct.variants.length > 0;
+
+                        const excludedVariantIds = localItems
+                            .filter((i, idx) => idx !== index && i.product_id === item.product_id && i.variant_id !== null)
+                            .map((i) => i.variant_id!);
+
+                        return (
+                            <div
+                                key={item.id}
+                                ref={index === localItems.length - 1 ? lastItemRef : null}
+                                className="relative space-y-4 rounded-lg border border-border p-4"
+                            >
+                                <div className="mb-2 flex items-center justify-between">
+                                    <h4 className="text-sm font-medium">Producto {index + 1}</h4>
+                                    {localItems.length > 1 && (
+                                        <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)}>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                    )}
+                                </div>
+
+                                <ProductCombobox
+                                    label="Producto"
+                                    value={item.product_id ? Number(item.product_id) : null}
+                                    onChange={(value) => updateItem(index, 'product_id', value ? String(value) : '')}
+                                    products={products.filter((product) => {
+                                        if (!product.variants || product.variants.length === 0) {
+                                            return !localItems.some((i, idx) => idx !== index && i.product_id === String(product.id));
+                                        }
+                                        return true;
+                                    })}
+                                    placeholder={PLACEHOLDERS.selectProduct}
+                                    error={errors[`items.${index}.product_id`]}
+                                    required
+                                />
+
+                                {hasVariants && (
+                                    <VariantSelector
+                                        variants={selectedProduct.variants!.filter((v) => !excludedVariantIds.includes(v.id))}
+                                        value={item.variant_id}
+                                        onChange={(variantId) => updateItem(index, 'variant_id', variantId)}
+                                        error={errors[`items.${index}.variant_id`]}
+                                        required
+                                    />
                                 )}
-                            </div>
-
-                            {/* Producto */}
-                            <ProductCombobox
-                                label="Producto"
-                                value={item.product_id ? Number(item.product_id) : null}
-                                onChange={(value) => {
-                                    // Actualizar product_id y resetear variant_ids en una sola operación
-                                    const updated = [...localItems];
-                                    updated[index] = {
-                                        ...updated[index],
-                                        product_id: value ? String(value) : '',
-                                        variant_ids: [], // Resetear variantes cuando cambia el producto
-                                    };
-                                    setLocalItems(updated);
-                                }}
-                                products={products.filter((product) => {
-                                    // Si el producto NO tiene variantes, eliminar si ya está en uso
-                                    if (!product.has_variants) {
-                                        return !localItems.some((i, idx) => idx !== index && i.product_id === String(product.id));
-                                    }
-                                    // Si el producto TIENE variantes, siempre permitir
-                                    return true;
-                                })}
-                                placeholder={PLACEHOLDERS.selectProduct}
-                                error={errors[`items.${index}.product_id`]}
-                                required
-                            />
-
-                            {/* Selector de Variantes */}
-                            {item.product_id &&
-                                (() => {
-                                    const selectedProduct = products.find((p) => p.id === Number(item.product_id));
-                                    const hasVariants =
-                                        selectedProduct?.has_variants && selectedProduct?.variants && selectedProduct.variants.length > 0;
-
-                                    if (!hasVariants) return null;
-
-                                    return (
-                                        <FormField label="Variante" error={errors[`items.${index}.variant_ids`]} required>
-                                            <Select
-                                                value={item.variant_ids[0] || ''}
-                                                onValueChange={(value) => {
-                                                    const updated = [...localItems];
-                                                    updated[index] = { ...updated[index], variant_ids: [value] };
-                                                    setLocalItems(updated);
-                                                }}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Selecciona una variante" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {selectedProduct.variants?.map((variant) => (
-                                                        <SelectItem key={variant.id} value={variant.id.toString()}>
-                                                            {variant.name} {variant.size && `- ${variant.size}`}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </FormField>
-                                    );
-                                })()}
 
                             {/* Precios */}
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -492,15 +503,26 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
                                 )}
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
 
-                    {/* Botón agregar */}
                     <Button type="button" variant="outline" onClick={addItem} className="w-full">
                         <Plus className="mr-2 h-4 w-4" />
                         Agregar otro producto
                     </Button>
                 </div>
             </FormSection>
+
+            <ConfirmationDialog
+                open={confirmDialog.open}
+                onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}
+                title={confirmDialog.title}
+                description={confirmDialog.description}
+                confirmLabel="Cambiar"
+                cancelLabel="Cancelar"
+                onConfirm={confirmDialog.onConfirm}
+                onCancel={confirmDialog.onCancel}
+            />
         </EditPageLayout>
     );
 }

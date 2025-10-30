@@ -2,7 +2,7 @@ import { showNotification } from '@/hooks/useNotifications';
 import { closestCenter, DndContext, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { CategoryCombobox } from '@/components/CategoryCombobox';
 import { ComboItemCard } from '@/components/combos/ComboItemCard';
@@ -33,6 +33,7 @@ interface Product {
     id: number;
     name: string;
     has_variants: boolean;
+    is_active: boolean;
     variants?: ProductVariant[];
     category?: {
         id: number;
@@ -83,6 +84,21 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
     });
 
     const [localItems, setLocalItems] = useState<ComboItem[]>([]);
+
+    const hasInactiveProducts = useMemo(() => {
+        return localItems.some((item) => {
+            if (item.is_choice_group && item.options) {
+                return item.options.some((option) => {
+                    const product = products.find((p) => p.id === option.product_id);
+                    return product && !product.is_active;
+                });
+            } else if (item.product_id) {
+                const product = products.find((p) => p.id === item.product_id);
+                return product && !product.is_active;
+            }
+            return false;
+        });
+    }, [localItems, products]);
 
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -216,6 +232,14 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
                     error={errors.image}
                 />
             </FormSection>
+
+            {hasInactiveProducts && (
+                <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                        ⚠ Advertencia: Este combo tiene productos inactivos seleccionados. El combo no estará disponible para los clientes hasta que se activen todos los productos.
+                    </p>
+                </div>
+            )}
 
             <FormSection icon={Banknote} title="Precios del Combo" description="Define el precio del combo completo" className="mt-8">
                 <PriceFields

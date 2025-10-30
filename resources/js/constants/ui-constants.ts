@@ -109,6 +109,7 @@ export const NOTIFICATIONS = {
         choiceGroupLabelRequired: 'La etiqueta del grupo es obligatoria',
         choiceGroupOptionsRequired: 'Cada grupo debe tener al menos 2 opciones',
         fixedItemProductRequired: 'Los items fijos deben tener un producto seleccionado',
+        minItemRequired: 'Debe haber al menos 1 item en la promoción',
     },
     warning: {
         inactiveOptionsDetected: 'El grupo tiene opciones inactivas',

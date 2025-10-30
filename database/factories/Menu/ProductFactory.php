@@ -23,6 +23,7 @@ class ProductFactory extends Factory
             'is_active' => true,
             'sort_order' => fake()->numberBetween(0, 100),
             'has_variants' => false,
+            'category_id' => \App\Models\Menu\Category::factory(),
         ];
     }
 

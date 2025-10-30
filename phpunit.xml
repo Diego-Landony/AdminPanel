@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
+         bootstrap="tests/bootstrap.php"
          colors="true"
 >
     <testsuites>
@@ -24,6 +24,11 @@
         <env name="CACHE_STORE" value="array"/>
         <env name="DB_CONNECTION" value="mariadb_testing"/>
         <env name="DB_DATABASE" value="subwayapp_test"/>
+        <env name="DB_TEST_HOST" value="127.0.0.1"/>
+        <env name="DB_TEST_PORT" value="3306"/>
+        <env name="DB_TEST_DATABASE" value="subwayapp_test"/>
+        <env name="DB_TEST_USERNAME" value="lima"/>
+        <env name="DB_TEST_PASSWORD" value="lima"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>

@@ -70,9 +70,8 @@ class ComboController extends Controller
                             ->select('id', 'product_id', 'name', 'size', 'precio_pickup_capital');
                     },
                 ])
-                ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name', 'category_id', 'has_variants']),
+                ->get(['id', 'name', 'category_id', 'has_variants', 'is_active']),
             'categories' => Category::query()
                 ->where('is_active', true)
                 ->where('is_combo_category', true)
@@ -173,9 +172,8 @@ class ComboController extends Controller
                             ->select('id', 'product_id', 'name', 'size', 'precio_pickup_capital');
                     },
                 ])
-                ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name', 'category_id', 'has_variants']),
+                ->get(['id', 'name', 'category_id', 'has_variants', 'is_active']),
             'categories' => Category::query()
                 ->where('is_active', true)
                 ->where('is_combo_category', true)

@@ -11,6 +11,7 @@ interface Product {
     id: number;
     name: string;
     has_variants: boolean;
+    is_active: boolean;
     variants?: ProductVariant[];
     category?: {
         id: number;
@@ -102,6 +103,14 @@ export function ProductSelectorModal({ isOpen, onClose, onSelect, products, excl
                                     ))}
                                 </SelectContent>
                             </Select>
+                        </div>
+                    )}
+
+                    {selectedProduct && !selectedProduct.is_active && (
+                        <div className="rounded-md bg-amber-50 p-3 dark:bg-amber-950/20">
+                            <p className="text-sm text-amber-800 dark:text-amber-200">
+                                ⚠ Producto inactivo seleccionado. El combo no estará disponible para los clientes hasta que se active este producto.
+                            </p>
                         </div>
                     )}
 

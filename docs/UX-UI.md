@@ -1309,7 +1309,7 @@ loadingSkeleton={CreateCategoriesSkeleton}
 
 ### Index Page (Listado)
 
-- [ ] Determinar tipo de tabla: DataTable, SortableTable, o GroupedSortableTable
+- [ ] Determinar tipo de tabla: DataTable, SortableTable, o GroupedSortableTable u otro.
 - [ ] Implementar columnas con `width`, `sortable`, `textAlign`
 - [ ] Configurar stats con iconos y colores semánticos
 - [ ] Crear `renderMobileCard` con `StandardMobileCard`

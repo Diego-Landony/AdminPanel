@@ -322,17 +322,8 @@ return new class extends Migration
                 $table->unique(['promotion_id', 'category_id'], 'unique_promo_category');
             });
 
-            // Agregar constraint check para promotion_items (solo uno de product/variant/category)
-            // Usar try-catch para evitar errores si la tabla no existe
-            try {
-                DB::statement('ALTER TABLE promotion_items ADD CONSTRAINT check_product_variant_or_category CHECK (
-                    (product_id IS NOT NULL AND variant_id IS NULL AND category_id IS NULL) OR
-                    (product_id IS NULL AND variant_id IS NOT NULL AND category_id IS NULL) OR
-                    (product_id IS NULL AND variant_id IS NULL AND category_id IS NOT NULL)
-                )');
-            } catch (\Exception $e) {
-                // Constraint ya existe o tabla no existe, continuar
-            }
+            // NOTE: El constraint check se agrega en la migración de consolidación
+            // para permitir la lógica correcta de category_id siempre requerido
         }
 
         // Crear usuario de test admin@test.com con contraseña admintest

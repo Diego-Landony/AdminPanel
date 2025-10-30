@@ -1,6 +1,7 @@
 import { Check, ChevronsUpDown } from 'lucide-react';
 import * as React from 'react';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
@@ -10,6 +11,7 @@ import { VisuallyHidden } from '@/components/ui/visually-hidden';
 interface Product {
     id: number;
     name: string;
+    is_active: boolean;
     category?: {
         id: number;
         name: string;
@@ -89,8 +91,11 @@ export function ProductCombobox({
                     onClick={() => setOpen(!open)}
                 >
                     {selectedProduct ? (
-                        <span className="truncate">
-                            {selectedProduct.name}
+                        <span className="flex items-center gap-2 truncate">
+                            <span className="truncate">{selectedProduct.name}</span>
+                            <Badge variant={selectedProduct.is_active ? 'default' : 'secondary'} className="shrink-0">
+                                {selectedProduct.is_active ? 'Activo' : 'Inactivo'}
+                            </Badge>
                             {selectedProduct.category && <span className="ml-2 text-muted-foreground">({selectedProduct.category.name})</span>}
                         </span>
                     ) : (
@@ -121,9 +126,14 @@ export function ProductCombobox({
                                             }}
                                         >
                                             <Check className={`mr-2 h-4 w-4 ${product.id === value ? 'opacity-100' : 'opacity-0'}`} />
-                                            <div className="flex flex-col">
-                                                <span>{product.name}</span>
-                                                {product.category && <span className="text-xs text-muted-foreground">{product.category.name}</span>}
+                                            <div className="flex flex-1 items-center justify-between gap-2">
+                                                <div className="flex flex-col">
+                                                    <span>{product.name}</span>
+                                                    {product.category && <span className="text-xs text-muted-foreground">{product.category.name}</span>}
+                                                </div>
+                                                <Badge variant={product.is_active ? 'default' : 'secondary'} className="shrink-0">
+                                                    {product.is_active ? 'Activo' : 'Inactivo'}
+                                                </Badge>
                                             </div>
                                         </CommandItem>
                                     ))}

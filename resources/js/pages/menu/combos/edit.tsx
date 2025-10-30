@@ -1,7 +1,7 @@
 import { closestCenter, DndContext, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { CategoryCombobox } from '@/components/CategoryCombobox';
 import { ComboItemCard } from '@/components/combos/ComboItemCard';
@@ -10,7 +10,6 @@ import { FormSection } from '@/components/form-section';
 import { ImageUpload } from '@/components/ImageUpload';
 import { PriceFields } from '@/components/PriceFields';
 import { EditProductsSkeleton } from '@/components/skeletons';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
@@ -32,6 +31,7 @@ interface Product {
     id: number;
     name: string;
     has_variants: boolean;
+    is_active: boolean;
     variants?: ProductVariant[];
     category?: {
         id: number;
@@ -71,6 +71,7 @@ interface ComboItem {
     product?: {
         id: number;
         name: string;
+        is_active: boolean;
     } | null;
     variant?: {
         id: number;
@@ -231,17 +232,37 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
         );
     };
 
-    // Detect inactive options in choice groups
-    const inactiveOptions = combo.items
-        .filter((item) => item.is_choice_group)
-        .flatMap((item) =>
-            (item.options || [])
-                .filter((opt) => opt.product && !opt.product.is_active)
-                .map((opt) => ({
-                    groupLabel: item.choice_label || 'Grupo sin nombre',
-                    productName: opt.product?.name || 'Producto desconocido',
-                })),
-        );
+    // Detect inactive products in both fixed items and choice groups
+    const inactiveItems = useMemo(() => {
+        const inactive: Array<{ type: 'fixed' | 'choice'; productName: string; groupLabel?: string }> = [];
+
+        localItems.forEach((item) => {
+            if (item.is_choice_group && item.options) {
+                // Check choice group options
+                item.options.forEach((option) => {
+                    const product = products.find((p) => p.id === option.product_id);
+                    if (product && !product.is_active) {
+                        inactive.push({
+                            type: 'choice',
+                            productName: product.name,
+                            groupLabel: item.choice_label || 'Grupo sin nombre',
+                        });
+                    }
+                });
+            } else if (item.product_id) {
+                // Check fixed items
+                const product = products.find((p) => p.id === item.product_id);
+                if (product && !product.is_active) {
+                    inactive.push({
+                        type: 'fixed',
+                        productName: product.name,
+                    });
+                }
+            }
+        });
+
+        return inactive;
+    }, [localItems, products]);
 
     return (
         <EditPageLayout
@@ -256,23 +277,32 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
             loading={false}
             loadingSkeleton={EditProductsSkeleton}
         >
-            {inactiveOptions.length > 0 && (
-                <Alert variant="warning" className="mb-6">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Opciones Inactivas Detectadas</AlertTitle>
-                    <AlertDescription>
-                        Algunos grupos tienen productos inactivos que no estarán disponibles para los clientes:
-                        <ul className="mt-2 list-inside list-disc space-y-1">
-                            {inactiveOptions.map((opt, index) => (
-                                <li key={index}>
-                                    <span className="font-medium">{opt.productName}</span>
-                                    {' en '}
-                                    <span className="text-muted-foreground">{opt.groupLabel}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </AlertDescription>
-                </Alert>
+            {inactiveItems.length > 0 && (
+                <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
+                    <div className="flex gap-3">
+                        <AlertCircle className="h-5 w-5 text-amber-800 dark:text-amber-200" />
+                        <div className="flex-1">
+                            <h3 className="font-semibold text-amber-800 dark:text-amber-200">Productos Inactivos Detectados</h3>
+                            <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">
+                                Este combo tiene productos inactivos que no estarán disponibles para los clientes:
+                            </p>
+                            <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-amber-800 dark:text-amber-200">
+                                {inactiveItems.map((item, index) => (
+                                    <li key={index}>
+                                        <span className="font-medium">{item.productName}</span>
+                                        {item.type === 'choice' && item.groupLabel && (
+                                            <>
+                                                {' en '}
+                                                <span className="opacity-80">{item.groupLabel}</span>
+                                            </>
+                                        )}
+                                        {item.type === 'fixed' && <span className="opacity-80"> (Item fijo)</span>}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             )}
 
             <FormSection icon={Package2} title="Información Básica" description="Datos principales del combo">

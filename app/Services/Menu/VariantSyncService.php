@@ -30,26 +30,33 @@ class VariantSyncService
             'removed' => [],
         ];
 
-        // Detectar variantes agregadas
-        $added = array_diff($newDefinitions, $oldDefinitions);
-        foreach ($added as $variantName) {
-            $this->addVariantToCategory($category, $variantName);
-            $changes['added'][] = $variantName;
-        }
-
-        // Detectar variantes eliminadas
-        $removed = array_diff($oldDefinitions, $newDefinitions);
-        foreach ($removed as $variantName) {
-            $this->removeVariant($category, $variantName);
-            $changes['removed'][] = $variantName;
-        }
-
-        // Detectar renombramientos (posición se mantiene pero nombre cambia)
+        // IMPORTANTE: Detectar renombramientos PRIMERO (antes de detectar eliminaciones)
+        // Esto previene que un renombramiento sea detectado como eliminación
         $renames = $this->detectRenames($oldDefinitions, $newDefinitions);
         foreach ($renames as $oldName => $newName) {
             $this->renameVariant($category, $oldName, $newName);
             $changes['renamed'][] = ['from' => $oldName, 'to' => $newName];
         }
+
+        // Detectar variantes agregadas (excluyendo las que son resultado de renombramientos)
+        $renamedTo = array_values($renames);
+        $added = array_diff($newDefinitions, $oldDefinitions, $renamedTo);
+        foreach ($added as $variantName) {
+            $this->addVariantToCategory($category, $variantName);
+            $changes['added'][] = $variantName;
+        }
+
+        // Detectar variantes eliminadas (excluyendo las que fueron renombradas)
+        $renamedFrom = array_keys($renames);
+        $removed = array_diff($oldDefinitions, $newDefinitions, $renamedFrom);
+        foreach ($removed as $variantName) {
+            $this->removeVariant($category, $variantName);
+            $changes['removed'][] = $variantName;
+        }
+
+        // Asegurar que todas las variantes en newDefinitions existen en todos los productos
+        // Esto cubre el caso donde productos fueron creados sin sus variantes iniciales
+        $this->ensureAllVariantsExist($category, $newDefinitions);
 
         return $changes;
     }
@@ -181,5 +188,39 @@ class VariantSyncService
         return ProductVariant::where('name', $variantName)
             ->whereHas('product', fn ($q) => $q->where('category_id', $category->id))
             ->count();
+    }
+
+    /**
+     * Asegura que todas las variantes especificadas existen en todos los productos de la categoría
+     * Si una variante no existe en un producto, la crea
+     *
+     * @param  array  $variantNames  Array de nombres de variantes que deben existir
+     */
+    protected function ensureAllVariantsExist(Category $category, array $variantNames): void
+    {
+        $products = Product::where('category_id', $category->id)->get();
+
+        foreach ($products as $product) {
+            $existingVariants = ProductVariant::where('product_id', $product->id)
+                ->pluck('name')
+                ->toArray();
+
+            $missingVariants = array_diff($variantNames, $existingVariants);
+
+            foreach ($missingVariants as $variantName) {
+                ProductVariant::create([
+                    'product_id' => $product->id,
+                    'sku' => 'PROD-'.$product->id.'-'.uniqid(),
+                    'name' => $variantName,
+                    'size' => $variantName,
+                    'precio_pickup_capital' => null,
+                    'precio_domicilio_capital' => null,
+                    'precio_pickup_interior' => null,
+                    'precio_domicilio_interior' => null,
+                    'is_active' => false,
+                    'sort_order' => 999,
+                ]);
+            }
+        }
     }
 }

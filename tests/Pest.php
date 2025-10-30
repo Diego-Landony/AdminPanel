@@ -15,8 +15,9 @@ pest()->extend(Tests\TestCase::class)
     ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
     ->in('Feature');
 
-// Unit tests also need the application context but without database refreshing
+// Unit tests also need the application context and RefreshDatabase to use test database
 pest()->extend(Tests\TestCase::class)
+    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
     ->in('Unit');
 
 // Cargar helpers de tests

@@ -4,6 +4,25 @@
 
 ---
 
+## Tecnologías
+
+**Backend:**
+- Laravel 12
+- PHP 8.4
+- MariaDB
+
+**Frontend Web (Panel Admin):**
+- React 19
+- Inertia.js v2
+- TypeScript
+- Tailwind CSS v4
+
+**App Móvil tecnologías que usará:**
+- React Native (mismo código para Android e iOS)
+- TypeScript
+
+---
+
 ## Acceso al Sistema
 
 **URL:** admin.subwaycardgt.com

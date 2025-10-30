@@ -128,7 +128,7 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
         setData('items', updated);
     };
 
-    const updateItem = (index: number, field: string, value: any) => {
+    const updateItem = (index: number, field: string, value: string | number | boolean | ChoiceOption[] | null) => {
         const updated = [...localItems];
         updated[index] = { ...updated[index], [field]: value };
         setLocalItems(updated);

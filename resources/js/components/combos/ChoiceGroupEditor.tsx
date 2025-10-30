@@ -16,8 +16,10 @@ interface Product {
     id: number;
     name: string;
     has_variants: boolean;
+    is_active: boolean;
     variants?: ProductVariant[];
     category?: {
+        id: number;
         name: string;
     };
 }
@@ -101,8 +103,6 @@ export function ChoiceGroupEditor({ label, options, onLabelChange, onOptionsChan
         productId: opt.product_id,
         variantId: opt.variant_id || null,
     }));
-
-    const hasMinOptions = options.length >= 2;
 
     return (
         <div className="space-y-4">

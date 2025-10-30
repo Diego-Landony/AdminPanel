@@ -30,7 +30,7 @@ export default function CategoryCreate() {
         if (!data.uses_variants && data.variant_definitions.length > 0) {
             setData('variant_definitions', []);
         }
-    }, [data.uses_variants]);
+    }, [data.uses_variants, data.variant_definitions.length, setData]);
 
     /**
      * Maneja el envío del formulario

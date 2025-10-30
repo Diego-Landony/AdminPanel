@@ -72,7 +72,7 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
             setSelectedCategory(null);
             setData('has_variants', false);
         }
-    }, [data.category_id]);
+    }, [data.category_id, categories, setData]);
 
     const handleCategoryChange = (value: number | null) => {
         setData('category_id', value ? String(value) : '');
@@ -97,7 +97,7 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
         const submitData = {
             ...data,
             sections: selectedSections,
-            variants: data.has_variants ? data.variants.filter((v) => v.is_active).map(({ is_active, ...rest }) => rest) : [],
+            variants: data.has_variants ? data.variants.filter((v) => v.is_active).map(({ is_active: _is_active, ...rest }) => rest) : [],
         };
 
         post(route('menu.products.store'), {

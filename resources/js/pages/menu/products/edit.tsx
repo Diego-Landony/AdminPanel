@@ -116,7 +116,7 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
             setSelectedCategory(null);
             setFormData((prev) => ({ ...prev, has_variants: false }));
         }
-    }, [formData.category_id]);
+    }, [formData.category_id, categories]);
 
     const handleInputChange = (field: keyof FormData, value: string | boolean | VariantData[]) => {
         setFormData((prev) => ({
@@ -152,7 +152,7 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
         const submitData = {
             ...formData,
             sections: selectedSections,
-            variants: formData.has_variants ? formData.variants.filter((v) => v.is_active).map(({ is_active, ...rest }) => rest) : [],
+            variants: formData.has_variants ? formData.variants.filter((v) => v.is_active).map(({ is_active: _is_active, ...rest }) => rest) : [],
         };
 
         router.put(`/menu/products/${product.id}`, submitData, {

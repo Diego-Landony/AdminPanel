@@ -48,7 +48,7 @@ interface ComboItemCardProps {
     item: ComboItem;
     index: number;
     products: Product[];
-    onUpdate: (field: string, value: any) => void;
+    onUpdate: (field: string, value: string | number | boolean | ChoiceOption[] | null) => void;
     onBatchUpdate?: (updates: Partial<ComboItem>) => void;
     onRemove: () => void;
     canDelete: boolean;

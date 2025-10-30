@@ -47,11 +47,21 @@ interface EditUserPageProps {
     all_roles: Role[];
 }
 
+interface AuthProps {
+    user?: {
+        id: number;
+    };
+}
+
+interface PageProps {
+    auth: AuthProps;
+}
+
 /**
  * Página para editar un usuario existente
  */
 export default function EditUser({ user, all_roles }: EditUserPageProps) {
-    const { auth } = usePage().props as any;
+    const { auth } = usePage<PageProps>().props;
     const [showPassword, setShowPassword] = useState(false);
     const [changePassword, setChangePassword] = useState(false);
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);

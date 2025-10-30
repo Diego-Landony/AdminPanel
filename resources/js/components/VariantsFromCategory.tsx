@@ -63,7 +63,7 @@ export function VariantsFromCategory({ categoryVariants, existingVariants = [], 
 
         setVariants(initializedVariants);
         onChange(initializedVariants);
-    }, [categoryVariants, existingVariants]);
+    }, [categoryVariants, existingVariants, onChange]);
 
     const updateVariant = (index: number, field: keyof VariantData, value: string | boolean) => {
         const updated = [...variants];

@@ -177,7 +177,11 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
         setLocalItems(localItems.filter((_, i) => i !== index));
     };
 
-    const updateItem = (index: number, field: string, value: any) => {
+    const updateItem = (
+        index: number,
+        field: string,
+        value: string | number | boolean | { id: string; product_id: number; variant_id?: number | null; sort_order: number }[] | null,
+    ) => {
         const updated = [...localItems];
         updated[index] = { ...updated[index], [field]: value };
         setLocalItems(updated);

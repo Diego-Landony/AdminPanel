@@ -162,10 +162,24 @@ export function countItemsByType(items: ComboItem[]): {
     };
 }
 
+interface PreparedComboItem {
+    is_choice_group: boolean;
+    quantity: number;
+    sort_order: number;
+    choice_label?: string | null;
+    product_id?: number | null;
+    variant_id?: number | null;
+    options?: Array<{
+        product_id: number;
+        variant_id?: number | null;
+        sort_order: number;
+    }>;
+}
+
 /**
  * Prepara datos de combo para enviar al backend
  */
-export function prepareComboDataForSubmit(items: ComboItem[]): any[] {
+export function prepareComboDataForSubmit(items: ComboItem[]): PreparedComboItem[] {
     return items.map((item, index) => {
         const baseItem = {
             is_choice_group: item.is_choice_group,

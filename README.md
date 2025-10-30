@@ -1,199 +1,209 @@
-# Dashboard de Gestión AdminPanel
+# Resumen de Avances - Sistema SubwayApp
 
-Dashboard web para gestión de usuarios, roles y permisos con seguimiento de actividad.
-
-## 🛠️ Requisitos del Sistema
-
-### Requisitos del Servidor
-- PHP 8.3+
-  - Extensiones requeridas:
-    - php8.3-fpm
-    - php8.3-sqlite3
-    - php8.3-xml
-    - php8.3-curl
-    - php8.3-mbstring
-    - php8.3-zip
-- Node.js 18+ y npm
-- Composer 2+
-
-### Requisitos de Base de Datos
-- SQLite 3
-
-## ⚡ Instalación en Producción
-
-### 1. Preparación del Servidor
-```bash
-# Instalar dependencias del sistema
-sudo apt update
-sudo apt install php8.3 php8.3-fpm php8.3-sqlite3 php8.3-xml php8.3-curl php8.3-mbstring php8.3-zip
-
-# Instalar Node.js 18+
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# Verificar instalaciones
-php -v
-node -v
-npm -v
-```
-
-### 2. Configuración del Proyecto
-```bash
-# Clonar repositorio
-git clone <repo>
-cd AdminPanel
-
-# Instalar dependencias de producción
-composer install --no-dev --optimize-autoloader
-npm install
-npm run build # Compila los assets para producción
-
-# Configuración del entorno
-cp .env.example .env
-php artisan key:generate
-```
-
-### 3. Configuración de la Base de Datos
-```bash
-# Crear y configurar SQLite
-touch database/database.sqlite
-chmod 664 database/database.sqlite
-chown www-data:www-data database/database.sqlite
-
-# Ejecutar migraciones
-php artisan migrate --force
-
-# Compilar los assets para producción
-npm run build
-```
-
-### 4. Optimizaciones para Producción
-```bash
-# Optimizar Laravel
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-
-# Establecer permisos correctos
-sudo chown -R www-data:www-data storage bootstrap/cache
-sudo chmod -R 775 storage bootstrap/cache
-sudo usermod -aG www-data $USER
-sudo usermod -aG www-data ubuntu
-```
-
-### Acceso
-
-## Acceso y Configuración del Servidor Web
-
-En producción, el sistema debe ser accedido a través de la ruta `public/index.php`.
-
-### Ejemplo de configuración para Caddy (Laravel)
-
-```caddyfile
-root * /var/www/html/AdminSubwayApp/public
-php_fastcgi unix//run/php/php8.3-fpm.sock
-file_server
-encode gzip
-
-# Rewrite para el index.php de Laravel
-try_files {path} {path}/ /index.php?{query}
-```
-
-Esto asegura que todas las rutas sean gestionadas por Laravel y los assets públicos estén disponibles correctamente.
-
-**URL de acceso:**  el dominio configurado
-**Usuario por defecto:** admin@admin.com
-**Contraseña:** admin
-
-
-## ⚠️ Notas Importantes
-- Asegúrate de que APP_ENV esté configurado como 'production'
-- Deshabilita APP_DEBUG en producción
-- Configura correctamente los permisos de archivos
-- Realiza backups regulares de la base de datos
-- Mantén las dependencias actualizadas
-
-## 🔒 Seguridad
-- Actualiza regularmente todas las dependencias
-- Monitorea los logs de actividad
-- Mantén copias de seguridad actualizadas
-- Utiliza HTTPS en producción
-- Configura correctamente los headers de seguridad
-
-
-## 🗄️ Base de Datos
-
-### **Tablas Principales:**
-- `users` - Gestión de usuarios con soft deletes
-- `roles` - Roles del sistema y personalizados  
-- `permissions` - Permisos granulares auto-generados
-- `user_activities` - Actividades de usuarios
-- `activity_logs` - Logs de auditoría
-
-### **Usuarios por Defecto:**
-- **admin@admin.com** / **admin** (acceso completo)
-- **admin@test.com** / **admintest** (acceso completo)
-
-## 🔐 Sistema de Permisos
-
-### **Auto-Discovery:**
-El sistema detecta automáticamente nuevas páginas en `resources/js/pages/` y genera permisos con patrón `{página}.{acción}`:
-
-```
-users.view, users.create, users.edit, users.delete
-roles.view, roles.create, roles.edit, roles.delete  
-activity.view, dashboard.view, etc.
-```
-
-### **Protecciones:**
-- Rol `admin` siempre tiene todos los permisos
-- Roles del sistema protegidos contra eliminación
-- Usuario admin@admin.com no se puede eliminar
-
-
-
-## 🧪 Testing
-
-```bash
-php artisan test                    # Todos los tests
-php artisan test --filter=User     # Tests específicos
-composer run test                   # Con config clear
-```
-
-## 🔧 Comandos Útiles
-
-```bash
-# Sincronizar permisos tras añadir páginas
-php artisan permissions:sync
-
-# Alternativa usando Tinker
-php artisan tinker
-$service = new App\Services\PermissionDiscoveryService;
-$service->syncPermissions();
-
-# Ver todas las rutas
-php artisan route:list
-
-# Limpiar cache
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
-```
-
-## 📈 Producción
-
-```bash
-# Variables de entorno
-APP_ENV=production
-APP_DEBUG=false  
-DB_CONNECTION=mysql
-
-# Deploy
-composer install --no-dev --optimize-autoloader
-npm ci && npm run build
-php artisan migrate --force
-php artisan config:cache
-php artisan route:cache
-```
+**Fecha ultima actualización:** 30 de Octubre, 2025
 
 ---
+
+## Tecnologías
+
+**Backend:**
+- Laravel 12
+- PHP 8.4
+- MariaDB
+
+**Frontend Web (Panel Admin):**
+- React 19
+- Inertia.js v2
+- TypeScript
+- Tailwind CSS v4
+
+**App Móvil tecnologías que usará:**
+- React Native (mismo código para Android e iOS)
+- TypeScript
+
+---
+
+## Acceso al Sistema
+
+**URL:** admin.subwaycardgt.com
+
+**Credenciales:**
+- Correo: admin@admin.com
+- Contraseña: admin
+
+---
+
+## Panel de Administración
+
+Panel web para gestionar todas las operaciones de Subway desde un solo lugar.
+
+---
+
+## Lo que está implementado
+
+### 1. CLIENTES
+- Registro de clientes con tarjeta Subway
+- Tipos de cliente: Bronce, Plata, Oro, Platino (estructura base)
+- Gestión de múltiples direcciones de entrega
+- Búsqueda por nombre, email, teléfono, tarjeta Subway
+
+### 2. Restaurantes
+- Ubicación en mapa con GPS
+- **GEOCERCAS**: zona de cobertura, solo entregas dentro del área
+- Horarios por día de la semana
+- Control individual de delivery y pickup
+- Muestra si está abierto o cerrado en tiempo real
+
+### 3. MENÚ
+- **Categorías**: Sándwiches, Bebidas, Postres, etc.
+- **Productos** con 4 precios diferentes:
+  - Pickup capital / Delivery capital
+  - Pickup Interior / Delivery Interior
+- **Variantes de producto**: Si se crea "Sub de Pollo" en categoría subs (15 cm y 30 cm), automáticamente se crean ambos tamaños para en los productos ponerle sus respectivos precios.
+- **Personalización de los productos por producto**:
+  - Pan (Blanco, Integral, Plano)
+  - Vegetales (Lechuga, Tomate, etc.)
+  - Salsas (Mostaza, Chipotle, etc.)
+  - Extras con costo adicional (Aguacate +Q10, Queso extra +Q5, champiñones +Q7, etc.)
+
+### 4. COMBOS
+Dos tipos de items en un combo:
+- **Fijos**: Vienen incluidos (galleta + bebida)
+- **Elección**: Cliente elige (Elige tu sándwich: bmt / Pavo / etc) + tipo de bebida, pepsi, sptrite
+
+Precio del combo unico pero construido a partir de los productos seleccionados.
+  
+### 5. PROMOCIONES 
+
+**Sub del Día**
+- Producto específico con precio especial en días seleccionados
+- Ejemplo: Sub de Pollo Q40 → Q22 toda la semana
+- NO se combina con otras promociones (combos, 2x1, toman el precio normal Q40)
+
+**2x1**
+- Categoría completa (Bebidas, Sándwiches, etc.)
+- Compras 2, pagas el más caro
+- Ejemplo: Coca-Cola Q15 + Sprite Q10 = Pagas Q15
+
+**Descuento por Porcentaje**
+- 5%, 10%, 20%, etc. sobre productos seleccionados
+- Ejemplo: 20% en todas las Ensaladas
+
+**Todas las promociones se pueden configurar:**
+- Días específicos (Lunes a Viernes)
+- Horarios (2pm - 5pm)
+- Solo pickup / Solo delivery / Ambos
+- Rango de fechas (Del 1 al 15 de Diciembre)
+
+### 6. CONTROL DE ACCESO
+- **Usuarios** con login y contraseña
+- **Roles**: Administrador, Gerente, Supervisor, Marketing, etc.
+- **Permisos por módulo**: Quién puede ver/crear/editar/eliminar
+- **Historial**: Registro de quién hizo qué cambio y cuándo
+
+
+## Pendiente de Implementar
+
+### Panel Administrativo
+- **Sistema de Motoristas**: Gestión de repartidores (asignación, disponibilidad, historial de entregas)
+- **Autoimpresión de Comandas**: Impresión automática de tickets en cocina de restaurante
+- **Dashboard de Pedidos**: Panel en tiempo real para recibir y gestionar pedidos desde la app
+- **Toma de Pedidos por Call Center**: Dashboard para que operadores tomen pedidos telefónicos
+- **Sistema de Puntos**: Lógica completa de acumulación, canje y gestión de puntos (el admin maneja toda la lógica)
+
+### Aplicación Móvil para Clientes
+- **Diseño y Desarrollo Completo de la App**:
+  - Registro e inicio de sesión
+  - Visualización de menú con categorías
+  - Personalización de productos (pan, vegetales, extras)
+  - Carrito de compras
+  - Gestión de direcciones de entrega
+  - Realizar pedidos
+  - Métodos de pago (efectivo/tarjeta)
+  - Integración con Infile para pagos con tarjeta
+  - Tracking de pedido en tiempo real
+  - Historial de pedidos
+  - Visualización de puntos (saldo, historial, canje) mediante API
+
+---
+
+## Roadmap de Implementación
+
+### FASE 1: App Móvil DEMO + Sistema de Pedidos (Noviembre - Diciembre 2025)
+**Objetivo:** Demo funcional de la app para presentar + panel de pedidos básico
+
+**App Móvil (Demo para Diciembre):**
+- Registro e inicio de sesión
+- Recuperación de contraseña
+- Gestión de direcciones de entrega
+- Visualización de menú con categorías
+- Personalización de productos (pan, vegetales, extras)
+- Carrito de compras
+- Selección de restaurante y tipo de servicio (pickup/delivery)
+- Realizar y confirmar pedido (solo efectivo por ahora)
+- Historial de pedidos
+
+**Panel Administrativo:**
+- Dashboard de Pedidos básico
+  - Recibe pedidos de la app en tiempo real
+  - Estados: Pendiente, Preparando, Listo, Entregado, Cancelado
+  - Filtros por restaurante y estado
+- Sistema de Motoristas básico
+  - Registro y asignación manual
+
+**Duración:** 6-8 semanas
+
+---
+
+### FASE 2: App Completa con Pagos y Puntos (Enero - Marzo 2026)
+**Objetivo:** App 100% funcional con pagos y programa de lealtad
+
+**App Móvil:**
+- Integración con Infile (pagos con tarjeta)
+- Guardado de tarjetas (tokenización)
+- Tracking de pedido en tiempo real
+- Notificaciones push
+- Perfil de usuario completo
+- Visualización de puntos (saldo, historial, canje) mediante API
+
+**Panel Administrativo:**
+- Sistema de puntos completo (lógica de acumulación, canje, vencimiento)
+- API para consumo desde app móvil
+- Toma de Pedidos por Call Center (dashboard para operadores tomen pedidos telefónicos)
+
+**Duración:** 10-12 semanas
+
+---
+
+### FASE 3: Estabilización y Correcciones (Abril 2026)
+**Objetivo:** Corregir errores y optimizar el sistema
+
+**Funcionalidades:**
+- Monitoreo de errores y corrección de bugs
+- Optimizaciones de rendimiento
+
+**Duración:** 4 semanas
+
+---
+
+## Estado del Proyecto
+
+**Completado (Octubre 2025):**
+- Panel administrativo con gestión completa de catálogos
+
+**En Desarrollo (Noviembre - Diciembre 2025):**
+- FASE 1: App móvil DEMO + Sistema de pedidos
+
+**Meta Diciembre 2025:**
+- Demo funcional de app para presentación
+- Panel de pedidos operativo
+
+**Próximamente:**
+- FASE 2: App completa con pagos y puntos (Ene-Mar 2026)
+- FASE 3: Estabilización y correcciones (Abril 2026)
+
+**Lanzamiento Oficial Estimado:** Abril 2026
+
+---
+
+

@@ -8,6 +8,8 @@ interface Product {
     id: number;
     name: string;
     is_active: boolean;
+    has_variants?: boolean;
+    variants?: ProductVariant[];
     category?: {
         name: string;
     };
@@ -43,7 +45,7 @@ export function SortableChoiceOption({ option, products, onRemove, canDelete }: 
     };
 
     const product = products.find((p) => p.id === option.product_id);
-    const variant = product && 'variants' in product ? (product as any).variants?.find((v: ProductVariant) => v.id === option.variant_id) : null;
+    const variant = product?.variants?.find((v: ProductVariant) => v.id === option.variant_id) || null;
 
     return (
         <div

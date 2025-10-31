@@ -222,7 +222,7 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
             `/menu/combos/${combo.id}`,
             {
                 ...formData,
-                items: preparedItems,
+                items: preparedItems as any,
             },
             {
                 onSuccess: () => {

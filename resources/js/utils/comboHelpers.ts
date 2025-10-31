@@ -174,6 +174,7 @@ interface PreparedComboItem {
         variant_id?: number | null;
         sort_order: number;
     }>;
+    [key: string]: unknown;
 }
 
 /**

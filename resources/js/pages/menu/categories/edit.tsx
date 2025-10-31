@@ -58,7 +58,7 @@ export default function CategoryEdit({ category }: EditPageProps) {
         }
     }, [formData.uses_variants, formData.variant_definitions.length]);
 
-    const handleInputChange = (field: keyof FormData, value: string | boolean) => {
+    const handleInputChange = (field: keyof FormData, value: string | boolean | string[]) => {
         setFormData((prev) => ({
             ...prev,
             [field]: value,

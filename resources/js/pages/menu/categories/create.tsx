@@ -22,7 +22,7 @@ export default function CategoryCreate() {
         is_active: true,
         is_combo_category: false,
         uses_variants: false,
-        variant_definitions: [],
+        variant_definitions: [] as string[],
     });
 
     // Limpiar variant_definitions si uses_variants se desactiva

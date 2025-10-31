@@ -6,7 +6,7 @@ import { AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface VariantData {
-    id?: number;
+    id?: number | string;
     name: string;
     is_active: boolean;
     precio_pickup_capital: string;
@@ -16,7 +16,7 @@ interface VariantData {
 }
 
 interface ExistingVariant {
-    id?: number;
+    id?: number | string;
     name: string;
     is_active?: boolean;
     precio_pickup_capital: string | number;

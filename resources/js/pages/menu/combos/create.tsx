@@ -80,7 +80,7 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
         precio_domicilio_capital: '',
         precio_pickup_interior: '',
         precio_domicilio_interior: '',
-        items: [] as ComboItem[],
+        items: [],
     });
 
     const [localItems, setLocalItems] = useState<ComboItem[]>([]);
@@ -119,27 +119,27 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
         };
         const updated = [...localItems, newItem];
         setLocalItems(updated);
-        setData('items', updated);
+        setData('items', updated as any);
     };
 
     const removeItem = (index: number) => {
         const updated = localItems.filter((_, i) => i !== index);
         setLocalItems(updated);
-        setData('items', updated);
+        setData('items', updated as any);
     };
 
     const updateItem = (index: number, field: string, value: string | number | boolean | ChoiceOption[] | null) => {
         const updated = [...localItems];
         updated[index] = { ...updated[index], [field]: value };
         setLocalItems(updated);
-        setData('items', updated);
+        setData('items', updated as any);
     };
 
     const batchUpdateItem = (index: number, updates: Partial<ComboItem>) => {
         const updated = [...localItems];
         updated[index] = { ...updated[index], ...updates };
         setLocalItems(updated);
-        setData('items', updated);
+        setData('items', updated as any);
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -151,7 +151,7 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
                 const newIndex = items.findIndex((item) => item.id === over.id);
 
                 const newItems = arrayMove(items, oldIndex, newIndex);
-                setData('items', newItems);
+                setData('items', newItems as any);
                 return newItems;
             });
         }
@@ -174,12 +174,13 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
             items: preparedItems,
         };
 
-        post(route('menu.combos.store'), submitData, {
+        post(route('menu.combos.store'), {
+            ...submitData,
             onSuccess: () => {
                 reset();
                 setLocalItems([]);
             },
-            onError: (errors) => {
+            onError: (errors: Record<string, string>) => {
                 if (Object.keys(errors).length === 0) {
                     showNotification.error(NOTIFICATIONS.error.dataLoading);
                 }

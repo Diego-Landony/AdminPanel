@@ -123,9 +123,9 @@ export function VariantDefinitionsInput({ variants, onChange, error }: VariantDe
     };
 
     // Determinar si una variante es duplicada
-    const isDuplicate = (variant: string) => {
+    const isDuplicate = (variant: string): boolean => {
         const trimmed = variant.trim().toLowerCase();
-        return trimmed && duplicates.has(trimmed);
+        return Boolean(trimmed && duplicates.has(trimmed));
     };
 
     return (

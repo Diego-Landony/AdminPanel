@@ -34,6 +34,7 @@ interface Product {
     name: string;
     category_id: number;
     has_variants: boolean;
+    is_active: boolean;
     category?: {
         id: number;
         name: string;
@@ -77,6 +78,7 @@ interface SubmitDailySpecialItem {
     validity_type: string;
     valid_from: string;
     valid_until: string;
+    [key: string]: unknown;
     time_from: string;
     time_until: string;
 }
@@ -247,7 +249,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
             name: data.name,
             description: data.description,
             type: data.type,
-            items: expandedItems,
+            items: expandedItems as any,
         };
 
         router.post(route('menu.promotions.store'), transformedData);

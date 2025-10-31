@@ -222,6 +222,7 @@ export default function CreatePercentage({ products, categories }: CreatePromoti
             valid_until: string;
             time_from: string;
             time_until: string;
+            [key: string]: unknown;
         }
 
         const expandedItems: SubmitItem[] = localItems.flatMap<SubmitItem>((item) => {
@@ -248,7 +249,7 @@ export default function CreatePercentage({ products, categories }: CreatePromoti
             name: data.name,
             description: data.description,
             type: data.type,
-            items: expandedItems,
+            items: expandedItems as any,
         });
     };
 

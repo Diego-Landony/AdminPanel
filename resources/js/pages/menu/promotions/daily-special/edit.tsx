@@ -34,6 +34,7 @@ interface Product {
     name: string;
     category_id: number;
     has_variants: boolean;
+    is_active: boolean;
     category?: {
         id: number;
         name: string;

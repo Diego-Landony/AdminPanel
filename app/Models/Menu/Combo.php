@@ -30,6 +30,7 @@ class Combo extends Model
     protected function casts(): array
     {
         return [
+            'category_id' => 'integer',
             'precio_pickup_capital' => 'decimal:2',
             'precio_domicilio_capital' => 'decimal:2',
             'precio_pickup_interior' => 'decimal:2',

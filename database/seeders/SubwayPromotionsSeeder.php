@@ -22,6 +22,7 @@ class SubwayPromotionsSeeder extends Seeder
         $this->createSubDelDia();
         $this->createDiscountPromotions();
         $this->createMixedDiscountPromotion();
+        $this->createBundlePromotion();
 
         $this->command->info('   ✅ Promociones creadas exitosamente');
     }
@@ -395,5 +396,64 @@ class SubwayPromotionsSeeder extends Seeder
         }
 
         $this->command->line("      ✅ {$promotion->name} - Promoción MIXTA creada");
+    }
+
+    private function createBundlePromotion(): void
+    {
+        $this->command->line('   🌟 Creando promoción Bundle Special...');
+
+        // Promoción Bundle: Verano Chilero
+        // Simula un bundle con precio especial (similar a combos pero con promoción)
+        $promotion = Promotion::create([
+            'name' => 'verano chilero',
+            'description' => 'Elige tu ensalada favorita + Pepsi lata a precio especial',
+            'type' => 'bundle_special',
+            'special_bundle_price_capital' => 35.00,
+            'special_bundle_price_interior' => 37.00,
+            'is_active' => true,
+            'sort_order' => 7,
+        ]);
+
+        // ITEM 1: GRUPO DE ELECCIÓN - Elige tu ensalada
+        $ensaladaGroup = \App\Models\Menu\BundlePromotionItem::create([
+            'promotion_id' => $promotion->id,
+            'product_id' => null,
+            'variant_id' => null,
+            'is_choice_group' => true,
+            'choice_label' => 'elige tu ensalada',
+            'quantity' => 1,
+            'sort_order' => 1,
+        ]);
+
+        // Opciones de ensaladas
+        $ensaladas = ['Ensalada B.M.T', 'Ensalada de Pollo Teriyaki', 'Ensalada Veggie'];
+        $sortOrder = 1;
+        foreach ($ensaladas as $ensaladaName) {
+            $product = Product::where('name', $ensaladaName)->first();
+            if ($product) {
+                \App\Models\Menu\BundlePromotionItemOption::create([
+                    'bundle_item_id' => $ensaladaGroup->id,
+                    'product_id' => $product->id,
+                    'variant_id' => null,
+                    'sort_order' => $sortOrder++,
+                ]);
+            }
+        }
+
+        // ITEM 2: FIJO - Pepsi lata
+        $pepsi = Product::where('name', 'Pepsi lata')->first();
+        if ($pepsi) {
+            \App\Models\Menu\BundlePromotionItem::create([
+                'promotion_id' => $promotion->id,
+                'product_id' => $pepsi->id,
+                'variant_id' => null,
+                'is_choice_group' => false,
+                'choice_label' => null,
+                'quantity' => 1,
+                'sort_order' => 2,
+            ]);
+        }
+
+        $this->command->line("      ✅ {$promotion->name} - Bundle Special creado (Q35 capital / Q37 interior)");
     }
 }

@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { Badge as BadgeIcon, CheckCircle, Clock, ShoppingBag, Truck, XCircle } from 'lucide-react';
+import { AlertCircle, Badge as BadgeIcon, CheckCircle, Clock, ShoppingBag, Truck, XCircle } from 'lucide-react';
 import React from 'react';
 
 export interface StatusConfig {
@@ -215,6 +215,35 @@ export const PROMOTION_STATUS_CONFIGS: Record<string, StatusConfig> = {
         color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600',
         text: 'Inactivo',
         icon: <XCircle className="h-3 w-3" />,
+    },
+    default: {
+        color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600',
+        text: 'Desconocido',
+        icon: <XCircle className="h-3 w-3" />,
+    },
+};
+
+// Configuraciones de estado para combinados (bundle promotions)
+export const COMBINADO_STATUS_CONFIGS: Record<string, StatusConfig> = {
+    active: {
+        color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-700',
+        text: 'Activo',
+        icon: <CheckCircle className="h-3 w-3" />,
+    },
+    inactive: {
+        color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600',
+        text: 'Inactivo',
+        icon: <XCircle className="h-3 w-3" />,
+    },
+    expired: {
+        color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-700',
+        text: 'Expirado',
+        icon: <AlertCircle className="h-3 w-3" />,
+    },
+    upcoming: {
+        color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-700',
+        text: 'Próximo',
+        icon: <Clock className="h-3 w-3" />,
     },
     default: {
         color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600',

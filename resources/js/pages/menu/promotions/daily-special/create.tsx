@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { CURRENCY, NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
-import { ProductCombobox } from '@/components/ProductCombobox';
+import { ProductOrComboSelector } from '@/components/ProductOrComboSelector';
 import { ConfirmationDialog } from '@/components/promotions/ConfirmationDialog';
 import { VariantSelector } from '@/components/promotions/VariantSelector';
 import { WeekdaySelector } from '@/components/WeekdaySelector';
@@ -45,17 +45,35 @@ interface Product {
 interface Category {
     id: number;
     name: string;
+    is_combo_category?: boolean;
+}
+
+interface Combo {
+    id: number;
+    name: string;
+    category_id: number;
+    is_active: boolean;
+    precio_pickup_capital: number;
+    precio_domicilio_capital: number;
+    precio_pickup_interior: number;
+    precio_domicilio_interior: number;
+    category?: {
+        id: number;
+        name: string;
+    };
 }
 
 interface CreatePromotionPageProps {
     products: Product[];
     categories: Category[];
+    combos: Combo[];
 }
 
 interface DailySpecialItem {
     id: string;
     product_id: string;
     variant_id: number | null;
+    item_type: 'product' | 'combo' | null;
     special_price_capital: string;
     special_price_interior: string;
     service_type: 'both' | 'delivery_only' | 'pickup_only';
@@ -83,7 +101,7 @@ interface SubmitDailySpecialItem {
     time_until: string;
 }
 
-export default function CreatePromotion({ products }: CreatePromotionPageProps) {
+export default function CreatePromotion({ products, combos }: CreatePromotionPageProps) {
     const { data, setData, processing, errors } = useForm({
         is_active: true,
         name: '',
@@ -100,6 +118,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
             id: generateUniqueId(),
             product_id: '',
             variant_id: null,
+            item_type: null,
             special_price_capital: '',
             special_price_interior: '',
             service_type: 'both',
@@ -144,6 +163,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
             id: generateUniqueId(),
             product_id: '',
             variant_id: null,
+            item_type: null,
             special_price_capital: '',
             special_price_interior: '',
             service_type: 'both',
@@ -182,7 +202,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
             if (hasData) {
                 setConfirmDialog({
                     open: true,
-                    title: '¿Cambiar de producto?',
+                    title: '¿Cambiar de producto/combo?',
                     description: 'Se perderán la variante y precios seleccionados si continúas.',
                     onConfirm: () => {
                         const updated = [...localItems];
@@ -209,11 +229,60 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
         setData('items', updated as unknown as DailySpecialItem[]);
     };
 
+    const updateProductOrCombo = (index: number, id: number | null, type: 'product' | 'combo') => {
+        const currentItem = localItems[index];
+        const hasData = currentItem.variant_id || currentItem.special_price_capital || currentItem.special_price_interior;
+
+        if (hasData && (String(id) !== currentItem.product_id || type !== currentItem.item_type)) {
+            setConfirmDialog({
+                open: true,
+                title: '¿Cambiar de producto/combo?',
+                description: 'Se perderán la variante y precios seleccionados si continúas.',
+                onConfirm: () => {
+                    const updated = [...localItems];
+                    updated[index] = {
+                        ...updated[index],
+                        product_id: id ? String(id) : '',
+                        item_type: type,
+                        variant_id: type === 'combo' ? null : updated[index].variant_id,
+                        special_price_capital: '',
+                        special_price_interior: '',
+                    };
+                    setLocalItems(updated);
+                    setData('items', updated as unknown as DailySpecialItem[]);
+                    setConfirmDialog({ ...confirmDialog, open: false });
+                },
+                onCancel: () => setConfirmDialog({ ...confirmDialog, open: false }),
+            });
+            return;
+        }
+
+        const updated = [...localItems];
+        updated[index] = {
+            ...updated[index],
+            product_id: id ? String(id) : '',
+            item_type: type,
+            variant_id: type === 'combo' ? null : updated[index].variant_id,
+        };
+        setLocalItems(updated);
+        setData('items', updated as unknown as DailySpecialItem[]);
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        const expandedItems: SubmitDailySpecialItem[] = localItems.map(({ id: _id, has_schedule: _has_schedule, ...item }) => {
-            const product = products.find((p) => p.id === Number(item.product_id));
+        const expandedItems: SubmitDailySpecialItem[] = localItems.map(({ id: _id, has_schedule: _has_schedule, item_type: _item_type, ...item }) => {
+            const currentItem = localItems.find((i) => i.product_id === item.product_id);
+            let category_id = 0;
+
+            if (currentItem?.item_type === 'product') {
+                const product = products.find((p) => p.id === Number(item.product_id));
+                category_id = product?.category_id || 0;
+            } else if (currentItem?.item_type === 'combo') {
+                const combo = combos.find((c) => c.id === Number(item.product_id));
+                category_id = combo?.category_id || 0;
+            }
+
             const hasDates = item.valid_from || item.valid_until;
             const hasTimes = item.time_from || item.time_until;
 
@@ -231,7 +300,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
             return {
                 product_id: item.product_id,
                 variant_id: item.variant_id,
-                category_id: product?.category_id || 0,
+                category_id,
                 validity_type,
                 special_price_capital: parseFloat(item.special_price_capital) || 0,
                 special_price_interior: parseFloat(item.special_price_interior) || 0,
@@ -249,7 +318,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
             name: data.name,
             description: data.description,
             type: data.type,
-            items: expandedItems as any,
+            items: expandedItems,
         };
 
         router.post(route('menu.promotions.store'), transformedData);
@@ -295,7 +364,9 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
             <FormSection title="Productos">
                 <div className="space-y-4">
                     {localItems.map((item, index) => {
-                        const selectedProduct = item.product_id ? products.find((p) => p.id === Number(item.product_id)) : null;
+                        const selectedProduct = item.item_type === 'product' && item.product_id
+                            ? products.find((p) => p.id === Number(item.product_id))
+                            : null;
                         const hasVariants = selectedProduct?.variants && selectedProduct.variants.length > 0;
 
                         const excludedVariantIds = localItems
@@ -309,7 +380,7 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                                 className="relative space-y-4 rounded-lg border border-border p-4"
                             >
                                 <div className="mb-2 flex items-center justify-between">
-                                    <h4 className="text-sm font-medium">Producto {index + 1}</h4>
+                                    <h4 className="text-sm font-medium">Producto/Combo {index + 1}</h4>
                                     {localItems.length > 1 && (
                                         <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)}>
                                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -317,22 +388,19 @@ export default function CreatePromotion({ products }: CreatePromotionPageProps) 
                                     )}
                                 </div>
 
-                                <ProductCombobox
-                                    label="Producto"
+                                <ProductOrComboSelector
+                                    label="Producto o Combo"
                                     value={item.product_id ? Number(item.product_id) : null}
-                                    onChange={(value) => updateItem(index, 'product_id', value ? String(value) : '')}
-                                    products={products.filter((product) => {
-                                        if (!product.variants || product.variants.length === 0) {
-                                            return !localItems.some((i, idx) => idx !== index && i.product_id === String(product.id));
-                                        }
-                                        return true;
-                                    })}
+                                    onChange={(value, type) => updateProductOrCombo(index, value, type)}
+                                    products={products}
+                                    combos={combos}
+                                    type={item.item_type}
                                     placeholder={PLACEHOLDERS.selectProduct}
                                     error={dynamicErrors[`items.${index}.product_id`]}
                                     required
                                 />
 
-                                {hasVariants && (
+                                {hasVariants && item.item_type === 'product' && (
                                     <VariantSelector
                                         variants={selectedProduct.variants!.filter((v) => !excludedVariantIds.includes(v.id))}
                                         value={item.variant_id}

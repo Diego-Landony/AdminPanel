@@ -56,6 +56,10 @@ export const PLACEHOLDERS = {
     searchUserEventDescription: 'Buscar por usuario, evento, descripción...',
     searchEventTypes: 'Tipos de evento...',
     searchUsers: 'Usuarios...',
+
+    // Combinados (Bundle Promotions)
+    combinadoName: 'Combinado Especial',
+    combinadoDescription: 'Descripción del combinado',
 } as const;
 
 // Mensajes de notificación estandarizados
@@ -187,6 +191,18 @@ export const FORM_SECTIONS = {
     choiceGroupOptions: {
         title: 'Opciones Disponibles',
         description: 'Mínimo 2 opciones requeridas para el grupo de elección',
+    },
+    combinadoItems: {
+        title: 'Items del Combinado',
+        description: 'Define productos fijos o grupos de elección para el combinado',
+    },
+    temporalValidity: {
+        title: 'Vigencia Temporal',
+        description: 'Configure fechas, horarios y días de la semana para el combinado',
+    },
+    specialPrices: {
+        title: 'Precios Especiales',
+        description: 'Precios del combinado por zona',
     },
 } as const;
 

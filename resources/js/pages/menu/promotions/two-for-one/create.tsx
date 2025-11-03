@@ -43,11 +43,28 @@ interface Product {
 interface Category {
     id: number;
     name: string;
+    is_combo_category?: boolean;
+}
+
+interface Combo {
+    id: number;
+    name: string;
+    category_id: number;
+    is_active: boolean;
+    precio_pickup_capital: number;
+    precio_domicilio_capital: number;
+    precio_pickup_interior: number;
+    precio_domicilio_interior: number;
+    category?: {
+        id: number;
+        name: string;
+    };
 }
 
 interface CreatePromotionPageProps {
     products: Product[];
     categories: Category[];
+    combos: Combo[];
 }
 
 interface LocalTwoForOneItem {
@@ -55,10 +72,11 @@ interface LocalTwoForOneItem {
     category_id: number | null;
     variant_id: number | null;
     selected_product_ids: number[];
+    selected_combo_ids: number[];
     discount_percentage: string;
 }
 
-export default function CreateTwoForOnePromotion({ products, categories }: CreatePromotionPageProps) {
+export default function CreateTwoForOnePromotion({ products, categories, combos }: CreatePromotionPageProps) {
     const { data, setData, processing, errors } = useForm({
         is_active: true,
         name: '',
@@ -79,6 +97,7 @@ export default function CreateTwoForOnePromotion({ products, categories }: Creat
             category_id: null,
             variant_id: null,
             selected_product_ids: [],
+            selected_combo_ids: [],
             discount_percentage: '',
         },
     ]);
@@ -116,6 +135,7 @@ export default function CreateTwoForOnePromotion({ products, categories }: Creat
             category_id: null,
             variant_id: null,
             selected_product_ids: [],
+            selected_combo_ids: [],
             discount_percentage: '',
         };
         setLocalItems((prev) => {
@@ -155,6 +175,7 @@ export default function CreateTwoForOnePromotion({ products, categories }: Creat
                     if (field === 'category_id' && value !== item.category_id) {
                         updatedItem.variant_id = null;
                         updatedItem.selected_product_ids = [];
+                        updatedItem.selected_combo_ids = [];
                     }
 
                     if (field === 'variant_id' && value !== item.variant_id) {
@@ -176,11 +197,11 @@ export default function CreateTwoForOnePromotion({ products, categories }: Creat
             const currentItem = localItems.find((item) => item.id === id);
             if (!currentItem) return;
 
-            if (field === 'category_id' && value !== currentItem.category_id && currentItem.selected_product_ids.length > 0) {
+            if (field === 'category_id' && value !== currentItem.category_id && (currentItem.selected_product_ids.length > 0 || currentItem.selected_combo_ids.length > 0)) {
                 setConfirmDialog({
                     open: true,
                     title: '¿Cambiar de categoría?',
-                    description: 'Se perderán los productos seleccionados y la variante si continúas.',
+                    description: 'Se perderán los productos/combos seleccionados y la variante si continúas.',
                     onConfirm: () => applyUpdate(id, field, value),
                     onCancel: () => {},
                 });
@@ -229,12 +250,24 @@ export default function CreateTwoForOnePromotion({ products, categories }: Creat
                 time_until: data.time_until,
             };
 
-            return item.selected_product_ids.map<SubmitItem>((product_id) => ({
+            const productItems = item.selected_product_ids.map<SubmitItem>((product_id) => ({
                 product_id,
                 variant_id: item.variant_id,
                 category_id: item.category_id!,
                 ...globalConfig,
             }));
+
+            const comboItems = item.selected_combo_ids.map<SubmitItem>((combo_id) => {
+                const combo = combos.find((c) => c.id === combo_id);
+                return {
+                    product_id: combo_id,
+                    variant_id: null,
+                    category_id: combo?.category_id || 0,
+                    ...globalConfig,
+                };
+            });
+
+            return [...productItems, ...comboItems];
         });
 
         router.post(route('menu.promotions.store'), {
@@ -242,7 +275,7 @@ export default function CreateTwoForOnePromotion({ products, categories }: Creat
             name: data.name,
             description: data.description,
             type: data.type,
-            items: expandedItems as any,
+            items: expandedItems,
         });
     };
 
@@ -254,9 +287,10 @@ export default function CreateTwoForOnePromotion({ products, categories }: Creat
     const hasInactiveProducts = useMemo(() => {
         return localItems.some((item) => {
             const selectedProducts = products.filter((p) => item.selected_product_ids.includes(p.id));
-            return selectedProducts.some((p) => !p.is_active);
+            const selectedCombos = combos.filter((c) => item.selected_combo_ids?.includes(c.id));
+            return selectedProducts.some((p) => !p.is_active) || selectedCombos.some((c) => !c.is_active);
         });
-    }, [localItems, products]);
+    }, [localItems, products, combos]);
 
     if (!products || !categories) {
         return <CreatePageSkeleton />;
@@ -392,6 +426,7 @@ export default function CreateTwoForOnePromotion({ products, categories }: Creat
                                     index={index}
                                     categories={categories}
                                     products={products}
+                                    combos={combos}
                                     onUpdate={updateItem}
                                     onRemove={removeItem}
                                     canRemove={localItems.length > 1}

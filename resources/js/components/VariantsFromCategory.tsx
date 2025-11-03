@@ -1,9 +1,9 @@
 import { PriceFields } from '@/components/PriceFields';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface VariantData {
     id?: number | string;
@@ -34,6 +34,7 @@ interface VariantsFromCategoryProps {
 
 export function VariantsFromCategory({ categoryVariants, existingVariants = [], onChange, errors = {} }: VariantsFromCategoryProps) {
     const [variants, setVariants] = useState<VariantData[]>([]);
+    const prevCategoryVariantsRef = useRef<string[]>([]);
 
     useEffect(() => {
         const initializedVariants = categoryVariants.map((variantName) => {
@@ -62,7 +63,13 @@ export function VariantsFromCategory({ categoryVariants, existingVariants = [], 
         });
 
         setVariants(initializedVariants);
-        onChange(initializedVariants);
+
+        // Call onChange only when category variants actually change
+        const hasVariantsChanged = JSON.stringify(prevCategoryVariantsRef.current) !== JSON.stringify(categoryVariants);
+        if (hasVariantsChanged) {
+            onChange(initializedVariants);
+            prevCategoryVariantsRef.current = categoryVariants;
+        }
     }, [categoryVariants, existingVariants, onChange]);
 
     const updateVariant = (index: number, field: keyof VariantData, value: string | boolean) => {
@@ -96,7 +103,7 @@ export function VariantsFromCategory({ categoryVariants, existingVariants = [], 
             {activeVariantsCount > 0 && (
                 <div className="flex justify-end">
                     <span className="text-xs text-muted-foreground">
-                        {activeVariantsCount} de {variants.length} activas
+                        {activeVariantsCount} de {variants.length} activos
                     </span>
                 </div>
             )}
@@ -118,22 +125,22 @@ export function VariantsFromCategory({ categoryVariants, existingVariants = [], 
             {variants.map((variant, index) => (
                 <div key={variant.name} className="space-y-4 rounded-lg border border-border p-4">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <Checkbox
+                        <Label htmlFor={`variant-${index}`} className="flex cursor-pointer items-center gap-2 text-base font-medium">
+                            {variant.is_active ? (
+                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            )}
+                            {variant.name}
+                        </Label>
+                        <div className="flex items-center gap-2">
+                            {variant.is_active && <span className="text-sm font-medium text-muted-foreground">Activo</span>}
+                            <Switch
                                 id={`variant-${index}`}
                                 checked={variant.is_active}
                                 onCheckedChange={(checked) => toggleVariant(index, checked as boolean)}
                             />
-                            <Label htmlFor={`variant-${index}`} className="flex cursor-pointer items-center gap-2 text-base font-medium">
-                                {variant.is_active ? (
-                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                ) : (
-                                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                )}
-                                {variant.name}
-                            </Label>
                         </div>
-                        {variant.is_active && <span className="text-xs text-muted-foreground">Activa</span>}
                     </div>
 
                     {variant.is_active && (

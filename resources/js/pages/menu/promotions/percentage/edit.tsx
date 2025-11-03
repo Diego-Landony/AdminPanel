@@ -44,12 +44,29 @@ interface Product {
 interface Category {
     id: number;
     name: string;
+    is_combo_category?: boolean;
+}
+
+interface Combo {
+    id: number;
+    name: string;
+    category_id: number;
+    is_active: boolean;
+    precio_pickup_capital: number;
+    precio_domicilio_capital: number;
+    precio_pickup_interior: number;
+    precio_domicilio_interior: number;
+    category?: {
+        id: number;
+        name: string;
+    };
 }
 
 interface PromotionItem {
     id: number;
     product_id: number | null;
     variant_id: number | null;
+    category_id: number | null;
     discount_percentage: string | null;
     service_type: 'both' | 'delivery_only' | 'pickup_only' | null;
     validity_type: 'permanent' | 'date_range' | 'time_range' | 'date_time_range' | null;
@@ -72,6 +89,7 @@ interface EditPromotionPageProps {
     promotion: Promotion;
     products: Product[];
     categories: Category[];
+    combos: Combo[];
 }
 
 interface LocalPromotionItem {
@@ -79,13 +97,14 @@ interface LocalPromotionItem {
     category_id: number | null;
     variant_id: number | null;
     selected_product_ids: number[];
+    selected_combo_ids: number[];
     discount_percentage: string;
     hasDeletedProducts?: boolean;
     hasDeletedVariant?: boolean;
     deletedProductCount?: number;
 }
 
-function groupPromotionItems(items: PromotionItem[], products: Product[]): LocalPromotionItem[] {
+function groupPromotionItems(items: PromotionItem[], products: Product[], combos: Combo[], categories: Category[]): LocalPromotionItem[] {
     if (items.length === 0) return [];
 
     const grouped: LocalPromotionItem[] = [];
@@ -100,68 +119,92 @@ function groupPromotionItems(items: PromotionItem[], products: Product[]): Local
     items.forEach((item, index) => {
         if (processed.has(index) || !item.product_id) return;
 
-        const groupKey = `${item.variant_id || 'null'}_${item.discount_percentage}`;
+        // Determinar si el item es un combo basándose en la categoría
+        const itemCategory = categories.find((c) => c.id === item.category_id);
+        const isCombo = itemCategory?.is_combo_category ?? false;
+
+        const groupKey = `${item.variant_id || 'null'}_${item.discount_percentage}_${isCombo ? 'combo' : 'product'}`;
 
         const relatedItems = items
             .map((it, idx) => ({ item: it, index: idx }))
-            .filter(
-                ({ item: it, index: idx }) =>
-                    !processed.has(idx) &&
-                    it.product_id &&
-                    `${it.variant_id || 'null'}_${it.discount_percentage}` === groupKey
-            );
+            .filter(({ item: it, index: idx }) => {
+                if (processed.has(idx) || !it.product_id) return false;
+                const itCategory = categories.find((c) => c.id === it.category_id);
+                const itIsCombo = itCategory?.is_combo_category ?? false;
+                return `${it.variant_id || 'null'}_${it.discount_percentage}_${itIsCombo ? 'combo' : 'product'}` === groupKey;
+            });
 
-        const productIds = relatedItems.map(({ item: it }) => it.product_id!);
+        if (isCombo) {
+            // Agrupar combos
+            const comboIds = relatedItems.map(({ item: it }) => it.product_id!);
+            const existingComboIds = comboIds.filter((cid) => combos.some((c) => c.id === cid));
+            const deletedComboCount = comboIds.length - existingComboIds.length;
 
-        // Detectar productos eliminados (Caso 5)
-        const existingProductIds = productIds.filter((pid) => products.some((p) => p.id === pid));
-        const deletedProductCount = productIds.length - existingProductIds.length;
-        const hasDeletedProducts = deletedProductCount > 0;
-
-        // Detectar variante eliminada (Caso 6)
-        const hasDeletedVariant = item.variant_id !== null && !availableVariantIds.has(item.variant_id);
-
-        const productCategories = existingProductIds
-            .map((pid) => products.find((p) => p.id === pid)?.category_id)
-            .filter((cid) => cid !== undefined);
-
-        const allSameCategory = productCategories.length > 0 && productCategories.every((cid) => cid === productCategories[0]);
-
-        if (allSameCategory) {
             relatedItems.forEach(({ index: idx }) => processed.add(idx));
 
             grouped.push({
                 id: generateUniqueId(),
-                category_id: productCategories[0]!,
-                variant_id: item.variant_id,
-                selected_product_ids: existingProductIds,
+                category_id: item.category_id,
+                variant_id: null,
+                selected_product_ids: [],
+                selected_combo_ids: existingComboIds,
                 discount_percentage: item.discount_percentage || '',
-                hasDeletedProducts,
-                hasDeletedVariant,
-                deletedProductCount,
+                hasDeletedProducts: deletedComboCount > 0,
+                hasDeletedVariant: false,
+                deletedProductCount: deletedComboCount,
             });
         } else {
-            processed.add(index);
+            // Agrupar productos
+            const productIds = relatedItems.map(({ item: it }) => it.product_id!);
+            const existingProductIds = productIds.filter((pid) => products.some((p) => p.id === pid));
+            const deletedProductCount = productIds.length - existingProductIds.length;
+            const hasDeletedProducts = deletedProductCount > 0;
+            const hasDeletedVariant = item.variant_id !== null && !availableVariantIds.has(item.variant_id);
 
-            const product = products.find((p) => p.id === item.product_id);
+            const productCategories = existingProductIds
+                .map((pid) => products.find((p) => p.id === pid)?.category_id)
+                .filter((cid) => cid !== undefined);
 
-            grouped.push({
-                id: generateUniqueId(),
-                category_id: product?.category_id || null,
-                variant_id: item.variant_id,
-                selected_product_ids: product ? [item.product_id!] : [],
-                discount_percentage: item.discount_percentage || '',
-                hasDeletedProducts: !product,
-                hasDeletedVariant,
-                deletedProductCount: !product ? 1 : 0,
-            });
+            const allSameCategory = productCategories.length > 0 && productCategories.every((cid) => cid === productCategories[0]);
+
+            if (allSameCategory) {
+                relatedItems.forEach(({ index: idx }) => processed.add(idx));
+
+                grouped.push({
+                    id: generateUniqueId(),
+                    category_id: productCategories[0]!,
+                    variant_id: item.variant_id,
+                    selected_product_ids: existingProductIds,
+                    selected_combo_ids: [],
+                    discount_percentage: item.discount_percentage || '',
+                    hasDeletedProducts,
+                    hasDeletedVariant,
+                    deletedProductCount,
+                });
+            } else {
+                processed.add(index);
+
+                const product = products.find((p) => p.id === item.product_id);
+
+                grouped.push({
+                    id: generateUniqueId(),
+                    category_id: product?.category_id || null,
+                    variant_id: item.variant_id,
+                    selected_product_ids: product ? [item.product_id!] : [],
+                    selected_combo_ids: [],
+                    discount_percentage: item.discount_percentage || '',
+                    hasDeletedProducts: !product,
+                    hasDeletedVariant,
+                    deletedProductCount: !product ? 1 : 0,
+                });
+            }
         }
     });
 
     return grouped;
 }
 
-export default function EditPercentagePromotion({ promotion, products, categories }: EditPromotionPageProps) {
+export default function EditPercentagePromotion({ promotion, products, categories, combos }: EditPromotionPageProps) {
     const firstItem = promotion.items[0];
 
     const [formData, setFormData] = useState({
@@ -177,7 +220,7 @@ export default function EditPercentagePromotion({ promotion, products, categorie
         time_until: firstItem?.time_until || '',
     });
 
-    const [localItems, setLocalItems] = useState<LocalPromotionItem[]>(() => groupPromotionItems(promotion.items, products));
+    const [localItems, setLocalItems] = useState<LocalPromotionItem[]>(() => groupPromotionItems(promotion.items, products, combos, categories));
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [processing, setProcessing] = useState(false);
@@ -216,6 +259,7 @@ export default function EditPercentagePromotion({ promotion, products, categorie
             category_id: null,
             variant_id: null,
             selected_product_ids: [],
+            selected_combo_ids: [],
             discount_percentage: '',
         };
         setLocalItems((prev) => [...prev, newItem]);
@@ -306,13 +350,26 @@ export default function EditPercentagePromotion({ promotion, products, categorie
                 time_until: formData.time_until,
             };
 
-            return item.selected_product_ids.map((product_id) => ({
+            const productItems = item.selected_product_ids.map((product_id) => ({
                 product_id,
                 variant_id: item.variant_id,
                 category_id: item.category_id!,
                 discount_percentage: item.discount_percentage,
                 ...globalConfig,
             }));
+
+            const comboItems = item.selected_combo_ids.map((combo_id) => {
+                const combo = combos.find((c) => c.id === combo_id);
+                return {
+                    product_id: combo_id,
+                    variant_id: null,
+                    category_id: combo?.category_id || 0,
+                    discount_percentage: item.discount_percentage,
+                    ...globalConfig,
+                };
+            });
+
+            return [...productItems, ...comboItems];
         });
 
         router.put(
@@ -531,6 +588,7 @@ export default function EditPercentagePromotion({ promotion, products, categorie
                                     index={index}
                                     categories={categories}
                                     products={products}
+                                    combos={combos}
                                     onUpdate={updateItem}
                                     onRemove={removeItem}
                                     canRemove={localItems.length > 1}

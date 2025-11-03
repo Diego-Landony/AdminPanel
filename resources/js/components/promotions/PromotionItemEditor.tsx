@@ -3,6 +3,7 @@ import { Trash2 } from 'lucide-react';
 import React, { useMemo } from 'react';
 
 import { CategoryCombobox } from '@/components/CategoryCombobox';
+import { ComboCheckboxList } from '@/components/promotions/ComboCheckboxList';
 import { ProductCheckboxList } from '@/components/promotions/ProductCheckboxList';
 import { VariantSelector } from '@/components/promotions/VariantSelector';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,18 @@ interface Product {
 interface Category {
     id: number;
     name: string;
+    is_combo_category?: boolean;
+}
+
+interface Combo {
+    id: number;
+    name: string;
+    category_id: number;
+    is_active: boolean;
+    category?: {
+        id: number;
+        name: string;
+    };
 }
 
 interface LocalPromotionItem {
@@ -40,6 +53,7 @@ interface LocalPromotionItem {
     category_id: number | null;
     variant_id: number | null;
     selected_product_ids: number[];
+    selected_combo_ids?: number[];
     discount_percentage: string;
 }
 
@@ -48,6 +62,7 @@ export interface PromotionItemEditorProps {
     index: number;
     categories: Category[];
     products: Product[];
+    combos?: Combo[];
     onUpdate: (id: string, field: keyof LocalPromotionItem, value: number | number[] | string | null) => void;
     onRemove: (id: string) => void;
     canRemove: boolean;
@@ -61,6 +76,7 @@ function PromotionItemEditorComponent({
     index,
     categories,
     products,
+    combos = [],
     onUpdate,
     onRemove,
     canRemove,
@@ -73,9 +89,17 @@ function PromotionItemEditorComponent({
         return products.filter((p) => p.category_id === item.category_id);
     }, [products, item.category_id]);
 
+    const selectedCategory = useMemo(() => {
+        return categories.find((c) => c.id === item.category_id);
+    }, [categories, item.category_id]);
+
     const categoryHasVariants = useMemo(() => {
+        // Si es categoría de combos, no tiene variantes
+        if (selectedCategory?.is_combo_category) {
+            return false;
+        }
         return categoryProducts.some((p) => p.variants && p.variants.length > 0);
-    }, [categoryProducts]);
+    }, [categoryProducts, selectedCategory]);
 
     const availableVariants = useMemo(() => {
         if (!item.category_id || !categoryHasVariants) return [];
@@ -111,6 +135,14 @@ function PromotionItemEditorComponent({
         return filtered;
     }, [categoryProducts, item.variant_id, categoryHasVariants, availableVariants]);
 
+    const categoryCombos = useMemo(() => {
+        if (!item.category_id) return [];
+        // Solo mostrar combos si la categoría seleccionada es una categoría de combos
+        if (!selectedCategory?.is_combo_category) return [];
+        // Filtrar combos que pertenecen a la categoría seleccionada
+        return combos.filter((c) => Number(c.category_id) === Number(item.category_id));
+    }, [combos, item.category_id, selectedCategory]);
+
     return (
         <div className="relative rounded-lg border border-border bg-card p-6">
             {canRemove && (
@@ -142,13 +174,43 @@ function PromotionItemEditorComponent({
                     />
                 )}
 
-                {item.category_id && (!categoryHasVariants || item.variant_id) && (
-                    <ProductCheckboxList
-                        products={filteredProducts}
-                        selectedIds={item.selected_product_ids}
-                        onChange={(selectedIds) => onUpdate(item.id, 'selected_product_ids', selectedIds)}
-                    />
-                )}
+                <div className="space-y-4">
+                    {/* Productos: solo si hay categoría y (no tiene variantes o ya se seleccionó variante) */}
+                    {item.category_id && (!categoryHasVariants || item.variant_id) && filteredProducts.length > 0 && (
+                        <ProductCheckboxList
+                            products={filteredProducts}
+                            selectedIds={item.selected_product_ids}
+                            onChange={(selectedIds) => onUpdate(item.id, 'selected_product_ids', selectedIds)}
+                        />
+                    )}
+
+                    {/* Combos: siempre visibles (independiente de categoría seleccionada) */}
+                    {categoryCombos.length > 0 && (
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                <div className="h-px flex-1 bg-border" />
+                                <span>Combos</span>
+                                <div className="h-px flex-1 bg-border" />
+                            </div>
+                            <ComboCheckboxList
+                                combos={categoryCombos}
+                                selectedIds={item.selected_combo_ids || []}
+                                onChange={(selectedIds) => onUpdate(item.id, 'selected_combo_ids', selectedIds)}
+                            />
+                        </div>
+                    )}
+
+                    {/* Empty state: solo si no hay productos NI combos disponibles */}
+                    {(!item.category_id || (item.category_id && (!categoryHasVariants || item.variant_id) && filteredProducts.length === 0)) &&
+                     categoryCombos.length === 0 && (
+                        <div className="rounded-lg border border-dashed p-8 text-center">
+                            <p className="text-sm font-medium text-muted-foreground">No hay productos ni combos disponibles</p>
+                            <p className="text-xs text-muted-foreground">
+                                {!item.category_id ? 'Selecciona una categoría para ver productos' : 'Selecciona una categoría diferente'}
+                            </p>
+                        </div>
+                    )}
+                </div>
 
                 {showDiscount && (
                     <FormField label="Porcentaje de Descuento" required error={getItemError(index, 'discount_percentage')}>

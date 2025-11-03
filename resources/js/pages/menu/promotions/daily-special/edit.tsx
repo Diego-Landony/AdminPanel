@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { CURRENCY, NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
-import { ProductCombobox } from '@/components/ProductCombobox';
+import { ProductOrComboSelector } from '@/components/ProductOrComboSelector';
 import { ConfirmationDialog } from '@/components/promotions/ConfirmationDialog';
 import { VariantSelector } from '@/components/promotions/VariantSelector';
 import { WeekdaySelector } from '@/components/WeekdaySelector';
@@ -45,6 +45,7 @@ interface Product {
 interface PromotionItem {
     id: number;
     product_id: number | null;
+    category_id: number | null;
     variant_id: number | null;
     special_price_capital: number | null;
     special_price_interior: number | null;
@@ -55,6 +56,11 @@ interface PromotionItem {
     time_from: string | null;
     time_until: string | null;
     weekdays: number[] | null;
+    category?: {
+        id: number;
+        name: string;
+        is_combo_category?: boolean;
+    };
 }
 
 interface Promotion {
@@ -69,17 +75,35 @@ interface Promotion {
 interface Category {
     id: number;
     name: string;
+    is_combo_category?: boolean;
+}
+
+interface Combo {
+    id: number;
+    name: string;
+    category_id: number;
+    is_active: boolean;
+    precio_pickup_capital: number;
+    precio_domicilio_capital: number;
+    precio_pickup_interior: number;
+    precio_domicilio_interior: number;
+    category?: {
+        id: number;
+        name: string;
+    };
 }
 
 interface EditPromotionPageProps {
     promotion: Promotion;
     products: Product[];
     categories: Category[];
+    combos: Combo[];
 }
 
 interface LocalItem {
     id: string;
     product_id: string;
+    item_type: 'product' | 'combo' | null;
     variant_id: number | null;
     special_price_capital: string;
     special_price_interior: string;
@@ -92,7 +116,7 @@ interface LocalItem {
     time_until: string;
 }
 
-export default function EditPromotion({ promotion, products }: EditPromotionPageProps) {
+export default function EditPromotion({ promotion, products, combos }: EditPromotionPageProps) {
     const [formData, setFormData] = useState({
         is_active: promotion.is_active,
         name: promotion.name,
@@ -105,9 +129,13 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
             const hasDates = !!(item.valid_from || item.valid_until);
             const hasTimes = !!(item.time_from || item.time_until);
 
+            // Determinar si es combo basado en la categoría cargada
+            const isCombo = item.category?.is_combo_category ?? false;
+
             return {
                 id: generateUniqueId(),
                 product_id: item.product_id ? String(item.product_id) : '',
+                item_type: isCombo ? 'combo' : 'product',
                 variant_id: item.variant_id,
                 special_price_capital: String(item.special_price_capital || ''),
                 special_price_interior: String(item.special_price_interior || ''),
@@ -156,6 +184,7 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
         const newItem: LocalItem = {
             id: generateUniqueId(),
             product_id: '',
+            item_type: null,
             variant_id: null,
             special_price_capital: '',
             special_price_interior: '',
@@ -182,35 +211,42 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
         setLocalItems(localItems.filter((_, i) => i !== index));
     };
 
-    const updateItem = (index: number, field: keyof Omit<LocalItem, 'id'>, value: string | number | number[] | boolean | null) => {
+    const updateProductOrCombo = (index: number, value: number | null, type: 'product' | 'combo') => {
         const currentItem = localItems[index];
+        const hasData = currentItem.variant_id || currentItem.special_price_capital || currentItem.special_price_interior;
 
-        if (field === 'product_id' && value !== currentItem.product_id) {
-            const hasData = currentItem.variant_id || currentItem.special_price_capital || currentItem.special_price_interior;
+        const performUpdate = () => {
+            const updated = [...localItems];
+            updated[index] = {
+                ...updated[index],
+                product_id: value ? String(value) : '',
+                item_type: type,
+                variant_id: null,
+                special_price_capital: '',
+                special_price_interior: '',
+            };
+            setLocalItems(updated);
+        };
 
+        if (value !== Number(currentItem.product_id) || type !== currentItem.item_type) {
             if (hasData) {
                 setConfirmDialog({
                     open: true,
-                    title: '¿Cambiar de producto?',
+                    title: '¿Cambiar de producto/combo?',
                     description: 'Se perderán la variante y precios seleccionados si continúas.',
                     onConfirm: () => {
-                        const updated = [...localItems];
-                        updated[index] = {
-                            ...updated[index],
-                            product_id: value as string,
-                            variant_id: null,
-                            special_price_capital: '',
-                            special_price_interior: '',
-                        };
-                        setLocalItems(updated);
+                        performUpdate();
                         setConfirmDialog({ ...confirmDialog, open: false });
                     },
                     onCancel: () => setConfirmDialog({ ...confirmDialog, open: false }),
                 });
                 return;
             }
+            performUpdate();
         }
+    };
 
+    const updateItem = (index: number, field: keyof Omit<LocalItem, 'id'>, value: string | number | number[] | boolean | null) => {
         const updated = [...localItems];
         updated[index] = { ...updated[index], [field]: value };
         setLocalItems(updated);
@@ -220,8 +256,12 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
         e.preventDefault();
         setProcessing(true);
 
-        const expandedItems = localItems.map(({ id: _id, has_schedule: _has_schedule, ...item }) => {
-            const product = products.find((p) => p.id === Number(item.product_id));
+        const expandedItems = localItems.map(({ id: _id, has_schedule: _has_schedule, item_type, ...item }) => {
+            // Buscar en productos o combos según el tipo
+            const entity = item_type === 'combo'
+                ? combos.find((c) => c.id === Number(item.product_id))
+                : products.find((p) => p.id === Number(item.product_id));
+
             const hasDates = item.valid_from || item.valid_until;
             const hasTimes = item.time_from || item.time_until;
 
@@ -238,7 +278,7 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
 
             return {
                 ...item,
-                category_id: product?.category_id || 0,
+                category_id: entity?.category_id || 0,
                 validity_type,
                 special_price_capital: parseFloat(item.special_price_capital) || 0,
                 special_price_interior: parseFloat(item.special_price_interior) || 0,
@@ -306,15 +346,18 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
                 </FormField>
             </FormSection>
 
-            {/* PRODUCTOS */}
-            <FormSection title="Productos">
+            {/* PRODUCTOS Y COMBOS */}
+            <FormSection title="Productos y Combos">
                 <div className="space-y-4">
                     {localItems.map((item, index) => {
-                        const selectedProduct = item.product_id ? products.find((p) => p.id === Number(item.product_id)) : null;
-                        const hasVariants = selectedProduct?.variants && selectedProduct.variants.length > 0;
+                        const isProduct = item.item_type === 'product';
+                        const isCombo = item.item_type === 'combo';
+                        const selectedProduct = isProduct && item.product_id ? products.find((p) => p.id === Number(item.product_id)) : null;
+                        const _selectedCombo = isCombo && item.product_id ? combos.find((c) => c.id === Number(item.product_id)) : null;
+                        const hasVariants = isProduct && selectedProduct?.variants && selectedProduct.variants.length > 0;
 
                         const excludedVariantIds = localItems
-                            .filter((i, idx) => idx !== index && i.product_id === item.product_id && i.variant_id !== null)
+                            .filter((i, idx) => idx !== index && i.product_id === item.product_id && i.variant_id !== null && i.item_type === 'product')
                             .map((i) => i.variant_id!);
 
                         return (
@@ -324,7 +367,9 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
                                 className="relative space-y-4 rounded-lg border border-border p-4"
                             >
                                 <div className="mb-2 flex items-center justify-between">
-                                    <h4 className="text-sm font-medium">Producto {index + 1}</h4>
+                                    <h4 className="text-sm font-medium">
+                                        {isCombo ? 'Combo' : 'Producto'} {index + 1}
+                                    </h4>
                                     {localItems.length > 1 && (
                                         <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)}>
                                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -332,16 +377,13 @@ export default function EditPromotion({ promotion, products }: EditPromotionPage
                                     )}
                                 </div>
 
-                                <ProductCombobox
-                                    label="Producto"
+                                <ProductOrComboSelector
+                                    label="Producto o Combo"
                                     value={item.product_id ? Number(item.product_id) : null}
-                                    onChange={(value) => updateItem(index, 'product_id', value ? String(value) : '')}
-                                    products={products.filter((product) => {
-                                        if (!product.variants || product.variants.length === 0) {
-                                            return !localItems.some((i, idx) => idx !== index && i.product_id === String(product.id));
-                                        }
-                                        return true;
-                                    })}
+                                    onChange={(value, type) => updateProductOrCombo(index, value, type)}
+                                    products={products}
+                                    combos={combos}
+                                    type={item.item_type}
                                     placeholder={PLACEHOLDERS.selectProduct}
                                     error={errors[`items.${index}.product_id`]}
                                     required

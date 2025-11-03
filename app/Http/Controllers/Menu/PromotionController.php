@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Menu;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Menu\StoreBundlePromotionRequest;
 use App\Http\Requests\Menu\StorePromotionRequest;
+use App\Http\Requests\Menu\UpdateBundlePromotionRequest;
 use App\Http\Requests\Menu\UpdatePromotionRequest;
 use App\Models\Menu\Category;
+use App\Models\Menu\Combo;
 use App\Models\Menu\Product;
 use App\Models\Menu\Promotion;
 use Illuminate\Http\JsonResponse;
@@ -85,7 +88,7 @@ class PromotionController extends Controller
         }
 
         $perPage = (int) $request->input('per_page', 10);
-        $promotions = $query->with(['items.variant.product', 'items.product', 'items.category'])
+        $promotions = $query->with(['items.variant.product', 'items.product', 'items.combo', 'items.category'])
             ->paginate($perPage)
             ->withQueryString();
 
@@ -153,9 +156,8 @@ class PromotionController extends Controller
         return Inertia::render('menu/promotions/create', [
             'products' => Product::query()
                 ->with('category')
-                ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name', 'category_id']),
+                ->get(['id', 'name', 'category_id', 'is_active']),
             'categories' => Category::query()
                 ->where('is_active', true)
                 ->orderBy('name')
@@ -233,6 +235,7 @@ class PromotionController extends Controller
         $promotion->load([
             'items.product.variants',
             'items.variant.product',
+            'items.combo',
             'items.category',
         ]);
 
@@ -257,7 +260,11 @@ class PromotionController extends Controller
             'categories' => Category::query()
                 ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name']),
+                ->get(['id', 'name', 'is_combo_category']),
+            'combos' => Combo::query()
+                ->with(['items.product:id,name', 'category:id,name'])
+                ->ordered()
+                ->get(['id', 'name', 'category_id', 'precio_pickup_capital', 'precio_domicilio_capital', 'precio_pickup_interior', 'precio_domicilio_interior', 'is_active']),
         ]);
     }
 
@@ -334,6 +341,7 @@ class PromotionController extends Controller
             'daily_special' => 'menu.promotions.daily-special.index',
             'percentage_discount' => 'menu.promotions.percentage.index',
             'two_for_one' => 'menu.promotions.two-for-one.index',
+            'bundle_special' => 'menu.promotions.bundle-specials.index',
             default => 'menu.promotions.daily-special.index',
         };
     }
@@ -447,16 +455,19 @@ class PromotionController extends Controller
         return Inertia::render('menu/promotions/daily-special/create', [
             'products' => Product::query()
                 ->with(['category:id,name', 'variants' => function ($query) {
-                    $query->select(['id', 'product_id', 'name', 'size', 'precio_pickup_capital', 'precio_pickup_interior'])
+                    $query->select(['id', 'product_id', 'name', 'size', 'precio_pickup_capital', 'precio_pickup_interior', 'is_active'])
                         ->orderBy('sort_order');
                 }])
-                ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name', 'category_id', 'has_variants']),
+                ->get(['id', 'name', 'category_id', 'has_variants', 'is_active']),
             'categories' => Category::query()
                 ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name']),
+                ->get(['id', 'name', 'is_combo_category']),
+            'combos' => Combo::query()
+                ->with(['items.product:id,name', 'category:id,name'])
+                ->ordered()
+                ->get(['id', 'name', 'category_id', 'precio_pickup_capital', 'precio_domicilio_capital', 'precio_pickup_interior', 'precio_domicilio_interior', 'is_active']),
         ]);
     }
 
@@ -484,7 +495,11 @@ class PromotionController extends Controller
             'categories' => Category::query()
                 ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name']),
+                ->get(['id', 'name', 'is_combo_category']),
+            'combos' => Combo::query()
+                ->with(['items.product:id,name', 'category:id,name'])
+                ->ordered()
+                ->get(['id', 'name', 'category_id', 'precio_pickup_capital', 'precio_domicilio_capital', 'precio_pickup_interior', 'precio_domicilio_interior', 'is_active']),
         ]);
     }
 
@@ -512,7 +527,247 @@ class PromotionController extends Controller
             'categories' => Category::query()
                 ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name']),
+                ->get(['id', 'name', 'is_combo_category']),
+            'combos' => Combo::query()
+                ->with(['items.product:id,name', 'category:id,name'])
+                ->ordered()
+                ->get(['id', 'name', 'category_id', 'precio_pickup_capital', 'precio_domicilio_capital', 'precio_pickup_interior', 'precio_domicilio_interior', 'is_active']),
         ]);
+    }
+
+    /**
+     * Muestra listado de combinados
+     */
+    public function bundleSpecialsIndex(Request $request): Response
+    {
+        $search = $request->input('search');
+
+        $query = Promotion::query()
+            ->combinados()
+            ->with(['bundleItems.product:id,name'])
+            ->withCount('bundleItems')
+            ->orderBy('sort_order')
+            ->orderBy('created_at', 'desc');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $combinados = $query->get();
+
+        // Calcular stats
+        $allCombinados = Promotion::combinados();
+        $activeCombinados = Promotion::combinados()->where('is_active', true);
+        $availableCombinados = Promotion::available();
+        $validNowCombinados = Promotion::validNowCombinados();
+
+        return Inertia::render('menu/promotions/bundle-specials/index', [
+            'combinados' => $combinados,
+            'stats' => [
+                'total_combinados' => $allCombinados->count(),
+                'active_combinados' => $activeCombinados->count(),
+                'available_combinados' => $availableCombinados->count(),
+                'valid_now_combinados' => $validNowCombinados->count(),
+            ],
+            'filters' => [
+                'search' => $search,
+                'per_page' => 10,
+            ],
+        ]);
+    }
+
+    /**
+     * Muestra formulario de creación de combinado
+     */
+    public function createBundleSpecial(): Response
+    {
+        return Inertia::render('menu/promotions/bundle-specials/create', [
+            'products' => Product::query()
+                ->with([
+                    'category:id,name,uses_variants',
+                    'variants' => function ($query) {
+                        $query->orderBy('sort_order')
+                            ->select('id', 'product_id', 'name', 'size', 'precio_pickup_capital', 'is_active');
+                    },
+                ])
+                ->orderBy('name')
+                ->get(['id', 'name', 'category_id', 'has_variants', 'is_active']),
+        ]);
+    }
+
+    /**
+     * Muestra formulario de edición de combinado
+     */
+    public function editBundleSpecial(Promotion $promotion): Response
+    {
+        // Verificar que sea un combinado
+        if ($promotion->type !== 'bundle_special') {
+            abort(404);
+        }
+
+        $promotion->load([
+            'bundleItems.product',
+            'bundleItems.variant',
+            'bundleItems.options.product',
+            'bundleItems.options.variant',
+        ]);
+
+        return Inertia::render('menu/promotions/bundle-specials/edit', [
+            'combinado' => $promotion,
+            'products' => Product::query()
+                ->with([
+                    'category:id,name,uses_variants',
+                    'variants' => function ($query) {
+                        $query->orderBy('sort_order')
+                            ->select('id', 'product_id', 'name', 'size', 'precio_pickup_capital', 'is_active');
+                    },
+                ])
+                ->orderBy('name')
+                ->get(['id', 'name', 'category_id', 'has_variants', 'is_active']),
+        ]);
+    }
+
+    /**
+     * Almacena un nuevo combinado
+     */
+    public function storeBundleSpecial(StoreBundlePromotionRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
+
+        $items = $validated['items'] ?? [];
+        unset($validated['items']);
+
+        $promotion = null;
+
+        DB::transaction(function () use ($validated, $items, &$promotion) {
+            $promotion = Promotion::create($validated);
+
+            // Crear items (IDÉNTICO a ComboController)
+            if (! empty($items)) {
+                foreach ($items as $item) {
+                    $isChoiceGroup = $item['is_choice_group'] ?? false;
+
+                    $bundleItem = $promotion->bundleItems()->create([
+                        'product_id' => $isChoiceGroup ? null : ($item['product_id'] ?? null),
+                        'variant_id' => $isChoiceGroup ? null : ($item['variant_id'] ?? null),
+                        'quantity' => $item['quantity'],
+                        'sort_order' => $item['sort_order'] ?? 0,
+                        'is_choice_group' => $isChoiceGroup,
+                        'choice_label' => $isChoiceGroup ? ($item['choice_label'] ?? null) : null,
+                    ]);
+
+                    // Crear opciones si es grupo
+                    if ($isChoiceGroup && ! empty($item['options'])) {
+                        foreach ($item['options'] as $option) {
+                            $bundleItem->options()->create([
+                                'product_id' => $option['product_id'],
+                                'variant_id' => $option['variant_id'] ?? null,
+                                'sort_order' => $option['sort_order'] ?? 0,
+                            ]);
+                        }
+                    }
+                }
+            }
+        });
+
+        return redirect()->route('menu.promotions.bundle-specials.index')
+            ->with('success', 'Combinado creado exitosamente.');
+    }
+
+    /**
+     * Actualiza un combinado existente
+     */
+    public function updateBundleSpecial(UpdateBundlePromotionRequest $request, Promotion $promotion): RedirectResponse
+    {
+        // Verificar que sea un combinado
+        if ($promotion->type !== 'bundle_special') {
+            abort(404);
+        }
+
+        $validated = $request->validated();
+
+        $items = $validated['items'] ?? [];
+        unset($validated['items']);
+
+        DB::transaction(function () use ($validated, $items, $promotion) {
+            $promotion->update($validated);
+
+            // Actualizar items: eliminar todos y recrear (igual que combos)
+            $promotion->bundleItems()->delete();
+
+            if (! empty($items)) {
+                foreach ($items as $item) {
+                    $isChoiceGroup = $item['is_choice_group'] ?? false;
+
+                    $bundleItem = $promotion->bundleItems()->create([
+                        'product_id' => $isChoiceGroup ? null : ($item['product_id'] ?? null),
+                        'variant_id' => $isChoiceGroup ? null : ($item['variant_id'] ?? null),
+                        'quantity' => $item['quantity'],
+                        'sort_order' => $item['sort_order'] ?? 0,
+                        'is_choice_group' => $isChoiceGroup,
+                        'choice_label' => $isChoiceGroup ? ($item['choice_label'] ?? null) : null,
+                    ]);
+
+                    // Crear opciones si es grupo
+                    if ($isChoiceGroup && ! empty($item['options'])) {
+                        foreach ($item['options'] as $option) {
+                            $bundleItem->options()->create([
+                                'product_id' => $option['product_id'],
+                                'variant_id' => $option['variant_id'] ?? null,
+                                'sort_order' => $option['sort_order'] ?? 0,
+                            ]);
+                        }
+                    }
+                }
+            }
+        });
+
+        return redirect()->route('menu.promotions.bundle-specials.index')
+            ->with('success', 'Combinado actualizado exitosamente.');
+    }
+
+    /**
+     * Activa o desactiva un combinado
+     */
+    public function toggleBundleSpecial(Promotion $promotion): RedirectResponse
+    {
+        if ($promotion->type !== 'bundle_special') {
+            abort(404);
+        }
+
+        $promotion->update([
+            'is_active' => ! $promotion->is_active,
+        ]);
+
+        $status = $promotion->is_active ? 'activado' : 'desactivado';
+
+        return redirect()->back()
+            ->with('success', "Combinado {$status} exitosamente.");
+    }
+
+    /**
+     * Reordena los combinados
+     */
+    public function reorderBundleSpecials(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'combinados' => ['required', 'array'],
+            'combinados.*.id' => ['required', 'integer', 'exists:promotions,id'],
+            'combinados.*.sort_order' => ['required', 'integer', 'min:1'],
+        ]);
+
+        foreach ($validated['combinados'] as $combinadoData) {
+            Promotion::where('id', $combinadoData['id'])
+                ->where('type', 'bundle_special')
+                ->update([
+                    'sort_order' => $combinadoData['sort_order'],
+                ]);
+        }
+
+        return redirect()->back()
+            ->with('success', 'Orden actualizado exitosamente.');
     }
 }

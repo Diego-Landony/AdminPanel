@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { CategoryCombobox } from '@/components/CategoryCombobox';
 import { EditPageLayout } from '@/components/edit-page-layout';
@@ -137,9 +137,20 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
         handleInputChange('category_id', value ? String(value) : '');
     };
 
-    const handleVariantsChange = (variants: VariantData[]) => {
-        handleInputChange('variants', variants);
-    };
+    const handleVariantsChange = useCallback((variants: VariantData[]) => {
+        setFormData((prev) => ({
+            ...prev,
+            variants: variants,
+        }));
+
+        if (errors['variants']) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors['variants'];
+                return newErrors;
+            });
+        }
+    }, [errors]);
 
     const toggleSection = (sectionId: number) => {
         setSelectedSections((prev) => (prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]));

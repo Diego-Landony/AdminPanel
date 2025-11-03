@@ -56,6 +56,7 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [comboUsageInfo, setComboUsageInfo] = useState<{ used_in_combos: boolean; combos: string[]; count: number } | null>(null);
 
     const getPriceRange = (product: Product) => {
         if (product.has_variants && product.variants && product.variants.length > 0) {
@@ -138,8 +139,19 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
         router.reload();
     };
 
-    const openDeleteDialog = (product: Product) => {
+    const openDeleteDialog = async (product: Product) => {
         setSelectedProduct(product);
+
+        // Consultar información de uso del producto
+        try {
+            const response = await fetch(route('menu.products.usage-info', product.id));
+            const data = await response.json();
+            setComboUsageInfo(data);
+        } catch (error) {
+            console.error('Error fetching usage info:', error);
+            setComboUsageInfo(null);
+        }
+
         setShowDeleteDialog(true);
     };
 
@@ -147,22 +159,19 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
         setSelectedProduct(null);
         setShowDeleteDialog(false);
         setDeletingProduct(null);
+        setComboUsageInfo(null);
     };
 
     const handleDeleteProduct = () => {
         if (!selectedProduct) return;
 
         setDeletingProduct(selectedProduct.id);
-        router.delete(`/menu/products/${selectedProduct.id}`, {
+        closeDeleteDialog();
+
+        router.delete(route('menu.products.destroy', selectedProduct.id), {
             preserveState: false,
-            onBefore: () => {
-                closeDeleteDialog();
-            },
-            onError: (error) => {
+            onFinish: () => {
                 setDeletingProduct(null);
-                if (error.message) {
-                    showNotification.error(error.message);
-                }
             },
         });
     };
@@ -355,6 +364,11 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
                 isDeleting={deletingProduct !== null}
                 entityName={selectedProduct?.name || ''}
                 entityType="producto"
+                customMessage={
+                    comboUsageInfo?.used_in_combos
+                        ? `¿Estás seguro de que quieres eliminar el producto "${selectedProduct?.name}"?\n\n⚠️ ADVERTENCIA: Este producto está siendo usado en ${comboUsageInfo.count} combo(s):\n${comboUsageInfo.combos.join(', ')}\n\nAl eliminarlo, será removido de estos combos. Esta acción no se puede deshacer.`
+                        : undefined
+                }
             />
         </AppLayout>
     );

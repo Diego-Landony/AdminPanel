@@ -14,6 +14,7 @@ export { EditPageSkeleton } from './EditPageSkeleton';
 export { RestaurantsSkeleton } from '../restaurants/restaurants-skeleton';
 export { ActivitySkeleton } from './activity-skeleton';
 export { CategoriesSkeleton } from './categories-skeleton';
+export { CombinadosSkeleton } from './CombinadosSkeleton';
 export { CustomerTypesSkeleton } from './customer-types-skeleton';
 export { CustomersSkeleton } from './customers-skeleton';
 export { HomeSkeleton } from './home-skeleton';

@@ -174,18 +174,9 @@ class SubwayMenuProductsSeeder extends Seeder
         $category = Category::where('name', 'Subway Series')->first();
 
         $series = [
-            ['name' => 'The Philly 15cm', 'description' => 'Steak, queso americano, pimientos verdes y cebollas (15cm)', 'precio_pickup_capital' => 42, 'precio_domicilio_capital' => 47, 'precio_pickup_interior' => 44, 'precio_domicilio_interior' => 49],
-            ['name' => 'The Philly 30cm', 'description' => 'Steak, queso americano, pimientos verdes y cebollas (30cm)', 'precio_pickup_capital' => 78, 'precio_domicilio_capital' => 83, 'precio_pickup_interior' => 80, 'precio_domicilio_interior' => 85],
-            ['name' => 'The Beast 15cm', 'description' => 'Pepperoni, salami, jamón, roast beef y pavo con doble queso (15cm)', 'precio_pickup_capital' => 48, 'precio_domicilio_capital' => 53, 'precio_pickup_interior' => 50, 'precio_domicilio_interior' => 55],
-            ['name' => 'The Beast 30cm', 'description' => 'Pepperoni, salami, jamón, roast beef y pavo con doble queso (30cm)', 'precio_pickup_capital' => 88, 'precio_domicilio_capital' => 93, 'precio_pickup_interior' => 90, 'precio_domicilio_interior' => 95],
-            ['name' => 'The Boss 15cm', 'description' => 'Salami, pepperoni, jamón con doble queso y vinagreta MVP (15cm)', 'precio_pickup_capital' => 45, 'precio_domicilio_capital' => 50, 'precio_pickup_interior' => 47, 'precio_domicilio_interior' => 52],
-            ['name' => 'The Boss 30cm', 'description' => 'Salami, pepperoni, jamón con doble queso y vinagreta MVP (30cm)', 'precio_pickup_capital' => 82, 'precio_domicilio_capital' => 87, 'precio_pickup_interior' => 84, 'precio_domicilio_interior' => 89],
-            ['name' => 'Titan Turkey 15cm', 'description' => 'Pavo, tocino, queso suizo y peppercorn ranch (15cm)', 'precio_pickup_capital' => 44, 'precio_domicilio_capital' => 49, 'precio_pickup_interior' => 46, 'precio_domicilio_interior' => 51],
-            ['name' => 'Titan Turkey 30cm', 'description' => 'Pavo, tocino, queso suizo y peppercorn ranch (30cm)', 'precio_pickup_capital' => 80, 'precio_domicilio_capital' => 85, 'precio_pickup_interior' => 82, 'precio_domicilio_interior' => 87],
-            ['name' => 'All-American Club 15cm', 'description' => 'Pavo, jamón, tocino con queso americano (15cm)', 'precio_pickup_capital' => 46, 'precio_domicilio_capital' => 51, 'precio_pickup_interior' => 48, 'precio_domicilio_interior' => 53],
-            ['name' => 'All-American Club 30cm', 'description' => 'Pavo, jamón, tocino con queso americano (30cm)', 'precio_pickup_capital' => 84, 'precio_domicilio_capital' => 89, 'precio_pickup_interior' => 86, 'precio_domicilio_interior' => 91],
-            ['name' => 'The Subway Club 15cm', 'description' => 'Pavo, jamón y roast beef clásico (15cm)', 'precio_pickup_capital' => 43, 'precio_domicilio_capital' => 48, 'precio_pickup_interior' => 45, 'precio_domicilio_interior' => 50],
-            ['name' => 'The Subway Club 30cm', 'description' => 'Pavo, jamón y roast beef clásico (30cm)', 'precio_pickup_capital' => 79, 'precio_domicilio_capital' => 84, 'precio_pickup_interior' => 81, 'precio_domicilio_interior' => 86],
+            ['name' => 'DON B.M.T.', 'description' => 'Pepperoni, salami y jamón de la Serie Subway', 'precio_pickup_capital' => 45, 'precio_domicilio_capital' => 50, 'precio_pickup_interior' => 47, 'precio_domicilio_interior' => 52],
+            ['name' => 'CAPITÁN YAKI', 'description' => 'Pollo Teriyaki especial de la Serie Subway', 'precio_pickup_capital' => 46, 'precio_domicilio_capital' => 51, 'precio_pickup_interior' => 48, 'precio_domicilio_interior' => 53],
+            ['name' => 'EL JEFE', 'description' => 'Carne premium especial de la Serie Subway', 'precio_pickup_capital' => 48, 'precio_domicilio_capital' => 53, 'precio_pickup_interior' => 50, 'precio_domicilio_interior' => 55],
         ];
 
         foreach ($series as $seriesData) {
@@ -323,12 +314,12 @@ class SubwayMenuProductsSeeder extends Seeder
 
         $ensaladas = [
             [
-                'name' => 'Ensalada Subway Club',
-                'description' => 'Pavo, jamón y roast beef sobre lechuga fresca con vegetales',
-                'precio_pickup_capital' => 42,
-                'precio_domicilio_capital' => 47,
-                'precio_pickup_interior' => 44,
-                'precio_domicilio_interior' => 49,
+                'name' => 'Ensalada B.M.T',
+                'description' => 'Pepperoni, salami y jamón sobre lechuga fresca con vegetales',
+                'precio_pickup_capital' => 40,
+                'precio_domicilio_capital' => 45,
+                'precio_pickup_interior' => 42,
+                'precio_domicilio_interior' => 47,
             ],
             [
                 'name' => 'Ensalada de Pollo Teriyaki',
@@ -487,7 +478,7 @@ class SubwayMenuProductsSeeder extends Seeder
 
         $postres = [
             [
-                'name' => 'Cookie con Chispas de Chocolate',
+                'name' => 'galleta con chocolate',
                 'description' => 'Galleta grande con chispas de chocolate',
                 'precio_pickup_capital' => 12,
                 'precio_domicilio_capital' => 14,
@@ -562,6 +553,12 @@ class SubwayMenuProductsSeeder extends Seeder
                 'description' => 'Carne de res y huevo con queso derretido',
                 'prices_15cm' => ['pickup_capital' => 35, 'domicilio_capital' => 40, 'pickup_interior' => 37, 'domicilio_interior' => 42],
                 'prices_30cm' => ['pickup_capital' => 62, 'domicilio_capital' => 67, 'pickup_interior' => 64, 'domicilio_interior' => 69],
+            ],
+            [
+                'name' => 'Desayuno chilero way',
+                'description' => 'Desayuno especial estilo chapín',
+                'prices_15cm' => ['pickup_capital' => 32, 'domicilio_capital' => 37, 'pickup_interior' => 34, 'domicilio_interior' => 39],
+                'prices_30cm' => ['pickup_capital' => 58, 'domicilio_capital' => 63, 'pickup_interior' => 60, 'domicilio_interior' => 65],
             ],
         ];
 

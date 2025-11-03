@@ -200,6 +200,12 @@ class ProductController extends Controller
                 $validated['precio_pickup_interior'] = $validated['precio_pickup_interior'] ?? null;
                 $validated['precio_domicilio_interior'] = $validated['precio_domicilio_interior'] ?? null;
 
+                // Eliminar referencias en combo_item_options antes de eliminar variantes
+                $variantIds = $product->variants()->pluck('id');
+                if ($variantIds->isNotEmpty()) {
+                    \App\Models\Menu\ComboItemOption::whereIn('variant_id', $variantIds)->delete();
+                }
+
                 // Eliminar variantes existentes
                 $product->variants()->delete();
             } else {
@@ -274,56 +280,48 @@ class ProductController extends Controller
     public function destroy(Request $request, Product $product): RedirectResponse|JsonResponse
     {
         try {
-            // Validar uso en combo_item_options
-            $usedInChoiceGroups = \App\Models\Menu\ComboItemOption::where('product_id', $product->id)
-                ->with('comboItem.combo')
-                ->get();
+            // Eliminar referencias en combo_item_options
+            \App\Models\Menu\ComboItemOption::where('product_id', $product->id)->delete();
 
-            if ($usedInChoiceGroups->isNotEmpty()) {
-                $comboNames = $usedInChoiceGroups
-                    ->pluck('comboItem.combo.name')
-                    ->unique()
-                    ->sort()
-                    ->values();
-
-                $errorMessage = sprintf(
-                    'No puedes eliminar este producto. Está usado en %d combo(s): %s',
-                    $comboNames->count(),
-                    $comboNames->join(', ')
-                );
-
-                if ($request->expectsJson()) {
-                    return response()->json([
-                        'message' => $errorMessage,
-                    ], 422);
-                }
-
-                return back()->withErrors([
-                    'error' => $errorMessage,
-                ]);
-            }
-
+            // Eliminar el producto
             $product->delete();
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'message' => 'Producto eliminado exitosamente.',
-                ], 200);
-            }
 
             return redirect()
                 ->route('menu.products.index')
                 ->with('success', 'Producto eliminado exitosamente.');
         } catch (\Exception $e) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'message' => 'Error al eliminar el producto: '.$e->getMessage(),
-                ], 500);
-            }
-
             return back()
-                ->withErrors(['error' => 'Error al eliminar el producto: '.$e->getMessage()]);
+                ->with('error', 'Error al eliminar el producto: '.$e->getMessage());
         }
+    }
+
+    /**
+     * Obtener información de uso del producto en combos
+     */
+    public function usageInfo(Product $product): JsonResponse
+    {
+        $usedInChoiceGroups = \App\Models\Menu\ComboItemOption::where('product_id', $product->id)
+            ->with('comboItem.combo')
+            ->get();
+
+        if ($usedInChoiceGroups->isEmpty()) {
+            return response()->json([
+                'used_in_combos' => false,
+                'combos' => [],
+            ]);
+        }
+
+        $comboNames = $usedInChoiceGroups
+            ->pluck('comboItem.combo.name')
+            ->unique()
+            ->sort()
+            ->values();
+
+        return response()->json([
+            'used_in_combos' => true,
+            'combos' => $comboNames,
+            'count' => $comboNames->count(),
+        ]);
     }
 
     /**

@@ -5,6 +5,7 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import {
     Activity,
+    Gift,
     HandPlatter,
     Home,
     Layers,
@@ -143,6 +144,14 @@ export const systemPages: PageConfig[] = [
         permission: 'menu.promotions.view',
     },
     {
+        name: 'menu-promotions-bundle-specials',
+        title: 'Combinados',
+        href: '/menu/promotions/bundle-specials',
+        icon: Gift,
+        group: 'Promociones',
+        permission: 'menu.promotions.view',
+    },
+    {
         name: 'activity',
         title: 'Actividad',
         href: '/activity',
@@ -188,6 +197,7 @@ export function AppSidebar() {
     const getNavItems = (): NavItem[] => {
         const items: NavItem[] = [];
         const groupedItems: Record<string, NavItem[]> = {};
+        let settingsItem: NavItem | null = null;
 
         // Procesar cada página del sistema
         systemPages.forEach((page) => {
@@ -201,6 +211,12 @@ export function AppSidebar() {
                 href: page.href,
                 icon: page.icon,
             };
+
+            // Guardar settings para agregarlo al final
+            if (page.name === 'settings') {
+                settingsItem = navItem;
+                return;
+            }
 
             // Si tiene grupo, agregarlo al grupo correspondiente
             if (page.group) {
@@ -230,6 +246,11 @@ export function AppSidebar() {
                 });
             }
         });
+
+        // Agregar configuración al final
+        if (settingsItem) {
+            items.push(settingsItem);
+        }
 
         // Si no hay items de navegación, mostrar mensaje de "sin acceso"
         if (items.length === 0) {

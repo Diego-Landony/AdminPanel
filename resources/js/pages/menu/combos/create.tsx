@@ -69,8 +69,22 @@ interface CreateComboPageProps {
     categories: Category[];
 }
 
+interface ComboFormData {
+    category_id: string;
+    name: string;
+    description: string;
+    image: string;
+    is_active: boolean;
+    precio_pickup_capital: string;
+    precio_domicilio_capital: string;
+    precio_pickup_interior: string;
+    precio_domicilio_interior: string;
+    items: ComboItem[];
+}
+
 export default function ComboCreate({ products, categories }: CreateComboPageProps) {
-    const { data, setData, post, processing, errors, reset } = useForm({
+    // @ts-expect-error - Inertia's FormDataType doesn't support nested array types
+    const { data, setData, post, processing, errors, reset } = useForm<ComboFormData>({
         category_id: '',
         name: '',
         description: '',
@@ -119,27 +133,27 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
         };
         const updated = [...localItems, newItem];
         setLocalItems(updated);
-        setData('items', updated as any);
+        setData('items', updated);
     };
 
     const removeItem = (index: number) => {
         const updated = localItems.filter((_, i) => i !== index);
         setLocalItems(updated);
-        setData('items', updated as any);
+        setData('items', updated);
     };
 
     const updateItem = (index: number, field: string, value: string | number | boolean | ChoiceOption[] | null) => {
         const updated = [...localItems];
         updated[index] = { ...updated[index], [field]: value };
         setLocalItems(updated);
-        setData('items', updated as any);
+        setData('items', updated);
     };
 
     const batchUpdateItem = (index: number, updates: Partial<ComboItem>) => {
         const updated = [...localItems];
         updated[index] = { ...updated[index], ...updates };
         setLocalItems(updated);
-        setData('items', updated as any);
+        setData('items', updated);
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -151,7 +165,7 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
                 const newIndex = items.findIndex((item) => item.id === over.id);
 
                 const newItems = arrayMove(items, oldIndex, newIndex);
-                setData('items', newItems as any);
+                setData('items', newItems);
                 return newItems;
             });
         }

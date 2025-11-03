@@ -137,7 +137,7 @@ class SubwayRealCombosSeeder extends Seeder
         ]);
 
         // Opciones de complementos
-        $complementosOptions = ['Papas Lays', 'Doritos', 'Cookie con Chispas de Chocolate', 'Cookie de Avena con Pasas'];
+        $complementosOptions = ['Papas Lays', 'Doritos', 'galleta con chocolate', 'Cookie de Avena con Pasas'];
         $sortOrder = 1;
         foreach ($complementosOptions as $complementoName) {
             $product = Product::where('name', $complementoName)->first();
@@ -177,7 +177,7 @@ class SubwayRealCombosSeeder extends Seeder
             'sort_order' => 1,
         ]);
 
-        $subsOptions = ['Italian B.M.T.', 'Pollo Teriyaki', 'Pechuga de Pavo', 'Subway Club', 'Atún', 'Jamón'];
+        $subsOptions = ['Italian B.M.T.', 'Pollo Teriyaki', 'Pechuga de Pavo', 'Atún', 'Jamón'];
         $sortOrder = 1;
         foreach ($subsOptions as $subName) {
             $product = Product::where('name', $subName)->first();
@@ -257,7 +257,7 @@ class SubwayRealCombosSeeder extends Seeder
             'sort_order' => 1,
         ]);
 
-        $subsOptions = ['Italian B.M.T.', 'Subway Club', 'Steak & Cheese', 'Pollo Teriyaki', 'Pechuga de Pavo'];
+        $subsOptions = ['Italian B.M.T.', 'Pollo Teriyaki', 'Pechuga de Pavo'];
         $sortOrder = 1;
         foreach ($subsOptions as $subName) {
             $product = Product::where('name', $subName)->first();
@@ -349,7 +349,7 @@ class SubwayRealCombosSeeder extends Seeder
             'sort_order' => 1,
         ]);
 
-        $desayunosOptions = ['Desayuno con Tocino y Huevo', 'Desayuno con Jamón y Huevo', 'Desayuno Steak y Huevo'];
+        $desayunosOptions = ['Desayuno con Tocino y Huevo', 'Desayuno con Jamón y Huevo'];
         $sortOrder = 1;
         foreach ($desayunosOptions as $desayunoName) {
             $product = Product::where('name', $desayunoName)->first();
@@ -387,7 +387,7 @@ class SubwayRealCombosSeeder extends Seeder
             'sort_order' => 3,
         ]);
 
-        $postresOptions = ['Muffin de Arándanos', 'Cookie con Chispas de Chocolate', 'Cookie de Avena con Pasas'];
+        $postresOptions = ['Muffin de Arándanos', 'galleta con chocolate', 'Cookie de Avena con Pasas'];
         $sortOrder = 1;
         foreach ($postresOptions as $postreName) {
             $product = Product::where('name', $postreName)->first();
@@ -427,7 +427,7 @@ class SubwayRealCombosSeeder extends Seeder
             'sort_order' => 1,
         ]);
 
-        $subsOptions = ['Jamón', 'Pechuga de Pollo', 'Veggie Delite', 'Atún'];
+        $subsOptions = ['Jamón', 'Pechuga de Pollo', 'Atún'];
         $sortOrder = 1;
         foreach ($subsOptions as $subName) {
             $product = Product::where('name', $subName)->first();

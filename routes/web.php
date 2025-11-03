@@ -195,6 +195,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('permission:menu.products.edit');
         Route::patch('products/{product}', [ProductController::class, 'update'])
             ->middleware('permission:menu.products.edit');
+        Route::get('products/{product}/usage-info', [ProductController::class, 'usageInfo'])->name('products.usage-info')
+            ->middleware('permission:menu.products.view');
         Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy')
             ->middleware('permission:menu.products.delete');
         Route::post('products/{product}/clone', [ProductController::class, 'clone'])->name('products.clone')
@@ -247,6 +249,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->middleware('permission:menu.promotions.view');
             Route::get('/percentage/create', [PromotionController::class, 'createPercentage'])->name('percentage.create')
                 ->middleware('permission:menu.promotions.create');
+
+            // Combinados (bundle specials)
+            Route::get('/bundle-specials', [PromotionController::class, 'bundleSpecialsIndex'])->name('bundle-specials.index')
+                ->middleware('permission:menu.promotions.view');
+            Route::get('/bundle-specials/create', [PromotionController::class, 'createBundleSpecial'])->name('bundle-specials.create')
+                ->middleware('permission:menu.promotions.create');
+            Route::post('/bundle-specials', [PromotionController::class, 'storeBundleSpecial'])->name('bundle-specials.store')
+                ->middleware('permission:menu.promotions.create');
+            Route::get('/bundle-specials/{promotion}/edit', [PromotionController::class, 'editBundleSpecial'])->name('bundle-specials.edit')
+                ->middleware('permission:menu.promotions.edit');
+            Route::put('/bundle-specials/{promotion}', [PromotionController::class, 'updateBundleSpecial'])->name('bundle-specials.update')
+                ->middleware('permission:menu.promotions.edit');
+            Route::delete('/bundle-specials/{promotion}', [PromotionController::class, 'destroy'])->name('bundle-specials.destroy')
+                ->middleware('permission:menu.promotions.delete');
+            Route::post('/bundle-specials/{promotion}/toggle', [PromotionController::class, 'toggleBundleSpecial'])->name('bundle-specials.toggle')
+                ->middleware('permission:menu.promotions.edit');
+            Route::post('/bundle-specials/reorder', [PromotionController::class, 'reorderBundleSpecials'])->name('bundle-specials.reorder')
+                ->middleware('permission:menu.promotions.edit');
 
             // Rutas compartidas (aplican a todos los tipos)
             Route::post('/preview', [PromotionController::class, 'preview'])->name('preview')

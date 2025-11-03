@@ -15,7 +15,7 @@ abstract class TestCase extends BaseTestCase
 
         // CRITICAL SAFETY CHECK: Verify we are in testing environment
         if (config('app.env') !== 'testing') {
-            throw new \Exception('Tests can ONLY run in testing environment! Current: ' . config('app.env'));
+            throw new \Exception('Tests can ONLY run in testing environment! Current: '.config('app.env'));
         }
 
         // CRITICAL SAFETY CHECK: Verify we are using test database
@@ -24,7 +24,7 @@ abstract class TestCase extends BaseTestCase
 
         if ($database === 'subwayapp') {
             throw new \Exception(
-                "DANGER: Tests attempting to use PRODUCTION database '{$database}'! " .
+                "DANGER: Tests attempting to use PRODUCTION database '{$database}'! ".
                 "Expected 'subwayapp_test'. Connection: {$connection}"
             );
         }
@@ -32,7 +32,7 @@ abstract class TestCase extends BaseTestCase
         // Additional safety: verify we're using the correct connection
         if ($connection !== 'mariadb_testing') {
             throw new \Exception(
-                "WARNING: Expected database connection 'mariadb_testing' but got '{$connection}'. " .
+                "WARNING: Expected database connection 'mariadb_testing' but got '{$connection}'. ".
                 "Database: {$database}"
             );
         }

@@ -279,19 +279,66 @@ class ProductController extends Controller
      */
     public function destroy(Request $request, Product $product): RedirectResponse|JsonResponse
     {
-        try {
-            // Eliminar referencias en combo_item_options
-            \App\Models\Menu\ComboItemOption::where('product_id', $product->id)->delete();
+        // Obtener combos donde se usa el producto en items fijos
+        $combosFromItems = \App\Models\Menu\ComboItem::where('product_id', $product->id)
+            ->with('combo:id,name')
+            ->get()
+            ->pluck('combo.name')
+            ->unique()
+            ->filter();
 
+        // Obtener combos donde se usa el producto en grupos de elección
+        $combosFromChoiceGroups = \App\Models\Menu\ComboItemOption::where('product_id', $product->id)
+            ->with('comboItem.combo:id,name')
+            ->get()
+            ->pluck('comboItem.combo.name')
+            ->unique()
+            ->filter();
+
+        // Combinar ambos conjuntos de combos
+        $allCombos = $combosFromItems->merge($combosFromChoiceGroups)->unique()->sort()->values();
+
+        if ($allCombos->isNotEmpty()) {
+            $comboCount = $allCombos->count();
+            $comboList = $allCombos->join(', ');
+
+            $message = "No se puede eliminar el producto porque está siendo usado en {$comboCount} combo(s): {$comboList}. Está usado en "
+                .($combosFromItems->isNotEmpty() ? 'items de combo' : '')
+                .($combosFromItems->isNotEmpty() && $combosFromChoiceGroups->isNotEmpty() ? ' y ' : '')
+                .($combosFromChoiceGroups->isNotEmpty() ? 'grupos de elección' : '').'.';
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $message,
+                ], 422);
+            }
+
+            return back()->with('error', $message);
+        }
+
+        try {
             // Eliminar el producto
             $product->delete();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Producto eliminado exitosamente.',
+                ], 200);
+            }
 
             return redirect()
                 ->route('menu.products.index')
                 ->with('success', 'Producto eliminado exitosamente.');
         } catch (\Exception $e) {
-            return back()
-                ->with('error', 'Error al eliminar el producto: '.$e->getMessage());
+            $errorMessage = 'Error al eliminar el producto: '.$e->getMessage();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $errorMessage,
+                ], 500);
+            }
+
+            return back()->with('error', $errorMessage);
         }
     }
 

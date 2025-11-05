@@ -57,7 +57,7 @@ test('puede crear combinado con items fijos', function () {
 
     // Debug: Ver todas las promociones creadas
     $allPromotions = Promotion::where('name', 'LIKE', 'Combinado Test%')->get(['id', 'name', 'type']);
-    dump('Total promociones "Combinado Test": ' . $allPromotions->count());
+    dump('Total promociones "Combinado Test": '.$allPromotions->count());
     dump($allPromotions->toArray());
 
     expect($promotion)->not->toBeNull();

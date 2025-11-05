@@ -232,7 +232,8 @@ export default function BundleSpecialEdit({ combinado, products }: EditBundleSpe
 
         router.put(
             route('menu.promotions.bundle-specials.update', combinado.id),
-            submitData,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            submitData as any,
             {
                 onSuccess: () => {
                     // Redirección manejada por el controlador

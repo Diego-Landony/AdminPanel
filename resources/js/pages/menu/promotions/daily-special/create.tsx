@@ -321,7 +321,8 @@ export default function CreatePromotion({ products, combos }: CreatePromotionPag
             items: expandedItems,
         };
 
-        router.post(route('menu.promotions.store'), transformedData);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        router.post(route('menu.promotions.store'), transformedData as any);
     };
 
     return (

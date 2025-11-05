@@ -283,7 +283,8 @@ export default function CreatePercentage({ products, categories, combos }: Creat
             name: data.name,
             description: data.description,
             type: data.type,
-            items: expandedItems,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            items: expandedItems as any,
         });
     };
 

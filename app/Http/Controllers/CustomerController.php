@@ -40,25 +40,27 @@ class CustomerController extends Controller
             }
         }
 
-        // Query base con relación de tipo de cliente
-        $query = Customer::with('customerType')
-            ->select([
-                'id',
-                'name',
-                'email',
-                'subway_card',
-                'birth_date',
-                'gender',
-                'customer_type_id',
-                'phone',
-                'email_verified_at',
-                'created_at',
-                'updated_at',
-                'last_activity_at',
-                'last_purchase_at',
-                'points',
-                'points_updated_at',
-            ]);
+        // Query base con relación de tipo de cliente y conteo de direcciones y NITs
+        // IMPORTANTE: select() debe ir ANTES de withCount() para no sobrescribir las columnas de conteo
+        $query = Customer::select([
+            'id',
+            'name',
+            'email',
+            'subway_card',
+            'birth_date',
+            'gender',
+            'customer_type_id',
+            'phone',
+            'email_verified_at',
+            'created_at',
+            'updated_at',
+            'last_activity_at',
+            'last_purchase_at',
+            'points',
+            'points_updated_at',
+        ])
+            ->with('customerType')
+            ->withCount('addresses', 'nits');
 
         // Aplicar búsqueda global si existe
         if ($search) {
@@ -143,6 +145,8 @@ class CustomerController extends Controller
                     // ✅ Legacy compatibility: provide client_type as computed field
                     'client_type' => $customer->customerType?->name ?? 'regular',
                     'phone' => $customer->phone,
+                    'addresses_count' => $customer->addresses_count ?? 0,
+                    'nits_count' => $customer->nits_count ?? 0,
                     'email_verified_at' => $customer->email_verified_at,
                     'created_at' => $customer->created_at,
                     'updated_at' => $customer->updated_at,
@@ -240,8 +244,6 @@ class CustomerController extends Controller
                 'gender' => 'nullable|string|max:50',
                 'customer_type_id' => 'nullable|exists:customer_types,id',
                 'phone' => 'nullable|string|max:255',
-                'address' => 'nullable|string|max:1000',
-                'nit' => 'nullable|string|max:255',
             ]);
 
             // Get default customer type if not provided
@@ -256,8 +258,6 @@ class CustomerController extends Controller
                 'gender' => $request->gender,
                 'customer_type_id' => $customerTypeId,
                 'phone' => $request->phone,
-                'address' => $request->address,
-                'nit' => $request->nit,
                 'email_verified_at' => now(),
                 'timezone' => 'America/Guatemala',
             ]);
@@ -290,6 +290,8 @@ class CustomerController extends Controller
      */
     public function edit(Customer $customer): Response
     {
+        $customer->load('addresses', 'nits');
+
         $customerData = [
             'id' => $customer->id,
             'name' => $customer->name,
@@ -303,8 +305,26 @@ class CustomerController extends Controller
                 'name' => $customer->customerType->name,
             ] : null,
             'phone' => $customer->phone,
-            'address' => $customer->address,
-            'nit' => $customer->nit,
+            'addresses' => $customer->addresses->map(function ($address) {
+                return [
+                    'id' => $address->id,
+                    'label' => $address->label,
+                    'address_line' => $address->address_line,
+                    'latitude' => $address->latitude,
+                    'longitude' => $address->longitude,
+                    'delivery_notes' => $address->delivery_notes,
+                    'is_default' => $address->is_default,
+                ];
+            }),
+            'nits' => $customer->nits->map(function ($nit) {
+                return [
+                    'id' => $nit->id,
+                    'nit' => $nit->nit,
+                    'nit_type' => $nit->nit_type,
+                    'business_name' => $nit->business_name,
+                    'is_default' => $nit->is_default,
+                ];
+            }),
             'email_verified_at' => $customer->email_verified_at ? $customer->email_verified_at->toISOString() : null,
             'created_at' => $customer->created_at ? $customer->created_at->toISOString() : null,
             'updated_at' => $customer->updated_at ? $customer->updated_at->toISOString() : null,
@@ -333,8 +353,6 @@ class CustomerController extends Controller
                 'gender' => 'nullable|string|max:50',
                 'customer_type_id' => 'nullable|exists:customer_types,id',
                 'phone' => 'nullable|string|max:255',
-                'address' => 'nullable|string|max:1000',
-                'nit' => 'nullable|string|max:255',
             ];
 
             // Solo validar contraseña si se proporciona
@@ -355,8 +373,6 @@ class CustomerController extends Controller
                 'gender' => $request->gender,
                 'customer_type_id' => $request->customer_type_id,
                 'phone' => $request->phone,
-                'address' => $request->address,
-                'nit' => $request->nit,
             ];
 
             // Solo actualizar contraseña si se proporciona

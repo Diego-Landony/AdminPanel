@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { Award, Check, Clock, CreditCard, Phone, Users, X } from 'lucide-react';
+import { Award, Check, Clock, CreditCard, FileText, MapPin, Phone, Users, X } from 'lucide-react';
 import React from 'react';
 
 import { DataTable } from '@/components/DataTable';
@@ -29,6 +29,8 @@ interface Customer {
         multiplier: number;
     } | null;
     phone: string | null;
+    addresses_count: number;
+    nits_count: number;
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
@@ -208,6 +210,28 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
             render: (customer: Customer) => <div className="text-sm">{customer.phone || 'N/A'}</div>,
         },
         {
+            key: 'addresses',
+            title: 'Direcciones',
+            width: 'sm' as const,
+            render: (customer: Customer) => (
+                <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">{customer.addresses_count || 0}</span>
+                </div>
+            ),
+        },
+        {
+            key: 'nits',
+            title: 'NITs',
+            width: 'sm' as const,
+            render: (customer: Customer) => (
+                <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">{customer.nits_count || 0}</span>
+                </div>
+            ),
+        },
+        {
             key: 'last_purchase',
             title: 'Última Compra',
             width: 'md' as const,
@@ -292,6 +316,24 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
                         </div>
                     ),
                     condition: !!customer.phone,
+                },
+                {
+                    label: 'Direcciones',
+                    value: (
+                        <div className="flex items-center gap-2">
+                            <MapPin className="h-3 w-3 text-muted-foreground" />
+                            <span>{customer.addresses_count || 0} dirección{customer.addresses_count !== 1 ? 'es' : ''}</span>
+                        </div>
+                    ),
+                },
+                {
+                    label: 'NITs',
+                    value: (
+                        <div className="flex items-center gap-2">
+                            <FileText className="h-3 w-3 text-muted-foreground" />
+                            <span>{customer.nits_count || 0} NIT{customer.nits_count !== 1 ? 's' : ''}</span>
+                        </div>
+                    ),
                 },
                 {
                     label: 'Verificación Email',

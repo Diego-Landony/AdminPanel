@@ -43,6 +43,7 @@ export const PLACEHOLDERS = {
     productName: 'Nombre del producto',
     comboLabel: 'Etiqueta del elemento',
     choiceGroupLabel: 'Ej: Elige tu sub de 15cm',
+    addressLabel: 'Casa, Oficina, etc.',
 
     // Selects genéricos
     selectGender: 'Selecciona el género',

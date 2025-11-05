@@ -275,7 +275,8 @@ export default function CreateTwoForOnePromotion({ products, categories, combos 
             name: data.name,
             description: data.description,
             type: data.type,
-            items: expandedItems,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            items: expandedItems as any,
         });
     };
 

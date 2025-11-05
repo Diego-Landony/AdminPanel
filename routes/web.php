@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\CustomerAddressController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CustomerDeviceController;
+use App\Http\Controllers\CustomerNitController;
 use App\Http\Controllers\CustomerTypeController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\Menu\CategoryController;
@@ -82,6 +85,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:customers.edit');
     Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy')
         ->middleware('permission:customers.delete');
+
+    // Gestión de direcciones de clientes
+    Route::post('customers/{customer}/addresses', [CustomerAddressController::class, 'store'])->name('customers.addresses.store')
+        ->middleware('permission:customers.edit');
+    Route::put('customers/{customer}/addresses/{address}', [CustomerAddressController::class, 'update'])->name('customers.addresses.update')
+        ->middleware('permission:customers.edit');
+    Route::delete('customers/{customer}/addresses/{address}', [CustomerAddressController::class, 'destroy'])->name('customers.addresses.destroy')
+        ->middleware('permission:customers.edit');
+
+    // Gestión de dispositivos de clientes
+    Route::post('customers/{customer}/devices', [CustomerDeviceController::class, 'store'])->name('customers.devices.store')
+        ->middleware('permission:customers.edit');
+    Route::put('customers/{customer}/devices/{device}', [CustomerDeviceController::class, 'update'])->name('customers.devices.update')
+        ->middleware('permission:customers.edit');
+    Route::delete('customers/{customer}/devices/{device}', [CustomerDeviceController::class, 'destroy'])->name('customers.devices.destroy')
+        ->middleware('permission:customers.edit');
+    Route::delete('customers/{customer}/devices-inactive', [CustomerDeviceController::class, 'destroyInactive'])->name('customers.devices.destroy-inactive')
+        ->middleware('permission:customers.edit');
+
+    // Gestión de NITs de clientes
+    Route::post('customers/{customer}/nits', [CustomerNitController::class, 'store'])->name('customers.nits.store')
+        ->middleware('permission:customers.edit');
+    Route::put('customers/{customer}/nits/{nit}', [CustomerNitController::class, 'update'])->name('customers.nits.update')
+        ->middleware('permission:customers.edit');
+    Route::delete('customers/{customer}/nits/{nit}', [CustomerNitController::class, 'destroy'])->name('customers.nits.destroy')
+        ->middleware('permission:customers.edit');
 
     // Gestión de tipos de clientes - requiere permisos específicos
     Route::get('customer-types', [CustomerTypeController::class, 'index'])->name('customer-types.index')

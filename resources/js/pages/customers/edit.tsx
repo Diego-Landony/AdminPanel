@@ -1,8 +1,11 @@
 import { showNotification } from '@/hooks/useNotifications';
-import { useForm } from '@inertiajs/react';
-import { Calendar, CreditCard, Eye, EyeOff, Hash, Lock, Mail, Phone, User } from 'lucide-react';
+import { router, useForm } from '@inertiajs/react';
+import { Building2, Calendar, CreditCard, Edit2, Eye, EyeOff, FileText, Lock, Mail, Phone, Plus, Trash2, User } from 'lucide-react';
 import React, { useState } from 'react';
 
+import { AddressFormModal } from '@/components/customers/AddressFormModal';
+import { NitFormModal } from '@/components/customers/NitFormModal';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
 import { EditCustomersSkeleton } from '@/components/skeletons';
@@ -11,7 +14,6 @@ import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { AUTOCOMPLETE, FIELD_DESCRIPTIONS, NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
 /**
@@ -28,6 +30,24 @@ interface CustomerType {
 /**
  * Interfaz para los datos del cliente
  */
+interface CustomerAddress {
+    id: number;
+    label: string | null;
+    address_line: string;
+    latitude: number | null;
+    longitude: number | null;
+    delivery_notes: string | null;
+    is_default: boolean;
+}
+
+interface CustomerNit {
+    id: number;
+    nit: string;
+    nit_type: 'personal' | 'company' | 'other';
+    business_name: string | null;
+    is_default: boolean;
+}
+
 interface Customer {
     id: number;
     name: string;
@@ -38,8 +58,8 @@ interface Customer {
     customer_type_id: number | null;
     customer_type: { id: number; name: string } | null;
     phone: string | null;
-    address: string | null;
-    nit: string | null;
+    addresses: CustomerAddress[];
+    nits: CustomerNit[];
     email_verified_at: string | null;
     created_at: string | null;
     updated_at: string | null;
@@ -76,6 +96,18 @@ const formatDate = (dateString: string | null): string => {
 export default function EditCustomer({ customer, customer_types }: EditCustomerProps) {
     const [showPassword, setShowPassword] = useState(false);
 
+    const [addressModalOpen, setAddressModalOpen] = useState(false);
+    const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
+    const [deleteAddressDialogOpen, setDeleteAddressDialogOpen] = useState(false);
+    const [addressToDelete, setAddressToDelete] = useState<CustomerAddress | null>(null);
+    const [isDeletingAddress, setIsDeletingAddress] = useState(false);
+
+    const [nitModalOpen, setNitModalOpen] = useState(false);
+    const [selectedNit, setSelectedNit] = useState<CustomerNit | null>(null);
+    const [deleteNitDialogOpen, setDeleteNitDialogOpen] = useState(false);
+    const [nitToDelete, setNitToDelete] = useState<CustomerNit | null>(null);
+    const [isDeletingNit, setIsDeletingNit] = useState(false);
+
     const { data, setData, put, processing, errors, reset, isDirty } = useForm({
         name: customer.name || '',
         email: customer.email || '',
@@ -86,8 +118,6 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
         gender: customer.gender || '',
         customer_type_id: customer.customer_type_id,
         phone: customer.phone || '',
-        address: customer.address || '',
-        nit: customer.nit || '',
     });
 
     /**
@@ -127,8 +157,76 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
             gender: customer.gender || '',
             customer_type_id: customer.customer_type_id,
             phone: customer.phone || '',
-            address: customer.address || '',
-            nit: customer.nit || '',
+        });
+    };
+
+    const handleAddAddress = () => {
+        setSelectedAddress(null);
+        setAddressModalOpen(true);
+    };
+
+    const handleEditAddress = (address: CustomerAddress) => {
+        setSelectedAddress(address);
+        setAddressModalOpen(true);
+    };
+
+    const handleDeleteAddressClick = (address: CustomerAddress) => {
+        setAddressToDelete(address);
+        setDeleteAddressDialogOpen(true);
+    };
+
+    const handleDeleteAddressConfirm = () => {
+        if (!addressToDelete) return;
+
+        setIsDeletingAddress(true);
+        router.delete(route('customers.addresses.destroy', { customer: customer.id, address: addressToDelete.id }), {
+            onSuccess: () => {
+                showNotification.success('Dirección eliminada exitosamente');
+                setDeleteAddressDialogOpen(false);
+                setAddressToDelete(null);
+            },
+            onError: (errors) => {
+                const firstError = Object.values(errors)[0];
+                if (typeof firstError === 'string') {
+                    showNotification.error(firstError);
+                }
+            },
+            onFinish: () => setIsDeletingAddress(false),
+        });
+    };
+
+    const handleAddNit = () => {
+        setSelectedNit(null);
+        setNitModalOpen(true);
+    };
+
+    const handleEditNit = (nit: CustomerNit) => {
+        setSelectedNit(nit);
+        setNitModalOpen(true);
+    };
+
+    const handleDeleteNitClick = (nit: CustomerNit) => {
+        setNitToDelete(nit);
+        setDeleteNitDialogOpen(true);
+    };
+
+    const handleDeleteNitConfirm = () => {
+        if (!nitToDelete) return;
+
+        setIsDeletingNit(true);
+        router.delete(route('customers.nits.destroy', { customer: customer.id, nit: nitToDelete.id }), {
+            onSuccess: () => {
+                showNotification.success('NIT eliminado exitosamente');
+                setDeleteNitDialogOpen(false);
+                setNitToDelete(null);
+            },
+            onError: (errors) => {
+                const firstError = Object.values(errors)[0];
+                if (typeof firstError === 'string') {
+                    showNotification.error(firstError);
+                }
+            },
+            onFinish: () => setIsDeletingNit(false),
         });
     };
 
@@ -237,22 +335,134 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
                     </div>
                 </FormField>
 
-                <FormField label="NIT" error={errors.nit} description={FIELD_DESCRIPTIONS.nit}>
-                    <div className="relative">
-                        <Hash className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="text"
-                            value={data.nit}
-                            onChange={(e) => setData('nit', e.target.value)}
-                            placeholder={PLACEHOLDERS.nit}
-                            className="pl-10"
-                        />
+                <div>
+                    <div className="flex items-center justify-between mb-3">
+                        <div>
+                            <span className="text-sm font-medium">Direcciones Guardadas</span>
+                            <p className="text-xs text-muted-foreground">Este cliente tiene {customer.addresses.length} dirección{customer.addresses.length !== 1 ? 'es' : ''} guardada{customer.addresses.length !== 1 ? 's' : ''}</p>
+                        </div>
+                        <Button type="button" variant="outline" size="sm" onClick={handleAddAddress}>
+                            <Plus className="h-4 w-4 mr-1" />
+                            Agregar
+                        </Button>
                     </div>
-                </FormField>
+                    {customer.addresses.length > 0 ? (
+                        <div className="space-y-2">
+                            {customer.addresses.map((address) => (
+                                <div key={address.id} className="rounded-lg border bg-muted/50 p-3">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                            {address.label && (
+                                                <span className="text-sm font-medium">{address.label}</span>
+                                            )}
+                                            <p className="text-sm text-muted-foreground">{address.address_line}</p>
+                                            {address.delivery_notes && (
+                                                <p className="text-xs text-muted-foreground mt-1">Notas: {address.delivery_notes}</p>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2 ml-2">
+                                            {address.is_default && (
+                                                <Badge variant="default" className="text-xs">Predeterminada</Badge>
+                                            )}
+                                            <Button type="button" variant="ghost" size="sm" onClick={() => handleEditAddress(address)} className="h-8 w-8 p-0">
+                                                <Edit2 className="h-4 w-4" />
+                                            </Button>
+                                            <Button type="button" variant="ghost" size="sm" onClick={() => handleDeleteAddressClick(address)} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="rounded-lg border border-dashed p-4 text-center">
+                            <p className="text-sm text-muted-foreground mb-2">No hay direcciones guardadas</p>
+                            <Button type="button" variant="outline" size="sm" onClick={handleAddAddress}>
+                                <Plus className="h-4 w-4 mr-1" />
+                                Agregar primera dirección
+                            </Button>
+                        </div>
+                    )}
+                </div>
 
-                <FormField label="Dirección" error={errors.address}>
-                    <Textarea value={data.address} onChange={(e) => setData('address', e.target.value)} placeholder={PLACEHOLDERS.address} rows={3} />
-                </FormField>
+                <div>
+                    <div className="flex items-center justify-between mb-3">
+                        <div>
+                            <span className="text-sm font-medium">NITs Guardados</span>
+                            <p className="text-xs text-muted-foreground">
+                                Este cliente tiene {customer.nits.length} NIT{customer.nits.length !== 1 ? 's' : ''} guardado{customer.nits.length !== 1 ? 's' : ''}
+                            </p>
+                        </div>
+                        <Button type="button" variant="outline" size="sm" onClick={handleAddNit}>
+                            <Plus className="h-4 w-4 mr-1" />
+                            Agregar
+                        </Button>
+                    </div>
+                    {customer.nits.length > 0 ? (
+                        <div className="space-y-2">
+                            {customer.nits.map((nit) => (
+                                <div key={nit.id} className="rounded-lg border bg-muted/50 p-3">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                {nit.nit_type === 'personal' && (
+                                                    <User className="h-3 w-3 text-blue-600" />
+                                                )}
+                                                {nit.nit_type === 'company' && (
+                                                    <Building2 className="h-3 w-3 text-purple-600" />
+                                                )}
+                                                {nit.nit_type === 'other' && (
+                                                    <FileText className="h-3 w-3 text-gray-600" />
+                                                )}
+                                                <Badge
+                                                    variant="outline"
+                                                    className={
+                                                        nit.nit_type === 'personal'
+                                                            ? 'border-blue-200 bg-blue-50 text-blue-700'
+                                                            : nit.nit_type === 'company'
+                                                            ? 'border-purple-200 bg-purple-50 text-purple-700'
+                                                            : 'border-gray-200 bg-gray-50 text-gray-700'
+                                                    }
+                                                >
+                                                    {nit.nit_type === 'personal' && 'Personal'}
+                                                    {nit.nit_type === 'company' && 'Empresa'}
+                                                    {nit.nit_type === 'other' && 'Otro'}
+                                                </Badge>
+                                            </div>
+                                            <p className="text-sm font-medium font-mono">{nit.nit}</p>
+                                            {nit.business_name && (
+                                                <p className="text-xs text-muted-foreground mt-1">
+                                                    <Building2 className="inline h-3 w-3 mr-1" />
+                                                    {nit.business_name}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2 ml-2">
+                                            {nit.is_default && (
+                                                <Badge variant="default" className="text-xs">Predeterminado</Badge>
+                                            )}
+                                            <Button type="button" variant="ghost" size="sm" onClick={() => handleEditNit(nit)} className="h-8 w-8 p-0">
+                                                <Edit2 className="h-4 w-4" />
+                                            </Button>
+                                            <Button type="button" variant="ghost" size="sm" onClick={() => handleDeleteNitClick(nit)} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="rounded-lg border border-dashed p-4 text-center">
+                            <p className="text-sm text-muted-foreground mb-2">No hay NITs guardados</p>
+                            <Button type="button" variant="outline" size="sm" onClick={handleAddNit}>
+                                <Plus className="h-4 w-4 mr-1" />
+                                Agregar primer NIT
+                            </Button>
+                        </div>
+                    )}
+                </div>
             </FormSection>
 
             <FormSection icon={Lock} title="Seguridad">
@@ -328,6 +538,28 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
                     </div>
                 </div>
             </FormSection>
+
+            <AddressFormModal isOpen={addressModalOpen} onClose={() => setAddressModalOpen(false)} customerId={customer.id} address={selectedAddress} />
+
+            <NitFormModal isOpen={nitModalOpen} onClose={() => setNitModalOpen(false)} customerId={customer.id} nit={selectedNit} />
+
+            <DeleteConfirmationDialog
+                isOpen={deleteAddressDialogOpen}
+                onClose={() => setDeleteAddressDialogOpen(false)}
+                onConfirm={handleDeleteAddressConfirm}
+                isDeleting={isDeletingAddress}
+                entityName={addressToDelete?.address_line || ''}
+                entityType="dirección"
+            />
+
+            <DeleteConfirmationDialog
+                isOpen={deleteNitDialogOpen}
+                onClose={() => setDeleteNitDialogOpen(false)}
+                onConfirm={handleDeleteNitConfirm}
+                isDeleting={isDeletingNit}
+                entityName={nitToDelete?.nit || ''}
+                entityType="NIT"
+            />
         </EditPageLayout>
     );
 }

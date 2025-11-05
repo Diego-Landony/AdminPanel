@@ -222,7 +222,8 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
             `/menu/combos/${combo.id}`,
             {
                 ...formData,
-                items: preparedItems,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                items: preparedItems as any,
             },
             {
                 onSuccess: () => {

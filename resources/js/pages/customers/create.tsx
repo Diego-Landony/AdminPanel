@@ -1,6 +1,6 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { useForm } from '@inertiajs/react';
-import { Calendar, CreditCard, Eye, EyeOff, Hash, Lock, Mail, Phone, User } from 'lucide-react';
+import { Calendar, CreditCard, Eye, EyeOff, Lock, Mail, Phone, User } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { AUTOCOMPLETE, FIELD_DESCRIPTIONS, NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
 interface CustomerType {
@@ -41,8 +40,6 @@ export default function CreateCustomer({ customer_types }: CreateCustomerProps) 
         gender: '',
         customer_type_id: null as number | null,
         phone: '',
-        address: '',
-        nit: '',
     });
 
     /**
@@ -164,23 +161,6 @@ export default function CreateCustomer({ customer_types }: CreateCustomerProps) 
                             className="pl-10"
                         />
                     </div>
-                </FormField>
-
-                <FormField label="NIT" error={errors.nit} description={FIELD_DESCRIPTIONS.nit}>
-                    <div className="relative">
-                        <Hash className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="text"
-                            value={data.nit}
-                            onChange={(e) => setData('nit', e.target.value)}
-                            placeholder={PLACEHOLDERS.nit}
-                            className="pl-10"
-                        />
-                    </div>
-                </FormField>
-
-                <FormField label="Dirección" error={errors.address}>
-                    <Textarea value={data.address} onChange={(e) => setData('address', e.target.value)} placeholder={PLACEHOLDERS.address} rows={3} />
                 </FormField>
             </FormSection>
 

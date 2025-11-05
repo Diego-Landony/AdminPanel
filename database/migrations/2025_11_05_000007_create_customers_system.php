@@ -9,14 +9,16 @@ return new class extends Migration
     /**
      * Run the migrations.
      *
-     * Esta migración unificada crea todas las tablas del negocio:
-     * - customer_types: Tipos de clientes con sistema de puntos
-     * - customers: Clientes de Subway con autenticación
-     * - restaurants: Restaurantes con geofence y delivery
+     * MÓDULO: Sistema de Clientes
+     * - Tipos de clientes (sistema de puntos y beneficios)
+     * - Clientes (usuarios de la app móvil)
+     * - Direcciones de clientes (múltiples direcciones de entrega)
+     * - Dispositivos de clientes (múltiples dispositivos FCM)
+     * - NITs de clientes (múltiples NITs para facturación)
      */
     public function up(): void
     {
-        // Tabla de tipos de cliente
+        // ==================== CUSTOMER_TYPES ====================
         Schema::create('customer_types', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
@@ -27,7 +29,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Tabla de clientes
+        // ==================== CUSTOMERS ====================
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
 
@@ -45,11 +47,8 @@ return new class extends Migration
 
             // Información de contacto
             $table->string('phone')->nullable();
-            $table->text('address')->nullable();
-            $table->string('nit')->nullable();
 
             // Tokens y sesiones
-            $table->string('fcm_token')->nullable();
             $table->rememberToken();
 
             // Actividad y compras
@@ -77,30 +76,51 @@ return new class extends Migration
             $table->index(['last_purchase_at']);
         });
 
-        // Tabla de restaurantes
-        Schema::create('restaurants', function (Blueprint $table) {
+        // ==================== CUSTOMER_ADDRESSES ====================
+        Schema::create('customer_addresses', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->decimal('latitude', 10, 7)->nullable();
-            $table->decimal('longitude', 10, 7)->nullable();
-            $table->longText('geofence_kml')->nullable();
-            $table->string('address');
+            $table->foreignId('customer_id')->constrained('customers')->onDelete('cascade');
+            $table->string('label', 100);
+            $table->text('address_line');
+            $table->decimal('latitude', 10, 7);
+            $table->decimal('longitude', 10, 7);
+            $table->text('delivery_notes')->nullable();
+            $table->boolean('is_default')->default(false);
+            $table->timestamps();
+
+            $table->index('customer_id');
+            $table->index('is_default');
+        });
+
+        // ==================== CUSTOMER_DEVICES ====================
+        Schema::create('customer_devices', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('customer_id')->constrained('customers')->onDelete('cascade');
+            $table->string('fcm_token')->unique();
+            $table->enum('device_type', ['ios', 'android', 'web'])->nullable();
+            $table->string('device_name')->nullable();
+            $table->string('device_model')->nullable();
+            $table->timestamp('last_used_at')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->boolean('delivery_active')->default(true);
-            $table->boolean('pickup_active')->default(true);
-            $table->string('phone')->nullable();
-            $table->json('schedule')->nullable();
-            $table->decimal('minimum_order_amount', 8, 2)->default(0);
-            $table->string('email')->nullable();
-            $table->integer('estimated_delivery_time')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
-            // Índices para búsquedas y performance
-            $table->index(['latitude', 'longitude']);
-            $table->index(['is_active']);
-            $table->index(['delivery_active', 'is_active']);
-            $table->index(['pickup_active', 'is_active']);
+            $table->index(['customer_id', 'last_used_at']);
+            $table->index('is_active');
+        });
+
+        // ==================== CUSTOMER_NITS ====================
+        Schema::create('customer_nits', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('customer_id')->constrained('customers')->onDelete('cascade');
+            $table->string('nit', 20);
+            $table->enum('nit_type', ['personal', 'company', 'other'])->default('personal');
+            $table->string('business_name')->nullable();
+            $table->boolean('is_default')->default(false);
+            $table->timestamps();
+
+            $table->index(['customer_id', 'is_default']);
+            $table->unique(['customer_id', 'nit']);
         });
     }
 
@@ -109,7 +129,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('restaurants');
+        Schema::dropIfExists('customer_nits');
+        Schema::dropIfExists('customer_devices');
+        Schema::dropIfExists('customer_addresses');
         Schema::dropIfExists('customers');
         Schema::dropIfExists('customer_types');
     }

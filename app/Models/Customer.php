@@ -30,9 +30,6 @@ class Customer extends Authenticatable
         'birth_date',
         'gender',
         'phone',
-        'address',
-        'nit',
-        'fcm_token',
         'last_login_at',
         'last_activity_at',
         'last_purchase_at',
@@ -100,6 +97,38 @@ class Customer extends Authenticatable
     public function defaultAddress(): ?CustomerAddress
     {
         return $this->addresses()->where('is_default', true)->first();
+    }
+
+    /**
+     * Relación con los dispositivos del cliente
+     */
+    public function devices(): HasMany
+    {
+        return $this->hasMany(CustomerDevice::class);
+    }
+
+    /**
+     * Obtiene solo los dispositivos activos del cliente (usados en los últimos 30 días)
+     */
+    public function activeDevices(): HasMany
+    {
+        return $this->devices()->active();
+    }
+
+    /**
+     * Relación con los NITs del cliente
+     */
+    public function nits(): HasMany
+    {
+        return $this->hasMany(CustomerNit::class);
+    }
+
+    /**
+     * Obtiene el NIT predeterminado del cliente
+     */
+    public function defaultNit(): ?CustomerNit
+    {
+        return $this->nits()->where('is_default', true)->first();
     }
 
     /**

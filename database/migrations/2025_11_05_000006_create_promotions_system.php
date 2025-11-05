@@ -73,11 +73,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // Índices
-            $table->index(['promotion_id']);
-            $table->index(['product_id']);
-            $table->index(['variant_id']);
-            $table->index(['category_id']);
+            // Índices compuestos adicionales (los simples ya se crean con foreignId)
             $table->index(['promotion_id', 'variant_id'], 'idx_promotion_variant');
             $table->index(['promotion_id', 'category_id'], 'idx_promotion_category');
             $table->index(['promotion_id', 'product_id'], 'idx_promotion_product');

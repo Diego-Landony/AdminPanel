@@ -81,3 +81,165 @@ function createTestUserForIntegration(): User
 {
     return createTestUser();
 }
+
+/**
+ * Creates a test user with specific permissions only
+ *
+ * @param  array|null  $permissions  Array of permission names (e.g., ['users.view', 'users.edit'])
+ */
+function createTestUserWithPermissions(?array $permissions = null): User
+{
+    $user = User::factory()->create();
+
+    $adminRole = Role::firstOrCreate(['name' => 'test_admin'], [
+        'display_name' => 'Test Administrator',
+        'is_system' => false,
+    ]);
+
+    if ($permissions !== null) {
+        $permissionIds = collect($permissions)->map(function ($permName) {
+            return Permission::firstOrCreate(['name' => $permName], [
+                'display_name' => ucwords(str_replace(['.', '_'], ' ', $permName)),
+                'group' => explode('.', $permName)[0] ?? 'general',
+            ])->id;
+        });
+
+        $adminRole->permissions()->sync($permissionIds);
+    }
+
+    $user->roles()->attach($adminRole);
+    $user->load('roles.permissions');
+
+    return $user;
+}
+
+/**
+ * Creates a test role with specific permissions
+ *
+ * @param  string  $name  Role name
+ * @param  array  $permissions  Array of permission names
+ */
+function createTestRole(string $name, array $permissions = []): Role
+{
+    $role = Role::firstOrCreate(['name' => $name], [
+        'display_name' => ucwords(str_replace('_', ' ', $name)),
+        'is_system' => false,
+    ]);
+
+    if (! empty($permissions)) {
+        $permissionIds = collect($permissions)->map(function ($permName) {
+            return Permission::firstOrCreate(['name' => $permName], [
+                'display_name' => ucwords(str_replace(['.', '_'], ' ', $permName)),
+                'group' => explode('.', $permName)[0] ?? 'general',
+            ])->id;
+        });
+
+        $role->permissions()->sync($permissionIds);
+    }
+
+    return $role;
+}
+
+/**
+ * Creates a test permission
+ *
+ * @param  string  $name  Permission name (e.g., 'users.view')
+ * @param  array  $attributes  Additional attributes
+ */
+function createTestPermission(string $name, array $attributes = []): Permission
+{
+    $defaults = [
+        'display_name' => ucwords(str_replace(['.', '_'], ' ', $name)),
+        'group' => explode('.', $name)[0] ?? 'general',
+    ];
+
+    return Permission::firstOrCreate(
+        ['name' => $name],
+        array_merge($defaults, $attributes)
+    );
+}
+
+/**
+ * Creates a complete menu structure for combo testing with products and variants
+ *
+ * @return array{comboCategory, subsCategory, products, bebida}
+ */
+function createMenuStructureForComboTests(): array
+{
+    $comboCategory = \App\Models\Menu\Category::factory()->create([
+        'is_combo_category' => true,
+        'is_active' => true,
+        'uses_variants' => false,
+    ]);
+
+    $subsCategory = \App\Models\Menu\Category::factory()->create([
+        'name' => 'Subs',
+        'is_active' => true,
+        'uses_variants' => true,
+        'variant_definitions' => ['15cm', '30cm'],
+    ]);
+
+    $products = [
+        \App\Models\Menu\Product::factory()->create([
+            'category_id' => $subsCategory->id,
+            'name' => 'Italian BMT',
+            'has_variants' => true,
+            'is_active' => true,
+        ]),
+        \App\Models\Menu\Product::factory()->create([
+            'category_id' => $subsCategory->id,
+            'name' => 'Pollo Teriyaki',
+            'has_variants' => true,
+            'is_active' => true,
+        ]),
+        \App\Models\Menu\Product::factory()->create([
+            'category_id' => $subsCategory->id,
+            'name' => 'Atún',
+            'has_variants' => true,
+            'is_active' => true,
+        ]),
+    ];
+
+    foreach ($products as $product) {
+        \App\Models\Menu\ProductVariant::factory()->create([
+            'product_id' => $product->id,
+            'name' => '15cm',
+            'size' => '15cm',
+            'precio_pickup_capital' => 30.00,
+            'precio_domicilio_capital' => 35.00,
+            'precio_pickup_interior' => 32.00,
+            'precio_domicilio_interior' => 37.00,
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+
+        \App\Models\Menu\ProductVariant::factory()->create([
+            'product_id' => $product->id,
+            'name' => '30cm',
+            'size' => '30cm',
+            'precio_pickup_capital' => 60.00,
+            'precio_domicilio_capital' => 65.00,
+            'precio_pickup_interior' => 62.00,
+            'precio_domicilio_interior' => 67.00,
+            'is_active' => true,
+            'sort_order' => 2,
+        ]);
+    }
+
+    $bebida = \App\Models\Menu\Product::factory()->create([
+        'name' => 'Coca Cola Personal',
+        'has_variants' => false,
+        'is_active' => true,
+        'precio_pickup_capital' => 15.00,
+        'precio_domicilio_capital' => 18.00,
+        'precio_pickup_interior' => 16.00,
+        'precio_domicilio_interior' => 19.00,
+    ]);
+
+    return [
+        'comboCategory' => $comboCategory,
+        'subsCategory' => $subsCategory,
+        'products' => $products,
+        'bebida' => $bebida,
+    ];
+}

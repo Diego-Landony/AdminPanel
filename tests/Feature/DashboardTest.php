@@ -3,34 +3,37 @@
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-test('guests are redirected to the login page', function () {
-    $this->get('/home')->assertRedirect('/login');
+uses(RefreshDatabase::class);
+
+describe('Guest Access', function () {
+    test('guests are redirected to the login page', function () {
+        $this->get('/home')->assertRedirect('/login');
+    });
 });
 
-test('authenticated users can visit the home page', function () {
-    $user = User::factory()->create();
+describe('Authenticated Access', function () {
+    test('authenticated users can visit the home page', function () {
+        $user = User::factory()->create();
 
-    // Buscar el permiso home.view existente
-    $permission = Permission::where('name', 'home.view')->first();
+        $permission = Permission::where('name', 'home.view')->first();
 
-    if (! $permission) {
-        // Si no existe, crear uno con todos los campos requeridos
-        $permission = Permission::create([
-            'name' => 'home.view',
-            'display_name' => 'Home',
-            'description' => 'Ver home',
-        ]);
-    }
+        if (! $permission) {
+            $permission = Permission::create([
+                'name' => 'home.view',
+                'display_name' => 'Home',
+                'description' => 'Ver home',
+            ]);
+        }
 
-    // Crear rol y asignar permiso
-    $role = Role::create(['name' => 'test-role', 'description' => 'Test role']);
-    $role->permissions()->attach($permission->id);
+        $role = Role::create(['name' => 'test-role', 'description' => 'Test role']);
+        $role->permissions()->attach($permission->id);
 
-    // Asignar rol al usuario
-    $user->roles()->attach($role->id);
+        $user->roles()->attach($role->id);
 
-    $this->actingAs($user);
+        $this->actingAs($user);
 
-    $this->get('/home')->assertOk();
+        $this->get('/home')->assertOk();
+    });
 });

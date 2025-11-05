@@ -5,8 +5,8 @@ use App\Models\Menu\ComboItem;
 use App\Models\Menu\ComboItemOption;
 use App\Models\Menu\Product;
 
-describe('Fase 2: Modelos y Relaciones Eloquent', function () {
-    test('modelo ComboItemOption existe con todas las relaciones', function () {
+describe('Combo Models and Eloquent Relationships', function () {
+    test('ComboItemOption model exists with all relationships', function () {
         $model = new ComboItemOption;
 
         expect($model)->toBeInstanceOf(ComboItemOption::class);
@@ -15,7 +15,7 @@ describe('Fase 2: Modelos y Relaciones Eloquent', function () {
         expect(method_exists($model, 'variant'))->toBeTrue();
     });
 
-    test('modelo ComboItemOption tiene fillable correcto', function () {
+    test('ComboItemOption model has correct fillable', function () {
         $model = new ComboItemOption;
         $fillable = $model->getFillable();
 
@@ -25,7 +25,7 @@ describe('Fase 2: Modelos y Relaciones Eloquent', function () {
         expect($fillable)->toContain('sort_order');
     });
 
-    test('modelo ComboItemOption tiene casts correcto', function () {
+    test('ComboItemOption model has correct casts', function () {
         $model = new ComboItemOption;
         $casts = $model->getCasts();
 
@@ -35,7 +35,7 @@ describe('Fase 2: Modelos y Relaciones Eloquent', function () {
         expect($casts)->toHaveKey('sort_order');
     });
 
-    test('modelo ComboItem extendido correctamente con nuevos campos', function () {
+    test('ComboItem model extended correctly with new fields', function () {
         $model = new ComboItem;
         $fillable = $model->getFillable();
 
@@ -43,7 +43,7 @@ describe('Fase 2: Modelos y Relaciones Eloquent', function () {
         expect($fillable)->toContain('choice_label');
     });
 
-    test('modelo ComboItem tiene cast correcto para is_choice_group', function () {
+    test('ComboItem model has correct cast for is_choice_group', function () {
         $model = new ComboItem;
         $casts = $model->getCasts();
 
@@ -51,47 +51,47 @@ describe('Fase 2: Modelos y Relaciones Eloquent', function () {
         expect($casts['is_choice_group'])->toBe('boolean');
     });
 
-    test('modelo ComboItem tiene relación options', function () {
+    test('ComboItem model has options relationship', function () {
         $model = new ComboItem;
 
         expect(method_exists($model, 'options'))->toBeTrue();
     });
 
-    test('modelo ComboItem tiene método isChoiceGroup', function () {
+    test('ComboItem model has isChoiceGroup method', function () {
         $model = new ComboItem;
 
         expect(method_exists($model, 'isChoiceGroup'))->toBeTrue();
         expect($model->isChoiceGroup())->toBeFalse();
     });
 
-    test('modelo ComboItem método getProductWithSections maneja grupos de elección', function () {
+    test('ComboItem model getProductWithSections method handles choice groups', function () {
         $model = new ComboItem;
         $model->is_choice_group = true;
 
         expect($model->getProductWithSections())->toBeNull();
     });
 
-    test('modelo Combo tiene scope available actualizado', function () {
+    test('Combo model has updated available scope', function () {
         $model = new Combo;
 
         expect(method_exists($model, 'scopeAvailable'))->toBeTrue();
     });
 
-    test('modelo Combo tiene scope availableWithWarnings', function () {
+    test('Combo model has availableWithWarnings scope', function () {
         $model = new Combo;
 
         expect(method_exists($model, 'scopeAvailableWithWarnings'))->toBeTrue();
     });
 
-    test('modelo Combo tiene método getInactiveOptionsCount', function () {
+    test('Combo model has getInactiveOptionsCount method', function () {
         $model = new Combo;
 
         expect(method_exists($model, 'getInactiveOptionsCount'))->toBeTrue();
     });
 });
 
-describe('Fase 2: Funcionalidad de relaciones', function () {
-    test('relación ComboItem::options funciona correctamente', function () {
+describe('Relationship Functionality', function () {
+    test('ComboItem::options relationship works correctly', function () {
         $combo = Combo::factory()->create();
         $product = Product::factory()->create();
 
@@ -107,7 +107,7 @@ describe('Fase 2: Funcionalidad de relaciones', function () {
         expect($comboItem->options)->toHaveCount(0);
     });
 
-    test('método getInactiveOptionsCount retorna 0 cuando no hay opciones inactivas', function () {
+    test('getInactiveOptionsCount method returns 0 when there are no inactive options', function () {
         $combo = Combo::factory()->create();
 
         $count = $combo->getInactiveOptionsCount();
@@ -115,7 +115,7 @@ describe('Fase 2: Funcionalidad de relaciones', function () {
         expect($count)->toBe(0);
     });
 
-    test('scope availableWithWarnings carga relaciones correctamente', function () {
+    test('availableWithWarnings scope loads relationships correctly', function () {
         Combo::factory()->create(['is_active' => true]);
 
         $combos = Combo::availableWithWarnings()->get();
@@ -124,28 +124,23 @@ describe('Fase 2: Funcionalidad de relaciones', function () {
     });
 });
 
-describe('Fase 2: Verificación completa según plan', function () {
-    test('checklist de fase 2 completo', function () {
-        // ✓ Modelo ComboItemOption creado con todas las relaciones
+describe('Complete Model Verification', function () {
+    test('phase 2 checklist complete', function () {
         $option = new ComboItemOption;
         expect(method_exists($option, 'comboItem'))->toBeTrue();
         expect(method_exists($option, 'product'))->toBeTrue();
         expect(method_exists($option, 'variant'))->toBeTrue();
 
-        // ✓ ComboItem extendido correctamente
         $item = new ComboItem;
         expect(method_exists($item, 'options'))->toBeTrue();
         expect(method_exists($item, 'isChoiceGroup'))->toBeTrue();
         expect(method_exists($item, 'getProductWithSections'))->toBeTrue();
 
-        // ✓ Combo scope available() funciona con grupos
         $combo = new Combo;
         expect(method_exists($combo, 'scopeAvailable'))->toBeTrue();
 
-        // ✓ Método getInactiveOptionsCount() retorna correctamente
         expect(method_exists($combo, 'getInactiveOptionsCount'))->toBeTrue();
 
-        // ✓ Método scopeAvailableWithWarnings() existe
         expect(method_exists($combo, 'scopeAvailableWithWarnings'))->toBeTrue();
     });
 });

@@ -58,7 +58,7 @@ class RealCustomersSeeder extends Seeder
         ];
 
         foreach ($clientes as $cliente) {
-            Customer::create([
+            $customer = Customer::create([
                 'name' => $cliente['name'],
                 'email' => $cliente['email'],
                 'password' => Hash::make('password123'),
@@ -67,8 +67,6 @@ class RealCustomersSeeder extends Seeder
                 'gender' => rand(0, 1) ? 'M' : 'F',
                 'customer_type_id' => $tipo->id,
                 'phone' => $cliente['phone'],
-                'address' => $this->getRandomAddress(),
-                'nit' => $this->generateNIT(),
                 'points' => $cliente['points'],
                 'points_updated_at' => now()->subDays(rand(1, 30)),
                 'last_purchase_at' => now()->subDays(rand(1, 15)),
@@ -76,6 +74,8 @@ class RealCustomersSeeder extends Seeder
                 'email_verified_at' => now(),
                 'timezone' => 'America/Guatemala',
             ]);
+
+            $this->createCustomerRelations($customer);
         }
 
         $this->command->line('   ✓ 10 clientes Regular creados');
@@ -97,7 +97,7 @@ class RealCustomersSeeder extends Seeder
         ];
 
         foreach ($clientes as $cliente) {
-            Customer::create([
+            $customer = Customer::create([
                 'name' => $cliente['name'],
                 'email' => $cliente['email'],
                 'password' => Hash::make('password123'),
@@ -106,8 +106,6 @@ class RealCustomersSeeder extends Seeder
                 'gender' => rand(0, 1) ? 'M' : 'F',
                 'customer_type_id' => $tipo->id,
                 'phone' => $cliente['phone'],
-                'address' => $this->getRandomAddress(),
-                'nit' => $this->generateNIT(),
                 'points' => $cliente['points'],
                 'points_updated_at' => now()->subDays(rand(1, 20)),
                 'last_purchase_at' => now()->subDays(rand(1, 10)),
@@ -115,6 +113,8 @@ class RealCustomersSeeder extends Seeder
                 'email_verified_at' => now(),
                 'timezone' => 'America/Guatemala',
             ]);
+
+            $this->createCustomerRelations($customer);
         }
 
         $this->command->line('   ✓ 10 clientes Bronce creados');
@@ -136,7 +136,7 @@ class RealCustomersSeeder extends Seeder
         ];
 
         foreach ($clientes as $cliente) {
-            Customer::create([
+            $customer = Customer::create([
                 'name' => $cliente['name'],
                 'email' => $cliente['email'],
                 'password' => Hash::make('password123'),
@@ -145,8 +145,6 @@ class RealCustomersSeeder extends Seeder
                 'gender' => rand(0, 1) ? 'M' : 'F',
                 'customer_type_id' => $tipo->id,
                 'phone' => $cliente['phone'],
-                'address' => $this->getRandomAddress(),
-                'nit' => $this->generateNIT(),
                 'points' => $cliente['points'],
                 'points_updated_at' => now()->subDays(rand(1, 14)),
                 'last_purchase_at' => now()->subDays(rand(1, 7)),
@@ -154,6 +152,8 @@ class RealCustomersSeeder extends Seeder
                 'email_verified_at' => now(),
                 'timezone' => 'America/Guatemala',
             ]);
+
+            $this->createCustomerRelations($customer);
         }
 
         $this->command->line('   ✓ 10 clientes Plata creados');
@@ -175,7 +175,7 @@ class RealCustomersSeeder extends Seeder
         ];
 
         foreach ($clientes as $cliente) {
-            Customer::create([
+            $customer = Customer::create([
                 'name' => $cliente['name'],
                 'email' => $cliente['email'],
                 'password' => Hash::make('password123'),
@@ -184,8 +184,6 @@ class RealCustomersSeeder extends Seeder
                 'gender' => rand(0, 1) ? 'M' : 'F',
                 'customer_type_id' => $tipo->id,
                 'phone' => $cliente['phone'],
-                'address' => $this->getRandomAddress(),
-                'nit' => $this->generateNIT(),
                 'points' => $cliente['points'],
                 'points_updated_at' => now()->subDays(rand(1, 10)),
                 'last_purchase_at' => now()->subDays(rand(1, 5)),
@@ -193,6 +191,8 @@ class RealCustomersSeeder extends Seeder
                 'email_verified_at' => now(),
                 'timezone' => 'America/Guatemala',
             ]);
+
+            $this->createCustomerRelations($customer);
         }
 
         $this->command->line('   ✓ 10 clientes Oro creados');
@@ -214,7 +214,7 @@ class RealCustomersSeeder extends Seeder
         ];
 
         foreach ($clientes as $cliente) {
-            Customer::create([
+            $customer = Customer::create([
                 'name' => $cliente['name'],
                 'email' => $cliente['email'],
                 'password' => Hash::make('password123'),
@@ -223,8 +223,6 @@ class RealCustomersSeeder extends Seeder
                 'gender' => rand(0, 1) ? 'M' : 'F',
                 'customer_type_id' => $tipo->id,
                 'phone' => $cliente['phone'],
-                'address' => $this->getRandomAddress(),
-                'nit' => $this->generateNIT(),
                 'points' => $cliente['points'],
                 'points_updated_at' => now()->subDays(rand(1, 7)),
                 'last_purchase_at' => now()->subDays(rand(1, 3)),
@@ -232,6 +230,8 @@ class RealCustomersSeeder extends Seeder
                 'email_verified_at' => now(),
                 'timezone' => 'America/Guatemala',
             ]);
+
+            $this->createCustomerRelations($customer);
         }
 
         $this->command->line('   ✓ 10 clientes Platino creados');
@@ -276,5 +276,26 @@ class RealCustomersSeeder extends Seeder
         ];
 
         return $locations[array_rand($locations)];
+    }
+
+    private function createCustomerRelations(Customer $customer): void
+    {
+        // Crear dirección por defecto
+        $customer->addresses()->create([
+            'label' => 'Casa',
+            'address_line' => $this->getRandomAddress(),
+            'latitude' => 14.6000 + (rand(-1000, 1000) / 10000),
+            'longitude' => -90.5000 + (rand(-1000, 1000) / 10000),
+            'delivery_notes' => null,
+            'is_default' => true,
+        ]);
+
+        // Crear NIT por defecto
+        $customer->nits()->create([
+            'nit' => $this->generateNIT(),
+            'nit_type' => 'personal',
+            'business_name' => null,
+            'is_default' => true,
+        ]);
     }
 }

@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-describe('Fase 3: Validación de opciones duplicadas', function () {
+describe('Duplicate Option Validation', function () {
     beforeEach(function () {
         $this->user = User::factory()->create();
 
@@ -36,7 +36,7 @@ describe('Fase 3: Validación de opciones duplicadas', function () {
         $this->product2 = Product::factory()->create(['is_active' => true]);
     });
 
-    test('rechaza grupos con opciones duplicadas - mismo producto sin variantes', function () {
+    test('rejects groups with duplicate options - same product without variants', function () {
         $data = [
             'category_id' => $this->category->id,
             'name' => 'Combo Test',
@@ -76,7 +76,7 @@ describe('Fase 3: Validación de opciones duplicadas', function () {
 
         $response = $this->postJson(route('menu.combos.store'), $data);
 
-        $response->assertStatus(422);
+        $response->assertUnprocessable();
         $allErrors = $response->json('errors');
 
         // Buscar el error de opción duplicada en cualquier campo de opciones
@@ -95,7 +95,7 @@ describe('Fase 3: Validación de opciones duplicadas', function () {
         expect($foundDuplicateError)->toBeTrue('No se encontró el error de opción duplicada');
     });
 
-    test('rechaza grupos con opciones duplicadas - mismo producto y misma variante', function () {
+    test('rejects groups with duplicate options - same product and same variant', function () {
         $productWithVariants = Product::factory()->create([
             'is_active' => true,
             'has_variants' => true,
@@ -145,7 +145,7 @@ describe('Fase 3: Validación de opciones duplicadas', function () {
 
         $response = $this->postJson(route('menu.combos.store'), $data);
 
-        $response->assertStatus(422);
+        $response->assertUnprocessable();
         $allErrors = $response->json('errors');
 
         // Buscar el error de opción duplicada en cualquier campo de opciones
@@ -164,7 +164,7 @@ describe('Fase 3: Validación de opciones duplicadas', function () {
         expect($foundDuplicateError)->toBeTrue('No se encontró el error de opción duplicada');
     });
 
-    test('acepta grupos con opciones diferentes - mismo producto, diferentes variantes', function () {
+    test('accepts groups with different options - same product, different variants', function () {
         $productWithVariants = Product::factory()->create([
             'is_active' => true,
             'has_variants' => true,
@@ -222,7 +222,7 @@ describe('Fase 3: Validación de opciones duplicadas', function () {
         $response->assertStatus(201);
     });
 
-    test('acepta grupos con opciones diferentes - productos completamente diferentes', function () {
+    test('accepts groups with different options - completely different products', function () {
         $data = [
             'category_id' => $this->category->id,
             'name' => 'Combo Test Productos Diferentes',
@@ -266,7 +266,7 @@ describe('Fase 3: Validación de opciones duplicadas', function () {
     });
 });
 
-describe('Fase 3: Otras validaciones de grupos', function () {
+describe('Other Choice Group Validations', function () {
     beforeEach(function () {
         $this->user = User::factory()->create();
 
@@ -287,7 +287,7 @@ describe('Fase 3: Otras validaciones de grupos', function () {
         $this->product2 = Product::factory()->create(['is_active' => true]);
     });
 
-    test('rechaza grupos con menos de 2 opciones', function () {
+    test('rejects groups with less than 2 options', function () {
         $data = [
             'category_id' => $this->category->id,
             'name' => 'Combo Test',
@@ -323,11 +323,11 @@ describe('Fase 3: Otras validaciones de grupos', function () {
 
         $response = $this->postJson(route('menu.combos.store'), $data);
 
-        $response->assertStatus(422);
+        $response->assertUnprocessable();
         $response->assertJsonValidationErrors('items.0.options');
     });
 
-    test('rechaza grupos sin etiqueta', function () {
+    test('rejects groups without label', function () {
         $data = [
             'category_id' => $this->category->id,
             'name' => 'Combo Test',
@@ -367,7 +367,7 @@ describe('Fase 3: Otras validaciones de grupos', function () {
 
         $response = $this->postJson(route('menu.combos.store'), $data);
 
-        $response->assertStatus(422);
+        $response->assertUnprocessable();
         $response->assertJsonValidationErrors('items.0.choice_label');
     });
 });

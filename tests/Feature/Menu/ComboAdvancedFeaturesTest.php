@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-describe('Fase 4: ComboController - Crear combos con grupos', function () {
+describe('Combo Creation with Choice Groups', function () {
     beforeEach(function () {
         $this->user = User::factory()->create();
         $permission = Permission::firstOrCreate(
@@ -36,7 +36,7 @@ describe('Fase 4: ComboController - Crear combos con grupos', function () {
         $this->product3 = Product::factory()->create(['is_active' => true]);
     });
 
-    test('puede crear combo con grupo de elección', function () {
+    test('can create combo with choice group', function () {
         $data = [
             'category_id' => $this->category->id,
             'name' => 'Combo con Grupo',
@@ -100,7 +100,7 @@ describe('Fase 4: ComboController - Crear combos con grupos', function () {
         expect($fixedItem->product_id)->toBe($this->product3->id);
     });
 
-    test('puede crear combo con múltiples grupos de elección', function () {
+    test('can create combo with multiple choice groups', function () {
         $product4 = Product::factory()->create(['is_active' => true]);
         $product5 = Product::factory()->create(['is_active' => true]);
 
@@ -146,7 +146,7 @@ describe('Fase 4: ComboController - Crear combos con grupos', function () {
         expect($combo->items->where('is_choice_group', true))->toHaveCount(2);
     });
 
-    test('puede crear combo mixto con items fijos y grupos', function () {
+    test('can create mixed combo with fixed items and groups', function () {
         $data = [
             'category_id' => $this->category->id,
             'name' => 'Combo Mixto',
@@ -187,7 +187,7 @@ describe('Fase 4: ComboController - Crear combos con grupos', function () {
     });
 });
 
-describe('Fase 4: ComboController - Editar y actualizar combos', function () {
+describe('Combo Update and Edit', function () {
     beforeEach(function () {
         $this->user = User::factory()->create();
         $editPerm = Permission::firstOrCreate(
@@ -213,7 +213,7 @@ describe('Fase 4: ComboController - Editar y actualizar combos', function () {
         $this->product2 = Product::factory()->create(['is_active' => true]);
     });
 
-    test('puede actualizar combo agregando grupo de elección', function () {
+    test('can update combo by adding choice group', function () {
         $combo = Combo::factory()->create(['category_id' => $this->category->id]);
         $item = ComboItem::create([
             'combo_id' => $combo->id,
@@ -262,7 +262,7 @@ describe('Fase 4: ComboController - Editar y actualizar combos', function () {
         expect($combo->items->where('is_choice_group', true))->toHaveCount(1);
     });
 
-    test('puede ver combo con grupos en edit', function () {
+    test('can view combo with groups in edit', function () {
         $combo = Combo::factory()->create(['category_id' => $this->category->id]);
         $groupItem = ComboItem::create([
             'combo_id' => $combo->id,
@@ -294,7 +294,7 @@ describe('Fase 4: ComboController - Editar y actualizar combos', function () {
     });
 });
 
-describe('Fase 4: ProductController - Prevenir eliminación', function () {
+describe('Product Deletion Prevention', function () {
     beforeEach(function () {
         $this->user = User::factory()->create();
         $permission = Permission::firstOrCreate(
@@ -314,7 +314,7 @@ describe('Fase 4: ProductController - Prevenir eliminación', function () {
         ]);
     });
 
-    test('no puede eliminar producto usado en grupo de elección', function () {
+    test('cannot delete product used in choice group', function () {
         $product = Product::factory()->create(['is_active' => true]);
         $product2 = Product::factory()->create(['is_active' => true]);
 
@@ -335,7 +335,7 @@ describe('Fase 4: ProductController - Prevenir eliminación', function () {
 
         $response = $this->deleteJson(route('menu.products.destroy', $product));
 
-        $response->assertStatus(422);
+        $response->assertUnprocessable();
 
         $responseData = $response->json();
         expect($responseData['message'])->toContain('Está usado');
@@ -368,7 +368,7 @@ describe('Fase 4: ProductController - Prevenir eliminación', function () {
         $response = $this->from(route('menu.products.index'))
             ->deleteJson(route('menu.products.destroy', $product));
 
-        $response->assertStatus(422);
+        $response->assertUnprocessable();
 
         $responseData = $response->json();
         $errorMessage = $responseData['message'];
@@ -377,7 +377,7 @@ describe('Fase 4: ProductController - Prevenir eliminación', function () {
         expect($errorMessage)->toContain('1 combo(s)');
     });
 
-    test('puede eliminar producto no usado en grupos', function () {
+    test('can delete product not used in groups', function () {
         $product = Product::factory()->create(['is_active' => true]);
 
         $response = $this->deleteJson(route('menu.products.destroy', $product));

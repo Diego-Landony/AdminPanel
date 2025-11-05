@@ -23,6 +23,7 @@ class SectionFactory extends Factory
             'allow_multiple' => fake()->boolean(),
             'min_selections' => 1,
             'max_selections' => fake()->numberBetween(1, 5),
+            'is_active' => true,
         ];
     }
 }

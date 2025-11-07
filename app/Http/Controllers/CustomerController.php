@@ -239,7 +239,7 @@ class CustomerController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|max:255|unique:customers',
                 'password' => 'required|string|min:6|confirmed',
-                'subway_card' => 'required|string|max:255|unique:customers',
+                'subway_card' => 'nullable|string|max:255|unique:customers',
                 'birth_date' => 'required|date|before:today',
                 'gender' => 'nullable|string|max:50',
                 'customer_type_id' => 'nullable|exists:customer_types,id',
@@ -249,18 +249,22 @@ class CustomerController extends Controller
             // Get default customer type if not provided
             $customerTypeId = $request->customer_type_id ?? CustomerType::getDefault()?->id;
 
-            $customer = Customer::create([
+            $customerData = [
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'subway_card' => $request->subway_card,
                 'birth_date' => $request->birth_date,
                 'gender' => $request->gender,
                 'customer_type_id' => $customerTypeId,
                 'phone' => $request->phone,
                 'email_verified_at' => now(),
-                'timezone' => 'America/Guatemala',
-            ]);
+            ];
+
+            if ($request->filled('subway_card')) {
+                $customerData['subway_card'] = $request->subway_card;
+            }
+
+            $customer = Customer::create($customerData);
 
             // Actualizar tipo de cliente automáticamente basado en puntos
             $customer->updateCustomerType();

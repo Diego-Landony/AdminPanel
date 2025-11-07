@@ -22,9 +22,9 @@ class CustomerFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => bcrypt('password'),
-            'subway_card' => fake()->unique()->numerify('##########'),
+            'subway_card' => '8'.fake()->unique()->numerify('###########'),
             'birth_date' => fake()->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),
-            'gender' => fake()->randomElement(['masculino', 'femenino', 'otro']),
+            'gender' => fake()->randomElement(['male', 'female', 'other']),
             'customer_type_id' => CustomerType::factory(),
             'phone' => fake()->phoneNumber(),
             'last_login_at' => fake()->optional()->dateTimeBetween('-30 days', 'now'),
@@ -32,7 +32,6 @@ class CustomerFactory extends Factory
             'last_purchase_at' => fake()->optional()->dateTimeBetween('-60 days', 'now'),
             'points' => fake()->numberBetween(0, 2000),
             'points_updated_at' => fake()->optional()->dateTimeBetween('-30 days', 'now'),
-            'timezone' => 'America/Guatemala',
             'remember_token' => fake()->sha256(),
         ];
     }

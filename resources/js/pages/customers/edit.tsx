@@ -295,9 +295,9 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
                             <SelectValue placeholder={PLACEHOLDERS.selectGender} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="masculino">Masculino</SelectItem>
-                            <SelectItem value="femenino">Femenino</SelectItem>
-                            <SelectItem value="otro">Otro</SelectItem>
+                            <SelectItem value="male">Masculino</SelectItem>
+                            <SelectItem value="female">Femenino</SelectItem>
+                            <SelectItem value="other">Otro</SelectItem>
                         </SelectContent>
                     </Select>
                 </FormField>

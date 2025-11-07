@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Api\V1;
 
+use App\Enums\Gender;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateProfileRequest extends FormRequest
 {
@@ -28,9 +30,8 @@ class UpdateProfileRequest extends FormRequest
             'email' => ['sometimes', 'string', 'lowercase', 'email', 'max:255', 'unique:customers,email,'.$customerId],
             'phone' => ['nullable', 'string', 'max:20'],
             'birth_date' => ['nullable', 'date', 'before:today'],
-            'gender' => ['nullable', 'in:male,female,other'],
+            'gender' => ['nullable', Rule::enum(Gender::class)],
             'subway_card' => ['nullable', 'string', 'max:50'],
-            'timezone' => ['nullable', 'string', 'max:50'],
         ];
     }
 

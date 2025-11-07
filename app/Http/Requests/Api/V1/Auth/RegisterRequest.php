@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Api\V1\Auth;
 
+use App\Enums\Gender;
 use App\Models\Customer;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 
 class RegisterRequest extends FormRequest
@@ -29,7 +31,7 @@ class RegisterRequest extends FormRequest
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'phone' => ['nullable', 'string', 'max:20'],
             'birth_date' => ['nullable', 'date', 'before:today'],
-            'gender' => ['nullable', 'in:male,female,other'],
+            'gender' => ['nullable', Rule::enum(Gender::class)],
             'device_name' => ['nullable', 'string', 'max:100'],
         ];
     }

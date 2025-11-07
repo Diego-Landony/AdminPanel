@@ -91,14 +91,14 @@ export default function CreateCustomer({ customer_types }: CreateCustomerProps) 
                     </div>
                 </FormField>
 
-                <FormField label="Tarjeta Subway" error={errors.subway_card} required description={FIELD_DESCRIPTIONS.subwayCard}>
+                <FormField label="Tarjeta Subway" error={errors.subway_card} description="Se generará automáticamente si se deja vacío">
                     <div className="relative">
                         <CreditCard className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                         <Input
                             type="text"
                             value={data.subway_card}
                             onChange={(e) => setData('subway_card', e.target.value)}
-                            placeholder={PLACEHOLDERS.subwayCard}
+                            placeholder="Se asignará automáticamente"
                             className="pl-10"
                         />
                     </div>
@@ -123,9 +123,9 @@ export default function CreateCustomer({ customer_types }: CreateCustomerProps) 
                             <SelectValue placeholder={PLACEHOLDERS.selectGender} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="masculino">Masculino</SelectItem>
-                            <SelectItem value="femenino">Femenino</SelectItem>
-                            <SelectItem value="otro">Otro</SelectItem>
+                            <SelectItem value="male">Masculino</SelectItem>
+                            <SelectItem value="female">Femenino</SelectItem>
+                            <SelectItem value="other">Otro</SelectItem>
                         </SelectContent>
                     </Select>
                 </FormField>

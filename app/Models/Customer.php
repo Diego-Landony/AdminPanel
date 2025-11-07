@@ -40,7 +40,6 @@ class Customer extends Authenticatable
         'last_purchase_at',
         'points',
         'points_updated_at',
-        'timezone',
         'customer_type_id',
     ];
 
@@ -79,6 +78,44 @@ class Customer extends Authenticatable
      * @var array<int, string>
      */
     protected $appends = ['status', 'is_online'];
+
+    /**
+     * Bootstrap model events.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Customer $customer) {
+            if (is_null($customer->subway_card) || $customer->subway_card === '') {
+                $customer->subway_card = static::generateUniqueSubwayCard();
+            }
+        });
+    }
+
+    /**
+     * Generate unique 12-digit subway card starting with 8.
+     * Format: 8XXXXXXXXXXX (12 digits total)
+     * Legacy cards starting with 7 are 11 digits (maintained for compatibility)
+     */
+    protected static function generateUniqueSubwayCard(): string
+    {
+        $maxAttempts = 100;
+        $attempts = 0;
+
+        do {
+            $randomDigits = '';
+            for ($i = 0; $i < 11; $i++) {
+                $randomDigits .= random_int(0, 9);
+            }
+            $subwayCard = '8'.$randomDigits;
+            $attempts++;
+
+            if ($attempts >= $maxAttempts) {
+                throw new \RuntimeException('Unable to generate unique subway card after '.$maxAttempts.' attempts');
+            }
+        } while (static::where('subway_card', $subwayCard)->exists());
+
+        return $subwayCard;
+    }
 
     /**
      * Relación con el tipo de cliente

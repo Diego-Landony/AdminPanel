@@ -128,3 +128,127 @@ test('crea token sanctum al registrarse', function () {
     // Verificar que el token tiene el nombre del dispositivo
     expect($customer->tokens()->first()->name)->toBe('iPhone 15');
 });
+
+// Test 6: Genera subway_card automaticamente
+test('genera subway_card automaticamente', function () {
+    $response = $this->postJson('/api/v1/auth/register', [
+        'name' => 'Pedro Gómez',
+        'email' => 'pedro@example.com',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
+    ]);
+
+    $response->assertCreated();
+
+    $customer = Customer::where('email', 'pedro@example.com')->first();
+
+    // Verificar que se generó subway_card
+    expect($customer->subway_card)->not->toBeNull();
+
+    // Verificar formato: debe tener 12 dígitos y comenzar con 8
+    expect($customer->subway_card)->toHaveLength(12);
+    expect($customer->subway_card)->toStartWith('8');
+
+    // Verificar que es numérico
+    expect($customer->subway_card)->toMatch('/^\d{12}$/');
+});
+
+// Test 7: Genera subway_card unica
+test('genera subway_card unica', function () {
+    // Crear primer customer
+    $response1 = $this->postJson('/api/v1/auth/register', [
+        'name' => 'Cliente 1',
+        'email' => 'cliente1@example.com',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
+    ]);
+
+    // Crear segundo customer
+    $response2 = $this->postJson('/api/v1/auth/register', [
+        'name' => 'Cliente 2',
+        'email' => 'cliente2@example.com',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
+    ]);
+
+    $response1->assertCreated();
+    $response2->assertCreated();
+
+    $customer1 = Customer::where('email', 'cliente1@example.com')->first();
+    $customer2 = Customer::where('email', 'cliente2@example.com')->first();
+
+    // Verificar que ambos tienen subway_card
+    expect($customer1->subway_card)->not->toBeNull();
+    expect($customer2->subway_card)->not->toBeNull();
+
+    // Verificar que son diferentes
+    expect($customer1->subway_card)->not->toBe($customer2->subway_card);
+});
+
+// Test 8: Mantiene compatibilidad con tarjetas legacy
+test('mantiene compatibilidad con tarjetas legacy', function () {
+    // Crear customer con tarjeta legacy de 11 dígitos
+    $legacyCard = '70000000001';
+
+    Customer::create([
+        'name' => 'Cliente Legacy',
+        'email' => 'legacy@example.com',
+        'password' => Hash::make('password123'),
+        'oauth_provider' => 'local',
+        'subway_card' => $legacyCard,
+    ]);
+
+    // Verificar que se guardó correctamente
+    $customer = Customer::where('email', 'legacy@example.com')->first();
+    expect($customer->subway_card)->toBe($legacyCard);
+    expect($customer->subway_card)->toHaveLength(11);
+    expect($customer->subway_card)->toStartWith('7');
+});
+
+// Test 9: Valida formato de gender estandarizado
+test('valida formato de gender estandarizado', function () {
+    $response = $this->postJson('/api/v1/auth/register', [
+        'name' => 'Test Gender',
+        'email' => 'test-gender@example.com',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
+        'gender' => 'male',
+    ]);
+
+    $response->assertCreated();
+
+    $customer = Customer::where('email', 'test-gender@example.com')->first();
+    expect($customer->gender)->toBe('male');
+
+    // Verificar que la respuesta JSON contiene el gender correcto
+    expect($response->json('data.customer.gender'))->toBe('male');
+});
+
+// Test 10: Rechaza gender no válido
+test('rechaza gender no valido', function () {
+    $response = $this->postJson('/api/v1/auth/register', [
+        'name' => 'Test Invalid Gender',
+        'email' => 'invalid-gender@example.com',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
+        'gender' => 'masculino', // formato antiguo no válido
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['gender']);
+});
+
+// Test 11: No incluye timezone en respuesta
+test('no incluye timezone en respuesta', function () {
+    $response = $this->postJson('/api/v1/auth/register', [
+        'name' => 'Test Timezone',
+        'email' => 'test-timezone@example.com',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
+    ]);
+
+    $response->assertCreated();
+
+    // Verificar que timezone no está en la respuesta
+    expect($response->json('data.customer'))->not->toHaveKey('timezone');
+});

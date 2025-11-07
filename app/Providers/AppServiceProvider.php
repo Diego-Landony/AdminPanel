@@ -36,8 +36,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Los observers se registran automáticamente via el trait LogsActivity
-
         $this->configureRateLimiting();
     }
 

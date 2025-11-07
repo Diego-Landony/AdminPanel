@@ -10,11 +10,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class Customer extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\CustomerFactory> */
-    use HasFactory, LogsActivity, Notifiable, SoftDeletes, TracksUserStatus;
+    use HasApiTokens, HasFactory, LogsActivity, Notifiable, SoftDeletes, TracksUserStatus;
 
     /**
      * The attributes that are mass assignable.
@@ -26,6 +27,10 @@ class Customer extends Authenticatable
         'email',
         'email_verified_at',
         'password',
+        'google_id',
+        'apple_id',
+        'avatar',
+        'oauth_provider',
         'subway_card',
         'birth_date',
         'gender',

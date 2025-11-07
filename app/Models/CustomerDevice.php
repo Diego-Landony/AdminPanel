@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class CustomerDevice extends Model
 {
@@ -19,10 +20,14 @@ class CustomerDevice extends Model
      */
     protected $fillable = [
         'customer_id',
+        'sanctum_token_id',
         'fcm_token',
+        'device_identifier',
         'device_type',
         'device_name',
         'device_model',
+        'app_version',
+        'os_version',
         'last_used_at',
         'is_active',
     ];
@@ -41,11 +46,38 @@ class CustomerDevice extends Model
     }
 
     /**
+     * Accessor para determinar si este dispositivo es el dispositivo actual
+     * (basado en el token Sanctum activo en la request)
+     */
+    public function getIsCurrentDeviceAttribute(): bool
+    {
+        if (! $this->sanctum_token_id) {
+            return false;
+        }
+
+        $currentToken = request()->user()?->currentAccessToken();
+
+        if (! $currentToken) {
+            return false;
+        }
+
+        return $this->sanctum_token_id === $currentToken->id;
+    }
+
+    /**
      * Relación con el cliente
      */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    /**
+     * Relación con el token de Sanctum (opcional)
+     */
+    public function token(): BelongsTo
+    {
+        return $this->belongsTo(PersonalAccessToken::class, 'sanctum_token_id');
     }
 
     /**

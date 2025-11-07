@@ -25,3 +25,6 @@ yarn-error.log
 /.zed
 /.logs
 
+# Firebase credentials
+*firebase*.json
+/firabase

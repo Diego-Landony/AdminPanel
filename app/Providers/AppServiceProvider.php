@@ -2,7 +2,12 @@
 
 namespace App\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -11,7 +16,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(Messaging::class, function ($app) {
+            $credentialsPath = config('services.firebase.credentials');
+
+            if (! $credentialsPath || ! file_exists($credentialsPath)) {
+                throw new \RuntimeException(
+                    'Firebase credentials file not found. Please check FIREBASE_CREDENTIALS in your .env file.'
+                );
+            }
+
+            return (new Factory)
+                ->withServiceAccount($credentialsPath)
+                ->createMessaging();
+        });
     }
 
     /**
@@ -20,5 +37,28 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Los observers se registran automáticamente via el trait LogsActivity
+
+        $this->configureRateLimiting();
+    }
+
+    /**
+     * Configure the rate limiters for the application.
+     */
+    protected function configureRateLimiting(): void
+    {
+        // Rate limiter general para API (120 requests por minuto)
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Rate limiter estricto para autenticación (5 intentos por minuto)
+        RateLimiter::for('auth', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
+        // Rate limiter para OAuth (10 intentos por minuto)
+        RateLimiter::for('oauth', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
+        });
     }
 }

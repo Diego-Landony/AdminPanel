@@ -43,7 +43,7 @@ class AuthController extends Controller
      *             @OA\Property(property="phone", type="string", nullable=true, example="+50212345678", description="Optional phone number"),
      *             @OA\Property(property="birth_date", type="string", format="date", nullable=true, example="1990-05-15", description="Optional birth date"),
      *             @OA\Property(property="gender", type="string", enum={"male","female","other"}, nullable=true, example="male", description="Optional gender"),
-     *             @OA\Property(property="device_name", type="string", nullable=true, example="iPhone 14 Pro", description="Device name for token")
+     *             @OA\Property(property="os", type="string", enum={"ios","android","web"}, nullable=true, example="ios", description="Operating system")
      *         )
      *     ),
      *
@@ -91,8 +91,8 @@ class AuthController extends Controller
 
         event(new Registered($customer));
 
-        $deviceName = $validated['device_name'] ?? 'mobile-app';
-        $token = $customer->createToken($deviceName)->plainTextToken;
+        $tokenName = isset($validated['os']) ? $validated['os'] : 'app';
+        $token = $customer->createToken($tokenName)->plainTextToken;
 
         return response()->json([
             'message' => 'Registro exitoso. Por favor verifica tu email.',
@@ -120,7 +120,7 @@ class AuthController extends Controller
      *
      *             @OA\Property(property="email", type="string", format="email", example="juan@example.com"),
      *             @OA\Property(property="password", type="string", format="password", example="SecurePass123!"),
-     *             @OA\Property(property="device_name", type="string", nullable=true, example="iPhone 14 Pro", description="Device name for token")
+     *             @OA\Property(property="os", type="string", enum={"ios","android","web"}, nullable=true, example="ios", description="Operating system")
      *         )
      *     ),
      *
@@ -170,8 +170,8 @@ class AuthController extends Controller
             'last_activity_at' => now(),
         ]);
 
-        $deviceName = $request->device_name ?? 'mobile-app';
-        $token = $customer->createToken($deviceName)->plainTextToken;
+        $tokenName = $request->os ?? 'app';
+        $token = $customer->createToken($tokenName)->plainTextToken;
 
         return response()->json([
             'message' => 'Inicio de sesión exitoso.',
@@ -276,13 +276,13 @@ class AuthController extends Controller
     {
         $customer = $request->user();
         $oldToken = $request->user()->currentAccessToken();
-        $deviceName = $oldToken->name;
+        $tokenName = $oldToken->name;
 
         // Revoke old token
         $oldToken->delete();
 
         // Create new token
-        $token = $customer->createToken($deviceName)->plainTextToken;
+        $token = $customer->createToken($tokenName)->plainTextToken;
 
         return response()->json([
             'message' => 'Token renovado exitosamente.',

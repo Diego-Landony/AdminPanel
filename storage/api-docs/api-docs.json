@@ -86,10 +86,15 @@
                                         "example": "male",
                                         "nullable": true
                                     },
-                                    "device_name": {
-                                        "description": "Device name for token",
+                                    "os": {
+                                        "description": "Operating system",
                                         "type": "string",
-                                        "example": "iPhone 14 Pro",
+                                        "enum": [
+                                            "ios",
+                                            "android",
+                                            "web"
+                                        ],
+                                        "example": "ios",
                                         "nullable": true
                                     }
                                 },
@@ -180,10 +185,15 @@
                                         "format": "password",
                                         "example": "SecurePass123!"
                                     },
-                                    "device_name": {
-                                        "description": "Device name for token",
+                                    "os": {
+                                        "description": "Operating system",
                                         "type": "string",
-                                        "example": "iPhone 14 Pro",
+                                        "enum": [
+                                            "ios",
+                                            "android",
+                                            "web"
+                                        ],
+                                        "example": "ios",
                                         "nullable": true
                                     }
                                 },
@@ -602,10 +612,15 @@
                                         "type": "string",
                                         "example": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjhlY..."
                                     },
-                                    "device_name": {
-                                        "description": "Device name for token",
+                                    "os": {
+                                        "description": "Operating system",
                                         "type": "string",
-                                        "example": "Pixel 7 Pro",
+                                        "enum": [
+                                            "ios",
+                                            "android",
+                                            "web"
+                                        ],
+                                        "example": "android",
                                         "nullable": true
                                     }
                                 },
@@ -695,10 +710,15 @@
                                         "type": "string",
                                         "example": "eyJraWQiOiJlWGF1bm1MIiwiYWxnIj..."
                                     },
-                                    "device_name": {
-                                        "description": "Device name for token",
+                                    "os": {
+                                        "description": "Operating system",
                                         "type": "string",
-                                        "example": "iPhone 14 Pro",
+                                        "enum": [
+                                            "ios",
+                                            "android",
+                                            "web"
+                                        ],
+                                        "example": "ios",
                                         "nullable": true
                                     }
                                 },

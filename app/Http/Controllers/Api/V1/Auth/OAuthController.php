@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
+use App\Enums\OperatingSystem;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\AuthResource;
 use App\Services\SocialAuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class OAuthController extends Controller
 {
@@ -31,7 +33,7 @@ class OAuthController extends Controller
      *             required={"id_token"},
      *
      *             @OA\Property(property="id_token", type="string", example="eyJhbGciOiJSUzI1NiIsImtpZCI6IjhlY...", description="Google OAuth id_token obtained from Google Sign-In SDK"),
-     *             @OA\Property(property="device_name", type="string", nullable=true, example="Pixel 7 Pro", description="Device name for token")
+     *             @OA\Property(property="os", type="string", enum={"ios","android","web"}, nullable=true, example="android", description="Operating system")
      *         )
      *     ),
      *
@@ -68,15 +70,15 @@ class OAuthController extends Controller
     {
         $validated = $request->validate([
             'id_token' => ['required', 'string'],
-            'device_name' => ['nullable', 'string', 'max:255'],
+            'os' => ['nullable', Rule::enum(OperatingSystem::class)],
         ]);
 
         $providerData = $this->socialAuthService->verifyGoogleToken($validated['id_token']);
 
         $result = $this->socialAuthService->findOrCreateCustomer('google', $providerData);
 
-        $deviceName = $validated['device_name'] ?? 'google-app';
-        $token = $result['customer']->createToken($deviceName)->plainTextToken;
+        $tokenName = $validated['os'] ?? 'app';
+        $token = $result['customer']->createToken($tokenName)->plainTextToken;
 
         $authData = AuthResource::make([
             'token' => $token,
@@ -110,7 +112,7 @@ class OAuthController extends Controller
      *             required={"id_token"},
      *
      *             @OA\Property(property="id_token", type="string", example="eyJraWQiOiJlWGF1bm1MIiwiYWxnIj...", description="Apple OAuth id_token obtained from Apple Sign-In SDK"),
-     *             @OA\Property(property="device_name", type="string", nullable=true, example="iPhone 14 Pro", description="Device name for token")
+     *             @OA\Property(property="os", type="string", enum={"ios","android","web"}, nullable=true, example="ios", description="Operating system")
      *         )
      *     ),
      *
@@ -147,15 +149,15 @@ class OAuthController extends Controller
     {
         $validated = $request->validate([
             'id_token' => ['required', 'string'],
-            'device_name' => ['nullable', 'string', 'max:255'],
+            'os' => ['nullable', Rule::enum(OperatingSystem::class)],
         ]);
 
         $providerData = $this->socialAuthService->verifyAppleToken($validated['id_token']);
 
         $result = $this->socialAuthService->findOrCreateCustomer('apple', $providerData);
 
-        $deviceName = $validated['device_name'] ?? 'apple-app';
-        $token = $result['customer']->createToken($deviceName)->plainTextToken;
+        $tokenName = $validated['os'] ?? 'app';
+        $token = $result['customer']->createToken($tokenName)->plainTextToken;
 
         $authData = AuthResource::make([
             'token' => $token,

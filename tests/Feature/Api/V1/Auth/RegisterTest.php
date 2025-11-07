@@ -14,7 +14,7 @@ test('puede registrarse con datos validos', function () {
         'password' => 'SecurePass123!',
         'password_confirmation' => 'SecurePass123!',
         'phone' => '+50212345678',
-        'device_name' => 'Test Device',
+        'os' => 'android',
     ]);
 
     // Verificar respuesta exitosa (201 Created)
@@ -113,7 +113,7 @@ test('crea token sanctum al registrarse', function () {
         'email' => 'roberto@example.com',
         'password' => 'SecurePass123!',
         'password_confirmation' => 'SecurePass123!',
-        'device_name' => 'iPhone 15',
+        'os' => 'ios',
     ]);
 
     // Verificar respuesta exitosa
@@ -125,8 +125,8 @@ test('crea token sanctum al registrarse', function () {
     // Verificar que tiene tokens
     expect($customer->tokens()->count())->toBe(1);
 
-    // Verificar que el token tiene el nombre del dispositivo
-    expect($customer->tokens()->first()->name)->toBe('iPhone 15');
+    // Verificar que el token tiene el nombre del sistema operativo
+    expect($customer->tokens()->first()->name)->toBe('ios');
 });
 
 // Test 6: Genera subway_card automaticamente

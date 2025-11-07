@@ -21,7 +21,7 @@ test('puede hacer login con credenciales validas', function () {
     $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'juan@example.com',
         'password' => 'password123',
-        'device_name' => 'Test Device',
+        'os' => 'android',
     ]);
 
     // Verificar respuesta exitosa
@@ -83,8 +83,8 @@ test('rechaza usuario inexistente', function () {
         ->assertJsonValidationErrors(['email']);
 });
 
-// Test 4: Puede especificar nombre de dispositivo
-test('puede especificar nombre de dispositivo', function () {
+// Test 4: Puede especificar sistema operativo
+test('puede especificar sistema operativo', function () {
     // Crear customer de prueba
     $customer = Customer::create([
         'name' => 'Juan Pérez',
@@ -94,11 +94,11 @@ test('puede especificar nombre de dispositivo', function () {
         'subway_card' => '1234567890',
     ]);
 
-    // Hacer login con device_name personalizado
+    // Hacer login con os personalizado
     $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'juan@example.com',
         'password' => 'password123',
-        'device_name' => 'iPhone 14 Pro',
+        'os' => 'ios',
     ]);
 
     // Verificar respuesta exitosa
@@ -106,7 +106,7 @@ test('puede especificar nombre de dispositivo', function () {
 
     // Verificar que el token fue creado con el nombre correcto
     $customer->refresh();
-    expect($customer->tokens()->first()->name)->toBe('iPhone 14 Pro');
+    expect($customer->tokens()->first()->name)->toBe('ios');
 });
 
 // Test 5: Actualiza last_login_at

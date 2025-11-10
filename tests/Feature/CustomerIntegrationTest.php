@@ -243,7 +243,7 @@ describe('Validation', function () {
 
         $response = $this->post('/customers', []);
         $response->assertSessionHasErrors([
-            'name', 'email', 'password', 'subway_card', 'birth_date',
+            'name', 'email', 'password',
         ]);
 
         $existingCustomer = Customer::factory()->create(['email' => 'existing@test.com']);

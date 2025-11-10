@@ -8,6 +8,7 @@ use App\Models\Menu\Product;
 use App\Models\Menu\ProductVariant;
 use App\Models\Menu\Section;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class SubwayMenuProductsSeeder extends Seeder
@@ -17,7 +18,13 @@ class SubwayMenuProductsSeeder extends Seeder
         $this->command->info('🥪 Creando productos del menú de Subway...');
 
         // Limpiar datos existentes (respetando foreign keys)
+        DB::table('bundle_promotion_item_options')->delete();
+        DB::table('bundle_promotion_items')->delete();
+        DB::table('promotion_items')->delete();
+        DB::table('combo_item_options')->delete();
         ComboItem::query()->delete();
+        DB::table('product_sections')->delete();
+        DB::table('category_product')->delete();
         ProductVariant::query()->delete();
         Product::query()->delete();
 

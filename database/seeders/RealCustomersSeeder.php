@@ -72,7 +72,6 @@ class RealCustomersSeeder extends Seeder
                 'last_purchase_at' => now()->subDays(rand(1, 15)),
                 'last_login_at' => now()->subDays(rand(0, 7)),
                 'email_verified_at' => now(),
-                'timezone' => 'America/Guatemala',
             ]);
 
             $this->createCustomerRelations($customer);
@@ -111,7 +110,6 @@ class RealCustomersSeeder extends Seeder
                 'last_purchase_at' => now()->subDays(rand(1, 10)),
                 'last_login_at' => now()->subDays(rand(0, 5)),
                 'email_verified_at' => now(),
-                'timezone' => 'America/Guatemala',
             ]);
 
             $this->createCustomerRelations($customer);
@@ -150,7 +148,6 @@ class RealCustomersSeeder extends Seeder
                 'last_purchase_at' => now()->subDays(rand(1, 7)),
                 'last_login_at' => now()->subDays(rand(0, 3)),
                 'email_verified_at' => now(),
-                'timezone' => 'America/Guatemala',
             ]);
 
             $this->createCustomerRelations($customer);
@@ -189,7 +186,6 @@ class RealCustomersSeeder extends Seeder
                 'last_purchase_at' => now()->subDays(rand(1, 5)),
                 'last_login_at' => now()->subDays(rand(0, 2)),
                 'email_verified_at' => now(),
-                'timezone' => 'America/Guatemala',
             ]);
 
             $this->createCustomerRelations($customer);
@@ -228,7 +224,6 @@ class RealCustomersSeeder extends Seeder
                 'last_purchase_at' => now()->subDays(rand(1, 3)),
                 'last_login_at' => now()->subHours(rand(1, 48)),
                 'email_verified_at' => now(),
-                'timezone' => 'America/Guatemala',
             ]);
 
             $this->createCustomerRelations($customer);

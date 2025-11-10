@@ -50,11 +50,26 @@ Route::prefix('v1')->group(function () {
 
     // OAuth endpoints (separate rate limiting)
     Route::middleware(['throttle:oauth'])->prefix('auth/oauth')->group(function () {
+        // Mobile app LOGIN endpoints - id_token validation (does NOT create accounts)
         Route::post('/google', [OAuthController::class, 'google'])
-            ->name('api.v1.auth.oauth.google');
+            ->name('api.v1.auth.oauth.google.login');
 
         Route::post('/apple', [OAuthController::class, 'apple'])
-            ->name('api.v1.auth.oauth.apple');
+            ->name('api.v1.auth.oauth.apple.login');
+
+        // Mobile app REGISTER endpoints - id_token validation (creates accounts)
+        Route::post('/google/register', [OAuthController::class, 'googleRegister'])
+            ->name('api.v1.auth.oauth.google.register');
+
+        Route::post('/apple/register', [OAuthController::class, 'appleRegister'])
+            ->name('api.v1.auth.oauth.apple.register');
+
+        // Web app endpoints - OAuth redirect flow
+        Route::get('/google/redirect', [OAuthController::class, 'googleRedirect'])
+            ->name('api.v1.auth.oauth.google.redirect');
+
+        Route::get('/google/callback', [OAuthController::class, 'googleCallback'])
+            ->name('api.v1.auth.oauth.google.callback');
     });
 
     /*

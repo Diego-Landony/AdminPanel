@@ -14,7 +14,7 @@
             "description": "Local Development Server"
         },
         {
-            "url": "https://admin.subwaycardgt.com/",
+            "url": "http://localhost",
             "description": "Application Server"
         }
     ],
@@ -595,8 +595,8 @@
                 "tags": [
                     "OAuth"
                 ],
-                "summary": "Login/Register with Google",
-                "description": "Authenticates or registers customer using Google OAuth id_token. Mobile app obtains id_token from Google Sign-In SDK, backend verifies with Google and returns Sanctum token. Creates new account if email doesn't exist.",
+                "summary": "Login with Google (Mobile)",
+                "description": "Authenticates customer using Google OAuth id_token from mobile app. If email exists, links Google account. If email doesn't exist, returns error asking to register first. Does NOT auto-create accounts.",
                 "operationId": "7de0059c713c7fba77ef30a111c1522e",
                 "requestBody": {
                     "required": true,
@@ -693,8 +693,8 @@
                 "tags": [
                     "OAuth"
                 ],
-                "summary": "Login/Register with Apple",
-                "description": "Authenticates or registers customer using Apple Sign-In id_token. Mobile app obtains id_token from Apple Sign-In SDK, backend verifies with Apple and returns Sanctum token. Creates new account if email doesn't exist.",
+                "summary": "Login with Apple (Mobile)",
+                "description": "Authenticates customer using Apple Sign-In id_token from mobile app. If email exists, links Apple account. If email doesn't exist, returns error asking to register first. Does NOT auto-create accounts.",
                 "operationId": "df8a9b89f5e6a009a05c437fdd4c39d0",
                 "requestBody": {
                     "required": true,
@@ -782,6 +782,298 @@
                     },
                     "429": {
                         "description": "Too many requests"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/oauth/google/register": {
+            "post": {
+                "tags": [
+                    "OAuth"
+                ],
+                "summary": "Register with Google (Mobile)",
+                "description": "Registers new customer using Google OAuth id_token from mobile app. Creates new account if email doesn't exist. If email already exists, returns error.",
+                "operationId": "66361e213aae994ffa0e9b6967818e9d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "id_token"
+                                ],
+                                "properties": {
+                                    "id_token": {
+                                        "description": "Google OAuth id_token obtained from Google Sign-In SDK",
+                                        "type": "string",
+                                        "example": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjhlY..."
+                                    },
+                                    "os": {
+                                        "description": "Operating system",
+                                        "type": "string",
+                                        "enum": [
+                                            "ios",
+                                            "android",
+                                            "web"
+                                        ],
+                                        "example": "android",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Registration successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cuenta creada exitosamente."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "customer": {
+                                                    "$ref": "#/components/schemas/Customer"
+                                                },
+                                                "token": {
+                                                    "type": "string",
+                                                    "example": "1|abc123xyz..."
+                                                },
+                                                "is_new_customer": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Email already exists or invalid token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Ya existe una cuenta con este correo electrónico."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/oauth/apple/register": {
+            "post": {
+                "tags": [
+                    "OAuth"
+                ],
+                "summary": "Register with Apple (Mobile)",
+                "description": "Registers new customer using Apple Sign-In id_token from mobile app. Creates new account if email doesn't exist. If email already exists, returns error.",
+                "operationId": "b92a1cf99d156a4d28a24868b9f151af",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "id_token"
+                                ],
+                                "properties": {
+                                    "id_token": {
+                                        "description": "Apple OAuth id_token obtained from Apple Sign-In SDK",
+                                        "type": "string",
+                                        "example": "eyJraWQiOiJlWGF1bm1MIiwiYWxnIj..."
+                                    },
+                                    "os": {
+                                        "description": "Operating system",
+                                        "type": "string",
+                                        "enum": [
+                                            "ios",
+                                            "android",
+                                            "web"
+                                        ],
+                                        "example": "ios",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Registration successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cuenta creada exitosamente."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "customer": {
+                                                    "$ref": "#/components/schemas/Customer"
+                                                },
+                                                "token": {
+                                                    "type": "string",
+                                                    "example": "1|abc123xyz..."
+                                                },
+                                                "is_new_customer": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Email already exists or invalid token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Ya existe una cuenta con este correo electrónico."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/oauth/google/redirect": {
+            "get": {
+                "tags": [
+                    "OAuth"
+                ],
+                "summary": "Redirect to Google OAuth (Web)",
+                "description": "Redirects user to Google OAuth consent screen. For web applications only. Mobile apps should use POST /api/v1/auth/oauth/google with id_token.",
+                "operationId": "d45644767bd0769d1084909175bff619",
+                "responses": {
+                    "302": {
+                        "description": "Redirect to Google"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/oauth/google/callback": {
+            "get": {
+                "tags": [
+                    "OAuth"
+                ],
+                "summary": "Handle Google OAuth callback (Web)",
+                "description": "Handles Google OAuth callback and returns authentication token. For web applications. If email doesn't exist, returns error asking user to register first.",
+                "operationId": "281ab9caddb2b86e3614c9e34567db4f",
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "description": "Authorization code from Google",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "state",
+                        "in": "query",
+                        "description": "CSRF state token",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Authentication successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Inicio de sesión exitoso."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "customer": {
+                                                    "$ref": "#/components/schemas/Customer"
+                                                },
+                                                "token": {
+                                                    "type": "string",
+                                                    "example": "1|abc123xyz..."
+                                                },
+                                                "is_new_customer": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Email not registered or other validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No existe una cuenta con este correo electrónico. Por favor regístrate primero."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }

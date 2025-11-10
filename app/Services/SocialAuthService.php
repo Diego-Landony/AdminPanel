@@ -62,9 +62,11 @@ class SocialAuthService
     }
 
     /**
-     * Find or create a customer from OAuth provider data
+     * Find existing customer and link OAuth provider (LOGIN - does NOT create accounts)
+     *
+     * @throws ValidationException if email doesn't exist
      */
-    public function findOrCreateCustomer(string $provider, object $providerData): array
+    public function findAndLinkCustomer(string $provider, object $providerData): array
     {
         $providerIdField = $provider.'_id';
 
@@ -97,6 +99,8 @@ class SocialAuthService
                 $providerIdField => $providerData->provider_id,
                 'avatar' => $providerData->avatar ?? $existingCustomer->avatar,
                 'oauth_provider' => $provider,
+                'last_login_at' => now(),
+                'last_activity_at' => now(),
             ]);
 
             return [
@@ -106,6 +110,47 @@ class SocialAuthService
             ];
         }
 
+        // Email no existe en la base de datos - RECHAZAR
+        throw ValidationException::withMessages([
+            'email' => ['No existe una cuenta con este correo electrónico. Por favor regístrate primero.'],
+        ]);
+    }
+
+    /**
+     * Create new customer from OAuth provider data (REGISTER - creates account)
+     *
+     * @throws ValidationException if email already exists
+     */
+    public function createCustomerFromOAuth(string $provider, object $providerData): array
+    {
+        $providerIdField = $provider.'_id';
+
+        // Verificar si ya existe una cuenta con este email
+        $existingCustomer = Customer::where('email', $providerData->email)->first();
+
+        if ($existingCustomer) {
+            // Si ya existe, verificar si tiene el provider vinculado
+            if ($providerData->provider_id === $existingCustomer->$providerIdField) {
+                // Cuenta ya existe y ya está vinculada - solo hacer login
+                $existingCustomer->update([
+                    'last_login_at' => now(),
+                    'last_activity_at' => now(),
+                ]);
+
+                return [
+                    'customer' => $existingCustomer,
+                    'message' => 'Inicio de sesión exitoso.',
+                    'is_new' => false,
+                ];
+            }
+
+            // Email existe pero no está vinculado a este provider
+            throw ValidationException::withMessages([
+                'email' => ['Ya existe una cuenta con este correo electrónico. Por favor inicia sesión con tu método original.'],
+            ]);
+        }
+
+        // Crear nueva cuenta
         $customer = Customer::create([
             'name' => $providerData->name ?? 'Usuario '.$provider,
             'email' => $providerData->email,

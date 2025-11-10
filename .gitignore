@@ -29,3 +29,6 @@ yarn-error.log
 # Firebase credentials
 *firebase*.json
 /firabase
+
+# Google OAuth credentials
+/crendenciales google/

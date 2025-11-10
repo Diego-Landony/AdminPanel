@@ -427,7 +427,7 @@ class OAuthController extends Controller
             'avatar' => $socialiteUser->getAvatar(),
         ];
 
-        $result = $this->socialAuthService->findOrCreateCustomer('google', $providerData);
+        $result = $this->socialAuthService->findAndLinkCustomer('google', $providerData);
 
         $tokenName = 'web';
         $token = $result['customer']->createToken($tokenName)->plainTextToken;

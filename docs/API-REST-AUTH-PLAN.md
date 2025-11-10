@@ -13,7 +13,7 @@
 
 Implementación de una API REST completa para **clientes (customers)** de Subway Guatemala que permita:
 
-- **Autenticación** tradicional (email/contraseña) y social (Google OAuth, Apple Sign-In)
+- **Autenticación** tradicional (email/contraseña) y social (Google OAuth)
 - **Sistema de pedidos** desde app móvil iOS/Android
 - **Programa de lealtad**: acumulación y gestión de puntos (Bronze/Silver/Gold)
 - **Gestión de perfil**: múltiples direcciones de entrega y NITs para facturación
@@ -29,7 +29,7 @@ Implementación de una API REST completa para **clientes (customers)** de Subway
 |---------|-------------------|----------------|
 | **Autenticación** | Sesiones (cookies) - Panel Admin | Tokens Sanctum (stateless) - App Clientes |
 | **Usuarios** | Admins (panel web) | Customers (app móvil pedidos) |
-| **Login Social** | No implementado | Google + Apple OAuth |
+| **Login Social** | No implementado | Google OAuth |
 | **Múltiples Dispositivos** | Una sesión por navegador | Múltiples tokens simultáneos por customer |
 | **Notificaciones** | No tiene | Firebase Cloud Messaging |
 | **Documentación API** | No aplica | Swagger UI interactiva |
@@ -123,13 +123,11 @@ Generada automáticamente por Sanctum. Campos principales:
 
 **Campos nuevos a agregar**:
 - `google_id`: VARCHAR(255) nullable, unique → ID de usuario en Google
-- `apple_id`: VARCHAR(255) nullable, unique → ID de usuario en Apple
 - `avatar`: TEXT nullable → URL de foto de perfil del provider OAuth
-- `oauth_provider`: ENUM('local', 'google', 'apple') default 'local'
+- `oauth_provider`: ENUM('local', 'google') default 'local'
 
 **Índices nuevos**:
 - `google_id` (único, búsqueda rápida)
-- `apple_id` (único, búsqueda rápida)
 
 **Lógica**:
 - Si customer existe con email pero sin `google_id` → vincular cuenta
@@ -675,12 +673,11 @@ Campos NO actualizables:
 
 ---
 
-## FASE 6: OAuth Social Login (Google + Apple) ✅ COMPLETADA
+## FASE 6: OAuth Social Login (Google) ✅ COMPLETADA
 
 ### Objetivos
 - Instalar Laravel Socialite
 - Implementar login con Google OAuth
-- Implementar login con Apple Sign-In
 - Manejar vinculación de cuentas existentes
 - Sincronizar datos del provider
 
@@ -690,7 +687,6 @@ Campos NO actualizables:
 
 **Providers soportados**:
 - Google (built-in)
-- Apple (requiere sign-in-with-apple)
 
 ### Configuración
 
@@ -701,18 +697,9 @@ Campos NO actualizables:
 - `client_secret`: de Google Cloud Console
 - `redirect`: no necesario para API móvil (client-side)
 
-**Apple OAuth**:
-- `client_id`: bundle ID de la app
-- `client_secret`: JWT firmado con private key
-- `redirect`: callback URL (si aplica)
-
 **Variables de entorno** (.env):
 - GOOGLE_CLIENT_ID
 - GOOGLE_CLIENT_SECRET
-- APPLE_CLIENT_ID
-- APPLE_TEAM_ID
-- APPLE_KEY_ID
-- APPLE_PRIVATE_KEY (ruta al archivo .p8)
 
 ### Controller: SocialAuthController
 
@@ -733,28 +720,12 @@ Lógica:
 8. Crear token Sanctum
 9. Retornar AuthResource
 
-**Método**: `apple(AppleLoginRequest $request)`
-
-Lógica similar a Google:
-1. Recibir `authorization_code` o `id_token`
-2. Verificar con Apple API
-3. Extraer datos: sub (apple_id), email, name
-4. Buscar/crear/vincular usuario
-5. Nota: Apple solo envía name en primer login
-6. Crear token y retornar
-
 ### Service: SocialAuthService
 
 **Método**: `verifyGoogleToken(string $idToken)`
 - Llamar a Google API
 - Validar audiencia (client_id)
 - Retornar datos del usuario o lanzar excepción
-
-**Método**: `verifyAppleToken(string $token)`
-- Decodificar JWT
-- Validar firma con clave pública de Apple
-- Verificar issuer y audience
-- Retornar datos
 
 **Método**: `findOrCreateUserFromProvider(array $providerData, string $provider)`
 - Lógica compartida de búsqueda/creación
@@ -764,18 +735,10 @@ Lógica similar a Google:
 ### Manejo de Casos Edge
 
 **Caso 1**: Usuario existe con email pero sin OAuth
-- Acción: vincular google_id/apple_id a usuario existente
+- Acción: vincular google_id a usuario existente
 - Notificar al usuario por email (seguridad)
 
-**Caso 2**: Usuario usa Google y luego Apple con mismo email
-- Acción: vincular ambos providers al mismo usuario
-- Permitir login por cualquiera
-
-**Caso 3**: Email no proporcionado por Apple
-- Acción: generar email temporal (uuid@privaterelay.appleid.com)
-- O solicitar email al usuario
-
-**Caso 4**: Password NULL en OAuth users
+**Caso 2**: Password NULL en OAuth users
 - Acción: permitir, password es nullable
 - Usuario puede establecer password después para login tradicional
 
@@ -783,14 +746,13 @@ Lógica similar a Google:
 
 - [x] Socialite instalado y configurado (v5.23.1)
 - [x] Google OAuth funcionando con id_token
-- [x] Apple Sign-In funcionando con id_token
 - [x] Vinculación automática por email funciona
 - [x] Avatar sincronizado desde provider
 - [x] Email verificado automáticamente en OAuth
 - [x] Casos edge manejados correctamente
-- [x] SocialAuthService implementado con verifyGoogleToken(), verifyAppleToken(), findOrCreateCustomer()
+- [x] SocialAuthService implementado con verifyGoogleToken(), findOrCreateCustomer()
 - [x] OAuthController actualizado para usar Socialite con ->stateless()->userFromToken()
-- [x] config/services.php configurado con Google y Apple
+- [x] config/services.php configurado con Google
 - [x] .env.example actualizado con variables OAuth
 
 ---
@@ -835,7 +797,7 @@ Lógica similar a Google:
 
 - password
 - remember_token
-- google_id, apple_id (sensibles)
+- google_id (sensible)
 - deleted_at
 - customer_type_id (se incluye como relación)
 
@@ -1278,13 +1240,12 @@ Definir modelos de datos:
 1. POST /register
 2. POST /login
 3. POST /google
-4. POST /apple
-5. POST /logout
-6. POST /logout-all
-7. POST /forgot-password
-8. POST /reset-password
-9. POST /change-password
-10. GET /me
+4. POST /logout
+5. POST /logout-all
+6. POST /forgot-password
+7. POST /reset-password
+8. POST /change-password
+9. GET /me
 11. PUT /profile
 
 **Grupo: Devices**
@@ -1306,7 +1267,6 @@ Definir modelos de datos:
 - LoginRequest
 - RegisterRequest
 - GoogleLoginRequest
-- AppleLoginRequest
 
 ### Ejemplos de Responses
 
@@ -1508,10 +1468,7 @@ Capturar excepciones comunes:
    - Login con Google (mismo email)
    - Verificar google_id agregado
 
-3. `permite_login_con_google_y_apple_mismo_usuario()`
-   - Vincular ambos providers
-
-4. `rechaza_token_invalido()`
+3. `rechaza_token_invalido()`
    - Mock devuelve error
    - Assert 401
 
@@ -1597,7 +1554,7 @@ Métodos helpers:
 **❌ Falta Implementar**:
 - Tokens Sanctum (`$customer->createToken()`)
 - Vinculación `customer_devices.sanctum_token_id` con tokens
-- Customers con OAuth (google_id, apple_id, oauth_provider) para testing
+- Customers con OAuth (google_id, oauth_provider) para testing
 
 ### Ampliar: RealCustomersSeeder
 
@@ -1605,9 +1562,8 @@ Métodos helpers:
 
 **Cambios requeridos**:
 
-1. **Agregar 5 customers especiales para API testing** (adicionales a los 50 existentes):
+1. **Agregar 4 customers especiales para API testing** (adicionales a los 50 existentes):
    - Customer con OAuth Google
-   - Customer con OAuth Apple
    - Customer con múltiples dispositivos
    - Customer inactivo (para probar lifecycle)
    - Customer de testing directo para Postman/Insomnia
@@ -1655,19 +1611,7 @@ Métodos helpers:
    - Direcciones: 2
    - NITs: 1
 
-4. **Customer - OAuth Apple**:
-   - Email: `customer.apple@subway.gt`
-   - Name: "Ana Martínez"
-   - Subway Card: "4000000001"
-   - apple_id: "001234.abcd..."
-   - oauth_provider: "apple"
-   - Customer Type: Bronze
-   - Points: 100
-   - Token: 1 (iOS)
-   - Direcciones: 1
-   - NITs: 1
-
-5. **Customer - Múltiples dispositivos**:
+4. **Customer - Múltiples dispositivos**:
    - Email: `customer.multi@subway.gt`
    - Password: `password`
    - Name: "Roberto García"
@@ -1783,22 +1727,7 @@ private function createApiTestCustomers(): void
     ]);
     $this->createCustomerRelations($googleCustomer);
 
-    // 2. Customer OAuth Apple
-    $appleCustomer = Customer::create([
-        'name' => 'Ana Martínez (Apple)',
-        'email' => 'ana.apple@subway.gt',
-        'password' => null,
-        'apple_id' => '001234.abcd1234efgh5678.1234',
-        'oauth_provider' => 'apple',
-        'subway_card' => '9000000002',
-        'customer_type_id' => CustomerType::where('name', 'Bronce')->first()->id,
-        'points' => 85,
-        'email_verified_at' => now(),
-        'timezone' => 'America/Guatemala',
-    ]);
-    $this->createCustomerRelations($appleCustomer);
-
-    // 3. Customer Testing (Postman/Insomnia)
+    // 2. Customer Testing (Postman/Insomnia)
     $testCustomer = Customer::create([
         'name' => 'API Test Customer',
         'email' => 'api@subway.gt',
@@ -1811,7 +1740,7 @@ private function createApiTestCustomers(): void
     ]);
     $this->createCustomerRelations($testCustomer);
 
-    $this->command->line('   ✓ 3 customers de prueba API creados');
+    $this->command->line('   ✓ 2 customers de prueba API creados');
 }
 ```
 
@@ -1839,8 +1768,8 @@ public function run(): void
 - [ ] Método `createCustomerRelations()` actualizado con tokens + devices
 - [ ] Todos los 50 customers existentes ahora tienen token Sanctum
 - [ ] Todos los customers tienen CustomerDevice vinculado con `sanctum_token_id`
-- [ ] 3 customers especiales API creados (Google OAuth, Apple OAuth, Test)
-- [ ] Campos OAuth poblados correctamente (google_id, apple_id, oauth_provider)
+- [ ] 2 customers especiales API creados (Google OAuth, Test)
+- [ ] Campos OAuth poblados correctamente (google_id, oauth_provider)
 - [ ] FCM tokens generados con formato realista (152 chars)
 - [ ] Seeder ejecuta sin errores: `php artisan db:seed --class=RealCustomersSeeder`
 - [ ] Output muestra cantidad correcta: "53 clientes realistas creados"
@@ -1866,7 +1795,7 @@ public function run(): void
    - Base URL
 
 2. **Autenticación**
-   - Tipos soportados (email/password, Google, Apple)
+   - Tipos soportados (email/password, Google)
    - Cómo obtener token
    - Cómo usar token en requests
    - Expiración y renovación
@@ -1921,13 +1850,6 @@ public function run(): void
    - Configurar consent screen
    - Agregar variables a .env
 
-2. **Apple Sign-In**:
-   - Configurar en Apple Developer Portal
-   - Crear Service ID
-   - Generar private key (.p8)
-   - Configurar bundle ID
-   - Agregar variables a .env
-
 ### README.md Updates
 
 **Sección nueva**: API REST
@@ -1956,7 +1878,6 @@ Al finalizar la implementación, el sistema debe cumplir:
 1. ✅ **Autenticación Multi-Canal**
    - Login con email/password funciona
    - Login con Google OAuth funciona
-   - Login con Apple Sign-In funciona
    - Tokens Sanctum generados correctamente
 
 2. ✅ **Gestión de Sesiones**
@@ -2071,7 +1992,7 @@ Este plan implementa una API REST completa y moderna que:
 | 3 | Rutas y estructura API | 0.25 días | routes/api.php |
 | 4 | Controllers API (reutilizar lógica) | 0.5 días | 4-5 controllers |
 | 5 | Form Requests API | 0.25 días | 6 requests |
-| 6 | OAuth Google + Apple | 1 día | SocialAuthController, Service |
+| 6 | OAuth Google | 1 día | SocialAuthController, Service |
 | 7 | API Resources | 0.5 días | 7 resources |
 | 8 | FCM Service | 0.5 días | FCMService, config |
 | 9 | Swagger/OpenAPI | 0.5 días | Anotaciones |
@@ -2090,7 +2011,7 @@ Este plan implementa una API REST completa y moderna que:
 
 **Arquitectura Nueva a Implementar**:
 - API REST con Sanctum (customers como tokenable)
-- OAuth social login (Google + Apple)
+- OAuth social login (Google)
 - Service FCM para notificaciones push
 - Swagger documentación interactiva
 - API Resources (7 nuevos)
@@ -2134,7 +2055,6 @@ Este plan implementa una API REST completa y moderna que:
 
 - ✅ Login tradicional email/password
 - ✅ Login con Google OAuth (id_token verification)
-- ✅ Login con Apple Sign-In (id_token verification)
 - ✅ Registro de nuevos customers
 - ✅ Password reset flow
 - ✅ Gestión de perfil
@@ -2155,7 +2075,6 @@ Este plan implementa una API REST completa y moderna que:
 ├── POST /api/v1/auth/email/verify/{id}/{hash}
 ├── POST /api/v1/auth/email/resend
 ├── POST /api/v1/auth/oauth/google
-├── POST /api/v1/auth/oauth/apple
 └── /api/v1/profile/* (protegido)
     ├── GET /profile
     ├── PUT /profile
@@ -2167,14 +2086,13 @@ Este plan implementa una API REST completa y moderna que:
 
 **Servicios Implementados**:
 
-- `SocialAuthService`: Verificación de tokens OAuth con Google/Apple via Socialite
+- `SocialAuthService`: Verificación de tokens OAuth con Google via Socialite
 - Rate limiting: auth (5/min), oauth (10/min), api (120/min)
 - Sanctum tokens con expiración de 365 días
 
 **Configuración OAuth**:
 
 - Google OAuth via `config/services.php` + Socialite
-- Apple Sign-In via `config/services.php` + Socialite
 - Variables en `.env.example` documentadas
 
 **Nuevas Funcionalidades Implementadas (Fases 8-10)**:

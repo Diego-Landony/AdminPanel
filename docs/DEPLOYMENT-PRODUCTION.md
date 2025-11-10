@@ -33,7 +33,6 @@
 
 - Firebase credentials: `storage/app/firebase/credentials.json`
 - Google OAuth credentials (si se usa)
-- Apple Sign-In credentials (si se usa)
 
 ### Backup
 
@@ -112,14 +111,6 @@ MAIL_FROM_NAME="Subway Guatemala"
 # Obtener de: https://console.cloud.google.com/apis/credentials
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
-
-# Apple Sign-In
-# Obtener de: https://developer.apple.com/account/resources/identifiers
-APPLE_CLIENT_ID=
-APPLE_CLIENT_SECRET=
-APPLE_TEAM_ID=
-APPLE_KEY_ID=
-APPLE_PRIVATE_KEY_PATH=
 ```
 
 ### Diferencias Local vs Producción

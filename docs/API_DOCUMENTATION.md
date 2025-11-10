@@ -25,7 +25,7 @@
 
 The SubwayApp API provides a RESTful interface for the Subway Guatemala mobile application. This API enables customers to:
 
-- Authenticate using email/password or social login (Google, Apple)
+- Authenticate using email/password or social login (Google)
 - Manage their profile, addresses, and billing information (NITs)
 - Register devices for push notifications
 - Browse menu, combos, and promotions
@@ -35,7 +35,7 @@ The SubwayApp API provides a RESTful interface for the Subway Guatemala mobile a
 ### Key Features
 
 - **Multi-device support**: Customers can use multiple devices simultaneously
-- **OAuth integration**: Google and Apple Sign-In
+- **OAuth integration**: Google Sign-In
 - **Push notifications**: Firebase Cloud Messaging (FCM)
 - **Customer loyalty program**: Bronze, Silver, Gold, Platinum tiers
 - **Secure authentication**: Laravel Sanctum with long-lived tokens
@@ -62,7 +62,6 @@ The API uses **Laravel Sanctum** for token-based authentication. All protected e
 
 1. **Email & Password** (Traditional)
 2. **Google OAuth** (Social Login)
-3. **Apple Sign-In** (Social Login)
 
 ### Obtaining a Token
 
@@ -107,18 +106,6 @@ Content-Type: application/json
 
 {
   "id_token": "<google_id_token_from_mobile_sdk>",
-  "device_name": "iPhone 15 Pro"
-}
-```
-
-#### Apple Sign-In
-
-```bash
-POST /api/v1/auth/oauth/apple
-Content-Type: application/json
-
-{
-  "id_token": "<apple_id_token_from_mobile_sdk>",
   "device_name": "iPhone 15 Pro"
 }
 ```
@@ -270,7 +257,7 @@ Authorization: Bearer <token>
 
 **customers**:
 - `id`, `name`, `email`, `password` (nullable for OAuth)
-- `google_id`, `apple_id`, `oauth_provider`
+- `google_id`, `oauth_provider`
 - `subway_card`, `birth_date`, `gender`, `phone`
 - `customer_type_id`, `points`
 - `email_verified_at`, `last_login_at`
@@ -308,7 +295,6 @@ Authorization: Bearer <token>
 | POST | `/auth/register` | No | Register new customer |
 | POST | `/auth/login` | No | Login with email/password |
 | POST | `/auth/oauth/google` | No | Login with Google |
-| POST | `/auth/oauth/apple` | No | Login with Apple |
 | POST | `/auth/logout` | Yes | Logout current device |
 | POST | `/auth/logout-all` | Yes | Logout all devices |
 | POST | `/auth/forgot-password` | No | Request password reset |
@@ -345,7 +331,7 @@ Authorization: Bearer <token>
 | Group | Limit | Applies To |
 |-------|-------|------------|
 | **auth** | 5 requests/minute | Login, Register, Forgot Password |
-| **oauth** | 10 requests/minute | Google OAuth, Apple OAuth |
+| **oauth** | 10 requests/minute | Google OAuth |
 | **api** | 120 requests/minute | All authenticated endpoints |
 
 ### Rate Limit Headers
@@ -687,7 +673,7 @@ Content-Type: application/json
 ### For Backend
 
 - Rate limiting prevents brute force attacks
-- OAuth tokens verified with Google/Apple servers
+- OAuth tokens verified with Google servers
 - Passwords hashed with bcrypt
 - Soft deletes for data recovery
 - CORS configured for production domains
@@ -716,7 +702,6 @@ For development/testing purposes:
 | `customer.bronze@subway.gt` | `password` | Local | 150 | Bronze |
 | `customer.silver@subway.gt` | `password` | Local | 750 | Silver |
 | `customer.gold.google@subway.gt` | N/A | Google | 1500 | Gold |
-| `customer.apple@subway.gt` | N/A | Apple | 100 | Bronze |
 | `api@subway.gt` | `password` | Local | 500 | Silver |
 
 ### Using cURL
@@ -757,12 +742,6 @@ API_URL=http://localhost:8000/api/v1
 GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-client-secret
 
-# Apple OAuth
-APPLE_CLIENT_ID=com.subway.app
-APPLE_TEAM_ID=YOUR_TEAM_ID
-APPLE_KEY_ID=YOUR_KEY_ID
-APPLE_PRIVATE_KEY=storage/app/AuthKey_XXX.p8
-
 # Firebase
 FIREBASE_CREDENTIALS=storage/app/firebase/credentials.json
 ```
@@ -775,7 +754,7 @@ FIREBASE_CREDENTIALS=storage/app/firebase/credentials.json
 
 **Initial Release**:
 - ✅ Authentication API (email/password)
-- ✅ OAuth integration (Google, Apple)
+- ✅ OAuth integration (Google)
 - ✅ Profile management
 - ✅ Device registration
 - ✅ Firebase Cloud Messaging

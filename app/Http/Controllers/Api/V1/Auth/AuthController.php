@@ -38,8 +38,8 @@ class AuthController extends Controller
      *
      *             @OA\Property(property="name", type="string", example="Juan Pérez", description="Customer full name"),
      *             @OA\Property(property="email", type="string", format="email", example="juan@example.com", description="Valid email address"),
-     *             @OA\Property(property="password", type="string", format="password", example="SecurePass123!", description="Min 8 characters, 1 uppercase, 1 number, 1 special char"),
-     *             @OA\Property(property="password_confirmation", type="string", format="password", example="SecurePass123!", description="Must match password"),
+     *             @OA\Property(property="password", type="string", format="password", example="Pass123", description="Min 6 characters, 1 letter, 1 number"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password", example="Pass123", description="Must match password"),
      *             @OA\Property(property="phone", type="string", nullable=true, example="+50212345678", description="Optional phone number"),
      *             @OA\Property(property="birth_date", type="string", format="date", nullable=true, example="1990-05-15", description="Optional birth date"),
      *             @OA\Property(property="gender", type="string", enum={"male","female","other"}, nullable=true, example="male", description="Optional gender"),

@@ -46,7 +46,7 @@ class RegisterRequest extends FormRequest
     {
         return [
             'email.unique' => 'Este correo ya está registrado.',
-            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
             'name.required' => 'El nombre es requerido.',
             'email.required' => 'El correo electrónico es requerido.',

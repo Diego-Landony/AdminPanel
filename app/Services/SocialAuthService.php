@@ -37,31 +37,6 @@ class SocialAuthService
     }
 
     /**
-     * Verify Apple OAuth token and return user data
-     *
-     * @throws ValidationException
-     */
-    public function verifyAppleToken(string $idToken): object
-    {
-        try {
-            $socialiteUser = Socialite::driver('apple')
-                ->stateless()
-                ->userFromToken($idToken);
-
-            return (object) [
-                'provider_id' => $socialiteUser->getId(),
-                'email' => $socialiteUser->getEmail(),
-                'name' => $socialiteUser->getName() ?? null,
-                'avatar' => $socialiteUser->getAvatar() ?? null,
-            ];
-        } catch (\Exception $e) {
-            throw ValidationException::withMessages([
-                'token' => ['Token de Apple inválido o expirado.'],
-            ]);
-        }
-    }
-
-    /**
      * Find existing customer and link OAuth provider (LOGIN - does NOT create accounts)
      *
      * @throws ValidationException if email doesn't exist

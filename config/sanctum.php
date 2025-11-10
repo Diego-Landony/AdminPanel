@@ -45,12 +45,12 @@ return [
     | considered expired. This will override any values set in the token's
     | "expires_at" attribute, but first-party sessions are not affected.
     |
-    | For mobile apps, we set this to 525600 minutes (365 days) to provide
+    | For mobile apps, we set this to 788400 minutes (547.5 days) to provide
     | long-lived sessions. Inactive tokens will be managed by device lifecycle.
     |
     */
 
-    'expiration' => 525600, // 365 días para apps móviles
+    'expiration' => 788400, // 547.5 días (1.5 años) para apps móviles
 
     /*
     |--------------------------------------------------------------------------

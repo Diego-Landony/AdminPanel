@@ -13,12 +13,10 @@ return new class extends Migration
     {
         Schema::table('customers', function (Blueprint $table) {
             $table->string('google_id')->nullable()->unique()->after('password');
-            $table->string('apple_id')->nullable()->unique()->after('google_id');
-            $table->text('avatar')->nullable()->after('apple_id');
-            $table->enum('oauth_provider', ['local', 'google', 'apple'])->default('local')->after('avatar');
+            $table->text('avatar')->nullable()->after('google_id');
+            $table->enum('oauth_provider', ['local', 'google'])->default('local')->after('avatar');
 
             $table->index('google_id');
-            $table->index('apple_id');
         });
     }
 
@@ -29,8 +27,7 @@ return new class extends Migration
     {
         Schema::table('customers', function (Blueprint $table) {
             $table->dropIndex(['google_id']);
-            $table->dropIndex(['apple_id']);
-            $table->dropColumn(['google_id', 'apple_id', 'avatar', 'oauth_provider']);
+            $table->dropColumn(['google_id', 'avatar', 'oauth_provider']);
         });
     }
 };

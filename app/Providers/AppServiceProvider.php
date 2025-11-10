@@ -6,6 +6,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging;
 
@@ -36,7 +37,24 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->configurePasswordValidation();
         $this->configureRateLimiting();
+    }
+
+    /**
+     * Configure password validation rules.
+     */
+    protected function configurePasswordValidation(): void
+    {
+        Password::defaults(function () {
+            $rule = Password::min(6)
+                ->letters()
+                ->numbers();
+
+            return $this->app->environment('production')
+                ? $rule->uncompromised()
+                : $rule;
+        });
     }
 
     /**

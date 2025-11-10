@@ -11,8 +11,8 @@ test('puede registrarse con datos validos', function () {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'María García',
         'email' => 'maria@example.com',
-        'password' => 'SecurePass123!',
-        'password_confirmation' => 'SecurePass123!',
+        'password' => 'SecurePass123',
+        'password_confirmation' => 'SecurePass123',
         'phone' => '+50212345678',
         'os' => 'android',
     ]);
@@ -61,8 +61,8 @@ test('rechaza email duplicado', function () {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'Otro Usuario',
         'email' => 'juan@example.com',
-        'password' => 'SecurePass123!',
-        'password_confirmation' => 'SecurePass123!',
+        'password' => 'SecurePass123',
+        'password_confirmation' => 'SecurePass123',
     ]);
 
     // Verificar error de validación
@@ -75,7 +75,7 @@ test('requiere password confirmation', function () {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'Carlos López',
         'email' => 'carlos@example.com',
-        'password' => 'SecurePass123!',
+        'password' => 'SecurePass123',
         // Sin password_confirmation
     ]);
 
@@ -89,8 +89,8 @@ test('hashea password automaticamente', function () {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'Ana Martínez',
         'email' => 'ana@example.com',
-        'password' => 'SecurePass123!',
-        'password_confirmation' => 'SecurePass123!',
+        'password' => 'SecurePass123',
+        'password_confirmation' => 'SecurePass123',
     ]);
 
     // Verificar respuesta exitosa
@@ -100,10 +100,10 @@ test('hashea password automaticamente', function () {
     $customer = Customer::where('email', 'ana@example.com')->first();
 
     // Verificar que la password está hasheada (no es la original)
-    expect($customer->password)->not->toBe('SecurePass123!');
+    expect($customer->password)->not->toBe('SecurePass123');
 
     // Verificar que el hash funciona correctamente
-    expect(Hash::check('SecurePass123!', $customer->password))->toBeTrue();
+    expect(Hash::check('SecurePass123', $customer->password))->toBeTrue();
 });
 
 // Test 5: Crea token Sanctum al registrarse
@@ -111,8 +111,8 @@ test('crea token sanctum al registrarse', function () {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'Roberto Ruiz',
         'email' => 'roberto@example.com',
-        'password' => 'SecurePass123!',
-        'password_confirmation' => 'SecurePass123!',
+        'password' => 'SecurePass123',
+        'password_confirmation' => 'SecurePass123',
         'os' => 'ios',
     ]);
 
@@ -134,8 +134,8 @@ test('genera subway_card automaticamente', function () {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'Pedro Gómez',
         'email' => 'pedro@example.com',
-        'password' => 'SecurePass123!',
-        'password_confirmation' => 'SecurePass123!',
+        'password' => 'SecurePass123',
+        'password_confirmation' => 'SecurePass123',
     ]);
 
     $response->assertCreated();
@@ -159,16 +159,16 @@ test('genera subway_card unica', function () {
     $response1 = $this->postJson('/api/v1/auth/register', [
         'name' => 'Cliente 1',
         'email' => 'cliente1@example.com',
-        'password' => 'SecurePass123!',
-        'password_confirmation' => 'SecurePass123!',
+        'password' => 'SecurePass123',
+        'password_confirmation' => 'SecurePass123',
     ]);
 
     // Crear segundo customer
     $response2 = $this->postJson('/api/v1/auth/register', [
         'name' => 'Cliente 2',
         'email' => 'cliente2@example.com',
-        'password' => 'SecurePass123!',
-        'password_confirmation' => 'SecurePass123!',
+        'password' => 'SecurePass123',
+        'password_confirmation' => 'SecurePass123',
     ]);
 
     $response1->assertCreated();
@@ -210,8 +210,8 @@ test('valida formato de gender estandarizado', function () {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'Test Gender',
         'email' => 'test-gender@example.com',
-        'password' => 'SecurePass123!',
-        'password_confirmation' => 'SecurePass123!',
+        'password' => 'SecurePass123',
+        'password_confirmation' => 'SecurePass123',
         'gender' => 'male',
     ]);
 
@@ -229,8 +229,8 @@ test('rechaza gender no valido', function () {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'Test Invalid Gender',
         'email' => 'invalid-gender@example.com',
-        'password' => 'SecurePass123!',
-        'password_confirmation' => 'SecurePass123!',
+        'password' => 'SecurePass123',
+        'password_confirmation' => 'SecurePass123',
         'gender' => 'masculino', // formato antiguo no válido
     ]);
 
@@ -243,8 +243,8 @@ test('no incluye timezone en respuesta', function () {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'Test Timezone',
         'email' => 'test-timezone@example.com',
-        'password' => 'SecurePass123!',
-        'password_confirmation' => 'SecurePass123!',
+        'password' => 'SecurePass123',
+        'password_confirmation' => 'SecurePass123',
     ]);
 
     $response->assertCreated();

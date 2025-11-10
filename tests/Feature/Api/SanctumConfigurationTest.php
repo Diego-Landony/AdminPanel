@@ -212,10 +212,6 @@ describe('OAuth Fields', function () {
         expect(Schema::hasColumn('customers', 'google_id'))->toBeTrue();
     });
 
-    test('customers table has apple_id column', function () {
-        expect(Schema::hasColumn('customers', 'apple_id'))->toBeTrue();
-    });
-
     test('customers table has avatar column', function () {
         expect(Schema::hasColumn('customers', 'avatar'))->toBeTrue();
     });

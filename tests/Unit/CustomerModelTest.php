@@ -14,7 +14,6 @@ test('customer has fillable attributes', function () {
         'email_verified_at',
         'password',
         'google_id',
-        'apple_id',
         'avatar',
         'oauth_provider',
         'subway_card',

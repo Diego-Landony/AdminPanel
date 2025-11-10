@@ -88,7 +88,6 @@ graph TB
         E2[Laravel Sanctum<br/>Token Manager]
         E3[Firebase<br/>Push Notifications]
         E4[Google OAuth]
-        E5[Apple Sign-In]
         E6[Storage<br/>S3/Local]
     end
 
@@ -164,7 +163,6 @@ graph LR
     subgraph "Authentication Methods"
         A1[Email + Password]
         A2[Google OAuth]
-        A3[Apple Sign-In]
     end
 
     subgraph "Laravel Sanctum"
@@ -223,7 +221,6 @@ erDiagram
         string email UK
         string password
         string google_id UK
-        string apple_id UK
         enum oauth_provider
         string subway_card UK
         date birth_date
@@ -392,7 +389,6 @@ api.v1:
 
 **OAuthController**:
 - Google Sign-In integration
-- Apple Sign-In integration
 - Account linking by email
 - Token generation
 
@@ -514,10 +510,6 @@ OAuth Providers:
 │   ├── Verify id_token
 │   ├── Extract user data
 │   └── Link/create account
-└── Apple
-    ├── Verify id_token
-    ├── Extract user data
-    └── Link/create account
 ```
 
 ---
@@ -543,12 +535,9 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[App receives id_token from OAuth provider] --> B{Provider?}
-    B -->|Google| C[Verify with Google API]
-    B -->|Apple| D[Verify with Apple API]
-    C --> E{Valid?}
-    D --> E
-    E -->|Invalid| F[Return 401: Invalid token]
+    A[App receives id_token from OAuth provider] --> B[Verify with Google API]
+    B --> C{Valid?}
+    C -->|Invalid| D[Return 401: Invalid token]
     E -->|Valid| G[Extract email, name, avatar]
     G --> H{Customer exists with oauth_id?}
     H -->|Yes| I[Load existing customer]
@@ -643,7 +632,6 @@ flowchart TD
 ├─────────────────────────────────┤
 │  • Firebase (Push Notifications)│
 │  • Google OAuth                 │
-│  • Apple Sign-In                │
 │  • S3 (Image Storage)           │
 └─────────────────────────────────┘
 ```
@@ -691,7 +679,7 @@ Layer 2: API Gateway
 
 Layer 3: Authentication
 ├── Laravel Sanctum (Token-based)
-├── OAuth Verification (Google/Apple)
+├── OAuth Verification (Google)
 └── Password Hashing (bcrypt)
 
 Layer 4: Authorization

@@ -133,11 +133,6 @@ SANCTUM_STATEFUL_DOMAINS=localhost:5173
 ```env
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
-
-APPLE_CLIENT_ID=
-APPLE_TEAM_ID=
-APPLE_KEY_ID=
-APPLE_PRIVATE_KEY=storage/app/AuthKey_XXX.p8
 ```
 
 **Firebase** (Optional for push notifications):
@@ -773,7 +768,7 @@ export const auth = {
 
 #### OAuth "Invalid Token" Error
 
-**Problem**: Google/Apple OAuth returns 401
+**Problem**: Google OAuth returns 401
 
 **Solutions**:
 1. Verify OAuth credentials in `.env`

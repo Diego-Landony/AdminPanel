@@ -127,34 +127,7 @@ test('vincula google a cuenta local existente', function () {
     expect($customer->oauth_provider)->toBe('google');
 });
 
-// Test 4: Rechaza login con Apple si el email no existe
-test('rechaza login con apple si el email no existe', function () {
-    $mockService = $this->partialMock(SocialAuthService::class);
-
-    $mockService->shouldReceive('verifyAppleToken')
-        ->once()
-        ->andReturn((object) [
-            'provider_id' => 'apple-789',
-            'email' => 'noexiste@example.com',
-            'name' => 'Usuario Nuevo',
-            'avatar' => null,
-        ]);
-
-    // Dejar que findAndLinkCustomer use la implementación real
-
-    $response = $this->postJson('/api/v1/auth/oauth/apple', [
-        'id_token' => 'fake-apple-token',
-        'os' => 'ios',
-    ]);
-
-    $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['email'])
-        ->assertJson([
-            'message' => 'No existe una cuenta con este correo electrónico. Por favor regístrate primero.',
-        ]);
-});
-
-// Test 5: Permite registro con Google si el email no existe
+// Test 4: Permite registro con Google si el email no existe
 test('permite registro con google si el email no existe', function () {
     $mockService = $this->partialMock(SocialAuthService::class);
 
@@ -197,7 +170,7 @@ test('permite registro con google si el email no existe', function () {
     expect($customer->email_verified_at)->not->toBeNull();
 });
 
-// Test 6: Rechaza registro con Google si el email ya existe
+// Test 5: Rechaza registro con Google si el email ya existe
 test('rechaza registro con google si el email ya existe', function () {
     // Crear customer existente
     Customer::create([

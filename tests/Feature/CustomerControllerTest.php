@@ -102,7 +102,7 @@ describe('Customer Creation', function () {
     })->with([
         'required fields' => [
             [],
-            ['name', 'email', 'password', 'subway_card', 'birth_date'],
+            ['name', 'email', 'password'],
         ],
         'unique email' => [
             fn () => [

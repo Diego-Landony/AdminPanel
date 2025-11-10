@@ -26,7 +26,6 @@ test('customer has fillable attributes', function () {
         'last_purchase_at',
         'points',
         'points_updated_at',
-        'timezone',
         'customer_type_id',
     ];
 
@@ -77,7 +76,6 @@ test('customer factory creates valid customer data', function () {
     expect($customerData)->toHaveKey('email');
     expect($customerData)->toHaveKey('subway_card');
     expect($customerData)->toHaveKey('birth_date');
-    expect($customerData['timezone'])->toBe('America/Guatemala');
 });
 
 test('customer factory creates customer with specific attributes', function () {

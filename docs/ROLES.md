@@ -236,3 +236,69 @@ tests/Feature/
 5. **Tests:** Verificar acceso permitido y bloqueado
 6. **Frontend:** Usar `hasPermission()` para mostrar/ocultar UI
 7. **Backend:** Middleware protege todas las rutas automáticamente
+
+
+
+
+
+  Recomendaciones (Prioridad Alta → Baja)
+
+  1. Límite de Tokens por Usuario ⭐⭐⭐⭐⭐
+
+  Implementar: Máximo 5 tokens activos por usuario
+  - Al crear token #6, eliminar el más antiguo automáticamente
+  - Balancea UX (puede tener 2-3 dispositivos) vs escala DB
+  - Previene acumulación infinita sin ser restrictivo
+  - Apps similares: Starbucks permite ~5 dispositivos
+
+  2. Limpieza Automática Diaria ⭐⭐⭐⭐⭐
+
+  Implementar: Schedule::command('sanctum:prune-expired')->daily()
+  - Elimina tokens expirados hace más de 7 días
+  - Corre automáticamente en producción (cron job)
+  - Mantiene DB limpia sin intervención manual
+  - Crítico para escala: Previene tabla de millones de registros
+
+  3. Mejorar Nombres de Tokens ⭐⭐⭐⭐
+
+  Cambiar de: "ios" → A: "ios-{device_identifier}"
+  - Permite identificar dispositivos únicos
+  - Útil para mostrar "iPhone de Juan" vs "iPad de Juan"
+  - Ya tienes device_identifier en customer_devices
+  - Ejemplo: "ios-ABC123", "android-XYZ789"
+
+  4. Sincronizar Tokens con Devices ⭐⭐⭐
+
+  Implementar: Al eliminar token, marcar device como inactivo
+  - Mantiene customer_devices sincronizado
+  - Evita registros huérfanos
+  - Mejora reporting de dispositivos activos
+
+  5. NO Implementar (Aún):
+
+  ❌ Geolocalización por IP - Overhead innecesario para v1
+  ❌ Revocar token viejo al login - Malo para UX si usuario alterna dispositivos
+  ❌ Metadata compleja (user agent, etc) - No lo necesitas ahora
+
+  Plan de Implementación Recomendado:
+
+  Fase 1: Limpieza Básica (1 hora)
+
+  1. Agregar scheduled task para pruning diario
+  2. Implementar límite de 5 tokens por usuario en login/register
+  3. Crear comando manual para limpiar tokens viejos (one-time cleanup)
+
+  Fase 2: Mejora Identificación (30 min)
+
+  4. Cambiar nombres de token a incluir device_identifier
+  5. Actualizar DeviceController para sincronizar con tokens
+
+  Fase 3: Testing (30 min)
+
+  6. Tests para verificar límites funcionan
+  7. Test para verificar pruning no rompe nada
+
+  Total: ~2 horas de trabajo
+
+  ¿Te parece bien esta estrategia? ¿Quieres que la implemente?
+

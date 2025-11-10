@@ -27,6 +27,8 @@ class LoginRequest extends FormRequest
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
             'os' => ['nullable', Rule::enum(OperatingSystem::class)],
+            'device_identifier' => ['nullable', 'string', 'max:255'],
+            'device_fingerprint' => ['nullable', 'string', 'max:255'],
             'remember' => ['nullable', 'boolean'],
         ];
     }

@@ -51,16 +51,16 @@
                                         "example": "juan@example.com"
                                     },
                                     "password": {
-                                        "description": "Min 8 characters, 1 uppercase, 1 number, 1 special char",
+                                        "description": "Min 6 characters, 1 letter, 1 number",
                                         "type": "string",
                                         "format": "password",
-                                        "example": "SecurePass123!"
+                                        "example": "Pass123"
                                     },
                                     "password_confirmation": {
                                         "description": "Must match password",
                                         "type": "string",
                                         "format": "password",
-                                        "example": "SecurePass123!"
+                                        "example": "Pass123"
                                     },
                                     "phone": {
                                         "description": "Optional phone number",
@@ -95,6 +95,18 @@
                                             "web"
                                         ],
                                         "example": "ios",
+                                        "nullable": true
+                                    },
+                                    "device_identifier": {
+                                        "description": "RECOMMENDED: Unique device UUID for tracking",
+                                        "type": "string",
+                                        "example": "550e8400-e29b-41d4-a716-446655440000",
+                                        "nullable": true
+                                    },
+                                    "device_fingerprint": {
+                                        "description": "Optional: SHA256 hash of device characteristics",
+                                        "type": "string",
+                                        "example": "a1b2c3d4e5f6...",
                                         "nullable": true
                                     }
                                 },
@@ -194,6 +206,18 @@
                                             "web"
                                         ],
                                         "example": "ios",
+                                        "nullable": true
+                                    },
+                                    "device_identifier": {
+                                        "description": "RECOMMENDED: Unique device UUID for tracking",
+                                        "type": "string",
+                                        "example": "550e8400-e29b-41d4-a716-446655440000",
+                                        "nullable": true
+                                    },
+                                    "device_fingerprint": {
+                                        "description": "Optional: SHA256 hash of device characteristics",
+                                        "type": "string",
+                                        "example": "a1b2c3d4e5f6...",
                                         "nullable": true
                                     }
                                 },
@@ -622,6 +646,18 @@
                                         ],
                                         "example": "android",
                                         "nullable": true
+                                    },
+                                    "device_identifier": {
+                                        "description": "RECOMMENDED: Unique device UUID for tracking",
+                                        "type": "string",
+                                        "example": "550e8400-e29b-41d4-a716-446655440000",
+                                        "nullable": true
+                                    },
+                                    "device_fingerprint": {
+                                        "description": "Optional: SHA256 hash of device characteristics",
+                                        "type": "string",
+                                        "example": "a1b2c3d4e5f6...",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -688,104 +724,6 @@
                 }
             }
         },
-        "/api/v1/auth/oauth/apple": {
-            "post": {
-                "tags": [
-                    "OAuth"
-                ],
-                "summary": "Login with Apple (Mobile)",
-                "description": "Authenticates customer using Apple Sign-In id_token from mobile app. If email exists, links Apple account. If email doesn't exist, returns error asking to register first. Does NOT auto-create accounts.",
-                "operationId": "df8a9b89f5e6a009a05c437fdd4c39d0",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "id_token"
-                                ],
-                                "properties": {
-                                    "id_token": {
-                                        "description": "Apple OAuth id_token obtained from Apple Sign-In SDK",
-                                        "type": "string",
-                                        "example": "eyJraWQiOiJlWGF1bm1MIiwiYWxnIj..."
-                                    },
-                                    "os": {
-                                        "description": "Operating system",
-                                        "type": "string",
-                                        "enum": [
-                                            "ios",
-                                            "android",
-                                            "web"
-                                        ],
-                                        "example": "ios",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Authentication successful",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Cuenta creada exitosamente."
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "customer": {
-                                                    "$ref": "#/components/schemas/Customer"
-                                                },
-                                                "token": {
-                                                    "type": "string",
-                                                    "example": "1|abc123xyz..."
-                                                },
-                                                "is_new_customer": {
-                                                    "description": "True if account was just created",
-                                                    "type": "boolean",
-                                                    "example": true
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Invalid token or account conflict",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Token de Apple inválido o expirado."
-                                        },
-                                        "errors": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Too many requests"
-                    }
-                }
-            }
-        },
         "/api/v1/auth/oauth/google/register": {
             "post": {
                 "tags": [
@@ -818,102 +756,17 @@
                                         ],
                                         "example": "android",
                                         "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Registration successful",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Cuenta creada exitosamente."
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "customer": {
-                                                    "$ref": "#/components/schemas/Customer"
-                                                },
-                                                "token": {
-                                                    "type": "string",
-                                                    "example": "1|abc123xyz..."
-                                                },
-                                                "is_new_customer": {
-                                                    "type": "boolean",
-                                                    "example": true
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
                                     },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Email already exists or invalid token",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Ya existe una cuenta con este correo electrónico."
-                                        },
-                                        "errors": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Too many requests"
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/oauth/apple/register": {
-            "post": {
-                "tags": [
-                    "OAuth"
-                ],
-                "summary": "Register with Apple (Mobile)",
-                "description": "Registers new customer using Apple Sign-In id_token from mobile app. Creates new account if email doesn't exist. If email already exists, returns error.",
-                "operationId": "b92a1cf99d156a4d28a24868b9f151af",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "id_token"
-                                ],
-                                "properties": {
-                                    "id_token": {
-                                        "description": "Apple OAuth id_token obtained from Apple Sign-In SDK",
+                                    "device_identifier": {
+                                        "description": "RECOMMENDED: Unique device UUID for tracking",
                                         "type": "string",
-                                        "example": "eyJraWQiOiJlWGF1bm1MIiwiYWxnIj..."
+                                        "example": "550e8400-e29b-41d4-a716-446655440000",
+                                        "nullable": true
                                     },
-                                    "os": {
-                                        "description": "Operating system",
+                                    "device_fingerprint": {
+                                        "description": "Optional: SHA256 hash of device characteristics",
                                         "type": "string",
-                                        "enum": [
-                                            "ios",
-                                            "android",
-                                            "web"
-                                        ],
-                                        "example": "ios",
+                                        "example": "a1b2c3d4e5f6...",
                                         "nullable": true
                                     }
                                 },
@@ -1122,7 +975,7 @@
                     "Devices"
                 ],
                 "summary": "Register or update device",
-                "description": "Registers new device or updates existing device with FCM token. Associates device with current Sanctum token for session management.",
+                "description": "Enriches existing device (auto-created during auth) with FCM token and additional metadata. If device doesn't exist, creates it.",
                 "operationId": "0743195c75a8fccfdf9875291bd6d8c0",
                 "requestBody": {
                     "required": true,
@@ -1140,9 +993,15 @@
                                         "example": "fKw8h4Xj..."
                                     },
                                     "device_identifier": {
-                                        "description": "Unique device identifier (auto-generated if not provided)",
+                                        "description": "Unique device identifier (should match identifier from auth)",
                                         "type": "string",
                                         "example": "ABC123DEF456",
+                                        "nullable": true
+                                    },
+                                    "device_fingerprint": {
+                                        "description": "SHA256 hash of device characteristics",
+                                        "type": "string",
+                                        "example": "sha256_hash...",
                                         "nullable": true
                                     },
                                     "device_type": {

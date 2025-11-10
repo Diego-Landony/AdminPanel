@@ -134,6 +134,21 @@ class FakeDataSeeder extends Seeder
                     ])
                     ->create();
             }
+
+            // Crear 1-3 dispositivos para cada cliente
+            $deviceCount = rand(1, 3);
+            $deviceTypes = ['ios', 'android', 'web'];
+
+            for ($i = 0; $i < $deviceCount; $i++) {
+                $deviceType = $deviceTypes[$i % count($deviceTypes)];
+
+                \App\Models\CustomerDevice::factory()
+                    ->state(['device_type' => $deviceType])
+                    ->active()
+                    ->create([
+                        'customer_id' => $customer->id,
+                    ]);
+            }
         }
     }
 

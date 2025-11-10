@@ -1,6 +1,6 @@
 # SubwayApp API Documentation
 
-**Version**: 1.0.0
+**Version**: 1.0.1
 **Base URL**: `https://admin.subwaycardgt.com/api/v1`
 **Updated**: November 2025
 
@@ -74,9 +74,19 @@ Content-Type: application/json
 {
   "email": "customer@example.com",
   "password": "password",
-  "device_name": "iPhone 15 Pro"  // optional
+  "os": "ios",                                    // optional: "ios", "android", "web"
+  "device_identifier": "ABC123-DEF456-GHI789",    // RECOMMENDED: unique device UUID
+  "device_fingerprint": "sha256_hash..."          // optional: SHA256 hash of device characteristics
 }
 ```
+
+**Device Tracking (Recommended)**:
+- `device_identifier`: Unique UUID for this device (generated once and stored locally)
+  - **If provided**: System tracks device, increments login count, updates trust score
+  - **If omitted**: Only authentication token is created (no device tracking)
+- `device_fingerprint`: SHA256 hash of device characteristics (hardware ID, OS version, etc.)
+  - Used for security and fraud detection
+  - Helps detect if device was rooted/jailbroken or tampered
 
 **Response**:
 ```json
@@ -106,9 +116,13 @@ Content-Type: application/json
 
 {
   "id_token": "<google_id_token_from_mobile_sdk>",
-  "device_name": "iPhone 15 Pro"
+  "os": "ios",                                    // optional: "ios", "android", "web"
+  "device_identifier": "ABC123-DEF456-GHI789",    // RECOMMENDED: unique device UUID
+  "device_fingerprint": "sha256_hash..."          // optional: SHA256 hash
 }
 ```
+
+> **Note**: Google OAuth also supports device tracking. Include `device_identifier` and `device_fingerprint` for the same benefits as traditional login.
 
 ### Using the Token
 
@@ -123,8 +137,10 @@ Accept: application/json
 ### Token Lifecycle
 
 - **Expiration**: 365 days (525,600 minutes)
+- **Token Limit**: Maximum 5 active tokens per user
 - **Revocation**: Tokens can be revoked individually or all at once
 - **Refresh**: Not currently implemented (long-lived tokens)
+- **Auto-cleanup**: Expired tokens are automatically deleted after 7 days
 
 ### Revoking Tokens
 
@@ -139,6 +155,145 @@ Authorization: Bearer <token>
 POST /api/v1/auth/logout-all
 Authorization: Bearer <token>
 ```
+
+### Token Management & Scalability
+
+The API implements automatic token management to ensure database scalability and prevent token accumulation:
+
+#### Token Limits
+
+- **Maximum active tokens per user**: 5 tokens
+- When a user has 5 active tokens and creates a new one (login/register), the oldest token (by `last_used_at`) is automatically deleted
+- This allows users to maintain sessions on multiple devices (e.g., 2 phones, 1 tablet, 1 web browser) while preventing unlimited token growth
+
+**Example Scenario**:
+```
+User has 5 active tokens:
+├─ Token 1: iPhone (last used 30 days ago)
+├─ Token 2: iPad (last used 5 days ago)
+├─ Token 3: Android (last used 2 days ago)
+├─ Token 4: Web (last used 1 day ago)
+└─ Token 5: Android Tablet (last used 3 hours ago)
+
+User logs in from new device:
+→ Token 1 (oldest by activity) is automatically deleted
+→ New token is created
+→ User now has 5 tokens again
+```
+
+#### Automatic Token Cleanup
+
+**Daily Scheduled Task**:
+- Runs every day at midnight
+- Deletes tokens that expired more than 7 days ago
+- Keeps database clean without manual intervention
+
+**Manual Cleanup Command**:
+```bash
+# Preview tokens to be deleted (dry run)
+php artisan tokens:cleanup --dry-run
+
+# Delete expired tokens (default: 7+ days old)
+php artisan tokens:cleanup
+
+# Delete expired tokens older than 30 days
+php artisan tokens:cleanup --days=30
+```
+
+#### Database Impact
+
+With this implementation:
+- **Before**: A user logging in daily for 2 years = 730 tokens
+- **After**: Same user = Maximum 5 tokens at any time
+- **Result**: ~99% reduction in token table growth
+
+#### Best Practices for Mobile Apps
+
+1. **Store tokens securely**: Use secure storage (Keychain/Keystore)
+2. **Don't create new tokens unnecessarily**: Only login when token is invalid or expired
+3. **Handle 401 errors gracefully**: When token is revoked/expired, prompt user to login
+4. **Use meaningful token names**: Pass `os` parameter (ios/android) for better device identification
+5. **Implement device tracking**: Send `device_identifier` and `device_fingerprint` for enhanced security
+
+**Device Tracking Implementation**:
+
+```javascript
+// Generate device_identifier once and store it permanently
+const getOrCreateDeviceIdentifier = async () => {
+  let deviceId = await SecureStore.getItemAsync('device_identifier');
+  if (!deviceId) {
+    deviceId = uuid.v4(); // Generate UUID: "550e8400-e29b-41d4-a716-446655440000"
+    await SecureStore.setItemAsync('device_identifier', deviceId);
+  }
+  return deviceId;
+};
+
+// Generate device_fingerprint (optional but recommended)
+const generateDeviceFingerprint = async () => {
+  const deviceInfo = {
+    brand: Device.brand,           // "Apple", "Samsung"
+    modelName: Device.modelName,   // "iPhone 14 Pro"
+    osVersion: Device.osVersion,   // "17.2"
+    platform: Device.osName,       // "iOS", "Android"
+  };
+
+  const fingerprintString = JSON.stringify(deviceInfo);
+  const hash = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    fingerprintString
+  );
+
+  return hash; // SHA256 hash
+};
+
+// Login with device tracking
+const login = async (email, password) => {
+  const deviceIdentifier = await getOrCreateDeviceIdentifier();
+  const deviceFingerprint = await generateDeviceFingerprint();
+
+  const response = await fetch('https://api.example.com/api/v1/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email,
+      password,
+      os: Platform.OS,              // "ios" or "android"
+      device_identifier: deviceIdentifier,
+      device_fingerprint: deviceFingerprint
+    })
+  });
+
+  return response.json();
+};
+```
+
+**Benefits of Device Tracking**:
+- Detects logins from new/unknown devices
+- Tracks login history per device
+- Calculates trust scores based on device behavior
+- Enables fraud detection and suspicious activity alerts
+- Allows customers to manage and revoke devices
+
+### ⚠️ CRITICAL: Required Implementation for Mobile Team
+
+**The mobile development team MUST implement the following**:
+
+1. **Generate a unique UUID** the first time the app is installed
+2. **Store the UUID in secure storage** (never regenerate it)
+3. **Send it in ALL login/register requests** as `device_identifier`
+4. **(Optional but Recommended)** Generate SHA256 hash of device characteristics as `device_fingerprint`
+
+**Why This Is Critical**:
+- Without `device_identifier`, the API cannot track devices or detect suspicious logins
+- Without device tracking, security features (trust scoring, fraud detection) will not work
+- Without proper implementation, users will appear to login from "new devices" every time
+
+**Implementation Checklist**:
+- [ ] Generate UUID on first app launch
+- [ ] Store UUID in secure storage (Keychain/Keystore)
+- [ ] Include `device_identifier` in all auth requests
+- [ ] Include `os` parameter (ios/android/web)
+- [ ] (Optional) Include `device_fingerprint` for enhanced security
 
 ---
 
@@ -237,7 +392,7 @@ Authorization: Bearer <token>
      │<────────────────────────────────────────────────────│
      │                │               │                   │
      │ POST /auth/oauth/google        │                   │
-     │ { id_token }   │               │                   │
+     │ { id_token, device_identifier, device_fingerprint }
      │───────────────>│               │                   │
      │                │ Verify token  │                   │
      │                │───────────────────────────────────>│
@@ -269,10 +424,12 @@ Authorization: Bearer <token>
 
 **customer_devices**:
 - `id`, `customer_id`, `sanctum_token_id`
-- `fcm_token`, `device_identifier`
-- `device_type`, `device_name`, `device_model`
+- `fcm_token` (nullable), `device_identifier` (UUID, unique)
+- `device_fingerprint` (SHA256 hash, nullable)
+- `device_type` (ios/android/web), `device_name`, `device_model`
 - `app_version`, `os_version`
-- `is_active`, `last_used_at`
+- `is_active`, `login_count`, `trust_score` (0-100)
+- `last_used_at`, `created_at`, `updated_at`, `deleted_at`
 
 **customer_addresses**:
 - `id`, `customer_id`, `label`
@@ -465,12 +622,16 @@ All errors follow this structure:
 ```json
 {
   "id": 1,
+  "device_identifier": "550e8400-e29b-41d4-a716-446655440000",
+  "device_fingerprint": "a1b2c3d4e5f6...",
   "device_name": "iPhone 15 Pro",
   "device_type": "ios",
   "device_model": "iPhone15,2",
   "app_version": "1.0.0",
   "os_version": "17.0",
   "last_used_at": "2025-11-07T14:25:00Z",
+  "login_count": 47,
+  "trust_score": 92,
   "is_active": true,
   "is_current_device": true,
   "created_at": "2025-10-01T08:00:00Z"
@@ -514,21 +675,28 @@ All errors follow this structure:
 ### 1. Register New Customer
 
 ```bash
-# 1. Register
+# 1. Register with device tracking
 POST /api/v1/auth/register
 {
   "name": "María García",
   "email": "maria@example.com",
   "password": "securepassword",
   "password_confirmation": "securepassword",
-  "device_name": "iPhone 15"
+  "os": "ios",
+  "device_identifier": "550e8400-e29b-41d4-a716-446655440000",  // REQUIRED
+  "device_fingerprint": "a1b2c3d4e5f6..."                       // Recommended
 }
 
 # Response includes token
 {
   "access_token": "1|xyz789...",
   "token_type": "Bearer",
-  "customer": { ... }
+  "customer": {
+    "id": 1,
+    "name": "María García",
+    "email": "maria@example.com",
+    ...
+  }
 }
 
 # 2. Use token for subsequent requests
@@ -541,34 +709,62 @@ Authorization: Bearer 1|xyz789...
 ```javascript
 // Mobile app (React Native)
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import * as SecureStore from 'expo-secure-store';
+import * as Crypto from 'expo-crypto';
+import * as Device from 'expo-device';
+import { v4 as uuidv4 } from 'uuid';
 
-// 1. Get Google ID token
+// 1. Get or create device identifier
+const getDeviceIdentifier = async () => {
+  let deviceId = await SecureStore.getItemAsync('device_identifier');
+  if (!deviceId) {
+    deviceId = uuidv4(); // "550e8400-e29b-41d4-a716-446655440000"
+    await SecureStore.setItemAsync('device_identifier', deviceId);
+  }
+  return deviceId;
+};
+
+// 2. Generate device fingerprint
+const generateFingerprint = async () => {
+  const info = JSON.stringify({
+    brand: Device.brand,
+    modelName: Device.modelName,
+    osVersion: Device.osVersion,
+    platform: Device.osName,
+  });
+  return await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, info);
+};
+
+// 3. Get Google ID token
 const { idToken } = await GoogleSignin.signIn();
 
-// 2. Send to API
+// 4. Send to API with device tracking
 const response = await fetch('https://api.subway.gt/api/v1/auth/oauth/google', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     id_token: idToken,
-    device_name: 'iPhone 15 Pro'
+    os: Platform.OS, // "ios" or "android"
+    device_identifier: await getDeviceIdentifier(),
+    device_fingerprint: await generateFingerprint()
   })
 });
 
-// 3. Store token
+// 5. Store token
 const { access_token } = await response.json();
-await AsyncStorage.setItem('token', access_token);
+await SecureStore.setItemAsync('token', access_token);
 ```
 
 ### 3. Register Device for Push Notifications
 
 ```javascript
-// Mobile app - Get FCM token
+// Mobile app - Get FCM token and register device
 import messaging from '@react-native-firebase/messaging';
+import * as Device from 'expo-device';
 
 const fcmToken = await messaging().getToken();
 
-// Register with API
+// Register or update device with API
 await fetch('https://api.subway.gt/api/v1/devices/register', {
   method: 'POST',
   headers: {
@@ -577,14 +773,21 @@ await fetch('https://api.subway.gt/api/v1/devices/register', {
   },
   body: JSON.stringify({
     fcm_token: fcmToken,
-    device_name: 'iPhone 15 Pro',
-    device_type: 'ios',
-    device_model: 'iPhone15,2',
+    device_identifier: await getDeviceIdentifier(),  // Same UUID from login
+    device_fingerprint: await generateFingerprint(), // Same fingerprint
+    device_name: Device.deviceName || 'Unknown Device',
+    device_type: Platform.OS, // "ios" or "android"
+    device_model: Device.modelName,
     app_version: '1.0.0',
-    os_version: '17.0'
+    os_version: Device.osVersion
   })
 });
 ```
+
+**Important Notes**:
+- Use the **same** `device_identifier` from login/register
+- This enriches the device record created during authentication
+- FCM token is optional - device tracking works without it
 
 ### 4. Manage Multiple Devices
 
@@ -749,6 +952,16 @@ FIREBASE_CREDENTIALS=storage/app/firebase/credentials.json
 ---
 
 ## Changelog
+
+### v1.0.1 (November 2025)
+
+**Token Management & Scalability**:
+- ✅ Automatic token limit (5 per user) to prevent database bloat
+- ✅ Daily scheduled cleanup of expired tokens
+- ✅ Manual cleanup command (`tokens:cleanup`)
+- ✅ Token expiration set to 1 year (365 days)
+- ✅ Oldest tokens auto-deleted when limit reached
+- ✅ ~99% reduction in token table growth
 
 ### v1.0.0 (November 2025)
 

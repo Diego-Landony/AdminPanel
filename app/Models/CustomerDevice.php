@@ -23,6 +23,7 @@ class CustomerDevice extends Model
         'sanctum_token_id',
         'fcm_token',
         'device_identifier',
+        'device_fingerprint',
         'device_type',
         'device_name',
         'device_model',
@@ -30,6 +31,8 @@ class CustomerDevice extends Model
         'os_version',
         'last_used_at',
         'is_active',
+        'login_count',
+        'trust_score',
     ];
 
     /**

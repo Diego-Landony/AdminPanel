@@ -192,4 +192,29 @@ class Customer extends Authenticatable
     {
         return $query->where('customer_type_id', $typeId);
     }
+
+    /**
+     * Enforce token limit by deleting oldest tokens if limit is exceeded
+     */
+    public function enforceTokenLimit(int $limit = 5): void
+    {
+        $tokenCount = $this->tokens()->count();
+
+        if ($tokenCount >= $limit) {
+            $tokensToDelete = $tokenCount - $limit + 1;
+
+            $oldestTokens = $this->tokens()
+                ->orderBy('last_used_at', 'asc')
+                ->orderBy('created_at', 'asc')
+                ->limit($tokensToDelete)
+                ->get();
+
+            foreach ($oldestTokens as $token) {
+                CustomerDevice::where('sanctum_token_id', $token->id)
+                    ->update(['is_active' => false]);
+
+                $token->delete();
+            }
+        }
+    }
 }

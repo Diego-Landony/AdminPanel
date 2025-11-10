@@ -57,7 +57,7 @@ class DeviceController extends Controller
      *     path="/api/v1/devices/register",
      *     tags={"Devices"},
      *     summary="Register or update device",
-     *     description="Registers new device or updates existing device with FCM token. Associates device with current Sanctum token for session management.",
+     *     description="Enriches existing device (auto-created during auth) with FCM token and additional metadata. If device doesn't exist, creates it.",
      *     security={{"sanctum":{}}},
      *
      *     @OA\RequestBody(
@@ -67,7 +67,8 @@ class DeviceController extends Controller
      *             required={"fcm_token","device_type"},
      *
      *             @OA\Property(property="fcm_token", type="string", example="fKw8h4Xj...", description="Firebase Cloud Messaging token"),
-     *             @OA\Property(property="device_identifier", type="string", nullable=true, example="ABC123DEF456", description="Unique device identifier (auto-generated if not provided)"),
+     *             @OA\Property(property="device_identifier", type="string", nullable=true, example="ABC123DEF456", description="Unique device identifier (should match identifier from auth)"),
+     *             @OA\Property(property="device_fingerprint", type="string", nullable=true, example="sha256_hash...", description="SHA256 hash of device characteristics"),
      *             @OA\Property(property="device_type", type="string", enum={"ios","android","web"}, example="ios", description="Device platform"),
      *             @OA\Property(property="device_name", type="string", nullable=true, example="iPhone 14 Pro", description="Human-readable device name"),
      *             @OA\Property(property="device_model", type="string", nullable=true, example="iPhone15,2", description="Device model identifier"),
@@ -96,6 +97,7 @@ class DeviceController extends Controller
         $validated = $request->validate([
             'fcm_token' => ['required', 'string', 'max:255'],
             'device_identifier' => ['nullable', 'string', 'max:255'],
+            'device_fingerprint' => ['nullable', 'string', 'max:255'],
             'device_type' => ['required', 'in:ios,android,web'],
             'device_name' => ['nullable', 'string', 'max:255'],
             'device_model' => ['nullable', 'string', 'max:255'],
@@ -106,21 +108,27 @@ class DeviceController extends Controller
         $customer = $request->user();
         $currentToken = $customer->currentAccessToken();
 
-        // Buscar dispositivo existente por device_identifier o fcm_token
-        $device = CustomerDevice::where('customer_id', $customer->id)
-            ->where(function ($query) use ($validated) {
-                if (isset($validated['device_identifier'])) {
-                    $query->where('device_identifier', $validated['device_identifier']);
-                }
-                $query->orWhere('fcm_token', $validated['fcm_token']);
-            })
-            ->first();
+        // Buscar dispositivo existente por device_identifier (prioritario) o fcm_token (fallback)
+        $device = null;
+        if (isset($validated['device_identifier'])) {
+            $device = CustomerDevice::where('customer_id', $customer->id)
+                ->where('device_identifier', $validated['device_identifier'])
+                ->first();
+        }
+
+        // Fallback: buscar por fcm_token si no se encontró por device_identifier
+        if (! $device) {
+            $device = CustomerDevice::where('customer_id', $customer->id)
+                ->where('fcm_token', $validated['fcm_token'])
+                ->first();
+        }
 
         if ($device) {
-            // Actualizar dispositivo existente
+            // Enriquecer dispositivo existente con FCM token y metadata adicional
             $device->update([
                 'fcm_token' => $validated['fcm_token'],
                 'device_identifier' => $validated['device_identifier'] ?? $device->device_identifier,
+                'device_fingerprint' => $validated['device_fingerprint'] ?? $device->device_fingerprint,
                 'device_type' => $validated['device_type'],
                 'device_name' => $validated['device_name'] ?? $device->device_name,
                 'device_model' => $validated['device_model'] ?? $device->device_model,
@@ -129,15 +137,17 @@ class DeviceController extends Controller
                 'sanctum_token_id' => $currentToken->id,
                 'is_active' => true,
                 'last_used_at' => now(),
+                'login_count' => $device->login_count + 1,
             ]);
 
             $message = 'Dispositivo actualizado exitosamente.';
         } else {
-            // Crear nuevo dispositivo
+            // Crear nuevo dispositivo (edge case: dispositivo no fue auto-creado durante auth)
             $device = CustomerDevice::create([
                 'customer_id' => $customer->id,
                 'fcm_token' => $validated['fcm_token'],
                 'device_identifier' => $validated['device_identifier'] ?? Str::uuid()->toString(),
+                'device_fingerprint' => $validated['device_fingerprint'] ?? null,
                 'device_type' => $validated['device_type'],
                 'device_name' => $validated['device_name'] ?? $validated['device_type'].' device',
                 'device_model' => $validated['device_model'] ?? null,
@@ -146,6 +156,7 @@ class DeviceController extends Controller
                 'sanctum_token_id' => $currentToken->id,
                 'is_active' => true,
                 'last_used_at' => now(),
+                'login_count' => 1,
             ]);
 
             $message = 'Dispositivo registrado exitosamente.';

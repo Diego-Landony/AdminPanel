@@ -34,6 +34,8 @@ class RegisterRequest extends FormRequest
             'birth_date' => ['nullable', 'date', 'before:today'],
             'gender' => ['nullable', Rule::enum(Gender::class)],
             'os' => ['nullable', Rule::enum(OperatingSystem::class)],
+            'device_identifier' => ['nullable', 'string', 'max:255'],
+            'device_fingerprint' => ['nullable', 'string', 'max:255'],
         ];
     }
 

@@ -292,5 +292,21 @@ class RealCustomersSeeder extends Seeder
             'business_name' => null,
             'is_default' => true,
         ]);
+
+        // Crear 1-3 dispositivos para cada cliente
+        $deviceCount = rand(1, 3);
+        $deviceTypes = ['ios', 'android', 'web'];
+
+        for ($i = 0; $i < $deviceCount; $i++) {
+            $deviceType = $deviceTypes[$i % count($deviceTypes)];
+
+            \App\Models\CustomerDevice::factory()
+                ->state(['device_type' => $deviceType])
+                ->active()
+                ->highTrust()
+                ->create([
+                    'customer_id' => $customer->id,
+                ]);
+        }
     }
 }

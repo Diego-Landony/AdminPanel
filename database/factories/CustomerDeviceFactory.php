@@ -17,9 +17,15 @@ class CustomerDeviceFactory extends Factory
      */
     public function definition(): array
     {
+        $loginCount = fake()->numberBetween(1, 50);
+        $daysSinceCreation = fake()->numberBetween(1, 365);
+        $isRecent = fake()->boolean(70);
+
         return [
             'customer_id' => Customer::factory(),
-            'fcm_token' => fake()->unique()->sha256(),
+            'fcm_token' => fake()->randomFloat() < 0.8 ? fake()->unique()->sha256() : null,
+            'device_identifier' => fake()->unique()->uuid(),
+            'device_fingerprint' => fake()->randomFloat() < 0.9 ? fake()->sha256() : null,
             'device_type' => fake()->randomElement(['ios', 'android', 'web']),
             'device_name' => fake()->optional()->randomElement([
                 'iPhone de Juan',
@@ -40,8 +46,38 @@ class CustomerDeviceFactory extends Factory
                 'Chrome on Windows',
                 'Safari on macOS',
             ]),
-            'last_used_at' => fake()->optional()->dateTimeBetween('-30 days', 'now'),
+            'app_version' => fake()->optional(0.8)->randomElement(['1.0.0', '1.0.5', '1.1.0', '1.2.0', '2.0.0']),
+            'os_version' => fake()->optional(0.8)->randomElement([
+                'iOS 17.2',
+                'iOS 16.5',
+                'Android 14',
+                'Android 13',
+                'macOS 14.0',
+                'Windows 11',
+            ]),
+            'last_used_at' => $isRecent
+                ? fake()->dateTimeBetween('-30 days', 'now')
+                : fake()->optional(0.7)->dateTimeBetween('-90 days', '-31 days'),
+            'is_active' => true,
+            'login_count' => $loginCount,
+            'trust_score' => $this->calculateInitialTrustScore($loginCount, $daysSinceCreation),
         ];
+    }
+
+    /**
+     * Calculate initial trust score based on login count and device age
+     */
+    protected function calculateInitialTrustScore(int $loginCount, int $daysSinceCreation): int
+    {
+        $score = 50; // Base score
+
+        // More logins = more trust (max +30)
+        $score += min(30, $loginCount * 2);
+
+        // Older device = more trust (max +20)
+        $score += min(20, floor($daysSinceCreation / 7));
+
+        return min(100, $score);
     }
 
     /**
@@ -85,9 +121,18 @@ class CustomerDeviceFactory extends Factory
      */
     public function active(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'last_used_at' => fake()->dateTimeBetween('-7 days', 'now'),
-        ]);
+        return $this->state(function (array $attributes) {
+            $loginCount = fake()->numberBetween(5, 50);
+
+            return [
+                'fcm_token' => $attributes['fcm_token'] ?? (fake()->randomFloat() < 0.9 ? fake()->unique()->sha256() : null),
+                'device_fingerprint' => $attributes['device_fingerprint'] ?? fake()->sha256(),
+                'last_used_at' => fake()->dateTimeBetween('-7 days', 'now'),
+                'is_active' => true,
+                'login_count' => $loginCount,
+                'trust_score' => min(100, 50 + ($loginCount * 2)),
+            ];
+        });
     }
 
     /**
@@ -97,6 +142,63 @@ class CustomerDeviceFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'last_used_at' => fake()->optional(0.7)->dateTimeBetween('-90 days', '-31 days'),
+            'is_active' => false,
+            'login_count' => fake()->numberBetween(1, 10),
+            'trust_score' => fake()->numberBetween(20, 60),
+        ]);
+    }
+
+    /**
+     * Indicate that this is a new device (first login).
+     */
+    public function newDevice(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'login_count' => 1,
+            'trust_score' => 50,
+            'last_used_at' => now(),
+            'is_active' => true,
+            'device_fingerprint' => fake()->sha256(),
+        ]);
+    }
+
+    /**
+     * Indicate that this is a trusted device (many logins).
+     */
+    public function trustedDevice(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'fcm_token' => $attributes['fcm_token'] ?? fake()->unique()->sha256(),
+            'device_fingerprint' => $attributes['device_fingerprint'] ?? fake()->sha256(),
+            'login_count' => fake()->numberBetween(50, 200),
+            'trust_score' => fake()->numberBetween(85, 100),
+            'last_used_at' => fake()->dateTimeBetween('-3 days', 'now'),
+            'is_active' => true,
+        ]);
+    }
+
+    /**
+     * Indicate that this device has low trust score.
+     */
+    public function lowTrust(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'login_count' => fake()->numberBetween(1, 5),
+            'trust_score' => fake()->numberBetween(20, 40),
+            'device_fingerprint' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that this device has high trust score.
+     */
+    public function highTrust(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'fcm_token' => $attributes['fcm_token'] ?? fake()->unique()->sha256(),
+            'device_fingerprint' => $attributes['device_fingerprint'] ?? fake()->sha256(),
+            'login_count' => fake()->numberBetween(30, 100),
+            'trust_score' => fake()->numberBetween(80, 100),
         ]);
     }
 }

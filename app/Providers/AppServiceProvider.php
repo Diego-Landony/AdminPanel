@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Observers\PersonalAccessTokenObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -9,6 +10,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,6 +41,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configurePasswordValidation();
         $this->configureRateLimiting();
+
+        PersonalAccessToken::observe(PersonalAccessTokenObserver::class);
     }
 
     /**

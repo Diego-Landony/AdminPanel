@@ -8,7 +8,8 @@
 /storage/pail
 /vendor
 /admin-legacy
-.env
+/storage/api-docs/api-docs.json
+/.env
 .env.backup
 .env.production
 .phpactor.json

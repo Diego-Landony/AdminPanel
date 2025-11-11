@@ -1,8 +1,8 @@
 # SubwayApp API Documentation
 
-**Version**: 1.0.1
+**Version**: 1.0.2
 **Base URL**: `https://admin.subwaycardgt.com/api/v1`
-**Updated**: November 2025
+**Updated**: November 10, 2025
 
 ---
 
@@ -962,6 +962,39 @@ FIREBASE_CREDENTIALS=storage/app/firebase/credentials.json
 - ✅ Token expiration set to 1 year (365 days)
 - ✅ Oldest tokens auto-deleted when limit reached
 - ✅ ~99% reduction in token table growth
+
+### v1.0.2 (November 10, 2025)
+
+**Device Tracking & Trust Scoring** (Sprint 1 & 2):
+- ✅ Device tracking with unique identifiers (`device_identifier`)
+- ✅ Device fingerprinting for security (`device_fingerprint`)
+- ✅ Login count tracking per device
+- ✅ Trust score calculation (0-100) based on device behavior
+- ✅ Auto-sync devices with authentication tokens
+- ✅ Observer pattern for token-device lifecycle
+- ✅ Scheduled cleanup of inactive devices
+- ✅ Commands: `devices:cleanup`, `devices:recalculate-trust-scores`
+- ✅ Updated API documentation with device tracking guide
+- ✅ Swagger/OpenAPI documentation updated
+- ✅ Frontend implementation guide with code examples
+
+**Breaking Changes**:
+- None (all new fields are optional/nullable)
+
+**New Request Parameters** (Optional but Recommended):
+- `device_identifier`: UUID for device tracking
+- `device_fingerprint`: SHA256 hash for security
+- `os`: Operating system (ios/android/web)
+
+**Endpoints Updated**:
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/oauth/google`
+- `POST /api/v1/auth/oauth/google/register`
+
+**Database Changes**:
+- Added `device_identifier`, `device_fingerprint`, `login_count`, `trust_score` to `customer_devices`
+- Made `fcm_token` nullable
 
 ### v1.0.0 (November 2025)
 

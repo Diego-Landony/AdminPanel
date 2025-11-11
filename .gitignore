@@ -6,6 +6,7 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/api-docs
 /vendor
 /admin-legacy
 /storage/api-docs/api-docs.json

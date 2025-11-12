@@ -7,7 +7,6 @@ use App\Http\Resources\Api\V1\CustomerDeviceResource;
 use App\Models\CustomerDevice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class DeviceController extends Controller
 {
@@ -57,23 +56,18 @@ class DeviceController extends Controller
      *     path="/api/v1/devices/register",
      *     tags={"Devices"},
      *     summary="Register or update device",
-     *     description="Enriches existing device (auto-created during auth) with FCM token and additional metadata. If device doesn't exist, creates it.",
+     *     description="Enriches existing device (auto-created during auth) with FCM token. If device doesn't exist, creates it.",
      *     security={{"sanctum":{}}},
      *
      *     @OA\RequestBody(
      *         required=true,
      *
      *         @OA\JsonContent(
-     *             required={"fcm_token","device_type"},
+     *             required={"fcm_token","device_identifier"},
      *
      *             @OA\Property(property="fcm_token", type="string", example="fKw8h4Xj...", description="Firebase Cloud Messaging token"),
-     *             @OA\Property(property="device_identifier", type="string", nullable=true, example="ABC123DEF456", description="Unique device identifier (should match identifier from auth)"),
-     *             @OA\Property(property="device_fingerprint", type="string", nullable=true, example="sha256_hash...", description="SHA256 hash of device characteristics"),
-     *             @OA\Property(property="device_type", type="string", enum={"ios","android","web"}, example="ios", description="Device platform"),
-     *             @OA\Property(property="device_name", type="string", nullable=true, example="iPhone 14 Pro", description="Human-readable device name"),
-     *             @OA\Property(property="device_model", type="string", nullable=true, example="iPhone15,2", description="Device model identifier"),
-     *             @OA\Property(property="app_version", type="string", nullable=true, example="1.0.5", description="App version number"),
-     *             @OA\Property(property="os_version", type="string", nullable=true, example="17.2", description="OS version number")
+     *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="REQUIRED: Unique device UUID (must match identifier from auth)"),
+     *             @OA\Property(property="device_name", type="string", nullable=true, example="iPhone de Juan", description="Human-readable device name")
      *         )
      *     ),
      *
@@ -96,25 +90,17 @@ class DeviceController extends Controller
     {
         $validated = $request->validate([
             'fcm_token' => ['required', 'string', 'max:255'],
-            'device_identifier' => ['nullable', 'string', 'max:255'],
-            'device_fingerprint' => ['nullable', 'string', 'max:255'],
-            'device_type' => ['required', 'in:ios,android,web'],
+            'device_identifier' => ['required', 'string', 'max:255'],
             'device_name' => ['nullable', 'string', 'max:255'],
-            'device_model' => ['nullable', 'string', 'max:255'],
-            'app_version' => ['nullable', 'string', 'max:20'],
-            'os_version' => ['nullable', 'string', 'max:20'],
         ]);
 
         $customer = $request->user();
         $currentToken = $customer->currentAccessToken();
 
         // Buscar dispositivo existente por device_identifier (prioritario) o fcm_token (fallback)
-        $device = null;
-        if (isset($validated['device_identifier'])) {
-            $device = CustomerDevice::where('customer_id', $customer->id)
-                ->where('device_identifier', $validated['device_identifier'])
-                ->first();
-        }
+        $device = CustomerDevice::where('customer_id', $customer->id)
+            ->where('device_identifier', $validated['device_identifier'])
+            ->first();
 
         // Fallback: buscar por fcm_token si no se encontró por device_identifier
         if (! $device) {
@@ -124,16 +110,10 @@ class DeviceController extends Controller
         }
 
         if ($device) {
-            // Enriquecer dispositivo existente con FCM token y metadata adicional
+            // Enriquecer dispositivo existente con FCM token
             $device->update([
                 'fcm_token' => $validated['fcm_token'],
-                'device_identifier' => $validated['device_identifier'] ?? $device->device_identifier,
-                'device_fingerprint' => $validated['device_fingerprint'] ?? $device->device_fingerprint,
-                'device_type' => $validated['device_type'],
                 'device_name' => $validated['device_name'] ?? $device->device_name,
-                'device_model' => $validated['device_model'] ?? $device->device_model,
-                'app_version' => $validated['app_version'] ?? $device->app_version,
-                'os_version' => $validated['os_version'] ?? $device->os_version,
                 'sanctum_token_id' => $currentToken->id,
                 'is_active' => true,
                 'last_used_at' => now(),
@@ -146,13 +126,8 @@ class DeviceController extends Controller
             $device = CustomerDevice::create([
                 'customer_id' => $customer->id,
                 'fcm_token' => $validated['fcm_token'],
-                'device_identifier' => $validated['device_identifier'] ?? Str::uuid()->toString(),
-                'device_fingerprint' => $validated['device_fingerprint'] ?? null,
-                'device_type' => $validated['device_type'],
-                'device_name' => $validated['device_name'] ?? $validated['device_type'].' device',
-                'device_model' => $validated['device_model'] ?? null,
-                'app_version' => $validated['app_version'] ?? null,
-                'os_version' => $validated['os_version'] ?? null,
+                'device_identifier' => $validated['device_identifier'],
+                'device_name' => $validated['device_name'] ?? 'Dispositivo móvil',
                 'sanctum_token_id' => $currentToken->id,
                 'is_active' => true,
                 'last_used_at' => now(),

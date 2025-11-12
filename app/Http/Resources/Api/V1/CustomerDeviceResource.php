@@ -16,13 +16,11 @@ class CustomerDeviceResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'device_type' => $this->device_type,
+            'device_identifier' => $this->device_identifier,
             'device_name' => $this->device_name,
-            'device_model' => $this->device_model,
-            'app_version' => $this->app_version,
-            'os_version' => $this->os_version,
             'last_used_at' => $this->last_used_at,
             'is_active' => (bool) $this->is_active,
+            'login_count' => $this->login_count,
             'is_current_device' => $this->is_current_device,
             'created_at' => $this->created_at,
         ];

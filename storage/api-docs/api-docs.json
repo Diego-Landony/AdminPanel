@@ -2,11 +2,11 @@
     "openapi": "3.0.0",
     "info": {
         "title": "Subway Guatemala Customer API",
-        "description": "API REST para la aplicación móvil de clientes de Subway Guatemala. Incluye autenticación multi-canal (email/password, Google OAuth, Apple Sign-In), gestión de perfil, dispositivos FCM y futuras funcionalidades de pedidos y lealtad.",
+        "description": "API REST para la aplicación móvil de clientes de Subway Guatemala. Incluye autenticación multi-canal (email/password y Google OAuth), gestión de perfil, dispositivos FCM para notificaciones push y futuras funcionalidades de pedidos y lealtad.",
         "contact": {
             "email": "dev@subwayguatemala.com"
         },
-        "version": "1.0.0"
+        "version": "1.0.2"
     },
     "servers": [
         {
@@ -14,7 +14,7 @@
             "description": "Local Development Server"
         },
         {
-            "url": "https://admin.subwaycardgt.com/",
+            "url": "http://localhost",
             "description": "Application Server"
         }
     ],
@@ -962,7 +962,7 @@
                     "Devices"
                 ],
                 "summary": "Register or update device",
-                "description": "Enriches existing device (auto-created during auth) with FCM token and additional metadata. If device doesn't exist, creates it.",
+                "description": "Enriches existing device (auto-created during auth) with FCM token. If device doesn't exist, creates it.",
                 "operationId": "0743195c75a8fccfdf9875291bd6d8c0",
                 "requestBody": {
                     "required": true,
@@ -971,7 +971,7 @@
                             "schema": {
                                 "required": [
                                     "fcm_token",
-                                    "device_type"
+                                    "device_identifier"
                                 ],
                                 "properties": {
                                     "fcm_token": {
@@ -980,49 +980,14 @@
                                         "example": "fKw8h4Xj..."
                                     },
                                     "device_identifier": {
-                                        "description": "Unique device identifier (should match identifier from auth)",
+                                        "description": "REQUIRED: Unique device UUID (must match identifier from auth)",
                                         "type": "string",
-                                        "example": "ABC123DEF456",
-                                        "nullable": true
-                                    },
-                                    "device_fingerprint": {
-                                        "description": "SHA256 hash of device characteristics",
-                                        "type": "string",
-                                        "example": "sha256_hash...",
-                                        "nullable": true
-                                    },
-                                    "device_type": {
-                                        "description": "Device platform",
-                                        "type": "string",
-                                        "enum": [
-                                            "ios",
-                                            "android",
-                                            "web"
-                                        ],
-                                        "example": "ios"
+                                        "example": "550e8400-e29b-41d4-a716-446655440000"
                                     },
                                     "device_name": {
                                         "description": "Human-readable device name",
                                         "type": "string",
-                                        "example": "iPhone 14 Pro",
-                                        "nullable": true
-                                    },
-                                    "device_model": {
-                                        "description": "Device model identifier",
-                                        "type": "string",
-                                        "example": "iPhone15,2",
-                                        "nullable": true
-                                    },
-                                    "app_version": {
-                                        "description": "App version number",
-                                        "type": "string",
-                                        "example": "1.0.5",
-                                        "nullable": true
-                                    },
-                                    "os_version": {
-                                        "description": "OS version number",
-                                        "type": "string",
-                                        "example": "17.2",
+                                        "example": "iPhone de Juan",
                                         "nullable": true
                                     }
                                 },
@@ -1526,8 +1491,7 @@
                         "type": "string",
                         "enum": [
                             "local",
-                            "google",
-                            "apple"
+                            "google"
                         ],
                         "example": "local"
                     },
@@ -1580,39 +1544,16 @@
                     },
                     "fcm_token": {
                         "type": "string",
-                        "example": "fKw8h4Xj..."
+                        "example": "fKw8h4Xj...",
+                        "nullable": true
                     },
                     "device_identifier": {
                         "type": "string",
-                        "example": "ABC123DEF456"
-                    },
-                    "device_type": {
-                        "type": "string",
-                        "enum": [
-                            "ios",
-                            "android",
-                            "web"
-                        ],
-                        "example": "ios"
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
                     },
                     "device_name": {
                         "type": "string",
-                        "example": "iPhone 14 Pro",
-                        "nullable": true
-                    },
-                    "device_model": {
-                        "type": "string",
-                        "example": "iPhone15,2",
-                        "nullable": true
-                    },
-                    "app_version": {
-                        "type": "string",
-                        "example": "1.0.5",
-                        "nullable": true
-                    },
-                    "os_version": {
-                        "type": "string",
-                        "example": "17.2",
+                        "example": "iPhone de Juan",
                         "nullable": true
                     },
                     "last_used_at": {
@@ -1624,6 +1565,10 @@
                     "is_active": {
                         "type": "boolean",
                         "example": true
+                    },
+                    "login_count": {
+                        "type": "integer",
+                        "example": 15
                     },
                     "is_current_device": {
                         "description": "True if this device is associated with current token",
@@ -1660,7 +1605,7 @@
         },
         {
             "name": "OAuth",
-            "description": "Endpoints para autenticación con Google y Apple Sign-In"
+            "description": "Endpoints para autenticación con Google OAuth"
         },
         {
             "name": "Profile",

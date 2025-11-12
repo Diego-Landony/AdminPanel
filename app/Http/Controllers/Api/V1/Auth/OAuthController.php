@@ -372,71 +372,103 @@ class OAuthController extends Controller
      */
     public function googleCallback(Request $request): JsonResponse|RedirectResponse
     {
-        $platform = session('oauth_platform', 'web');
-        $action = session('oauth_action', 'login');
-        $deviceId = session('oauth_device_id');
-        $os = session('oauth_os', 'app');
+        try {
+            $platform = session('oauth_platform', 'web');
+            $action = session('oauth_action', 'login');
+            $deviceId = session('oauth_device_id');
+            $os = session('oauth_os', 'app');
 
-        $socialiteUser = Socialite::driver('google')->stateless()->user();
-
-        $providerData = (object) [
-            'provider_id' => $socialiteUser->getId(),
-            'email' => $socialiteUser->getEmail(),
-            'name' => $socialiteUser->getName(),
-            'avatar' => $socialiteUser->getAvatar(),
-        ];
-
-        // Handle based on action (login vs register)
-        if ($action === 'register') {
-            $result = $this->socialAuthService->createCustomerFromOAuth('google', $providerData);
-        } else {
-            $result = $this->socialAuthService->findAndLinkCustomer('google', $providerData);
-        }
-
-        $result['customer']->enforceTokenLimit(5);
-
-        $tokenName = $platform === 'mobile'
-            ? $this->generateTokenName($os, $deviceId)
-            : 'web';
-
-        $newAccessToken = $result['customer']->createToken($tokenName);
-        $token = $newAccessToken->plainTextToken;
-
-        // Auto-create or update device if mobile and device_id provided
-        if ($platform === 'mobile' && $deviceId) {
-            $this->deviceService->syncDeviceWithToken(
-                $result['customer'],
-                $newAccessToken->accessToken,
-                $deviceId,
-                $os,
-                null
-            );
-        }
-
-        // If mobile platform, redirect to app
-        if ($platform === 'mobile') {
-            session()->forget(['oauth_platform', 'oauth_action', 'oauth_device_id', 'oauth_os']);
-
-            return $this->redirectToApp([
-                'token' => $token,
-                'success' => true,
-                'message' => $result['message'],
-                'is_new_customer' => $result['is_new'],
+            \Log::info('OAuth Callback', [
+                'platform' => $platform,
+                'action' => $action,
+                'device_id' => $deviceId,
+                'os' => $os,
             ]);
+
+            $socialiteUser = Socialite::driver('google')->stateless()->user();
+
+            $providerData = (object) [
+                'provider_id' => $socialiteUser->getId(),
+                'email' => $socialiteUser->getEmail(),
+                'name' => $socialiteUser->getName(),
+                'avatar' => $socialiteUser->getAvatar(),
+            ];
+
+            \Log::info('Google User Data', ['email' => $providerData->email]);
+
+            // Handle based on action (login vs register)
+            if ($action === 'register') {
+                $result = $this->socialAuthService->createCustomerFromOAuth('google', $providerData);
+            } else {
+                $result = $this->socialAuthService->findAndLinkCustomer('google', $providerData);
+            }
+
+            $result['customer']->enforceTokenLimit(5);
+
+            $tokenName = $platform === 'mobile'
+                ? $this->generateTokenName($os, $deviceId)
+                : 'web';
+
+            $newAccessToken = $result['customer']->createToken($tokenName);
+            $token = $newAccessToken->plainTextToken;
+
+            // Auto-create or update device if mobile and device_id provided
+            if ($platform === 'mobile' && $deviceId) {
+                $this->deviceService->syncDeviceWithToken(
+                    $result['customer'],
+                    $newAccessToken->accessToken,
+                    $deviceId,
+                    $os,
+                    null
+                );
+            }
+
+            // If mobile platform, redirect to app
+            if ($platform === 'mobile') {
+                session()->forget(['oauth_platform', 'oauth_action', 'oauth_device_id', 'oauth_os']);
+
+                \Log::info('Redirecting to mobile app', ['customer_id' => $result['customer']->id]);
+
+                return $this->redirectToApp([
+                    'token' => $token,
+                    'success' => true,
+                    'message' => $result['message'],
+                    'is_new_customer' => $result['is_new'],
+                ]);
+            }
+
+            // Web platform - return JSON
+            $authData = AuthResource::make([
+                'token' => $token,
+                'customer' => $result['customer']->load('customerType'),
+            ])->resolve();
+
+            return response()->json([
+                'message' => $result['message'],
+                'data' => array_merge($authData, [
+                    'is_new_customer' => $result['is_new'],
+                ]),
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('OAuth Callback Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            $platform = session('oauth_platform', 'web');
+
+            if ($platform === 'mobile') {
+                return $this->redirectToApp([
+                    'error' => true,
+                    'message' => 'Error al procesar autenticación: '.$e->getMessage(),
+                ]);
+            }
+
+            return response()->json([
+                'message' => 'Error al procesar autenticación',
+                'error' => config('app.debug') ? $e->getMessage() : 'Server Error',
+            ], 500);
         }
-
-        // Web platform - return JSON
-        $authData = AuthResource::make([
-            'token' => $token,
-            'customer' => $result['customer']->load('customerType'),
-        ])->resolve();
-
-        return response()->json([
-            'message' => $result['message'],
-            'data' => array_merge($authData, [
-                'is_new_customer' => $result['is_new'],
-            ]),
-        ]);
     }
 
     /**

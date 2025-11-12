@@ -655,9 +655,14 @@ export async function loginWithGoogle() {
 import messaging from '@react-native-firebase/messaging';
 import DeviceInfo from 'react-native-device-info';
 
-export async function registerDevice(token: string) {
+export async function registerDevice(token: string, userName: string) {
   const fcmToken = await messaging().getToken();
   const deviceIdentifier = await DeviceInfo.getUniqueId(); // UUID for device tracking
+  const deviceModel = await DeviceInfo.getDeviceName(); // e.g., "iPhone 14 Pro"
+
+  // IMPORTANT: Personalize device name with user's name
+  // This helps users identify their devices in the device list
+  const deviceName = `${deviceModel} de ${userName}`; // e.g., "iPhone 14 Pro de Juan"
 
   await fetch('https://api.subway.gt/api/v1/devices/register', {
     method: 'POST',
@@ -666,9 +671,9 @@ export async function registerDevice(token: string) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      fcm_token: fcmToken,
-      device_identifier: deviceIdentifier, // REQUIRED: Unique device UUID
-      device_name: await DeviceInfo.getDeviceName()
+      fcm_token: fcmToken,                  // REQUIRED: Firebase Cloud Messaging token
+      device_identifier: deviceIdentifier,  // REQUIRED: Unique device UUID
+      device_name: deviceName               // REQUIRED: Personalized name (e.g., "iPhone de Juan")
     })
   });
 }

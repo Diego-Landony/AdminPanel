@@ -962,7 +962,7 @@
                     "Devices"
                 ],
                 "summary": "Register or update device",
-                "description": "Enriches existing device (auto-created during auth) with FCM token. If device doesn't exist, creates it.",
+                "description": "Enriches existing device (auto-created during auth) with FCM token and custom device name. The mobile app MUST send a personalized device name (e.g., 'iPhone 14 Pro de Juan', 'Samsung Galaxy S23 de María') to replace the generic 'Device' name created during authentication. This allows users to identify their devices in the device list.",
                 "operationId": "0743195c75a8fccfdf9875291bd6d8c0",
                 "requestBody": {
                     "required": true,
@@ -971,11 +971,12 @@
                             "schema": {
                                 "required": [
                                     "fcm_token",
-                                    "device_identifier"
+                                    "device_identifier",
+                                    "device_name"
                                 ],
                                 "properties": {
                                     "fcm_token": {
-                                        "description": "Firebase Cloud Messaging token",
+                                        "description": "Firebase Cloud Messaging token for push notifications",
                                         "type": "string",
                                         "example": "fKw8h4Xj..."
                                     },
@@ -985,10 +986,9 @@
                                         "example": "550e8400-e29b-41d4-a716-446655440000"
                                     },
                                     "device_name": {
-                                        "description": "Human-readable device name",
+                                        "description": "REQUIRED: Personalized device name set by the app (e.g., 'iPhone 14 Pro de Juan', 'Samsung Galaxy S23 de María'). This name will be displayed to the user when managing their devices.",
                                         "type": "string",
-                                        "example": "iPhone de Juan",
-                                        "nullable": true
+                                        "example": "iPhone 14 Pro de Juan"
                                     }
                                 },
                                 "type": "object"
@@ -1553,7 +1553,7 @@
                     },
                     "device_name": {
                         "type": "string",
-                        "example": "iPhone de Juan",
+                        "example": "iPhone 14 Pro de Juan",
                         "nullable": true
                     },
                     "last_used_at": {

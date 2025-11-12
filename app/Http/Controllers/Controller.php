@@ -79,7 +79,7 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="sanctum_token_id", type="integer", nullable=true, example=5),
  *     @OA\Property(property="fcm_token", type="string", nullable=true, example="fKw8h4Xj..."),
  *     @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000"),
- *     @OA\Property(property="device_name", type="string", nullable=true, example="iPhone de Juan"),
+ *     @OA\Property(property="device_name", type="string", nullable=true, example="iPhone 14 Pro de Juan"),
  *     @OA\Property(property="last_used_at", type="string", format="date-time", nullable=true, example="2024-01-20T15:45:00Z"),
  *     @OA\Property(property="is_active", type="boolean", example=true),
  *     @OA\Property(property="login_count", type="integer", example=15),

@@ -56,18 +56,18 @@ class DeviceController extends Controller
      *     path="/api/v1/devices/register",
      *     tags={"Devices"},
      *     summary="Register or update device",
-     *     description="Enriches existing device (auto-created during auth) with FCM token. If device doesn't exist, creates it.",
+     *     description="Enriches existing device (auto-created during auth) with FCM token and custom device name. The mobile app MUST send a personalized device name (e.g., 'iPhone 14 Pro de Juan', 'Samsung Galaxy S23 de María') to replace the generic 'Device' name created during authentication. This allows users to identify their devices in the device list.",
      *     security={{"sanctum":{}}},
      *
      *     @OA\RequestBody(
      *         required=true,
      *
      *         @OA\JsonContent(
-     *             required={"fcm_token","device_identifier"},
+     *             required={"fcm_token","device_identifier","device_name"},
      *
-     *             @OA\Property(property="fcm_token", type="string", example="fKw8h4Xj...", description="Firebase Cloud Messaging token"),
+     *             @OA\Property(property="fcm_token", type="string", example="fKw8h4Xj...", description="Firebase Cloud Messaging token for push notifications"),
      *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="REQUIRED: Unique device UUID (must match identifier from auth)"),
-     *             @OA\Property(property="device_name", type="string", nullable=true, example="iPhone de Juan", description="Human-readable device name")
+     *             @OA\Property(property="device_name", type="string", example="iPhone 14 Pro de Juan", description="REQUIRED: Personalized device name set by the app (e.g., 'iPhone 14 Pro de Juan', 'Samsung Galaxy S23 de María'). This name will be displayed to the user when managing their devices.")
      *         )
      *     ),
      *
@@ -91,7 +91,7 @@ class DeviceController extends Controller
         $validated = $request->validate([
             'fcm_token' => ['required', 'string', 'max:255'],
             'device_identifier' => ['required', 'string', 'max:255'],
-            'device_name' => ['nullable', 'string', 'max:255'],
+            'device_name' => ['required', 'string', 'max:255'],
         ]);
 
         $customer = $request->user();
@@ -113,7 +113,7 @@ class DeviceController extends Controller
             // Enriquecer dispositivo existente con FCM token
             $device->update([
                 'fcm_token' => $validated['fcm_token'],
-                'device_name' => $validated['device_name'] ?? $device->device_name,
+                'device_name' => $validated['device_name'],
                 'sanctum_token_id' => $currentToken->id,
                 'is_active' => true,
                 'last_used_at' => now(),
@@ -127,7 +127,7 @@ class DeviceController extends Controller
                 'customer_id' => $customer->id,
                 'fcm_token' => $validated['fcm_token'],
                 'device_identifier' => $validated['device_identifier'],
-                'device_name' => $validated['device_name'] ?? 'Dispositivo móvil',
+                'device_name' => $validated['device_name'],
                 'sanctum_token_id' => $currentToken->id,
                 'is_active' => true,
                 'last_used_at' => now(),

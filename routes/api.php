@@ -50,24 +50,23 @@ Route::prefix('v1')->group(function () {
 
     // OAuth endpoints (separate rate limiting)
     Route::middleware(['throttle:oauth'])->prefix('auth/oauth')->group(function () {
-        // Mobile app LOGIN endpoint - id_token validation (does NOT create accounts)
+        // id_token validation endpoints (for native apps with Google SDK)
+        // These endpoints validate id_token obtained directly from Google Sign-In SDK
         Route::post('/google', [OAuthController::class, 'google'])
             ->name('api.v1.auth.oauth.google.login');
 
-        // Mobile app REGISTER endpoint - id_token validation (creates accounts)
         Route::post('/google/register', [OAuthController::class, 'googleRegister'])
             ->name('api.v1.auth.oauth.google.register');
 
-        // OAuth redirect flow endpoints (require session for state management)
+        // OAuth redirect flow (unified for web & mobile)
+        // Uses OAuth 2.0 state parameter instead of session for stateless operation
         Route::middleware(['web'])->group(function () {
-            // Mobile app OAuth redirect flow (opens browser, redirects back to app)
-            Route::get('/google/mobile', [OAuthController::class, 'redirectToMobile'])
-                ->name('api.v1.auth.oauth.google.mobile');
-
-            // Web app endpoints - OAuth redirect flow
+            // Unified OAuth redirect - works for web and mobile (React Native WebBrowser)
+            // Use ?action=login|register&platform=web|mobile&device_id=uuid
             Route::get('/google/redirect', [OAuthController::class, 'googleRedirect'])
                 ->name('api.v1.auth.oauth.google.redirect');
 
+            // OAuth callback - automatically called by Google after authorization
             Route::get('/google/callback', [OAuthController::class, 'googleCallback'])
                 ->name('api.v1.auth.oauth.google.callback');
         });

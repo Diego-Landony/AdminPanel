@@ -1,30 +1,38 @@
-# OAuth de Google para Mobile App - Guía de Implementación Backend
-## Laravel API + Expo React Native
+# OAuth de Google Unificado - Guía de Implementación Backend
+## Laravel API + Expo React Native / Web
 
-> **🎉 ESTADO: IMPLEMENTACIÓN BACKEND COMPLETADA ✅**
+> **🎉 ESTADO: IMPLEMENTACIÓN ACTUALIZADA A OAuth 2.0 STATE PARAMETER ✅**
 >
-> Fecha de implementación: 2025-11-12
+> Fecha de actualización: 2025-11-12
 >
-> Todas las modificaciones del backend han sido completadas y están listas para testing.
+> El backend ahora usa OAuth 2.0 state parameter en lugar de sesión, unificando web y mobile en un solo endpoint.
 
 ---
 
 ## 📋 Resumen Ejecutivo
 
-La app móvil necesita autenticación con Google que funcione en Expo Go (sin builds nativos). La solución:
+Solución OAuth unificada que funciona para web, mobile (Expo Go), y cualquier plataforma:
 
-1. **App móvil** → Abre navegador web al backend: `https://admin.subwaycardgt.com/api/v1/auth/oauth/google/mobile`
-2. **Backend** → Maneja TODO el flujo OAuth con Google
-3. **Backend** → Redirige de vuelta a la app con: `subwayapp://callback?token={token}&customer={data}`
-4. **App móvil** → Recibe el deep link y almacena la sesión
+1. **Cliente (web/mobile)** → Abre navegador al backend: `https://admin.subwaycardgt.com/api/v1/auth/oauth/google/redirect?action=login&platform=mobile&device_id=uuid`
+2. **Backend** → Codifica parámetros en OAuth 2.0 state parameter
+3. **Backend** → Redirige a Google con el state
+4. **Google** → Usuario autoriza y redirige al callback con el state
+5. **Backend** → Decodifica state, procesa autenticación
+6. **Backend** → Responde según platform:
+   - Web: Retorna JSON con token
+   - Mobile: Redirige a `subwayapp://callback?token={token}&customer={data}`
+7. **Cliente** → Almacena token y sesión
 
 ### ✅ Ventajas de esta solución:
 
+- ✅ **UN SOLO endpoint** para web y mobile (más simple)
+- ✅ **Usa OAuth 2.0 state parameter** (estándar OAuth, sin sesión)
 - ✅ **Funciona en Expo Go** (sin necesidad de builds nativos)
 - ✅ **No requiere configurar nuevos URIs en Google Cloud Console** (usa los existentes)
 - ✅ **Backend centraliza toda la lógica OAuth** (más seguro)
-- ✅ **Mismo código para iOS y Android**
-- ✅ **Un solo flujo para web y mobile**
+- ✅ **Sin cookies ni sesión** (funciona con cualquier navegador)
+- ✅ **Separación clara de login/register** mediante parámetro `action`
+- ✅ **Funciona para cualquier plataforma** (web, mobile, desktop, etc.)
 
 ---
 
@@ -32,12 +40,13 @@ La app móvil necesita autenticación con Google que funcione en Expo Go (sin bu
 
 ### ✅ Cambios completados:
 
-1. ✅ **Nueva ruta:** `GET /api/v1/auth/oauth/google/mobile` en `routes/api.php`
-2. ✅ **Método nuevo:** `redirectToMobile()` en `OAuthController.php` - guarda datos en sesión y redirige a Google
-3. ✅ **Método modificado:** `googleCallback()` - detecta mobile/web y redirige apropiadamente
-4. ✅ **Método helper:** `redirectToApp()` - genera deep link para retornar a la app
-5. ✅ **Configuración:** `mobile_scheme` agregado en `config/app.php`
-6. ✅ **Session driver:** Ya configurado como `database` con tabla existente
+1. ✅ **Endpoint unificado:** `GET /api/v1/auth/oauth/google/redirect?action={login|register}&platform={web|mobile}&device_id={uuid}`
+2. ✅ **Método actualizado:** `googleRedirect()` - codifica parámetros en OAuth state
+3. ✅ **Método actualizado:** `googleCallback()` - decodifica state y responde según platform
+4. ✅ **Eliminado:** `redirectToMobile()` - ya no necesario con endpoint unificado
+5. ✅ **Eliminada ruta:** `/google/mobile` - ahora todo usa `/google/redirect`
+6. ✅ **Sin sesión:** Usa OAuth 2.0 state parameter (estándar OAuth)
+7. ✅ **Swagger actualizado:** Documentación completa de parámetros y respuestas
 
 ### 📁 Archivos modificados:
 
@@ -54,23 +63,44 @@ La app móvil necesita autenticación con Google que funcione en Expo Go (sin bu
 ```
 Usuario presiona "Continuar con Google"
            ↓
-App abre navegador → https://admin.subwaycardgt.com/api/v1/auth/oauth/google/mobile?action=login
+Cliente abre navegador → https://admin.subwaycardgt.com/api/v1/auth/oauth/google/redirect
+                         ?action=login
+                         &platform=mobile
+                         &device_id=550e8400-e29b-41d4-a716-446655440000
            ↓
-Backend guarda: session['oauth_platform'] = 'mobile'
+Backend codifica parámetros en OAuth state:
+    state = base64({
+        "platform": "mobile",
+        "action": "login",
+        "device_id": "550e8400...",
+        "nonce": "abc123...",
+        "timestamp": 1699999999
+    })
            ↓
-Backend redirige → https://accounts.google.com/o/oauth2/v2/auth
+Backend redirige a Google con state:
+    https://accounts.google.com/o/oauth2/v2/auth
+    ?client_id=...
+    &redirect_uri=https://admin.subwaycardgt.com/api/v1/auth/oauth/google/callback
+    &state=eyJwbGF0Zm9ybSI6Im1vYmlsZSJ9...  ← Google retorna este state
            ↓
 Usuario autoriza en Google
            ↓
-Google redirige → https://admin.subwaycardgt.com/api/v1/auth/oauth/google/callback
+Google redirige al callback con state:
+    https://admin.subwaycardgt.com/api/v1/auth/oauth/google/callback
+    ?code=4/0AY0e-g7...
+    &state=eyJwbGF0Zm9ybSI6Im1vYmlsZSJ9...  ← State retornado
            ↓
-Backend procesa (login o register)
+Backend decodifica state:
+    platform = "mobile"
+    action = "login"
+    device_id = "550e8400..."
            ↓
-Backend genera token Sanctum
+Backend obtiene datos de Google y procesa (login o register)
            ↓
-Backend detecta: session['oauth_platform'] === 'mobile'
+Backend genera token Sanctum y vincula dispositivo
            ↓
-Backend redirige → subwayapp://callback?token=ABC&customer={...}
+Backend detecta platform === 'mobile' → Redirige a deep link:
+    subwayapp://callback?token=12|SUis...&customer={...}&is_new_customer=0
            ↓
 App recibe deep link y guarda sesión
            ↓
@@ -573,25 +603,34 @@ https://admin.subwaycardgt.com/api/v1/auth/oauth/google/callback
 
 ## 📱 Endpoints Finales
 
-### Nuevos:
+### Endpoint OAuth Unificado:
 ```
-GET  /api/v1/auth/oauth/google/mobile
-     ?action={login|register}
-     &device_id={uuid}
-     &os={ios|android}
+GET  /api/v1/auth/oauth/google/redirect
+     ?action={login|register}     (requerido - separa login de register)
+     &platform={web|mobile}       (requerido - determina respuesta JSON vs deep link)
+     &device_id={uuid}            (opcional - para tracking de dispositivos)
+
+Ejemplos:
+  - Web Login:     ?action=login&platform=web
+  - Web Register:  ?action=register&platform=web
+  - Mobile Login:  ?action=login&platform=mobile&device_id=550e8400...
+  - Mobile Register: ?action=register&platform=mobile&device_id=550e8400...
 ```
 
-### Modificados:
+### Callback OAuth (automático):
 ```
 GET  /api/v1/auth/oauth/google/callback
-     (ahora detecta si viene de mobile y redirige apropiadamente)
+     (Google llama este endpoint automáticamente con code y state)
+
+     - Decodifica OAuth state parameter
+     - Procesa autenticación según action (login/register)
+     - Responde según platform (JSON para web, deep link para mobile)
 ```
 
-### Sin cambios:
+### Endpoints id_token (opcionales - para apps nativas con SDK):
 ```
-POST /api/v1/auth/oauth/google          (login con id_token - web)
-POST /api/v1/auth/oauth/google/register (register con id_token - web)
-GET  /api/v1/auth/oauth/google/redirect (redirect a Google - web)
+POST /api/v1/auth/oauth/google          (login con id_token)
+POST /api/v1/auth/oauth/google/register (register con id_token)
 ```
 
 ---

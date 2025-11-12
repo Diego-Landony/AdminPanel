@@ -25,6 +25,7 @@ test('rechaza login con google si el email no existe', function () {
 
     $response = $this->postJson('/api/v1/auth/oauth/google', [
         'id_token' => 'fake-id-token',
+        'os' => 'android',
     ]);
 
     $response->assertUnprocessable()
@@ -60,6 +61,7 @@ test('permite login con google si el email ya existe', function () {
 
     $response = $this->postJson('/api/v1/auth/oauth/google', [
         'id_token' => 'fake-id-token',
+        'os' => 'android',
     ]);
 
     $response->assertOk()
@@ -113,6 +115,7 @@ test('vincula google a cuenta local existente', function () {
 
     $response = $this->postJson('/api/v1/auth/oauth/google', [
         'id_token' => 'fake-id-token',
+        'os' => 'ios',
     ]);
 
     $response->assertOk();
@@ -141,6 +144,7 @@ test('permite registro con google si el email no existe', function () {
 
     $response = $this->postJson('/api/v1/auth/oauth/google/register', [
         'id_token' => 'fake-id-token',
+        'os' => 'android',
     ]);
 
     $response->assertCreated()
@@ -192,6 +196,7 @@ test('rechaza registro con google si el email ya existe', function () {
 
     $response = $this->postJson('/api/v1/auth/oauth/google/register', [
         'id_token' => 'fake-id-token',
+        'os' => 'android',
     ]);
 
     $response->assertUnprocessable()

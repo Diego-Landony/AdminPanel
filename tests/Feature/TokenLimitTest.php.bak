@@ -81,6 +81,7 @@ test('register endpoint enforces token limit', function () {
         'email' => 'new@example.com',
         'password' => 'Pass123',
         'password_confirmation' => 'Pass123',
+        'os' => 'ios',
     ]);
 
     $response->assertCreated();
@@ -97,6 +98,7 @@ test('register endpoint enforces token limit', function () {
     $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'new@example.com',
         'password' => 'Pass123',
+        'os' => 'android',
     ]);
 
     $response->assertOk();
@@ -123,6 +125,7 @@ test('login endpoint enforces token limit', function () {
     $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'test@example.com',
         'password' => 'password',
+        'os' => 'android',
     ]);
 
     $response->assertOk();
@@ -143,6 +146,7 @@ test('token name includes device identifier when provided', function () {
     $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'test@example.com',
         'password' => 'password',
+        'os' => 'ios',
         'device_identifier' => 'ABC123XYZ789',
     ]);
 
@@ -151,10 +155,10 @@ test('token name includes device identifier when provided', function () {
     $customer->refresh();
     $latestToken = $customer->tokens()->latest()->first();
 
-    expect($latestToken->name)->toBe('ABC123XY');
+    expect($latestToken->name)->toBe('ios-ABC123XY');
 });
 
-test('token name is device-uniqid when device identifier not provided', function () {
+test('token name is just os when device identifier not provided', function () {
     $customer = Customer::create([
         'name' => 'Test Customer',
         'email' => 'test@example.com',
@@ -166,6 +170,7 @@ test('token name is device-uniqid when device identifier not provided', function
     $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'test@example.com',
         'password' => 'password',
+        'os' => 'android',
     ]);
 
     $response->assertOk();
@@ -173,5 +178,5 @@ test('token name is device-uniqid when device identifier not provided', function
     $customer->refresh();
     $latestToken = $customer->tokens()->latest()->first();
 
-    expect($latestToken->name)->toStartWith('device-');
+    expect($latestToken->name)->toBe('android');
 });

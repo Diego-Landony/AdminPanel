@@ -38,13 +38,9 @@ class CustomerSeeder extends Seeder
 
                 // Crear entre 1 y 3 dispositivos para cada cliente
                 $deviceCount = rand(1, 3);
-                $deviceTypes = ['ios', 'android', 'web'];
 
                 for ($i = 0; $i < $deviceCount; $i++) {
-                    $deviceType = $deviceTypes[$i % count($deviceTypes)];
-
                     CustomerDevice::factory()
-                        ->state(['device_type' => $deviceType])
                         ->active()
                         ->create([
                             'customer_id' => $customer->id,
@@ -97,22 +93,19 @@ class CustomerSeeder extends Seeder
         ]);
 
         // Crear dispositivos para el cliente de prueba
-        CustomerDevice::factory()->ios()->active()->create([
+        CustomerDevice::factory()->active()->create([
             'customer_id' => $testCustomer->id,
             'device_name' => 'iPhone de Prueba',
-            'device_model' => 'iPhone 14 Pro',
         ]);
 
-        CustomerDevice::factory()->android()->active()->create([
+        CustomerDevice::factory()->active()->create([
             'customer_id' => $testCustomer->id,
             'device_name' => 'Samsung de Prueba',
-            'device_model' => 'Samsung Galaxy S23',
         ]);
 
-        CustomerDevice::factory()->web()->active()->create([
+        CustomerDevice::factory()->active()->create([
             'customer_id' => $testCustomer->id,
             'device_name' => 'Navegador Chrome',
-            'device_model' => 'Chrome on macOS',
         ]);
 
         // Crear NITs para el cliente de prueba

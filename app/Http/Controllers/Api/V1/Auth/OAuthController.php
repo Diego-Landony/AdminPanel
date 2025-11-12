@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
-use App\Enums\OperatingSystem;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\AuthResource;
 use App\Services\DeviceService;
@@ -10,7 +9,6 @@ use App\Services\SocialAuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Laravel\Socialite\Facades\Socialite;
 
 class OAuthController extends Controller
@@ -37,12 +35,10 @@ class OAuthController extends Controller
      *         required=true,
      *
      *         @OA\JsonContent(
-     *             required={"id_token"},
+     *             required={"id_token","device_identifier"},
      *
      *             @OA\Property(property="id_token", type="string", example="eyJhbGciOiJSUzI1NiIsImtpZCI6IjhlY...", description="Google OAuth id_token obtained from Google Sign-In SDK"),
-     *             @OA\Property(property="os", type="string", enum={"ios","android","web"}, nullable=true, example="android", description="Operating system"),
-     *             @OA\Property(property="device_identifier", type="string", nullable=true, example="550e8400-e29b-41d4-a716-446655440000", description="RECOMMENDED: Unique device UUID for tracking"),
-     *             @OA\Property(property="device_fingerprint", type="string", nullable=true, example="a1b2c3d4e5f6...", description="Optional: SHA256 hash of device characteristics")
+     *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="REQUIRED: Unique device UUID for tracking")
      *         )
      *     ),
      *
@@ -79,9 +75,7 @@ class OAuthController extends Controller
     {
         $validated = $request->validate([
             'id_token' => ['required', 'string'],
-            'os' => ['nullable', Rule::enum(OperatingSystem::class)],
             'device_identifier' => ['nullable', 'string', 'max:255'],
-            'device_fingerprint' => ['nullable', 'string', 'max:255'],
         ]);
 
         $providerData = $this->socialAuthService->verifyGoogleToken($validated['id_token']);
@@ -90,21 +84,16 @@ class OAuthController extends Controller
 
         $result['customer']->enforceTokenLimit(5);
 
-        $tokenName = $this->generateTokenName(
-            $validated['os'] ?? 'web',
-            $validated['device_identifier'] ?? null
-        );
+        $tokenName = $this->generateTokenName($validated['device_identifier'] ?? null);
         $newAccessToken = $result['customer']->createToken($tokenName);
         $token = $newAccessToken->plainTextToken;
 
-        // Auto-create or update device if device_identifier provided
+        // Sync device with token if device_identifier provided
         if (isset($validated['device_identifier'])) {
             $this->deviceService->syncDeviceWithToken(
                 $result['customer'],
                 $newAccessToken->accessToken,
-                $validated['device_identifier'],
-                $validated['os'] ?? 'web',
-                $validated['device_fingerprint'] ?? null
+                $validated['device_identifier']
             );
         }
 
@@ -138,12 +127,10 @@ class OAuthController extends Controller
      *         required=true,
      *
      *         @OA\JsonContent(
-     *             required={"id_token"},
+     *             required={"id_token","device_identifier"},
      *
      *             @OA\Property(property="id_token", type="string", example="eyJhbGciOiJSUzI1NiIsImtpZCI6IjhlY...", description="Google OAuth id_token obtained from Google Sign-In SDK"),
-     *             @OA\Property(property="os", type="string", enum={"ios","android","web"}, nullable=true, example="android", description="Operating system"),
-     *             @OA\Property(property="device_identifier", type="string", nullable=true, example="550e8400-e29b-41d4-a716-446655440000", description="RECOMMENDED: Unique device UUID for tracking"),
-     *             @OA\Property(property="device_fingerprint", type="string", nullable=true, example="a1b2c3d4e5f6...", description="Optional: SHA256 hash of device characteristics")
+     *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="REQUIRED: Unique device UUID for tracking")
      *         )
      *     ),
      *
@@ -180,9 +167,7 @@ class OAuthController extends Controller
     {
         $validated = $request->validate([
             'id_token' => ['required', 'string'],
-            'os' => ['nullable', Rule::enum(OperatingSystem::class)],
             'device_identifier' => ['nullable', 'string', 'max:255'],
-            'device_fingerprint' => ['nullable', 'string', 'max:255'],
         ]);
 
         $providerData = $this->socialAuthService->verifyGoogleToken($validated['id_token']);
@@ -191,21 +176,16 @@ class OAuthController extends Controller
 
         $result['customer']->enforceTokenLimit(5);
 
-        $tokenName = $this->generateTokenName(
-            $validated['os'] ?? 'web',
-            $validated['device_identifier'] ?? null
-        );
+        $tokenName = $this->generateTokenName($validated['device_identifier'] ?? null);
         $newAccessToken = $result['customer']->createToken($tokenName);
         $token = $newAccessToken->plainTextToken;
 
-        // Auto-create or update device if device_identifier provided
+        // Sync device with token if device_identifier provided
         if (isset($validated['device_identifier'])) {
             $this->deviceService->syncDeviceWithToken(
                 $result['customer'],
                 $newAccessToken->accessToken,
-                $validated['device_identifier'],
-                $validated['os'] ?? 'web',
-                $validated['device_fingerprint'] ?? null
+                $validated['device_identifier']
             );
         }
 
@@ -272,14 +252,12 @@ class OAuthController extends Controller
         $validated = $request->validate([
             'action' => 'required|in:login,register',
             'device_id' => 'nullable|string|max:255',
-            'os' => 'nullable|in:ios,android',
         ]);
 
         session([
             'oauth_platform' => 'mobile',
             'oauth_action' => $validated['action'],
             'oauth_device_id' => $validated['device_id'] ?? null,
-            'oauth_os' => $validated['os'] ?? 'web',
         ]);
 
         return Socialite::driver('google')->redirect();
@@ -376,13 +354,11 @@ class OAuthController extends Controller
             $platform = session('oauth_platform', 'web');
             $action = session('oauth_action', 'login');
             $deviceId = session('oauth_device_id');
-            $os = session('oauth_os', 'web');
 
             \Log::info('OAuth Callback', [
                 'platform' => $platform,
                 'action' => $action,
                 'device_id' => $deviceId,
-                'os' => $os,
             ]);
 
             $socialiteUser = Socialite::driver('google')->stateless()->user();
@@ -406,8 +382,8 @@ class OAuthController extends Controller
             $result['customer']->enforceTokenLimit(5);
 
             $tokenName = $platform === 'mobile'
-                ? $this->generateTokenName($os, $deviceId)
-                : 'web';
+                ? $this->generateTokenName($deviceId)
+                : $this->generateTokenName(null);
 
             $newAccessToken = $result['customer']->createToken($tokenName);
             $token = $newAccessToken->plainTextToken;
@@ -417,15 +393,13 @@ class OAuthController extends Controller
                 $this->deviceService->syncDeviceWithToken(
                     $result['customer'],
                     $newAccessToken->accessToken,
-                    $deviceId,
-                    $os,
-                    null
+                    $deviceId
                 );
             }
 
             // If mobile platform, redirect to app
             if ($platform === 'mobile') {
-                session()->forget(['oauth_platform', 'oauth_action', 'oauth_device_id', 'oauth_os']);
+                session()->forget(['oauth_platform', 'oauth_action', 'oauth_device_id']);
 
                 \Log::info('Redirecting to mobile app', ['customer_id' => $result['customer']->id]);
 
@@ -485,12 +459,12 @@ class OAuthController extends Controller
     /**
      * Generate token name with device identifier if available
      */
-    protected function generateTokenName(string $os, ?string $deviceIdentifier): string
+    protected function generateTokenName(?string $deviceIdentifier): string
     {
         if ($deviceIdentifier) {
-            return $os.'-'.substr($deviceIdentifier, 0, 8);
+            return substr($deviceIdentifier, 0, 8);
         }
 
-        return $os;
+        return 'device-'.uniqid();
     }
 }

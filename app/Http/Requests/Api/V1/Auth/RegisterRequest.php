@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\V1\Auth;
 
 use App\Enums\Gender;
-use App\Enums\OperatingSystem;
 use App\Models\Customer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -33,9 +32,7 @@ class RegisterRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:20'],
             'birth_date' => ['nullable', 'date', 'before:today'],
             'gender' => ['nullable', Rule::enum(Gender::class)],
-            'os' => ['nullable', Rule::enum(OperatingSystem::class)],
             'device_identifier' => ['nullable', 'string', 'max:255'],
-            'device_fingerprint' => ['nullable', 'string', 'max:255'],
         ];
     }
 

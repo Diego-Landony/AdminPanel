@@ -229,25 +229,21 @@ class OAuthController extends Controller
 
             // Generar token
             $customer->enforceTokenLimit(5);
-            $tokenName = $this->generateTokenName($os, $deviceId);
+            $tokenName = $this->generateTokenName($deviceId);
             $newAccessToken = $customer->createToken($tokenName);
             $token = $newAccessToken->plainTextToken;
 
-            // Vincular dispositivo si se proporcionó
-            if ($deviceId) {
-                $this->deviceService->syncDeviceWithToken(
-                    $customer,
-                    $newAccessToken->accessToken,
-                    $deviceId,
-                    $os,
-                    null // device_fingerprint
-                );
+            // Vincular dispositivo (device_identifier es obligatorio)
+            $this->deviceService->syncDeviceWithToken(
+                $customer,
+                $newAccessToken->accessToken,
+                $deviceId
+            );
 
-                Log::info('Dispositivo vinculado', [
-                    'customer_id' => $customer->id,
-                    'device_id' => $deviceId,
-                ]);
-            }
+            Log::info('Dispositivo vinculado', [
+                'customer_id' => $customer->id,
+                'device_id' => $deviceId,
+            ]);
 
             // Si es MOBILE, redirigir a la app con deep link
             if ($platform === 'mobile') {
@@ -345,13 +341,13 @@ class OAuthController extends Controller
     /**
      * Helper: Generar nombre de token
      */
-    protected function generateTokenName(string $os, ?string $deviceIdentifier): string
+    protected function generateTokenName(?string $deviceIdentifier): string
     {
         if ($deviceIdentifier) {
-            return $os . '-' . substr($deviceIdentifier, 0, 8);
+            return substr($deviceIdentifier, 0, 8);
         }
 
-        return $os;
+        return 'device-' . uniqid();
     }
 
     // ... El resto de métodos existentes (google, googleRegister, etc.) permanecen igual

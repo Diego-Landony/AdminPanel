@@ -37,7 +37,7 @@ class AuthController extends Controller
      *         required=true,
      *
      *         @OA\JsonContent(
-     *             required={"name","email","password","password_confirmation"},
+     *             required={"name","email","password","password_confirmation","device_identifier"},
      *
      *             @OA\Property(property="name", type="string", example="Juan Pérez", description="Customer full name"),
      *             @OA\Property(property="email", type="string", format="email", example="juan@example.com", description="Valid email address"),
@@ -46,9 +46,7 @@ class AuthController extends Controller
      *             @OA\Property(property="phone", type="string", nullable=true, example="+50212345678", description="Optional phone number"),
      *             @OA\Property(property="birth_date", type="string", format="date", nullable=true, example="1990-05-15", description="Optional birth date"),
      *             @OA\Property(property="gender", type="string", enum={"male","female","other"}, nullable=true, example="male", description="Optional gender"),
-     *             @OA\Property(property="os", type="string", enum={"ios","android","web"}, nullable=true, example="ios", description="Operating system"),
-     *             @OA\Property(property="device_identifier", type="string", nullable=true, example="550e8400-e29b-41d4-a716-446655440000", description="RECOMMENDED: Unique device UUID for tracking"),
-     *             @OA\Property(property="device_fingerprint", type="string", nullable=true, example="a1b2c3d4e5f6...", description="Optional: SHA256 hash of device characteristics")
+     *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="REQUIRED: Unique device UUID for tracking")
      *         )
      *     ),
      *
@@ -98,21 +96,16 @@ class AuthController extends Controller
 
         $customer->enforceTokenLimit(5);
 
-        $tokenName = $this->generateTokenName(
-            $validated['os'] ?? 'web',
-            $validated['device_identifier'] ?? null
-        );
+        $tokenName = $this->generateTokenName($validated['device_identifier'] ?? null);
         $newAccessToken = $customer->createToken($tokenName);
         $token = $newAccessToken->plainTextToken;
 
-        // Auto-create or update device if device_identifier provided
+        // Sync device with token if device_identifier provided
         if (isset($validated['device_identifier'])) {
             $this->deviceService->syncDeviceWithToken(
                 $customer,
                 $newAccessToken->accessToken,
-                $validated['device_identifier'],
-                $validated['os'] ?? 'web',
-                $validated['device_fingerprint'] ?? null
+                $validated['device_identifier']
             );
         }
 
@@ -138,13 +131,11 @@ class AuthController extends Controller
      *         required=true,
      *
      *         @OA\JsonContent(
-     *             required={"email","password"},
+     *             required={"email","password","device_identifier"},
      *
      *             @OA\Property(property="email", type="string", format="email", example="juan@example.com"),
      *             @OA\Property(property="password", type="string", format="password", example="SecurePass123!"),
-     *             @OA\Property(property="os", type="string", enum={"ios","android","web"}, nullable=true, example="ios", description="Operating system"),
-     *             @OA\Property(property="device_identifier", type="string", nullable=true, example="550e8400-e29b-41d4-a716-446655440000", description="RECOMMENDED: Unique device UUID for tracking"),
-     *             @OA\Property(property="device_fingerprint", type="string", nullable=true, example="a1b2c3d4e5f6...", description="Optional: SHA256 hash of device characteristics")
+     *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="REQUIRED: Unique device UUID for tracking")
      *         )
      *     ),
      *
@@ -196,21 +187,16 @@ class AuthController extends Controller
 
         $customer->enforceTokenLimit(5);
 
-        $tokenName = $this->generateTokenName(
-            $request->os ?? 'web',
-            $request->device_identifier ?? null
-        );
+        $tokenName = $this->generateTokenName($request->device_identifier ?? null);
         $newAccessToken = $customer->createToken($tokenName);
         $token = $newAccessToken->plainTextToken;
 
-        // Auto-create or update device if device_identifier provided
+        // Sync device with token if device_identifier provided
         if ($request->device_identifier) {
             $this->deviceService->syncDeviceWithToken(
                 $customer,
                 $newAccessToken->accessToken,
-                $request->device_identifier,
-                $request->os ?? 'web',
-                $request->device_fingerprint ?? null
+                $request->device_identifier
             );
         }
 
@@ -603,12 +589,12 @@ class AuthController extends Controller
     /**
      * Generate token name with device identifier if available
      */
-    protected function generateTokenName(string $os, ?string $deviceIdentifier): string
+    protected function generateTokenName(?string $deviceIdentifier): string
     {
         if ($deviceIdentifier) {
-            return $os.'-'.substr($deviceIdentifier, 0, 8);
+            return substr($deviceIdentifier, 0, 8);
         }
 
-        return $os;
+        return 'device-'.uniqid();
     }
 }

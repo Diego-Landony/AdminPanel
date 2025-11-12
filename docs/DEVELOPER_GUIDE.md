@@ -581,15 +581,18 @@ it('can login with google oauth', function () {
 ```typescript
 // mobile/src/services/auth.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DeviceInfo from 'react-native-device-info';
 
 export async function login(email: string, password: string) {
+  const deviceIdentifier = await DeviceInfo.getUniqueId();
+
   const response = await fetch('https://api.subway.gt/api/v1/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       email,
       password,
-      device_name: 'iPhone 15 Pro'
+      device_identifier: deviceIdentifier // REQUIRED: Unique device UUID
     })
   });
 
@@ -612,6 +615,7 @@ export async function login(email: string, password: string) {
 ```typescript
 // mobile/src/services/oauth.ts
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import DeviceInfo from 'react-native-device-info';
 
 GoogleSignin.configure({
   webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
@@ -623,13 +627,16 @@ export async function loginWithGoogle() {
   await GoogleSignin.hasPlayServices();
   const { idToken } = await GoogleSignin.signIn();
 
-  // 2. Send to backend
+  // 2. Get device identifier
+  const deviceIdentifier = await DeviceInfo.getUniqueId();
+
+  // 3. Send to backend
   const response = await fetch('https://api.subway.gt/api/v1/auth/oauth/google', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       id_token: idToken,
-      device_name: await getDeviceName()
+      device_identifier: deviceIdentifier // REQUIRED: Unique device UUID
     })
   });
 
@@ -650,6 +657,7 @@ import DeviceInfo from 'react-native-device-info';
 
 export async function registerDevice(token: string) {
   const fcmToken = await messaging().getToken();
+  const deviceIdentifier = await DeviceInfo.getUniqueId(); // UUID for device tracking
 
   await fetch('https://api.subway.gt/api/v1/devices/register', {
     method: 'POST',
@@ -659,11 +667,8 @@ export async function registerDevice(token: string) {
     },
     body: JSON.stringify({
       fcm_token: fcmToken,
-      device_name: await DeviceInfo.getDeviceName(),
-      device_type: Platform.OS, // 'ios' or 'android'
-      device_model: await DeviceInfo.getModel(),
-      app_version: DeviceInfo.getVersion(),
-      os_version: DeviceInfo.getSystemVersion()
+      device_identifier: deviceIdentifier, // REQUIRED: Unique device UUID
+      device_name: await DeviceInfo.getDeviceName()
     })
   });
 }

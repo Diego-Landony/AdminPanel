@@ -6,17 +6,26 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::table('customer_devices', function (Blueprint $table) {
-            $table->integer('trust_score')->default(50)->after('login_count');
+            $table->foreign('sanctum_token_id')
+                ->references('id')
+                ->on('personal_access_tokens')
+                ->onDelete('set null');
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::table('customer_devices', function (Blueprint $table) {
-            $table->dropColumn('trust_score');
+            $table->dropForeign(['sanctum_token_id']);
         });
     }
 };

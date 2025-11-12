@@ -96,16 +96,19 @@ return new class extends Migration
         Schema::create('customer_devices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_id')->constrained('customers')->onDelete('cascade');
+            $table->unsignedBigInteger('sanctum_token_id')->nullable();
             $table->string('fcm_token')->unique();
-            $table->enum('device_type', ['ios', 'android', 'web'])->nullable();
+            $table->string('device_identifier')->nullable()->unique();
             $table->string('device_name')->nullable();
-            $table->string('device_model')->nullable();
             $table->timestamp('last_used_at')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->integer('login_count')->default(0);
             $table->timestamps();
             $table->softDeletes();
 
             $table->index(['customer_id', 'last_used_at']);
+            $table->index('sanctum_token_id');
+            $table->index('device_identifier');
             $table->index('is_active');
         });
 

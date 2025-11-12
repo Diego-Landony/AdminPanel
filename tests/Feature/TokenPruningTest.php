@@ -129,7 +129,6 @@ test('enforceTokenLimit marks associated device as inactive when token deleted',
         'sanctum_token_id' => $firstToken->accessToken->id,
         'fcm_token' => 'fcm-token-123',
         'device_identifier' => 'ABC123',
-        'device_type' => 'ios',
         'device_name' => 'iPhone',
         'is_active' => true,
     ]);
@@ -163,7 +162,6 @@ test('enforceTokenLimit marks multiple associated devices as inactive', function
         'sanctum_token_id' => $token1->accessToken->id,
         'fcm_token' => 'fcm-token-1',
         'device_identifier' => 'ABC123',
-        'device_type' => 'ios',
         'device_name' => 'iPhone',
         'is_active' => true,
     ]);
@@ -172,7 +170,6 @@ test('enforceTokenLimit marks multiple associated devices as inactive', function
         'sanctum_token_id' => $token2->accessToken->id,
         'fcm_token' => 'fcm-token-2',
         'device_identifier' => 'XYZ789',
-        'device_type' => 'android',
         'device_name' => 'Samsung',
         'is_active' => true,
     ]);

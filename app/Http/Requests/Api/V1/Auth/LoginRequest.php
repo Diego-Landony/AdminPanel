@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests\Api\V1\Auth;
 
-use App\Enums\OperatingSystem;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class LoginRequest extends FormRequest
 {
@@ -26,9 +24,7 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
-            'os' => ['nullable', Rule::enum(OperatingSystem::class)],
             'device_identifier' => ['nullable', 'string', 'max:255'],
-            'device_fingerprint' => ['nullable', 'string', 'max:255'],
             'remember' => ['nullable', 'boolean'],
         ];
     }

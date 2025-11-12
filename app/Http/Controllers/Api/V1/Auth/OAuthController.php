@@ -91,7 +91,7 @@ class OAuthController extends Controller
         $result['customer']->enforceTokenLimit(5);
 
         $tokenName = $this->generateTokenName(
-            $validated['os'] ?? 'app',
+            $validated['os'] ?? 'web',
             $validated['device_identifier'] ?? null
         );
         $newAccessToken = $result['customer']->createToken($tokenName);
@@ -103,7 +103,7 @@ class OAuthController extends Controller
                 $result['customer'],
                 $newAccessToken->accessToken,
                 $validated['device_identifier'],
-                $validated['os'] ?? 'app',
+                $validated['os'] ?? 'web',
                 $validated['device_fingerprint'] ?? null
             );
         }
@@ -192,7 +192,7 @@ class OAuthController extends Controller
         $result['customer']->enforceTokenLimit(5);
 
         $tokenName = $this->generateTokenName(
-            $validated['os'] ?? 'app',
+            $validated['os'] ?? 'web',
             $validated['device_identifier'] ?? null
         );
         $newAccessToken = $result['customer']->createToken($tokenName);
@@ -204,7 +204,7 @@ class OAuthController extends Controller
                 $result['customer'],
                 $newAccessToken->accessToken,
                 $validated['device_identifier'],
-                $validated['os'] ?? 'app',
+                $validated['os'] ?? 'web',
                 $validated['device_fingerprint'] ?? null
             );
         }
@@ -279,7 +279,7 @@ class OAuthController extends Controller
             'oauth_platform' => 'mobile',
             'oauth_action' => $validated['action'],
             'oauth_device_id' => $validated['device_id'] ?? null,
-            'oauth_os' => $validated['os'] ?? 'app',
+            'oauth_os' => $validated['os'] ?? 'web',
         ]);
 
         return Socialite::driver('google')->redirect();
@@ -376,7 +376,7 @@ class OAuthController extends Controller
             $platform = session('oauth_platform', 'web');
             $action = session('oauth_action', 'login');
             $deviceId = session('oauth_device_id');
-            $os = session('oauth_os', 'app');
+            $os = session('oauth_os', 'web');
 
             \Log::info('OAuth Callback', [
                 'platform' => $platform,
@@ -459,7 +459,7 @@ class OAuthController extends Controller
 
             if ($platform === 'mobile') {
                 return $this->redirectToApp([
-                    'error' => true,
+                    'error' => 'authentication_failed',
                     'message' => 'Error al procesar autenticación: '.$e->getMessage(),
                 ]);
             }

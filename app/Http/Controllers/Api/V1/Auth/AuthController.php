@@ -99,7 +99,7 @@ class AuthController extends Controller
         $customer->enforceTokenLimit(5);
 
         $tokenName = $this->generateTokenName(
-            $validated['os'] ?? 'app',
+            $validated['os'] ?? 'web',
             $validated['device_identifier'] ?? null
         );
         $newAccessToken = $customer->createToken($tokenName);
@@ -111,7 +111,7 @@ class AuthController extends Controller
                 $customer,
                 $newAccessToken->accessToken,
                 $validated['device_identifier'],
-                $validated['os'] ?? 'app',
+                $validated['os'] ?? 'web',
                 $validated['device_fingerprint'] ?? null
             );
         }
@@ -197,7 +197,7 @@ class AuthController extends Controller
         $customer->enforceTokenLimit(5);
 
         $tokenName = $this->generateTokenName(
-            $request->os ?? 'app',
+            $request->os ?? 'web',
             $request->device_identifier ?? null
         );
         $newAccessToken = $customer->createToken($tokenName);
@@ -209,7 +209,7 @@ class AuthController extends Controller
                 $customer,
                 $newAccessToken->accessToken,
                 $request->device_identifier,
-                $request->os ?? 'app',
+                $request->os ?? 'web',
                 $request->device_fingerprint ?? null
             );
         }

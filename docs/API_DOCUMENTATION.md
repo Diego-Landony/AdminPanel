@@ -1,8 +1,8 @@
 # SubwayApp API Documentation
 
-**Version**: 1.0.2
+**Version**: 1.0.3
 **Base URL**: `https://admin.subwaycardgt.com/api/v1`
-**Updated**: November 10, 2025
+**Updated**: November 12, 2025
 
 ---
 
@@ -61,7 +61,9 @@ The API uses **Laravel Sanctum** for token-based authentication. All protected e
 ### Authentication Methods
 
 1. **Email & Password** (Traditional)
-2. **Google OAuth** (Social Login)
+2. **Google OAuth - Mobile** (WebBrowser + Deep Link) - **NEW in v1.0.3**
+3. **Google OAuth - Web** (Redirect Flow)
+4. **Google OAuth - ID Token** (Legacy Mobile)
 
 ### Obtaining a Token
 
@@ -108,7 +110,62 @@ Content-Type: application/json
 }
 ```
 
-#### Google OAuth
+#### Google OAuth - Mobile (WebBrowser + Deep Link) **NEW**
+
+**Recommended for Expo Go and React Native apps**. This method:
+- Works in Expo Go without native builds
+- Keeps all OAuth logic on the backend (more secure)
+- Uses WebBrowser to open browser, then redirects back to app via deep link
+
+**Flow:**
+1. App opens browser to backend OAuth endpoint
+2. Backend redirects to Google
+3. User authorizes
+4. Backend processes OAuth and redirects to app: `subwayapp://callback?token=...`
+
+```javascript
+// React Native / Expo
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
+
+const loginWithGoogle = async () => {
+  const deviceId = await getDeviceIdentifier();
+  const os = Platform.OS === 'ios' ? 'ios' : 'android';
+
+  // Open browser to backend OAuth endpoint
+  const result = await WebBrowser.openAuthSessionAsync(
+    `https://admin.subwaycardgt.com/api/v1/auth/oauth/google/mobile?action=login&device_id=${deviceId}&os=${os}`,
+    'subwayapp://callback'
+  );
+
+  if (result.type === 'success' && result.url) {
+    const { queryParams } = Linking.parse(result.url);
+    const token = queryParams?.token;
+    const customer = queryParams?.customer ? JSON.parse(queryParams.customer) : null;
+
+    // Store token and navigate to app
+    await SecureStore.setItemAsync('token', token);
+    navigation.navigate('Home');
+  }
+};
+```
+
+**Endpoints:**
+- **Login**: `GET /api/v1/auth/oauth/google/mobile?action=login&device_id=UUID&os=ios`
+- **Register**: `GET /api/v1/auth/oauth/google/mobile?action=register&device_id=UUID&os=android`
+
+**Query Parameters:**
+- `action` (required): `"login"` or `"register"`
+- `device_id` (optional): UUID for device tracking
+- `os` (optional): `"ios"` or `"android"`
+
+**Response:**
+- **On success**: Redirects to `subwayapp://callback?token=ABC&customer={...}&is_new_customer=0`
+- **On error**: Redirects to `subwayapp://callback?error=user_not_found&message=...`
+
+#### Google OAuth - ID Token (Legacy Mobile)
+
+**Legacy method** for mobile apps that use Google Sign-In SDK directly:
 
 ```bash
 POST /api/v1/auth/oauth/google
@@ -122,7 +179,7 @@ Content-Type: application/json
 }
 ```
 
-> **Note**: Google OAuth also supports device tracking. Include `device_identifier` and `device_fingerprint` for the same benefits as traditional login.
+> **Note**: This method also supports device tracking. Include `device_identifier` and `device_fingerprint` for the same benefits as traditional login.
 
 ### Using the Token
 
@@ -378,6 +435,42 @@ const login = async (email, password) => {
 
 ### OAuth Flow (Google)
 
+#### Flow A: Mobile (WebBrowser + Deep Link) - RECOMMENDED
+
+```
+┌──────────┐     ┌─────────┐     ┌──────────┐     ┌────────────┐
+│  Mobile  │     │   API   │     │ Database │     │   Google   │
+│   App    │     │ Server  │     │          │     │    OAuth   │
+└────┬─────┘     └────┬────┘     └────┬─────┘     └──────┬─────┘
+     │                │               │                   │
+     │ User taps "Sign in with Google"                   │
+     │                │               │                   │
+     │ Opens browser: /auth/oauth/google/mobile          │
+     │───────────────>│               │                   │
+     │                │ Store session │                   │
+     │                │──────────────>│                   │
+     │                │ Redirect      │                   │
+     │                │───────────────────────────────────>│
+     │                │               │  User authorizes  │
+     │                │               │                   │
+     │                │<Callback code─────────────────────│
+     │                │ Exchange code │                   │
+     │                │───────────────────────────────────>│
+     │                │<Google profile────────────────────│
+     │                │ Find/Create   │                   │
+     │                │ customer      │                   │
+     │                │──────────────>│                   │
+     │                │ Generate token│                   │
+     │                │──────────────>│                   │
+     │                │ Redirect to:  │                   │
+     │ subwayapp://callback?token=...│                   │
+     │<───────────────│               │                   │
+     │ App opens      │               │                   │
+     │ with token     │               │                   │
+```
+
+#### Flow B: ID Token (Legacy)
+
 ```
 ┌──────────┐     ┌─────────┐     ┌──────────┐     ┌────────────┐
 │  Mobile  │     │   API   │     │ Database │     │   Google   │
@@ -451,7 +544,11 @@ const login = async (email, password) => {
 |--------|----------|------|-------------|
 | POST | `/auth/register` | No | Register new customer |
 | POST | `/auth/login` | No | Login with email/password |
-| POST | `/auth/oauth/google` | No | Login with Google |
+| GET | `/auth/oauth/google/mobile` | No | **NEW** Google OAuth for mobile (WebBrowser flow) |
+| POST | `/auth/oauth/google` | No | Login with Google (ID token - legacy) |
+| POST | `/auth/oauth/google/register` | No | Register with Google (ID token - legacy) |
+| GET | `/auth/oauth/google/redirect` | No | Google OAuth redirect (web only) |
+| GET | `/auth/oauth/google/callback` | No | Google OAuth callback handler |
 | POST | `/auth/logout` | Yes | Logout current device |
 | POST | `/auth/logout-all` | Yes | Logout all devices |
 | POST | `/auth/forgot-password` | No | Request password reset |
@@ -704,7 +801,94 @@ GET /api/v1/profile
 Authorization: Bearer 1|xyz789...
 ```
 
-### 2. Login with Google
+### 2. Login with Google (WebBrowser Flow - RECOMMENDED)
+
+```javascript
+// Mobile app (React Native / Expo)
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
+import * as SecureStore from 'expo-secure-store';
+import * as Crypto from 'expo-crypto';
+import * as Device from 'expo-device';
+import { Platform } from 'react-native';
+import { v4 as uuidv4 } from 'uuid';
+
+// 1. Get or create device identifier
+const getDeviceIdentifier = async () => {
+  let deviceId = await SecureStore.getItemAsync('device_identifier');
+  if (!deviceId) {
+    deviceId = uuidv4(); // "550e8400-e29b-41d4-a716-446655440000"
+    await SecureStore.setItemAsync('device_identifier', deviceId);
+  }
+  return deviceId;
+};
+
+// 2. Login with Google (WebBrowser + Deep Link)
+const loginWithGoogle = async () => {
+  const deviceId = await getDeviceIdentifier();
+  const os = Platform.OS === 'ios' ? 'ios' : 'android';
+
+  // Open browser to backend OAuth endpoint
+  const result = await WebBrowser.openAuthSessionAsync(
+    `https://admin.subwaycardgt.com/api/v1/auth/oauth/google/mobile?action=login&device_id=${deviceId}&os=${os}`,
+    'subwayapp://callback'
+  );
+
+  if (result.type === 'success' && result.url) {
+    // Parse deep link
+    const { queryParams } = Linking.parse(result.url);
+
+    if (queryParams?.error) {
+      // Handle error
+      console.error('OAuth Error:', queryParams.message);
+      Alert.alert('Error', queryParams.message);
+      return;
+    }
+
+    // Success - store token
+    const token = queryParams?.token;
+    const customer = queryParams?.customer ? JSON.parse(queryParams.customer) : null;
+    const isNewCustomer = queryParams?.is_new_customer === '1';
+
+    await SecureStore.setItemAsync('token', token);
+    await SecureStore.setItemAsync('customer', JSON.stringify(customer));
+
+    // Navigate to app
+    navigation.navigate('Home', { isNewCustomer });
+  }
+};
+
+// 3. Register with Google (same approach, different action)
+const registerWithGoogle = async () => {
+  const deviceId = await getDeviceIdentifier();
+  const os = Platform.OS === 'ios' ? 'ios' : 'android';
+
+  const result = await WebBrowser.openAuthSessionAsync(
+    `https://admin.subwaycardgt.com/api/v1/auth/oauth/google/mobile?action=register&device_id=${deviceId}&os=${os}`,
+    'subwayapp://callback'
+  );
+
+  // Same handling as login
+  // ...
+};
+```
+
+**Configure Deep Link in app.json:**
+```json
+{
+  "expo": {
+    "scheme": "subwayapp",
+    "ios": {
+      "bundleIdentifier": "com.subway.app"
+    },
+    "android": {
+      "package": "com.subway.app"
+    }
+  }
+}
+```
+
+### 2b. Login with Google (ID Token - Legacy)
 
 ```javascript
 // Mobile app (React Native)
@@ -739,7 +923,7 @@ const generateFingerprint = async () => {
 const { idToken } = await GoogleSignin.signIn();
 
 // 4. Send to API with device tracking
-const response = await fetch('https://api.subway.gt/api/v1/auth/oauth/google', {
+const response = await fetch('https://admin.subwaycardgt.com/api/v1/auth/oauth/google', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -952,6 +1136,37 @@ FIREBASE_CREDENTIALS=storage/app/firebase/credentials.json
 ---
 
 ## Changelog
+
+### v1.0.3 (November 12, 2025)
+
+**Google OAuth Mobile Flow (WebBrowser + Deep Link)**:
+- ✅ New endpoint: `GET /api/v1/auth/oauth/google/mobile` for mobile OAuth
+- ✅ WebBrowser-based flow: Works in Expo Go without native builds
+- ✅ Backend handles all OAuth logic (more secure)
+- ✅ Deep link redirect: Returns to app via `subwayapp://callback?token=...`
+- ✅ Supports both login and register actions
+- ✅ Automatic device tracking and synchronization
+- ✅ Session-based flow tracking with database driver
+- ✅ Updated Swagger/OpenAPI documentation
+- ✅ Updated API documentation with flow diagrams
+- ✅ Test page updated (`/public/test-auth-redirect.html`)
+
+**New Endpoints**:
+- `GET /auth/oauth/google/mobile?action={login|register}&device_id={uuid}&os={ios|android}`
+
+**Modified Endpoints**:
+- `GET /auth/oauth/google/callback` - Now detects mobile platform and redirects appropriately
+
+**Configuration**:
+- Added `mobile_scheme` configuration in `config/app.php`
+- Environment variable: `MOBILE_APP_SCHEME=subwayapp`
+
+**Benefits**:
+- Works in Expo Go (no native builds needed for development)
+- Centralized OAuth logic on backend
+- More secure (no OAuth tokens on client)
+- Single codebase for iOS and Android
+- Consistent with web OAuth flow
 
 ### v1.0.1 (November 2025)
 

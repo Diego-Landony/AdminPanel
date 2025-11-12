@@ -58,6 +58,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/google/register', [OAuthController::class, 'googleRegister'])
             ->name('api.v1.auth.oauth.google.register');
 
+        // Mobile app OAuth redirect flow (opens browser, redirects back to app)
+        Route::get('/google/mobile', [OAuthController::class, 'redirectToMobile'])
+            ->name('api.v1.auth.oauth.google.mobile');
+
         // Web app endpoints - OAuth redirect flow
         Route::get('/google/redirect', [OAuthController::class, 'googleRedirect'])
             ->name('api.v1.auth.oauth.google.redirect');

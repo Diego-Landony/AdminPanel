@@ -223,6 +223,69 @@ class OAuthController extends Controller
     }
 
     /**
+     * Redirect to Google OAuth for mobile app.
+     *
+     * Stores session data to track mobile platform and action.
+     * After OAuth, the user will be redirected back to the mobile app via deep link.
+     *
+     * @OA\Get(
+     *     path="/api/v1/auth/oauth/google/mobile",
+     *     tags={"OAuth"},
+     *     summary="Redirect to Google OAuth (Mobile)",
+     *     description="Redirects user to Google OAuth consent screen for mobile apps. Stores session data to redirect back to mobile app after authentication.",
+     *
+     *     @OA\Parameter(
+     *         name="action",
+     *         in="query",
+     *         required=true,
+     *         description="Action type: login or register",
+     *
+     *         @OA\Schema(type="string", enum={"login", "register"})
+     *     ),
+     *
+     *     @OA\Parameter(
+     *         name="device_id",
+     *         in="query",
+     *         required=false,
+     *         description="Device identifier",
+     *
+     *         @OA\Schema(type="string")
+     *     ),
+     *
+     *     @OA\Parameter(
+     *         name="os",
+     *         in="query",
+     *         required=false,
+     *         description="Operating system",
+     *
+     *         @OA\Schema(type="string", enum={"ios", "android"})
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=302,
+     *         description="Redirect to Google"
+     *     )
+     * )
+     */
+    public function redirectToMobile(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:login,register',
+            'device_id' => 'nullable|string|max:255',
+            'os' => 'nullable|in:ios,android',
+        ]);
+
+        session([
+            'oauth_platform' => 'mobile',
+            'oauth_action' => $validated['action'],
+            'oauth_device_id' => $validated['device_id'] ?? null,
+            'oauth_os' => $validated['os'] ?? 'app',
+        ]);
+
+        return Socialite::driver('google')->redirect();
+    }
+
+    /**
      * Redirect to Google OAuth provider (Web flow).
      *
      * This method is for web applications using the traditional OAuth redirect flow.
@@ -246,16 +309,17 @@ class OAuthController extends Controller
     }
 
     /**
-     * Handle Google OAuth callback (Web flow).
+     * Handle Google OAuth callback (Web and Mobile flow).
      *
      * After user authorizes on Google, they're redirected here with an authorization code.
      * Backend exchanges code for access token, validates user, and returns Sanctum token.
+     * For mobile, redirects to app via deep link. For web, returns JSON.
      *
      * @OA\Get(
      *     path="/api/v1/auth/oauth/google/callback",
      *     tags={"OAuth"},
-     *     summary="Handle Google OAuth callback (Web)",
-     *     description="Handles Google OAuth callback and returns authentication token. For web applications. If email doesn't exist, returns error asking user to register first.",
+     *     summary="Handle Google OAuth callback (Web & Mobile)",
+     *     description="Handles Google OAuth callback and returns authentication token. For web applications, returns JSON. For mobile, redirects to app via deep link. If email doesn't exist (login action), returns error asking user to register first.",
      *
      *     @OA\Parameter(
      *         name="code",
@@ -291,6 +355,10 @@ class OAuthController extends Controller
      *     ),
      *
      *     @OA\Response(
+     *         response=302,
+     *         description="Redirect to mobile app with token"
+     *     ),
+     *     @OA\Response(
      *         response=422,
      *         description="Email not registered or other validation error",
      *
@@ -302,8 +370,13 @@ class OAuthController extends Controller
      *     )
      * )
      */
-    public function googleCallback(Request $request): JsonResponse
+    public function googleCallback(Request $request): JsonResponse|RedirectResponse
     {
+        $platform = session('oauth_platform', 'web');
+        $action = session('oauth_action', 'login');
+        $deviceId = session('oauth_device_id');
+        $os = session('oauth_os', 'app');
+
         $socialiteUser = Socialite::driver('google')->stateless()->user();
 
         $providerData = (object) [
@@ -313,13 +386,46 @@ class OAuthController extends Controller
             'avatar' => $socialiteUser->getAvatar(),
         ];
 
-        $result = $this->socialAuthService->findAndLinkCustomer('google', $providerData);
+        // Handle based on action (login vs register)
+        if ($action === 'register') {
+            $result = $this->socialAuthService->createCustomerFromOAuth('google', $providerData);
+        } else {
+            $result = $this->socialAuthService->findAndLinkCustomer('google', $providerData);
+        }
 
         $result['customer']->enforceTokenLimit(5);
 
-        $tokenName = 'web';
-        $token = $result['customer']->createToken($tokenName)->plainTextToken;
+        $tokenName = $platform === 'mobile'
+            ? $this->generateTokenName($os, $deviceId)
+            : 'web';
 
+        $newAccessToken = $result['customer']->createToken($tokenName);
+        $token = $newAccessToken->plainTextToken;
+
+        // Auto-create or update device if mobile and device_id provided
+        if ($platform === 'mobile' && $deviceId) {
+            $this->deviceService->syncDeviceWithToken(
+                $result['customer'],
+                $newAccessToken->accessToken,
+                $deviceId,
+                $os,
+                null
+            );
+        }
+
+        // If mobile platform, redirect to app
+        if ($platform === 'mobile') {
+            session()->forget(['oauth_platform', 'oauth_action', 'oauth_device_id', 'oauth_os']);
+
+            return $this->redirectToApp([
+                'token' => $token,
+                'success' => true,
+                'message' => $result['message'],
+                'is_new_customer' => $result['is_new'],
+            ]);
+        }
+
+        // Web platform - return JSON
         $authData = AuthResource::make([
             'token' => $token,
             'customer' => $result['customer']->load('customerType'),
@@ -331,6 +437,17 @@ class OAuthController extends Controller
                 'is_new_customer' => $result['is_new'],
             ]),
         ]);
+    }
+
+    /**
+     * Redirect to mobile app via deep link with authentication data.
+     */
+    protected function redirectToApp(array $data): RedirectResponse
+    {
+        $scheme = config('app.mobile_scheme', 'subwayapp');
+        $queryParams = http_build_query($data);
+
+        return redirect()->away("{$scheme}://callback?{$queryParams}");
     }
 
     /**

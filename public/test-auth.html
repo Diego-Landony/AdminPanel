@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Autenticación - Subway Guatemala</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        h1 {
+            grid-column: 1 / -1;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            grid-column: 1 / -1;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .auth-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .auth-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="email"],
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .google-btn {
+            background: white;
+            color: #444;
+            border: 2px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .google-btn:hover {
+            background: #f8f8f8;
+            border-color: #667eea;
+        }
+
+        .google-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .response-section {
+            grid-column: 1 / -1;
+            margin-top: 20px;
+        }
+
+        .response-box {
+            background: #f5f5f5;
+            border-radius: 6px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .response-box.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .response-box.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .info-box {
+            grid-column: 1 / -1;
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #1565c0;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test de Autenticación</h1>
+        <p class="subtitle">API: https://admin.subwaycardgt.com/api/v1</p>
+
+        <div class="info-box">
+            <strong>ℹ️ Información:</strong> Esta página prueba el login con email/contraseña y Google OAuth contra la API de producción.
+        </div>
+
+        <!-- Email/Password Section -->
+        <div class="auth-section">
+            <h2>📧 Login con Email</h2>
+            <form id="emailLoginForm">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required placeholder="usuario@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" required placeholder="••••••••">
+                </div>
+                <button type="submit" id="emailLoginBtn">
+                    Iniciar Sesión
+                </button>
+            </form>
+
+            <div class="divider">- o -</div>
+
+            <h2 style="margin-top: 20px;">📝 Registro con Email</h2>
+            <form id="emailRegisterForm">
+                <div class="form-group">
+                    <label for="register_name">Nombre:</label>
+                    <input type="text" id="register_name" required placeholder="Juan Pérez">
+                </div>
+                <div class="form-group">
+                    <label for="register_email">Email:</label>
+                    <input type="email" id="register_email" required placeholder="nuevo@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="register_password">Contraseña:</label>
+                    <input type="password" id="register_password" required placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                    <label for="register_password_confirmation">Confirmar Contraseña:</label>
+                    <input type="password" id="register_password_confirmation" required placeholder="••••••••">
+                </div>
+                <button type="submit" id="emailRegisterBtn">
+                    Registrarse
+                </button>
+            </form>
+        </div>
+
+        <!-- Google OAuth Section -->
+        <div class="auth-section">
+            <h2>🔐 Autenticación con Google</h2>
+
+            <div style="margin-bottom: 15px;">
+                <p style="font-size: 13px; color: #666; margin-bottom: 10px;">Iniciar Sesión (usuarios existentes):</p>
+                <div id="googleLoginButton"></div>
+            </div>
+
+            <div class="divider">- o -</div>
+
+            <div>
+                <p style="font-size: 13px; color: #666; margin-bottom: 10px;">Registrarse (usuarios nuevos):</p>
+                <div id="googleRegisterButton"></div>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h2>📱 Información del Token</h2>
+                <div class="form-group">
+                    <label>Token de Acceso:</label>
+                    <input type="text" id="tokenDisplay" readonly placeholder="El token aparecerá aquí después del login">
+                </div>
+                <button onclick="testAuthenticatedRequest()" id="testApiBtn" disabled>
+                    Probar API Autenticada
+                </button>
+                <button onclick="clearAll()" style="background: #dc3545; margin-top: 5px;">
+                    Limpiar Todo
+                </button>
+            </div>
+        </div>
+
+        <!-- Response Section -->
+        <div class="response-section">
+            <h2 style="color: #333; margin-bottom: 15px;">📄 Respuesta del Servidor</h2>
+            <div id="response" class="response-box">
+Esperando petición...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://admin.subwaycardgt.com/api/v1';
+        let currentToken = null;
+
+        // Email Login
+        document.getElementById('emailLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('emailLoginBtn');
+            btn.disabled = true;
+            btn.innerHTML = 'Iniciando sesión... <span class="loading"></span>';
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        os: 'web',
+                    }),
+                });
+
+                const data = await response.json();
+                displayResponse(response, data);
+
+                if (response.ok && data.data?.access_token) {
+                    currentToken = data.data.access_token;
+                    document.getElementById('tokenDisplay').value = currentToken;
+                    document.getElementById('testApiBtn').disabled = false;
+                }
+            } catch (error) {
+                displayResponse(null, { error: error.message });
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Iniciar Sesión';
+            }
+        });
+
+        // Email Register
+        document.getElementById('emailRegisterForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('emailRegisterBtn');
+            btn.disabled = true;
+            btn.innerHTML = 'Registrando... <span class="loading"></span>';
+
+            const name = document.getElementById('register_name').value;
+            const email = document.getElementById('register_email').value;
+            const password = document.getElementById('register_password').value;
+            const password_confirmation = document.getElementById('register_password_confirmation').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        password,
+                        password_confirmation,
+                        os: 'web',
+                    }),
+                });
+
+                const data = await response.json();
+                displayResponse(response, data);
+
+                if (response.ok && data.data?.access_token) {
+                    currentToken = data.data.access_token;
+                    document.getElementById('tokenDisplay').value = currentToken;
+                    document.getElementById('testApiBtn').disabled = false;
+                }
+            } catch (error) {
+                displayResponse(null, { error: error.message });
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Registrarse';
+            }
+        });
+
+        // Google OAuth - Variables globales
+        let currentGoogleMode = 'login'; // Rastrea qué acción se está realizando
+        let googleInitialized = false;
+        let googleClient = null;
+
+        // Inicializar Google Sign-In cuando el script esté listo
+        function initGoogleSignIn() {
+            if (typeof google === 'undefined' || !google.accounts) {
+                console.log('Esperando a que Google se cargue...');
+                setTimeout(initGoogleSignIn, 100);
+                return;
+            }
+
+            if (!googleInitialized) {
+                // Inicializar una sola vez con callback genérico
+                googleClient = google.accounts.id.initialize({
+                    client_id: '321508774328-pcc8ghpgpl13trfm5r0duenkmrr9t0jn.apps.googleusercontent.com',
+                    callback: handleGoogleResponse,
+                    auto_select: false,
+                });
+
+                // Renderizar botón oficial de LOGIN
+                google.accounts.id.renderButton(
+                    document.getElementById('googleLoginButton'),
+                    {
+                        type: 'standard',
+                        theme: 'outline',
+                        size: 'large',
+                        text: 'signin_with',
+                        width: '100%',
+                    }
+                );
+
+                // Renderizar botón oficial de REGISTRO (con texto personalizado)
+                google.accounts.id.renderButton(
+                    document.getElementById('googleRegisterButton'),
+                    {
+                        type: 'standard',
+                        theme: 'filled_blue',
+                        size: 'large',
+                        text: 'signup_with',
+                        width: '100%',
+                    }
+                );
+
+                // Interceptar clics en el botón de registro para cambiar el modo
+                document.getElementById('googleRegisterButton').addEventListener('click', () => {
+                    currentGoogleMode = 'register';
+                    console.log('🔵 Modo cambiado a: REGISTRO');
+                });
+
+                // Interceptar clics en el botón de login para asegurar el modo correcto
+                document.getElementById('googleLoginButton').addEventListener('click', () => {
+                    currentGoogleMode = 'login';
+                    console.log('🟢 Modo cambiado a: LOGIN');
+                });
+
+                googleInitialized = true;
+                console.log('✅ Google Sign-In inicializado');
+            }
+        }
+
+        // Intentar inicializar cuando la página cargue
+        window.addEventListener('load', initGoogleSignIn);
+        // También intentar de inmediato
+        if (document.readyState === 'complete') {
+            initGoogleSignIn();
+        }
+
+        // Callback único que usa currentGoogleMode para decidir el endpoint
+        function handleGoogleResponse(response) {
+            handleGoogleCallback(response, currentGoogleMode);
+            // Reset al modo login después de completar
+            currentGoogleMode = 'login';
+        }
+
+        // Callback cuando Google retorna el credential
+        async function handleGoogleCallback(response, mode) {
+            const idToken = response.credential;
+            const endpoint = mode === 'register'
+                ? `${API_BASE}/auth/oauth/google/register`
+                : `${API_BASE}/auth/oauth/google`;
+
+            const modeText = mode === 'register' ? 'Registrando' : 'Iniciando sesión';
+
+            try {
+                displayResponse(null, {
+                    status: `${modeText} con Google...`,
+                    mode: mode,
+                    endpoint: endpoint
+                });
+
+                const apiResponse = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id_token: idToken,
+                        os: 'web',
+                    }),
+                });
+
+                const data = await apiResponse.json();
+                displayResponse(apiResponse, data);
+
+                if (apiResponse.ok && data.data?.access_token) {
+                    currentToken = data.data.access_token;
+                    document.getElementById('tokenDisplay').value = currentToken;
+                    document.getElementById('testApiBtn').disabled = false;
+                }
+            } catch (error) {
+                displayResponse(null, { error: error.message });
+            }
+        }
+
+        // Test authenticated request
+        async function testAuthenticatedRequest() {
+            if (!currentToken) {
+                alert('No hay token disponible. Primero inicia sesión.');
+                return;
+            }
+
+            const btn = document.getElementById('testApiBtn');
+            btn.disabled = true;
+            btn.innerHTML = 'Probando... <span class="loading"></span>';
+
+            try {
+                const response = await fetch(`${API_BASE}/customer`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                const data = await response.json();
+                displayResponse(response, data);
+            } catch (error) {
+                displayResponse(null, { error: error.message });
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Probar API Autenticada';
+            }
+        }
+
+        // Display response
+        function displayResponse(response, data) {
+            const responseDiv = document.getElementById('response');
+            const status = response ? response.status : 'N/A';
+            const statusText = response ? response.statusText : 'Network Error';
+
+            let className = 'response-box';
+            if (response && response.ok) {
+                className += ' success';
+            } else if (response || data.error) {
+                className += ' error';
+            }
+
+            responseDiv.className = className;
+            responseDiv.textContent = JSON.stringify({
+                status,
+                statusText,
+                data
+            }, null, 2);
+        }
+
+        // Clear all
+        function clearAll() {
+            currentToken = null;
+            document.getElementById('tokenDisplay').value = '';
+            document.getElementById('testApiBtn').disabled = true;
+            document.getElementById('response').className = 'response-box';
+            document.getElementById('response').textContent = 'Esperando petición...';
+            document.getElementById('emailLoginForm').reset();
+            document.getElementById('emailRegisterForm').reset();
+        }
+    </script>
+</body>
+</html>

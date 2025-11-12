@@ -123,4 +123,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Mobile App Deep Link Scheme
+    |--------------------------------------------------------------------------
+    |
+    | This value determines the URL scheme used for deep linking to the mobile
+    | application. After OAuth authentication, users will be redirected back
+    | to the app using this scheme (e.g., "subwayapp://callback").
+    |
+    */
+
+    'mobile_scheme' => env('MOBILE_APP_SCHEME', 'subwayapp'),
+
 ];

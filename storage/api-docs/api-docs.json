@@ -833,6 +833,58 @@
                 }
             }
         },
+        "/api/v1/auth/oauth/google/mobile": {
+            "get": {
+                "tags": [
+                    "OAuth"
+                ],
+                "summary": "Redirect to Google OAuth (Mobile)",
+                "description": "Redirects user to Google OAuth consent screen for mobile apps. Stores session data to redirect back to mobile app after authentication.",
+                "operationId": "f092d1e5c1a89c8dc0d29868f9a8fffa",
+                "parameters": [
+                    {
+                        "name": "action",
+                        "in": "query",
+                        "description": "Action type: login or register",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "login",
+                                "register"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "device_id",
+                        "in": "query",
+                        "description": "Device identifier",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "os",
+                        "in": "query",
+                        "description": "Operating system",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "ios",
+                                "android"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect to Google"
+                    }
+                }
+            }
+        },
         "/api/v1/auth/oauth/google/redirect": {
             "get": {
                 "tags": [
@@ -853,8 +905,8 @@
                 "tags": [
                     "OAuth"
                 ],
-                "summary": "Handle Google OAuth callback (Web)",
-                "description": "Handles Google OAuth callback and returns authentication token. For web applications. If email doesn't exist, returns error asking user to register first.",
+                "summary": "Handle Google OAuth callback (Web & Mobile)",
+                "description": "Handles Google OAuth callback and returns authentication token. For web applications, returns JSON. For mobile, redirects to app via deep link. If email doesn't exist (login action), returns error asking user to register first.",
                 "operationId": "281ab9caddb2b86e3614c9e34567db4f",
                 "parameters": [
                     {
@@ -908,6 +960,9 @@
                                 }
                             }
                         }
+                    },
+                    "302": {
+                        "description": "Redirect to mobile app with token"
                     },
                     "422": {
                         "description": "Email not registered or other validation error",

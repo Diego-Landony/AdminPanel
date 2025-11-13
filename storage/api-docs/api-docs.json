@@ -14,7 +14,7 @@
             "description": "Local Development Server"
         },
         {
-            "url": "http://localhost",
+            "url": "https://admin.subwaycardgt.com/",
             "description": "Application Server"
         }
     ],
@@ -765,69 +765,76 @@
                 }
             }
         },
-        "/api/v1/auth/oauth/google/mobile": {
+        "/api/v1/auth/oauth/google/redirect": {
             "get": {
                 "tags": [
                     "OAuth"
                 ],
-                "summary": "Redirect to Google OAuth (Mobile)",
-                "description": "Redirects user to Google OAuth consent screen for mobile apps. Stores session data to redirect back to mobile app after authentication.",
-                "operationId": "f092d1e5c1a89c8dc0d29868f9a8fffa",
+                "summary": "Redirect to Google OAuth (Web & Mobile)",
+                "description": "Initiates Google OAuth flow for any platform. Uses OAuth 2.0 state parameter to maintain context across the redirect flow. Works for web apps, mobile apps (React Native with WebBrowser), and any other client type. After Google authorization, redirects to callback which returns JSON for web or deep link for mobile.",
+                "operationId": "d45644767bd0769d1084909175bff619",
                 "parameters": [
                     {
                         "name": "action",
                         "in": "query",
-                        "description": "Action type: login or register",
+                        "description": "Action type: 'login' for existing users or 'register' for new users",
                         "required": true,
                         "schema": {
                             "type": "string",
                             "enum": [
                                 "login",
                                 "register"
-                            ]
+                            ],
+                            "example": "login"
+                        }
+                    },
+                    {
+                        "name": "platform",
+                        "in": "query",
+                        "description": "Client platform: 'web' for web applications (returns JSON) or 'mobile' for mobile apps (redirects via deep link)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "web",
+                                "mobile"
+                            ],
+                            "example": "web"
                         }
                     },
                     {
                         "name": "device_id",
                         "in": "query",
-                        "description": "Device identifier",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "os",
-                        "in": "query",
-                        "description": "Operating system",
+                        "description": "Device identifier for tracking and multi-device management. Required for mobile apps.",
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "enum": [
-                                "ios",
-                                "android"
-                            ]
+                            "example": "550e8400-e29b-41d4-a716-446655440000"
                         }
                     }
                 ],
                 "responses": {
                     "302": {
-                        "description": "Redirect to Google"
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/oauth/google/redirect": {
-            "get": {
-                "tags": [
-                    "OAuth"
-                ],
-                "summary": "Redirect to Google OAuth (Web)",
-                "description": "Redirects user to Google OAuth consent screen. For web applications only. Mobile apps should use POST /api/v1/auth/oauth/google with id_token.",
-                "operationId": "d45644767bd0769d1084909175bff619",
-                "responses": {
-                    "302": {
-                        "description": "Redirect to Google"
+                        "description": "Redirect to Google OAuth consent screen"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The action field is required."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -838,31 +845,33 @@
                     "OAuth"
                 ],
                 "summary": "Handle Google OAuth callback (Web & Mobile)",
-                "description": "Handles Google OAuth callback and returns authentication token. For web applications, returns JSON. For mobile, redirects to app via deep link. If email doesn't exist (login action), returns error asking user to register first.",
+                "description": "Handles Google OAuth callback after user authorization. This endpoint is called automatically by Google. It decodes the OAuth 2.0 state parameter to determine platform and action, then authenticates or registers the user. Returns JSON for web clients or redirects to deep link for mobile apps.",
                 "operationId": "281ab9caddb2b86e3614c9e34567db4f",
                 "parameters": [
                     {
                         "name": "code",
                         "in": "query",
-                        "description": "Authorization code from Google",
+                        "description": "Authorization code from Google OAuth",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "example": "4/0AY0e-g7..."
                         }
                     },
                     {
                         "name": "state",
                         "in": "query",
-                        "description": "CSRF state token",
-                        "required": false,
+                        "description": "OAuth 2.0 state parameter containing encoded platform, action, and device_id information",
+                        "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "example": "eyJwbGF0Zm9ybSI6IndlYiIsImFjdGlvbiI6ImxvZ2luIn0="
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Authentication successful",
+                        "description": "Authentication successful (web platform)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -873,12 +882,20 @@
                                         },
                                         "data": {
                                             "properties": {
+                                                "access_token": {
+                                                    "type": "string",
+                                                    "example": "12|SUis1Iwo3q8vZ0bqDH8qRofURWHygpX75ek4rH3p018743cd"
+                                                },
+                                                "token_type": {
+                                                    "type": "string",
+                                                    "example": "Bearer"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer",
+                                                    "example": 525600
+                                                },
                                                 "customer": {
                                                     "$ref": "#/components/schemas/Customer"
-                                                },
-                                                "token": {
-                                                    "type": "string",
-                                                    "example": "1|abc123xyz..."
                                                 },
                                                 "is_new_customer": {
                                                     "type": "boolean",
@@ -894,10 +911,19 @@
                         }
                     },
                     "302": {
-                        "description": "Redirect to mobile app with token"
+                        "description": "Redirect to mobile app with token (mobile platform)",
+                        "headers": {
+                            "Location": {
+                                "description": "Deep link to mobile app",
+                                "schema": {
+                                    "type": "string",
+                                    "example": "subwayapp://callback?token=12|SUis...&customer={...}&is_new_customer=0"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Email not registered or other validation error",
+                        "description": "Email not registered (login action) or email already exists (register action)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -908,6 +934,26 @@
                                         },
                                         "errors": {
                                             "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error or invalid state parameter",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error al procesar autenticación"
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid state parameter"
                                         }
                                     },
                                     "type": "object"

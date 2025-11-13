@@ -75,7 +75,7 @@ class OAuthController extends Controller
     {
         $validated = $request->validate([
             'id_token' => ['required', 'string'],
-            'device_identifier' => ['nullable', 'string', 'max:255'],
+            'device_identifier' => ['required', 'string', 'max:255'],
         ]);
 
         $providerData = $this->socialAuthService->verifyGoogleToken($validated['id_token']);
@@ -84,18 +84,16 @@ class OAuthController extends Controller
 
         $result['customer']->enforceTokenLimit(5);
 
-        $tokenName = $this->generateTokenName($validated['device_identifier'] ?? null);
+        $tokenName = $this->generateTokenName($validated['device_identifier']);
         $newAccessToken = $result['customer']->createToken($tokenName);
         $token = $newAccessToken->plainTextToken;
 
-        // Sync device with token if device_identifier provided
-        if (isset($validated['device_identifier'])) {
-            $this->deviceService->syncDeviceWithToken(
-                $result['customer'],
-                $newAccessToken->accessToken,
-                $validated['device_identifier']
-            );
-        }
+        // Sync device with token
+        $this->deviceService->syncDeviceWithToken(
+            $result['customer'],
+            $newAccessToken->accessToken,
+            $validated['device_identifier']
+        );
 
         $authData = AuthResource::make([
             'token' => $token,
@@ -167,7 +165,7 @@ class OAuthController extends Controller
     {
         $validated = $request->validate([
             'id_token' => ['required', 'string'],
-            'device_identifier' => ['nullable', 'string', 'max:255'],
+            'device_identifier' => ['required', 'string', 'max:255'],
         ]);
 
         $providerData = $this->socialAuthService->verifyGoogleToken($validated['id_token']);
@@ -176,18 +174,16 @@ class OAuthController extends Controller
 
         $result['customer']->enforceTokenLimit(5);
 
-        $tokenName = $this->generateTokenName($validated['device_identifier'] ?? null);
+        $tokenName = $this->generateTokenName($validated['device_identifier']);
         $newAccessToken = $result['customer']->createToken($tokenName);
         $token = $newAccessToken->plainTextToken;
 
-        // Sync device with token if device_identifier provided
-        if (isset($validated['device_identifier'])) {
-            $this->deviceService->syncDeviceWithToken(
-                $result['customer'],
-                $newAccessToken->accessToken,
-                $validated['device_identifier']
-            );
-        }
+        // Sync device with token
+        $this->deviceService->syncDeviceWithToken(
+            $result['customer'],
+            $newAccessToken->accessToken,
+            $validated['device_identifier']
+        );
 
         $authData = AuthResource::make([
             'token' => $token,
@@ -262,7 +258,7 @@ class OAuthController extends Controller
         $validated = $request->validate([
             'action' => 'required|in:login,register',
             'platform' => 'required|in:web,mobile',
-            'device_id' => 'nullable|string|max:255',
+            'device_id' => 'required_if:platform,mobile|string|max:255',
         ]);
 
         // Encode all parameters in OAuth state parameter (OAuth 2.0 spec)

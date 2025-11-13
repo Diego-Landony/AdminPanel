@@ -156,7 +156,7 @@ class OAuthController extends Controller
      *         response=302,
      *         description="Redirect to mobile app with token (mobile platform)",
      *
-     *         @OA\Header(header="Location", description="Deep link to mobile app", @OA\Schema(type="string", example="subwayapp://callback?token=12|SUis...&customer={...}&is_new_customer=0"))
+     *         @OA\Header(header="Location", description="Deep link to mobile app with minimal data. Use token to fetch full customer profile via GET /api/v1/profile", @OA\Schema(type="string", example="subwayapp://oauth/callback?token=12|SUis...&customer_id=81&is_new_customer=0"))
      *     ),
      *
      *     @OA\Response(
@@ -265,18 +265,7 @@ class OAuthController extends Controller
 
                 return $this->redirectToApp([
                     'token' => $token,
-                    'customer' => json_encode([
-                        'id' => $customer->id,
-                        'name' => $customer->name,
-                        'email' => $customer->email,
-                        'phone' => $customer->phone,
-                        'avatar' => $customer->avatar,
-                        'subway_card' => $customer->subway_card,
-                        'birth_date' => $customer->birth_date,
-                        'gender' => $customer->gender,
-                        'points' => $customer->points,
-                        'customer_type' => $customer->customerType,
-                    ]),
+                    'customer_id' => $customer->id,
                     'is_new_customer' => $result['is_new'] ? '1' : '0',
                 ]);
             }
@@ -335,7 +324,7 @@ class OAuthController extends Controller
         $scheme = config('app.mobile_scheme', 'subwayapp');
         $queryParams = http_build_query($data);
 
-        return redirect()->away("{$scheme}://callback?{$queryParams}");
+        return redirect()->away("{$scheme}://oauth/callback?{$queryParams}");
     }
 
     /**

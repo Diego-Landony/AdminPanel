@@ -729,10 +729,10 @@
                         "description": "Redirect to mobile app with token (mobile platform)",
                         "headers": {
                             "Location": {
-                                "description": "Deep link to mobile app",
+                                "description": "Deep link to mobile app with minimal data. Use token to fetch full customer profile via GET /api/v1/profile",
                                 "schema": {
                                     "type": "string",
-                                    "example": "subwayapp://callback?token=12|SUis...&customer={...}&is_new_customer=0"
+                                    "example": "subwayapp://oauth/callback?token=12|SUis...&customer_id=81&is_new_customer=0"
                                 }
                             }
                         }

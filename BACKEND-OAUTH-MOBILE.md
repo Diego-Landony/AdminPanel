@@ -4,7 +4,7 @@
 > **✅ ESTADO: IMPLEMENTACIÓN COMPLETADA Y VALIDADA**
 >
 > Última actualización: 2025-11-13
-> Versión: 3.0 - OAuth 2.0 State Parameter + Validaciones Corregidas
+> Versión: 3.1 - Browser-only OAuth + Callback con customer_id
 
 ---
 
@@ -13,11 +13,11 @@
 **Solución OAuth unificada que funciona para web y mobile:**
 
 - ✅ Backend maneja TODO el flujo OAuth (más seguro)
-- ✅ Un solo endpoint para web y mobile (más simple)
+- ✅ Solo OAuth vía navegador (NO requiere Google SDK nativo)
 - ✅ OAuth 2.0 state parameter (estándar, sin sesión)
 - ✅ Funciona en Expo Go (sin builds nativos)
 - ✅ Cliente tipo "Aplicación web" en Google Cloud Console
-- ✅ Validaciones de API corregidas (device_id/device_identifier requeridos)
+- ✅ Callback con customer_id (seguro, no expone datos en URLs)
 
 ---
 
@@ -220,11 +220,23 @@ if (result.type === 'success' && result.url) {
   const params = new URLSearchParams(result.url.split('?')[1]);
   const token = params.get('token');
   const customerId = params.get('customer_id');
+  const isNewCustomer = params.get('is_new_customer');
 
   // 5. Guardar token
   await AsyncStorage.setItem('auth_token', token);
+  await AsyncStorage.setItem('customer_id', customerId);
 
-  // Navegar a home
+  // 6. Obtener perfil completo del usuario
+  const profileResponse = await fetch('https://admin.subwaycardgt.com/api/v1/profile', {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json',
+    },
+  });
+  const customer = await profileResponse.json();
+
+  // 7. Guardar perfil y navegar
+  await AsyncStorage.setItem('customer', JSON.stringify(customer));
   navigation.navigate('Home');
 }
 ```
@@ -251,6 +263,14 @@ subwayapp://oauth/callback
   &is_new_customer=0
 ```
 
+**⚠️ Nota de Seguridad:**
+El callback solo envía `customer_id` (no el objeto completo) por:
+- **Seguridad**: URLs se guardan en logs y historial del navegador
+- **Tamaño**: Deep links largos pueden fallar en algunos dispositivos
+- **Privacidad**: Evita exponer datos sensibles en URLs
+
+**Usa el token para obtener el perfil completo** vía `GET /api/v1/profile`
+
 **Error:**
 ```
 subwayapp://oauth/callback
@@ -266,6 +286,7 @@ subwayapp://oauth/callback
 - Usar `expo-web-browser` (NO `expo-auth-session`)
 - Generar device_id único y guardarlo
 - Pasar device_id en TODAS las llamadas OAuth
+- Obtener perfil completo con `GET /api/v1/profile` después del callback
 - Manejar tanto éxito como errores
 
 **❌ NO Hacer:**

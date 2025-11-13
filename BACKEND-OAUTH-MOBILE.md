@@ -52,6 +52,7 @@
 
 Route::middleware(['throttle:oauth'])->prefix('auth/oauth')->group(function () {
     // OAuth redirect flow (unified for web & mobile)
+    // Only uses browser-based OAuth, no Google SDK required
     Route::middleware(['web'])->group(function () {
         Route::get('/google/redirect', [OAuthController::class, 'googleRedirect'])
             ->name('api.v1.auth.oauth.google.redirect');
@@ -59,32 +60,19 @@ Route::middleware(['throttle:oauth'])->prefix('auth/oauth')->group(function () {
         Route::get('/google/callback', [OAuthController::class, 'googleCallback'])
             ->name('api.v1.auth.oauth.google.callback');
     });
-
-    // Native SDK endpoints (opcional - si usan Google SDK directamente)
-    Route::post('/google', [OAuthController::class, 'google'])
-        ->name('api.v1.auth.oauth.google.login');
-
-    Route::post('/google/register', [OAuthController::class, 'googleRegister'])
-        ->name('api.v1.auth.oauth.google.register');
 });
 ```
 
+**Nota:** Este proyecto solo usa OAuth via navegador. No requiere Google SDK nativo.
+
 ### 2. Validaciones (Corregidas ✅)
 
-#### Endpoint GET /google/redirect
 ```php
+// GET /api/v1/auth/oauth/google/redirect
 $validated = $request->validate([
     'action' => 'required|in:login,register',
     'platform' => 'required|in:web,mobile',
     'device_id' => 'required_if:platform,mobile|string|max:255', // ✅ Requerido para mobile
-]);
-```
-
-#### Endpoints POST /google y /google/register
-```php
-$validated = $request->validate([
-    'id_token' => ['required', 'string'],
-    'device_identifier' => ['required', 'string', 'max:255'], // ✅ Ahora requerido
 ]);
 ```
 
@@ -288,11 +276,11 @@ subwayapp://oauth/callback
 
 ---
 
-## 📊 Endpoints de la API
+## 📊 Endpoint de la API
 
 ### GET /api/v1/auth/oauth/google/redirect
 
-**Descripción:** Inicia el flujo OAuth (web/mobile)
+**Descripción:** Inicia el flujo OAuth (web/mobile) via navegador
 
 **Parámetros Query:**
 
@@ -302,59 +290,16 @@ subwayapp://oauth/callback
 | `platform` | string | ✅ Sí | `web`, `mobile` | Plataforma del cliente |
 | `device_id` | string | ⚠️ Si platform=mobile | UUID | Identificador único del dispositivo |
 
-**Respuesta:**
-- 302: Redirige a Google OAuth
-- 422: Error de validación
+**Respuestas:**
+- **302:** Redirige a Google OAuth
+- **422:** Error de validación
 
----
+**Callback (automático):**
 
-### POST /api/v1/auth/oauth/google
+Después de la autorización en Google, el backend redirige:
 
-**Descripción:** Login directo con Google SDK (opcional)
-
-**Body JSON:**
-
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `id_token` | string | ✅ Sí | Token de Google Sign-In SDK |
-| `device_identifier` | string | ✅ Sí | UUID único del dispositivo |
-
-**Respuesta:**
-```json
-{
-  "message": "Inicio de sesión exitoso.",
-  "data": {
-    "customer": { ... },
-    "token": "1|abc123xyz...",
-    "is_new_customer": false
-  }
-}
-```
-
----
-
-### POST /api/v1/auth/oauth/google/register
-
-**Descripción:** Registro directo con Google SDK (opcional)
-
-**Body JSON:**
-
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `id_token` | string | ✅ Sí | Token de Google Sign-In SDK |
-| `device_identifier` | string | ✅ Sí | UUID único del dispositivo |
-
-**Respuesta:**
-```json
-{
-  "message": "Cuenta creada exitosamente.",
-  "data": {
-    "customer": { ... },
-    "token": "1|abc123xyz...",
-    "is_new_customer": true
-  }
-}
-```
+- **Web:** Retorna JSON con token
+- **Mobile:** Redirige a `subwayapp://oauth/callback?token=xxx&customer_id=xxx`
 
 ---
 

@@ -14,7 +14,7 @@
             "description": "Local Development Server"
         },
         {
-            "url": "https://admin.subwaycardgt.com/",
+            "url": "http://localhost",
             "description": "Application Server"
         }
     ],
@@ -580,191 +580,6 @@
                 }
             }
         },
-        "/api/v1/auth/oauth/google": {
-            "post": {
-                "tags": [
-                    "OAuth"
-                ],
-                "summary": "Login with Google (Mobile)",
-                "description": "Authenticates customer using Google OAuth id_token from mobile app. If email exists, links Google account. If email doesn't exist, returns error asking to register first. Does NOT auto-create accounts.",
-                "operationId": "7de0059c713c7fba77ef30a111c1522e",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "id_token",
-                                    "device_identifier"
-                                ],
-                                "properties": {
-                                    "id_token": {
-                                        "description": "Google OAuth id_token obtained from Google Sign-In SDK",
-                                        "type": "string",
-                                        "example": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjhlY..."
-                                    },
-                                    "device_identifier": {
-                                        "description": "REQUIRED: Unique device UUID for tracking",
-                                        "type": "string",
-                                        "example": "550e8400-e29b-41d4-a716-446655440000"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Authentication successful",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Inicio de sesión exitoso."
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "customer": {
-                                                    "$ref": "#/components/schemas/Customer"
-                                                },
-                                                "token": {
-                                                    "type": "string",
-                                                    "example": "1|abc123xyz..."
-                                                },
-                                                "is_new_customer": {
-                                                    "description": "True if account was just created",
-                                                    "type": "boolean",
-                                                    "example": false
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Invalid token or account conflict",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Token de Google inválido o expirado."
-                                        },
-                                        "errors": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Too many requests"
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/oauth/google/register": {
-            "post": {
-                "tags": [
-                    "OAuth"
-                ],
-                "summary": "Register with Google (Mobile)",
-                "description": "Registers new customer using Google OAuth id_token from mobile app. Creates new account if email doesn't exist. If email already exists, returns error.",
-                "operationId": "66361e213aae994ffa0e9b6967818e9d",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "id_token",
-                                    "device_identifier"
-                                ],
-                                "properties": {
-                                    "id_token": {
-                                        "description": "Google OAuth id_token obtained from Google Sign-In SDK",
-                                        "type": "string",
-                                        "example": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjhlY..."
-                                    },
-                                    "device_identifier": {
-                                        "description": "REQUIRED: Unique device UUID for tracking",
-                                        "type": "string",
-                                        "example": "550e8400-e29b-41d4-a716-446655440000"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Registration successful",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Cuenta creada exitosamente."
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "customer": {
-                                                    "$ref": "#/components/schemas/Customer"
-                                                },
-                                                "token": {
-                                                    "type": "string",
-                                                    "example": "1|abc123xyz..."
-                                                },
-                                                "is_new_customer": {
-                                                    "type": "boolean",
-                                                    "example": true
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Email already exists or invalid token",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Ya existe una cuenta con este correo electrónico."
-                                        },
-                                        "errors": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Too many requests"
-                    }
-                }
-            }
-        },
         "/api/v1/auth/oauth/google/redirect": {
             "get": {
                 "tags": [
@@ -805,7 +620,7 @@
                     {
                         "name": "device_id",
                         "in": "query",
-                        "description": "Device identifier for tracking and multi-device management. Required for mobile apps.",
+                        "description": "Device identifier UUID for tracking. **REQUIRED when platform=mobile**, optional for web. Validated with rule: required_if:platform,mobile",
                         "required": false,
                         "schema": {
                             "type": "string",

@@ -50,16 +50,9 @@ Route::prefix('v1')->group(function () {
 
     // OAuth endpoints (separate rate limiting)
     Route::middleware(['throttle:oauth'])->prefix('auth/oauth')->group(function () {
-        // id_token validation endpoints (for native apps with Google SDK)
-        // These endpoints validate id_token obtained directly from Google Sign-In SDK
-        Route::post('/google', [OAuthController::class, 'google'])
-            ->name('api.v1.auth.oauth.google.login');
-
-        Route::post('/google/register', [OAuthController::class, 'googleRegister'])
-            ->name('api.v1.auth.oauth.google.register');
-
         // OAuth redirect flow (unified for web & mobile)
         // Uses OAuth 2.0 state parameter instead of session for stateless operation
+        // Only uses browser-based OAuth, no Google SDK required
         Route::middleware(['web'])->group(function () {
             // Unified OAuth redirect - works for web and mobile (React Native WebBrowser)
             // Use ?action=login|register&platform=web|mobile&device_id=uuid

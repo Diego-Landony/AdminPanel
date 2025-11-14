@@ -31,7 +31,8 @@ export default function CreateCustomer({ customer_types }: CreateCustomerProps) 
     const [showPassword, setShowPassword] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        name: '',
+        first_name: '',
+        last_name: '',
         email: '',
         password: '',
         password_confirmation: '',
@@ -73,8 +74,12 @@ export default function CreateCustomer({ customer_types }: CreateCustomerProps) 
             loadingSkeleton={CreateCustomersSkeleton}
         >
             <FormSection icon={User} title="Información Personal">
-                <FormField label="Nombre Completo" error={errors.name} required>
-                    <Input type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} autoComplete={AUTOCOMPLETE.name} />
+                <FormField label="Nombre" error={errors.first_name} required>
+                    <Input type="text" value={data.first_name} onChange={(e) => setData('first_name', e.target.value)} autoComplete="given-name" />
+                </FormField>
+
+                <FormField label="Apellido" error={errors.last_name} required>
+                    <Input type="text" value={data.last_name} onChange={(e) => setData('last_name', e.target.value)} autoComplete="family-name" />
                 </FormField>
 
                 <FormField label="Email" error={errors.email} required>

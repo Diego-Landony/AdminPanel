@@ -71,7 +71,8 @@ class CustomerSeeder extends Seeder
 
         // Crear un cliente de prueba específico
         $testCustomer = Customer::factory()->create([
-            'name' => 'Cliente de Prueba',
+            'first_name' => 'Cliente',
+            'last_name' => 'de Prueba',
             'email' => 'cliente@test.com',
             'subway_card' => '1234567890',
             'customer_type_id' => CustomerType::where('name', 'gold')->first()?->id ?? CustomerType::first()?->id,

@@ -73,7 +73,8 @@ class ProfileController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="name", type="string", example="Juan Pérez Actualizado"),
+     *             @OA\Property(property="first_name", type="string", example="Juan"),
+     *             @OA\Property(property="last_name", type="string", example="Pérez Actualizado"),
      *             @OA\Property(property="email", type="string", format="email", example="nuevo@example.com"),
      *             @OA\Property(property="phone", type="string", nullable=true, example="+50212345678"),
      *             @OA\Property(property="birth_date", type="string", format="date", nullable=true, example="1990-05-15"),

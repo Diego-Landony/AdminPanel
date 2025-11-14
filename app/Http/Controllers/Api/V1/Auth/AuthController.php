@@ -37,9 +37,10 @@ class AuthController extends Controller
      *         required=true,
      *
      *         @OA\JsonContent(
-     *             required={"name","email","password","password_confirmation","device_identifier"},
+     *             required={"first_name","last_name","email","password","password_confirmation","device_identifier"},
      *
-     *             @OA\Property(property="name", type="string", example="Juan Pérez", description="Customer full name"),
+     *             @OA\Property(property="first_name", type="string", example="Juan", description="Customer first name"),
+     *             @OA\Property(property="last_name", type="string", example="Pérez", description="Customer last name"),
      *             @OA\Property(property="email", type="string", format="email", example="juan@example.com", description="Valid email address"),
      *             @OA\Property(property="password", type="string", format="password", example="Pass123", description="Min 6 characters, 1 letter, 1 number"),
      *             @OA\Property(property="password_confirmation", type="string", format="password", example="Pass123", description="Must match password"),
@@ -83,7 +84,8 @@ class AuthController extends Controller
         $validated = $request->validated();
 
         $customer = Customer::create([
-            'name' => $validated['name'],
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'phone' => $validated['phone'] ?? null,

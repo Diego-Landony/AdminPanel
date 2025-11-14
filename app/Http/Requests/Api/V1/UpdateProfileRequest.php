@@ -26,7 +26,8 @@ class UpdateProfileRequest extends FormRequest
         $customerId = $this->user()->id;
 
         return [
-            'name' => ['sometimes', 'string', 'max:255'],
+            'first_name' => ['sometimes', 'string', 'max:255'],
+            'last_name' => ['sometimes', 'string', 'max:255'],
             'email' => ['sometimes', 'string', 'lowercase', 'email', 'max:255', 'unique:customers,email,'.$customerId],
             'phone' => ['nullable', 'string', 'max:20'],
             'birth_date' => ['nullable', 'date', 'before:today'],
@@ -43,7 +44,8 @@ class UpdateProfileRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.max' => 'El nombre no puede exceder 255 caracteres.',
+            'first_name.max' => 'El nombre no puede exceder 255 caracteres.',
+            'last_name.max' => 'El apellido no puede exceder 255 caracteres.',
             'email.email' => 'El correo electrónico debe ser válido.',
             'email.unique' => 'Este correo electrónico ya está en uso.',
             'phone.max' => 'El teléfono no puede exceder 20 caracteres.',

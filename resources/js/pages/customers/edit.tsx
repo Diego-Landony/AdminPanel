@@ -50,7 +50,9 @@ interface CustomerNit {
 
 interface Customer {
     id: number;
-    name: string;
+    first_name: string;
+    last_name: string;
+    full_name: string;
     email: string;
     subway_card: string;
     birth_date: string | null;
@@ -109,7 +111,8 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
     const [isDeletingNit, setIsDeletingNit] = useState(false);
 
     const { data, setData, put, processing, errors, reset, isDirty } = useForm({
-        name: customer.name || '',
+        first_name: customer.first_name || '',
+        last_name: customer.last_name || '',
         email: customer.email || '',
         password: '',
         password_confirmation: '',
@@ -148,7 +151,8 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
     const handleReset = () => {
         reset();
         setData({
-            name: customer.name || '',
+            first_name: customer.first_name || '',
+            last_name: customer.last_name || '',
             email: customer.email || '',
             password: '',
             password_confirmation: '',
@@ -233,11 +237,11 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
     return (
         <EditPageLayout
             title="Editar Cliente"
-            description={`Modifica la información de ${customer.name}`}
+            description={`Modifica la información de ${customer.full_name}`}
             backHref={route('customers.index')}
             onSubmit={handleSubmit}
             processing={processing}
-            pageTitle={`Editar Cliente - ${customer.name}`}
+            pageTitle={`Editar Cliente - ${customer.full_name}`}
             loading={processing}
             loadingSkeleton={EditCustomersSkeleton}
             isDirty={isDirty}
@@ -245,8 +249,12 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
             showResetButton={true}
         >
             <FormSection icon={User} title="Información Personal">
-                <FormField label="Nombre Completo" error={errors.name} required>
-                    <Input type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} autoComplete={AUTOCOMPLETE.name} />
+                <FormField label="Nombre" error={errors.first_name} required>
+                    <Input type="text" value={data.first_name} onChange={(e) => setData('first_name', e.target.value)} autoComplete="given-name" />
+                </FormField>
+
+                <FormField label="Apellido" error={errors.last_name} required>
+                    <Input type="text" value={data.last_name} onChange={(e) => setData('last_name', e.target.value)} autoComplete="family-name" />
                 </FormField>
 
                 <FormField label="Email" error={errors.email} required>

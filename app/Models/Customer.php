@@ -23,7 +23,8 @@ class Customer extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
         'email_verified_at',
         'password',
@@ -76,7 +77,15 @@ class Customer extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $appends = ['status', 'is_online'];
+    protected $appends = ['status', 'is_online', 'full_name'];
+
+    /**
+     * Get the customer's full name.
+     */
+    public function getFullNameAttribute(): string
+    {
+        return trim("{$this->first_name} {$this->last_name}");
+    }
 
     /**
      * Bootstrap model events.

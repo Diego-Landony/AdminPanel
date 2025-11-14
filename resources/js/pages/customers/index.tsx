@@ -17,7 +17,9 @@ import { calculateAge, daysSince, formatDate, formatPoints } from '@/utils/forma
  */
 interface Customer {
     id: number;
-    name: string;
+    first_name: string;
+    last_name: string;
+    full_name: string;
     email: string;
     subway_card: string;
     birth_date: string;
@@ -178,7 +180,7 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
                     ),
                 );
 
-                return <EntityInfoCell icon={Users} primaryText={customer.name} secondaryText={customer.email} badges={<>{badges}</>} />;
+                return <EntityInfoCell icon={Users} primaryText={customer.full_name} secondaryText={customer.email} badges={<>{badges}</>} />;
             },
         },
         {
@@ -276,7 +278,7 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
     const CustomerMobileCard = ({ customer }: { customer: Customer }) => (
         <StandardMobileCard
             icon={Users}
-            title={customer.name}
+            title={customer.full_name}
             subtitle={customer.email}
             actions={{
                 editHref: `/customers/${customer.id}/edit`,

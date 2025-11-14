@@ -44,7 +44,8 @@ class CustomerController extends Controller
         // IMPORTANTE: select() debe ir ANTES de withCount() para no sobrescribir las columnas de conteo
         $query = Customer::select([
             'id',
-            'name',
+            'first_name',
+            'last_name',
             'email',
             'subway_card',
             'birth_date',
@@ -65,10 +66,12 @@ class CustomerController extends Controller
         // Aplicar búsqueda global si existe
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('subway_card', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
                     ->orWhereHas('customerType', function ($subQuery) use ($search) {
                         $subQuery->where('name', 'like', "%{$search}%");
                     });
@@ -82,7 +85,7 @@ class CustomerController extends Controller
                 $direction = $criteria['direction'] ?? 'desc';
 
                 if ($field === 'customer' || $field === 'name') {
-                    $query->orderBy('name', $direction);
+                    $query->orderBy('first_name', $direction)->orderBy('last_name', $direction);
                 } elseif ($field === 'status') {
                     $query->orderByRaw('
                         CASE
@@ -102,7 +105,7 @@ class CustomerController extends Controller
         } else {
             // Fallback a ordenamiento único
             if ($sortField === 'customer' || $sortField === 'name') {
-                $query->orderBy('name', $sortDirection);
+                $query->orderBy('first_name', $sortDirection)->orderBy('last_name', $sortDirection);
             } elseif ($sortField === 'status') {
                 $query->orderByRaw('
                     CASE
@@ -131,7 +134,9 @@ class CustomerController extends Controller
 
                 return [
                     'id' => $customer->id,
-                    'name' => $customer->name,
+                    'first_name' => $customer->first_name,
+                    'last_name' => $customer->last_name,
+                    'full_name' => $customer->full_name,
                     'email' => $customer->email,
                     'subway_card' => $customer->subway_card,
                     'birth_date' => $customer->birth_date,
@@ -236,7 +241,8 @@ class CustomerController extends Controller
 
         try {
             $request->validate([
-                'name' => 'required|string|max:255',
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
                 'email' => 'required|email|max:255|unique:customers',
                 'password' => 'required|string|min:6|confirmed',
                 'subway_card' => 'nullable|string|max:255|unique:customers',
@@ -250,7 +256,8 @@ class CustomerController extends Controller
             $customerTypeId = $request->customer_type_id ?? CustomerType::getDefault()?->id;
 
             $customerData = [
-                'name' => $request->name,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'birth_date' => $request->birth_date,
@@ -298,7 +305,9 @@ class CustomerController extends Controller
 
         $customerData = [
             'id' => $customer->id,
-            'name' => $customer->name,
+            'first_name' => $customer->first_name,
+            'last_name' => $customer->last_name,
+            'full_name' => $customer->full_name,
             'email' => $customer->email,
             'subway_card' => $customer->subway_card,
             'birth_date' => $customer->birth_date ? $customer->birth_date->format('Y-m-d') : null,
@@ -350,7 +359,8 @@ class CustomerController extends Controller
     {
         try {
             $rules = [
-                'name' => 'required|string|max:255',
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
                 'email' => 'required|string|lowercase|email|max:255|unique:customers,email,'.$customer->id,
                 'subway_card' => 'required|string|max:255|unique:customers,subway_card,'.$customer->id,
                 'birth_date' => 'required|date|before:today',
@@ -370,7 +380,8 @@ class CustomerController extends Controller
             $emailChanged = $customer->email !== $request->email;
 
             $customerData = [
-                'name' => $request->name,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
                 'email' => $request->email,
                 'subway_card' => $request->subway_card,
                 'birth_date' => $request->birth_date,
@@ -418,7 +429,7 @@ class CustomerController extends Controller
     public function destroy(Customer $customer): RedirectResponse
     {
         try {
-            $customerName = $customer->name;
+            $customerName = $customer->full_name;
             $customer->delete();
 
             return back()->with('success', "Cliente '{$customerName}' eliminado exitosamente");

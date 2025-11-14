@@ -9,7 +9,8 @@ uses(RefreshDatabase::class);
 // Test 1: Puede registrarse con datos válidos
 test('puede registrarse con datos validos', function () {
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'María García',
+        'first_name' => 'María',
+        'last_name' => 'García',
         'email' => 'maria@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
@@ -26,7 +27,9 @@ test('puede registrarse con datos validos', function () {
                 'expires_in',
                 'customer' => [
                     'id',
-                    'name',
+                    'first_name',
+                    'last_name',
+                    'full_name',
                     'email',
                     'phone',
                 ],
@@ -36,7 +39,8 @@ test('puede registrarse con datos validos', function () {
     // Verificar que el customer fue creado en la BD
     $this->assertDatabaseHas('customers', [
         'email' => 'maria@example.com',
-        'name' => 'María García',
+        'first_name' => 'María',
+        'last_name' => 'García',
         'phone' => '+50212345678',
     ]);
 
@@ -49,7 +53,8 @@ test('puede registrarse con datos validos', function () {
 test('rechaza email duplicado', function () {
     // Crear customer existente
     Customer::create([
-        'name' => 'Juan Pérez',
+        'first_name' => 'Juan',
+        'last_name' => 'Pérez',
         'email' => 'juan@example.com',
         'password' => Hash::make('password123'),
         'oauth_provider' => 'local',
@@ -58,7 +63,8 @@ test('rechaza email duplicado', function () {
 
     // Intentar registrar con el mismo email
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Otro Usuario',
+        'first_name' => 'Otro',
+        'last_name' => 'Usuario',
         'email' => 'juan@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
@@ -72,7 +78,8 @@ test('rechaza email duplicado', function () {
 // Test 3: Requiere password confirmation
 test('requiere password confirmation', function () {
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Carlos López',
+        'first_name' => 'Carlos',
+        'last_name' => 'López',
         'email' => 'carlos@example.com',
         'password' => 'SecurePass123',
         // Sin password_confirmation
@@ -86,7 +93,8 @@ test('requiere password confirmation', function () {
 // Test 4: Hashea password automáticamente
 test('hashea password automaticamente', function () {
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Ana Martínez',
+        'first_name' => 'Ana',
+        'last_name' => 'Martínez',
         'email' => 'ana@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
@@ -108,7 +116,8 @@ test('hashea password automaticamente', function () {
 // Test 5: Crea token Sanctum al registrarse
 test('crea token sanctum al registrarse', function () {
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Roberto Ruiz',
+        'first_name' => 'Roberto',
+        'last_name' => 'Ruiz',
         'email' => 'roberto@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
@@ -130,7 +139,8 @@ test('crea token sanctum al registrarse', function () {
 // Test 6: Genera subway_card automaticamente
 test('genera subway_card automaticamente', function () {
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Pedro Gómez',
+        'first_name' => 'Pedro',
+        'last_name' => 'Gómez',
         'email' => 'pedro@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
@@ -155,7 +165,8 @@ test('genera subway_card automaticamente', function () {
 test('genera subway_card unica', function () {
     // Crear primer customer
     $response1 = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Cliente 1',
+        'first_name' => 'Cliente',
+        'last_name' => 'Uno',
         'email' => 'cliente1@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
@@ -163,7 +174,8 @@ test('genera subway_card unica', function () {
 
     // Crear segundo customer
     $response2 = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Cliente 2',
+        'first_name' => 'Cliente',
+        'last_name' => 'Dos',
         'email' => 'cliente2@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
@@ -189,7 +201,8 @@ test('mantiene compatibilidad con tarjetas legacy', function () {
     $legacyCard = '70000000001';
 
     Customer::create([
-        'name' => 'Cliente Legacy',
+        'first_name' => 'Cliente',
+        'last_name' => 'Legacy',
         'email' => 'legacy@example.com',
         'password' => Hash::make('password123'),
         'oauth_provider' => 'local',
@@ -206,7 +219,8 @@ test('mantiene compatibilidad con tarjetas legacy', function () {
 // Test 9: Valida formato de gender estandarizado
 test('valida formato de gender estandarizado', function () {
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Test Gender',
+        'first_name' => 'Test',
+        'last_name' => 'Gender',
         'email' => 'test-gender@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
@@ -225,7 +239,8 @@ test('valida formato de gender estandarizado', function () {
 // Test 10: Rechaza gender no válido
 test('rechaza gender no valido', function () {
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Test Invalid Gender',
+        'first_name' => 'Test',
+        'last_name' => 'Invalid Gender',
         'email' => 'invalid-gender@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
@@ -239,7 +254,8 @@ test('rechaza gender no valido', function () {
 // Test 11: No incluye timezone en respuesta
 test('no incluye timezone en respuesta', function () {
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Test Timezone',
+        'first_name' => 'Test',
+        'last_name' => 'Timezone',
         'email' => 'test-timezone@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',

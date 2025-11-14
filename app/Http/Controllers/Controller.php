@@ -54,7 +54,9 @@ namespace App\Http\Controllers;
  *     description="Customer model with profile information",
  *
  *     @OA\Property(property="id", type="integer", example=1),
- *     @OA\Property(property="name", type="string", example="Juan Pérez"),
+ *     @OA\Property(property="first_name", type="string", example="Juan"),
+ *     @OA\Property(property="last_name", type="string", example="Pérez"),
+ *     @OA\Property(property="full_name", type="string", example="Juan Pérez", description="Computed full name"),
  *     @OA\Property(property="email", type="string", format="email", example="juan@example.com"),
  *     @OA\Property(property="phone", type="string", nullable=true, example="+50212345678"),
  *     @OA\Property(property="birth_date", type="string", format="date", nullable=true, example="1990-05-15"),

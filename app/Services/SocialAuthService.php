@@ -126,8 +126,12 @@ class SocialAuthService
         }
 
         // Crear nueva cuenta
+        $fullName = $providerData->name ?? 'Usuario '.$provider;
+        $nameParts = $this->splitFullName($fullName);
+
         $customer = Customer::create([
-            'name' => $providerData->name ?? 'Usuario '.$provider,
+            'first_name' => $nameParts['first_name'],
+            'last_name' => $nameParts['last_name'],
             'email' => $providerData->email,
             $providerIdField => $providerData->provider_id,
             'avatar' => $providerData->avatar,
@@ -142,6 +146,19 @@ class SocialAuthService
             'customer' => $customer,
             'message' => 'Cuenta creada exitosamente.',
             'is_new' => true,
+        ];
+    }
+
+    /**
+     * Split full name into first and last name
+     */
+    protected function splitFullName(string $fullName): array
+    {
+        $nameParts = explode(' ', trim($fullName), 2);
+
+        return [
+            'first_name' => $nameParts[0] ?? 'Usuario',
+            'last_name' => $nameParts[1] ?? '',
         ];
     }
 }

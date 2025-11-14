@@ -26,7 +26,8 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.Customer::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'phone' => ['nullable', 'string', 'max:20'],
@@ -47,7 +48,8 @@ class RegisterRequest extends FormRequest
             'email.unique' => 'Este correo ya está registrado.',
             'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
-            'name.required' => 'El nombre es requerido.',
+            'first_name.required' => 'El nombre es requerido.',
+            'last_name.required' => 'El apellido es requerido.',
             'email.required' => 'El correo electrónico es requerido.',
             'email.email' => 'El correo electrónico debe ser válido.',
         ];

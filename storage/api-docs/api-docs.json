@@ -33,17 +33,23 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "name",
+                                    "first_name",
+                                    "last_name",
                                     "email",
                                     "password",
                                     "password_confirmation",
                                     "device_identifier"
                                 ],
                                 "properties": {
-                                    "name": {
-                                        "description": "Customer full name",
+                                    "first_name": {
+                                        "description": "Customer first name",
                                         "type": "string",
-                                        "example": "Juan Pérez"
+                                        "example": "Juan"
+                                    },
+                                    "last_name": {
+                                        "description": "Customer last name",
+                                        "type": "string",
+                                        "example": "Pérez"
                                     },
                                     "email": {
                                         "description": "Valid email address",
@@ -993,9 +999,13 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
-                                    "name": {
+                                    "first_name": {
                                         "type": "string",
-                                        "example": "Juan Pérez Actualizado"
+                                        "example": "Juan"
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Pérez Actualizado"
                                     },
                                     "email": {
                                         "type": "string",
@@ -1313,7 +1323,16 @@
                         "type": "integer",
                         "example": 1
                     },
-                    "name": {
+                    "first_name": {
+                        "type": "string",
+                        "example": "Juan"
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "example": "Pérez"
+                    },
+                    "full_name": {
+                        "description": "Computed full name",
                         "type": "string",
                         "example": "Juan Pérez"
                     },

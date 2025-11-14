@@ -98,13 +98,13 @@ class RefreshCustomersSeeder extends Seeder
 
             // Generar género y nombre apropiado
             $gender = $faker->randomElement(['masculino', 'femenino']);
-            $fullName = $gender === 'femenino'
-                ? $faker->firstNameFemale().' '.$faker->lastName().' '.$faker->lastName()
-                : $faker->firstNameMale().' '.$faker->lastName().' '.$faker->lastName();
+            $firstName = $gender === 'femenino' ? $faker->firstNameFemale() : $faker->firstNameMale();
+            $lastName = $faker->lastName().' '.$faker->lastName();
 
             // Generar datos con localización española
             Customer::create([
-                'full_name' => $fullName,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
                 'email' => $faker->unique()->safeEmail(),
                 'email_verified_at' => $faker->optional(0.8)->dateTimeBetween('-1 year', 'now'),
                 'password' => bcrypt('password'), // Password por defecto

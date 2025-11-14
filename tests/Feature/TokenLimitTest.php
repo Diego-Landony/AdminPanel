@@ -8,7 +8,8 @@ uses(RefreshDatabase::class);
 
 test('customer can have up to 5 tokens', function () {
     $customer = Customer::create([
-        'name' => 'Test Customer',
+        'first_name' => 'Test',
+        'last_name' => 'Customer',
         'email' => 'test@example.com',
         'password' => Hash::make('password'),
         'oauth_provider' => 'local',
@@ -24,7 +25,8 @@ test('customer can have up to 5 tokens', function () {
 
 test('creating 6th token deletes oldest token', function () {
     $customer = Customer::create([
-        'name' => 'Test Customer',
+        'first_name' => 'Test',
+        'last_name' => 'Customer',
         'email' => 'test@example.com',
         'password' => Hash::make('password'),
         'oauth_provider' => 'local',
@@ -50,7 +52,8 @@ test('creating 6th token deletes oldest token', function () {
 
 test('enforceTokenLimit deletes tokens with null last_used_at first', function () {
     $customer = Customer::create([
-        'name' => 'Test Customer',
+        'first_name' => 'Test',
+        'last_name' => 'Customer',
         'email' => 'test@example.com',
         'password' => Hash::make('password'),
         'oauth_provider' => 'local',
@@ -77,7 +80,8 @@ test('enforceTokenLimit deletes tokens with null last_used_at first', function (
 
 test('register endpoint enforces token limit', function () {
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'New Customer',
+        'first_name' => 'New',
+        'last_name' => 'Customer',
         'email' => 'new@example.com',
         'password' => 'Pass123',
         'password_confirmation' => 'Pass123',
@@ -107,7 +111,8 @@ test('register endpoint enforces token limit', function () {
 
 test('login endpoint enforces token limit', function () {
     $customer = Customer::create([
-        'name' => 'Test Customer',
+        'first_name' => 'Test',
+        'last_name' => 'Customer',
         'email' => 'test@example.com',
         'password' => Hash::make('password'),
         'oauth_provider' => 'local',
@@ -133,7 +138,8 @@ test('login endpoint enforces token limit', function () {
 
 test('token name includes device identifier when provided', function () {
     $customer = Customer::create([
-        'name' => 'Test Customer',
+        'first_name' => 'Test',
+        'last_name' => 'Customer',
         'email' => 'test@example.com',
         'password' => Hash::make('password'),
         'oauth_provider' => 'local',
@@ -156,7 +162,8 @@ test('token name includes device identifier when provided', function () {
 
 test('token name is device-uniqid when device identifier not provided', function () {
     $customer = Customer::create([
-        'name' => 'Test Customer',
+        'first_name' => 'Test',
+        'last_name' => 'Customer',
         'email' => 'test@example.com',
         'password' => Hash::make('password'),
         'oauth_provider' => 'local',

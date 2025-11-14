@@ -10,7 +10,8 @@ uses(RefreshDatabase::class);
 
 test('tokens:cleanup command deletes expired tokens older than specified days', function () {
     $customer = Customer::create([
-        'name' => 'Test Customer',
+        'first_name' => 'Test',
+        'last_name' => 'Customer',
         'email' => 'test@example.com',
         'password' => Hash::make('password'),
         'oauth_provider' => 'local',
@@ -44,7 +45,8 @@ test('tokens:cleanup command deletes expired tokens older than specified days', 
 
 test('tokens:cleanup command with dry-run does not delete tokens', function () {
     $customer = Customer::create([
-        'name' => 'Test Customer',
+        'first_name' => 'Test',
+        'last_name' => 'Customer',
         'email' => 'test@example.com',
         'password' => Hash::make('password'),
         'oauth_provider' => 'local',
@@ -66,7 +68,8 @@ test('tokens:cleanup command with dry-run does not delete tokens', function () {
 
 test('tokens:cleanup command handles no expired tokens gracefully', function () {
     $customer = Customer::create([
-        'name' => 'Test Customer',
+        'first_name' => 'Test',
+        'last_name' => 'Customer',
         'email' => 'test@example.com',
         'password' => Hash::make('password'),
         'oauth_provider' => 'local',
@@ -88,7 +91,8 @@ test('tokens:cleanup command handles no expired tokens gracefully', function () 
 
 test('tokens:cleanup respects custom days parameter', function () {
     $customer = Customer::create([
-        'name' => 'Test Customer',
+        'first_name' => 'Test',
+        'last_name' => 'Customer',
         'email' => 'test@example.com',
         'password' => Hash::make('password'),
         'oauth_provider' => 'local',
@@ -116,7 +120,8 @@ test('tokens:cleanup respects custom days parameter', function () {
 
 test('enforceTokenLimit marks associated device as inactive when token deleted', function () {
     $customer = Customer::create([
-        'name' => 'Test Customer',
+        'first_name' => 'Test',
+        'last_name' => 'Customer',
         'email' => 'test@example.com',
         'password' => Hash::make('password'),
         'oauth_provider' => 'local',
@@ -148,7 +153,8 @@ test('enforceTokenLimit marks associated device as inactive when token deleted',
 
 test('enforceTokenLimit marks multiple associated devices as inactive', function () {
     $customer = Customer::create([
-        'name' => 'Test Customer',
+        'first_name' => 'Test',
+        'last_name' => 'Customer',
         'email' => 'test@example.com',
         'password' => Hash::make('password'),
         'oauth_provider' => 'local',

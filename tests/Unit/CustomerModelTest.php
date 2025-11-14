@@ -9,7 +9,8 @@ test('customer has fillable attributes', function () {
     $customer = new Customer;
 
     $expectedFillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
         'email_verified_at',
         'password',
@@ -71,7 +72,9 @@ test('customer casts attributes correctly', function () {
 test('customer factory creates valid customer data', function () {
     $customerData = Customer::factory()->make()->toArray();
 
-    expect($customerData)->toHaveKey('name');
+    expect($customerData)->toHaveKey('first_name');
+    expect($customerData)->toHaveKey('last_name');
+    expect($customerData)->toHaveKey('full_name');
     expect($customerData)->toHaveKey('email');
     expect($customerData)->toHaveKey('subway_card');
     expect($customerData)->toHaveKey('birth_date');
@@ -79,12 +82,15 @@ test('customer factory creates valid customer data', function () {
 
 test('customer factory creates customer with specific attributes', function () {
     $customerData = Customer::factory()->make([
-        'name' => 'Test Customer',
+        'first_name' => 'Test',
+        'last_name' => 'Customer',
         'email' => 'test@customer.com',
         'customer_type_id' => null,
     ])->toArray();
 
-    expect($customerData['name'])->toBe('Test Customer');
+    expect($customerData['first_name'])->toBe('Test');
+    expect($customerData['last_name'])->toBe('Customer');
+    expect($customerData['full_name'])->toBe('Test Customer');
     expect($customerData['email'])->toBe('test@customer.com');
     expect($customerData['customer_type_id'])->toBeNull(); // New customers start without type
 });

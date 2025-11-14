@@ -67,44 +67,44 @@ class FakeDataSeeder extends Seeder
         // Nombres guatemaltecos realistas para clientes
         $guatemalanCustomers = [
             // Regular (10 clientes con 0-49 puntos)
-            ['name' => 'Juan Carlos Cifuentes Méndez', 'email' => 'juan.cifuentes@gmail.com', 'type_name' => 'Regular', 'points' => 15],
-            ['name' => 'Sofía Alejandra Morales Díaz', 'email' => 'sofia.morales@yahoo.com', 'type_name' => 'Regular', 'points' => 22],
-            ['name' => 'Pedro Luis González Ramírez', 'email' => 'pedro.gonzalez@hotmail.com', 'type_name' => 'Regular', 'points' => 8],
-            ['name' => 'Carmen Rosa Pérez López', 'email' => 'carmen.perez@gmail.com', 'type_name' => 'Regular', 'points' => 35],
-            ['name' => 'Diego Armando Castillo Flores', 'email' => 'diego.castillo@outlook.com', 'type_name' => 'Regular', 'points' => 18],
-            ['name' => 'Gabriela Fernanda Herrera Santos', 'email' => 'gabriela.herrera@gmail.com', 'type_name' => 'Regular', 'points' => 42],
-            ['name' => 'Miguel Ángel Rodríguez García', 'email' => 'miguel.rodriguez@yahoo.com', 'type_name' => 'Regular', 'points' => 12],
-            ['name' => 'Valentina Isabella Ortiz Martínez', 'email' => 'valentina.ortiz@gmail.com', 'type_name' => 'Regular', 'points' => 28],
-            ['name' => 'Fernando José Vásquez Ruiz', 'email' => 'fernando.vasquez@hotmail.com', 'type_name' => 'Regular', 'points' => 38],
-            ['name' => 'Andrea Carolina Méndez Torres', 'email' => 'andrea.mendez@gmail.com', 'type_name' => 'Regular', 'points' => 45],
+            ['first_name' => 'Juan Carlos', 'last_name' => 'Cifuentes Méndez', 'email' => 'juan.cifuentes@gmail.com', 'type_name' => 'Regular', 'points' => 15],
+            ['first_name' => 'Sofía Alejandra', 'last_name' => 'Morales Díaz', 'email' => 'sofia.morales@yahoo.com', 'type_name' => 'Regular', 'points' => 22],
+            ['first_name' => 'Pedro Luis', 'last_name' => 'González Ramírez', 'email' => 'pedro.gonzalez@hotmail.com', 'type_name' => 'Regular', 'points' => 8],
+            ['first_name' => 'Carmen Rosa', 'last_name' => 'Pérez López', 'email' => 'carmen.perez@gmail.com', 'type_name' => 'Regular', 'points' => 35],
+            ['first_name' => 'Diego Armando', 'last_name' => 'Castillo Flores', 'email' => 'diego.castillo@outlook.com', 'type_name' => 'Regular', 'points' => 18],
+            ['first_name' => 'Gabriela Fernanda', 'last_name' => 'Herrera Santos', 'email' => 'gabriela.herrera@gmail.com', 'type_name' => 'Regular', 'points' => 42],
+            ['first_name' => 'Miguel Ángel', 'last_name' => 'Rodríguez García', 'email' => 'miguel.rodriguez@yahoo.com', 'type_name' => 'Regular', 'points' => 12],
+            ['first_name' => 'Valentina Isabella', 'last_name' => 'Ortiz Martínez', 'email' => 'valentina.ortiz@gmail.com', 'type_name' => 'Regular', 'points' => 28],
+            ['first_name' => 'Fernando José', 'last_name' => 'Vásquez Ruiz', 'email' => 'fernando.vasquez@hotmail.com', 'type_name' => 'Regular', 'points' => 38],
+            ['first_name' => 'Andrea Carolina', 'last_name' => 'Méndez Torres', 'email' => 'andrea.mendez@gmail.com', 'type_name' => 'Regular', 'points' => 45],
 
             // Bronce (8 clientes con 50-124 puntos)
-            ['name' => 'Ricardo Daniel López Cruz', 'email' => 'ricardo.lopez@gmail.com', 'type_name' => 'Bronce', 'points' => 65],
-            ['name' => 'Mónica Patricia García Sánchez', 'email' => 'monica.garcia@yahoo.com', 'type_name' => 'Bronce', 'points' => 78],
-            ['name' => 'Javier Enrique Ramírez Gómez', 'email' => 'javier.ramirez@hotmail.com', 'type_name' => 'Bronce', 'points' => 92],
-            ['name' => 'Lucía Fernanda Díaz Morales', 'email' => 'lucia.diaz@gmail.com', 'type_name' => 'Bronce', 'points' => 58],
-            ['name' => 'Alejandro Manuel Flores Pérez', 'email' => 'alejandro.flores@outlook.com', 'type_name' => 'Bronce', 'points' => 105],
-            ['name' => 'Diana Sofía Santos Hernández', 'email' => 'diana.santos@gmail.com', 'type_name' => 'Bronce', 'points' => 82],
-            ['name' => 'Jorge Luis Martínez Castillo', 'email' => 'jorge.martinez@yahoo.com', 'type_name' => 'Bronce', 'points' => 115],
-            ['name' => 'Isabella María Rodríguez López', 'email' => 'isabella.rodriguez@gmail.com', 'type_name' => 'Bronce', 'points' => 95],
+            ['first_name' => 'Ricardo Daniel', 'last_name' => 'López Cruz', 'email' => 'ricardo.lopez@gmail.com', 'type_name' => 'Bronce', 'points' => 65],
+            ['first_name' => 'Mónica Patricia', 'last_name' => 'García Sánchez', 'email' => 'monica.garcia@yahoo.com', 'type_name' => 'Bronce', 'points' => 78],
+            ['first_name' => 'Javier Enrique', 'last_name' => 'Ramírez Gómez', 'email' => 'javier.ramirez@hotmail.com', 'type_name' => 'Bronce', 'points' => 92],
+            ['first_name' => 'Lucía Fernanda', 'last_name' => 'Díaz Morales', 'email' => 'lucia.diaz@gmail.com', 'type_name' => 'Bronce', 'points' => 58],
+            ['first_name' => 'Alejandro Manuel', 'last_name' => 'Flores Pérez', 'email' => 'alejandro.flores@outlook.com', 'type_name' => 'Bronce', 'points' => 105],
+            ['first_name' => 'Diana Sofía', 'last_name' => 'Santos Hernández', 'email' => 'diana.santos@gmail.com', 'type_name' => 'Bronce', 'points' => 82],
+            ['first_name' => 'Jorge Luis', 'last_name' => 'Martínez Castillo', 'email' => 'jorge.martinez@yahoo.com', 'type_name' => 'Bronce', 'points' => 115],
+            ['first_name' => 'Isabella María', 'last_name' => 'Rodríguez López', 'email' => 'isabella.rodriguez@gmail.com', 'type_name' => 'Bronce', 'points' => 95],
 
             // Plata (6 clientes con 125-324 puntos)
-            ['name' => 'Eduardo Antonio García Ruiz', 'email' => 'eduardo.garcia@gmail.com', 'type_name' => 'Plata', 'points' => 185],
-            ['name' => 'Daniela Alejandra Pérez Torres', 'email' => 'daniela.perez@yahoo.com', 'type_name' => 'Plata', 'points' => 225],
-            ['name' => 'Gustavo Adolfo Méndez Díaz', 'email' => 'gustavo.mendez@hotmail.com', 'type_name' => 'Plata', 'points' => 265],
-            ['name' => 'Carolina Isabel Flores Morales', 'email' => 'carolina.flores@gmail.com', 'type_name' => 'Plata', 'points' => 198],
-            ['name' => 'Rodrigo Sebastián López García', 'email' => 'rodrigo.lopez@outlook.com', 'type_name' => 'Plata', 'points' => 285],
-            ['name' => 'Natalia Valeria Ramírez Santos', 'email' => 'natalia.ramirez@gmail.com', 'type_name' => 'Plata', 'points' => 245],
+            ['first_name' => 'Eduardo Antonio', 'last_name' => 'García Ruiz', 'email' => 'eduardo.garcia@gmail.com', 'type_name' => 'Plata', 'points' => 185],
+            ['first_name' => 'Daniela Alejandra', 'last_name' => 'Pérez Torres', 'email' => 'daniela.perez@yahoo.com', 'type_name' => 'Plata', 'points' => 225],
+            ['first_name' => 'Gustavo Adolfo', 'last_name' => 'Méndez Díaz', 'email' => 'gustavo.mendez@hotmail.com', 'type_name' => 'Plata', 'points' => 265],
+            ['first_name' => 'Carolina Isabel', 'last_name' => 'Flores Morales', 'email' => 'carolina.flores@gmail.com', 'type_name' => 'Plata', 'points' => 198],
+            ['first_name' => 'Rodrigo Sebastián', 'last_name' => 'López García', 'email' => 'rodrigo.lopez@outlook.com', 'type_name' => 'Plata', 'points' => 285],
+            ['first_name' => 'Natalia Valeria', 'last_name' => 'Ramírez Santos', 'email' => 'natalia.ramirez@gmail.com', 'type_name' => 'Plata', 'points' => 245],
 
             // Oro (4 clientes con 325-999 puntos)
-            ['name' => 'Alberto Francisco Martínez López', 'email' => 'alberto.martinez@gmail.com', 'type_name' => 'Oro', 'points' => 485],
-            ['name' => 'Paola Andrea García Pérez', 'email' => 'paola.garcia@yahoo.com', 'type_name' => 'Oro', 'points' => 625],
-            ['name' => 'Sergio Alejandro Díaz Rodríguez', 'email' => 'sergio.diaz@hotmail.com', 'type_name' => 'Oro', 'points' => 765],
-            ['name' => 'Mariana José Flores Hernández', 'email' => 'mariana.flores@gmail.com', 'type_name' => 'Oro', 'points' => 545],
+            ['first_name' => 'Alberto Francisco', 'last_name' => 'Martínez López', 'email' => 'alberto.martinez@gmail.com', 'type_name' => 'Oro', 'points' => 485],
+            ['first_name' => 'Paola Andrea', 'last_name' => 'García Pérez', 'email' => 'paola.garcia@yahoo.com', 'type_name' => 'Oro', 'points' => 625],
+            ['first_name' => 'Sergio Alejandro', 'last_name' => 'Díaz Rodríguez', 'email' => 'sergio.diaz@hotmail.com', 'type_name' => 'Oro', 'points' => 765],
+            ['first_name' => 'Mariana José', 'last_name' => 'Flores Hernández', 'email' => 'mariana.flores@gmail.com', 'type_name' => 'Oro', 'points' => 545],
 
             // Platino (2 clientes con 1000+ puntos)
-            ['name' => 'Francisco Javier López Martínez', 'email' => 'francisco.lopez@gmail.com', 'type_name' => 'Platino', 'points' => 1450],
-            ['name' => 'Victoria Eugenia García Ruiz', 'email' => 'victoria.garcia@yahoo.com', 'type_name' => 'Platino', 'points' => 2150],
+            ['first_name' => 'Francisco Javier', 'last_name' => 'López Martínez', 'email' => 'francisco.lopez@gmail.com', 'type_name' => 'Platino', 'points' => 1450],
+            ['first_name' => 'Victoria Eugenia', 'last_name' => 'García Ruiz', 'email' => 'victoria.garcia@yahoo.com', 'type_name' => 'Platino', 'points' => 2150],
         ];
 
         foreach ($guatemalanCustomers as $customerData) {
@@ -113,7 +113,8 @@ class FakeDataSeeder extends Seeder
 
             $customer = Customer::factory()
                 ->state([
-                    'name' => $customerData['name'],
+                    'first_name' => $customerData['first_name'],
+                    'last_name' => $customerData['last_name'],
                     'email' => $customerData['email'],
                     'customer_type_id' => $customerTypes[$customerData['type_name']],
                     'points' => $customerData['points'],

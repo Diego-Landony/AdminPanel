@@ -45,21 +45,22 @@ class RealCustomersSeeder extends Seeder
     private function createRegularCustomers(CustomerType $tipo): void
     {
         $clientes = [
-            ['name' => 'Carlos Méndez', 'email' => 'carlos.mendez@gmail.com', 'points' => 15, 'phone' => '4123-4567'],
-            ['name' => 'María García', 'email' => 'maria.garcia@hotmail.com', 'points' => 22, 'phone' => '5234-5678'],
-            ['name' => 'José Hernández', 'email' => 'jose.hernandez@yahoo.com', 'points' => 8, 'phone' => '3345-6789'],
-            ['name' => 'Ana López', 'email' => 'ana.lopez@gmail.com', 'points' => 30, 'phone' => '4456-7890'],
-            ['name' => 'Pedro Ramírez', 'email' => 'pedro.ramirez@outlook.com', 'points' => 18, 'phone' => '5567-8901'],
-            ['name' => 'Lucía Morales', 'email' => 'lucia.morales@gmail.com', 'points' => 25, 'phone' => '6678-9012'],
-            ['name' => 'Miguel Torres', 'email' => 'miguel.torres@hotmail.com', 'points' => 12, 'phone' => '7789-0123'],
-            ['name' => 'Carmen Flores', 'email' => 'carmen.flores@gmail.com', 'points' => 35, 'phone' => '4890-1234'],
-            ['name' => 'Roberto Castro', 'email' => 'roberto.castro@yahoo.com', 'points' => 20, 'phone' => '5901-2345'],
-            ['name' => 'Diana Reyes', 'email' => 'diana.reyes@gmail.com', 'points' => 28, 'phone' => '3012-3456'],
+            ['first_name' => 'Carlos', 'last_name' => 'Méndez', 'email' => 'carlos.mendez@gmail.com', 'points' => 15, 'phone' => '4123-4567'],
+            ['first_name' => 'María', 'last_name' => 'García', 'email' => 'maria.garcia@hotmail.com', 'points' => 22, 'phone' => '5234-5678'],
+            ['first_name' => 'José', 'last_name' => 'Hernández', 'email' => 'jose.hernandez@yahoo.com', 'points' => 8, 'phone' => '3345-6789'],
+            ['first_name' => 'Ana', 'last_name' => 'López', 'email' => 'ana.lopez@gmail.com', 'points' => 30, 'phone' => '4456-7890'],
+            ['first_name' => 'Pedro', 'last_name' => 'Ramírez', 'email' => 'pedro.ramirez@outlook.com', 'points' => 18, 'phone' => '5567-8901'],
+            ['first_name' => 'Lucía', 'last_name' => 'Morales', 'email' => 'lucia.morales@gmail.com', 'points' => 25, 'phone' => '6678-9012'],
+            ['first_name' => 'Miguel', 'last_name' => 'Torres', 'email' => 'miguel.torres@hotmail.com', 'points' => 12, 'phone' => '7789-0123'],
+            ['first_name' => 'Carmen', 'last_name' => 'Flores', 'email' => 'carmen.flores@gmail.com', 'points' => 35, 'phone' => '4890-1234'],
+            ['first_name' => 'Roberto', 'last_name' => 'Castro', 'email' => 'roberto.castro@yahoo.com', 'points' => 20, 'phone' => '5901-2345'],
+            ['first_name' => 'Diana', 'last_name' => 'Reyes', 'email' => 'diana.reyes@gmail.com', 'points' => 28, 'phone' => '3012-3456'],
         ];
 
         foreach ($clientes as $cliente) {
             $customer = Customer::create([
-                'name' => $cliente['name'],
+                'first_name' => $cliente['first_name'],
+                'last_name' => $cliente['last_name'],
                 'email' => $cliente['email'],
                 'password' => Hash::make('password123'),
                 'subway_card' => $this->generateSubwayCard(),
@@ -83,21 +84,22 @@ class RealCustomersSeeder extends Seeder
     private function createBronceCustomers(CustomerType $tipo): void
     {
         $clientes = [
-            ['name' => 'Fernando Gómez', 'email' => 'fernando.gomez@gmail.com', 'points' => 65, 'phone' => '4123-5678'],
-            ['name' => 'Patricia Ruiz', 'email' => 'patricia.ruiz@hotmail.com', 'points' => 78, 'phone' => '5234-6789'],
-            ['name' => 'Ricardo Vargas', 'email' => 'ricardo.vargas@gmail.com', 'points' => 55, 'phone' => '3345-7890'],
-            ['name' => 'Sofía Ortiz', 'email' => 'sofia.ortiz@yahoo.com', 'points' => 92, 'phone' => '4456-8901'],
-            ['name' => 'Antonio Sánchez', 'email' => 'antonio.sanchez@outlook.com', 'points' => 68, 'phone' => '5567-9012'],
-            ['name' => 'Gabriela Díaz', 'email' => 'gabriela.diaz@gmail.com', 'points' => 85, 'phone' => '6678-0123'],
-            ['name' => 'Javier Cruz', 'email' => 'javier.cruz@hotmail.com', 'points' => 72, 'phone' => '7789-1234'],
-            ['name' => 'Valeria Jiménez', 'email' => 'valeria.jimenez@gmail.com', 'points' => 105, 'phone' => '4890-2345'],
-            ['name' => 'Eduardo Navarro', 'email' => 'eduardo.navarro@yahoo.com', 'points' => 58, 'phone' => '5901-3456'],
-            ['name' => 'Mónica Peña', 'email' => 'monica.pena@gmail.com', 'points' => 115, 'phone' => '3012-4567'],
+            ['first_name' => 'Fernando', 'last_name' => 'Gómez', 'email' => 'fernando.gomez@gmail.com', 'points' => 65, 'phone' => '4123-5678'],
+            ['first_name' => 'Patricia', 'last_name' => 'Ruiz', 'email' => 'patricia.ruiz@hotmail.com', 'points' => 78, 'phone' => '5234-6789'],
+            ['first_name' => 'Ricardo', 'last_name' => 'Vargas', 'email' => 'ricardo.vargas@gmail.com', 'points' => 55, 'phone' => '3345-7890'],
+            ['first_name' => 'Sofía', 'last_name' => 'Ortiz', 'email' => 'sofia.ortiz@yahoo.com', 'points' => 92, 'phone' => '4456-8901'],
+            ['first_name' => 'Antonio', 'last_name' => 'Sánchez', 'email' => 'antonio.sanchez@outlook.com', 'points' => 68, 'phone' => '5567-9012'],
+            ['first_name' => 'Gabriela', 'last_name' => 'Díaz', 'email' => 'gabriela.diaz@gmail.com', 'points' => 85, 'phone' => '6678-0123'],
+            ['first_name' => 'Javier', 'last_name' => 'Cruz', 'email' => 'javier.cruz@hotmail.com', 'points' => 72, 'phone' => '7789-1234'],
+            ['first_name' => 'Valeria', 'last_name' => 'Jiménez', 'email' => 'valeria.jimenez@gmail.com', 'points' => 105, 'phone' => '4890-2345'],
+            ['first_name' => 'Eduardo', 'last_name' => 'Navarro', 'email' => 'eduardo.navarro@yahoo.com', 'points' => 58, 'phone' => '5901-3456'],
+            ['first_name' => 'Mónica', 'last_name' => 'Peña', 'email' => 'monica.pena@gmail.com', 'points' => 115, 'phone' => '3012-4567'],
         ];
 
         foreach ($clientes as $cliente) {
             $customer = Customer::create([
-                'name' => $cliente['name'],
+                'first_name' => $cliente['first_name'],
+                'last_name' => $cliente['last_name'],
                 'email' => $cliente['email'],
                 'password' => Hash::make('password123'),
                 'subway_card' => $this->generateSubwayCard(),
@@ -121,21 +123,22 @@ class RealCustomersSeeder extends Seeder
     private function createPlataCustomers(CustomerType $tipo): void
     {
         $clientes = [
-            ['name' => 'Alejandro Mendoza', 'email' => 'alejandro.mendoza@gmail.com', 'points' => 145, 'phone' => '4123-6789'],
-            ['name' => 'Laura Guzmán', 'email' => 'laura.guzman@hotmail.com', 'points' => 198, 'phone' => '5234-7890'],
-            ['name' => 'Francisco Herrera', 'email' => 'francisco.herrera@gmail.com', 'points' => 167, 'phone' => '3345-8901'],
-            ['name' => 'Isabella Rojas', 'email' => 'isabella.rojas@yahoo.com', 'points' => 225, 'phone' => '4456-9012'],
-            ['name' => 'Sergio Molina', 'email' => 'sergio.molina@outlook.com', 'points' => 178, 'phone' => '5567-0123'],
-            ['name' => 'Camila Aguilar', 'email' => 'camila.aguilar@gmail.com', 'points' => 255, 'phone' => '6678-1234'],
-            ['name' => 'Daniel Medina', 'email' => 'daniel.medina@hotmail.com', 'points' => 189, 'phone' => '7789-2345'],
-            ['name' => 'Natalia Romero', 'email' => 'natalia.romero@gmail.com', 'points' => 310, 'phone' => '4890-3456'],
-            ['name' => 'Andrés Silva', 'email' => 'andres.silva@yahoo.com', 'points' => 205, 'phone' => '5901-4567'],
-            ['name' => 'Victoria Vega', 'email' => 'victoria.vega@gmail.com', 'points' => 268, 'phone' => '3012-5678'],
+            ['first_name' => 'Alejandro', 'last_name' => 'Mendoza', 'email' => 'alejandro.mendoza@gmail.com', 'points' => 145, 'phone' => '4123-6789'],
+            ['first_name' => 'Laura', 'last_name' => 'Guzmán', 'email' => 'laura.guzman@hotmail.com', 'points' => 198, 'phone' => '5234-7890'],
+            ['first_name' => 'Francisco', 'last_name' => 'Herrera', 'email' => 'francisco.herrera@gmail.com', 'points' => 167, 'phone' => '3345-8901'],
+            ['first_name' => 'Isabella', 'last_name' => 'Rojas', 'email' => 'isabella.rojas@yahoo.com', 'points' => 225, 'phone' => '4456-9012'],
+            ['first_name' => 'Sergio', 'last_name' => 'Molina', 'email' => 'sergio.molina@outlook.com', 'points' => 178, 'phone' => '5567-0123'],
+            ['first_name' => 'Camila', 'last_name' => 'Aguilar', 'email' => 'camila.aguilar@gmail.com', 'points' => 255, 'phone' => '6678-1234'],
+            ['first_name' => 'Daniel', 'last_name' => 'Medina', 'email' => 'daniel.medina@hotmail.com', 'points' => 189, 'phone' => '7789-2345'],
+            ['first_name' => 'Natalia', 'last_name' => 'Romero', 'email' => 'natalia.romero@gmail.com', 'points' => 310, 'phone' => '4890-3456'],
+            ['first_name' => 'Andrés', 'last_name' => 'Silva', 'email' => 'andres.silva@yahoo.com', 'points' => 205, 'phone' => '5901-4567'],
+            ['first_name' => 'Victoria', 'last_name' => 'Vega', 'email' => 'victoria.vega@gmail.com', 'points' => 268, 'phone' => '3012-5678'],
         ];
 
         foreach ($clientes as $cliente) {
             $customer = Customer::create([
-                'name' => $cliente['name'],
+                'first_name' => $cliente['first_name'],
+                'last_name' => $cliente['last_name'],
                 'email' => $cliente['email'],
                 'password' => Hash::make('password123'),
                 'subway_card' => $this->generateSubwayCard(),
@@ -159,21 +162,22 @@ class RealCustomersSeeder extends Seeder
     private function createOroCustomers(CustomerType $tipo): void
     {
         $clientes = [
-            ['name' => 'Mauricio Campos', 'email' => 'mauricio.campos@gmail.com', 'points' => 385, 'phone' => '4123-7890'],
-            ['name' => 'Elena Ramos', 'email' => 'elena.ramos@hotmail.com', 'points' => 452, 'phone' => '5234-8901'],
-            ['name' => 'Rodrigo Márquez', 'email' => 'rodrigo.marquez@gmail.com', 'points' => 412, 'phone' => '3345-9012'],
-            ['name' => 'Paola Núñez', 'email' => 'paola.nunez@yahoo.com', 'points' => 568, 'phone' => '4456-0123'],
-            ['name' => 'Gustavo Paredes', 'email' => 'gustavo.paredes@outlook.com', 'points' => 495, 'phone' => '5567-1234'],
-            ['name' => 'Mariana Soto', 'email' => 'mariana.soto@gmail.com', 'points' => 725, 'phone' => '6678-2345'],
-            ['name' => 'Jorge Delgado', 'email' => 'jorge.delgado@hotmail.com', 'points' => 638, 'phone' => '7789-3456'],
-            ['name' => 'Daniela Cabrera', 'email' => 'daniela.cabrera@gmail.com', 'points' => 892, 'phone' => '4890-4567'],
-            ['name' => 'Luis Miranda', 'email' => 'luis.miranda@yahoo.com', 'points' => 547, 'phone' => '5901-5678'],
-            ['name' => 'Andrea Escobar', 'email' => 'andrea.escobar@gmail.com', 'points' => 675, 'phone' => '3012-6789'],
+            ['first_name' => 'Mauricio', 'last_name' => 'Campos', 'email' => 'mauricio.campos@gmail.com', 'points' => 385, 'phone' => '4123-7890'],
+            ['first_name' => 'Elena', 'last_name' => 'Ramos', 'email' => 'elena.ramos@hotmail.com', 'points' => 452, 'phone' => '5234-8901'],
+            ['first_name' => 'Rodrigo', 'last_name' => 'Márquez', 'email' => 'rodrigo.marquez@gmail.com', 'points' => 412, 'phone' => '3345-9012'],
+            ['first_name' => 'Paola', 'last_name' => 'Núñez', 'email' => 'paola.nunez@yahoo.com', 'points' => 568, 'phone' => '4456-0123'],
+            ['first_name' => 'Gustavo', 'last_name' => 'Paredes', 'email' => 'gustavo.paredes@outlook.com', 'points' => 495, 'phone' => '5567-1234'],
+            ['first_name' => 'Mariana', 'last_name' => 'Soto', 'email' => 'mariana.soto@gmail.com', 'points' => 725, 'phone' => '6678-2345'],
+            ['first_name' => 'Jorge', 'last_name' => 'Delgado', 'email' => 'jorge.delgado@hotmail.com', 'points' => 638, 'phone' => '7789-3456'],
+            ['first_name' => 'Daniela', 'last_name' => 'Cabrera', 'email' => 'daniela.cabrera@gmail.com', 'points' => 892, 'phone' => '4890-4567'],
+            ['first_name' => 'Luis', 'last_name' => 'Miranda', 'email' => 'luis.miranda@yahoo.com', 'points' => 547, 'phone' => '5901-5678'],
+            ['first_name' => 'Andrea', 'last_name' => 'Escobar', 'email' => 'andrea.escobar@gmail.com', 'points' => 675, 'phone' => '3012-6789'],
         ];
 
         foreach ($clientes as $cliente) {
             $customer = Customer::create([
-                'name' => $cliente['name'],
+                'first_name' => $cliente['first_name'],
+                'last_name' => $cliente['last_name'],
                 'email' => $cliente['email'],
                 'password' => Hash::make('password123'),
                 'subway_card' => $this->generateSubwayCard(),
@@ -197,21 +201,22 @@ class RealCustomersSeeder extends Seeder
     private function createPlatinoCustomers(CustomerType $tipo): void
     {
         $clientes = [
-            ['name' => 'Santiago Fuentes', 'email' => 'santiago.fuentes@gmail.com', 'points' => 1125, 'phone' => '4123-8901'],
-            ['name' => 'Regina Villanueva', 'email' => 'regina.villanueva@hotmail.com', 'points' => 1456, 'phone' => '5234-9012'],
-            ['name' => 'Emilio Córdoba', 'email' => 'emilio.cordoba@gmail.com', 'points' => 1298, 'phone' => '3345-0123'],
-            ['name' => 'Valentina Padilla', 'email' => 'valentina.padilla@yahoo.com', 'points' => 1687, 'phone' => '4456-1234'],
-            ['name' => 'Héctor Salazar', 'email' => 'hector.salazar@outlook.com', 'points' => 1543, 'phone' => '5567-2345'],
-            ['name' => 'Alejandra Montes', 'email' => 'alejandra.montes@gmail.com', 'points' => 2125, 'phone' => '6678-3456'],
-            ['name' => 'Cristian Ibarra', 'email' => 'cristian.ibarra@hotmail.com', 'points' => 1834, 'phone' => '7789-4567'],
-            ['name' => 'Fernanda Paz', 'email' => 'fernanda.paz@gmail.com', 'points' => 2547, 'phone' => '4890-5678'],
-            ['name' => 'Óscar Valencia', 'email' => 'oscar.valencia@yahoo.com', 'points' => 1975, 'phone' => '5901-6789'],
-            ['name' => 'Carolina Ríos', 'email' => 'carolina.rios@gmail.com', 'points' => 3012, 'phone' => '3012-7890'],
+            ['first_name' => 'Santiago', 'last_name' => 'Fuentes', 'email' => 'santiago.fuentes@gmail.com', 'points' => 1125, 'phone' => '4123-8901'],
+            ['first_name' => 'Regina', 'last_name' => 'Villanueva', 'email' => 'regina.villanueva@hotmail.com', 'points' => 1456, 'phone' => '5234-9012'],
+            ['first_name' => 'Emilio', 'last_name' => 'Córdoba', 'email' => 'emilio.cordoba@gmail.com', 'points' => 1298, 'phone' => '3345-0123'],
+            ['first_name' => 'Valentina', 'last_name' => 'Padilla', 'email' => 'valentina.padilla@yahoo.com', 'points' => 1687, 'phone' => '4456-1234'],
+            ['first_name' => 'Héctor', 'last_name' => 'Salazar', 'email' => 'hector.salazar@outlook.com', 'points' => 1543, 'phone' => '5567-2345'],
+            ['first_name' => 'Alejandra', 'last_name' => 'Montes', 'email' => 'alejandra.montes@gmail.com', 'points' => 2125, 'phone' => '6678-3456'],
+            ['first_name' => 'Cristian', 'last_name' => 'Ibarra', 'email' => 'cristian.ibarra@hotmail.com', 'points' => 1834, 'phone' => '7789-4567'],
+            ['first_name' => 'Fernanda', 'last_name' => 'Paz', 'email' => 'fernanda.paz@gmail.com', 'points' => 2547, 'phone' => '4890-5678'],
+            ['first_name' => 'Óscar', 'last_name' => 'Valencia', 'email' => 'oscar.valencia@yahoo.com', 'points' => 1975, 'phone' => '5901-6789'],
+            ['first_name' => 'Carolina', 'last_name' => 'Ríos', 'email' => 'carolina.rios@gmail.com', 'points' => 3012, 'phone' => '3012-7890'],
         ];
 
         foreach ($clientes as $cliente) {
             $customer = Customer::create([
-                'name' => $cliente['name'],
+                'first_name' => $cliente['first_name'],
+                'last_name' => $cliente['last_name'],
                 'email' => $cliente['email'],
                 'password' => Hash::make('password123'),
                 'subway_card' => $this->generateSubwayCard(),

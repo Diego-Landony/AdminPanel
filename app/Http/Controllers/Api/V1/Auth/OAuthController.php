@@ -98,7 +98,10 @@ class OAuthController extends Controller
         ]);
 
         return Socialite::driver('google')
-            ->with(['state' => $state])
+            ->with([
+                'state' => $state,
+                'prompt' => 'select_account',
+            ])
             ->redirect();
     }
 

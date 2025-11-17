@@ -10,7 +10,8 @@ uses(RefreshDatabase::class);
 test('puede hacer login con credenciales validas', function () {
     // Crear customer de prueba
     $customer = Customer::create([
-        'name' => 'Juan Pérez',
+        'first_name' => 'Juan',
+        'last_name' => 'Pérez',
         'email' => 'juan@example.com',
         'password' => Hash::make('password123'),
         'oauth_provider' => 'local',
@@ -33,7 +34,8 @@ test('puede hacer login con credenciales validas', function () {
             'expires_in',
             'customer' => [
                 'id',
-                'name',
+                'first_name',
+                'last_name',
                 'email',
             ],
         ],
@@ -51,7 +53,8 @@ test('puede hacer login con credenciales validas', function () {
 test('rechaza credenciales invalidas', function () {
     // Crear customer de prueba
     Customer::create([
-        'name' => 'Juan Pérez',
+        'first_name' => 'Juan',
+        'last_name' => 'Pérez',
         'email' => 'juan@example.com',
         'password' => Hash::make('password123'),
         'oauth_provider' => 'local',
@@ -86,7 +89,8 @@ test('rechaza usuario inexistente', function () {
 test('puede especificar sistema operativo', function () {
     // Crear customer de prueba
     $customer = Customer::create([
-        'name' => 'Juan Pérez',
+        'first_name' => 'Juan',
+        'last_name' => 'Pérez',
         'email' => 'juan@example.com',
         'password' => Hash::make('password123'),
         'oauth_provider' => 'local',
@@ -113,7 +117,8 @@ test('puede especificar sistema operativo', function () {
 test('actualiza last login at', function () {
     // Crear customer de prueba con last_login_at en null
     $customer = Customer::create([
-        'name' => 'Juan Pérez',
+        'first_name' => 'Juan',
+        'last_name' => 'Pérez',
         'email' => 'juan@example.com',
         'password' => Hash::make('password123'),
         'oauth_provider' => 'local',

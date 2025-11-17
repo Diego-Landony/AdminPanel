@@ -11,7 +11,8 @@ uses(RefreshDatabase::class);
 test('puede solicitar reset de password', function () {
     // Crear customer de prueba
     $customer = Customer::create([
-        'name' => 'Juan Pérez',
+        'first_name' => 'Juan',
+        'last_name' => 'Pérez',
         'email' => 'juan@example.com',
         'password' => Hash::make('password123'),
         'oauth_provider' => 'local',
@@ -39,7 +40,8 @@ test('puede solicitar reset de password', function () {
 test('puede cambiar password con token valido', function () {
     // Crear customer de prueba
     $customer = Customer::create([
-        'name' => 'Juan Pérez',
+        'first_name' => 'Juan',
+        'last_name' => 'Pérez',
         'email' => 'juan@example.com',
         'password' => Hash::make('OldPass123'),
         'oauth_provider' => 'local',
@@ -77,7 +79,8 @@ test('puede cambiar password con token valido', function () {
 test('rechaza token expirado', function () {
     // Crear customer de prueba
     $customer = Customer::create([
-        'name' => 'Juan Pérez',
+        'first_name' => 'Juan',
+        'last_name' => 'Pérez',
         'email' => 'juan@example.com',
         'password' => Hash::make('password123'),
         'oauth_provider' => 'local',
@@ -101,7 +104,8 @@ test('rechaza token expirado', function () {
 test('puede cambiar password estando autenticado', function () {
     // Crear customer de prueba
     $customer = Customer::create([
-        'name' => 'Juan Pérez',
+        'first_name' => 'Juan',
+        'last_name' => 'Pérez',
         'email' => 'juan@example.com',
         'password' => Hash::make('CurrPass123'),
         'oauth_provider' => 'local',
@@ -139,7 +143,8 @@ test('puede cambiar password estando autenticado', function () {
 test('requiere password actual correcto', function () {
     // Crear customer de prueba
     $customer = Customer::create([
-        'name' => 'Juan Pérez',
+        'first_name' => 'Juan',
+        'last_name' => 'Pérez',
         'email' => 'juan@example.com',
         'password' => Hash::make('CurrPass123'),
         'oauth_provider' => 'local',

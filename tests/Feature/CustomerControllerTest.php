@@ -29,8 +29,8 @@ describe('Customer Listing', function () {
     });
 
     test('can search customers', function () {
-        Customer::factory()->create(['name' => 'Juan Pérez']);
-        Customer::factory()->create(['name' => 'María González']);
+        Customer::factory()->create(['first_name' => 'Juan', 'last_name' => 'Pérez']);
+        Customer::factory()->create(['first_name' => 'María', 'last_name' => 'González']);
         Customer::factory()->create(['email' => 'test@example.com']);
 
         $response = $this->get('/customers?search=Juan');
@@ -38,22 +38,22 @@ describe('Customer Listing', function () {
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page->component('customers/index')
             ->has('customers.data', 1)
-            ->where('customers.data.0.name', 'Juan Pérez')
+            ->where('customers.data.0.first_name', 'Juan')
         );
     });
 
     test('can sort customers', function () {
-        Customer::factory()->create(['name' => 'Ana López']);
-        Customer::factory()->create(['name' => 'Carlos Ruiz']);
-        Customer::factory()->create(['name' => 'Beatriz Silva']);
+        Customer::factory()->create(['first_name' => 'Ana', 'last_name' => 'López']);
+        Customer::factory()->create(['first_name' => 'Carlos', 'last_name' => 'Ruiz']);
+        Customer::factory()->create(['first_name' => 'Beatriz', 'last_name' => 'Silva']);
 
-        $response = $this->get('/customers?sort_field=name&sort_direction=asc');
+        $response = $this->get('/customers?sort_field=first_name&sort_direction=asc');
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page->component('customers/index')
-            ->where('customers.data.0.name', 'Ana López')
-            ->where('customers.data.1.name', 'Beatriz Silva')
-            ->where('customers.data.2.name', 'Carlos Ruiz')
+            ->where('customers.data.0.first_name', 'Ana')
+            ->where('customers.data.1.first_name', 'Beatriz')
+            ->where('customers.data.2.first_name', 'Carlos')
         );
     });
 });
@@ -68,7 +68,8 @@ describe('Customer Creation', function () {
 
     test('can create new customer', function () {
         $customerData = [
-            'name' => 'Nuevo Cliente',
+            'first_name' => 'Nuevo',
+            'last_name' => 'Cliente',
             'email' => 'nuevo@test.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
@@ -86,7 +87,8 @@ describe('Customer Creation', function () {
         $response->assertSessionHas('success', 'Cliente creado exitosamente');
 
         $this->assertDatabaseHas('customers', [
-            'name' => 'Nuevo Cliente',
+            'first_name' => 'Nuevo',
+            'last_name' => 'Cliente',
             'email' => 'nuevo@test.com',
             'subway_card' => '1234567890',
         ]);
@@ -102,11 +104,12 @@ describe('Customer Creation', function () {
     })->with([
         'required fields' => [
             [],
-            ['name', 'email', 'password'],
+            ['first_name', 'last_name', 'email', 'password'],
         ],
         'unique email' => [
             fn () => [
-                'name' => 'Nuevo Cliente',
+                'first_name' => 'Nuevo',
+                'last_name' => 'Cliente',
                 'email' => Customer::factory()->create(['email' => 'existing@test.com'])->email,
                 'password' => 'password123',
                 'password_confirmation' => 'password123',
@@ -117,7 +120,8 @@ describe('Customer Creation', function () {
         ],
         'unique subway card' => [
             fn () => [
-                'name' => 'Nuevo Cliente',
+                'first_name' => 'Nuevo',
+                'last_name' => 'Cliente',
                 'email' => 'nuevo@test.com',
                 'password' => 'password123',
                 'password_confirmation' => 'password123',
@@ -132,7 +136,8 @@ describe('Customer Creation', function () {
 describe('Customer Updates', function () {
     test('renders edit page with customer data', function () {
         $customer = Customer::factory()->create([
-            'name' => 'Cliente Test',
+            'first_name' => 'Cliente',
+            'last_name' => 'Test',
             'email' => 'cliente@test.com',
         ]);
 
@@ -141,19 +146,22 @@ describe('Customer Updates', function () {
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page->component('customers/edit')
             ->has('customer')
-            ->where('customer.name', 'Cliente Test')
+            ->where('customer.first_name', 'Cliente')
+            ->where('customer.last_name', 'Test')
             ->where('customer.email', 'cliente@test.com')
         );
     });
 
     test('can update customer information', function () {
         $customer = Customer::factory()->create([
-            'name' => 'Cliente Original',
+            'first_name' => 'Cliente',
+            'last_name' => 'Original',
             'email' => 'original@test.com',
         ]);
 
         $updateData = [
-            'name' => 'Cliente Actualizado',
+            'first_name' => 'Cliente',
+            'last_name' => 'Actualizado',
             'email' => 'actualizado@test.com',
             'subway_card' => $customer->subway_card,
             'birth_date' => $customer->birth_date->format('Y-m-d'),
@@ -166,7 +174,8 @@ describe('Customer Updates', function () {
         $response->assertSessionHas('success', 'Cliente actualizado exitosamente');
 
         $customer->refresh();
-        expect($customer->name)->toBe('Cliente Actualizado');
+        expect($customer->first_name)->toBe('Cliente');
+        expect($customer->last_name)->toBe('Actualizado');
         expect($customer->email)->toBe('actualizado@test.com');
         expect($customer->phone)->toBe('+502 9876-5432');
     });
@@ -176,7 +185,8 @@ describe('Customer Updates', function () {
         $originalPassword = $customer->password;
 
         $updateData = [
-            'name' => $customer->name,
+            'first_name' => $customer->first_name,
+            'last_name' => $customer->last_name,
             'email' => $customer->email,
             'subway_card' => $customer->subway_card,
             'birth_date' => $customer->birth_date->format('Y-m-d'),
@@ -203,7 +213,8 @@ describe('Customer Updates', function () {
         expect($customer->email_verified_at)->not->toBeNull();
 
         $updateData = [
-            'name' => $customer->name,
+            'first_name' => $customer->first_name,
+            'last_name' => $customer->last_name,
             'email' => 'newemail@test.com',
             'subway_card' => $customer->subway_card,
             'birth_date' => $customer->birth_date->format('Y-m-d'),
@@ -223,7 +234,7 @@ describe('Customer Updates', function () {
 
 describe('Customer Deletion', function () {
     test('can delete customer', function () {
-        $customer = Customer::factory()->create(['name' => 'Cliente a Eliminar']);
+        $customer = Customer::factory()->create(['first_name' => 'Cliente', 'last_name' => 'a Eliminar']);
 
         $response = $this->delete("/customers/{$customer->id}");
 

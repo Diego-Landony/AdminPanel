@@ -229,7 +229,8 @@ describe('OAuth Fields', function () {
 
     test('customer can be created with oauth data', function () {
         $customer = Customer::create([
-            'name' => 'OAuth User',
+            'first_name' => 'OAuth',
+            'last_name' => 'User',
             'email' => 'oauth@test.com',
             'google_id' => '123456789',
             'oauth_provider' => 'google',
@@ -237,7 +238,6 @@ describe('OAuth Fields', function () {
             'subway_card' => 'TEST123456',
             'birth_date' => '1990-01-01',
             'email_verified_at' => now(),
-            'timezone' => 'America/Guatemala',
         ]);
 
         expect($customer->google_id)->toBe('123456789');

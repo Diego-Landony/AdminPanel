@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Customer;
 use App\Observers\PersonalAccessTokenObserver;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -41,8 +44,73 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configurePasswordValidation();
         $this->configureRateLimiting();
+        $this->configureCustomerNotifications();
 
         PersonalAccessToken::observe(PersonalAccessTokenObserver::class);
+
+        // Register mail views namespace for custom email templates
+        $this->loadViewsFrom([
+            resource_path('views/vendor/mail/html'),
+            resource_path('views/vendor/mail/text'),
+        ], 'mail');
+    }
+
+    /**
+     * Configure custom notification URLs for Customer model (mobile deep links).
+     */
+    protected function configureCustomerNotifications(): void
+    {
+        // Customize password reset URL for Customers (mobile app deep link)
+        ResetPassword::createUrlUsing(function ($notifiable, string $token) {
+            // Only apply to Customer model
+            if ($notifiable instanceof Customer) {
+                $scheme = config('app.mobile_scheme', 'subwayapp');
+                $queryParams = http_build_query([
+                    'token' => $token,
+                    'email' => $notifiable->getEmailForPasswordReset(),
+                ]);
+
+                return "{$scheme}://reset-password?{$queryParams}";
+            }
+
+            // Default behavior for User model (AdminPanel)
+            return url(route('password.reset', [
+                'token' => $token,
+                'email' => $notifiable->getEmailForPasswordReset(),
+            ], false));
+        });
+
+        // Customize email verification URL for Customers (mobile app deep link)
+        VerifyEmail::createUrlUsing(function ($notifiable) {
+            // Only apply to Customer model
+            if ($notifiable instanceof Customer) {
+                $scheme = config('app.mobile_scheme', 'subwayapp');
+
+                // Generate signed API URL
+                $apiUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                    'api.v1.auth.verify-email',
+                    now()->addMinutes(60),
+                    [
+                        'id' => $notifiable->getKey(),
+                        'hash' => sha1($notifiable->getEmailForVerification()),
+                    ]
+                );
+
+                $encodedUrl = urlencode($apiUrl);
+
+                return "{$scheme}://verify-email?url={$encodedUrl}";
+            }
+
+            // Default behavior for User model (AdminPanel)
+            return \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                'verification.verify',
+                now()->addMinutes(60),
+                [
+                    'id' => $notifiable->getKey(),
+                    'hash' => sha1($notifiable->getEmailForVerification()),
+                ]
+            );
+        });
     }
 
     /**

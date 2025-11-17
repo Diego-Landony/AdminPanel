@@ -172,8 +172,11 @@ return [
     */
 
     'custom' => [
-        'attribute-name' => [
-            'rule-name' => 'custom-message',
+        'email' => [
+            'unique' => 'Este correo ya está registrado. ¿Ya tienes cuenta? Inicia sesión.',
+        ],
+        'password' => [
+            'confirmed' => 'Las contraseñas no coinciden.',
         ],
     ],
 
@@ -190,10 +193,21 @@ return [
 
     'attributes' => [
         'name' => 'nombre',
+        'first_name' => 'nombre',
+        'last_name' => 'apellido',
         'email' => 'correo electrónico',
         'password' => 'contraseña',
         'password_confirmation' => 'confirmación de contraseña',
         'current_password' => 'contraseña actual',
+        'new_password' => 'nueva contraseña',
+        'phone' => 'teléfono',
+        'birth_date' => 'fecha de nacimiento',
+        'gender' => 'género',
+        'device_identifier' => 'identificador de dispositivo',
+        'device_id' => 'identificador de dispositivo',
+        'action' => 'acción',
+        'platform' => 'plataforma',
+        'token' => 'token',
         'description' => 'descripción',
         'permissions' => 'permisos',
         'role' => 'rol',

@@ -136,4 +136,17 @@ return [
 
     'mobile_scheme' => env('MOBILE_APP_SCHEME', 'subwayapp'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Mobile Application Name
+    |--------------------------------------------------------------------------
+    |
+    | This is the name used for the mobile app in notifications and emails
+    | sent to customers. This is separate from the main APP_NAME which is
+    | used for the admin panel.
+    |
+    */
+
+    'mobile_name' => env('MOBILE_APP_NAME', 'Subway-App Mobile'),
+
 ];

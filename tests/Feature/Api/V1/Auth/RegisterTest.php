@@ -14,7 +14,9 @@ test('puede registrarse con datos validos', function () {
         'email' => 'maria@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
-        'phone' => '+50212345678',
+        'phone' => '12345678',
+        'birth_date' => '1990-05-15',
+        'gender' => 'female',
     ]);
 
     // Verificar respuesta exitosa (201 Created)
@@ -41,7 +43,8 @@ test('puede registrarse con datos validos', function () {
         'email' => 'maria@example.com',
         'first_name' => 'María',
         'last_name' => 'García',
-        'phone' => '+50212345678',
+        'phone' => '12345678',
+        'gender' => 'female',
     ]);
 
     // Verificar que el token existe
@@ -68,6 +71,9 @@ test('rechaza email duplicado', function () {
         'email' => 'juan@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
+        'phone' => '12345678',
+        'birth_date' => '1990-05-15',
+        'gender' => 'male',
     ]);
 
     // Verificar error de validación
@@ -82,6 +88,9 @@ test('requiere password confirmation', function () {
         'last_name' => 'López',
         'email' => 'carlos@example.com',
         'password' => 'SecurePass123',
+        'phone' => '12345678',
+        'birth_date' => '1990-05-15',
+        'gender' => 'male',
         // Sin password_confirmation
     ]);
 
@@ -98,6 +107,9 @@ test('hashea password automaticamente', function () {
         'email' => 'ana@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
+        'phone' => '12345678',
+        'birth_date' => '1990-05-15',
+        'gender' => 'female',
     ]);
 
     // Verificar respuesta exitosa
@@ -121,6 +133,9 @@ test('crea token sanctum al registrarse', function () {
         'email' => 'roberto@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
+        'phone' => '12345678',
+        'birth_date' => '1990-05-15',
+        'gender' => 'male',
     ]);
 
     // Verificar respuesta exitosa
@@ -144,6 +159,9 @@ test('genera subway_card automaticamente', function () {
         'email' => 'pedro@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
+        'phone' => '12345678',
+        'birth_date' => '1990-05-15',
+        'gender' => 'male',
     ]);
 
     $response->assertCreated();
@@ -170,6 +188,9 @@ test('genera subway_card unica', function () {
         'email' => 'cliente1@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
+        'phone' => '12345678',
+        'birth_date' => '1990-05-15',
+        'gender' => 'male',
     ]);
 
     // Crear segundo customer
@@ -179,6 +200,9 @@ test('genera subway_card unica', function () {
         'email' => 'cliente2@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
+        'phone' => '87654321',
+        'birth_date' => '1992-03-20',
+        'gender' => 'female',
     ]);
 
     $response1->assertCreated();
@@ -224,6 +248,8 @@ test('valida formato de gender estandarizado', function () {
         'email' => 'test-gender@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
+        'phone' => '12345678',
+        'birth_date' => '1990-05-15',
         'gender' => 'male',
     ]);
 
@@ -244,6 +270,8 @@ test('rechaza gender no valido', function () {
         'email' => 'invalid-gender@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
+        'phone' => '12345678',
+        'birth_date' => '1990-05-15',
         'gender' => 'masculino', // formato antiguo no válido
     ]);
 
@@ -259,10 +287,62 @@ test('no incluye timezone en respuesta', function () {
         'email' => 'test-timezone@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
+        'phone' => '12345678',
+        'birth_date' => '1990-05-15',
+        'gender' => 'other',
     ]);
 
     $response->assertCreated();
 
     // Verificar que timezone no está en la respuesta
     expect($response->json('data.customer'))->not->toHaveKey('timezone');
+});
+
+// Test 12: Valida que teléfono tenga exactamente 8 dígitos
+test('valida telefono de 8 digitos', function () {
+    $response = $this->postJson('/api/v1/auth/register', [
+        'first_name' => 'Test',
+        'last_name' => 'Phone',
+        'email' => 'test-phone@example.com',
+        'password' => 'SecurePass123',
+        'password_confirmation' => 'SecurePass123',
+        'phone' => '1234567', // Solo 7 dígitos
+        'birth_date' => '1990-05-15',
+        'gender' => 'male',
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['phone']);
+});
+
+// Test 13: Rechaza teléfono con caracteres no numéricos
+test('rechaza telefono con caracteres no numericos', function () {
+    $response = $this->postJson('/api/v1/auth/register', [
+        'first_name' => 'Test',
+        'last_name' => 'Phone',
+        'email' => 'test-phone2@example.com',
+        'password' => 'SecurePass123',
+        'password_confirmation' => 'SecurePass123',
+        'phone' => '+5021234', // Con prefijo +502
+        'birth_date' => '1990-05-15',
+        'gender' => 'male',
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['phone']);
+});
+
+// Test 14: Requiere todos los campos obligatorios
+test('requiere todos los campos obligatorios', function () {
+    $response = $this->postJson('/api/v1/auth/register', [
+        'first_name' => 'Test',
+        'last_name' => 'Required',
+        'email' => 'test-required@example.com',
+        'password' => 'SecurePass123',
+        'password_confirmation' => 'SecurePass123',
+        // Falta phone, birth_date, gender
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['phone', 'birth_date', 'gender']);
 });

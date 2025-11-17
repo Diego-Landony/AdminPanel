@@ -71,8 +71,16 @@ class AuthController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="The email has already been taken."),
-     *             @OA\Property(property="errors", type="object")
+     *             @OA\Property(property="message", type="string", example="Este correo ya está registrado."),
+     *             @OA\Property(property="errors", type="object",
+     *                 @OA\Property(property="email", type="array", @OA\Items(type="string", example="Este correo ya está registrado.")),
+     *                 @OA\Property(property="first_name", type="array", @OA\Items(type="string", example="El nombre es requerido.")),
+     *                 @OA\Property(property="last_name", type="array", @OA\Items(type="string", example="El apellido es requerido.")),
+     *                 @OA\Property(property="password", type="array", @OA\Items(type="string", example="Las contraseñas no coinciden.")),
+     *                 @OA\Property(property="phone", type="array", @OA\Items(type="string", example="El teléfono debe tener exactamente 8 dígitos.")),
+     *                 @OA\Property(property="birth_date", type="array", @OA\Items(type="string", example="La fecha de nacimiento es requerida.")),
+     *                 @OA\Property(property="gender", type="array", @OA\Items(type="string", example="El género es requerido."))
+     *             )
      *         )
      *     ),
      *
@@ -112,7 +120,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'Registro exitoso. Por favor verifica tu email.',
+            'message' => __('auth.register_success'),
             'data' => AuthResource::make([
                 'token' => $token,
                 'customer' => $customer,
@@ -155,7 +163,19 @@ class AuthController extends Controller
      *         )
      *     ),
      *
-     *     @OA\Response(response=422, description="Invalid credentials or OAuth account"),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Invalid credentials or OAuth account",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Las credenciales proporcionadas son incorrectas."),
+     *             @OA\Property(property="errors", type="object",
+     *                 @OA\Property(property="email", type="array", @OA\Items(type="string", example="Las credenciales proporcionadas son incorrectas."))
+     *             )
+     *         )
+     *     ),
+     *
      *     @OA\Response(response=429, description="Too many login attempts")
      * )
      */
@@ -169,13 +189,13 @@ class AuthController extends Controller
             RateLimiter::hit($this->throttleKey($request));
 
             throw ValidationException::withMessages([
-                'email' => ['Las credenciales proporcionadas son incorrectas.'],
+                'email' => [__('auth.invalid_credentials')],
             ]);
         }
 
         if ($customer->oauth_provider !== 'local') {
             throw ValidationException::withMessages([
-                'email' => ['Esta cuenta usa autenticación con '.$customer->oauth_provider.'. Por favor inicia sesión con '.$customer->oauth_provider.'.'],
+                'email' => [__('auth.oauth_account', ['provider' => $customer->oauth_provider])],
             ]);
         }
 
@@ -203,7 +223,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'Inicio de sesión exitoso.',
+            'message' => __('auth.login_success'),
             'data' => AuthResource::make([
                 'token' => $token,
                 'customer' => $customer->load('customerType'),
@@ -239,7 +259,7 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'message' => 'Sesión cerrada exitosamente.',
+            'message' => __('auth.logout_success'),
         ]);
     }
 
@@ -271,7 +291,7 @@ class AuthController extends Controller
         $request->user()->tokens()->delete();
 
         return response()->json([
-            'message' => 'Se cerraron todas las sesiones exitosamente.',
+            'message' => __('auth.logout_all_success'),
         ]);
     }
 
@@ -314,7 +334,7 @@ class AuthController extends Controller
         $token = $customer->createToken($tokenName)->plainTextToken;
 
         return response()->json([
-            'message' => 'Token renovado exitosamente.',
+            'message' => __('auth.token_refreshed'),
             'data' => AuthResource::make([
                 'token' => $token,
                 'customer' => $customer,
@@ -368,7 +388,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'Enlace de restablecimiento de contraseña enviado.',
+            'message' => __('auth.password_reset_link_sent'),
         ]);
     }
 
@@ -429,7 +449,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'Contraseña restablecida exitosamente.',
+            'message' => __('auth.password_reset_success'),
         ]);
     }
 
@@ -480,13 +500,13 @@ class AuthController extends Controller
 
         if (! hash_equals(sha1($customer->email), (string) $request->route('hash'))) {
             throw ValidationException::withMessages([
-                'email' => ['El enlace de verificación no es válido.'],
+                'email' => [__('auth.invalid_verification_link')],
             ]);
         }
 
         if ($customer->hasVerifiedEmail()) {
             return response()->json([
-                'message' => 'El email ya ha sido verificado.',
+                'message' => __('auth.email_already_verified'),
             ]);
         }
 
@@ -495,7 +515,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'Email verificado exitosamente.',
+            'message' => __('auth.email_verified'),
         ]);
     }
 
@@ -542,20 +562,20 @@ class AuthController extends Controller
 
         if (! $customer) {
             throw ValidationException::withMessages([
-                'email' => ['No se encontró una cuenta con este email.'],
+                'email' => [__('auth.account_not_found')],
             ]);
         }
 
         if ($customer->hasVerifiedEmail()) {
             return response()->json([
-                'message' => 'El email ya ha sido verificado.',
+                'message' => __('auth.email_already_verified'),
             ]);
         }
 
         $customer->sendEmailVerificationNotification();
 
         return response()->json([
-            'message' => 'Enlace de verificación reenviado.',
+            'message' => __('auth.verification_link_resent'),
         ]);
     }
 

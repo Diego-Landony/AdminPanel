@@ -280,7 +280,7 @@ class OAuthController extends Controller
             ])->resolve();
 
             return response()->json([
-                'message' => $result['message'],
+                'message' => __($result['message_key']),
                 'data' => array_merge($authData, [
                     'is_new_customer' => $result['is_new'],
                 ]),

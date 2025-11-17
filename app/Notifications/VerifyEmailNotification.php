@@ -14,7 +14,8 @@ class VerifyEmailNotification extends VerifyEmailBase
      */
     protected function verificationUrl($notifiable): string
     {
-        return URL::temporarySignedRoute(
+        // Generate the signed API URL
+        $apiUrl = URL::temporarySignedRoute(
             'api.v1.auth.verify-email',
             Carbon::now()->addMinutes(60),
             [
@@ -22,6 +23,12 @@ class VerifyEmailNotification extends VerifyEmailBase
                 'hash' => sha1($notifiable->getEmailForVerification()),
             ]
         );
+
+        // Wrap in deep link for mobile app
+        $scheme = config('app.mobile_scheme', 'subwayapp');
+        $encodedUrl = urlencode($apiUrl);
+
+        return "{$scheme}://verify-email?url={$encodedUrl}";
     }
 
     /**
@@ -30,13 +37,17 @@ class VerifyEmailNotification extends VerifyEmailBase
     public function toMail($notifiable): MailMessage
     {
         $verificationUrl = $this->verificationUrl($notifiable);
+        $appName = config('app.mobile_name');
+
+        // Get customer name
+        $customerName = $notifiable->first_name ?? 'Usuario';
 
         return (new MailMessage)
-            ->subject('Verifica tu Email - Subway Guatemala')
-            ->greeting('¡Hola!')
-            ->line('Por favor verifica tu dirección de email haciendo clic en el botón de abajo.')
-            ->action('Verificar Email', $verificationUrl)
-            ->line('Este enlace expirará en 60 minutos.')
-            ->line('Si no creaste esta cuenta, puedes ignorar este mensaje.');
+            ->subject(__('emails.verify_subject', ['appName' => $appName]))
+            ->view('emails.mobile.verify-email', [
+                'customerName' => $customerName,
+                'actionUrl' => $verificationUrl,
+                'expireMinutes' => 60,
+            ]);
     }
 }

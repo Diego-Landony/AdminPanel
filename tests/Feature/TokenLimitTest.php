@@ -85,6 +85,9 @@ test('register endpoint enforces token limit', function () {
         'email' => 'new@example.com',
         'password' => 'Pass123',
         'password_confirmation' => 'Pass123',
+        'phone' => '12345678',
+        'birth_date' => '1990-05-15',
+        'gender' => 'male',
     ]);
 
     $response->assertCreated();

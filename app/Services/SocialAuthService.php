@@ -31,7 +31,7 @@ class SocialAuthService
             ];
         } catch (\Exception $e) {
             throw ValidationException::withMessages([
-                'token' => ['Token de Google inválido o expirado.'],
+                'token' => [__('auth.oauth_invalid_token')],
             ]);
         }
     }
@@ -56,7 +56,7 @@ class SocialAuthService
 
             return [
                 'customer' => $customer,
-                'message' => 'Inicio de sesión exitoso.',
+                'message_key' => 'auth.oauth_login_success',
                 'is_new' => false,
             ];
         }
@@ -66,7 +66,7 @@ class SocialAuthService
         if ($existingCustomer) {
             if ($existingCustomer->oauth_provider !== $provider && $existingCustomer->oauth_provider !== 'local') {
                 throw ValidationException::withMessages([
-                    'email' => ['Esta cuenta ya existe con autenticación '.$existingCustomer->oauth_provider.'.'],
+                    'email' => [__('auth.oauth_provider_mismatch', ['provider' => $existingCustomer->oauth_provider])],
                 ]);
             }
 
@@ -80,14 +80,14 @@ class SocialAuthService
 
             return [
                 'customer' => $existingCustomer,
-                'message' => 'Cuenta vinculada exitosamente.',
+                'message_key' => 'auth.oauth_account_linked',
                 'is_new' => false,
             ];
         }
 
         // Email no existe en la base de datos - RECHAZAR
         throw ValidationException::withMessages([
-            'email' => ['No existe una cuenta con este correo electrónico. Por favor regístrate primero.'],
+            'email' => [__('auth.oauth_email_not_registered')],
         ]);
     }
 
@@ -114,14 +114,14 @@ class SocialAuthService
 
                 return [
                     'customer' => $existingCustomer,
-                    'message' => 'Inicio de sesión exitoso.',
+                    'message_key' => 'auth.oauth_login_success',
                     'is_new' => false,
                 ];
             }
 
             // Email existe pero no está vinculado a este provider
             throw ValidationException::withMessages([
-                'email' => ['Ya existe una cuenta con este correo electrónico. Por favor inicia sesión con tu método original.'],
+                'email' => [__('auth.oauth_email_exists')],
             ]);
         }
 
@@ -144,7 +144,7 @@ class SocialAuthService
 
         return [
             'customer' => $customer,
-            'message' => 'Cuenta creada exitosamente.',
+            'message_key' => 'auth.oauth_register_success',
             'is_new' => true,
         ];
     }

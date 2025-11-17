@@ -5,7 +5,6 @@ namespace App\Notifications;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 
 class ResetPasswordNotification extends ResetPassword
 {
@@ -24,18 +23,19 @@ class ResetPasswordNotification extends ResetPassword
      */
     public function toMail($notifiable): MailMessage
     {
-        $url = url(route('password.reset', [
-            'token' => $this->token,
-            'email' => $notifiable->getEmailForPasswordReset(),
-        ], false));
+        $url = $this->resetUrl($notifiable);
+        $appName = config('app.mobile_name');
+        $expireMinutes = config('auth.passwords.'.config('auth.defaults.passwords').'.expire');
+
+        // Get customer name
+        $customerName = $notifiable->first_name ?? 'Usuario';
 
         return (new MailMessage)
-            ->subject(__('passwords.subject'))
-            ->greeting(__('passwords.greeting'))
-            ->line(__('passwords.body'))
-            ->action(__('passwords.action'), $url)
-            ->line(__('passwords.expire', ['count' => config('auth.passwords.'.config('auth.defaults.passwords').'.expire')]))
-            ->line(__('passwords.footer'))
-            ->salutation(__('passwords.salutation').' '.config('app.name'));
+            ->subject(__('emails.reset_subject', ['appName' => $appName]))
+            ->view('emails.mobile.reset-password', [
+                'customerName' => $customerName,
+                'actionUrl' => $url,
+                'expireMinutes' => $expireMinutes,
+            ]);
     }
 }

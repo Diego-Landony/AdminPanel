@@ -30,9 +30,9 @@ class RegisterRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.Customer::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'birth_date' => ['nullable', 'date', 'before:today'],
-            'gender' => ['nullable', Rule::enum(Gender::class)],
+            'phone' => ['required', 'string', 'size:8', 'regex:/^[0-9]{8}$/'],
+            'birth_date' => ['required', 'date', 'before:today'],
+            'gender' => ['required', Rule::enum(Gender::class)],
             'device_identifier' => ['nullable', 'string', 'max:255'],
         ];
     }
@@ -45,13 +45,22 @@ class RegisterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.unique' => 'Este correo ya está registrado.',
-            'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
-            'password.confirmed' => 'Las contraseñas no coinciden.',
             'first_name.required' => 'El nombre es requerido.',
             'last_name.required' => 'El apellido es requerido.',
             'email.required' => 'El correo electrónico es requerido.',
             'email.email' => 'El correo electrónico debe ser válido.',
+            'email.unique' => 'Este correo ya está registrado.',
+            'password.required' => 'La contraseña es requerida.',
+            'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
+            'password.confirmed' => 'Las contraseñas no coinciden.',
+            'phone.required' => 'El teléfono es requerido.',
+            'phone.size' => 'El teléfono debe tener exactamente 8 dígitos.',
+            'phone.regex' => 'El teléfono debe contener solo números.',
+            'birth_date.required' => 'La fecha de nacimiento es requerida.',
+            'birth_date.date' => 'La fecha de nacimiento debe ser una fecha válida.',
+            'birth_date.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
+            'gender.required' => 'El género es requerido.',
+            'gender.enum' => 'El género seleccionado no es válido.',
         ];
     }
 }

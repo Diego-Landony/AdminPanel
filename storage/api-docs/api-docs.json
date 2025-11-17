@@ -141,9 +141,60 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "The email has already been taken."
+                                            "example": "Este correo ya está registrado."
                                         },
                                         "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "Este correo ya está registrado."
+                                                    }
+                                                },
+                                                "first_name": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "El nombre es requerido."
+                                                    }
+                                                },
+                                                "last_name": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "El apellido es requerido."
+                                                    }
+                                                },
+                                                "password": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "Las contraseñas no coinciden."
+                                                    }
+                                                },
+                                                "phone": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "El teléfono debe tener exactamente 8 dígitos."
+                                                    }
+                                                },
+                                                "birth_date": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "La fecha de nacimiento es requerida."
+                                                    }
+                                                },
+                                                "gender": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "El género es requerido."
+                                                    }
+                                                }
+                                            },
                                             "type": "object"
                                         }
                                     },
@@ -228,7 +279,32 @@
                         }
                     },
                     "422": {
-                        "description": "Invalid credentials or OAuth account"
+                        "description": "Invalid credentials or OAuth account",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Las credenciales proporcionadas son incorrectas."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "Las credenciales proporcionadas son incorrectas."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "429": {
                         "description": "Too many login attempts"
@@ -1317,7 +1393,7 @@
         "schemas": {
             "Customer": {
                 "title": "Customer",
-                "description": "Customer model with profile information",
+                "description": "Customer model with profile information and loyalty data",
                 "properties": {
                     "id": {
                         "type": "integer",
@@ -1341,10 +1417,29 @@
                         "format": "email",
                         "example": "juan@example.com"
                     },
-                    "phone": {
+                    "email_verified_at": {
                         "type": "string",
-                        "example": "+50212345678",
+                        "format": "date-time",
+                        "example": "2024-01-15T10:30:00Z",
                         "nullable": true
+                    },
+                    "avatar": {
+                        "type": "string",
+                        "example": "https://example.com/avatar.jpg",
+                        "nullable": true
+                    },
+                    "oauth_provider": {
+                        "type": "string",
+                        "enum": [
+                            "local",
+                            "google"
+                        ],
+                        "example": "local"
+                    },
+                    "subway_card": {
+                        "description": "Unique loyalty card number (10-12 digits)",
+                        "type": "string",
+                        "example": "802056895224"
                     },
                     "birth_date": {
                         "type": "string",
@@ -1362,23 +1457,10 @@
                         "example": "male",
                         "nullable": true
                     },
-                    "avatar": {
+                    "phone": {
+                        "description": "8-digit phone number (Guatemala)",
                         "type": "string",
-                        "example": "https://example.com/avatar.jpg",
-                        "nullable": true
-                    },
-                    "oauth_provider": {
-                        "type": "string",
-                        "enum": [
-                            "local",
-                            "google"
-                        ],
-                        "example": "local"
-                    },
-                    "email_verified_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "example": "2024-01-15T10:30:00Z",
+                        "example": "12345678",
                         "nullable": true
                     },
                     "last_login_at": {
@@ -1387,10 +1469,42 @@
                         "example": "2024-01-20T15:45:00Z",
                         "nullable": true
                     },
-                    "customer_type_id": {
-                        "type": "integer",
-                        "example": 1,
+                    "last_activity_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-20T16:00:00Z",
                         "nullable": true
+                    },
+                    "last_purchase_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-18T12:30:00Z",
+                        "nullable": true
+                    },
+                    "points": {
+                        "description": "Available loyalty points",
+                        "type": "integer",
+                        "example": 150
+                    },
+                    "points_updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-18T12:30:00Z",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive",
+                            "suspended"
+                        ],
+                        "example": "active"
+                    },
+                    "is_online": {
+                        "description": "True if customer is currently active",
+                        "type": "boolean",
+                        "example": true
                     },
                     "created_at": {
                         "type": "string",

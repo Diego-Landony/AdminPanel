@@ -16,14 +16,14 @@ class DeviceService
         PersonalAccessToken $token,
         string $deviceIdentifier
     ): CustomerDevice {
-        // Find existing device by device_identifier
-        $device = CustomerDevice::where('customer_id', $customer->id)
-            ->where('device_identifier', $deviceIdentifier)
-            ->first();
+        // Find existing device by device_identifier ONLY (it's globally unique)
+        // This handles the case where a device was previously used by another customer
+        $device = CustomerDevice::where('device_identifier', $deviceIdentifier)->first();
 
         if ($device) {
-            // Update existing device
+            // Update existing device - reassign to current customer
             $device->update([
+                'customer_id' => $customer->id,
                 'sanctum_token_id' => $token->id,
                 'is_active' => true,
                 'last_used_at' => now(),

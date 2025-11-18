@@ -34,6 +34,26 @@ Route::get('/', function () {
 Route::post('/theme/update', [ThemeController::class, 'update'])->name('theme.update');
 Route::get('/theme/get', [ThemeController::class, 'get'])->name('theme.get');
 
+// OAuth Success Route (Web platform)
+Route::get('/oauth/success', function () {
+    // Recuperar datos de la sesión
+    $token = session('oauth_token');
+    $customerId = session('oauth_customer_id');
+    $isNew = session('oauth_is_new');
+    $message = session('oauth_message');
+
+    // Limpiar sesión OAuth
+    session()->forget(['oauth_token', 'oauth_customer_id', 'oauth_is_new', 'oauth_message']);
+
+    // Retornar vista que procesa el token
+    return view('auth.oauth-success', [
+        'token' => $token,
+        'customerId' => $customerId,
+        'isNewCustomer' => $isNew,
+        'message' => $message,
+    ]);
+})->name('oauth.success');
+
 // Rutas de subida de imágenes (requieren autenticación)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/api/upload/image', [ImageUploadController::class, 'upload'])->name('upload.image');

@@ -37,14 +37,11 @@ Always use context7 when I need code generation, setup or configuration steps, o
 - If you get "File does not exist" or any read error, you MUST:
   1. Try using Glob tool to search for the file with pattern matching
   2. Try using MCP tools if available to locate the file
-  3. Search in common alternative locations (~/programing/, /Users/diegolandony/programing/)
+  3. Search in common alternative locations based on file type
   4. Ask the user for the correct path if still not found
 - NEVER skip or ignore a file the user asked you to read
 - If a file path has `~`, expand it to the full absolute path
-- Example: If user says "read ~/programing/app_flutter/BACKEND-OAUTH-MOBILE.md" and you get error, try:
-  - /Users/diegolandony/programing/app_flutter/BACKEND-OAUTH-MOBILE.md
-  - Use Glob: "**/*BACKEND-OAUTH-MOBILE.md" in /Users/diegolandony/programing/
-  - Search in docs/ subdirectories
+
 
 ## Verification Scripts
 - Do not create verification scripts or tinker when tests cover that functionality and prove it works. Unit and feature tests are more important.

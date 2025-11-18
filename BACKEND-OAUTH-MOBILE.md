@@ -1,10 +1,10 @@
-# OAuth de Google - Backend Laravel + Expo React Native
+# OAuth de Google - Backend Laravel (Web + Mobile)
 ## Guía de Implementación Completa
 
 > **✅ ESTADO: IMPLEMENTACIÓN COMPLETADA Y VALIDADA**
 >
-> Última actualización: 2025-11-13
-> Versión: 3.1 - Browser-only OAuth + Callback con customer_id
+> Última actualización: 2025-01-18
+> Versión: 4.0 - Guía Web + Mobile
 
 ---
 
@@ -13,11 +13,12 @@
 **Solución OAuth unificada que funciona para web y mobile:**
 
 - ✅ Backend maneja TODO el flujo OAuth (más seguro)
-- ✅ Solo OAuth vía navegador (NO requiere Google SDK nativo)
+- ✅ OAuth vía navegador (NO requiere Google SDK)
 - ✅ OAuth 2.0 state parameter (estándar, sin sesión)
-- ✅ Funciona en Expo Go (sin builds nativos)
+- ✅ Compatible con aplicaciones web (React/Vue/Inertia)
+- ✅ Compatible con aplicaciones mobile (Expo React Native)
 - ✅ Cliente tipo "Aplicación web" en Google Cloud Console
-- ✅ Callback con customer_id (seguro, no expone datos en URLs)
+- ✅ Callback seguro (JSON para web, deep link para mobile)
 
 ---
 
@@ -28,13 +29,19 @@
 - OAuth 2.0 Authorization Code Grant
 - State parameter para mantener contexto (no usa sesión)
 - Genera tokens Sanctum para autenticación API
-- Gestiona vinculación de dispositivos
+- Gestiona vinculación de dispositivos (mobile)
 
-### Frontend (Expo React Native)
-- `expo-web-browser` para abrir OAuth en navegador
-- Deep link (`subwayapp://`) para recibir callback
-- AsyncStorage para guardar tokens
+### Frontend Web
+- Redirige al endpoint de OAuth con `platform=web`
+- Recibe respuesta JSON con token y datos del usuario
+- Guarda token en almacenamiento local (localStorage, cookies, etc.)
 - NO requiere Google SDK
+
+### Frontend Mobile
+- Abre OAuth en navegador del sistema
+- Configura deep link para recibir callback
+- Guarda token en almacenamiento persistente
+- NO requiere Google SDK nativo
 
 ### Google Cloud Console
 - Tipo de cliente: **"Aplicación web"** ✅
@@ -109,22 +116,24 @@ https://admin.subwaycardgt.com/api/v1/auth/oauth/google/callback
 
 ---
 
-## 🔄 Flujo Completo OAuth (Mobile)
+## 🔄 Flujo Completo OAuth
+
+### Flujo Web (Inertia/React/Vue)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ 1. Usuario toca "Continuar con Google" en la app               │
+│ 1. Usuario hace clic en "Continuar con Google"                 │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│ 2. App abre navegador → Backend                                │
-│    GET /api/v1/auth/oauth/google/redirect                      │
-│    ?action=login&platform=mobile&device_id=uuid                │
+│ 2. Frontend redirige a Backend                                 │
+│    window.location.href = /api/v1/auth/oauth/google/redirect   │
+│    ?action=login&platform=web                                  │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
 │ 3. Backend codifica parámetros en OAuth state                  │
-│    state = base64({platform, action, device_id, nonce})        │
+│    state = base64({platform: "web", action, nonce})            │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
@@ -147,11 +156,69 @@ https://admin.subwaycardgt.com/api/v1/auth/oauth/google/callback
 │    - Login: vincula cuenta existente                           │
 │    - Register: crea cuenta nueva                               │
 │    - Genera token Sanctum                                      │
-│    - Vincula dispositivo con token                             │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│ 8. Backend redirige a app con deep link                        │
+│ 8. Backend devuelve JSON (platform=web)                        │
+│    {                                                            │
+│      "message": "Inicio de sesión exitoso",                    │
+│      "data": {                                                  │
+│        "access_token": "12|SUis...",                            │
+│        "customer": {...},                                       │
+│        "is_new_customer": false                                 │
+│      }                                                          │
+│    }                                                            │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 9. Frontend guarda token, actualiza estado, redirige a home    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Flujo Mobile (Expo React Native)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. Usuario toca "Continuar con Google" en la app               │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. App abre navegador → Backend                                │
+│    WebBrowser.openAuthSessionAsync(...)                        │
+│    GET /api/v1/auth/oauth/google/redirect                      │
+│    ?action=login&platform=mobile&device_id=uuid                │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. Backend codifica parámetros en OAuth state                  │
+│    state = base64({platform: "mobile", action, device_id})     │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 4. Backend redirige a Google con state                         │
+│    https://accounts.google.com/o/oauth2/v2/auth?state=...      │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 5. Usuario autoriza en Google (pantalla de consentimiento)     │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 6. Google redirige a backend con code y state                  │
+│    GET /api/v1/auth/oauth/google/callback?code=xxx&state=xxx   │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 7. Backend decodifica state y procesa autenticación            │
+│    - Obtiene datos de Google                                   │
+│    - Login: vincula cuenta existente                           │
+│    - Register: crea cuenta nueva                               │
+│    - Genera token Sanctum                                      │
+│    - Vincula dispositivo con token (mobile)                    │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 8. Backend redirige a app con deep link (platform=mobile)      │
 │    subwayapp://oauth/callback?token=xxx&customer_id=xxx        │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
@@ -162,138 +229,287 @@ https://admin.subwaycardgt.com/api/v1/auth/oauth/google/callback
 
 ---
 
-## 📱 Guía para Desarrolladores de Expo App
+## 🌐 Guía para Desarrolladores Web
 
-### 🎯 Qué Hacer en la App
+### 🎯 Implementación Plataforma Web
 
-#### 1. Configurar Deep Link en `app.json`
+#### 1. Iniciar Flujo OAuth
 
-```json
-{
-  "expo": {
-    "scheme": "subwayapp",
-    "name": "Subway Guatemala",
-    "slug": "subway-guatemala"
-  }
-}
+Para iniciar el proceso de autenticación con Google, redirige al usuario al endpoint del backend:
+
+**URL de inicio:**
+```
+GET /api/v1/auth/oauth/google/redirect?action={login|register}&platform=web
+```
+
+**Parámetros:**
+- `action`: `login` (cuenta existente) o `register` (crear cuenta nueva)
+- `platform`: **Debe ser `web`**
+- `device_id`: Opcional para web
+
+**Ejemplo:**
+```
+https://admin.subwaycardgt.com/api/v1/auth/oauth/google/redirect?action=login&platform=web
+```
+
+#### 2. Respuesta del Backend
+
+Después de que el usuario autorice en Google, el backend **redirigirá a una página HTML** que procesará el token automáticamente:
+
+**Flujo de respuesta:**
+
+1. Backend guarda datos en sesión
+2. Redirige a `/oauth/success`
+3. Página HTML recibe el token
+4. JavaScript guarda el token en localStorage
+5. Redirige automáticamente a `/home` o tu dashboard
+
+**Datos disponibles en la página de éxito:**
+- `token`: Token de acceso Sanctum
+- `customerId`: ID del cliente
+- `isNewCustomer`: true si es cuenta nueva, false si ya existía
+- `message`: Mensaje de éxito traducido
+
+**La página automáticamente:**
+- Guarda `auth_token` en localStorage
+- Guarda `customer_id` en localStorage
+- Emite evento `oauth-success` (para Livewire)
+- Redirige a `/home` después de 1 segundo
+
+#### 3. Escuchar Evento OAuth (Opcional - Para Livewire)
+
+Si usas Livewire, puedes escuchar el evento `oauth-success`:
+
+```javascript
+window.addEventListener('oauth-success', (event) => {
+    const { token, customerId, isNewCustomer, message } = event.detail;
+
+    // Actualizar estado de Livewire
+    Livewire.emit('userAuthenticated', { token, customerId });
+
+    // O hacer lo que necesites con los datos
+    console.log('Usuario autenticado:', customerId);
+});
+```
+
+#### 4. Usar Token en Peticiones API
+
+El token ya está guardado en `localStorage` automáticamente. Para usarlo en peticiones API:
+
+```
+Authorization: Bearer {auth_token desde localStorage}
+```
+
+**Ejemplo de petición:**
+```
+GET /api/v1/profile
+Headers:
+  Accept: application/json
+  Authorization: Bearer 12|SUisABC123xyz...
+```
+
+### ✅ Consideraciones Web
+
+**✅ Hacer:**
+- Redirigir completamente al endpoint OAuth (redirección de página completa)
+- Usar `platform=web` en todos los casos
+- El token se guarda automáticamente en localStorage
+- La redirección a `/home` es automática (puedes personalizar en la vista)
+- Incluir token en todas las peticiones autenticadas
+- Personalizar la ruta de redirección en `resources/views/auth/oauth-success.blade.php` si necesitas
+
+**❌ NO Hacer:**
+- NO instalar o usar Google Sign-In SDK/JavaScript
+- NO exponer tokens en URLs públicas
+- NO usar `platform=mobile` para aplicaciones web
+- NO intentar parsear deep links
+
+**🎨 Personalización:**
+
+Si necesitas cambiar la ruta de redirección después del OAuth, edita:
+```
+resources/views/auth/oauth-success.blade.php
+```
+
+Busca esta línea:
+```javascript
+window.location.href = '/home';
+```
+
+Y cámbiala por tu ruta preferida.
+
+---
+
+## 📱 Guía para Desarrolladores Mobile
+
+### 🎯 Implementación Plataforma Mobile
+
+#### 1. Configurar Deep Link
+
+Tu aplicación mobile debe estar configurada para recibir deep links con el scheme:
+
+```
+subwayapp://
 ```
 
 **⚠️ El scheme debe ser exactamente `subwayapp`**
+
+Este deep link permite que el backend redirija a tu app después de completar el OAuth.
 
 ---
 
 #### 2. Generar Device ID Único
 
-```typescript
-// Generar UUID único cuando la app se instala
-// Guardarlo en AsyncStorage
-// Usarlo en TODAS las llamadas OAuth
+Genera un identificador único para el dispositivo y guárdalo en almacenamiento persistente:
 
-const deviceId = '550e8400-e29b-41d4-a716-446655440000'; // UUID v4
-```
+- **Formato recomendado:** UUID v4
+- **Ejemplo:** `550e8400-e29b-41d4-a716-446655440000`
+- **Persistencia:** Debe mantenerse entre sesiones
+- **Uso:** Enviar en todas las peticiones OAuth
 
-**Este device_id es OBLIGATORIO para mobile**
+**⚠️ Este `device_id` es OBLIGATORIO para mobile**
 
 ---
 
-#### 3. Implementar Login con Google
+#### 3. Iniciar Flujo OAuth
 
-**Usar `expo-web-browser` (NO expo-auth-session):**
+Abre el navegador del sistema con la URL del backend:
 
-```typescript
-import * as WebBrowser from 'expo-web-browser';
+**URL de inicio:**
+```
+GET /api/v1/auth/oauth/google/redirect?action={login|register}&platform=mobile&device_id={uuid}
+```
 
-// 1. Obtener device_id del AsyncStorage
-const deviceId = await getDeviceId();
+**Parámetros:**
+- `action`: `login` (cuenta existente) o `register` (crear cuenta nueva)
+- `platform`: **Debe ser `mobile`**
+- `device_id`: **Requerido** - UUID del dispositivo
 
-// 2. Construir URL del backend
-const authUrl = `https://admin.subwaycardgt.com/api/v1/auth/oauth/google/redirect?action=login&platform=mobile&device_id=${deviceId}`;
+**Ejemplo:**
+```
+https://admin.subwaycardgt.com/api/v1/auth/oauth/google/redirect?action=login&platform=mobile&device_id=550e8400-e29b-41d4-a716-446655440000
+```
 
-// 3. Abrir navegador
-const result = await WebBrowser.openAuthSessionAsync(
-  authUrl,
-  'subwayapp://oauth/callback'
-);
+**Configuración del navegador:**
+- Especifica la URL de callback esperada: `subwayapp://oauth/callback`
+- El navegador se cerrará automáticamente al recibir el callback
 
-// 4. Manejar callback
-if (result.type === 'success' && result.url) {
-  const params = new URLSearchParams(result.url.split('?')[1]);
-  const token = params.get('token');
-  const customerId = params.get('customer_id');
-  const isNewCustomer = params.get('is_new_customer');
+---
 
-  // 5. Guardar token
-  await AsyncStorage.setItem('auth_token', token);
-  await AsyncStorage.setItem('customer_id', customerId);
+#### 4. Recibir Callback
 
-  // 6. Obtener perfil completo del usuario
-  const profileResponse = await fetch('https://admin.subwaycardgt.com/api/v1/profile', {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Accept': 'application/json',
-    },
-  });
-  const customer = await profileResponse.json();
+Después de que el usuario autorice en Google, el backend redirigirá a tu app mediante deep link:
 
-  // 7. Guardar perfil y navegar
-  await AsyncStorage.setItem('customer', JSON.stringify(customer));
-  navigation.navigate('Home');
+**Éxito:**
+```
+subwayapp://oauth/callback?token={access_token}&customer_id={id}&is_new_customer={0|1}
+```
+
+**Ejemplo:**
+```
+subwayapp://oauth/callback?token=12|SUisABC123xyz&customer_id=81&is_new_customer=0
+```
+
+**Parámetros del callback:**
+- `token`: Token de acceso Sanctum para autenticación API
+- `customer_id`: ID del cliente (para referencia)
+- `is_new_customer`: `1` si es cuenta nueva, `0` si ya existía
+
+**Error:**
+```
+subwayapp://oauth/callback?error={error_code}&message={error_message}
+```
+
+**Ejemplo:**
+```
+subwayapp://oauth/callback?error=user_not_found&message=No%20existe%20una%20cuenta
+```
+
+---
+
+#### 5. Parsear Callback
+
+Extrae los parámetros del deep link:
+
+1. Obtén la URL del deep link recibido
+2. Parsea los query parameters
+3. Extrae `token`, `customer_id`, `is_new_customer`
+4. Verifica si hay `error`
+
+---
+
+#### 6. Guardar Token
+
+Guarda el token en almacenamiento persistente seguro:
+
+- **Android:** SharedPreferences (modo privado) o EncryptedSharedPreferences
+- **iOS:** Keychain
+- **Persistencia:** Debe sobrevivir cierres de app
+
+---
+
+#### 7. Obtener Perfil Completo
+
+**⚠️ Importante:** El callback solo envía `customer_id` (no el objeto completo) por seguridad.
+
+Usa el token para obtener el perfil completo del usuario:
+
+```
+GET /api/v1/profile
+Headers:
+  Accept: application/json
+  Authorization: Bearer {access_token}
+```
+
+**Respuesta:**
+```json
+{
+  "data": {
+    "id": 81,
+    "first_name": "Juan",
+    "last_name": "Pérez",
+    "email": "juan@example.com",
+    "phone": null,
+    "avatar": "https://lh3.googleusercontent.com/a/...",
+    "loyalty_points": 0,
+    "customer_type": {
+      "id": 1,
+      "name": "Regular"
+    }
+  }
 }
 ```
 
 ---
 
-#### 4. Implementar Register con Google
+#### 8. Usar Token en Peticiones API
 
-**Exactamente igual al login, pero cambiar:**
-```typescript
-// Cambiar action=login → action=register
-const authUrl = `https://admin.subwaycardgt.com/api/v1/auth/oauth/google/redirect?action=register&platform=mobile&device_id=${deviceId}`;
+Para todas las peticiones autenticadas, incluye el token en el header `Authorization`:
+
+```
+Authorization: Bearer {access_token}
 ```
 
 ---
 
-### ✅ Callback del Backend
-
-**Éxito:**
-```
-subwayapp://oauth/callback
-  ?token=12|SUisABC123xyz...
-  &customer_id=81
-  &is_new_customer=0
-```
-
-**⚠️ Nota de Seguridad:**
-El callback solo envía `customer_id` (no el objeto completo) por:
-- **Seguridad**: URLs se guardan en logs y historial del navegador
-- **Tamaño**: Deep links largos pueden fallar en algunos dispositivos
-- **Privacidad**: Evita exponer datos sensibles en URLs
-
-**Usa el token para obtener el perfil completo** vía `GET /api/v1/profile`
-
-**Error:**
-```
-subwayapp://oauth/callback
-  ?error=user_not_found
-  &message=No existe una cuenta con este correo
-```
-
----
-
-### ⚠️ Cosas Importantes
+### ✅ Consideraciones Mobile
 
 **✅ Hacer:**
-- Usar `expo-web-browser` (NO `expo-auth-session`)
-- Generar device_id único y guardarlo
-- Pasar device_id en TODAS las llamadas OAuth
+- Abrir OAuth en navegador del sistema (NO WebView embebida)
+- Generar y persistir `device_id` único
+- Usar `platform=mobile` en todos los casos
+- Incluir `device_id` en todas las peticiones OAuth
+- Configurar deep link con scheme `subwayapp://`
+- Manejar callback (éxito y errores)
 - Obtener perfil completo con `GET /api/v1/profile` después del callback
-- Manejar tanto éxito como errores
+- Guardar token de forma segura
 
 **❌ NO Hacer:**
-- NO instalar Google Sign-In SDK
-- NO configurar nada en Google Cloud Console
-- NO usar `expo-auth-session`
-- NO intentar validar el token de Google en la app
+- NO instalar o usar Google Sign-In SDK nativo
+- NO usar WebView embebida para OAuth
+- NO exponer token en logs
+- NO usar `platform=web` para apps mobile
+- NO asumir que el callback contiene el perfil completo
 
 ---
 
@@ -301,7 +517,7 @@ subwayapp://oauth/callback
 
 ### GET /api/v1/auth/oauth/google/redirect
 
-**Descripción:** Inicia el flujo OAuth (web/mobile) via navegador
+**Descripción:** Inicia el flujo OAuth unificado para web y mobile
 
 **Parámetros Query:**
 
@@ -309,7 +525,7 @@ subwayapp://oauth/callback
 |-----------|------|-----------|---------|-------------|
 | `action` | string | ✅ Sí | `login`, `register` | Tipo de acción |
 | `platform` | string | ✅ Sí | `web`, `mobile` | Plataforma del cliente |
-| `device_id` | string | ⚠️ Si platform=mobile | UUID | Identificador único del dispositivo |
+| `device_id` | string | ⚠️ Si platform=mobile | UUID | Identificador único del dispositivo (requerido solo para mobile) |
 
 **Respuestas:**
 - **302:** Redirige a Google OAuth
@@ -317,10 +533,49 @@ subwayapp://oauth/callback
 
 **Callback (automático):**
 
-Después de la autorización en Google, el backend redirige:
+Después de la autorización en Google, el backend:
 
-- **Web:** Retorna JSON con token
-- **Mobile:** Redirige a `subwayapp://oauth/callback?token=xxx&customer_id=xxx`
+- **Web (`platform=web`):** Retorna JSON con token y datos completos del usuario
+- **Mobile (`platform=mobile`):** Redirige a `subwayapp://oauth/callback?token=xxx&customer_id=xxx`
+
+### Respuesta del Callback
+
+#### Web (JSON Response)
+
+```json
+{
+  "message": "Inicio de sesión exitoso.",
+  "data": {
+    "access_token": "12|SUisABC123xyz...",
+    "token_type": "Bearer",
+    "expires_in": 525600,
+    "customer": {
+      "id": 81,
+      "first_name": "Juan",
+      "last_name": "Pérez",
+      "email": "juan@example.com",
+      "phone": null,
+      "avatar": "https://lh3.googleusercontent.com/a/...",
+      "loyalty_points": 0,
+      "email_verified_at": "2025-01-18T12:00:00.000000Z",
+      "customer_type": {
+        "id": 1,
+        "name": "Regular",
+        "discount_percentage": "0.00"
+      }
+    },
+    "is_new_customer": false
+  }
+}
+```
+
+#### Mobile (Deep Link Redirect)
+
+```
+subwayapp://oauth/callback?token=12|SUisABC123xyz&customer_id=81&is_new_customer=0
+```
+
+**Nota:** Mobile solo recibe `customer_id` por seguridad. Usa `GET /api/v1/profile` para obtener datos completos.
 
 ---
 
@@ -337,19 +592,35 @@ Después de la autorización en Google, el backend redirige:
 
 ## 🧪 Testing
 
-### 1. Test desde Navegador
+### 1. Test Web desde Navegador
 
-**Login web (device_id opcional):**
+**Login (retorna JSON):**
 ```
 https://admin.subwaycardgt.com/api/v1/auth/oauth/google/redirect?action=login&platform=web
 ```
 
-**Login mobile (device_id REQUERIDO):**
+**Register (retorna JSON):**
+```
+https://admin.subwaycardgt.com/api/v1/auth/oauth/google/redirect?action=register&platform=web
+```
+
+**Resultado esperado:** JSON con `access_token`, `customer` completo, y `is_new_customer`
+
+### 2. Test Mobile desde Navegador
+
+**Login (redirige a deep link):**
 ```
 https://admin.subwaycardgt.com/api/v1/auth/oauth/google/redirect?action=login&platform=mobile&device_id=550e8400-e29b-41d4-a716-446655440000
 ```
 
-### 2. Test desde React Native
+**Register (redirige a deep link):**
+```
+https://admin.subwaycardgt.com/api/v1/auth/oauth/google/redirect?action=register&platform=mobile&device_id=550e8400-e29b-41d4-a716-446655440000
+```
+
+**Resultado esperado:** Redirección a `subwayapp://oauth/callback?token=xxx&customer_id=xxx`
+
+### 3. Test desde React Native
 
 ```typescript
 const deviceId = await getOrCreateDeviceId();
@@ -362,20 +633,36 @@ const result = await WebBrowser.openAuthSessionAsync(
 );
 ```
 
-### 3. Verificar Logs
+### 4. Test desde Web App (JavaScript)
+
+```javascript
+// Test Login
+window.location.href = '/api/v1/auth/oauth/google/redirect?action=login&platform=web';
+
+// Test Register
+window.location.href = '/api/v1/auth/oauth/google/redirect?action=register&platform=web';
+```
+
+### 5. Verificar Logs
 
 ```bash
 tail -f storage/logs/laravel.log | grep "OAuth"
 ```
 
-**Logs esperados:**
+**Logs esperados (Web):**
+```
+[info] OAuth Redirect Initiated {"platform":"web","action":"login","device_id":"none"}
+[info] OAuth Callback {"platform":"web","action":"login","email":"user@example.com"}
+```
+
+**Logs esperados (Mobile):**
 ```
 [info] OAuth Redirect Initiated {"platform":"mobile","action":"login","device_id":"550e8400..."}
-[info] OAuth Callback Processing {"email":"user@example.com","platform":"mobile"}
+[info] OAuth Callback {"platform":"mobile","action":"login","email":"user@example.com"}
 [info] Device synced with token {"customer_id":81,"device_id":"550e8400..."}
 ```
 
-### 4. Test Page HTML
+### 6. Test Page HTML
 
 Existe una página de testing en:
 ```
@@ -383,10 +670,10 @@ https://admin.subwaycardgt.com/test-auth-redirect.html
 ```
 
 Permite probar:
-- Login con Google (Web)
-- Login con Google (Mobile)
-- Registro con Google (Web)
-- Registro con Google (Mobile)
+- Login con Google (Web) → Retorna JSON
+- Login con Google (Mobile) → Redirige a app
+- Registro con Google (Web) → Retorna JSON
+- Registro con Google (Mobile) → Redirige a app
 
 ---
 
@@ -468,22 +755,27 @@ https://admin.subwaycardgt.com/api/v1/auth/oauth/google/callback
 - [x] Swagger documentation actualizada
 - [x] Testing page HTML implementada
 
-### Frontend Mobile: 📋 PENDIENTE
+### Frontend Web: 📋 POR IMPLEMENTAR
 
-- [ ] Configurar `scheme: "subwayapp"` en app.json
+- [ ] Redirigir a `/api/v1/auth/oauth/google/redirect?action=login&platform=web`
+- [ ] Manejar respuesta JSON del backend
+- [ ] Guardar token en almacenamiento persistente
+- [ ] Implementar interceptor para agregar token a peticiones API
+- [ ] Manejar errores de autenticación
+
+### Frontend Mobile: 📋 POR IMPLEMENTAR
+
+- [ ] Configurar deep link scheme `subwayapp://`
 - [ ] Implementar generación de device_id único
-- [ ] Implementar `WebBrowser.openAuthSessionAsync()`
+- [ ] Abrir navegador del sistema para OAuth
 - [ ] Configurar deep link listener
 - [ ] Parsear query params del callback
-- [ ] Guardar token en AsyncStorage
+- [ ] Guardar token en almacenamiento seguro
+- [ ] Llamar a `/api/v1/profile` para obtener datos completos
 - [ ] Manejar errores del callback
-- [ ] Testing en Expo Go
-- [ ] Testing en standalone build
 
 ---
 
-**Última actualización:** 2025-11-13
-**Versión:** 3.0 - OAuth 2.0 State Parameter + Validaciones Corregidas
+**Última actualización:** 2025-01-18
+**Versión:** 4.0 - Guía Agnóstica Web + Mobile
 **Autor:** Backend Team
-**Implementado por:** Claude Code
-**Revisado por:** Claude Code con Context7

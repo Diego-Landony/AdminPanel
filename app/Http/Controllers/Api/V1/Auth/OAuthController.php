@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Api\V1\AuthResource;
 use App\Services\DeviceService;
 use App\Services\SocialAuthService;
 use Illuminate\Http\JsonResponse;
@@ -273,18 +272,20 @@ class OAuthController extends Controller
                 ]);
             }
 
-            // WEB: Return JSON
-            $authData = AuthResource::make([
-                'token' => $token,
-                'customer' => $customer->load('customerType'),
-            ])->resolve();
-
-            return response()->json([
-                'message' => __($result['message_key']),
-                'data' => array_merge($authData, [
-                    'is_new_customer' => $result['is_new'],
-                ]),
+            // WEB: Store in session and redirect to success route
+            \Log::info('Web OAuth successful, redirecting to app', [
+                'customer_id' => $customer->id,
+                'is_new' => $result['is_new'],
             ]);
+
+            session([
+                'oauth_token' => $token,
+                'oauth_customer_id' => $customer->id,
+                'oauth_is_new' => $result['is_new'],
+                'oauth_message' => __($result['message_key']),
+            ]);
+
+            return redirect()->route('oauth.success');
 
         } catch (\Exception $e) {
             \Log::error('OAuth Callback Error', [
@@ -311,11 +312,9 @@ class OAuthController extends Controller
                 ]);
             }
 
-            // WEB: Return JSON error
-            return response()->json([
-                'message' => 'Error al procesar autenticación',
-                'error' => config('app.debug') ? $e->getMessage() : 'Server Error',
-            ], 500);
+            // WEB: Redirect with error
+            return redirect()->route('login')
+                ->with('error', 'Error al procesar autenticación con Google. Por favor intenta nuevamente.');
         }
     }
 

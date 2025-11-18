@@ -159,19 +159,15 @@ https://admin.subwaycardgt.com/api/v1/auth/oauth/google/callback
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│ 8. Backend devuelve JSON (platform=web)                        │
-│    {                                                            │
-│      "message": "Inicio de sesión exitoso",                    │
-│      "data": {                                                  │
-│        "access_token": "12|SUis...",                            │
-│        "customer": {...},                                       │
-│        "is_new_customer": false                                 │
-│      }                                                          │
-│    }                                                            │
+│ 8. Backend guarda en sesión y redirige a /oauth/success        │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│ 9. Frontend guarda token, actualiza estado, redirige a home    │
+│ 9. Vista HTML oauth-success.blade.php se carga                 │
+│    - JavaScript lee datos de la sesión (token, customer_id)    │
+│    - Guarda token en localStorage automáticamente              │
+│    - Emite evento 'oauth-success' para Livewire                │
+│    - Redirige a /home después de 1 segundo                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -254,27 +250,29 @@ https://admin.subwaycardgt.com/api/v1/auth/oauth/google/redirect?action=login&pl
 
 #### 2. Respuesta del Backend
 
-Después de que el usuario autorice en Google, el backend **redirigirá a una página HTML** que procesará el token automáticamente:
+Después de que el usuario autorice en Google, el backend **redirigirá a una página HTML** (`/oauth/success`) que procesará el token automáticamente.
 
-**Flujo de respuesta:**
+**⚠️ IMPORTANTE: El backend NO retorna JSON directamente. Retorna una vista HTML con JavaScript.**
 
-1. Backend guarda datos en sesión
-2. Redirige a `/oauth/success`
-3. Página HTML recibe el token
-4. JavaScript guarda el token en localStorage
-5. Redirige automáticamente a `/home` o tu dashboard
+**Flujo de respuesta (automático):**
 
-**Datos disponibles en la página de éxito:**
-- `token`: Token de acceso Sanctum
-- `customerId`: ID del cliente
-- `isNewCustomer`: true si es cuenta nueva, false si ya existía
-- `message`: Mensaje de éxito traducido
+1. Backend guarda datos en sesión (token, customer_id, is_new, message)
+2. Backend redirige a → `/oauth/success`
+3. Laravel renderiza la vista → `resources/views/auth/oauth-success.blade.php`
+4. La vista contiene JavaScript que:
+   - Lee los datos de las variables Blade (`@json($token)`, etc.)
+   - Guarda `auth_token` en `localStorage`
+   - Guarda `customer_id` en `localStorage`
+   - Emite evento `oauth-success` (para Livewire/Alpine.js)
+   - Redirige automáticamente a `/home` después de 1 segundo
 
-**La página automáticamente:**
-- Guarda `auth_token` en localStorage
-- Guarda `customer_id` en localStorage
-- Emite evento `oauth-success` (para Livewire)
-- Redirige a `/home` después de 1 segundo
+**Datos disponibles en la vista:**
+- `$token`: Token de acceso Sanctum
+- `$customerId`: ID del cliente
+- `$isNewCustomer`: true si es cuenta nueva, false si ya existía
+- `$message`: Mensaje de éxito traducido
+
+**Todo esto sucede automáticamente - no necesitas hacer nada en el frontend, excepto iniciar el flujo.**
 
 #### 3. Escuchar Evento OAuth (Opcional - Para Livewire)
 
@@ -311,18 +309,22 @@ Headers:
 ### ✅ Consideraciones Web
 
 **✅ Hacer:**
-- Redirigir completamente al endpoint OAuth (redirección de página completa)
+- Redirigir completamente al endpoint OAuth con `window.location.href` (redirección de página completa)
 - Usar `platform=web` en todos los casos
-- El token se guarda automáticamente en localStorage
-- La redirección a `/home` es automática (puedes personalizar en la vista)
+- El token se guarda automáticamente en localStorage (nada que hacer)
+- La redirección a `/home` es automática (personalizar en la vista si necesitas)
 - Incluir token en todas las peticiones autenticadas
+- (Opcional) Escuchar evento `oauth-success` si usas Livewire/Alpine.js
 - Personalizar la ruta de redirección en `resources/views/auth/oauth-success.blade.php` si necesitas
 
 **❌ NO Hacer:**
 - NO instalar o usar Google Sign-In SDK/JavaScript
+- NO usar popups + postMessage (innecesario)
+- NO hacer peticiones AJAX/fetch al endpoint OAuth
 - NO exponer tokens en URLs públicas
 - NO usar `platform=mobile` para aplicaciones web
 - NO intentar parsear deep links
+- NO cambiar el backend - ya funciona correctamente
 
 **🎨 Personalización:**
 
@@ -535,39 +537,44 @@ Authorization: Bearer {access_token}
 
 Después de la autorización en Google, el backend:
 
-- **Web (`platform=web`):** Retorna JSON con token y datos completos del usuario
+- **Web (`platform=web`):** Redirige a `/oauth/success` (vista HTML que procesa el token automáticamente)
 - **Mobile (`platform=mobile`):** Redirige a `subwayapp://oauth/callback?token=xxx&customer_id=xxx`
 
 ### Respuesta del Callback
 
-#### Web (JSON Response)
+#### Web (HTML View con JavaScript)
 
-```json
-{
-  "message": "Inicio de sesión exitoso.",
-  "data": {
-    "access_token": "12|SUisABC123xyz...",
-    "token_type": "Bearer",
-    "expires_in": 525600,
-    "customer": {
-      "id": 81,
-      "first_name": "Juan",
-      "last_name": "Pérez",
-      "email": "juan@example.com",
-      "phone": null,
-      "avatar": "https://lh3.googleusercontent.com/a/...",
-      "loyalty_points": 0,
-      "email_verified_at": "2025-01-18T12:00:00.000000Z",
-      "customer_type": {
-        "id": 1,
-        "name": "Regular",
-        "discount_percentage": "0.00"
-      }
-    },
-    "is_new_customer": false
-  }
-}
+**⚠️ El backend NO retorna JSON para web. Retorna una redirección a `/oauth/success`**
+
+El navegador carga `resources/views/auth/oauth-success.blade.php` que contiene:
+
+```html
+<!-- La vista tiene acceso a estas variables Blade: -->
+@if($token)
+    <script>
+        const authData = {
+            token: @json($token),              // "12|SUisABC123xyz..."
+            customerId: @json($customerId),    // 81
+            isNewCustomer: @json($isNewCustomer), // false
+            message: @json($message)           // "Inicio de sesión exitoso"
+        };
+
+        // Automáticamente guarda en localStorage
+        localStorage.setItem('auth_token', authData.token);
+        localStorage.setItem('customer_id', authData.customerId);
+
+        // Emite evento para Livewire
+        window.dispatchEvent(new CustomEvent('oauth-success', { detail: authData }));
+
+        // Redirige automáticamente
+        setTimeout(() => {
+            window.location.href = '/home';
+        }, 1000);
+    </script>
+@endif
 ```
+
+**El frontend web NO necesita parsear JSON - todo se maneja automáticamente.**
 
 #### Mobile (Deep Link Redirect)
 
@@ -594,17 +601,28 @@ subwayapp://oauth/callback?token=12|SUisABC123xyz&customer_id=81&is_new_customer
 
 ### 1. Test Web desde Navegador
 
-**Login (retorna JSON):**
+**Login (redirige a vista HTML):**
 ```
 https://admin.subwaycardgt.com/api/v1/auth/oauth/google/redirect?action=login&platform=web
 ```
 
-**Register (retorna JSON):**
+**Register (redirige a vista HTML):**
 ```
 https://admin.subwaycardgt.com/api/v1/auth/oauth/google/redirect?action=register&platform=web
 ```
 
-**Resultado esperado:** JSON con `access_token`, `customer` completo, y `is_new_customer`
+**Resultado esperado:**
+1. Autorización en Google
+2. Redirección a `/oauth/success`
+3. Vista HTML con spinner de carga
+4. Token guardado en localStorage automáticamente
+5. Redirección automática a `/home`
+
+**Verificar localStorage en DevTools:**
+```javascript
+localStorage.getItem('auth_token')  // debe tener el token Sanctum
+localStorage.getItem('customer_id') // debe tener el ID del cliente
+```
 
 ### 2. Test Mobile desde Navegador
 
@@ -670,10 +688,10 @@ https://admin.subwaycardgt.com/test-auth-redirect.html
 ```
 
 Permite probar:
-- Login con Google (Web) → Retorna JSON
-- Login con Google (Mobile) → Redirige a app
-- Registro con Google (Web) → Retorna JSON
-- Registro con Google (Mobile) → Redirige a app
+- Login con Google (Web) → Redirige a `/oauth/success` → guarda token → redirige a `/home`
+- Login con Google (Mobile) → Redirige a app con deep link
+- Registro con Google (Web) → Redirige a `/oauth/success` → guarda token → redirige a `/home`
+- Registro con Google (Mobile) → Redirige a app con deep link
 
 ---
 

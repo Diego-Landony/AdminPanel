@@ -110,14 +110,14 @@ class OAuthController extends Controller
      * Receives the OAuth callback from Google with authorization code and state parameter.
      * Decodes the state to retrieve platform, action, and device_id.
      * Exchanges code for user data, creates/authenticates customer, and responds accordingly:
-     * - Web: Returns JSON with token
+     * - Web: Redirects to /oauth/success with session data
      * - Mobile: Redirects to app via deep link
      *
      * @OA\Get(
      *     path="/api/v1/auth/oauth/google/callback",
      *     tags={"OAuth"},
      *     summary="Handle Google OAuth callback (Web & Mobile)",
-     *     description="Handles Google OAuth callback after user authorization. This endpoint is called automatically by Google. It decodes the OAuth 2.0 state parameter to determine platform and action, then authenticates or registers the user. Returns JSON for web clients or redirects to deep link for mobile apps.",
+     *     description="Handles Google OAuth callback after user authorization. This endpoint is called automatically by Google. It decodes the OAuth 2.0 state parameter to determine platform and action, then authenticates or registers the user. For web: redirects to /oauth/success HTML page that stores token in localStorage. For mobile: redirects to deep link with token.",
      *
      *     @OA\Parameter(
      *         name="code",
@@ -138,48 +138,14 @@ class OAuthController extends Controller
      *     ),
      *
      *     @OA\Response(
-     *         response=200,
-     *         description="Authentication successful (web platform)",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="Inicio de sesión exitoso."),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="access_token", type="string", example="12|SUis1Iwo3q8vZ0bqDH8qRofURWHygpX75ek4rH3p018743cd"),
-     *                 @OA\Property(property="token_type", type="string", example="Bearer"),
-     *                 @OA\Property(property="expires_in", type="integer", example=525600),
-     *                 @OA\Property(property="customer", ref="#/components/schemas/Customer"),
-     *                 @OA\Property(property="is_new_customer", type="boolean", example=false)
-     *             )
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
      *         response=302,
-     *         description="Redirect to mobile app with token (mobile platform)",
+     *         description="Redirect response - behavior depends on platform and success/error status. WEB SUCCESS: redirects to /oauth/success (HTML page that stores token in localStorage and redirects to /home). WEB ERROR: redirects to /login with error message. MOBILE SUCCESS: redirects to subwayapp://oauth/callback?token=xxx&customer_id=xxx. MOBILE ERROR: redirects to subwayapp://oauth/callback?error=xxx&message=xxx",
      *
-     *         @OA\Header(header="Location", description="Deep link to mobile app with minimal data. Use token to fetch full customer profile via GET /api/v1/profile", @OA\Schema(type="string", example="subwayapp://oauth/callback?token=12|SUis...&customer_id=81&is_new_customer=0"))
-     *     ),
+     *         @OA\Header(
+     *             header="Location",
+     *             description="Redirect URL varies by platform: Web success -> /oauth/success, Web error -> /login, Mobile success -> subwayapp://oauth/callback?token=..., Mobile error -> subwayapp://oauth/callback?error=...",
      *
-     *     @OA\Response(
-     *         response=422,
-     *         description="Email not registered (login action) or email already exists (register action)",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="No existe una cuenta con este correo electrónico. Por favor regístrate primero."),
-     *             @OA\Property(property="errors", type="object")
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=500,
-     *         description="Server error or invalid state parameter",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="Error al procesar autenticación"),
-     *             @OA\Property(property="error", type="string", example="Invalid state parameter")
+     *             @OA\Schema(type="string", example="/oauth/success")
      *         )
      *     )
      * )

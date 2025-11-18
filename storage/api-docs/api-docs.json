@@ -742,7 +742,7 @@
                     "OAuth"
                 ],
                 "summary": "Handle Google OAuth callback (Web & Mobile)",
-                "description": "Handles Google OAuth callback after user authorization. This endpoint is called automatically by Google. It decodes the OAuth 2.0 state parameter to determine platform and action, then authenticates or registers the user. Returns JSON for web clients or redirects to deep link for mobile apps.",
+                "description": "Handles Google OAuth callback after user authorization. This endpoint is called automatically by Google. It decodes the OAuth 2.0 state parameter to determine platform and action, then authenticates or registers the user. For web: redirects to /oauth/success HTML page that stores token in localStorage. For mobile: redirects to deep link with token.",
                 "operationId": "281ab9caddb2b86e3614c9e34567db4f",
                 "parameters": [
                     {
@@ -767,93 +767,14 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Authentication successful (web platform)",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Inicio de sesión exitoso."
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "access_token": {
-                                                    "type": "string",
-                                                    "example": "12|SUis1Iwo3q8vZ0bqDH8qRofURWHygpX75ek4rH3p018743cd"
-                                                },
-                                                "token_type": {
-                                                    "type": "string",
-                                                    "example": "Bearer"
-                                                },
-                                                "expires_in": {
-                                                    "type": "integer",
-                                                    "example": 525600
-                                                },
-                                                "customer": {
-                                                    "$ref": "#/components/schemas/Customer"
-                                                },
-                                                "is_new_customer": {
-                                                    "type": "boolean",
-                                                    "example": false
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
                     "302": {
-                        "description": "Redirect to mobile app with token (mobile platform)",
+                        "description": "Redirect response - behavior depends on platform and success/error status. WEB SUCCESS: redirects to /oauth/success (HTML page that stores token in localStorage and redirects to /home). WEB ERROR: redirects to /login with error message. MOBILE SUCCESS: redirects to subwayapp://oauth/callback?token=xxx&customer_id=xxx. MOBILE ERROR: redirects to subwayapp://oauth/callback?error=xxx&message=xxx",
                         "headers": {
                             "Location": {
-                                "description": "Deep link to mobile app with minimal data. Use token to fetch full customer profile via GET /api/v1/profile",
+                                "description": "Redirect URL varies by platform: Web success -> /oauth/success, Web error -> /login, Mobile success -> subwayapp://oauth/callback?token=..., Mobile error -> subwayapp://oauth/callback?error=...",
                                 "schema": {
                                     "type": "string",
-                                    "example": "subwayapp://oauth/callback?token=12|SUis...&customer_id=81&is_new_customer=0"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Email not registered (login action) or email already exists (register action)",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "No existe una cuenta con este correo electrónico. Por favor regístrate primero."
-                                        },
-                                        "errors": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Server error or invalid state parameter",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Error al procesar autenticación"
-                                        },
-                                        "error": {
-                                            "type": "string",
-                                            "example": "Invalid state parameter"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "example": "/oauth/success"
                                 }
                             }
                         }

@@ -35,15 +35,13 @@ Route::post('/theme/update', [ThemeController::class, 'update'])->name('theme.up
 Route::get('/theme/get', [ThemeController::class, 'get'])->name('theme.get');
 
 // OAuth Success Route (Web platform)
-Route::get('/oauth/success', function () {
-    // Recuperar datos de la sesión
-    $token = session('oauth_token');
-    $customerId = session('oauth_customer_id');
-    $isNew = session('oauth_is_new');
-    $message = session('oauth_message');
-
-    // Limpiar sesión OAuth
-    session()->forget(['oauth_token', 'oauth_customer_id', 'oauth_is_new', 'oauth_message']);
+Route::get('/oauth/success', function (Illuminate\Http\Request $request) {
+    // Recuperar datos de los query parameters (en lugar de sesión)
+    // Esto funciona igual que mobile y evita problemas de sesión perdida
+    $token = $request->query('token');
+    $customerId = $request->query('customer_id');
+    $isNew = $request->query('is_new');
+    $message = $request->query('message');
 
     // Retornar vista que procesa el token
     return view('auth.oauth-success', [

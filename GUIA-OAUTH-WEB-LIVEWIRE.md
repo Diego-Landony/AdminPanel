@@ -178,6 +178,25 @@ fetch('/api/v1/profile', {
 
 ## 🐛 Resolución de Problemas
 
+### Problema: "Me redirige a https://admin.subwaycardgt.com/login en lugar de localhost"
+
+**Causa:** El OAuth está fallando (probablemente por credenciales de Google incorrectas) y el error te redirige a login.
+
+**Solución:**
+1. Verifica que tengas credenciales reales de Google en `.env`:
+```env
+GOOGLE_CLIENT_ID=TU-CLIENT-ID-REAL.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=TU-CLIENT-SECRET-REAL
+```
+
+2. Si `GOOGLE_CLIENT_ID` tiene el valor `your-google-client-id.apps.googleusercontent.com`, es un placeholder y NO funcionará.
+
+3. Para desarrollo local, necesitas:
+   - Crear un proyecto en Google Cloud Console
+   - Configurar OAuth 2.0 credentials
+   - Agregar `http://localhost/api/v1/auth/oauth/google/callback` a los URIs autorizados
+   - Copiar el Client ID y Client Secret reales a tu `.env`
+
 ### Problema: "No pasa nada después de autorizar en Google"
 
 **Causa:** Probablemente estás siendo redirigido a `/oauth/success` pero hay un error en la vista.

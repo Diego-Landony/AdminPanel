@@ -78,6 +78,7 @@ class OAuthController extends Controller
             'action' => 'required|in:login,register',
             'platform' => 'required|in:web,mobile',
             'device_id' => 'required_if:platform,mobile|string|max:255',
+            'redirect_url' => 'nullable|url', // URL del frontend para redirección
         ]);
 
         // Encode all parameters in OAuth state parameter (OAuth 2.0 spec)
@@ -86,6 +87,7 @@ class OAuthController extends Controller
             'platform' => $validated['platform'],
             'action' => $validated['action'],
             'device_id' => $validated['device_id'] ?? null,
+            'redirect_url' => $validated['redirect_url'] ?? null, // Frontend redirect URL
             'nonce' => \Illuminate\Support\Str::random(32), // CSRF protection
             'timestamp' => time(), // For state expiration validation
         ]));
@@ -175,6 +177,7 @@ class OAuthController extends Controller
             $platform = $state['platform'] ?? 'web';
             $action = $state['action'] ?? 'login';
             $deviceId = $state['device_id'] ?? null;
+            $redirectUrl = $state['redirect_url'] ?? null;
 
             \Log::info('OAuth Callback', [
                 'platform' => $platform,
@@ -244,14 +247,26 @@ class OAuthController extends Controller
                 'is_new' => $result['is_new'],
             ]);
 
-            session([
-                'oauth_token' => $token,
-                'oauth_customer_id' => $customer->id,
-                'oauth_is_new' => $result['is_new'],
-                'oauth_message' => __($result['message_key']),
-            ]);
+            // Si hay redirect_url personalizada (para desarrollo local), redirigir allá con datos en query string
+            if ($redirectUrl) {
+                $params = http_build_query([
+                    'token' => $token,
+                    'customer_id' => $customer->id,
+                    'is_new_customer' => $result['is_new'] ? '1' : '0',
+                    'message' => __($result['message_key']),
+                ]);
 
-            return redirect()->route('oauth.success');
+                return redirect()->away($redirectUrl.'?'.$params);
+            }
+
+            // WEB: Pasar datos en URL en lugar de sesión (igual que mobile)
+            // Esto evita problemas de sesión perdida en redirects cross-origin
+            return redirect()->route('oauth.success', [
+                'token' => $token,
+                'customer_id' => $customer->id,
+                'is_new' => $result['is_new'] ? '1' : '0',
+                'message' => __($result['message_key']),
+            ]);
 
         } catch (\Exception $e) {
             \Log::error('OAuth Callback Error', [
@@ -279,7 +294,7 @@ class OAuthController extends Controller
             }
 
             // WEB: Redirect with error
-            return redirect()->route('login')
+            return redirect('/login')
                 ->with('error', 'Error al procesar autenticación con Google. Por favor intenta nuevamente.');
         }
     }

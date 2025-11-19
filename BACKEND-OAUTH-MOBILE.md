@@ -256,9 +256,9 @@ Después de que el usuario autorice en Google, el backend **redirigirá a una p�
 
 **Flujo de respuesta (automático):**
 
-1. Backend guarda datos en sesión (token, customer_id, is_new, message)
-2. Backend redirige a → `/oauth/success`
-3. Laravel renderiza la vista → `resources/views/auth/oauth-success.blade.php`
+1. Backend redirige a → `/oauth/success?token=xxx&customer_id=xxx&is_new=x&message=xxx`
+2. Laravel renderiza la vista → `resources/views/auth/oauth-success.blade.php`
+3. La vista recibe los datos de los query parameters
 4. La vista contiene JavaScript que:
    - Lee los datos de las variables Blade (`@json($token)`, etc.)
    - Guarda `auth_token` en `localStorage`
@@ -266,11 +266,14 @@ Después de que el usuario autorice en Google, el backend **redirigirá a una p�
    - Emite evento `oauth-success` (para Livewire/Alpine.js)
    - Redirige automáticamente a `/home` después de 1 segundo
 
-**Datos disponibles en la vista:**
-- `$token`: Token de acceso Sanctum
-- `$customerId`: ID del cliente
-- `$isNewCustomer`: true si es cuenta nueva, false si ya existía
-- `$message`: Mensaje de éxito traducido
+**Datos pasados en la URL:**
+- `token`: Token de acceso Sanctum
+- `customer_id`: ID del cliente
+- `is_new`: 1 si es cuenta nueva, 0 si ya existía
+- `message`: Mensaje de éxito traducido
+
+**Por qué usamos URL en lugar de sesión:**
+La sesión se puede perder en redirects cross-origin (desde Google OAuth). Pasar datos en URL es más confiable y funciona igual que el flujo mobile.
 
 **Todo esto sucede automáticamente - no necesitas hacer nada en el frontend, excepto iniciar el flujo.**
 

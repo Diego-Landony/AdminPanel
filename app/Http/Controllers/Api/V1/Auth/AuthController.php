@@ -185,11 +185,19 @@ class AuthController extends Controller
 
         $customer = Customer::where('email', $request->email)->first();
 
-        if (! $customer || ! Hash::check($request->password, $customer->password)) {
+        if (! $customer) {
             RateLimiter::hit($this->throttleKey($request));
 
             throw ValidationException::withMessages([
-                'email' => [__('auth.invalid_credentials')],
+                'email' => [__('auth.account_not_found')],
+            ]);
+        }
+
+        if (! Hash::check($request->password, $customer->password)) {
+            RateLimiter::hit($this->throttleKey($request));
+
+            throw ValidationException::withMessages([
+                'password' => [__('auth.incorrect_password')],
             ]);
         }
 

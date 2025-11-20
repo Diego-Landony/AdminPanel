@@ -49,8 +49,8 @@ test('puede hacer login con credenciales validas', function () {
     expect($response->json('data.customer.email'))->toBe('juan@example.com');
 });
 
-// Test 2: Rechaza credenciales inválidas
-test('rechaza credenciales invalidas', function () {
+// Test 2: Rechaza credenciales inválidas (password incorrecta)
+test('rechaza password incorrecta', function () {
     // Crear customer de prueba
     Customer::create([
         'first_name' => 'Juan',
@@ -67,9 +67,9 @@ test('rechaza credenciales invalidas', function () {
         'password' => 'wrongpassword',
     ]);
 
-    // Verificar respuesta 422 (ValidationException)
+    // Verificar respuesta 422 con error específico en campo 'password'
     $response->assertStatus(422)
-        ->assertJsonValidationErrors(['email']);
+        ->assertJsonValidationErrors(['password']);
 });
 
 // Test 3: Rechaza usuario inexistente

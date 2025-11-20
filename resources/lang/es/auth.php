@@ -22,6 +22,7 @@ return [
     'invalid_credentials' => 'Las credenciales proporcionadas son incorrectas.',
     'oauth_account' => 'Esta cuenta usa autenticación con :provider. Por favor inicia sesión con :provider.',
     'account_not_found' => 'No se encontró una cuenta con este email.',
+    'incorrect_password' => 'La contraseña es incorrecta.',
 
     // OAuth
     'oauth_login_success' => 'Inicio de sesión exitoso.',

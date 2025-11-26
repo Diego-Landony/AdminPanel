@@ -33,3 +33,9 @@ yarn-error.log
 
 # Google OAuth credentials
 /crendenciales google/
+
+# Claude Code
+CLAUDE.md
+.mcp.json
+mcp.json
+.github/

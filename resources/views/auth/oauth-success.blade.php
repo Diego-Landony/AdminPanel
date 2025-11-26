@@ -3,83 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $error ? 'Error de autenticación' : 'Autenticación exitosa' }}</title>
+    <title>{{ $error ? 'Error' : 'Autenticación exitosa' }}</title>
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            margin: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #fff;
+            color: #000;
         }
         .container {
-            background: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             text-align: center;
             max-width: 400px;
+            padding: 2rem;
         }
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border: 2px solid #eee;
+            border-top: 2px solid #000;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
+            width: 24px;
+            height: 24px;
+            animation: spin 0.8s linear infinite;
             margin: 0 auto 1rem;
         }
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            to { transform: rotate(360deg); }
         }
         h1 {
-            color: #333;
-            margin: 0 0 0.5rem;
-            font-size: 1.5rem;
+            font-size: 1.125rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
         }
         p {
+            font-size: 0.875rem;
             color: #666;
-            margin: 0;
         }
-        .success {
-            color: #38a169;
-        }
-        .error {
-            color: #e53e3e;
-            background: #fff5f5;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid #fc8181;
-        }
-        .error h1 {
-            color: #e53e3e;
+        .error h1 { color: #dc2626; }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #000;
+                color: #fff;
+            }
+            .spinner {
+                border-color: #333;
+                border-top-color: #fff;
+            }
+            p {
+                color: #999;
+            }
+            .error h1 { color: #ef4444; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         @if($error)
-            {{-- Caso de error --}}
-            <div class="error">
-                <h1>Error de autenticación</h1>
-                <p>{{ $message ?? 'No se pudo completar la autenticación. Por favor intenta nuevamente.' }}</p>
-            </div>
+            <h1>Error</h1>
+            <p>{{ $message ?? 'No se pudo completar la autenticación.' }}</p>
         @elseif($token)
-            {{-- Caso de éxito --}}
-            <div class="success">
-                <div class="spinner"></div>
-                <h1>¡Autenticación exitosa!</h1>
-                <p>{{ $message ?? 'Cerrando ventana...' }}</p>
-            </div>
+            <div class="spinner"></div>
+            <h1>Autenticación exitosa</h1>
+            <p>{{ $message ?? 'Cerrando...' }}</p>
         @else
-            {{-- Caso sin datos --}}
-            <div class="error">
-                <h1>Error</h1>
-                <p>No se recibieron datos de autenticación.</p>
-            </div>
+            <h1>Error</h1>
+            <p>No se recibieron datos.</p>
         @endif
     </div>
 

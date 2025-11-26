@@ -37,17 +37,17 @@ class AuthController extends Controller
      *         required=true,
      *
      *         @OA\JsonContent(
-     *             required={"first_name","last_name","email","password","password_confirmation","device_identifier"},
+     *             required={"first_name","last_name","email","password","password_confirmation","phone","birth_date","gender","device_identifier"},
      *
      *             @OA\Property(property="first_name", type="string", example="Juan", description="Customer first name"),
      *             @OA\Property(property="last_name", type="string", example="Pérez", description="Customer last name"),
      *             @OA\Property(property="email", type="string", format="email", example="juan@example.com", description="Valid email address"),
      *             @OA\Property(property="password", type="string", format="password", example="Pass123", description="Min 6 characters, 1 letter, 1 number"),
      *             @OA\Property(property="password_confirmation", type="string", format="password", example="Pass123", description="Must match password"),
-     *             @OA\Property(property="phone", type="string", nullable=true, example="+50212345678", description="Optional phone number"),
-     *             @OA\Property(property="birth_date", type="string", format="date", nullable=true, example="1990-05-15", description="Optional birth date"),
-     *             @OA\Property(property="gender", type="string", enum={"male","female","other"}, nullable=true, example="male", description="Optional gender"),
-     *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="REQUIRED: Unique device UUID for tracking")
+     *             @OA\Property(property="phone", type="string", example="+50212345678", description="Phone number"),
+     *             @OA\Property(property="birth_date", type="string", format="date", example="1990-05-15", description="Birth date"),
+     *             @OA\Property(property="gender", type="string", enum={"male","female","other"}, example="male", description="Gender"),
+     *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="Unique device UUID for tracking. Client must generate UUID v4, persist it locally (localStorage/AsyncStorage), and send same UUID on every authentication to identify device across sessions.")
      *         )
      *     ),
      *
@@ -106,18 +106,16 @@ class AuthController extends Controller
 
         $customer->enforceTokenLimit(5);
 
-        $tokenName = $this->generateTokenName($validated['device_identifier'] ?? null);
+        $tokenName = $this->generateTokenName($validated['device_identifier']);
         $newAccessToken = $customer->createToken($tokenName);
         $token = $newAccessToken->plainTextToken;
 
-        // Sync device with token if device_identifier provided
-        if (isset($validated['device_identifier'])) {
-            $this->deviceService->syncDeviceWithToken(
-                $customer,
-                $newAccessToken->accessToken,
-                $validated['device_identifier']
-            );
-        }
+        // Sync device with token
+        $this->deviceService->syncDeviceWithToken(
+            $customer,
+            $newAccessToken->accessToken,
+            $validated['device_identifier']
+        );
 
         return response()->json([
             'message' => __('auth.register_success'),
@@ -145,7 +143,7 @@ class AuthController extends Controller
      *
      *             @OA\Property(property="email", type="string", format="email", example="juan@example.com"),
      *             @OA\Property(property="password", type="string", format="password", example="SecurePass123!"),
-     *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="REQUIRED: Unique device UUID for tracking")
+     *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="Unique device UUID for tracking. Client must generate UUID v4, persist it locally (localStorage/AsyncStorage), and send same UUID on every authentication to identify device across sessions.")
      *         )
      *     ),
      *
@@ -217,18 +215,16 @@ class AuthController extends Controller
 
         $customer->enforceTokenLimit(5);
 
-        $tokenName = $this->generateTokenName($request->device_identifier ?? null);
+        $tokenName = $this->generateTokenName($request->device_identifier);
         $newAccessToken = $customer->createToken($tokenName);
         $token = $newAccessToken->plainTextToken;
 
-        // Sync device with token if device_identifier provided
-        if ($request->device_identifier) {
-            $this->deviceService->syncDeviceWithToken(
-                $customer,
-                $newAccessToken->accessToken,
-                $request->device_identifier
-            );
-        }
+        // Sync device with token
+        $this->deviceService->syncDeviceWithToken(
+            $customer,
+            $newAccessToken->accessToken,
+            $request->device_identifier
+        );
 
         return response()->json([
             'message' => __('auth.login_success'),

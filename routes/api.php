@@ -62,6 +62,13 @@ Route::prefix('v1')->group(function () {
             // OAuth callback - automatically called by Google after authorization
             Route::get('/google/callback', [OAuthController::class, 'googleCallback'])
                 ->name('api.v1.auth.oauth.google.callback');
+
+            // Apple Sign In
+            Route::get('/apple/redirect', [OAuthController::class, 'appleRedirect'])
+                ->name('api.v1.auth.oauth.apple.redirect');
+
+            Route::get('/apple/callback', [OAuthController::class, 'appleCallback'])
+                ->name('api.v1.auth.oauth.apple.callback');
         });
     });
 

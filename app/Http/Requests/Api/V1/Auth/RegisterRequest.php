@@ -33,7 +33,7 @@ class RegisterRequest extends FormRequest
             'phone' => ['required', 'string', 'size:8', 'regex:/^[0-9]{8}$/'],
             'birth_date' => ['required', 'date', 'before:today'],
             'gender' => ['required', Rule::enum(Gender::class)],
-            'device_identifier' => ['nullable', 'string', 'max:255'],
+            'device_identifier' => ['required', 'string', 'max:255'],
         ];
     }
 
@@ -61,6 +61,8 @@ class RegisterRequest extends FormRequest
             'birth_date.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
             'gender.required' => 'El género es requerido.',
             'gender.enum' => 'El género seleccionado no es válido.',
+            'device_identifier.required' => 'El identificador de dispositivo es requerido.',
+            'device_identifier.max' => 'El identificador de dispositivo no puede exceder 255 caracteres.',
         ];
     }
 }

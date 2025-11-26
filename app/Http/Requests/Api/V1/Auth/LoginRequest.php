@@ -24,7 +24,7 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
-            'device_identifier' => ['nullable', 'string', 'max:255'],
+            'device_identifier' => ['required', 'string', 'max:255'],
             'remember' => ['nullable', 'boolean'],
         ];
     }
@@ -40,6 +40,8 @@ class LoginRequest extends FormRequest
             'email.required' => 'El correo electrónico es requerido.',
             'email.email' => 'El correo electrónico debe ser válido.',
             'password.required' => 'La contraseña es requerida.',
+            'device_identifier.required' => 'El identificador de dispositivo es requerido.',
+            'device_identifier.max' => 'El identificador de dispositivo no puede exceder 255 caracteres.',
         ];
     }
 }

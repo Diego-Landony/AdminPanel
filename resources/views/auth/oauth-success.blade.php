@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Autenticación exitosa</title>
+    <title>{{ $error ? 'Error de autenticación' : 'Autenticación exitosa' }}</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -44,6 +44,9 @@
             color: #666;
             margin: 0;
         }
+        .success {
+            color: #38a169;
+        }
         .error {
             color: #e53e3e;
             background: #fff5f5;
@@ -51,56 +54,110 @@
             border-radius: 0.5rem;
             border: 1px solid #fc8181;
         }
+        .error h1 {
+            color: #e53e3e;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        @if($token)
-            <div class="spinner"></div>
-            <h1>¡Autenticación exitosa!</h1>
-            <p>Redirigiendo a la aplicación...</p>
+        @if($error)
+            {{-- Caso de error --}}
+            <div class="error">
+                <h1>Error de autenticación</h1>
+                <p>{{ $message ?? 'No se pudo completar la autenticación. Por favor intenta nuevamente.' }}</p>
+            </div>
+        @elseif($token)
+            {{-- Caso de éxito --}}
+            <div class="success">
+                <div class="spinner"></div>
+                <h1>¡Autenticación exitosa!</h1>
+                <p>{{ $message ?? 'Cerrando ventana...' }}</p>
+            </div>
         @else
+            {{-- Caso sin datos --}}
             <div class="error">
                 <h1>Error</h1>
-                <p>No se pudo completar la autenticación. Por favor intenta nuevamente.</p>
+                <p>No se recibieron datos de autenticación.</p>
             </div>
         @endif
     </div>
 
-    @if($token)
     <script>
-        // Datos del usuario autenticado
-        const authData = {
-            token: @json($token),
-            customerId: @json($customerId),
-            isNewCustomer: @json($isNewCustomer),
-            message: @json($message)
-        };
+        @if($error)
+            // CASO DE ERROR: Comunicar error al frontend
+            const errorData = {
+                error: @json($error),
+                message: @json($message ?? 'Error de autenticación')
+            };
 
-        // Guardar token en localStorage
-        localStorage.setItem('auth_token', authData.token);
-        localStorage.setItem('customer_id', authData.customerId);
-        localStorage.setItem('is_new_customer', authData.isNewCustomer ? '1' : '0');
+            // Intentar comunicarse con la ventana padre (si fue abierta como popup)
+            if (window.opener) {
+                try {
+                    window.opener.postMessage({
+                        type: 'oauth-error',
+                        data: errorData
+                    }, '*');
 
-        // Emitir evento para Livewire (si lo estás usando)
-        window.dispatchEvent(new CustomEvent('oauth-success', {
-            detail: authData
-        }));
+                    // Cerrar esta ventana después de comunicar el error
+                    setTimeout(() => {
+                        window.close();
+                    }, 3000);
+                } catch (e) {
+                    console.error('No se pudo comunicar con la ventana padre:', e);
+                }
+            }
 
-        // Redirigir después de guardar los datos
-        setTimeout(() => {
-            // Cambiar esta URL según tu aplicación
-            // Opciones:
-            // 1. Redirigir al dashboard
-            window.location.href = '/home';
+            // También emitir evento local por si la página está en iframe
+            window.dispatchEvent(new CustomEvent('oauth-error', {
+                detail: errorData
+            }));
 
-            // 2. O cerrar esta ventana si se abrió como popup
-            // window.close();
+        @elseif($token)
+            // CASO DE ÉXITO: Comunicar datos al frontend
+            const authData = {
+                token: @json($token),
+                customerId: @json($customerId),
+                isNewCustomer: @json($isNewCustomer),
+                message: @json($message)
+            };
 
-            // 3. O redirigir a una ruta personalizada
-            // window.location.href = '/dashboard';
-        }, 1000);
+            // Guardar token en localStorage (por si el frontend lo necesita)
+            try {
+                localStorage.setItem('auth_token', authData.token);
+                localStorage.setItem('customer_id', authData.customerId);
+                localStorage.setItem('is_new_customer', authData.isNewCustomer ? '1' : '0');
+            } catch (e) {
+                console.warn('No se pudo guardar en localStorage:', e);
+            }
+
+            // Intentar comunicarse con la ventana padre (si fue abierta como popup)
+            if (window.opener) {
+                try {
+                    window.opener.postMessage({
+                        type: 'oauth-success',
+                        data: authData
+                    }, '*');
+
+                    // Cerrar esta ventana después de comunicar los datos
+                    setTimeout(() => {
+                        window.close();
+                    }, 1000);
+                } catch (e) {
+                    console.error('No se pudo comunicar con la ventana padre:', e);
+                }
+            } else {
+                // Si no hay window.opener, intentar cerrar de todos modos
+                setTimeout(() => {
+                    window.close();
+                }, 1000);
+            }
+
+            // También emitir evento local por si la página está en iframe
+            window.dispatchEvent(new CustomEvent('oauth-success', {
+                detail: authData
+            }));
+        @endif
     </script>
-    @endif
 </body>
 </html>

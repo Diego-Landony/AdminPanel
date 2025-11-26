@@ -14,7 +14,7 @@
             "description": "Local Development Server"
         },
         {
-            "url": "http://localhost",
+            "url": "https://admin.subwaycardgt.com/",
             "description": "Application Server"
         }
     ],
@@ -38,6 +38,9 @@
                                     "email",
                                     "password",
                                     "password_confirmation",
+                                    "phone",
+                                    "birth_date",
+                                    "gender",
                                     "device_identifier"
                                 ],
                                 "properties": {
@@ -70,31 +73,28 @@
                                         "example": "Pass123"
                                     },
                                     "phone": {
-                                        "description": "Optional phone number",
+                                        "description": "Phone number",
                                         "type": "string",
-                                        "example": "+50212345678",
-                                        "nullable": true
+                                        "example": "+50212345678"
                                     },
                                     "birth_date": {
-                                        "description": "Optional birth date",
+                                        "description": "Birth date",
                                         "type": "string",
                                         "format": "date",
-                                        "example": "1990-05-15",
-                                        "nullable": true
+                                        "example": "1990-05-15"
                                     },
                                     "gender": {
-                                        "description": "Optional gender",
+                                        "description": "Gender",
                                         "type": "string",
                                         "enum": [
                                             "male",
                                             "female",
                                             "other"
                                         ],
-                                        "example": "male",
-                                        "nullable": true
+                                        "example": "male"
                                     },
                                     "device_identifier": {
-                                        "description": "REQUIRED: Unique device UUID for tracking",
+                                        "description": "Unique device UUID for tracking. Client must generate UUID v4, persist it locally (localStorage/AsyncStorage), and send same UUID on every authentication to identify device across sessions.",
                                         "type": "string",
                                         "example": "550e8400-e29b-41d4-a716-446655440000"
                                     }
@@ -239,7 +239,7 @@
                                         "example": "SecurePass123!"
                                     },
                                     "device_identifier": {
-                                        "description": "REQUIRED: Unique device UUID for tracking",
+                                        "description": "Unique device UUID for tracking. Client must generate UUID v4, persist it locally (localStorage/AsyncStorage), and send same UUID on every authentication to identify device across sessions.",
                                         "type": "string",
                                         "example": "550e8400-e29b-41d4-a716-446655440000"
                                     }
@@ -778,6 +778,115 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/oauth/apple/redirect": {
+            "get": {
+                "tags": [
+                    "OAuth"
+                ],
+                "summary": "Redirect to Apple OAuth (Web & Mobile)",
+                "description": "Initiates Apple OAuth flow for any platform. Uses OAuth 2.0 state parameter to maintain context. Works for web apps, mobile apps (React Native with WebBrowser), and any other client type.",
+                "operationId": "eb85e9832719d0e001c347b4497fbd03",
+                "parameters": [
+                    {
+                        "name": "action",
+                        "in": "query",
+                        "description": "Action type: 'login' for existing users or 'register' for new users",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "login",
+                                "register"
+                            ],
+                            "example": "login"
+                        }
+                    },
+                    {
+                        "name": "platform",
+                        "in": "query",
+                        "description": "Client platform: 'web' for web applications (returns JSON) or 'mobile' for mobile apps (redirects via deep link)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "web",
+                                "mobile"
+                            ],
+                            "example": "web"
+                        }
+                    },
+                    {
+                        "name": "device_id",
+                        "in": "query",
+                        "description": "Device identifier UUID for tracking. **REQUIRED when platform=mobile**, optional for web.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "550e8400-e29b-41d4-a716-446655440000"
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect to Apple OAuth consent screen"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The action field is required."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/oauth/apple/callback": {
+            "get": {
+                "tags": [
+                    "OAuth"
+                ],
+                "summary": "Handle Apple OAuth callback (Web & Mobile)",
+                "description": "Handles Apple OAuth callback after user authorization. Decodes OAuth 2.0 state parameter to determine platform and action. NOTE: Apple only sends name/email on FIRST authentication, subsequent logins only return user ID.",
+                "operationId": "f4d2234c8403161c607fa0d3b8a3a07a",
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "description": "Authorization code from Apple OAuth",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "state",
+                        "in": "query",
+                        "description": "OAuth 2.0 state parameter containing encoded platform, action, and device_id information",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect response based on platform. Web: redirects to /oauth/success. Mobile: redirects to deep link."
                     }
                 }
             }

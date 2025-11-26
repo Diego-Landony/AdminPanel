@@ -169,8 +169,8 @@ class OAuthController extends Controller
                 throw new \Exception('Invalid state parameter');
             }
 
-            // Validate state timestamp (expire after 10 minutes)
-            if (isset($state['timestamp']) && (time() - $state['timestamp']) > 600) {
+            // Validate state timestamp (expire after 30 minutes)
+            if (isset($state['timestamp']) && (time() - $state['timestamp']) > 1800) {
                 throw new \Exception('State parameter expired');
             }
 
@@ -293,9 +293,11 @@ class OAuthController extends Controller
                 ]);
             }
 
-            // WEB: Redirect with error
-            return redirect('/login')
-                ->with('error', 'Error al procesar autenticación con Google. Por favor intenta nuevamente.');
+            // WEB: Redirect to oauth/success with error parameters
+            return redirect()->route('oauth.success', [
+                'error' => 'authentication_failed',
+                'message' => 'Error al procesar autenticación. Por favor intenta nuevamente.',
+            ]);
         }
     }
 
@@ -440,7 +442,8 @@ class OAuthController extends Controller
                 throw new \Exception('Invalid state parameter');
             }
 
-            if (isset($state['timestamp']) && (time() - $state['timestamp']) > 600) {
+            // Validate state timestamp (expire after 30 minutes)
+            if (isset($state['timestamp']) && (time() - $state['timestamp']) > 1800) {
                 throw new \Exception('State parameter expired');
             }
 
@@ -536,8 +539,11 @@ class OAuthController extends Controller
                 ]);
             }
 
-            return redirect('/login')
-                ->with('error', 'Error al procesar autenticación con Apple. Por favor intenta nuevamente.');
+            // WEB: Redirect to oauth/success with error parameters
+            return redirect()->route('oauth.success', [
+                'error' => 'authentication_failed',
+                'message' => 'Error al procesar autenticación con Apple. Por favor intenta nuevamente.',
+            ]);
         }
     }
 

@@ -42,6 +42,7 @@ Route::get('/oauth/success', function (Illuminate\Http\Request $request) {
     $customerId = $request->query('customer_id');
     $isNew = $request->query('is_new');
     $message = $request->query('message');
+    $error = $request->query('error');
 
     // Retornar vista que procesa el token
     return view('auth.oauth-success', [
@@ -49,6 +50,7 @@ Route::get('/oauth/success', function (Illuminate\Http\Request $request) {
         'customerId' => $customerId,
         'isNewCustomer' => $isNew,
         'message' => $message,
+        'error' => $error,
     ]);
 })->name('oauth.success');
 

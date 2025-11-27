@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
+use App\Exceptions\AccountDeletedException;
 use App\Http\Controllers\Controller;
 use App\Services\DeviceService;
 use App\Services\SocialAuthService;
@@ -28,7 +29,7 @@ class OAuthController extends Controller
      *     path="/api/v1/auth/oauth/google/redirect",
      *     tags={"OAuth"},
      *     summary="Redirect to Google OAuth (Web & Mobile)",
-     *     description="Initiates Google OAuth flow for any platform. Uses OAuth 2.0 state parameter to maintain context across the redirect flow. Works for web apps, mobile apps (React Native with WebBrowser), and any other client type. After Google authorization, redirects to callback which returns JSON for web or deep link for mobile.",
+     *     description="Initiates Google OAuth flow for any platform. Uses OAuth 2.0 state parameter to maintain context across the redirect flow.",
      *
      *     @OA\Parameter(
      *         name="action",
@@ -52,7 +53,7 @@ class OAuthController extends Controller
      *         name="device_id",
      *         in="query",
      *         required=false,
-     *         description="Device identifier UUID for tracking. **REQUIRED when platform=mobile**, optional for web. Validated with rule: required_if:platform,mobile",
+     *         description="Device identifier UUID for tracking. **REQUIRED when platform=mobile**, optional for web.",
      *
      *         @OA\Schema(type="string", example="550e8400-e29b-41d4-a716-446655440000")
      *     ),
@@ -79,7 +80,7 @@ class OAuthController extends Controller
             'action' => 'required|in:login,register',
             'platform' => 'required|in:web,mobile',
             'device_id' => 'required_if:platform,mobile|string|max:255',
-            'redirect_url' => 'nullable|url', // URL del frontend para redirección
+            'redirect_url' => 'nullable|url',
         ]);
 
         // Encode all parameters in OAuth state parameter (OAuth 2.0 spec)
@@ -88,7 +89,7 @@ class OAuthController extends Controller
             'platform' => $validated['platform'],
             'action' => $validated['action'],
             'device_id' => $validated['device_id'] ?? null,
-            'redirect_url' => $validated['redirect_url'] ?? null, // Frontend redirect URL
+            'redirect_url' => $validated['redirect_url'] ?? null,
             'nonce' => \Illuminate\Support\Str::random(32), // CSRF protection
             'timestamp' => time(), // For state expiration validation
         ]));
@@ -294,6 +295,14 @@ class OAuthController extends Controller
                 'message' => __($result['message_key']),
             ]);
 
+        } catch (AccountDeletedException $e) {
+            \Log::info('OAuth Account Deleted - Recoverable', [
+                'email' => $e->getEmail(),
+                'points' => $e->getPoints(),
+                'days_left' => $e->getDaysLeft(),
+            ]);
+
+            return $this->handleDeletedAccountError($request, $e);
         } catch (ValidationException $e) {
             \Log::warning('OAuth Validation Error', [
                 'error_bag' => $e->errorBag,
@@ -372,7 +381,7 @@ class OAuthController extends Controller
      *     path="/api/v1/auth/oauth/apple/redirect",
      *     tags={"OAuth"},
      *     summary="Redirect to Apple OAuth (Web & Mobile)",
-     *     description="Initiates Apple OAuth flow for any platform. Uses OAuth 2.0 state parameter to maintain context. Works for web apps, mobile apps (React Native with WebBrowser), and any other client type.",
+     *     description="Initiates Apple OAuth flow for any platform. Uses OAuth 2.0 state parameter to maintain context.",
      *
      *     @OA\Parameter(
      *         name="action",
@@ -594,6 +603,14 @@ class OAuthController extends Controller
                 'message' => __($result['message_key']),
             ]);
 
+        } catch (AccountDeletedException $e) {
+            \Log::info('Apple OAuth Account Deleted - Recoverable', [
+                'email' => $e->getEmail(),
+                'points' => $e->getPoints(),
+                'days_left' => $e->getDaysLeft(),
+            ]);
+
+            return $this->handleDeletedAccountError($request, $e);
         } catch (ValidationException $e) {
             \Log::warning('Apple OAuth Validation Error', [
                 'error_bag' => $e->errorBag,
@@ -609,6 +626,49 @@ class OAuthController extends Controller
 
             return $this->handleOAuthError($request, 'authentication_failed', __('auth.oauth_authentication_failed'));
         }
+    }
+
+    /**
+     * Handle deleted account error and redirect appropriately based on platform.
+     */
+    protected function handleDeletedAccountError(Request $request, AccountDeletedException $exception): RedirectResponse
+    {
+        $platform = 'web';
+        $redirectUrl = null;
+
+        try {
+            if ($request->query('state')) {
+                $state = json_decode(base64_decode($request->query('state')), true);
+                $platform = $state['platform'] ?? 'web';
+                $redirectUrl = $state['redirect_url'] ?? null;
+            }
+        } catch (\Exception $decodeError) {
+            // Ignore decode errors, use default platform
+        }
+
+        $errorData = [
+            'error' => 'account_deleted_recoverable',
+            'message' => $exception->getMessage(),
+            'points' => $exception->getPoints(),
+            'days_left' => $exception->getDaysLeft(),
+            'email' => $exception->getEmail(),
+            'oauth_provider' => $exception->getOAuthProvider(),
+        ];
+
+        // MOBILE: Redirect with error via deep link
+        if ($platform === 'mobile') {
+            return $this->redirectToApp($errorData);
+        }
+
+        // WEB: Si hay redirect_url personalizada, redirigir con error
+        if ($redirectUrl) {
+            $params = http_build_query($errorData);
+
+            return redirect()->away($redirectUrl.'?'.$params);
+        }
+
+        // WEB: Redirect to oauth/success with error parameters
+        return redirect()->route('oauth.success', $errorData);
     }
 
     /**

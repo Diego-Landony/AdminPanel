@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\AccountDeletedException;
 use App\Models\Customer;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Hash;
@@ -48,6 +49,26 @@ class SocialAuthService
     public function findAndLinkCustomer(string $provider, object $providerData): array
     {
         $providerIdField = $provider.'_id';
+
+        // Caso 0: Verificar PRIMERO si existe una cuenta eliminada (soft deleted)
+        // Esto debe ir antes de cualquier otra búsqueda para detectar cuentas recuperables
+        $deletedCustomer = Customer::where('email', $providerData->email)
+            ->onlyTrashed()
+            ->first();
+
+        if ($deletedCustomer) {
+            $deletedAt = $deletedCustomer->deleted_at;
+            $daysSinceDeletion = $deletedAt->diffInDays(now());
+            $daysLeft = max(0, 30 - $daysSinceDeletion);
+
+            // Si la cuenta fue eliminada hace menos de 30 días, lanzar excepción especial
+            if ($daysLeft > 0) {
+                throw new AccountDeletedException($deletedCustomer, $daysLeft);
+            }
+
+            // Si pasaron más de 30 días, eliminar permanentemente
+            $deletedCustomer->forceDelete();
+        }
 
         // Caso 1: Ya tiene este provider vinculado (login normal con OAuth)
         $customer = Customer::where($providerIdField, $providerData->provider_id)->first();
@@ -130,6 +151,7 @@ class SocialAuthService
      * Create new customer from OAuth provider data (REGISTER - creates accounts)
      *
      * @throws ValidationException if email already exists (user_already_exists error)
+     * @throws AccountDeletedException if account is soft-deleted and recoverable
      */
     public function createCustomerFromOAuth(string $provider, object $providerData): array
     {
@@ -143,6 +165,25 @@ class SocialAuthService
             throw ValidationException::withMessages([
                 'email' => [__('auth.oauth_user_already_exists')],
             ])->errorBag('user_already_exists');
+        }
+
+        // Verificar si existe una cuenta eliminada (soft deleted)
+        $deletedCustomer = Customer::where('email', $providerData->email)
+            ->onlyTrashed()
+            ->first();
+
+        if ($deletedCustomer) {
+            $deletedAt = $deletedCustomer->deleted_at;
+            $daysSinceDeletion = $deletedAt->diffInDays(now());
+            $daysLeft = max(0, 30 - $daysSinceDeletion);
+
+            if ($daysLeft > 0) {
+                // Cuenta recuperable - lanzar excepción para que el cliente maneje la reactivación
+                throw new AccountDeletedException($deletedCustomer, $daysLeft);
+            }
+
+            // Más de 30 días - eliminar permanentemente
+            $deletedCustomer->forceDelete();
         }
 
         // Crear nueva cuenta

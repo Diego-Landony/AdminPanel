@@ -24,8 +24,8 @@
                 "tags": [
                     "Authentication"
                 ],
-                "summary": "Register a new customer",
-                "description": "Creates a new customer account with email and password. Sends email verification notification.",
+                "summary": "Registrar nuevo cliente",
+                "description": "Crea una nueva cuenta de cliente con email y contraseña.\n     *\n     * **Nota:** Si el email ya está registrado (activo), retorna error 422.\n     * Si deseas registrar un email que tenía cuenta eliminada, usa POST /api/v1/auth/reactivate o espera 30 días.",
                 "operationId": "7ca6fc7989202054d29707fef91a2d4a",
                 "requestBody": {
                     "required": true,
@@ -45,46 +45,46 @@
                                 ],
                                 "properties": {
                                     "first_name": {
-                                        "description": "Customer first name",
+                                        "description": "Nombre del cliente",
                                         "type": "string",
                                         "example": "Juan"
                                     },
                                     "last_name": {
-                                        "description": "Customer last name",
+                                        "description": "Apellido del cliente",
                                         "type": "string",
                                         "example": "Pérez"
                                     },
                                     "email": {
-                                        "description": "Valid email address",
+                                        "description": "Correo electrónico válido",
                                         "type": "string",
                                         "format": "email",
                                         "example": "juan@example.com"
                                     },
                                     "password": {
-                                        "description": "Min 6 characters, 1 letter, 1 number",
+                                        "description": "Mínimo 6 caracteres, 1 letra, 1 número",
                                         "type": "string",
                                         "format": "password",
                                         "example": "Pass123"
                                     },
                                     "password_confirmation": {
-                                        "description": "Must match password",
+                                        "description": "Debe coincidir con password",
                                         "type": "string",
                                         "format": "password",
                                         "example": "Pass123"
                                     },
                                     "phone": {
-                                        "description": "Phone number",
+                                        "description": "Número de teléfono",
                                         "type": "string",
                                         "example": "+50212345678"
                                     },
                                     "birth_date": {
-                                        "description": "Birth date",
+                                        "description": "Fecha de nacimiento",
                                         "type": "string",
                                         "format": "date",
                                         "example": "1990-05-15"
                                     },
                                     "gender": {
-                                        "description": "Gender",
+                                        "description": "Género",
                                         "type": "string",
                                         "enum": [
                                             "male",
@@ -94,7 +94,7 @@
                                         "example": "male"
                                     },
                                     "device_identifier": {
-                                        "description": "Unique device UUID for tracking. Client must generate UUID v4, persist it locally (localStorage/AsyncStorage), and send same UUID on every authentication to identify device across sessions.",
+                                        "description": "UUID único del dispositivo",
                                         "type": "string",
                                         "example": "550e8400-e29b-41d4-a716-446655440000"
                                     }
@@ -106,7 +106,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Registration successful",
+                        "description": "Registro exitoso",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -134,7 +134,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation error",
+                        "description": "Error de validación",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -204,7 +204,7 @@
                         }
                     },
                     "429": {
-                        "description": "Too many requests"
+                        "description": "Demasiadas solicitudes"
                     }
                 }
             }
@@ -214,8 +214,8 @@
                 "tags": [
                     "Authentication"
                 ],
-                "summary": "Login with email and password",
-                "description": "Authenticates customer and returns Sanctum token. Rate limited to 5 attempts per minute.",
+                "summary": "Iniciar sesión con email y contraseña",
+                "description": "Autentica al cliente y devuelve token Sanctum. Limitado a 5 intentos por minuto.\n     *\n     * **Si la cuenta fue eliminada:**\n     * - Retorna 409 con `code: account_deleted_recoverable`\n     * - Incluye días restantes para reactivar y puntos acumulados\n     * - El cliente debe usar POST /api/v1/auth/reactivate para recuperar la cuenta",
                 "operationId": "9d0bb5c770cbec19b0b9566606ef4adb",
                 "requestBody": {
                     "required": true,
@@ -239,7 +239,7 @@
                                         "example": "SecurePass123!"
                                     },
                                     "device_identifier": {
-                                        "description": "Unique device UUID for tracking. Client must generate UUID v4, persist it locally (localStorage/AsyncStorage), and send same UUID on every authentication to identify device across sessions.",
+                                        "description": "UUID único del dispositivo",
                                         "type": "string",
                                         "example": "550e8400-e29b-41d4-a716-446655440000"
                                     }
@@ -251,7 +251,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Login successful",
+                        "description": "Inicio de sesión exitoso",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -278,8 +278,55 @@
                             }
                         }
                     },
+                    "409": {
+                        "description": "Cuenta eliminada - puede reactivarse",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Encontramos una cuenta eliminada con este correo."
+                                        },
+                                        "code": {
+                                            "type": "string",
+                                            "example": "account_deleted_recoverable"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "deleted_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-11-15T10:30:00Z"
+                                                },
+                                                "days_until_permanent_deletion": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "points": {
+                                                    "type": "integer",
+                                                    "example": 150
+                                                },
+                                                "can_reactivate": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "oauth_provider": {
+                                                    "description": "Tipo de cuenta: 'local' (email/password), 'google', o 'apple'. Si es 'local', el reactivate requiere password.",
+                                                    "type": "string",
+                                                    "example": "local"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
                     "422": {
-                        "description": "Invalid credentials or OAuth account",
+                        "description": "Credenciales inválidas o cuenta OAuth",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -307,7 +354,7 @@
                         }
                     },
                     "429": {
-                        "description": "Too many login attempts"
+                        "description": "Demasiados intentos de acceso"
                     }
                 }
             }
@@ -435,7 +482,7 @@
                     "Authentication"
                 ],
                 "summary": "Solicitar restablecimiento de contraseña",
-                "description": "Envía un enlace de restablecimiento de contraseña al correo del cliente. Solo funciona para cuentas locales (no OAuth).\n     *\n     * **Errores posibles:**\n     * - email_not_found: No existe una cuenta con este correo\n     * - oauth_no_password: La cuenta usa autenticación OAuth (Google/Apple), no tiene contraseña",
+                "description": "Envía un enlace de restablecimiento de contraseña al correo del cliente. Solo funciona para cuentas locales (no OAuth).\n     *\n     * **Errores posibles:**\n     * - email_not_found: No existe una cuenta activa con este correo\n     * - oauth_no_password: La cuenta usa OAuth, no tiene contraseña",
                 "operationId": "4011ca27431b5cd53a225688e531de47",
                 "requestBody": {
                     "required": true,
@@ -714,13 +761,128 @@
                 }
             }
         },
+        "/api/v1/auth/reactivate": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Reactivar cuenta eliminada",
+                "description": "Reactiva una cuenta de cliente que fue soft-deleted. Solo funciona si no han pasado más de 30 días desde la eliminación.\n     *\n     * **Flujo:**\n     * 1. Busca cuenta eliminada con el email proporcionado\n     * 2. Verifica que no hayan pasado más de 30 días desde eliminación\n     * 3. Para cuentas locales, verifica la contraseña\n     * 4. Restaura la cuenta y genera nuevo token\n     * 5. Retorna datos del usuario incluyendo puntos acumulados\n     *\n     * **Errores posibles:**\n     * - account_not_found_deleted: No existe cuenta eliminada con este email\n     * - reactivation_period_expired: Han pasado más de 30 días desde eliminación\n     * - incorrect_password: Contraseña incorrecta (solo cuentas locales)",
+                "operationId": "e08ef1a6deb11a0fdce4b7e2ddd9ee7e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "device_identifier"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "description": "Email de la cuenta eliminada",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "juan@example.com"
+                                    },
+                                    "password": {
+                                        "description": "Contraseña (requerida solo para cuentas locales, no OAuth)",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "SecurePass123!"
+                                    },
+                                    "device_identifier": {
+                                        "description": "Identificador único del dispositivo",
+                                        "type": "string",
+                                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cuenta reactivada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cuenta reactivada exitosamente. Bienvenido de nuevo."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "customer": {
+                                                    "$ref": "#/components/schemas/Customer"
+                                                },
+                                                "token": {
+                                                    "type": "string",
+                                                    "example": "1|abc123xyz..."
+                                                },
+                                                "points": {
+                                                    "description": "Puntos acumulados que se conservaron",
+                                                    "type": "integer",
+                                                    "example": 150
+                                                },
+                                                "deleted_at": {
+                                                    "description": "Fecha original de eliminación",
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-11-20T10:30:00.000000Z"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No se encontró una cuenta eliminada con este correo electrónico."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "No se encontró una cuenta eliminada con este correo electrónico."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Demasiadas solicitudes"
+                    }
+                }
+            }
+        },
         "/api/v1/auth/oauth/google/redirect": {
             "get": {
                 "tags": [
                     "OAuth"
                 ],
                 "summary": "Redirect to Google OAuth (Web & Mobile)",
-                "description": "Initiates Google OAuth flow for any platform. Uses OAuth 2.0 state parameter to maintain context across the redirect flow. Works for web apps, mobile apps (React Native with WebBrowser), and any other client type. After Google authorization, redirects to callback which returns JSON for web or deep link for mobile.",
+                "description": "Initiates Google OAuth flow for any platform. Uses OAuth 2.0 state parameter to maintain context across the redirect flow.",
                 "operationId": "d45644767bd0769d1084909175bff619",
                 "parameters": [
                     {
@@ -754,7 +916,7 @@
                     {
                         "name": "device_id",
                         "in": "query",
-                        "description": "Device identifier UUID for tracking. **REQUIRED when platform=mobile**, optional for web. Validated with rule: required_if:platform,mobile",
+                        "description": "Device identifier UUID for tracking. **REQUIRED when platform=mobile**, optional for web.",
                         "required": false,
                         "schema": {
                             "type": "string",
@@ -840,7 +1002,7 @@
                     "OAuth"
                 ],
                 "summary": "Redirect to Apple OAuth (Web & Mobile)",
-                "description": "Initiates Apple OAuth flow for any platform. Uses OAuth 2.0 state parameter to maintain context. Works for web apps, mobile apps (React Native with WebBrowser), and any other client type.",
+                "description": "Initiates Apple OAuth flow for any platform. Uses OAuth 2.0 state parameter to maintain context.",
                 "operationId": "eb85e9832719d0e001c347b4497fbd03",
                 "parameters": [
                     {
@@ -1239,20 +1401,17 @@
                 "tags": [
                     "Profile"
                 ],
-                "summary": "Delete customer account",
-                "description": "Soft deletes customer account. Requires password confirmation for local accounts. Revokes all tokens.",
+                "summary": "Eliminar cuenta de cliente",
+                "description": "Soft delete de la cuenta del cliente. Revoca todos los tokens.\n     *\n     * **Para cuentas locales (email/contraseña):**\n     * - Requiere: password (contraseña actual para confirmar)\n     *\n     * **Para cuentas OAuth (Google/Apple) sin contraseña:**\n     * - NO requiere password (el body puede estar vacío o enviar `{}`)\n     *\n     * **Período de gracia:**\n     * - La cuenta se puede recuperar dentro de 30 días usando POST /api/v1/auth/reactivate\n     * - Después de 30 días, la cuenta se elimina permanentemente",
                 "operationId": "dd388e266427403d3d4573c1104c784a",
                 "requestBody": {
-                    "required": true,
+                    "required": false,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "password"
-                                ],
                                 "properties": {
                                     "password": {
-                                        "description": "Current password for verification",
+                                        "description": "Contraseña actual. SOLO requerido para cuentas locales (oauth_provider='local'). NO enviar si es cuenta OAuth.",
                                         "type": "string",
                                         "format": "password",
                                         "example": "SecurePass123!"
@@ -1265,7 +1424,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Account deleted successfully",
+                        "description": "Cuenta eliminada exitosamente",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1273,6 +1432,22 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Cuenta eliminada exitosamente."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "can_reactivate_until": {
+                                                    "description": "Fecha límite para reactivar la cuenta",
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-12-27T10:30:00Z"
+                                                },
+                                                "days_to_reactivate": {
+                                                    "description": "Días restantes para reactivar",
+                                                    "type": "integer",
+                                                    "example": 30
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1281,10 +1456,35 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "No autenticado"
                     },
                     "422": {
-                        "description": "Incorrect password"
+                        "description": "Contraseña incorrecta (solo cuentas locales)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "La contraseña es incorrecta."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "password": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "La contraseña es incorrecta."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [

@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\V1\Auth;
 
 use App\Enums\Gender;
-use App\Models\Customer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
@@ -28,7 +27,7 @@ class RegisterRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.Customer::class],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('customers', 'email')],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'phone' => ['required', 'string', 'size:8', 'regex:/^[0-9]{8}$/'],
             'birth_date' => ['required', 'date', 'before:today'],

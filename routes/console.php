@@ -15,3 +15,6 @@ Schedule::command('sanctum:prune-expired --hours=168')->daily();
 // - Mark devices as inactive after 6 months (180 days) of no use
 // - Soft delete devices inactive for 1 year (365 days)
 Schedule::command('devices:cleanup --inactive-days=180 --delete-days=365')->daily();
+
+// Purge customers that were soft-deleted more than 30 days ago
+Schedule::command('customers:purge-deleted --days=30')->daily();

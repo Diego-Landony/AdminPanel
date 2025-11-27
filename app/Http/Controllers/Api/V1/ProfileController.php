@@ -125,47 +125,74 @@ class ProfileController extends Controller
      * @OA\Delete(
      *     path="/api/v1/profile",
      *     tags={"Profile"},
-     *     summary="Delete customer account",
-     *     description="Soft deletes customer account. Requires password confirmation for local accounts. Revokes all tokens.",
+     *     summary="Eliminar cuenta de cliente",
+     *     description="Soft delete de la cuenta del cliente. Revoca todos los tokens.
+     *
+     * **Para cuentas locales (email/contraseña):**
+     * - Requiere: password (contraseña actual para confirmar)
+     *
+     * **Para cuentas OAuth (Google/Apple) sin contraseña:**
+     * - NO requiere password (el body puede estar vacío o enviar `{}`)
+     *
+     * **Período de gracia:**
+     * - La cuenta se puede recuperar dentro de 30 días usando POST /api/v1/auth/reactivate
+     * - Después de 30 días, la cuenta se elimina permanentemente",
      *     security={{"sanctum":{}}},
      *
      *     @OA\RequestBody(
-     *         required=true,
+     *         required=false,
      *
      *         @OA\JsonContent(
-     *             required={"password"},
      *
-     *             @OA\Property(property="password", type="string", format="password", example="SecurePass123!", description="Current password for verification")
+     *             @OA\Property(property="password", type="string", format="password", example="SecurePass123!", description="Contraseña actual. SOLO requerido para cuentas locales (oauth_provider='local'). NO enviar si es cuenta OAuth.")
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Account deleted successfully",
+     *         description="Cuenta eliminada exitosamente",
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Cuenta eliminada exitosamente.")
+     *             @OA\Property(property="message", type="string", example="Cuenta eliminada exitosamente."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="can_reactivate_until", type="string", format="date-time", example="2025-12-27T10:30:00Z", description="Fecha límite para reactivar la cuenta"),
+     *                 @OA\Property(property="days_to_reactivate", type="integer", example=30, description="Días restantes para reactivar")
+     *             )
      *         )
      *     ),
      *
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=422, description="Incorrect password")
+     *     @OA\Response(response=401, description="No autenticado"),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Contraseña incorrecta (solo cuentas locales)",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="La contraseña es incorrecta."),
+     *             @OA\Property(property="errors", type="object",
+     *                 @OA\Property(property="password", type="array",
+     *
+     *                     @OA\Items(type="string", example="La contraseña es incorrecta.")
+     *                 )
+     *             )
+     *         )
+     *     )
      * )
      */
     public function destroy(Request $request): JsonResponse
     {
-        $request->validate([
-            'password' => ['required', 'string'],
-        ]);
-
         $customer = $request->user();
 
-        // Verify password for local accounts
+        // Solo validar y verificar contraseña para cuentas locales
         if ($customer->oauth_provider === 'local') {
+            $request->validate([
+                'password' => ['required', 'string'],
+            ]);
+
             if (! Hash::check($request->password, $customer->password)) {
                 throw ValidationException::withMessages([
-                    'password' => ['La contraseña es incorrecta.'],
+                    'password' => [__('auth.incorrect_password')],
                 ]);
             }
         }
@@ -178,6 +205,10 @@ class ProfileController extends Controller
 
         return response()->json([
             'message' => 'Cuenta eliminada exitosamente.',
+            'data' => [
+                'can_reactivate_until' => now()->addDays(30)->toIso8601String(),
+                'days_to_reactivate' => 30,
+            ],
         ]);
     }
 

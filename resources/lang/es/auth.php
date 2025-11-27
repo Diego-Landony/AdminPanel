@@ -49,4 +49,14 @@ return [
 
     // Errores de validación genéricos
     'invalid_data' => 'Los datos ingresados son inválidos.',
+
+    // Recuperación de cuenta eliminada
+    'account_deleted_recoverable' => 'Encontramos una cuenta eliminada con este correo.',
+    'oauth_account_deleted_recoverable' => 'Tu cuenta fue eliminada pero aún puede recuperarse. Tienes :points puntos acumulados y :days_left días restantes para recuperar tu cuenta.',
+
+    // Reactivación de cuenta
+    'account_reactivated' => 'Cuenta reactivada exitosamente. Bienvenido de nuevo.',
+    'account_not_found_deleted' => 'No se encontró una cuenta eliminada con este correo electrónico.',
+    'reactivation_period_expired' => 'El período de reactivación ha expirado. La cuenta fue eliminada hace más de 30 días.',
+    'oauth_deleted_use_provider' => 'Esta cuenta eliminada usa :provider. Para reactivarla, inicia sesión con :provider.',
 ];

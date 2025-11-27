@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Api\V1\Auth\LoginRequest;
+use App\Http\Requests\Api\V1\Auth\ReactivateAccountRequest;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
 use App\Http\Requests\Api\V1\Auth\ResetPasswordRequest;
 use App\Http\Resources\Api\V1\AuthResource;
@@ -14,6 +15,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
@@ -30,8 +32,11 @@ class AuthController extends Controller
      * @OA\Post(
      *     path="/api/v1/auth/register",
      *     tags={"Authentication"},
-     *     summary="Register a new customer",
-     *     description="Creates a new customer account with email and password. Sends email verification notification.",
+     *     summary="Registrar nuevo cliente",
+     *     description="Crea una nueva cuenta de cliente con email y contraseña.
+     *
+     * **Nota:** Si el email ya está registrado (activo), retorna error 422.
+     * Si deseas registrar un email que tenía cuenta eliminada, usa POST /api/v1/auth/reactivate o espera 30 días.",
      *
      *     @OA\RequestBody(
      *         required=true,
@@ -39,21 +44,21 @@ class AuthController extends Controller
      *         @OA\JsonContent(
      *             required={"first_name","last_name","email","password","password_confirmation","phone","birth_date","gender","device_identifier"},
      *
-     *             @OA\Property(property="first_name", type="string", example="Juan", description="Customer first name"),
-     *             @OA\Property(property="last_name", type="string", example="Pérez", description="Customer last name"),
-     *             @OA\Property(property="email", type="string", format="email", example="juan@example.com", description="Valid email address"),
-     *             @OA\Property(property="password", type="string", format="password", example="Pass123", description="Min 6 characters, 1 letter, 1 number"),
-     *             @OA\Property(property="password_confirmation", type="string", format="password", example="Pass123", description="Must match password"),
-     *             @OA\Property(property="phone", type="string", example="+50212345678", description="Phone number"),
-     *             @OA\Property(property="birth_date", type="string", format="date", example="1990-05-15", description="Birth date"),
-     *             @OA\Property(property="gender", type="string", enum={"male","female","other"}, example="male", description="Gender"),
-     *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="Unique device UUID for tracking. Client must generate UUID v4, persist it locally (localStorage/AsyncStorage), and send same UUID on every authentication to identify device across sessions.")
+     *             @OA\Property(property="first_name", type="string", example="Juan", description="Nombre del cliente"),
+     *             @OA\Property(property="last_name", type="string", example="Pérez", description="Apellido del cliente"),
+     *             @OA\Property(property="email", type="string", format="email", example="juan@example.com", description="Correo electrónico válido"),
+     *             @OA\Property(property="password", type="string", format="password", example="Pass123", description="Mínimo 6 caracteres, 1 letra, 1 número"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password", example="Pass123", description="Debe coincidir con password"),
+     *             @OA\Property(property="phone", type="string", example="+50212345678", description="Número de teléfono"),
+     *             @OA\Property(property="birth_date", type="string", format="date", example="1990-05-15", description="Fecha de nacimiento"),
+     *             @OA\Property(property="gender", type="string", enum={"male","female","other"}, example="male", description="Género"),
+     *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="UUID único del dispositivo")
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=201,
-     *         description="Registration successful",
+     *         description="Registro exitoso",
      *
      *         @OA\JsonContent(
      *
@@ -67,7 +72,7 @@ class AuthController extends Controller
      *
      *     @OA\Response(
      *         response=422,
-     *         description="Validation error",
+     *         description="Error de validación",
      *
      *         @OA\JsonContent(
      *
@@ -84,13 +89,15 @@ class AuthController extends Controller
      *         )
      *     ),
      *
-     *     @OA\Response(response=429, description="Too many requests")
+     *     @OA\Response(response=429, description="Demasiadas solicitudes")
      * )
      */
     public function register(RegisterRequest $request): JsonResponse
     {
         $validated = $request->validated();
 
+        // Simple: crear cuenta nueva
+        // La validación en RegisterRequest ya verifica que el email no exista (activo)
         $customer = Customer::create([
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
@@ -132,8 +139,13 @@ class AuthController extends Controller
      * @OA\Post(
      *     path="/api/v1/auth/login",
      *     tags={"Authentication"},
-     *     summary="Login with email and password",
-     *     description="Authenticates customer and returns Sanctum token. Rate limited to 5 attempts per minute.",
+     *     summary="Iniciar sesión con email y contraseña",
+     *     description="Autentica al cliente y devuelve token Sanctum. Limitado a 5 intentos por minuto.
+     *
+     * **Si la cuenta fue eliminada:**
+     * - Retorna 409 con `code: account_deleted_recoverable`
+     * - Incluye días restantes para reactivar y puntos acumulados
+     * - El cliente debe usar POST /api/v1/auth/reactivate para recuperar la cuenta",
      *
      *     @OA\RequestBody(
      *         required=true,
@@ -143,13 +155,13 @@ class AuthController extends Controller
      *
      *             @OA\Property(property="email", type="string", format="email", example="juan@example.com"),
      *             @OA\Property(property="password", type="string", format="password", example="SecurePass123!"),
-     *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="Unique device UUID for tracking. Client must generate UUID v4, persist it locally (localStorage/AsyncStorage), and send same UUID on every authentication to identify device across sessions.")
+     *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="UUID único del dispositivo")
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Login successful",
+     *         description="Inicio de sesión exitoso",
      *
      *         @OA\JsonContent(
      *
@@ -162,8 +174,26 @@ class AuthController extends Controller
      *     ),
      *
      *     @OA\Response(
+     *         response=409,
+     *         description="Cuenta eliminada - puede reactivarse",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Encontramos una cuenta eliminada con este correo."),
+     *             @OA\Property(property="code", type="string", example="account_deleted_recoverable"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="deleted_at", type="string", format="date-time", example="2025-11-15T10:30:00Z"),
+     *                 @OA\Property(property="days_until_permanent_deletion", type="integer", example=15),
+     *                 @OA\Property(property="points", type="integer", example=150),
+     *                 @OA\Property(property="can_reactivate", type="boolean", example=true),
+     *                 @OA\Property(property="oauth_provider", type="string", example="local", description="Tipo de cuenta: 'local' (email/password), 'google', o 'apple'. Si es 'local', el reactivate requiere password.")
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
      *         response=422,
-     *         description="Invalid credentials or OAuth account",
+     *         description="Credenciales inválidas o cuenta OAuth",
      *
      *         @OA\JsonContent(
      *
@@ -174,7 +204,7 @@ class AuthController extends Controller
      *         )
      *     ),
      *
-     *     @OA\Response(response=429, description="Too many login attempts")
+     *     @OA\Response(response=429, description="Demasiados intentos de acceso")
      * )
      */
     public function login(LoginRequest $request): JsonResponse
@@ -184,6 +214,34 @@ class AuthController extends Controller
         $customer = Customer::where('email', $request->email)->first();
 
         if (! $customer) {
+            // Verificar si existe una cuenta eliminada (soft deleted)
+            $deletedCustomer = Customer::where('email', $request->email)
+                ->onlyTrashed()
+                ->first();
+
+            if ($deletedCustomer) {
+                $deletedAt = Carbon::parse($deletedCustomer->deleted_at);
+                $daysUntilPermanentDeletion = 30 - $deletedAt->diffInDays(now());
+
+                // Si la cuenta fue eliminada hace menos de 30 días, ofrecer reactivación
+                if ($daysUntilPermanentDeletion > 0) {
+                    return response()->json([
+                        'message' => __('auth.account_deleted_recoverable'),
+                        'code' => 'account_deleted_recoverable',
+                        'data' => [
+                            'deleted_at' => $deletedAt->toIso8601String(),
+                            'days_until_permanent_deletion' => $daysUntilPermanentDeletion,
+                            'points' => $deletedCustomer->points ?? 0,
+                            'can_reactivate' => true,
+                            'oauth_provider' => $deletedCustomer->oauth_provider,
+                        ],
+                    ], 409);
+                }
+
+                // Más de 30 días - eliminar permanentemente
+                $deletedCustomer->forceDelete();
+            }
+
             RateLimiter::hit($this->throttleKey($request));
 
             throw ValidationException::withMessages([
@@ -356,8 +414,8 @@ class AuthController extends Controller
      *     description="Envía un enlace de restablecimiento de contraseña al correo del cliente. Solo funciona para cuentas locales (no OAuth).
      *
      * **Errores posibles:**
-     * - email_not_found: No existe una cuenta con este correo
-     * - oauth_no_password: La cuenta usa autenticación OAuth (Google/Apple), no tiene contraseña",
+     * - email_not_found: No existe una cuenta activa con este correo
+     * - oauth_no_password: La cuenta usa OAuth, no tiene contraseña",
      *
      *     @OA\RequestBody(
      *         required=true,
@@ -400,7 +458,7 @@ class AuthController extends Controller
      */
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
     {
-        // Verificar si el email existe
+        // Verificar si el email existe (solo cuentas activas)
         $customer = Customer::where('email', $request->email)->first();
 
         if (! $customer) {
@@ -643,6 +701,156 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => __('auth.verification_link_resent'),
+        ]);
+    }
+
+    /**
+     * Reactivate a soft-deleted customer account.
+     *
+     * @OA\Post(
+     *     path="/api/v1/auth/reactivate",
+     *     tags={"Authentication"},
+     *     summary="Reactivar cuenta eliminada",
+     *     description="Reactiva una cuenta de cliente que fue soft-deleted. Solo funciona si no han pasado más de 30 días desde la eliminación.
+     *
+     * **Flujo:**
+     * 1. Busca cuenta eliminada con el email proporcionado
+     * 2. Verifica que no hayan pasado más de 30 días desde eliminación
+     * 3. Para cuentas locales, verifica la contraseña
+     * 4. Restaura la cuenta y genera nuevo token
+     * 5. Retorna datos del usuario incluyendo puntos acumulados
+     *
+     * **Errores posibles:**
+     * - account_not_found_deleted: No existe cuenta eliminada con este email
+     * - reactivation_period_expired: Han pasado más de 30 días desde eliminación
+     * - incorrect_password: Contraseña incorrecta (solo cuentas locales)",
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(
+     *             required={"email","device_identifier"},
+     *
+     *             @OA\Property(property="email", type="string", format="email", example="juan@example.com", description="Email de la cuenta eliminada"),
+     *             @OA\Property(property="password", type="string", format="password", example="SecurePass123!", description="Contraseña (requerida solo para cuentas locales, no OAuth)"),
+     *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="Identificador único del dispositivo")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Cuenta reactivada exitosamente",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Cuenta reactivada exitosamente. Bienvenido de nuevo."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="customer", ref="#/components/schemas/Customer"),
+     *                 @OA\Property(property="token", type="string", example="1|abc123xyz..."),
+     *                 @OA\Property(property="points", type="integer", example=150, description="Puntos acumulados que se conservaron"),
+     *                 @OA\Property(property="deleted_at", type="string", format="date-time", example="2025-11-20T10:30:00.000000Z", description="Fecha original de eliminación")
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="No se encontró una cuenta eliminada con este correo electrónico."),
+     *             @OA\Property(property="errors", type="object",
+     *                 @OA\Property(property="email", type="array",
+     *
+     *                     @OA\Items(type="string", example="No se encontró una cuenta eliminada con este correo electrónico.")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=429, description="Demasiadas solicitudes")
+     * )
+     */
+    public function reactivateAccount(ReactivateAccountRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+
+        // Buscar cuenta eliminada con el email proporcionado
+        $customer = Customer::onlyTrashed()
+            ->where('email', $validated['email'])
+            ->first();
+
+        if (! $customer) {
+            throw ValidationException::withMessages([
+                'email' => [__('auth.account_not_found_deleted')],
+            ]);
+        }
+
+        // Verificar que no hayan pasado más de 30 días desde la eliminación
+        $deletedAt = $customer->deleted_at;
+        $daysSinceDeletion = $deletedAt->diffInDays(now());
+
+        if ($daysSinceDeletion > 30) {
+            // Limpiar la cuenta expirada
+            $customer->forceDelete();
+
+            throw ValidationException::withMessages([
+                'email' => [__('auth.reactivation_period_expired')],
+            ]);
+        }
+
+        // Si es cuenta local, verificar la contraseña
+        if ($customer->oauth_provider === 'local') {
+            if (! isset($validated['password'])) {
+                throw ValidationException::withMessages([
+                    'password' => ['La contraseña es requerida para cuentas locales.'],
+                ]);
+            }
+
+            if (! Hash::check($validated['password'], $customer->password)) {
+                throw ValidationException::withMessages([
+                    'password' => [__('auth.incorrect_password')],
+                ]);
+            }
+        }
+
+        // Guardar puntos antes de restaurar
+        $preservedPoints = $customer->points ?? 0;
+        $originalDeletedAt = $customer->deleted_at;
+
+        // Restaurar la cuenta
+        $customer->restore();
+
+        // Update last login timestamp
+        $customer->update([
+            'last_login_at' => now(),
+            'last_activity_at' => now(),
+        ]);
+
+        // Enforce token limit
+        $customer->enforceTokenLimit(5);
+
+        // Generar nuevo token
+        $tokenName = $this->generateTokenName($validated['device_identifier']);
+        $newAccessToken = $customer->createToken($tokenName);
+        $token = $newAccessToken->plainTextToken;
+
+        // Sync device with token
+        $this->deviceService->syncDeviceWithToken(
+            $customer,
+            $newAccessToken->accessToken,
+            $validated['device_identifier']
+        );
+
+        return response()->json([
+            'message' => __('auth.account_reactivated'),
+            'data' => [
+                'token' => $token,
+                'customer' => new \App\Http\Resources\Api\V1\CustomerResource($customer->load('customerType')),
+                'points' => $preservedPoints,
+                'deleted_at' => $originalDeletedAt->toIso8601String(),
+            ],
         ]);
     }
 

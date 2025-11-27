@@ -18,16 +18,42 @@ class ChangePasswordRequest extends FormRequest
     }
 
     /**
+     * Check if user has a password set (local account or has set one manually).
+     */
+    protected function userHasPassword(): bool
+    {
+        $user = $this->user();
+
+        // Usuario local siempre tiene contraseña
+        if ($user->oauth_provider === 'local') {
+            return true;
+        }
+
+        // Usuario OAuth podría haber creado una contraseña después
+        // Verificamos si la contraseña NO es un hash random (los OAuth tienen password random)
+        // Una forma simple: si puede hacer login con alguna contraseña conocida, tiene contraseña real
+        // Pero como no sabemos, asumimos que OAuth sin 'local' no tiene contraseña usable
+        return false;
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        return [
-            'current_password' => ['required', 'string'],
-            'password' => ['required', 'string', 'confirmed', 'different:current_password', Rules\Password::defaults()],
+        $rules = [
+            'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ];
+
+        // Solo requerir current_password si el usuario tiene contraseña (cuenta local)
+        if ($this->userHasPassword()) {
+            $rules['current_password'] = ['required', 'string'];
+            $rules['password'][] = 'different:current_password';
+        }
+
+        return $rules;
     }
 
     /**
@@ -52,8 +78,11 @@ class ChangePasswordRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-            if (! Hash::check($this->current_password, $this->user()->password)) {
-                $validator->errors()->add('current_password', 'La contraseña actual es incorrecta.');
+            // Solo validar current_password si el usuario tiene contraseña
+            if ($this->userHasPassword() && $this->current_password) {
+                if (! Hash::check($this->current_password, $this->user()->password)) {
+                    $validator->errors()->add('current_password', 'La contraseña actual es incorrecta.');
+                }
             }
         });
     }

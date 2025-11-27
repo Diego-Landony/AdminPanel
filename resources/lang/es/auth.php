@@ -14,6 +14,9 @@ return [
     'token_refreshed' => 'Token renovado exitosamente.',
     'password_reset_link_sent' => 'Enlace de restablecimiento de contraseña enviado.',
     'password_reset_success' => 'Contraseña restablecida exitosamente.',
+    'password_reset_throttled' => 'Demasiados intentos. Por favor espera :seconds segundos antes de volver a intentarlo.',
+    'password_created' => 'Contraseña creada exitosamente. Ahora puedes iniciar sesión con tu correo y contraseña.',
+    'password_updated' => 'Contraseña actualizada exitosamente. Se cerraron todas las otras sesiones.',
     'email_verified' => 'Email verificado exitosamente.',
     'email_already_verified' => 'El email ya ha sido verificado.',
     'verification_link_resent' => 'Enlace de verificación reenviado.',
@@ -22,16 +25,20 @@ return [
     'invalid_credentials' => 'Las credenciales proporcionadas son incorrectas.',
     'oauth_account' => 'Esta cuenta usa autenticación con :provider. Por favor inicia sesión con :provider.',
     'account_not_found' => 'No se encontró una cuenta con este email.',
+    'email_not_found' => 'No existe una cuenta con este correo electrónico.',
     'incorrect_password' => 'La contraseña es incorrecta.',
+    'oauth_no_password' => 'Esta cuenta usa autenticación con :provider y no tiene contraseña. Inicia sesión con :provider.',
 
     // OAuth
     'oauth_login_success' => 'Inicio de sesión exitoso.',
-    'oauth_account_linked' => 'Cuenta vinculada exitosamente.',
+    'oauth_account_linked' => 'Cuenta vinculada exitosamente. Ahora puedes iniciar sesión con tu contraseña o con este método.',
     'oauth_register_success' => 'Cuenta creada exitosamente.',
     'oauth_email_not_registered' => 'No existe una cuenta con este correo electrónico. Por favor regístrate primero.',
     'oauth_email_exists' => 'Ya existe una cuenta con este correo electrónico. Por favor inicia sesión con tu método original.',
+    'oauth_user_already_exists' => 'Ya existe una cuenta con este correo electrónico. Usa iniciar sesión en lugar de registrarte.',
     'oauth_provider_mismatch' => 'Esta cuenta ya existe con autenticación :provider.',
     'oauth_invalid_token' => 'Token de Google inválido o expirado.',
+    'oauth_authentication_failed' => 'Error al procesar la autenticación. Por favor intenta nuevamente.',
 
     // Verificación de email
     'invalid_verification_link' => 'El enlace de verificación no es válido.',

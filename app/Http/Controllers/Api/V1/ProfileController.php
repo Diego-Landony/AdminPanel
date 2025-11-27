@@ -269,64 +269,112 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update customer password.
+     * Update or create customer password.
      *
      * @OA\Put(
      *     path="/api/v1/profile/password",
      *     tags={"Profile"},
-     *     summary="Update customer password",
-     *     description="Changes customer password. Only for local accounts (not OAuth). Revokes all tokens except current one for security.",
+     *     summary="Actualizar o crear contraseña",
+     *     description="Cambia o crea la contraseña del cliente. Revoca todos los tokens excepto el actual por seguridad.
+     *
+     * **Para cuentas locales (email/contraseña):**
+     * - Requiere: current_password, password, password_confirmation
+     * - La nueva contraseña debe ser diferente a la actual
+     *
+     * **Para cuentas OAuth (Google/Apple) sin contraseña:**
+     * - Requiere: password, password_confirmation
+     * - NO requiere current_password (están creando su primera contraseña)
+     * - Después de crear contraseña, pueden usar ambos métodos: OAuth y contraseña
+     *
+     * **Comportamiento después de crear contraseña (OAuth):**
+     * - El usuario mantiene su google_id/apple_id vinculado
+     * - oauth_provider cambia a 'local'
+     * - Puede iniciar sesión con Google/Apple O con email+contraseña",
      *     security={{"sanctum":{}}},
      *
      *     @OA\RequestBody(
      *         required=true,
      *
      *         @OA\JsonContent(
-     *             required={"current_password","password","password_confirmation"},
+     *             required={"password","password_confirmation"},
      *
-     *             @OA\Property(property="current_password", type="string", format="password", example="OldPass123!", description="Current password for verification"),
-     *             @OA\Property(property="password", type="string", format="password", example="NewSecurePass123!", description="New password"),
-     *             @OA\Property(property="password_confirmation", type="string", format="password", example="NewSecurePass123!", description="Must match new password")
+     *             @OA\Property(property="current_password", type="string", format="password", example="OldPass123!", description="Contraseña actual. SOLO requerido para cuentas locales (oauth_provider='local'). NO enviar si es cuenta OAuth."),
+     *             @OA\Property(property="password", type="string", format="password", example="NuevaPass123!", description="Nueva contraseña (mínimo 6 caracteres, al menos 1 letra y 1 número)"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password", example="NuevaPass123!", description="Debe coincidir con password")
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Password updated successfully",
+     *         description="Contraseña actualizada/creada exitosamente",
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Contraseña actualizada exitosamente. Se cerraron todas las otras sesiones.")
+     *             @OA\Property(property="message", type="string", example="Contraseña creada exitosamente. Ahora puedes iniciar sesión con tu correo y contraseña."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="password_created", type="boolean", example=true, description="true si es primera contraseña (usuario OAuth), false si fue cambio de contraseña existente"),
+     *                 @OA\Property(property="can_use_password_login", type="boolean", example=true, description="Siempre true después de esta operación")
+     *             )
      *         )
      *     ),
      *
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=422, description="Validation error or OAuth account")
+     *     @OA\Response(response=401, description="No autenticado"),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="La contraseña actual es incorrecta."),
+     *             @OA\Property(property="errors", type="object",
+     *                 @OA\Property(property="current_password", type="array",
+     *
+     *                     @OA\Items(type="string", example="La contraseña actual es incorrecta.")
+     *                 ),
+     *
+     *                 @OA\Property(property="password", type="array",
+     *
+     *                     @OA\Items(type="string", example="Las contraseñas no coinciden.")
+     *                 )
+     *             )
+     *         )
+     *     )
      * )
      */
     public function updatePassword(ChangePasswordRequest $request): JsonResponse
     {
         $customer = $request->user();
-
-        // Only local accounts can change password
-        if ($customer->oauth_provider !== 'local') {
-            return response()->json([
-                'message' => 'Las cuentas de '.$customer->oauth_provider.' no pueden cambiar la contraseña.',
-            ], 422);
-        }
-
         $validated = $request->validated();
+
+        // Determinar si es creación de contraseña (OAuth) o cambio (local)
+        $isCreatingPassword = $customer->oauth_provider !== 'local';
 
         $customer->update([
             'password' => Hash::make($validated['password']),
         ]);
 
+        // Si era cuenta OAuth, ahora puede usar contraseña también
+        // Cambiamos a 'local' para permitir login con contraseña
+        if ($isCreatingPassword) {
+            $customer->update([
+                'oauth_provider' => 'local',
+            ]);
+        }
+
         // Revoke all tokens except current one for security
         $currentToken = $customer->currentAccessToken();
         $customer->tokens()->where('id', '!=', $currentToken->id)->delete();
 
+        $message = $isCreatingPassword
+            ? __('auth.password_created')
+            : __('auth.password_updated');
+
         return response()->json([
-            'message' => 'Contraseña actualizada exitosamente. Se cerraron todas las otras sesiones.',
+            'message' => $message,
+            'data' => [
+                'password_created' => $isCreatingPassword,
+                'can_use_password_login' => true,
+            ],
         ]);
     }
 }

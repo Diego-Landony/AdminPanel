@@ -434,8 +434,8 @@
                 "tags": [
                     "Authentication"
                 ],
-                "summary": "Request password reset",
-                "description": "Sends password reset link to customer's email. Only for local accounts (not OAuth).",
+                "summary": "Solicitar restablecimiento de contraseña",
+                "description": "Envía un enlace de restablecimiento de contraseña al correo del cliente. Solo funciona para cuentas locales (no OAuth).\n     *\n     * **Errores posibles:**\n     * - email_not_found: No existe una cuenta con este correo\n     * - oauth_no_password: La cuenta usa autenticación OAuth (Google/Apple), no tiene contraseña",
                 "operationId": "4011ca27431b5cd53a225688e531de47",
                 "requestBody": {
                     "required": true,
@@ -459,7 +459,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Reset link sent",
+                        "description": "Enlace de restablecimiento enviado",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -475,10 +475,35 @@
                         }
                     },
                     "422": {
-                        "description": "Validation error"
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No existe una cuenta con este correo electrónico."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "No existe una cuenta con este correo electrónico."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "429": {
-                        "description": "Too many requests"
+                        "description": "Demasiadas solicitudes"
                     }
                 }
             }
@@ -488,8 +513,8 @@
                 "tags": [
                     "Authentication"
                 ],
-                "summary": "Reset password",
-                "description": "Resets password using token from email. Revokes all existing tokens for security.",
+                "summary": "Restablecer contraseña con token",
+                "description": "Restablece la contraseña usando el token recibido por email. Revoca todos los tokens existentes por seguridad.\n     *\n     * **Errores posibles:**\n     * - passwords.token: Token inválido o expirado\n     * - passwords.user: No existe una cuenta con este email",
                 "operationId": "aba7a33c4064b5b1a2f3a8a70c20094b",
                 "requestBody": {
                     "required": true,
@@ -509,16 +534,18 @@
                                         "example": "juan@example.com"
                                     },
                                     "password": {
+                                        "description": "Mínimo 6 caracteres",
                                         "type": "string",
                                         "format": "password",
-                                        "example": "NewSecurePass123!"
+                                        "example": "NuevaPass123!"
                                     },
                                     "password_confirmation": {
                                         "type": "string",
                                         "format": "password",
-                                        "example": "NewSecurePass123!"
+                                        "example": "NuevaPass123!"
                                     },
                                     "token": {
+                                        "description": "Token recibido en el email",
                                         "type": "string",
                                         "example": "abc123resettoken456"
                                     }
@@ -530,7 +557,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Password reset successful",
+                        "description": "Contraseña restablecida exitosamente",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -546,10 +573,35 @@
                         }
                     },
                     "422": {
-                        "description": "Invalid token or validation error"
+                        "description": "Token inválido o error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Este token de restablecimiento de contraseña es inválido."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "Este token de restablecimiento de contraseña es inválido."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "429": {
-                        "description": "Too many requests"
+                        "description": "Demasiadas solicitudes"
                     }
                 }
             }
@@ -741,14 +793,14 @@
                 "tags": [
                     "OAuth"
                 ],
-                "summary": "Handle Google OAuth callback (Web & Mobile)",
-                "description": "Handles Google OAuth callback after user authorization. This endpoint is called automatically by Google. It decodes the OAuth 2.0 state parameter to determine platform and action, then authenticates or registers the user. For web: redirects to /oauth/success HTML page that stores token in localStorage. For mobile: redirects to deep link with token.",
+                "summary": "Callback de OAuth de Google (Web y Móvil)",
+                "description": "Maneja el callback de OAuth después de la autorización de Google. Este endpoint es llamado automáticamente por Google. Decodifica el parámetro state de OAuth 2.0 para determinar plataforma y acción, luego autentica o registra al usuario.\n     *\n     * **Respuestas de éxito:**\n     * - Web: redirige a /oauth/success con token, customer_id, is_new_customer=1|0, message\n     * - Móvil: redirige a subwayapp://oauth/callback?token=xxx&customer_id=xxx&is_new_customer=1|0\n     *\n     * **Respuestas de error:**\n     * - Web: redirige a /oauth/success con error=xxx&message=xxx\n     * - Móvil: redirige a subwayapp://oauth/callback?error=xxx&message=xxx\n     *\n     * **Códigos de error posibles:**\n     * - user_already_exists: La cuenta ya existe (en flujo de registro)\n     * - email_not_registered: El email no está registrado (en flujo de login)\n     * - authentication_failed: Error general de autenticación\n     *\n     * **Parámetro is_new_customer:**\n     * - 1: Usuario recién registrado (debe completar perfil)\n     * - 0: Usuario existente (login normal)",
                 "operationId": "281ab9caddb2b86e3614c9e34567db4f",
                 "parameters": [
                     {
                         "name": "code",
                         "in": "query",
-                        "description": "Authorization code from Google OAuth",
+                        "description": "Código de autorización de Google OAuth",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -758,7 +810,7 @@
                     {
                         "name": "state",
                         "in": "query",
-                        "description": "OAuth 2.0 state parameter containing encoded platform, action, and device_id information",
+                        "description": "Parámetro state de OAuth 2.0 con información codificada de plataforma, acción y device_id",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -768,13 +820,13 @@
                 ],
                 "responses": {
                     "302": {
-                        "description": "Redirect response - behavior depends on platform and success/error status. WEB SUCCESS: redirects to /oauth/success (HTML page that stores token in localStorage and redirects to /home). WEB ERROR: redirects to /login with error message. MOBILE SUCCESS: redirects to subwayapp://oauth/callback?token=xxx&customer_id=xxx. MOBILE ERROR: redirects to subwayapp://oauth/callback?error=xxx&message=xxx",
+                        "description": "Respuesta de redirección según plataforma y resultado.\n     *\n     * **ÉXITO WEB:** /oauth/success?token=xxx&customer_id=xxx&is_new_customer=1|0&message=xxx\n     *\n     * **ERROR WEB:** /oauth/success?error=user_already_exists&message=Ya existe una cuenta...\n     *\n     * **ÉXITO MÓVIL:** subwayapp://oauth/callback?token=xxx&customer_id=xxx&is_new_customer=1|0\n     *\n     * **ERROR MÓVIL:** subwayapp://oauth/callback?error=user_already_exists&message=Ya existe una cuenta...",
                         "headers": {
                             "Location": {
-                                "description": "Redirect URL varies by platform: Web success -> /oauth/success, Web error -> /login, Mobile success -> subwayapp://oauth/callback?token=..., Mobile error -> subwayapp://oauth/callback?error=...",
+                                "description": "URL de redirección según plataforma y resultado",
                                 "schema": {
                                     "type": "string",
-                                    "example": "/oauth/success"
+                                    "example": "/oauth/success?token=xxx&customer_id=123&is_new_customer=1"
                                 }
                             }
                         }
@@ -861,14 +913,14 @@
                 "tags": [
                     "OAuth"
                 ],
-                "summary": "Handle Apple OAuth callback (Web & Mobile)",
-                "description": "Handles Apple OAuth callback after user authorization. Decodes OAuth 2.0 state parameter to determine platform and action. NOTE: Apple only sends name/email on FIRST authentication, subsequent logins only return user ID.",
+                "summary": "Callback de OAuth de Apple (Web y Móvil)",
+                "description": "Maneja el callback de OAuth después de la autorización de Apple. Decodifica el parámetro state de OAuth 2.0 para determinar plataforma y acción. NOTA: Apple solo envía nombre/email en la PRIMERA autenticación, los logins posteriores solo retornan el user ID.\n     *\n     * **Respuestas de éxito:**\n     * - Web: redirige a /oauth/success con token, customer_id, is_new_customer=1|0, message\n     * - Móvil: redirige a subwayapp://oauth/callback?token=xxx&customer_id=xxx&is_new_customer=1|0\n     *\n     * **Respuestas de error:**\n     * - Web: redirige a /oauth/success con error=xxx&message=xxx\n     * - Móvil: redirige a subwayapp://oauth/callback?error=xxx&message=xxx\n     *\n     * **Códigos de error posibles:**\n     * - user_already_exists: La cuenta ya existe (en flujo de registro)\n     * - email_not_registered: El email no está registrado (en flujo de login)\n     * - authentication_failed: Error general de autenticación\n     *\n     * **Parámetro is_new_customer:**\n     * - 1: Usuario recién registrado (debe completar perfil)\n     * - 0: Usuario existente (login normal)",
                 "operationId": "f4d2234c8403161c607fa0d3b8a3a07a",
                 "parameters": [
                     {
                         "name": "code",
                         "in": "query",
-                        "description": "Authorization code from Apple OAuth",
+                        "description": "Código de autorización de Apple OAuth",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -877,7 +929,7 @@
                     {
                         "name": "state",
                         "in": "query",
-                        "description": "OAuth 2.0 state parameter containing encoded platform, action, and device_id information",
+                        "description": "Parámetro state de OAuth 2.0 con información codificada de plataforma, acción y device_id",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -886,7 +938,7 @@
                 ],
                 "responses": {
                     "302": {
-                        "description": "Redirect response based on platform. Web: redirects to /oauth/success. Mobile: redirects to deep link."
+                        "description": "Respuesta de redirección según plataforma y resultado.\n     *\n     * **ÉXITO WEB:** /oauth/success?token=xxx&customer_id=xxx&is_new_customer=1|0&message=xxx\n     *\n     * **ERROR WEB:** /oauth/success?error=user_already_exists&message=Ya existe una cuenta...\n     *\n     * **ÉXITO MÓVIL:** subwayapp://oauth/callback?token=xxx&customer_id=xxx&is_new_customer=1|0\n     *\n     * **ERROR MÓVIL:** subwayapp://oauth/callback?error=user_already_exists&message=Ya existe una cuenta..."
                     }
                 }
             }
@@ -1349,8 +1401,8 @@
                 "tags": [
                     "Profile"
                 ],
-                "summary": "Update customer password",
-                "description": "Changes customer password. Only for local accounts (not OAuth). Revokes all tokens except current one for security.",
+                "summary": "Actualizar o crear contraseña",
+                "description": "Cambia o crea la contraseña del cliente. Revoca todos los tokens excepto el actual por seguridad.\n     *\n     * **Para cuentas locales (email/contraseña):**\n     * - Requiere: current_password, password, password_confirmation\n     * - La nueva contraseña debe ser diferente a la actual\n     *\n     * **Para cuentas OAuth (Google/Apple) sin contraseña:**\n     * - Requiere: password, password_confirmation\n     * - NO requiere current_password (están creando su primera contraseña)\n     * - Después de crear contraseña, pueden usar ambos métodos: OAuth y contraseña\n     *\n     * **Comportamiento después de crear contraseña (OAuth):**\n     * - El usuario mantiene su google_id/apple_id vinculado\n     * - oauth_provider cambia a 'local'\n     * - Puede iniciar sesión con Google/Apple O con email+contraseña",
                 "operationId": "141e4afbe7b6c73bcd252f096680adb5",
                 "requestBody": {
                     "required": true,
@@ -1358,28 +1410,27 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "current_password",
                                     "password",
                                     "password_confirmation"
                                 ],
                                 "properties": {
                                     "current_password": {
-                                        "description": "Current password for verification",
+                                        "description": "Contraseña actual. SOLO requerido para cuentas locales (oauth_provider='local'). NO enviar si es cuenta OAuth.",
                                         "type": "string",
                                         "format": "password",
                                         "example": "OldPass123!"
                                     },
                                     "password": {
-                                        "description": "New password",
+                                        "description": "Nueva contraseña (mínimo 6 caracteres, al menos 1 letra y 1 número)",
                                         "type": "string",
                                         "format": "password",
-                                        "example": "NewSecurePass123!"
+                                        "example": "NuevaPass123!"
                                     },
                                     "password_confirmation": {
-                                        "description": "Must match new password",
+                                        "description": "Debe coincidir con password",
                                         "type": "string",
                                         "format": "password",
-                                        "example": "NewSecurePass123!"
+                                        "example": "NuevaPass123!"
                                     }
                                 },
                                 "type": "object"
@@ -1389,14 +1440,29 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Password updated successfully",
+                        "description": "Contraseña actualizada/creada exitosamente",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Contraseña actualizada exitosamente. Se cerraron todas las otras sesiones."
+                                            "example": "Contraseña creada exitosamente. Ahora puedes iniciar sesión con tu correo y contraseña."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "password_created": {
+                                                    "description": "true si es primera contraseña (usuario OAuth), false si fue cambio de contraseña existente",
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "can_use_password_login": {
+                                                    "description": "Siempre true después de esta operación",
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1405,10 +1471,42 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "No autenticado"
                     },
                     "422": {
-                        "description": "Validation error or OAuth account"
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "La contraseña actual es incorrecta."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "current_password": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "La contraseña actual es incorrecta."
+                                                    }
+                                                },
+                                                "password": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "Las contraseñas no coinciden."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [

@@ -352,8 +352,12 @@ class AuthController extends Controller
      * @OA\Post(
      *     path="/api/v1/auth/forgot-password",
      *     tags={"Authentication"},
-     *     summary="Request password reset",
-     *     description="Sends password reset link to customer's email. Only for local accounts (not OAuth).",
+     *     summary="Solicitar restablecimiento de contraseña",
+     *     description="Envía un enlace de restablecimiento de contraseña al correo del cliente. Solo funciona para cuentas locales (no OAuth).
+     *
+     * **Errores posibles:**
+     * - email_not_found: No existe una cuenta con este correo
+     * - oauth_no_password: La cuenta usa autenticación OAuth (Google/Apple), no tiene contraseña",
      *
      *     @OA\RequestBody(
      *         required=true,
@@ -367,7 +371,7 @@ class AuthController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Reset link sent",
+     *         description="Enlace de restablecimiento enviado",
      *
      *         @OA\JsonContent(
      *
@@ -375,15 +379,55 @@ class AuthController extends Controller
      *         )
      *     ),
      *
-     *     @OA\Response(response=422, description="Validation error"),
-     *     @OA\Response(response=429, description="Too many requests")
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="No existe una cuenta con este correo electrónico."),
+     *             @OA\Property(property="errors", type="object",
+     *                 @OA\Property(property="email", type="array",
+     *
+     *                     @OA\Items(type="string", example="No existe una cuenta con este correo electrónico.")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=429, description="Demasiadas solicitudes")
      * )
      */
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
     {
+        // Verificar si el email existe
+        $customer = Customer::where('email', $request->email)->first();
+
+        if (! $customer) {
+            throw ValidationException::withMessages([
+                'email' => [__('auth.email_not_found')],
+            ]);
+        }
+
+        // Verificar si es cuenta OAuth (no tiene contraseña local)
+        if ($customer->oauth_provider !== 'local') {
+            throw ValidationException::withMessages([
+                'email' => [__('auth.oauth_no_password', ['provider' => ucfirst($customer->oauth_provider)])],
+            ]);
+        }
+
         $status = Password::broker('customers')->sendResetLink(
             $request->only('email')
         );
+
+        if ($status === Password::RESET_THROTTLED) {
+            // Obtener tiempo de throttle de la configuración (default 60 segundos)
+            $throttleSeconds = config('auth.passwords.customers.throttle', 60);
+
+            throw ValidationException::withMessages([
+                'email' => [__('auth.password_reset_throttled', ['seconds' => $throttleSeconds])],
+            ]);
+        }
 
         if ($status !== Password::RESET_LINK_SENT) {
             throw ValidationException::withMessages([
@@ -402,8 +446,12 @@ class AuthController extends Controller
      * @OA\Post(
      *     path="/api/v1/auth/reset-password",
      *     tags={"Authentication"},
-     *     summary="Reset password",
-     *     description="Resets password using token from email. Revokes all existing tokens for security.",
+     *     summary="Restablecer contraseña con token",
+     *     description="Restablece la contraseña usando el token recibido por email. Revoca todos los tokens existentes por seguridad.
+     *
+     * **Errores posibles:**
+     * - passwords.token: Token inválido o expirado
+     * - passwords.user: No existe una cuenta con este email",
      *
      *     @OA\RequestBody(
      *         required=true,
@@ -412,15 +460,15 @@ class AuthController extends Controller
      *             required={"email","password","password_confirmation","token"},
      *
      *             @OA\Property(property="email", type="string", format="email", example="juan@example.com"),
-     *             @OA\Property(property="password", type="string", format="password", example="NewSecurePass123!"),
-     *             @OA\Property(property="password_confirmation", type="string", format="password", example="NewSecurePass123!"),
-     *             @OA\Property(property="token", type="string", example="abc123resettoken456")
+     *             @OA\Property(property="password", type="string", format="password", example="NuevaPass123!", description="Mínimo 6 caracteres"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password", example="NuevaPass123!"),
+     *             @OA\Property(property="token", type="string", example="abc123resettoken456", description="Token recibido en el email")
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Password reset successful",
+     *         description="Contraseña restablecida exitosamente",
      *
      *         @OA\JsonContent(
      *
@@ -428,8 +476,23 @@ class AuthController extends Controller
      *         )
      *     ),
      *
-     *     @OA\Response(response=422, description="Invalid token or validation error"),
-     *     @OA\Response(response=429, description="Too many requests")
+     *     @OA\Response(
+     *         response=422,
+     *         description="Token inválido o error de validación",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Este token de restablecimiento de contraseña es inválido."),
+     *             @OA\Property(property="errors", type="object",
+     *                 @OA\Property(property="email", type="array",
+     *
+     *                     @OA\Items(type="string", example="Este token de restablecimiento de contraseña es inválido.")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=429, description="Demasiadas solicitudes")
      * )
      */
     public function resetPassword(ResetPasswordRequest $request): JsonResponse

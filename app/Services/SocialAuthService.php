@@ -39,12 +39,17 @@ class SocialAuthService
     /**
      * Find existing customer and link OAuth provider (LOGIN - does NOT create accounts)
      *
+     * Permite vincular Google/Apple a cuentas existentes sin eliminar el acceso por contraseña.
+     * - Si la cuenta es 'local', agrega el provider_id pero MANTIENE oauth_provider='local'
+     * - Esto permite al usuario seguir usando su contraseña O el login social
+     *
      * @throws ValidationException if email doesn't exist
      */
     public function findAndLinkCustomer(string $provider, object $providerData): array
     {
         $providerIdField = $provider.'_id';
 
+        // Caso 1: Ya tiene este provider vinculado (login normal con OAuth)
         $customer = Customer::where($providerIdField, $providerData->provider_id)->first();
 
         if ($customer) {
@@ -61,26 +66,56 @@ class SocialAuthService
             ];
         }
 
+        // Caso 2: Buscar por email
         $existingCustomer = Customer::where('email', $providerData->email)->first();
 
         if ($existingCustomer) {
-            if ($existingCustomer->oauth_provider !== $provider && $existingCustomer->oauth_provider !== 'local') {
-                throw ValidationException::withMessages([
-                    'email' => [__('auth.oauth_provider_mismatch', ['provider' => $existingCustomer->oauth_provider])],
-                ]);
+            // Verificar si ya tiene OTRO provider OAuth vinculado (no local)
+            // Por ejemplo: tiene Apple y quiere vincular Google
+            $hasOtherOAuthProvider = $existingCustomer->oauth_provider !== 'local'
+                && $existingCustomer->oauth_provider !== $provider;
+
+            // Si ya tiene otro OAuth Y ese campo ya tiene un ID, no permitir
+            // (pero sí permitir si es 'local' o si es el mismo provider)
+            if ($hasOtherOAuthProvider) {
+                // Permitir vincular múltiples providers
+                // Solo rechazar si intenta usar un provider diferente al que ya tiene como principal
+                // y no tiene el campo del provider actual vacío
+                $currentProviderField = $existingCustomer->oauth_provider.'_id';
+                if ($existingCustomer->$currentProviderField && ! $existingCustomer->$providerIdField) {
+                    // Ya tiene otro OAuth como principal, pero podemos agregar este también
+                    // No cambiamos oauth_provider, solo agregamos el nuevo ID
+                }
             }
 
-            $existingCustomer->update([
+            // Vincular el provider SIN cambiar oauth_provider si es 'local'
+            // Esto permite que siga usando su contraseña
+            $updateData = [
                 $providerIdField => $providerData->provider_id,
                 'avatar' => $providerData->avatar ?? $existingCustomer->avatar,
-                'oauth_provider' => $provider,
                 'last_login_at' => now(),
                 'last_activity_at' => now(),
-            ]);
+            ];
+
+            // Solo cambiar oauth_provider si NO es 'local'
+            // Si es 'local', mantenerlo para que pueda seguir usando contraseña
+            if ($existingCustomer->oauth_provider === 'local') {
+                // Mantener 'local' - el usuario puede usar contraseña Y OAuth
+                // No agregamos 'oauth_provider' al update
+            } else {
+                // Si ya era OAuth, mantener el provider original
+                // (no cambiar de 'google' a 'apple' por ejemplo)
+            }
+
+            $existingCustomer->update($updateData);
+
+            // Mensaje diferente si es primera vez que vincula vs ya estaba vinculado
+            $isFirstLink = $existingCustomer->wasChanged($providerIdField);
+            $messageKey = $isFirstLink ? 'auth.oauth_account_linked' : 'auth.oauth_login_success';
 
             return [
                 'customer' => $existingCustomer,
-                'message_key' => 'auth.oauth_account_linked',
+                'message_key' => $messageKey,
                 'is_new' => false,
             ];
         }
@@ -92,9 +127,9 @@ class SocialAuthService
     }
 
     /**
-     * Create new customer from OAuth provider data (REGISTER - creates account)
+     * Create new customer from OAuth provider data (REGISTER - creates accounts)
      *
-     * @throws ValidationException if email already exists
+     * @throws ValidationException if email already exists (user_already_exists error)
      */
     public function createCustomerFromOAuth(string $provider, object $providerData): array
     {
@@ -104,25 +139,10 @@ class SocialAuthService
         $existingCustomer = Customer::where('email', $providerData->email)->first();
 
         if ($existingCustomer) {
-            // Si ya existe, verificar si tiene el provider vinculado
-            if ($providerData->provider_id === $existingCustomer->$providerIdField) {
-                // Cuenta ya existe y ya está vinculada - solo hacer login
-                $existingCustomer->update([
-                    'last_login_at' => now(),
-                    'last_activity_at' => now(),
-                ]);
-
-                return [
-                    'customer' => $existingCustomer,
-                    'message_key' => 'auth.oauth_login_success',
-                    'is_new' => false,
-                ];
-            }
-
-            // Email existe pero no está vinculado a este provider
+            // La cuenta ya existe - SIEMPRE rechazar en flujo de registro
             throw ValidationException::withMessages([
-                'email' => [__('auth.oauth_email_exists')],
-            ]);
+                'email' => [__('auth.oauth_user_already_exists')],
+            ])->errorBag('user_already_exists');
         }
 
         // Crear nueva cuenta

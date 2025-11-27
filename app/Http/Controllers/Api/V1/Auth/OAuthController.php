@@ -8,6 +8,7 @@ use App\Services\SocialAuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
 
 class OAuthController extends Controller
@@ -118,14 +119,31 @@ class OAuthController extends Controller
      * @OA\Get(
      *     path="/api/v1/auth/oauth/google/callback",
      *     tags={"OAuth"},
-     *     summary="Handle Google OAuth callback (Web & Mobile)",
-     *     description="Handles Google OAuth callback after user authorization. This endpoint is called automatically by Google. It decodes the OAuth 2.0 state parameter to determine platform and action, then authenticates or registers the user. For web: redirects to /oauth/success HTML page that stores token in localStorage. For mobile: redirects to deep link with token.",
+     *     summary="Callback de OAuth de Google (Web y Móvil)",
+     *     description="Maneja el callback de OAuth después de la autorización de Google. Este endpoint es llamado automáticamente por Google. Decodifica el parámetro state de OAuth 2.0 para determinar plataforma y acción, luego autentica o registra al usuario.
+     *
+     * **Respuestas de éxito:**
+     * - Web: redirige a /oauth/success con token, customer_id, is_new_customer=1|0, message
+     * - Móvil: redirige a subwayapp://oauth/callback?token=xxx&customer_id=xxx&is_new_customer=1|0
+     *
+     * **Respuestas de error:**
+     * - Web: redirige a /oauth/success con error=xxx&message=xxx
+     * - Móvil: redirige a subwayapp://oauth/callback?error=xxx&message=xxx
+     *
+     * **Códigos de error posibles:**
+     * - user_already_exists: La cuenta ya existe (en flujo de registro)
+     * - email_not_registered: El email no está registrado (en flujo de login)
+     * - authentication_failed: Error general de autenticación
+     *
+     * **Parámetro is_new_customer:**
+     * - 1: Usuario recién registrado (debe completar perfil)
+     * - 0: Usuario existente (login normal)",
      *
      *     @OA\Parameter(
      *         name="code",
      *         in="query",
      *         required=true,
-     *         description="Authorization code from Google OAuth",
+     *         description="Código de autorización de Google OAuth",
      *
      *         @OA\Schema(type="string", example="4/0AY0e-g7...")
      *     ),
@@ -134,20 +152,28 @@ class OAuthController extends Controller
      *         name="state",
      *         in="query",
      *         required=true,
-     *         description="OAuth 2.0 state parameter containing encoded platform, action, and device_id information",
+     *         description="Parámetro state de OAuth 2.0 con información codificada de plataforma, acción y device_id",
      *
      *         @OA\Schema(type="string", example="eyJwbGF0Zm9ybSI6IndlYiIsImFjdGlvbiI6ImxvZ2luIn0=")
      *     ),
      *
      *     @OA\Response(
      *         response=302,
-     *         description="Redirect response - behavior depends on platform and success/error status. WEB SUCCESS: redirects to /oauth/success (HTML page that stores token in localStorage and redirects to /home). WEB ERROR: redirects to /login with error message. MOBILE SUCCESS: redirects to subwayapp://oauth/callback?token=xxx&customer_id=xxx. MOBILE ERROR: redirects to subwayapp://oauth/callback?error=xxx&message=xxx",
+     *         description="Respuesta de redirección según plataforma y resultado.
+     *
+     * **ÉXITO WEB:** /oauth/success?token=xxx&customer_id=xxx&is_new_customer=1|0&message=xxx
+     *
+     * **ERROR WEB:** /oauth/success?error=user_already_exists&message=Ya existe una cuenta...
+     *
+     * **ÉXITO MÓVIL:** subwayapp://oauth/callback?token=xxx&customer_id=xxx&is_new_customer=1|0
+     *
+     * **ERROR MÓVIL:** subwayapp://oauth/callback?error=user_already_exists&message=Ya existe una cuenta...",
      *
      *         @OA\Header(
      *             header="Location",
-     *             description="Redirect URL varies by platform: Web success -> /oauth/success, Web error -> /login, Mobile success -> subwayapp://oauth/callback?token=..., Mobile error -> subwayapp://oauth/callback?error=...",
+     *             description="URL de redirección según plataforma y resultado",
      *
-     *             @OA\Schema(type="string", example="/oauth/success")
+     *             @OA\Schema(type="string", example="/oauth/success?token=xxx&customer_id=123&is_new_customer=1")
      *         )
      *     )
      * )
@@ -268,37 +294,64 @@ class OAuthController extends Controller
                 'message' => __($result['message_key']),
             ]);
 
+        } catch (ValidationException $e) {
+            \Log::warning('OAuth Validation Error', [
+                'error_bag' => $e->errorBag,
+                'errors' => $e->errors(),
+            ]);
+
+            return $this->handleOAuthError($request, $e->errorBag, $e->getMessage());
         } catch (\Exception $e) {
             \Log::error('OAuth Callback Error', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            // Try to get platform from state (if available)
-            $platform = 'web';
-            try {
-                if ($request->query('state')) {
-                    $state = json_decode(base64_decode($request->query('state')), true);
-                    $platform = $state['platform'] ?? 'web';
-                }
-            } catch (\Exception $decodeError) {
-                // Ignore decode errors, use default platform
-            }
+            return $this->handleOAuthError($request, 'authentication_failed', __('auth.oauth_authentication_failed'));
+        }
+    }
 
-            // MOBILE: Redirect with error
-            if ($platform === 'mobile') {
-                return $this->redirectToApp([
-                    'error' => 'authentication_failed',
-                    'message' => 'Error al procesar autenticación: '.$e->getMessage(),
-                ]);
-            }
+    /**
+     * Handle OAuth errors and redirect appropriately based on platform.
+     */
+    protected function handleOAuthError(Request $request, string $errorCode, string $message): RedirectResponse
+    {
+        $platform = 'web';
+        $redirectUrl = null;
 
-            // WEB: Redirect to oauth/success with error parameters
-            return redirect()->route('oauth.success', [
-                'error' => 'authentication_failed',
-                'message' => 'Error al procesar autenticación. Por favor intenta nuevamente.',
+        try {
+            if ($request->query('state')) {
+                $state = json_decode(base64_decode($request->query('state')), true);
+                $platform = $state['platform'] ?? 'web';
+                $redirectUrl = $state['redirect_url'] ?? null;
+            }
+        } catch (\Exception $decodeError) {
+            // Ignore decode errors, use default platform
+        }
+
+        // MOBILE: Redirect with error via deep link
+        if ($platform === 'mobile') {
+            return $this->redirectToApp([
+                'error' => $errorCode,
+                'message' => $message,
             ]);
         }
+
+        // WEB: Si hay redirect_url personalizada, redirigir con error
+        if ($redirectUrl) {
+            $params = http_build_query([
+                'error' => $errorCode,
+                'message' => $message,
+            ]);
+
+            return redirect()->away($redirectUrl.'?'.$params);
+        }
+
+        // WEB: Redirect to oauth/success with error parameters
+        return redirect()->route('oauth.success', [
+            'error' => $errorCode,
+            'message' => $message,
+        ]);
     }
 
     /**
@@ -399,14 +452,31 @@ class OAuthController extends Controller
      * @OA\Get(
      *     path="/api/v1/auth/oauth/apple/callback",
      *     tags={"OAuth"},
-     *     summary="Handle Apple OAuth callback (Web & Mobile)",
-     *     description="Handles Apple OAuth callback after user authorization. Decodes OAuth 2.0 state parameter to determine platform and action. NOTE: Apple only sends name/email on FIRST authentication, subsequent logins only return user ID.",
+     *     summary="Callback de OAuth de Apple (Web y Móvil)",
+     *     description="Maneja el callback de OAuth después de la autorización de Apple. Decodifica el parámetro state de OAuth 2.0 para determinar plataforma y acción. NOTA: Apple solo envía nombre/email en la PRIMERA autenticación, los logins posteriores solo retornan el user ID.
+     *
+     * **Respuestas de éxito:**
+     * - Web: redirige a /oauth/success con token, customer_id, is_new_customer=1|0, message
+     * - Móvil: redirige a subwayapp://oauth/callback?token=xxx&customer_id=xxx&is_new_customer=1|0
+     *
+     * **Respuestas de error:**
+     * - Web: redirige a /oauth/success con error=xxx&message=xxx
+     * - Móvil: redirige a subwayapp://oauth/callback?error=xxx&message=xxx
+     *
+     * **Códigos de error posibles:**
+     * - user_already_exists: La cuenta ya existe (en flujo de registro)
+     * - email_not_registered: El email no está registrado (en flujo de login)
+     * - authentication_failed: Error general de autenticación
+     *
+     * **Parámetro is_new_customer:**
+     * - 1: Usuario recién registrado (debe completar perfil)
+     * - 0: Usuario existente (login normal)",
      *
      *     @OA\Parameter(
      *         name="code",
      *         in="query",
      *         required=true,
-     *         description="Authorization code from Apple OAuth",
+     *         description="Código de autorización de Apple OAuth",
      *
      *         @OA\Schema(type="string")
      *     ),
@@ -415,14 +485,22 @@ class OAuthController extends Controller
      *         name="state",
      *         in="query",
      *         required=true,
-     *         description="OAuth 2.0 state parameter containing encoded platform, action, and device_id information",
+     *         description="Parámetro state de OAuth 2.0 con información codificada de plataforma, acción y device_id",
      *
      *         @OA\Schema(type="string")
      *     ),
      *
      *     @OA\Response(
      *         response=302,
-     *         description="Redirect response based on platform. Web: redirects to /oauth/success. Mobile: redirects to deep link."
+     *         description="Respuesta de redirección según plataforma y resultado.
+     *
+     * **ÉXITO WEB:** /oauth/success?token=xxx&customer_id=xxx&is_new_customer=1|0&message=xxx
+     *
+     * **ERROR WEB:** /oauth/success?error=user_already_exists&message=Ya existe una cuenta...
+     *
+     * **ÉXITO MÓVIL:** subwayapp://oauth/callback?token=xxx&customer_id=xxx&is_new_customer=1|0
+     *
+     * **ERROR MÓVIL:** subwayapp://oauth/callback?error=user_already_exists&message=Ya existe una cuenta..."
      *     )
      * )
      */
@@ -516,34 +594,20 @@ class OAuthController extends Controller
                 'message' => __($result['message_key']),
             ]);
 
+        } catch (ValidationException $e) {
+            \Log::warning('Apple OAuth Validation Error', [
+                'error_bag' => $e->errorBag,
+                'errors' => $e->errors(),
+            ]);
+
+            return $this->handleOAuthError($request, $e->errorBag, $e->getMessage());
         } catch (\Exception $e) {
             \Log::error('Apple OAuth Callback Error', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            $platform = 'web';
-            try {
-                if ($request->query('state')) {
-                    $state = json_decode(base64_decode($request->query('state')), true);
-                    $platform = $state['platform'] ?? 'web';
-                }
-            } catch (\Exception $decodeError) {
-                //
-            }
-
-            if ($platform === 'mobile') {
-                return $this->redirectToApp([
-                    'error' => 'authentication_failed',
-                    'message' => 'Error al procesar autenticación: '.$e->getMessage(),
-                ]);
-            }
-
-            // WEB: Redirect to oauth/success with error parameters
-            return redirect()->route('oauth.success', [
-                'error' => 'authentication_failed',
-                'message' => 'Error al procesar autenticación con Apple. Por favor intenta nuevamente.',
-            ]);
+            return $this->handleOAuthError($request, 'authentication_failed', __('auth.oauth_authentication_failed'));
         }
     }
 

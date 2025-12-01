@@ -142,6 +142,10 @@ class AuthController extends Controller
      *     summary="Iniciar sesión con email y contraseña",
      *     description="Autentica al cliente y devuelve token Sanctum. Limitado a 5 intentos por minuto.
      *
+     * **Si la cuenta usa OAuth (Google/Apple):**
+     * - Retorna 409 con `code: oauth_account_required`
+     * - El cliente debe redirigir al usuario al flujo OAuth correspondiente
+     *
      * **Si la cuenta fue eliminada:**
      * - Retorna 409 con `code: account_deleted_recoverable`
      * - Incluye días restantes para reactivar y puntos acumulados
@@ -175,25 +179,40 @@ class AuthController extends Controller
      *
      *     @OA\Response(
      *         response=409,
-     *         description="Cuenta eliminada - puede reactivarse",
+     *         description="Conflicto - Cuenta OAuth o eliminada",
      *
      *         @OA\JsonContent(
+     *             oneOf={
      *
-     *             @OA\Property(property="message", type="string", example="Encontramos una cuenta eliminada con este correo."),
-     *             @OA\Property(property="code", type="string", example="account_deleted_recoverable"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="deleted_at", type="string", format="date-time", example="2025-11-15T10:30:00Z"),
-     *                 @OA\Property(property="days_until_permanent_deletion", type="integer", example=15),
-     *                 @OA\Property(property="points", type="integer", example=150),
-     *                 @OA\Property(property="can_reactivate", type="boolean", example=true),
-     *                 @OA\Property(property="oauth_provider", type="string", example="local", description="Tipo de cuenta: 'local' (email/password), 'google', o 'apple'. Si es 'local', el reactivate requiere password.")
-     *             )
+     *                 @OA\Schema(
+     *
+     *                     @OA\Property(property="message", type="string", example="Esta cuenta usa autenticación con google. Por favor inicia sesión con google."),
+     *                     @OA\Property(property="code", type="string", example="oauth_account_required"),
+     *                     @OA\Property(property="data", type="object",
+     *                         @OA\Property(property="oauth_provider", type="string", enum={"google", "apple"}, example="google", description="Proveedor OAuth que debe usar"),
+     *                         @OA\Property(property="email", type="string", format="email", example="juan@example.com")
+     *                     )
+     *                 ),
+     *
+     *                 @OA\Schema(
+     *
+     *                     @OA\Property(property="message", type="string", example="Encontramos una cuenta eliminada con este correo."),
+     *                     @OA\Property(property="code", type="string", example="account_deleted_recoverable"),
+     *                     @OA\Property(property="data", type="object",
+     *                         @OA\Property(property="deleted_at", type="string", format="date-time", example="2025-11-15T10:30:00Z"),
+     *                         @OA\Property(property="days_until_permanent_deletion", type="integer", example=15),
+     *                         @OA\Property(property="points", type="integer", example=150),
+     *                         @OA\Property(property="can_reactivate", type="boolean", example=true),
+     *                         @OA\Property(property="oauth_provider", type="string", example="local")
+     *                     )
+     *                 )
+     *             }
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=422,
-     *         description="Credenciales inválidas o cuenta OAuth",
+     *         description="Credenciales inválidas",
      *
      *         @OA\JsonContent(
      *
@@ -249,17 +268,24 @@ class AuthController extends Controller
             ]);
         }
 
+        // Verificar primero si es cuenta OAuth (antes de validar password)
+        // Esto evita revelar información sobre la contraseña y mejora UX
+        if ($customer->oauth_provider !== 'local') {
+            return response()->json([
+                'message' => __('auth.oauth_account', ['provider' => $customer->oauth_provider]),
+                'code' => 'oauth_account_required',
+                'data' => [
+                    'oauth_provider' => $customer->oauth_provider,
+                    'email' => $customer->email,
+                ],
+            ], 409);
+        }
+
         if (! Hash::check($request->password, $customer->password)) {
             RateLimiter::hit($this->throttleKey($request));
 
             throw ValidationException::withMessages([
                 'password' => [__('auth.incorrect_password')],
-            ]);
-        }
-
-        if ($customer->oauth_provider !== 'local') {
-            throw ValidationException::withMessages([
-                'email' => [__('auth.oauth_account', ['provider' => $customer->oauth_provider])],
             ]);
         }
 

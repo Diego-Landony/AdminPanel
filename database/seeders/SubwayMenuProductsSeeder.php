@@ -144,7 +144,7 @@ class SubwayMenuProductsSeeder extends Seeder
                 'product_id' => $product->id,
                 'sku' => Str::slug($subData['name']).'-15cm',
                 'name' => '15cm',
-                'size' => '15cm',
+                'size' => 'sixinch',
                 'precio_pickup_capital' => $subData['prices_15cm']['pickup_capital'],
                 'precio_domicilio_capital' => $subData['prices_15cm']['domicilio_capital'],
                 'precio_pickup_interior' => $subData['prices_15cm']['pickup_interior'],
@@ -158,7 +158,7 @@ class SubwayMenuProductsSeeder extends Seeder
                 'product_id' => $product->id,
                 'sku' => Str::slug($subData['name']).'-30cm',
                 'name' => '30cm',
-                'size' => '30cm',
+                'size' => 'footlong',
                 'precio_pickup_capital' => $subData['prices_30cm']['pickup_capital'],
                 'precio_domicilio_capital' => $subData['prices_30cm']['domicilio_capital'],
                 'precio_pickup_interior' => $subData['prices_30cm']['pickup_interior'],
@@ -546,26 +546,34 @@ class SubwayMenuProductsSeeder extends Seeder
             [
                 'name' => 'Desayuno con Tocino y Huevo',
                 'description' => 'Tocino crujiente y huevo con queso en tu pan favorito',
-                'prices_15cm' => ['pickup_capital' => 28, 'domicilio_capital' => 33, 'pickup_interior' => 30, 'domicilio_interior' => 35],
-                'prices_30cm' => ['pickup_capital' => 52, 'domicilio_capital' => 57, 'pickup_interior' => 54, 'domicilio_interior' => 59],
+                'precio_pickup_capital' => 28,
+                'precio_domicilio_capital' => 33,
+                'precio_pickup_interior' => 30,
+                'precio_domicilio_interior' => 35,
             ],
             [
                 'name' => 'Desayuno con Jamón y Huevo',
                 'description' => 'Jamón y huevo revuelto con queso',
-                'prices_15cm' => ['pickup_capital' => 26, 'domicilio_capital' => 31, 'pickup_interior' => 28, 'domicilio_interior' => 33],
-                'prices_30cm' => ['pickup_capital' => 50, 'domicilio_capital' => 55, 'pickup_interior' => 52, 'domicilio_interior' => 57],
+                'precio_pickup_capital' => 26,
+                'precio_domicilio_capital' => 31,
+                'precio_pickup_interior' => 28,
+                'precio_domicilio_interior' => 33,
             ],
             [
                 'name' => 'Desayuno Steak y Huevo',
                 'description' => 'Carne de res y huevo con queso derretido',
-                'prices_15cm' => ['pickup_capital' => 35, 'domicilio_capital' => 40, 'pickup_interior' => 37, 'domicilio_interior' => 42],
-                'prices_30cm' => ['pickup_capital' => 62, 'domicilio_capital' => 67, 'pickup_interior' => 64, 'domicilio_interior' => 69],
+                'precio_pickup_capital' => 35,
+                'precio_domicilio_capital' => 40,
+                'precio_pickup_interior' => 37,
+                'precio_domicilio_interior' => 42,
             ],
             [
                 'name' => 'Desayuno chilero way',
                 'description' => 'Desayuno especial estilo chapín',
-                'prices_15cm' => ['pickup_capital' => 32, 'domicilio_capital' => 37, 'pickup_interior' => 34, 'domicilio_interior' => 39],
-                'prices_30cm' => ['pickup_capital' => 58, 'domicilio_capital' => 63, 'pickup_interior' => 60, 'domicilio_interior' => 65],
+                'precio_pickup_capital' => 32,
+                'precio_domicilio_capital' => 37,
+                'precio_pickup_interior' => 34,
+                'precio_domicilio_interior' => 39,
             ],
         ];
 
@@ -575,47 +583,19 @@ class SubwayMenuProductsSeeder extends Seeder
                 'name' => $desayunoData['name'],
                 'description' => $desayunoData['description'],
                 'image' => null,
-                'has_variants' => true,
-                'precio_pickup_capital' => 0,
-                'precio_domicilio_capital' => 0,
-                'precio_pickup_interior' => 0,
-                'precio_domicilio_interior' => 0,
+                'has_variants' => false,
+                'precio_pickup_capital' => $desayunoData['precio_pickup_capital'],
+                'precio_domicilio_capital' => $desayunoData['precio_domicilio_capital'],
+                'precio_pickup_interior' => $desayunoData['precio_pickup_interior'],
+                'precio_domicilio_interior' => $desayunoData['precio_domicilio_interior'],
                 'is_active' => true,
                 'sort_order' => 0,
-            ]);
-
-            // Crear variante 15cm
-            ProductVariant::create([
-                'product_id' => $product->id,
-                'sku' => Str::slug($desayunoData['name']).'-15cm',
-                'name' => '15cm',
-                'size' => '15cm',
-                'precio_pickup_capital' => $desayunoData['prices_15cm']['pickup_capital'],
-                'precio_domicilio_capital' => $desayunoData['prices_15cm']['domicilio_capital'],
-                'precio_pickup_interior' => $desayunoData['prices_15cm']['pickup_interior'],
-                'precio_domicilio_interior' => $desayunoData['prices_15cm']['domicilio_interior'],
-                'is_active' => true,
-                'sort_order' => 1,
-            ]);
-
-            // Crear variante 30cm
-            ProductVariant::create([
-                'product_id' => $product->id,
-                'sku' => Str::slug($desayunoData['name']).'-30cm',
-                'name' => '30cm',
-                'size' => '30cm',
-                'precio_pickup_capital' => $desayunoData['prices_30cm']['pickup_capital'],
-                'precio_domicilio_capital' => $desayunoData['prices_30cm']['domicilio_capital'],
-                'precio_pickup_interior' => $desayunoData['prices_30cm']['pickup_interior'],
-                'precio_domicilio_interior' => $desayunoData['prices_30cm']['domicilio_interior'],
-                'is_active' => true,
-                'sort_order' => 2,
             ]);
 
             // Asociar secciones
             $product->sections()->attach($sections);
 
-            $this->command->line("      ✓ {$product->name} (2 variantes)");
+            $this->command->line("      ✓ {$product->name}");
         }
     }
 }

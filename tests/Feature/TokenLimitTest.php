@@ -88,6 +88,7 @@ test('register endpoint enforces token limit', function () {
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'male',
+        'device_identifier' => 'test-device-register',
     ]);
 
     $response->assertCreated();
@@ -104,6 +105,7 @@ test('register endpoint enforces token limit', function () {
     $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'new@example.com',
         'password' => 'Pass123',
+        'device_identifier' => 'test-device-login',
     ]);
 
     $response->assertOk();
@@ -131,6 +133,7 @@ test('login endpoint enforces token limit', function () {
     $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'test@example.com',
         'password' => 'password',
+        'device_identifier' => 'test-device-login',
     ]);
 
     $response->assertOk();
@@ -163,7 +166,7 @@ test('token name includes device identifier when provided', function () {
     expect($latestToken->name)->toBe('ABC123XY');
 });
 
-test('token name is device-uniqid when device identifier not provided', function () {
+test('device_identifier is required for login', function () {
     $customer = Customer::create([
         'first_name' => 'Test',
         'last_name' => 'Customer',
@@ -178,10 +181,6 @@ test('token name is device-uniqid when device identifier not provided', function
         'password' => 'password',
     ]);
 
-    $response->assertOk();
-
-    $customer->refresh();
-    $latestToken = $customer->tokens()->latest()->first();
-
-    expect($latestToken->name)->toStartWith('device-');
+    $response->assertUnprocessable();
+    $response->assertJsonValidationErrors(['device_identifier']);
 });

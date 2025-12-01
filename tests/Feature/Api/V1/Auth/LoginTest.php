@@ -22,6 +22,7 @@ test('puede hacer login con credenciales validas', function () {
     $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'juan@example.com',
         'password' => 'password123',
+        'device_identifier' => 'test-device-login-001',
     ]);
 
     // Verificar respuesta exitosa
@@ -65,6 +66,7 @@ test('rechaza password incorrecta', function () {
     $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'juan@example.com',
         'password' => 'wrongpassword',
+        'device_identifier' => 'test-device-login-002',
     ]);
 
     // Verificar respuesta 422 con error específico en campo 'password'
@@ -78,6 +80,7 @@ test('rechaza usuario inexistente', function () {
     $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'noexiste@example.com',
         'password' => 'password123',
+        'device_identifier' => 'test-device-login-003',
     ]);
 
     // Verificar respuesta 422 (ValidationException, NO 404 por seguridad)
@@ -130,6 +133,7 @@ test('rechaza login tradicional para cuenta oauth', function () {
     $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'juan.google@example.com',
         'password' => 'password123',
+        'device_identifier' => 'test-device-login-005',
     ]);
 
     // Verificar respuesta 409 con código específico
@@ -171,6 +175,7 @@ test('actualiza last login at', function () {
     $this->postJson('/api/v1/auth/login', [
         'email' => 'juan@example.com',
         'password' => 'password123',
+        'device_identifier' => 'test-device-login-006',
     ]);
 
     // Refrescar el modelo desde la BD
@@ -179,4 +184,27 @@ test('actualiza last login at', function () {
     // Verificar que last_login_at fue actualizado
     expect($customer->last_login_at)->not->toBeNull();
     expect($customer->last_login_at)->toBeInstanceOf(\Carbon\Carbon::class);
+});
+
+// Test 7: Requiere device_identifier
+test('requiere device_identifier para login', function () {
+    // Crear customer de prueba
+    Customer::create([
+        'first_name' => 'Juan',
+        'last_name' => 'Pérez',
+        'email' => 'juan@example.com',
+        'password' => Hash::make('password123'),
+        'oauth_provider' => 'local',
+        'subway_card' => '1234567890',
+    ]);
+
+    // Intentar login sin device_identifier
+    $response = $this->postJson('/api/v1/auth/login', [
+        'email' => 'juan@example.com',
+        'password' => 'password123',
+    ]);
+
+    // Verificar respuesta 422 con error de validación
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['device_identifier']);
 });

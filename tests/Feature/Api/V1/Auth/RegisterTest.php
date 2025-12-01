@@ -17,6 +17,7 @@ test('puede registrarse con datos validos', function () {
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'female',
+        'device_identifier' => 'test-device-001',
     ]);
 
     // Verificar respuesta exitosa (201 Created)
@@ -74,6 +75,7 @@ test('rechaza email duplicado', function () {
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'male',
+        'device_identifier' => 'test-device-002',
     ]);
 
     // Verificar error de validación
@@ -91,6 +93,7 @@ test('requiere password confirmation', function () {
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'male',
+        'device_identifier' => 'test-device-003',
         // Sin password_confirmation
     ]);
 
@@ -110,6 +113,7 @@ test('hashea password automaticamente', function () {
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'female',
+        'device_identifier' => 'test-device-004',
     ]);
 
     // Verificar respuesta exitosa
@@ -136,6 +140,7 @@ test('crea token sanctum al registrarse', function () {
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'male',
+        'device_identifier' => 'test-device-005',
     ]);
 
     // Verificar respuesta exitosa
@@ -147,8 +152,8 @@ test('crea token sanctum al registrarse', function () {
     // Verificar que tiene tokens
     expect($customer->tokens()->count())->toBe(1);
 
-    // Verificar que el token tiene un nombre generado
-    expect($customer->tokens()->first()->name)->toStartWith('device-');
+    // Verificar que el token tiene el nombre del device_identifier (truncado a 8 chars)
+    expect($customer->tokens()->first()->name)->toBe('test-dev');
 });
 
 // Test 6: Genera subway_card automaticamente
@@ -162,6 +167,7 @@ test('genera subway_card automaticamente', function () {
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'male',
+        'device_identifier' => 'test-device-006',
     ]);
 
     $response->assertCreated();
@@ -191,6 +197,7 @@ test('genera subway_card unica', function () {
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'male',
+        'device_identifier' => 'test-device-007a',
     ]);
 
     // Crear segundo customer
@@ -203,6 +210,7 @@ test('genera subway_card unica', function () {
         'phone' => '87654321',
         'birth_date' => '1992-03-20',
         'gender' => 'female',
+        'device_identifier' => 'test-device-007b',
     ]);
 
     $response1->assertCreated();
@@ -251,6 +259,7 @@ test('valida formato de gender estandarizado', function () {
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'male',
+        'device_identifier' => 'test-device-009',
     ]);
 
     $response->assertCreated();
@@ -273,6 +282,7 @@ test('rechaza gender no valido', function () {
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'masculino', // formato antiguo no válido
+        'device_identifier' => 'test-device-010',
     ]);
 
     $response->assertUnprocessable()
@@ -290,6 +300,7 @@ test('no incluye timezone en respuesta', function () {
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'other',
+        'device_identifier' => 'test-device-011',
     ]);
 
     $response->assertCreated();
@@ -309,6 +320,7 @@ test('valida telefono de 8 digitos', function () {
         'phone' => '1234567', // Solo 7 dígitos
         'birth_date' => '1990-05-15',
         'gender' => 'male',
+        'device_identifier' => 'test-device-012',
     ]);
 
     $response->assertUnprocessable()
@@ -326,6 +338,7 @@ test('rechaza telefono con caracteres no numericos', function () {
         'phone' => '+5021234', // Con prefijo +502
         'birth_date' => '1990-05-15',
         'gender' => 'male',
+        'device_identifier' => 'test-device-013',
     ]);
 
     $response->assertUnprocessable()
@@ -340,9 +353,9 @@ test('requiere todos los campos obligatorios', function () {
         'email' => 'test-required@example.com',
         'password' => 'SecurePass123',
         'password_confirmation' => 'SecurePass123',
-        // Falta phone, birth_date, gender
+        // Falta phone, birth_date, gender, device_identifier
     ]);
 
     $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['phone', 'birth_date', 'gender']);
+        ->assertJsonValidationErrors(['phone', 'birth_date', 'gender', 'device_identifier']);
 });

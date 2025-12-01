@@ -2,6 +2,7 @@
 
 namespace App\Models\Menu;
 
+use App\Models\Concerns\HasReportingCategory;
 use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Combo extends Model
 {
-    use HasFactory, LogsActivity, SoftDeletes;
+    use HasFactory, HasReportingCategory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'category_id',
@@ -185,5 +186,26 @@ class Combo extends Model
         };
 
         return (float) $this->$field;
+    }
+
+    /**
+     * Accessor: Categoría de reportería (siempre "combos")
+     */
+    public function getReportingCategoryAttribute(): string
+    {
+        return 'combos';
+    }
+
+    /**
+     * Scope: Filtrar por categoría de reportería
+     */
+    public function scopeByReportingCategory($query, string $category)
+    {
+        // Los combos siempre son "combos", si piden otra categoría retorna vacío
+        if ($category !== 'combos') {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query;
     }
 }

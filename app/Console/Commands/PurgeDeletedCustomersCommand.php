@@ -10,7 +10,8 @@ class PurgeDeletedCustomersCommand extends Command
 {
     protected $signature = 'customers:purge-deleted
                             {--days=30 : Number of days after soft delete to permanently delete}
-                            {--dry-run : Show what would be deleted without actually deleting}';
+                            {--dry-run : Show what would be deleted without actually deleting}
+                            {--force : Skip confirmation prompt}';
 
     protected $description = 'Permanently delete customers that were soft-deleted more than X days ago';
 
@@ -64,11 +65,13 @@ class PurgeDeletedCustomersCommand extends Command
             return self::SUCCESS;
         }
 
-        // Confirm before deleting
-        if (! $this->confirm("Are you sure you want to permanently delete {$count} customer(s)?", false)) {
-            $this->info('Operation cancelled');
+        // Confirm before deleting (skip if --force or non-interactive mode)
+        if (! $this->option('force') && $this->input->isInteractive()) {
+            if (! $this->confirm("Are you sure you want to permanently delete {$count} customer(s)?", false)) {
+                $this->info('Operation cancelled');
 
-            return self::SUCCESS;
+                return self::SUCCESS;
+            }
         }
 
         // Permanently delete customers

@@ -2,6 +2,7 @@
 
 namespace App\Models\Menu;
 
+use App\Models\Concerns\HasReportingCategory;
 use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Product extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, HasReportingCategory, LogsActivity;
 
     /**
      * Los atributos que se pueden asignar masivamente
@@ -167,5 +168,32 @@ class Product extends Model
     public function isInActiveCombos(): bool
     {
         return $this->combos()->where('is_active', true)->exists();
+    }
+
+    /**
+     * Accessor: Categoría de reportería derivada de la categoría de menú
+     */
+    public function getReportingCategoryAttribute(): string
+    {
+        $category = $this->relationLoaded('category') ? $this->category : $this->category()->first();
+
+        return $this->deriveReportingCategoryFromMenuCategory($category?->name);
+    }
+
+    /**
+     * Scope: Filtrar por categoría de reportería
+     */
+    public function scopeByReportingCategory($query, string $category)
+    {
+        $map = array_flip(static::getReportingCategoryMap());
+        $menuCategoryName = $map[$category] ?? null;
+
+        if ($menuCategoryName) {
+            return $query->whereHas('category', function ($q) use ($menuCategoryName) {
+                $q->where('name', $menuCategoryName);
+            });
+        }
+
+        return $query;
     }
 }

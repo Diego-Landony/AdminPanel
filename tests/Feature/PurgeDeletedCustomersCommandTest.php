@@ -17,7 +17,7 @@ test('purges customers deleted more than specified days ago', function () {
         'subway_card' => '123456789012',
     ]);
     $recentlyDeleted->delete();
-    $recentlyDeleted->update(['deleted_at' => now()->subDays(15)]);
+    Customer::withTrashed()->where('id', $recentlyDeleted->id)->update(['deleted_at' => now()->subDays(15)]);
 
     $oldDeleted = Customer::create([
         'first_name' => 'Old',
@@ -28,7 +28,7 @@ test('purges customers deleted more than specified days ago', function () {
         'subway_card' => '223456789012',
     ]);
     $oldDeleted->delete();
-    $oldDeleted->update(['deleted_at' => now()->subDays(45)]);
+    Customer::withTrashed()->where('id', $oldDeleted->id)->update(['deleted_at' => now()->subDays(45)]);
 
     $activeCustomer = Customer::create([
         'first_name' => 'Active',
@@ -42,7 +42,7 @@ test('purges customers deleted more than specified days ago', function () {
     expect(Customer::count())->toBe(1);
     expect(Customer::withTrashed()->count())->toBe(3);
 
-    Artisan::call('customers:purge-deleted', ['--days' => 30, '--no-interaction' => true]);
+    Artisan::call('customers:purge-deleted', ['--days' => 30, '--force' => true]);
 
     expect(Customer::count())->toBe(1);
     expect(Customer::withTrashed()->count())->toBe(2);
@@ -61,7 +61,7 @@ test('dry-run mode does not delete customers', function () {
         'subway_card' => '123456789012',
     ]);
     $oldDeleted->delete();
-    $oldDeleted->update(['deleted_at' => now()->subDays(45)]);
+    Customer::withTrashed()->where('id', $oldDeleted->id)->update(['deleted_at' => now()->subDays(45)]);
 
     expect(Customer::withTrashed()->count())->toBe(1);
 
@@ -81,11 +81,11 @@ test('handles no customers to purge gracefully', function () {
         'subway_card' => '123456789012',
     ]);
     $recentlyDeleted->delete();
-    $recentlyDeleted->update(['deleted_at' => now()->subDays(15)]);
+    Customer::withTrashed()->where('id', $recentlyDeleted->id)->update(['deleted_at' => now()->subDays(15)]);
 
     expect(Customer::withTrashed()->count())->toBe(1);
 
-    $exitCode = Artisan::call('customers:purge-deleted', ['--days' => 30, '--no-interaction' => true]);
+    $exitCode = Artisan::call('customers:purge-deleted', ['--days' => 30, '--force' => true]);
 
     expect($exitCode)->toBe(0);
     expect(Customer::withTrashed()->count())->toBe(1);
@@ -101,7 +101,7 @@ test('respects custom days parameter', function () {
         'subway_card' => '123456789012',
     ]);
     $deleted20DaysAgo->delete();
-    $deleted20DaysAgo->update(['deleted_at' => now()->subDays(20)]);
+    Customer::withTrashed()->where('id', $deleted20DaysAgo->id)->update(['deleted_at' => now()->subDays(20)]);
 
     $deleted40DaysAgo = Customer::create([
         'first_name' => 'Forty',
@@ -112,11 +112,11 @@ test('respects custom days parameter', function () {
         'subway_card' => '223456789012',
     ]);
     $deleted40DaysAgo->delete();
-    $deleted40DaysAgo->update(['deleted_at' => now()->subDays(40)]);
+    Customer::withTrashed()->where('id', $deleted40DaysAgo->id)->update(['deleted_at' => now()->subDays(40)]);
 
     expect(Customer::withTrashed()->count())->toBe(2);
 
-    Artisan::call('customers:purge-deleted', ['--days' => 25, '--no-interaction' => true]);
+    Artisan::call('customers:purge-deleted', ['--days' => 25, '--force' => true]);
 
     expect(Customer::withTrashed()->count())->toBe(1);
     expect(Customer::withTrashed()->find($deleted40DaysAgo->id))->toBeNull();
@@ -133,7 +133,7 @@ test('uses default 30 days when days option not provided', function () {
         'subway_card' => '123456789012',
     ]);
     $deleted25DaysAgo->delete();
-    $deleted25DaysAgo->update(['deleted_at' => now()->subDays(25)]);
+    Customer::withTrashed()->where('id', $deleted25DaysAgo->id)->update(['deleted_at' => now()->subDays(25)]);
 
     $deleted35DaysAgo = Customer::create([
         'first_name' => 'ThirtyFive',
@@ -144,11 +144,11 @@ test('uses default 30 days when days option not provided', function () {
         'subway_card' => '223456789012',
     ]);
     $deleted35DaysAgo->delete();
-    $deleted35DaysAgo->update(['deleted_at' => now()->subDays(35)]);
+    Customer::withTrashed()->where('id', $deleted35DaysAgo->id)->update(['deleted_at' => now()->subDays(35)]);
 
     expect(Customer::withTrashed()->count())->toBe(2);
 
-    Artisan::call('customers:purge-deleted', ['--no-interaction' => true]);
+    Artisan::call('customers:purge-deleted', ['--force' => true]);
 
     expect(Customer::withTrashed()->count())->toBe(1);
     expect(Customer::withTrashed()->find($deleted35DaysAgo->id))->toBeNull();
@@ -176,7 +176,7 @@ test('does not affect active customers', function () {
 
     expect(Customer::count())->toBe(2);
 
-    Artisan::call('customers:purge-deleted', ['--days' => 30, '--no-interaction' => true]);
+    Artisan::call('customers:purge-deleted', ['--days' => 30, '--force' => true]);
 
     expect(Customer::count())->toBe(2);
     expect(Customer::find($activeCustomer1->id))->not->toBeNull();
@@ -194,12 +194,12 @@ test('purges multiple customers in single run', function () {
             'subway_card' => "{$i}23456789012",
         ]);
         $customer->delete();
-        $customer->update(['deleted_at' => now()->subDays(45)]);
+        Customer::withTrashed()->where('id', $customer->id)->update(['deleted_at' => now()->subDays(45)]);
     }
 
     expect(Customer::withTrashed()->count())->toBe(5);
 
-    Artisan::call('customers:purge-deleted', ['--days' => 30, '--no-interaction' => true]);
+    Artisan::call('customers:purge-deleted', ['--days' => 30, '--force' => true]);
 
     expect(Customer::withTrashed()->count())->toBe(0);
 });

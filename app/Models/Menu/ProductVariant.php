@@ -2,6 +2,7 @@
 
 namespace App\Models\Menu;
 
+use App\Models\Concerns\HasReportingCategory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class ProductVariant extends Model
 {
-    use HasFactory;
+    use HasFactory, HasReportingCategory;
 
     /**
      * Nombre de la tabla
@@ -148,5 +149,46 @@ class ProductVariant extends Model
             'precio_domicilio_interior' => $this->precio_domicilio_interior,
             default => 0.0,
         };
+    }
+
+    /**
+     * Accessor: Categoría de reportería derivada
+     *
+     * Para variantes de subs: usa el size (footlong, sixinch)
+     * Para otras variantes: hereda de la categoría del producto
+     */
+    public function getReportingCategoryAttribute(): string
+    {
+        // Si tiene size y es footlong/sixinch, usar directamente
+        if ($this->size && in_array($this->size, ['footlong', 'sixinch'])) {
+            return $this->size;
+        }
+
+        // Heredar de la categoría del producto
+        $product = $this->relationLoaded('product') ? $this->product : $this->product()->with('category')->first();
+
+        return $this->deriveReportingCategoryFromMenuCategory($product?->category?->name);
+    }
+
+    /**
+     * Scope: Filtrar por categoría de reportería
+     */
+    public function scopeByReportingCategory($query, string $category)
+    {
+        if (in_array($category, ['footlong', 'sixinch'])) {
+            return $query->where('size', $category);
+        }
+
+        // Para otras categorías, filtrar por categoría del producto
+        $map = array_flip(static::getReportingCategoryMap());
+        $menuCategoryName = $map[$category] ?? null;
+
+        if ($menuCategoryName) {
+            return $query->whereHas('product.category', function ($q) use ($menuCategoryName) {
+                $q->where('name', $menuCategoryName);
+            });
+        }
+
+        return $query;
     }
 }

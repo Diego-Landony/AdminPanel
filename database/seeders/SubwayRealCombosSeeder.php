@@ -330,7 +330,7 @@ class SubwayRealCombosSeeder extends Seeder
         $combo = Combo::create([
             'category_id' => $comboCategory->id,
             'name' => 'Combo Desayuno',
-            'description' => 'Desayuno 15cm a elección + Bebida + Postre',
+            'description' => 'Desayuno a elección + Bebida + Postre',
             'precio_pickup_capital' => 42.00,
             'precio_domicilio_capital' => 48.00,
             'precio_pickup_interior' => 44.00,
@@ -339,29 +339,26 @@ class SubwayRealCombosSeeder extends Seeder
             'sort_order' => 4,
         ]);
 
-        // GRUPO DE ELECCIÓN: Elige tu Desayuno 15cm
+        // GRUPO DE ELECCIÓN: Elige tu Desayuno (sin variantes)
         $desayunoChoiceGroup = $combo->items()->create([
             'is_choice_group' => true,
-            'choice_label' => 'Elige tu Desayuno 15cm',
+            'choice_label' => 'Elige tu Desayuno',
             'product_id' => null,
             'variant_id' => null,
             'quantity' => 1,
             'sort_order' => 1,
         ]);
 
-        $desayunosOptions = ['Desayuno con Tocino y Huevo', 'Desayuno con Jamón y Huevo'];
+        $desayunosOptions = ['Desayuno con Tocino y Huevo', 'Desayuno con Jamón y Huevo', 'Desayuno Steak y Huevo', 'Desayuno chilero way'];
         $sortOrder = 1;
         foreach ($desayunosOptions as $desayunoName) {
             $product = Product::where('name', $desayunoName)->first();
             if ($product) {
-                $variant = $this->getFirstVariant($product);
-                if ($variant) {
-                    $desayunoChoiceGroup->options()->create([
-                        'product_id' => $product->id,
-                        'variant_id' => $variant->id,
-                        'sort_order' => $sortOrder++,
-                    ]);
-                }
+                $desayunoChoiceGroup->options()->create([
+                    'product_id' => $product->id,
+                    'variant_id' => null,
+                    'sort_order' => $sortOrder++,
+                ]);
             }
         }
 

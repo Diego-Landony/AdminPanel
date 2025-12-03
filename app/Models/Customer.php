@@ -112,7 +112,7 @@ class Customer extends Authenticatable implements MustVerifyEmail
 
         do {
             $randomDigits = '';
-            for ($i = 0; $i < 11; $i++) {
+            for ($i = 0; $i < 10; $i++) {
                 $randomDigits .= random_int(0, 9);
             }
             $subwayCard = '8'.$randomDigits;

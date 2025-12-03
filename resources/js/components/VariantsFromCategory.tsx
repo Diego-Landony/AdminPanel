@@ -64,9 +64,11 @@ export function VariantsFromCategory({ categoryVariants, existingVariants = [], 
 
         setVariants(initializedVariants);
 
-        // Call onChange only when category variants actually change
+        // Call onChange when category variants change OR on first mount with existing variants
         const hasVariantsChanged = JSON.stringify(prevCategoryVariantsRef.current) !== JSON.stringify(categoryVariants);
-        if (hasVariantsChanged) {
+        const isFirstMount = prevCategoryVariantsRef.current.length === 0 && categoryVariants.length > 0;
+
+        if (hasVariantsChanged || isFirstMount) {
             onChange(initializedVariants);
             prevCategoryVariantsRef.current = categoryVariants;
         }

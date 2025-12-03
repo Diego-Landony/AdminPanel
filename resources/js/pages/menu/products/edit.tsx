@@ -85,6 +85,16 @@ interface FormData {
 }
 
 export default function ProductEdit({ product, categories, sections }: EditProductPageProps) {
+    // Initialize variants from existing product data
+    const initialVariants: VariantData[] = product.variants.map((v) => ({
+        name: v.name,
+        is_active: v.is_active ?? true,
+        precio_pickup_capital: String(v.precio_pickup_capital || ''),
+        precio_domicilio_capital: String(v.precio_domicilio_capital || ''),
+        precio_pickup_interior: String(v.precio_pickup_interior || ''),
+        precio_domicilio_interior: String(v.precio_domicilio_interior || ''),
+    }));
+
     const [formData, setFormData] = useState<FormData>({
         category_id: product.category_id ? String(product.category_id) : '',
         name: product.name,
@@ -95,7 +105,7 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
         precio_domicilio_capital: product.precio_domicilio_capital || '',
         precio_pickup_interior: product.precio_pickup_interior || '',
         precio_domicilio_interior: product.precio_domicilio_interior || '',
-        variants: [],
+        variants: initialVariants,
     });
 
     const [imageFile, setImageFile] = useState<File | null>(null);

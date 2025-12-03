@@ -119,7 +119,6 @@ interface LocalComboItem {
 }
 
 export default function ComboEdit({ combo, products, categories }: EditComboPageProps) {
-    // Map server data to local format
     const initialItems: LocalComboItem[] = combo.items.map((item) => ({
         id: `item-${item.id}`,
         is_choice_group: item.is_choice_group,
@@ -141,7 +140,6 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
         category_id: String(combo.category?.id || ''),
         name: combo.name,
         description: combo.description || '',
-        image: combo.image || '',
         is_active: combo.is_active,
         precio_pickup_capital: String(combo.precio_pickup_capital),
         precio_domicilio_capital: String(combo.precio_domicilio_capital),
@@ -149,6 +147,9 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
         precio_domicilio_interior: String(combo.precio_domicilio_interior),
     });
 
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(combo.image || null);
+    const [removeImage, setRemoveImage] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [localItems, setLocalItems] = useState<LocalComboItem[]>(initialItems);
@@ -159,6 +160,30 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
             coordinateGetter: sortableKeyboardCoordinates,
         }),
     );
+
+    const handleInputChange = (field: string, value: string | boolean) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+        if (errors[field]) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors[field];
+                return newErrors;
+            });
+        }
+    };
+
+    const handleImageChange = (file: File | null, previewUrl: string | null) => {
+        setImageFile(file);
+        setImagePreview(previewUrl);
+        setRemoveImage(file === null && previewUrl === null);
+        if (errors.image) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors.image;
+                return newErrors;
+            });
+        }
+    };
 
     const addItem = () => {
         const newItem: LocalComboItem = {
@@ -188,10 +213,8 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
     };
 
     const batchUpdateItem = (index: number, updates: Partial<LocalComboItem>) => {
-        console.log('🔄 [Edit] batchUpdateItem called:', { index, updates });
         const updated = [...localItems];
         updated[index] = { ...updated[index], ...updates };
-        console.log('🔄 [Edit] Updated item after batch:', updated[index]);
         setLocalItems(updated);
     };
 
@@ -218,32 +241,66 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
 
         const preparedItems = prepareComboDataForSubmit(localItems);
 
-        router.put(
-            `/menu/combos/${combo.id}`,
-            {
-                ...formData,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                items: preparedItems as any,
+        const data = new FormData();
+        data.append('_method', 'PUT');
+        data.append('category_id', formData.category_id);
+        data.append('name', formData.name);
+        data.append('description', formData.description);
+        data.append('is_active', formData.is_active ? '1' : '0');
+        data.append('precio_pickup_capital', formData.precio_pickup_capital);
+        data.append('precio_domicilio_capital', formData.precio_domicilio_capital);
+        data.append('precio_pickup_interior', formData.precio_pickup_interior);
+        data.append('precio_domicilio_interior', formData.precio_domicilio_interior);
+
+        if (imageFile) {
+            data.append('image', imageFile);
+        } else if (removeImage) {
+            data.append('remove_image', '1');
+        }
+
+        preparedItems.forEach((item, index) => {
+            data.append(`items[${index}][is_choice_group]`, item.is_choice_group ? '1' : '0');
+            data.append(`items[${index}][quantity]`, String(item.quantity));
+            data.append(`items[${index}][sort_order]`, String(item.sort_order));
+
+            if (item.choice_label) {
+                data.append(`items[${index}][choice_label]`, item.choice_label);
+            }
+            if (item.product_id) {
+                data.append(`items[${index}][product_id]`, String(item.product_id));
+            }
+            if (item.variant_id) {
+                data.append(`items[${index}][variant_id]`, String(item.variant_id));
+            }
+
+            if (item.options && item.options.length > 0) {
+                item.options.forEach((option, optIndex) => {
+                    data.append(`items[${index}][options][${optIndex}][product_id]`, String(option.product_id));
+                    data.append(`items[${index}][options][${optIndex}][sort_order]`, String(option.sort_order));
+                    if (option.variant_id) {
+                        data.append(`items[${index}][options][${optIndex}][variant_id]`, String(option.variant_id));
+                    }
+                });
+            }
+        });
+
+        router.post(`/menu/combos/${combo.id}`, data, {
+            forceFormData: true,
+            onSuccess: () => {
+                // Redirección manejada por el controlador
             },
-            {
-                onSuccess: () => {
-                    // Redirección manejada por el controlador
-                },
-                onError: (errors) => {
-                    setErrors(errors as Record<string, string>);
-                    setIsSubmitting(false);
-                },
+            onError: (errors) => {
+                setErrors(errors as Record<string, string>);
+                setIsSubmitting(false);
             },
-        );
+        });
     };
 
-    // Detect inactive products in both fixed items and choice groups
     const inactiveItems = useMemo(() => {
         const inactive: Array<{ type: 'fixed' | 'choice'; productName: string; groupLabel?: string }> = [];
 
         localItems.forEach((item) => {
             if (item.is_choice_group && item.options) {
-                // Check choice group options
                 item.options.forEach((option) => {
                     const product = products.find((p) => p.id === option.product_id);
                     if (product && !product.is_active) {
@@ -255,7 +312,6 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
                     }
                 });
             } else if (item.product_id) {
-                // Check fixed items
                 const product = products.find((p) => p.id === item.product_id);
                 if (product && !product.is_active) {
                     inactive.push({
@@ -318,13 +374,13 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
                     <Switch
                         id="is_active"
                         checked={formData.is_active}
-                        onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked as boolean })}
+                        onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)}
                     />
                 </div>
 
                 <CategoryCombobox
                     value={formData.category_id ? Number(formData.category_id) : null}
-                    onChange={(value) => setFormData({ ...formData, category_id: value ? String(value) : '' })}
+                    onChange={(value) => handleInputChange('category_id', value ? String(value) : '')}
                     categories={categories}
                     label="Categoría"
                     error={errors.category_id}
@@ -332,22 +388,22 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
                 />
 
                 <FormField label="Nombre" error={errors.name} required>
-                    <Input id="name" type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+                    <Input id="name" type="text" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} />
                 </FormField>
 
                 <FormField label="Descripción" error={errors.description}>
                     <Textarea
                         id="description"
                         value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        onChange={(e) => handleInputChange('description', e.target.value)}
                         rows={2}
                     />
                 </FormField>
 
                 <ImageUpload
                     label="Imagen del Combo"
-                    currentImage={formData.image}
-                    onImageChange={(url) => setFormData({ ...formData, image: url || '' })}
+                    currentImage={imagePreview}
+                    onImageChange={handleImageChange}
                     error={errors.image}
                 />
             </FormSection>
@@ -358,10 +414,10 @@ export default function ComboEdit({ combo, products, categories }: EditComboPage
                     capitalDomicilio={formData.precio_domicilio_capital}
                     interiorPickup={formData.precio_pickup_interior}
                     interiorDomicilio={formData.precio_domicilio_interior}
-                    onChangeCapitalPickup={(value) => setFormData({ ...formData, precio_pickup_capital: value })}
-                    onChangeCapitalDomicilio={(value) => setFormData({ ...formData, precio_domicilio_capital: value })}
-                    onChangeInteriorPickup={(value) => setFormData({ ...formData, precio_pickup_interior: value })}
-                    onChangeInteriorDomicilio={(value) => setFormData({ ...formData, precio_domicilio_interior: value })}
+                    onChangeCapitalPickup={(value) => handleInputChange('precio_pickup_capital', value)}
+                    onChangeCapitalDomicilio={(value) => handleInputChange('precio_domicilio_capital', value)}
+                    onChangeInteriorPickup={(value) => handleInputChange('precio_pickup_interior', value)}
+                    onChangeInteriorDomicilio={(value) => handleInputChange('precio_domicilio_interior', value)}
                     errors={{
                         capitalPickup: errors.precio_pickup_capital,
                         capitalDomicilio: errors.precio_domicilio_capital,

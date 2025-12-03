@@ -7,8 +7,10 @@ use App\Http\Controllers\CustomerDeviceController;
 use App\Http\Controllers\CustomerNitController;
 use App\Http\Controllers\CustomerTypeController;
 use App\Http\Controllers\ImageUploadController;
+use App\Http\Controllers\Menu\BadgeTypeController;
 use App\Http\Controllers\Menu\CategoryController;
 use App\Http\Controllers\Menu\ComboController;
+use App\Http\Controllers\Menu\MenuOrderController;
 use App\Http\Controllers\Menu\ProductController;
 use App\Http\Controllers\Menu\ProductVariantController;
 use App\Http\Controllers\Menu\PromotionController;
@@ -198,6 +200,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Gestión de Menú
     Route::prefix('menu')->name('menu.')->group(function () {
+        // Menu Order (Vista unificada de ordenamiento)
+        Route::get('order', [MenuOrderController::class, 'index'])->name('order.index');
+        Route::post('order/badges', [MenuOrderController::class, 'updateBadges'])->name('order.badges');
+        Route::post('order/toggle-item', [MenuOrderController::class, 'toggleItem'])->name('order.toggle-item');
+        Route::post('order/toggle-category', [MenuOrderController::class, 'toggleCategory'])->name('order.toggle-category');
+
+        // Badge Types
+        Route::get('badge-types', [BadgeTypeController::class, 'index'])->name('badge-types.index')
+            ->middleware('permission:menu.categories.view');
+        Route::get('badge-types/create', [BadgeTypeController::class, 'create'])->name('badge-types.create')
+            ->middleware('permission:menu.categories.create');
+        Route::post('badge-types', [BadgeTypeController::class, 'store'])->name('badge-types.store')
+            ->middleware('permission:menu.categories.create');
+        Route::get('badge-types/{badgeType}/edit', [BadgeTypeController::class, 'edit'])->name('badge-types.edit')
+            ->middleware('permission:menu.categories.edit');
+        Route::put('badge-types/{badgeType}', [BadgeTypeController::class, 'update'])->name('badge-types.update')
+            ->middleware('permission:menu.categories.edit');
+        Route::delete('badge-types/{badgeType}', [BadgeTypeController::class, 'destroy'])->name('badge-types.destroy')
+            ->middleware('permission:menu.categories.delete');
+        Route::post('badge-types/reorder', [BadgeTypeController::class, 'reorder'])->name('badge-types.reorder')
+            ->middleware('permission:menu.categories.edit');
+
         // Categories
         Route::get('categories', [CategoryController::class, 'index'])->name('categories.index')
             ->middleware('permission:menu.categories.view');

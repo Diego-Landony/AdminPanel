@@ -1,15 +1,15 @@
-import { showNotification } from '@/hooks/useNotifications';
 import { ImageIcon, Trash2, Upload } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
-import { Label } from './ui/label';
+import { FormError } from '@/components/ui/form-error';
+import { LabelWithRequired } from '@/components/LabelWithRequired';
+import { showNotification } from '@/hooks/useNotifications';
 
 interface ImageUploadProps {
     label?: string;
     currentImage?: string | null;
-    onImageChange: (imageUrl: string | null) => void;
+    onImageChange: (file: File | null, previewUrl: string | null) => void;
     error?: string;
-    uploadEndpoint?: string;
     maxSizeMB?: number;
     acceptedFormats?: string[];
     required?: boolean;
@@ -20,110 +20,49 @@ export function ImageUpload({
     currentImage,
     onImageChange,
     error,
-    uploadEndpoint = '/api/upload/image',
     maxSizeMB = 5,
-    acceptedFormats = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'],
+    acceptedFormats = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/svg+xml', 'image/avif'],
     required = false,
 }: ImageUploadProps) {
-    const [isUploading, setIsUploading] = useState(false);
     const [preview, setPreview] = useState<string | null>(currentImage || null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        console.log('=== INICIO IMAGE UPLOAD ===');
+    useEffect(() => {
+        if (currentImage && !preview) {
+            setPreview(currentImage);
+        }
+    }, [currentImage, preview]);
+
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        console.log('1. Archivo seleccionado:', file);
 
         if (!file) {
-            console.log('❌ No hay archivo, abortando');
             return;
         }
 
-        // Validar formato
-        console.log('2. Validando formato. Type:', file.type);
-        console.log('   Formatos aceptados:', acceptedFormats);
         if (!acceptedFormats.includes(file.type)) {
-            console.error('❌ Formato no válido');
             showNotification.error(`Formato no válido. Usa: ${acceptedFormats.map((f) => f.split('/')[1]).join(', ')}`);
             return;
         }
-        console.log('✅ Formato válido');
 
-        // Validar tamaño
         const fileSizeMB = file.size / (1024 * 1024);
-        console.log('3. Validando tamaño. Size:', fileSizeMB.toFixed(2), 'MB. Max:', maxSizeMB, 'MB');
         if (fileSizeMB > maxSizeMB) {
-            console.error('❌ Tamaño excedido');
             showNotification.error(`La imagen debe ser menor a ${maxSizeMB}MB. Tamaño actual: ${fileSizeMB.toFixed(2)}MB`);
             return;
         }
-        console.log('✅ Tamaño válido');
 
-        // Crear preview local
-        console.log('4. Creando preview local...');
         const reader = new FileReader();
         reader.onloadend = () => {
-            console.log('✅ Preview creado');
-            setPreview(reader.result as string);
+            const previewUrl = reader.result as string;
+            setPreview(previewUrl);
+            onImageChange(file, previewUrl);
         };
         reader.readAsDataURL(file);
-
-        // Subir imagen
-        console.log('5. Preparando subida de imagen...');
-        setIsUploading(true);
-        const formData = new FormData();
-        formData.append('image', file);
-        console.log('   FormData creado');
-        console.log('   Upload endpoint:', uploadEndpoint);
-
-        try {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-            console.log('6. CSRF Token:', csrfToken ? 'Presente' : 'NO ENCONTRADO');
-            console.log('7. Enviando fetch request...');
-
-            const response = await fetch(uploadEndpoint, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-            });
-
-            console.log('8. Response recibida. Status:', response.status, response.statusText);
-            console.log('   Response OK:', response.ok);
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('❌ Response no OK. Error text:', errorText);
-                throw new Error('Error al subir la imagen');
-            }
-
-            const data = await response.json();
-            console.log('9. Data parseada:', data);
-
-            if (data.url) {
-                console.log('✅ URL recibida:', data.url);
-                onImageChange(data.url);
-                showNotification.success('Imagen subida correctamente');
-            } else {
-                console.error('❌ No se recibió URL en la respuesta');
-                throw new Error('No se recibió URL de la imagen');
-            }
-        } catch (error) {
-            console.error('❌ Error en upload:', error);
-            showNotification.error('Error al subir la imagen. Intenta de nuevo.');
-            setPreview(currentImage || null);
-        } finally {
-            console.log('🏁 Upload finalizado');
-            setIsUploading(false);
-            console.log('=== FIN IMAGE UPLOAD ===');
-        }
     };
 
     const handleRemoveImage = () => {
         setPreview(null);
-        onImageChange(null);
+        onImageChange(null, null);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -135,25 +74,19 @@ export function ImageUpload({
 
     return (
         <div className="space-y-2">
-            {label && (
-                <Label>
-                    {label}
-                    {required && <span className="ml-1 text-destructive">*</span>}
-                </Label>
-            )}
+            {label && <LabelWithRequired required={required}>{label}</LabelWithRequired>}
 
             <div className="flex flex-col items-center gap-4">
-                {/* Preview o placeholder */}
                 <div className="relative w-full max-w-xs">
                     {preview ? (
                         <div className="group relative">
                             <img src={preview} alt="Preview" className="h-48 w-full rounded-lg border border-border object-cover" />
                             <div className="absolute inset-0 flex items-center justify-center gap-2 rounded-lg bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                                <Button type="button" variant="secondary" size="sm" onClick={handleClickUpload} disabled={isUploading}>
+                                <Button type="button" variant="secondary" size="sm" onClick={handleClickUpload}>
                                     <Upload className="mr-2 h-4 w-4" />
                                     Cambiar
                                 </Button>
-                                <Button type="button" variant="destructive" size="sm" onClick={handleRemoveImage} disabled={isUploading}>
+                                <Button type="button" variant="destructive" size="sm" onClick={handleRemoveImage}>
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
                             </div>
@@ -162,32 +95,20 @@ export function ImageUpload({
                         <button
                             type="button"
                             onClick={handleClickUpload}
-                            disabled={isUploading}
-                            className="flex h-48 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border transition-colors hover:border-primary hover:bg-accent/50 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex h-48 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border transition-colors hover:border-primary hover:bg-accent/50"
                         >
-                            {isUploading ? (
-                                <>
-                                    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
-                                    <p className="text-sm text-muted-foreground">Subiendo imagen...</p>
-                                </>
-                            ) : (
-                                <>
-                                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                                    <p className="text-sm text-muted-foreground">Click para subir imagen</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        Máx {maxSizeMB}MB • {acceptedFormats.map((f) => f.split('/')[1].toUpperCase()).join(', ')}
-                                    </p>
-                                </>
-                            )}
+                            <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground">Click para seleccionar imagen</p>
+                            <p className="text-xs text-muted-foreground">
+                                Máx {maxSizeMB}MB • {acceptedFormats.map((f) => f.split('/')[1].toUpperCase()).join(', ')}
+                            </p>
                         </button>
                     )}
                 </div>
 
-                {/* Input oculto */}
                 <input ref={fileInputRef} type="file" accept={acceptedFormats.join(',')} onChange={handleFileSelect} className="hidden" />
 
-                {/* Error */}
-                {error && <p className="text-sm text-destructive">{error}</p>}
+                <FormError message={error} />
             </div>
         </div>
     );

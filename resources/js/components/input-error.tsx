@@ -1,10 +1,14 @@
-import { cn } from '@/lib/utils';
-import { type HTMLAttributes } from 'react';
+/**
+ * @deprecated Use FormError from '@/components/ui/form-error' instead.
+ * This component will be removed in a future version.
+ */
+import { FormError } from '@/components/ui/form-error';
 
-export default function InputError({ message, className = '', ...props }: HTMLAttributes<HTMLParagraphElement> & { message?: string }) {
-    return message ? (
-        <p {...props} className={cn('text-sm text-red-600 dark:text-red-400', className)}>
-            {message}
-        </p>
-    ) : null;
+interface InputErrorProps {
+    message?: string;
+    className?: string;
+}
+
+export default function InputError({ message, className }: InputErrorProps) {
+    return <FormError message={message} className={className} showIcon={false} />;
 }

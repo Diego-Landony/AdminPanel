@@ -1,5 +1,6 @@
 import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+import { FormError } from '@/components/ui/form-error';
+import { LabelWithRequired } from '@/components/LabelWithRequired';
 
 interface WeekdaySelectorProps {
     value: number[];
@@ -30,11 +31,8 @@ export function WeekdaySelector({ value, onChange, error, label = 'Días de la s
 
     return (
         <div className="space-y-2">
-            <Label>
-                {label}
-                {required && <span className="ml-1 text-destructive">*</span>}
-            </Label>
-            <div className="flex gap-2">
+            <LabelWithRequired required={required}>{label}</LabelWithRequired>
+            <div className="flex flex-wrap gap-2">
                 {WEEKDAYS.map((day) => (
                     <div key={day.value} className="flex flex-col items-center gap-1">
                         <div
@@ -52,7 +50,7 @@ export function WeekdaySelector({ value, onChange, error, label = 'Días de la s
                     </div>
                 ))}
             </div>
-            {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+            <FormError message={error} />
             {value.length > 0 && (
                 <p className="text-sm text-muted-foreground">
                     Seleccionados: {value.map((d) => WEEKDAYS.find((w) => w.value === d)?.fullName).join(', ')}

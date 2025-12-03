@@ -2,6 +2,7 @@
 
 namespace App\Models\Menu;
 
+use App\Models\Concerns\HasBadges;
 use App\Models\Concerns\HasReportingCategory;
 use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Product extends Model
 {
-    use HasFactory, HasReportingCategory, LogsActivity;
+    use HasBadges, HasFactory, HasReportingCategory, LogsActivity;
 
     /**
      * Los atributos que se pueden asignar masivamente

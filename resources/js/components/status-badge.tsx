@@ -15,7 +15,7 @@ interface StatusBadgeProps {
     className?: string;
 }
 
-export function StatusBadge({ status, configs, showIcon = true, className = '' }: StatusBadgeProps) {
+const StatusBadgeComponent = ({ status, configs, showIcon = true, className = '' }: StatusBadgeProps) => {
     const config = configs[status] ||
         configs.default || {
             color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600',
@@ -28,7 +28,9 @@ export function StatusBadge({ status, configs, showIcon = true, className = '' }
             {config.text}
         </Badge>
     );
-}
+};
+
+export const StatusBadge = React.memo(StatusBadgeComponent);
 
 /**
  * Componente helper para badges de color personalizados (multipliers, etc.)

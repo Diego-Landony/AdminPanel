@@ -26,7 +26,8 @@ class UpdateComboRequest extends FormRequest
                 Rule::unique('combos', 'name')->ignore($comboId),
             ],
             'description' => ['nullable', 'string', 'max:500'],
-            'image' => ['nullable', 'string', 'max:255'],
+            'image' => ['nullable', 'file', 'max:5120', 'mimetypes:image/jpeg,image/png,image/webp,image/gif,image/bmp,image/svg+xml,image/avif'],
+            'remove_image' => ['nullable', 'boolean'],
 
             // Precios del combo (4 precios requeridos)
             'precio_pickup_capital' => ['required', 'numeric', 'min:0', 'max:9999.99'],

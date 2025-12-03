@@ -277,7 +277,7 @@ export default function UsersIndex({ users, total_users, online_users, filters }
         {
             title: 'desconectados',
             value: total_users - online_users,
-            icon: <Users className="h-3 w-3 text-red-600" />,
+            icon: <Users className="h-3 w-3 text-destructive" />,
         },
     ];
 

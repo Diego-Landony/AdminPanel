@@ -1,7 +1,7 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { closestCenter, DndContext, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { useForm } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
 import { CategoryCombobox } from '@/components/CategoryCombobox';
@@ -69,34 +69,22 @@ interface CreateComboPageProps {
     categories: Category[];
 }
 
-interface ComboFormData {
-    category_id: string;
-    name: string;
-    description: string;
-    image: string;
-    is_active: boolean;
-    precio_pickup_capital: string;
-    precio_domicilio_capital: string;
-    precio_pickup_interior: string;
-    precio_domicilio_interior: string;
-    items: ComboItem[];
-}
-
 export default function ComboCreate({ products, categories }: CreateComboPageProps) {
-    // @ts-expect-error - Inertia's FormDataType doesn't support nested array types
-    const { data, setData, post, processing, errors, reset } = useForm<ComboFormData>({
+    const [formData, setFormData] = useState({
         category_id: '',
         name: '',
         description: '',
-        image: '',
         is_active: true,
         precio_pickup_capital: '',
         precio_domicilio_capital: '',
         precio_pickup_interior: '',
         precio_domicilio_interior: '',
-        items: [],
     });
 
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [processing, setProcessing] = useState(false);
     const [localItems, setLocalItems] = useState<ComboItem[]>([]);
 
     const hasInactiveProducts = useMemo(() => {
@@ -121,6 +109,29 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
         }),
     );
 
+    const handleInputChange = (field: string, value: string | boolean) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+        if (errors[field]) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors[field];
+                return newErrors;
+            });
+        }
+    };
+
+    const handleImageChange = (file: File | null, previewUrl: string | null) => {
+        setImageFile(file);
+        setImagePreview(previewUrl);
+        if (errors.image) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors.image;
+                return newErrors;
+            });
+        }
+    };
+
     const addItem = () => {
         const newItem: ComboItem = {
             id: generateUniqueItemId(),
@@ -131,29 +142,23 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
             sort_order: localItems.length + 1,
             options: [],
         };
-        const updated = [...localItems, newItem];
-        setLocalItems(updated);
-        setData('items', updated);
+        setLocalItems([...localItems, newItem]);
     };
 
     const removeItem = (index: number) => {
-        const updated = localItems.filter((_, i) => i !== index);
-        setLocalItems(updated);
-        setData('items', updated);
+        setLocalItems(localItems.filter((_, i) => i !== index));
     };
 
     const updateItem = (index: number, field: string, value: string | number | boolean | ChoiceOption[] | null) => {
         const updated = [...localItems];
         updated[index] = { ...updated[index], [field]: value };
         setLocalItems(updated);
-        setData('items', updated);
     };
 
     const batchUpdateItem = (index: number, updates: Partial<ComboItem>) => {
         const updated = [...localItems];
         updated[index] = { ...updated[index], ...updates };
         setLocalItems(updated);
-        setData('items', updated);
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -163,10 +168,7 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
             setLocalItems((items) => {
                 const oldIndex = items.findIndex((item) => item.id === active.id);
                 const newIndex = items.findIndex((item) => item.id === over.id);
-
-                const newItems = arrayMove(items, oldIndex, newIndex);
-                setData('items', newItems);
-                return newItems;
+                return arrayMove(items, oldIndex, newIndex);
             });
         }
     };
@@ -181,20 +183,71 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
             return;
         }
 
+        setProcessing(true);
+
         const preparedItems = prepareComboDataForSubmit(localItems);
 
-        const submitData = {
-            ...data,
-            items: preparedItems,
-        };
+        const data = new FormData();
+        data.append('category_id', formData.category_id);
+        data.append('name', formData.name);
+        data.append('description', formData.description);
+        data.append('is_active', formData.is_active ? '1' : '0');
+        data.append('precio_pickup_capital', formData.precio_pickup_capital);
+        data.append('precio_domicilio_capital', formData.precio_domicilio_capital);
+        data.append('precio_pickup_interior', formData.precio_pickup_interior);
+        data.append('precio_domicilio_interior', formData.precio_domicilio_interior);
 
-        post(route('menu.combos.store'), {
-            ...submitData,
+        if (imageFile) {
+            data.append('image', imageFile);
+        }
+
+        preparedItems.forEach((item, index) => {
+            data.append(`items[${index}][is_choice_group]`, item.is_choice_group ? '1' : '0');
+            data.append(`items[${index}][quantity]`, String(item.quantity));
+            data.append(`items[${index}][sort_order]`, String(item.sort_order));
+
+            if (item.choice_label) {
+                data.append(`items[${index}][choice_label]`, item.choice_label);
+            }
+            if (item.product_id) {
+                data.append(`items[${index}][product_id]`, String(item.product_id));
+            }
+            if (item.variant_id) {
+                data.append(`items[${index}][variant_id]`, String(item.variant_id));
+            }
+
+            if (item.options && item.options.length > 0) {
+                item.options.forEach((option, optIndex) => {
+                    data.append(`items[${index}][options][${optIndex}][product_id]`, String(option.product_id));
+                    data.append(`items[${index}][options][${optIndex}][sort_order]`, String(option.sort_order));
+                    if (option.variant_id) {
+                        data.append(`items[${index}][options][${optIndex}][variant_id]`, String(option.variant_id));
+                    }
+                });
+            }
+        });
+
+        router.post(route('menu.combos.store'), data, {
+            forceFormData: true,
             onSuccess: () => {
-                reset();
+                setFormData({
+                    category_id: '',
+                    name: '',
+                    description: '',
+                    is_active: true,
+                    precio_pickup_capital: '',
+                    precio_domicilio_capital: '',
+                    precio_pickup_interior: '',
+                    precio_domicilio_interior: '',
+                });
+                setImageFile(null);
+                setImagePreview(null);
                 setLocalItems([]);
+                setProcessing(false);
             },
             onError: (errors: Record<string, string>) => {
+                setErrors(errors);
+                setProcessing(false);
                 if (Object.keys(errors).length === 0) {
                     showNotification.error(NOTIFICATIONS.error.dataLoading);
                 }
@@ -220,12 +273,12 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
                     <Label htmlFor="is_active" className="text-base">
                         Combo activo
                     </Label>
-                    <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked as boolean)} />
+                    <Switch id="is_active" checked={formData.is_active} onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)} />
                 </div>
 
                 <CategoryCombobox
-                    value={data.category_id ? Number(data.category_id) : null}
-                    onChange={(value) => setData('category_id', value ? String(value) : '')}
+                    value={formData.category_id ? Number(formData.category_id) : null}
+                    onChange={(value) => handleInputChange('category_id', value ? String(value) : '')}
                     categories={categories}
                     label="Categoría"
                     error={errors.category_id}
@@ -233,17 +286,17 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
                 />
 
                 <FormField label="Nombre" error={errors.name} required>
-                    <Input id="name" type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} />
+                    <Input id="name" type="text" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} />
                 </FormField>
 
                 <FormField label="Descripción" error={errors.description}>
-                    <Textarea id="description" value={data.description} onChange={(e) => setData('description', e.target.value)} rows={2} />
+                    <Textarea id="description" value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} rows={2} />
                 </FormField>
 
                 <ImageUpload
                     label="Imagen del Combo"
-                    currentImage={data.image}
-                    onImageChange={(url) => setData('image', url || '')}
+                    currentImage={imagePreview}
+                    onImageChange={handleImageChange}
                     error={errors.image}
                 />
             </FormSection>
@@ -258,14 +311,14 @@ export default function ComboCreate({ products, categories }: CreateComboPagePro
 
             <FormSection icon={Banknote} title="Precios del Combo" description="Define el precio del combo completo" className="mt-8">
                 <PriceFields
-                    capitalPickup={data.precio_pickup_capital}
-                    capitalDomicilio={data.precio_domicilio_capital}
-                    interiorPickup={data.precio_pickup_interior}
-                    interiorDomicilio={data.precio_domicilio_interior}
-                    onChangeCapitalPickup={(value) => setData('precio_pickup_capital', value)}
-                    onChangeCapitalDomicilio={(value) => setData('precio_domicilio_capital', value)}
-                    onChangeInteriorPickup={(value) => setData('precio_pickup_interior', value)}
-                    onChangeInteriorDomicilio={(value) => setData('precio_domicilio_interior', value)}
+                    capitalPickup={formData.precio_pickup_capital}
+                    capitalDomicilio={formData.precio_domicilio_capital}
+                    interiorPickup={formData.precio_pickup_interior}
+                    interiorDomicilio={formData.precio_domicilio_interior}
+                    onChangeCapitalPickup={(value) => handleInputChange('precio_pickup_capital', value)}
+                    onChangeCapitalDomicilio={(value) => handleInputChange('precio_domicilio_capital', value)}
+                    onChangeInteriorPickup={(value) => handleInputChange('precio_pickup_interior', value)}
+                    onChangeInteriorDomicilio={(value) => handleInputChange('precio_domicilio_interior', value)}
                     errors={{
                         capitalPickup: errors.precio_pickup_capital,
                         capitalDomicilio: errors.precio_domicilio_capital,

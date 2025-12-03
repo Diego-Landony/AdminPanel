@@ -87,7 +87,7 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
                 loading={false}
                 loadingSkeleton={EditUsersSkeleton}
             >
-                <div className="text-center text-red-600">Error al cargar los datos del usuario.</div>
+                <div className="text-center text-destructive">Error al cargar los datos del usuario.</div>
             </EditPageLayout>
         );
     }

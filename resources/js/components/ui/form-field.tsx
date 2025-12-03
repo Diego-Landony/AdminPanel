@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { type HTMLAttributes, type ReactNode } from 'react';
 import { FormError } from './form-error';
+import { LabelWithRequired } from '@/components/LabelWithRequired';
 
 interface FormFieldProps extends HTMLAttributes<HTMLDivElement> {
     label?: string;
@@ -22,10 +23,9 @@ export function FormField({
     return (
         <div className={cn('space-y-2', className)} {...props}>
             {label && (
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                <LabelWithRequired required={required}>
                     {label}
-                    {required && <span className="text-red-500 ml-1">*</span>}
-                </label>
+                </LabelWithRequired>
             )}
             
             {description && (

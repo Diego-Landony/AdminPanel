@@ -1,5 +1,5 @@
 import { showNotification } from '@/hooks/useNotifications';
-import { useForm } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import React, { useEffect, useState } from 'react';
 
 import { CategoryCombobox } from '@/components/CategoryCombobox';
@@ -45,11 +45,10 @@ interface CreateProductPageProps {
 }
 
 export default function ProductCreate({ categories, sections }: CreateProductPageProps) {
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const [formData, setFormData] = useState({
         category_id: '',
         name: '',
         description: '',
-        image: '',
         is_active: true,
         has_variants: false,
         precio_pickup_capital: '',
@@ -57,29 +56,55 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
         precio_pickup_interior: '',
         precio_domicilio_interior: '',
         variants: [] as VariantData[],
-        sections: [] as number[],
     });
 
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [processing, setProcessing] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
     const [selectedSections, setSelectedSections] = useState<number[]>([]);
 
     useEffect(() => {
-        if (data.category_id) {
-            const category = categories.find((c) => c.id === Number(data.category_id));
+        if (formData.category_id) {
+            const category = categories.find((c) => c.id === Number(formData.category_id));
             setSelectedCategory(category || null);
-            setData('has_variants', category?.uses_variants || false);
+            setFormData((prev) => ({ ...prev, has_variants: category?.uses_variants || false }));
         } else {
             setSelectedCategory(null);
-            setData('has_variants', false);
+            setFormData((prev) => ({ ...prev, has_variants: false }));
         }
-    }, [data.category_id, categories, setData]);
+    }, [formData.category_id, categories]);
+
+    const handleInputChange = (field: string, value: string | boolean | VariantData[]) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+        if (errors[field]) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors[field];
+                return newErrors;
+            });
+        }
+    };
 
     const handleCategoryChange = (value: number | null) => {
-        setData('category_id', value ? String(value) : '');
+        handleInputChange('category_id', value ? String(value) : '');
     };
 
     const handleVariantsChange = (variants: VariantData[]) => {
-        setData('variants', variants);
+        handleInputChange('variants', variants);
+    };
+
+    const handleImageChange = (file: File | null, previewUrl: string | null) => {
+        setImageFile(file);
+        setImagePreview(previewUrl);
+        if (errors.image) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors.image;
+                return newErrors;
+            });
+        }
     };
 
     const toggleSection = (sectionId: number) => {
@@ -88,25 +113,66 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
             : [...selectedSections, sectionId];
 
         setSelectedSections(newSelected);
-        setData('sections', newSelected);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        setProcessing(true);
 
-        const submitData = {
-            ...data,
-            sections: selectedSections,
-            variants: data.has_variants ? data.variants.filter((v) => v.is_active).map(({ is_active: _is_active, ...rest }) => rest) : [],
-        };
+        const data = new FormData();
+        data.append('category_id', formData.category_id);
+        data.append('name', formData.name);
+        data.append('description', formData.description);
+        data.append('is_active', formData.is_active ? '1' : '0');
+        data.append('has_variants', formData.has_variants ? '1' : '0');
+        data.append('precio_pickup_capital', formData.precio_pickup_capital);
+        data.append('precio_domicilio_capital', formData.precio_domicilio_capital);
+        data.append('precio_pickup_interior', formData.precio_pickup_interior);
+        data.append('precio_domicilio_interior', formData.precio_domicilio_interior);
 
-        post(route('menu.products.store'), {
-            ...submitData,
+        if (imageFile) {
+            data.append('image', imageFile);
+        }
+
+        selectedSections.forEach((sectionId, index) => {
+            data.append(`sections[${index}]`, String(sectionId));
+        });
+
+        const activeVariants = formData.has_variants
+            ? formData.variants.filter((v) => v.is_active)
+            : [];
+
+        activeVariants.forEach((variant, index) => {
+            data.append(`variants[${index}][name]`, variant.name);
+            data.append(`variants[${index}][precio_pickup_capital]`, variant.precio_pickup_capital);
+            data.append(`variants[${index}][precio_domicilio_capital]`, variant.precio_domicilio_capital);
+            data.append(`variants[${index}][precio_pickup_interior]`, variant.precio_pickup_interior);
+            data.append(`variants[${index}][precio_domicilio_interior]`, variant.precio_domicilio_interior);
+        });
+
+        router.post(route('menu.products.store'), data, {
+            forceFormData: true,
             onSuccess: () => {
-                reset();
+                setFormData({
+                    category_id: '',
+                    name: '',
+                    description: '',
+                    is_active: true,
+                    has_variants: false,
+                    precio_pickup_capital: '',
+                    precio_domicilio_capital: '',
+                    precio_pickup_interior: '',
+                    precio_domicilio_interior: '',
+                    variants: [],
+                });
+                setImageFile(null);
+                setImagePreview(null);
                 setSelectedSections([]);
+                setProcessing(false);
             },
             onError: (errors: Record<string, string>) => {
+                setErrors(errors);
+                setProcessing(false);
                 if (Object.keys(errors).length === 0) {
                     showNotification.error(NOTIFICATIONS.error.server);
                 }
@@ -131,11 +197,11 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                     <Label htmlFor="is_active" className="text-base">
                         Activo
                     </Label>
-                    <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked as boolean)} />
+                    <Switch id="is_active" checked={formData.is_active} onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)} />
                 </div>
 
                 <CategoryCombobox
-                    value={data.category_id ? Number(data.category_id) : null}
+                    value={formData.category_id ? Number(formData.category_id) : null}
                     onChange={handleCategoryChange}
                     categories={categories}
                     label="Categoría"
@@ -144,14 +210,19 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                 />
 
                 <FormField label="Nombre" error={errors.name} required>
-                    <Input id="name" type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} />
+                    <Input id="name" type="text" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} />
                 </FormField>
 
                 <FormField label="Descripción" error={errors.description}>
-                    <Textarea id="description" value={data.description} onChange={(e) => setData('description', e.target.value)} rows={2} />
+                    <Textarea id="description" value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} rows={2} />
                 </FormField>
 
-                <ImageUpload label="Imagen" currentImage={data.image} onImageChange={(url) => setData('image', url || '')} error={errors.image} />
+                <ImageUpload
+                    label="Imagen"
+                    currentImage={imagePreview}
+                    onImageChange={handleImageChange}
+                    error={errors.image}
+                />
             </FormSection>
 
             <FormSection icon={Banknote} title="Precios" className="mt-8">
@@ -165,14 +236,14 @@ export default function ProductCreate({ categories, sections }: CreateProductPag
                     />
                 ) : (
                     <PriceFields
-                        capitalPickup={data.precio_pickup_capital}
-                        capitalDomicilio={data.precio_domicilio_capital}
-                        interiorPickup={data.precio_pickup_interior}
-                        interiorDomicilio={data.precio_domicilio_interior}
-                        onChangeCapitalPickup={(value) => setData('precio_pickup_capital', value)}
-                        onChangeCapitalDomicilio={(value) => setData('precio_domicilio_capital', value)}
-                        onChangeInteriorPickup={(value) => setData('precio_pickup_interior', value)}
-                        onChangeInteriorDomicilio={(value) => setData('precio_domicilio_interior', value)}
+                        capitalPickup={formData.precio_pickup_capital}
+                        capitalDomicilio={formData.precio_domicilio_capital}
+                        interiorPickup={formData.precio_pickup_interior}
+                        interiorDomicilio={formData.precio_domicilio_interior}
+                        onChangeCapitalPickup={(value) => handleInputChange('precio_pickup_capital', value)}
+                        onChangeCapitalDomicilio={(value) => handleInputChange('precio_domicilio_capital', value)}
+                        onChangeInteriorPickup={(value) => handleInputChange('precio_pickup_interior', value)}
+                        onChangeInteriorDomicilio={(value) => handleInputChange('precio_domicilio_interior', value)}
                         errors={{
                             capitalPickup: errors.precio_pickup_capital,
                             capitalDomicilio: errors.precio_domicilio_capital,

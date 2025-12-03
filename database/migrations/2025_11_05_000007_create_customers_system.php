@@ -7,8 +7,6 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
-     *
      * MÓDULO: Sistema de Clientes
      * - Tipos de clientes (sistema de puntos y beneficios)
      * - Clientes (usuarios de la app móvil)
@@ -33,13 +31,18 @@ return new class extends Migration
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
 
-            // Información básica
-            $table->string('name');
+            // Información básica (nombre separado en first/last)
+            $table->string('first_name');
+            $table->string('last_name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->string('subway_card')->unique();
-            $table->date('birth_date');
+            $table->string('password')->nullable(); // Nullable para OAuth
+            $table->string('google_id')->nullable()->unique();
+            $table->string('apple_id')->nullable()->unique();
+            $table->text('avatar')->nullable();
+            $table->enum('oauth_provider', ['local', 'google', 'apple'])->default('local');
+            $table->string('subway_card')->nullable()->unique();
+            $table->date('birth_date')->nullable();
             $table->string('gender')->nullable();
 
             // Tipo de cliente
@@ -60,9 +63,6 @@ return new class extends Migration
             $table->integer('points')->default(0);
             $table->timestamp('points_updated_at')->nullable();
 
-            // Configuración
-            $table->string('timezone')->default('America/Guatemala');
-
             // Timestamps y soft deletes
             $table->timestamps();
             $table->softDeletes();
@@ -70,6 +70,8 @@ return new class extends Migration
             // Índices para optimización
             $table->index(['email']);
             $table->index(['subway_card']);
+            $table->index(['google_id']);
+            $table->index(['apple_id']);
             $table->index(['customer_type_id']);
             $table->index(['created_at']);
             $table->index(['last_activity_at']);
@@ -96,8 +98,10 @@ return new class extends Migration
         Schema::create('customer_devices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_id')->constrained('customers')->onDelete('cascade');
-            $table->unsignedBigInteger('sanctum_token_id')->nullable();
-            $table->string('fcm_token')->unique();
+            $table->foreignId('sanctum_token_id')->nullable()
+                ->references('id')->on('personal_access_tokens')
+                ->onDelete('set null');
+            $table->string('fcm_token')->nullable()->unique();
             $table->string('device_identifier')->nullable()->unique();
             $table->string('device_name')->nullable();
             $table->timestamp('last_used_at')->nullable();
@@ -127,9 +131,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('customer_nits');

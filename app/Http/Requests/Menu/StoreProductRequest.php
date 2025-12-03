@@ -44,7 +44,7 @@ class StoreProductRequest extends FormRequest
             ],
             'name' => 'required|string|max:150',
             'description' => 'nullable|string',
-            'image' => 'nullable|string|max:255',
+            'image' => 'nullable|file|max:5120|mimetypes:image/jpeg,image/png,image/webp,image/gif,image/bmp,image/svg+xml,image/avif',
 
             // Configuración
             'is_active' => 'boolean',

@@ -5,6 +5,8 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import {
     Activity,
+    ArrowUpDown,
+    Award,
     Gift,
     HandPlatter,
     Home,
@@ -88,6 +90,14 @@ export const systemPages: PageConfig[] = [
         permission: 'restaurants.view',
     },
     {
+        name: 'menu-order',
+        title: 'Menú App',
+        href: '/menu/order',
+        icon: ArrowUpDown,
+        group: 'Menú',
+        permission: 'menu.categories.view',
+    },
+    {
         name: 'menu-categories',
         title: 'Categorías',
         href: '/menu/categories',
@@ -118,6 +128,14 @@ export const systemPages: PageConfig[] = [
         icon: Package2,
         group: 'Menú',
         permission: 'menu.combos.view',
+    },
+    {
+        name: 'menu-badge-types',
+        title: 'Badges',
+        href: '/menu/badge-types',
+        icon: Award,
+        group: 'Menú',
+        permission: 'menu.categories.view',
     },
     {
         name: 'menu-promotions-daily-special',

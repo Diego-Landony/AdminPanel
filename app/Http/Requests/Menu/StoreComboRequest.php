@@ -18,7 +18,7 @@ class StoreComboRequest extends FormRequest
             'category_id' => ['required', 'integer', 'exists:categories,id'],
             'name' => ['required', 'string', 'max:255', 'unique:combos,name'],
             'description' => ['nullable', 'string', 'max:500'],
-            'image' => ['nullable', 'string', 'max:255'],
+            'image' => ['nullable', 'file', 'max:5120', 'mimetypes:image/jpeg,image/png,image/webp,image/gif,image/bmp,image/svg+xml,image/avif'],
 
             // Precios del combo (4 precios requeridos)
             'precio_pickup_capital' => ['required', 'numeric', 'min:0', 'max:9999.99'],

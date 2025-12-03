@@ -14,7 +14,12 @@ class ImageUploadController extends Controller
     public function upload(Request $request)
     {
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max
+            'image' => [
+                'required',
+                'file',
+                'max:5120', // 5MB max
+                'mimetypes:image/jpeg,image/png,image/webp,image/gif,image/bmp,image/svg+xml,image/avif',
+            ],
         ]);
 
         try {

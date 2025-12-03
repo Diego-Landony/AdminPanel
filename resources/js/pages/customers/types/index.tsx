@@ -214,7 +214,7 @@ export default function CustomerTypesIndex({ customer_types, stats, filters }: C
         {
             title: 'inactivos',
             value: stats.total_types - stats.active_types,
-            icon: <Users className="h-3 w-3 text-red-600" />,
+            icon: <Users className="h-3 w-3 text-destructive" />,
         },
     ];
 

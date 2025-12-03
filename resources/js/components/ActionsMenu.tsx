@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Edit, MoreVertical, Trash2 } from 'lucide-react';
 import React from 'react';
 
@@ -62,7 +63,7 @@ export function ActionsMenu({
                 {canDelete && (
                     <DropdownMenuItem onClick={handleDelete} className="cursor-pointer" disabled={isDeleting}>
                         {isDeleting ? (
-                            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                            <LoadingSpinner size="sm" variant="current" className="mr-2" />
                         ) : (
                             <Trash2 className="mr-2 h-4 w-4" />
                         )}

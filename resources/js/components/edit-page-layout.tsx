@@ -3,6 +3,7 @@ import { ArrowLeft, Save } from 'lucide-react';
 import React from 'react';
 
 import { Button } from '@/components/ui/button';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import AppLayout from '@/layouts/app-layout';
 
 interface EditPageLayoutProps {
@@ -106,7 +107,7 @@ export function EditPageLayout({
                                     className={`w-full sm:w-auto ${processing ? 'cursor-not-allowed' : ''}`}
                                 >
                                     {processing ? (
-                                        <div className="mr-2 h-4 w-4 flex-shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                        <LoadingSpinner size="sm" variant="white" className="mr-2 flex-shrink-0" />
                                     ) : (
                                         <Save className="mr-2 h-4 w-4 flex-shrink-0" />
                                     )}

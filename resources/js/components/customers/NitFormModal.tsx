@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { showNotification } from '@/hooks/useNotifications';
 import { router } from '@inertiajs/react';
@@ -172,7 +173,7 @@ export const NitFormModal: React.FC<NitFormModalProps> = ({ isOpen, onClose, cus
                         <Button type="submit" disabled={isSubmitting}>
                             {isSubmitting ? (
                                 <>
-                                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                    <LoadingSpinner size="sm" variant="white" className="mr-2" />
                                     {nit ? 'Actualizando...' : 'Guardando...'}
                                 </>
                             ) : (

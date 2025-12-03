@@ -50,6 +50,28 @@ describe('Image Upload', function () {
         expect($response->json('success'))->toBeTrue();
     });
 
+    test('can upload valid avif image', function () {
+        $file = UploadedFile::fake()->create('test.avif', 100, 'image/avif');
+
+        $response = $this->postJson(route('upload.image'), [
+            'image' => $file,
+        ]);
+
+        $response->assertSuccessful();
+        expect($response->json('success'))->toBeTrue();
+    });
+
+    test('can upload valid gif image', function () {
+        $file = UploadedFile::fake()->create('test.gif', 100, 'image/gif');
+
+        $response = $this->postJson(route('upload.image'), [
+            'image' => $file,
+        ]);
+
+        $response->assertSuccessful();
+        expect($response->json('success'))->toBeTrue();
+    });
+
     test('generates unique filenames using UUID', function () {
         $file1 = UploadedFile::fake()->image('test.jpg');
         $file2 = UploadedFile::fake()->image('test.jpg');
@@ -110,7 +132,7 @@ describe('Image Validation', function () {
     });
 
     test('rejects invalid mime types', function () {
-        $file = UploadedFile::fake()->create('test.gif', 100, 'image/gif');
+        $file = UploadedFile::fake()->create('test.tiff', 100, 'image/tiff');
 
         $response = $this->postJson(route('upload.image'), [
             'image' => $file,

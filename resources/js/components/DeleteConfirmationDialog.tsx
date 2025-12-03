@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Trash2 } from 'lucide-react';
 import React from 'react';
 
@@ -19,7 +20,7 @@ interface DeleteConfirmationDialogProps {
  * Professional delete confirmation dialog component
  * Provides consistent UX for delete operations across all entities
  */
-export const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
+const DeleteConfirmationDialogComponent: React.FC<DeleteConfirmationDialogProps> = ({
     isOpen,
     onClose,
     onConfirm,
@@ -49,7 +50,7 @@ export const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> =
                     <Button variant="destructive" onClick={onConfirm} disabled={isDeleting || !canDelete}>
                         {isDeleting ? (
                             <>
-                                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                <LoadingSpinner size="sm" variant="white" className="mr-2" />
                                 Eliminando...
                             </>
                         ) : (
@@ -64,3 +65,5 @@ export const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> =
         </Dialog>
     );
 };
+
+export const DeleteConfirmationDialog = React.memo(DeleteConfirmationDialogComponent);

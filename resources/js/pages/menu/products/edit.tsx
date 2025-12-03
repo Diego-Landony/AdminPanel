@@ -75,7 +75,6 @@ interface FormData {
     category_id: string;
     name: string;
     description: string;
-    image: string;
     is_active: boolean;
     has_variants: boolean;
     precio_pickup_capital: string;
@@ -90,7 +89,6 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
         category_id: product.category_id ? String(product.category_id) : '',
         name: product.name,
         description: product.description || '',
-        image: product.image || '',
         is_active: product.is_active,
         has_variants: product.has_variants,
         precio_pickup_capital: product.precio_pickup_capital || '',
@@ -100,6 +98,9 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
         variants: [],
     });
 
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(product.image || null);
+    const [removeImage, setRemoveImage] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedSections, setSelectedSections] = useState<number[]>(product.sections.map((s) => s.id));
@@ -152,6 +153,19 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
         }
     }, [errors]);
 
+    const handleImageChange = (file: File | null, previewUrl: string | null) => {
+        setImageFile(file);
+        setImagePreview(previewUrl);
+        setRemoveImage(file === null && previewUrl === null);
+        if (errors.image) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors.image;
+                return newErrors;
+            });
+        }
+    };
+
     const toggleSection = (sectionId: number) => {
         setSelectedSections((prev) => (prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]));
     };
@@ -160,13 +174,42 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
         e.preventDefault();
         setIsSubmitting(true);
 
-        const submitData = {
-            ...formData,
-            sections: selectedSections,
-            variants: formData.has_variants ? formData.variants.filter((v) => v.is_active).map(({ is_active: _is_active, ...rest }) => rest) : [],
-        };
+        const data = new FormData();
+        data.append('_method', 'PUT');
+        data.append('category_id', formData.category_id);
+        data.append('name', formData.name);
+        data.append('description', formData.description);
+        data.append('is_active', formData.is_active ? '1' : '0');
+        data.append('has_variants', formData.has_variants ? '1' : '0');
+        data.append('precio_pickup_capital', formData.precio_pickup_capital);
+        data.append('precio_domicilio_capital', formData.precio_domicilio_capital);
+        data.append('precio_pickup_interior', formData.precio_pickup_interior);
+        data.append('precio_domicilio_interior', formData.precio_domicilio_interior);
 
-        router.put(`/menu/products/${product.id}`, submitData, {
+        if (imageFile) {
+            data.append('image', imageFile);
+        } else if (removeImage) {
+            data.append('remove_image', '1');
+        }
+
+        selectedSections.forEach((sectionId, index) => {
+            data.append(`sections[${index}]`, String(sectionId));
+        });
+
+        const activeVariants = formData.has_variants
+            ? formData.variants.filter((v) => v.is_active)
+            : [];
+
+        activeVariants.forEach((variant, index) => {
+            data.append(`variants[${index}][name]`, variant.name);
+            data.append(`variants[${index}][precio_pickup_capital]`, variant.precio_pickup_capital);
+            data.append(`variants[${index}][precio_domicilio_capital]`, variant.precio_domicilio_capital);
+            data.append(`variants[${index}][precio_pickup_interior]`, variant.precio_pickup_interior);
+            data.append(`variants[${index}][precio_domicilio_interior]`, variant.precio_domicilio_interior);
+        });
+
+        router.post(`/menu/products/${product.id}`, data, {
+            forceFormData: true,
             onSuccess: () => {
                 // La redirección la maneja el controlador
             },
@@ -226,8 +269,8 @@ export default function ProductEdit({ product, categories, sections }: EditProdu
 
                 <ImageUpload
                     label="Imagen"
-                    currentImage={formData.image}
-                    onImageChange={(url) => handleInputChange('image', url || '')}
+                    currentImage={imagePreview}
+                    onImageChange={handleImageChange}
                     error={errors.image}
                 />
             </FormSection>

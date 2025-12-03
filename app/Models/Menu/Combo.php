@@ -2,6 +2,7 @@
 
 namespace App\Models\Menu;
 
+use App\Models\Concerns\HasBadges;
 use App\Models\Concerns\HasReportingCategory;
 use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Combo extends Model
 {
-    use HasFactory, HasReportingCategory, LogsActivity, SoftDeletes;
+    use HasBadges, HasFactory, HasReportingCategory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'category_id',

@@ -12,6 +12,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -89,6 +91,16 @@ class ComboController extends Controller
 
         $items = $validated['items'] ?? [];
         unset($validated['items']);
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $filename = Str::uuid().'.'.$image->getClientOriginalExtension();
+            $path = $image->storeAs('images', $filename, 'public');
+            $validated['image'] = '/storage/'.$path;
+        } else {
+            unset($validated['image']);
+        }
 
         $combo = null;
 
@@ -190,7 +202,31 @@ class ComboController extends Controller
         $validated = $request->validated();
 
         $items = $validated['items'] ?? [];
-        unset($validated['items']);
+        $removeImage = $validated['remove_image'] ?? false;
+        unset($validated['items'], $validated['remove_image']);
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($combo->image) {
+                $oldPath = str_replace('/storage/', '', $combo->image);
+                Storage::disk('public')->delete($oldPath);
+            }
+
+            $image = $request->file('image');
+            $filename = Str::uuid().'.'.$image->getClientOriginalExtension();
+            $path = $image->storeAs('images', $filename, 'public');
+            $validated['image'] = '/storage/'.$path;
+        } elseif ($removeImage) {
+            // Remove image if requested
+            if ($combo->image) {
+                $oldPath = str_replace('/storage/', '', $combo->image);
+                Storage::disk('public')->delete($oldPath);
+            }
+            $validated['image'] = null;
+        } else {
+            unset($validated['image']);
+        }
 
         DB::transaction(function () use ($validated, $items, $combo) {
             $combo->update($validated);

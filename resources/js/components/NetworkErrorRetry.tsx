@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
 
 interface NetworkErrorRetryProps {
@@ -141,7 +142,7 @@ export const NetworkErrorRetry: React.FC<NetworkErrorRetryProps> = ({
                         <Button onClick={handleRetry} disabled={isRetrying} variant="default" size="sm">
                             {isRetrying ? (
                                 <>
-                                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                    <LoadingSpinner size="sm" variant="white" className="mr-2" />
                                     Reintentando...
                                 </>
                             ) : (

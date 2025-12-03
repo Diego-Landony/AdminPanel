@@ -35,8 +35,23 @@ interface VariantsFromCategoryProps {
 export function VariantsFromCategory({ categoryVariants, existingVariants = [], onChange, errors = {} }: VariantsFromCategoryProps) {
     const [variants, setVariants] = useState<VariantData[]>([]);
     const prevCategoryVariantsRef = useRef<string[]>([]);
+    const onChangeRef = useRef(onChange);
+    const isInitializedRef = useRef(false);
+
+    // Keep onChange ref updated without triggering re-renders
+    useEffect(() => {
+        onChangeRef.current = onChange;
+    }, [onChange]);
 
     useEffect(() => {
+        // Only reinitialize when category variants actually change, not on every render
+        const hasVariantsChanged = JSON.stringify(prevCategoryVariantsRef.current) !== JSON.stringify(categoryVariants);
+        const isFirstMount = !isInitializedRef.current && categoryVariants.length > 0;
+
+        if (!hasVariantsChanged && !isFirstMount) {
+            return;
+        }
+
         const initializedVariants = categoryVariants.map((variantName) => {
             const existing = existingVariants.find((v) => v.name === variantName);
 
@@ -63,16 +78,10 @@ export function VariantsFromCategory({ categoryVariants, existingVariants = [], 
         });
 
         setVariants(initializedVariants);
-
-        // Call onChange when category variants change OR on first mount with existing variants
-        const hasVariantsChanged = JSON.stringify(prevCategoryVariantsRef.current) !== JSON.stringify(categoryVariants);
-        const isFirstMount = prevCategoryVariantsRef.current.length === 0 && categoryVariants.length > 0;
-
-        if (hasVariantsChanged || isFirstMount) {
-            onChange(initializedVariants);
-            prevCategoryVariantsRef.current = categoryVariants;
-        }
-    }, [categoryVariants, existingVariants, onChange]);
+        onChangeRef.current(initializedVariants);
+        prevCategoryVariantsRef.current = categoryVariants;
+        isInitializedRef.current = true;
+    }, [categoryVariants, existingVariants]);
 
     const updateVariant = (index: number, field: keyof VariantData, value: string | boolean) => {
         const updated = [...variants];

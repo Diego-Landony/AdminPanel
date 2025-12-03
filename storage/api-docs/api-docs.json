@@ -215,7 +215,7 @@
                     "Authentication"
                 ],
                 "summary": "Iniciar sesión con email y contraseña",
-                "description": "Autentica al cliente y devuelve token Sanctum. Limitado a 5 intentos por minuto.\n     *\n     * **Si la cuenta fue eliminada:**\n     * - Retorna 409 con `code: account_deleted_recoverable`\n     * - Incluye días restantes para reactivar y puntos acumulados\n     * - El cliente debe usar POST /api/v1/auth/reactivate para recuperar la cuenta",
+                "description": "Autentica al cliente y devuelve token Sanctum. Limitado a 5 intentos por minuto.\n     *\n     * **Si la cuenta usa OAuth (Google/Apple):**\n     * - Retorna 409 con `code: oauth_account_required`\n     * - El cliente debe redirigir al usuario al flujo OAuth correspondiente\n     *\n     * **Si la cuenta fue eliminada:**\n     * - Retorna 409 con `code: account_deleted_recoverable`\n     * - Incluye días restantes para reactivar y puntos acumulados\n     * - El cliente debe usar POST /api/v1/auth/reactivate para recuperar la cuenta",
                 "operationId": "9d0bb5c770cbec19b0b9566606ef4adb",
                 "requestBody": {
                     "required": true,
@@ -279,54 +279,89 @@
                         }
                     },
                     "409": {
-                        "description": "Cuenta eliminada - puede reactivarse",
+                        "description": "Conflicto - Cuenta OAuth o eliminada",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Encontramos una cuenta eliminada con este correo."
-                                        },
-                                        "code": {
-                                            "type": "string",
-                                            "example": "account_deleted_recoverable"
-                                        },
-                                        "data": {
+                                    "oneOf": [
+                                        {
                                             "properties": {
-                                                "deleted_at": {
+                                                "message": {
                                                     "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2025-11-15T10:30:00Z"
+                                                    "example": "Esta cuenta usa autenticación con google. Por favor inicia sesión con google."
                                                 },
-                                                "days_until_permanent_deletion": {
-                                                    "type": "integer",
-                                                    "example": 15
-                                                },
-                                                "points": {
-                                                    "type": "integer",
-                                                    "example": 150
-                                                },
-                                                "can_reactivate": {
-                                                    "type": "boolean",
-                                                    "example": true
-                                                },
-                                                "oauth_provider": {
-                                                    "description": "Tipo de cuenta: 'local' (email/password), 'google', o 'apple'. Si es 'local', el reactivate requiere password.",
+                                                "code": {
                                                     "type": "string",
-                                                    "example": "local"
+                                                    "example": "oauth_account_required"
+                                                },
+                                                "data": {
+                                                    "properties": {
+                                                        "oauth_provider": {
+                                                            "description": "Proveedor OAuth que debe usar",
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "google",
+                                                                "apple"
+                                                            ],
+                                                            "example": "google"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "format": "email",
+                                                            "example": "juan@example.com"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Encontramos una cuenta eliminada con este correo."
+                                                },
+                                                "code": {
+                                                    "type": "string",
+                                                    "example": "account_deleted_recoverable"
+                                                },
+                                                "data": {
+                                                    "properties": {
+                                                        "deleted_at": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2025-11-15T10:30:00Z"
+                                                        },
+                                                        "days_until_permanent_deletion": {
+                                                            "type": "integer",
+                                                            "example": 15
+                                                        },
+                                                        "points": {
+                                                            "type": "integer",
+                                                            "example": 150
+                                                        },
+                                                        "can_reactivate": {
+                                                            "type": "boolean",
+                                                            "example": true
+                                                        },
+                                                        "oauth_provider": {
+                                                            "type": "string",
+                                                            "example": "local"
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
                                         }
-                                    },
-                                    "type": "object"
+                                    ]
                                 }
                             }
                         }
                     },
                     "422": {
-                        "description": "Credenciales inválidas o cuenta OAuth",
+                        "description": "Credenciales inválidas",
                         "content": {
                             "application/json": {
                                 "schema": {

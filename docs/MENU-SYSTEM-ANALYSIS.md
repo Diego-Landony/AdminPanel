@@ -157,7 +157,7 @@ promotions
 | ~~**CRÍTICA**~~ | ~~Tabla `category_product` vacía~~ | ✅ **RESUELTO** - Tabla eliminada |
 | **ALTA** | Sin índice en `deleted_at` | `ALTER TABLE combos ADD INDEX idx_deleted_at (deleted_at)` |
 | **ALTA** | Sin índice en `products.name` | `ALTER TABLE products ADD INDEX idx_name (name)` |
-| **MEDIA** | Ambigüedad `variant_id = NULL` | Documentar significado explícito |
+| ~~**MEDIA**~~ | ~~Ambigüedad `variant_id = NULL`~~ | ✅ **RESUELTO** - Documentado en modelos |
 | **MEDIA** | Duplicación `combo_items` ≈ `bundle_promotion_items` | Evaluar unificación |
 | **BAJA** | 4 campos de precio por entidad | Considerar normalización futura |
 
@@ -217,3 +217,89 @@ promotions
 - Tabla `products` - 46 registros
 - Tabla `product_variants` - 38 registros
 - ~~Tabla `category_product`~~ - **ELIMINADA** (era código muerto)
+
+---
+
+## 6. NOTAS TÉCNICAS
+
+### 6.1 Comportamiento de `variant_id = NULL`
+
+El campo `variant_id` puede ser NULL en cuatro tablas del sistema: `combo_items`, `combo_item_options`, `bundle_promotion_items`, y `bundle_promotion_item_options`. El significado de NULL varía según el contexto:
+
+#### En `combo_items` y `bundle_promotion_items`
+
+Cuando `variant_id = NULL`, hay dos casos posibles:
+
+**Caso 1: Grupo de Elección (is_choice_group = true)**
+- El registro es un **contenedor** de grupo de elección, no un producto real
+- `product_id` también es NULL
+- Las opciones reales del grupo están en `combo_item_options` o `bundle_promotion_item_options`
+- Ejemplo: "Elige tu Sub 15cm" - las opciones son Italian B.M.T., Pollo Teriyaki, etc.
+
+**Caso 2: Producto sin Variantes (is_choice_group = false)**
+- El producto asociado NO tiene variantes (`has_variants = false`)
+- `product_id` tiene valor
+- Los precios se obtienen directamente del producto
+- Ejemplo: Bebidas (Gaseosa Lata, Agua Pura), Galletas, etc.
+
+Cuando `variant_id` tiene valor:
+- El producto asociado tiene variantes (`has_variants = true`)
+- Se debe usar la variante específica (15cm, 30cm, etc.)
+- Los precios se obtienen de `product_variants`
+- Ejemplo: Italian B.M.T. 15cm, Pollo Teriyaki 30cm
+
+#### En `combo_item_options` y `bundle_promotion_item_options`
+
+Estas tablas almacenan las opciones de grupos de elección.
+
+Cuando `variant_id = NULL`:
+- El producto asociado NO tiene variantes (`has_variants = false`)
+- Los precios se toman del producto directamente
+- Ejemplo: Grupo de bebidas donde cada opción es un producto simple
+
+Cuando `variant_id` tiene valor:
+- El producto asociado tiene variantes (`has_variants = true`)
+- Los precios se toman de `product_variants`
+- **Validación crítica**: Todas las opciones del mismo grupo deben ser consistentes:
+  - Todas con `variant_id = NULL`, o todas con `variant_id NOT NULL`
+  - Si tienen variantes, todas deben ser de la misma variante (mismo tamaño)
+  - Ejemplo: Un grupo de subs 15cm no puede mezclar opciones de 30cm
+
+### 6.2 Validación de Variantes
+
+El sistema valida las variantes en los Form Requests (`StoreComboRequest`, `UpdateComboRequest`, `StoreBundlePromotionRequest`):
+
+```php
+// Si el producto tiene variantes, variant_id es REQUERIDO
+if ($product->has_variants) {
+    if (empty($data['variant_id'])) {
+        // ERROR: Debes seleccionar una variante
+    }
+}
+
+// Si el producto NO tiene variantes, variant_id debe ser NULL
+if (!$product->has_variants) {
+    if (!empty($data['variant_id'])) {
+        // ERROR: Este producto no tiene variantes
+    }
+}
+```
+
+### 6.3 Consistencia en Grupos de Elección
+
+Los grupos de elección tienen validaciones especiales (`validateVariantConsistency`):
+
+1. **Coherencia de variantes**: Todas las opciones deben tener variantes o ninguna debe tenerlas
+2. **Mismo tamaño**: Si las opciones tienen variantes, todas deben ser de la misma variante (15cm o 30cm)
+3. **Mínimo de opciones**: Cada grupo debe tener al menos 2 opciones
+4. **Sin duplicados**: No se permiten opciones duplicadas (misma combinación product_id + variant_id)
+
+### 6.4 Determinación de `has_variants`
+
+El campo `has_variants` en el modelo `Product` se calcula automáticamente:
+
+- Si el producto tiene categoría cargada, usa `category->uses_variants`
+- Si no tiene categoría cargada, usa el valor directo de `has_variants` (legacy)
+- Esto permite que categorías completas compartan el comportamiento de variantes
+
+Ver `Product::getHasVariantsAttribute()` para la implementación.

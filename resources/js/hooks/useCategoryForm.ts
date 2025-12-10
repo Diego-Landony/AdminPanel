@@ -75,20 +75,45 @@ export function useCategoryForm({
         }
     }, [formData.uses_variants, formData.variant_definitions.length]);
 
+    // Validación en tiempo real
+    const validateField = useCallback((field: string, value: string | boolean | string[]): string | null => {
+        switch (field) {
+            case 'name':
+                if (typeof value === 'string') {
+                    if (!value || value.trim() === '') {
+                        return 'El nombre es requerido';
+                    }
+                    if (value.length < 2) {
+                        return 'El nombre debe tener al menos 2 caracteres';
+                    }
+                    if (value.length > 255) {
+                        return 'El nombre no puede exceder 255 caracteres';
+                    }
+                }
+                return null;
+            default:
+                return null;
+        }
+    }, []);
+
     // Handlers
     const handleInputChange = useCallback(
         (field: keyof CategoryFormData, value: string | boolean | string[]) => {
             setFormData((prev) => ({ ...prev, [field]: value }));
 
-            if (errors[field]) {
-                setErrors((prev) => {
-                    const newErrors = { ...prev };
+            // Validar en tiempo real
+            const error = validateField(field, value);
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                if (error) {
+                    newErrors[field] = error;
+                } else {
                     delete newErrors[field];
-                    return newErrors;
-                });
-            }
+                }
+                return newErrors;
+            });
         },
-        [errors]
+        [validateField]
     );
 
     const resetForm = useCallback(() => {

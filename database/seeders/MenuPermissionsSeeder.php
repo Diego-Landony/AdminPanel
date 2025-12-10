@@ -13,7 +13,7 @@ class MenuPermissionsSeeder extends Seeder
      */
     public function run(): void
     {
-        $resources = ['categories', 'products', 'sections', 'promotions'];
+        $resources = ['categories', 'products', 'sections', 'promotions', 'combos'];
         $permissions = [];
 
         foreach ($resources as $resource) {
@@ -31,15 +31,27 @@ class MenuPermissionsSeeder extends Seeder
                     'group' => 'menu',
                 ],
                 [
-                    'name' => "menu.{$resource}.edit",
-                    'display_name' => 'Editar '.ucfirst($resource),
-                    'description' => "Capacidad de modificar {$resource} del menú",
+                    'name' => "menu.{$resource}.update",
+                    'display_name' => 'Actualizar '.ucfirst($resource),
+                    'description' => "Capacidad de actualizar {$resource} del menú",
                     'group' => 'menu',
                 ],
                 [
                     'name' => "menu.{$resource}.delete",
                     'display_name' => 'Eliminar '.ucfirst($resource),
                     'description' => "Capacidad de eliminar {$resource} del menú",
+                    'group' => 'menu',
+                ],
+                [
+                    'name' => "menu.{$resource}.restore",
+                    'display_name' => 'Restaurar '.ucfirst($resource),
+                    'description' => "Capacidad de restaurar {$resource} eliminados del menú",
+                    'group' => 'menu',
+                ],
+                [
+                    'name' => "menu.{$resource}.force-delete",
+                    'display_name' => 'Eliminar permanentemente '.ucfirst($resource),
+                    'description' => "Capacidad de eliminar permanentemente {$resource} del menú",
                     'group' => 'menu',
                 ],
             ]);

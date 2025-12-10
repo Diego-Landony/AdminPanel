@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Modelo de Producto Base
@@ -20,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Product extends Model
 {
-    use HasBadges, HasFactory, HasReportingCategory, LogsActivity;
+    use HasBadges, HasFactory, HasReportingCategory, LogsActivity, SoftDeletes;
 
     /**
      * Los atributos que se pueden asignar masivamente

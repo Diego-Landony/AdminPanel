@@ -51,6 +51,16 @@ class ComboItem extends Model
 
     /**
      * Relación: Un item puede referenciar una variante específica
+     *
+     * Cuando variant_id es NULL:
+     * - Si is_choice_group = true: Este es un contenedor de grupo de elección, no tiene producto ni variante.
+     *   Las opciones reales están en combo_item_options.
+     * - Si is_choice_group = false: El producto asociado NO tiene variantes (has_variants = false).
+     *   Ejemplo: Bebidas, galletas, productos sin tamaños. El producto tiene precios directos.
+     *
+     * Cuando variant_id NO es NULL:
+     * - El producto asociado tiene variantes (has_variants = true) y se debe usar la variante específica.
+     *   Ejemplo: Subs en 15cm, 30cm. Los precios están en product_variants.
      */
     public function variant(): BelongsTo
     {

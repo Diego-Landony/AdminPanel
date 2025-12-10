@@ -188,20 +188,69 @@ export function useComboForm({
 
     const hasInactiveProducts = inactiveItems.length > 0;
 
+    // Validación en tiempo real
+    const validateField = useCallback((field: string, value: string | boolean): string | null => {
+        switch (field) {
+            case 'name':
+                if (typeof value === 'string') {
+                    if (!value || value.trim() === '') {
+                        return 'El nombre es requerido';
+                    }
+                    if (value.length < 2) {
+                        return 'El nombre debe tener al menos 2 caracteres';
+                    }
+                    if (value.length > 255) {
+                        return 'El nombre no puede exceder 255 caracteres';
+                    }
+                }
+                return null;
+            case 'description':
+                if (typeof value === 'string' && value.length > 1000) {
+                    return 'La descripción no puede exceder 1000 caracteres';
+                }
+                return null;
+            case 'category_id':
+                if (typeof value === 'string' && (!value || value.trim() === '')) {
+                    return 'La categoría es requerida';
+                }
+                return null;
+            case 'precio_pickup_capital':
+            case 'precio_domicilio_capital':
+            case 'precio_pickup_interior':
+            case 'precio_domicilio_interior':
+                if (typeof value === 'string' && value !== '') {
+                    const numValue = parseFloat(value);
+                    if (isNaN(numValue)) {
+                        return 'Debe ser un número válido';
+                    }
+                    if (numValue < 0) {
+                        return 'El precio debe ser mayor o igual a 0';
+                    }
+                }
+                return null;
+            default:
+                return null;
+        }
+    }, []);
+
     // Handlers
     const handleInputChange = useCallback(
         (field: keyof ComboFormData, value: string | boolean) => {
             setFormData((prev) => ({ ...prev, [field]: value }));
 
-            if (errors[field]) {
-                setErrors((prev) => {
-                    const newErrors = { ...prev };
+            // Validar en tiempo real
+            const error = validateField(field, value);
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                if (error) {
+                    newErrors[field] = error;
+                } else {
                     delete newErrors[field];
-                    return newErrors;
-                });
-            }
+                }
+                return newErrors;
+            });
         },
-        [errors]
+        [validateField]
     );
 
     const handleImageChange = useCallback(

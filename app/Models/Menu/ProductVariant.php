@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Modelo de Variante de Producto
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class ProductVariant extends Model
 {
-    use HasFactory, HasReportingCategory;
+    use HasFactory, HasReportingCategory, SoftDeletes;
 
     /**
      * Nombre de la tabla

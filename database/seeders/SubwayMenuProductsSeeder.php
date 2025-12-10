@@ -24,7 +24,6 @@ class SubwayMenuProductsSeeder extends Seeder
         DB::table('combo_item_options')->delete();
         ComboItem::query()->delete();
         DB::table('product_sections')->delete();
-        DB::table('category_product')->delete();
         ProductVariant::query()->delete();
         Product::query()->delete();
 

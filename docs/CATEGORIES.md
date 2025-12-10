@@ -38,12 +38,11 @@ Las **Categorías** son el eje central de organización del menú. Actúan como 
 
 ### 1. Categoría Normal (sin variantes)
 
-Los productos tienen precios fijos definidos en la tabla pivot `category_product`.
+Los productos tienen precios fijos definidos directamente en la tabla `products`.
 
 **Comportamiento:**
-- Al asociar un producto, se requieren los 4 precios
-- Los precios se almacenan en la relación, no en el producto
-- Un mismo producto puede tener precios diferentes en categorías distintas
+- Al crear un producto, se definen los 4 precios directamente
+- El producto pertenece a una única categoría (`category_id`)
 
 **Ejemplo:** Categoría "Bebidas"
 - Coca-Cola: Q15 pickup capital, Q18 domicilio capital...
@@ -56,7 +55,7 @@ Los productos generan variantes automáticamente basadas en `variant_definitions
 
 **Comportamiento:**
 - La categoría define las variantes disponibles (ej: `["15cm", "30cm"]`)
-- Al asociar un producto, se crean automáticamente las variantes
+- Al crear un producto en esta categoría, se crean automáticamente las variantes
 - Cada variante tiene sus propios 4 precios
 - Las variantes inician inactivas y sin precios (deben configurarse manualmente)
 
@@ -94,7 +93,7 @@ El sistema maneja **4 precios** por unidad vendible:
 
 | Tipo Categoría | Ubicación de Precios |
 |----------------|----------------------|
-| Sin variantes | Tabla pivot `category_product` |
+| Sin variantes | Directamente en tabla `products` |
 | Con variantes | Tabla `product_variants` |
 | Combos | Directamente en tabla `combos` |
 
@@ -137,39 +136,51 @@ El sistema detecta renombramientos comparando posiciones en el array:
 │ sort_order      │                  │
 └────────┬────────┘                  │
          │                           │
-         │ N:N                       │ 1:N
+         │ 1:N                       │ 1:N
          │                           │
 ┌────────┴────────┐          ┌───────┴───────┐
-│category_product │          │    combos     │
+│    products     │          │    combos     │
 │─────────────────│          │───────────────│
-│ category_id     │          │ category_id   │
-│ product_id      │          │ name          │
-│ sort_order      │          │ precios...    │
-│ precios...      │          └───────────────┘
+│ id              │          │ category_id   │
+│ name            │          │ name          │
+│ category_id  ───┘          │ precios...    │
+│ has_variants    │          └───────────────┘
+│ precios...      │
+│ ...             │
 └────────┬────────┘
          │
-         │ N:1
+         │ 1:N
          │
 ┌────────┴────────┐
-│    products     │
+│product_variants │
 │─────────────────│
-│ id              │
-│ name            │──────────────────┐
-│ category_id     │                  │
-│ has_variants    │                  │ 1:N
-│ ...             │                  │
-└─────────────────┘                  │
-                             ┌───────┴────────┐
-                             │product_variants│
-                             │────────────────│
-                             │ product_id     │
-                             │ sku            │
-                             │ name           │
-                             │ size           │
-                             │ precios...     │
-                             │ is_active      │
-                             └────────────────┘
+│ product_id      │
+│ sku             │
+│ name            │
+│ size            │
+│ precios...      │
+│ is_active       │
+└─────────────────┘
 ```
+
+---
+
+## Categorías de Reportería
+
+El sistema deriva automáticamente categorías de reportería para análisis interno:
+
+| Categoría Menú | Categoría Reportería |
+|----------------|---------------------|
+| Subs (variante 15cm) | `sixinch` |
+| Subs (variante 30cm) | `footlong` |
+| Bebidas | `bebidas` |
+| Wraps | `wraps` |
+| Ensaladas | `ensaladas` |
+| Postres | `postres` |
+| Desayunos | `desayunos` |
+| Combos | `combos` |
+
+Para Subs, la categoría de reportería se deriva del campo `size` de la variante (`sixinch` o `footlong`).
 
 ---
 
@@ -185,19 +196,18 @@ El sistema detecta renombramientos comparando posiciones en el array:
 3. Se genera sort_order automáticamente
 ```
 
-### Asociar Producto a Categoría
+### Crear Producto en Categoría
 
 ```
 Sin Variantes:
-1. Seleccionar producto
-2. Ingresar los 4 precios
-3. Se crea registro en category_product con precios
+1. Seleccionar categoría
+2. Ingresar los 4 precios directamente en el producto
+3. Se guarda en tabla products
 
 Con Variantes:
-1. Seleccionar producto
-2. Se crea registro en category_product (sin precios)
-3. VariantGeneratorService genera variantes automáticamente
-4. Usuario debe activar variantes y asignar precios manualmente
+1. Seleccionar categoría con variantes
+2. VariantGeneratorService genera variantes automáticamente
+3. Usuario debe activar variantes y asignar precios manualmente
 ```
 
 ### Modificar Variantes de Categoría
@@ -252,9 +262,6 @@ Con Variantes:
 | PUT/PATCH | `/menu/categories/{id}` | Actualizar |
 | DELETE | `/menu/categories/{id}` | Eliminar |
 | POST | `/menu/categories/reorder` | Reordenar |
-| POST | `/menu/categories/{id}/products/attach` | Asociar producto |
-| DELETE | `/menu/categories/{id}/products/{pid}` | Desasociar producto |
-| PATCH | `/menu/categories/{id}/products/{pid}/prices` | Actualizar precios |
 
 ---
 
@@ -270,7 +277,6 @@ Con Variantes:
 ### Índices de BD
 
 - `idx_active_order`: Optimiza consultas de categorías activas ordenadas
-- Índice único en `category_product(category_id, product_id)`
 
 ### Traits del Modelo
 

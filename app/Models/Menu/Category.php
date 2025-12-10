@@ -5,7 +5,6 @@ namespace App\Models\Menu;
 use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
@@ -30,23 +29,11 @@ class Category extends Model
     ];
 
     /**
-     * Relación N:N: Una categoría puede tener múltiples productos
-     *
-     * Si uses_variants = false: Los precios están en el pivot
-     * Si uses_variants = true: Los precios están en product_variants
+     * Relación 1:N: Una categoría tiene múltiples productos
      */
-    public function products(): BelongsToMany
+    public function products(): HasMany
     {
-        return $this->belongsToMany(Product::class, 'category_product')
-            ->withPivot([
-                'sort_order',
-                'precio_pickup_capital',
-                'precio_domicilio_capital',
-                'precio_pickup_interior',
-                'precio_domicilio_interior',
-            ])
-            ->withTimestamps()
-            ->orderByPivot('sort_order');
+        return $this->hasMany(Product::class)->orderBy('sort_order');
     }
 
     /**

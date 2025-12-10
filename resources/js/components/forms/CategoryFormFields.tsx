@@ -1,0 +1,106 @@
+/**
+ * Componente reutilizable para campos de formulario de categorías
+ * Usado tanto en create como en edit
+ */
+
+import { FormSection } from '@/components/form-section';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { VariantDefinitionsInput } from '@/components/VariantDefinitionsInput';
+import { AlertCircle, Layers, ListOrdered } from 'lucide-react';
+
+import type { CategoryFormData, FormErrors } from '@/types/menu';
+
+export interface CategoryFormFieldsProps {
+    formData: CategoryFormData;
+    onInputChange: (field: keyof CategoryFormData, value: string | boolean | string[]) => void;
+    errors: FormErrors;
+    variantsChanged?: boolean;
+    mode: 'create' | 'edit';
+}
+
+export function CategoryFormFields({
+    formData,
+    onInputChange,
+    errors,
+    variantsChanged = false,
+    mode,
+}: CategoryFormFieldsProps) {
+    const isEdit = mode === 'edit';
+
+    return (
+        <>
+            <FormSection icon={Layers} title="Información Básica">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <Label htmlFor="is_active" className="text-base">
+                        Activa
+                    </Label>
+                    <Switch
+                        id="is_active"
+                        checked={formData.is_active}
+                        onCheckedChange={(checked) => onInputChange('is_active', checked as boolean)}
+                    />
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <Label htmlFor="is_combo_category" className="text-base">
+                        Categoría de combos
+                    </Label>
+                    <Switch
+                        id="is_combo_category"
+                        checked={formData.is_combo_category}
+                        onCheckedChange={(checked) => onInputChange('is_combo_category', checked as boolean)}
+                    />
+                </div>
+
+                <FormField label="Nombre" error={errors.name} required>
+                    <Input
+                        id="name"
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => onInputChange('name', e.target.value)}
+                    />
+                </FormField>
+            </FormSection>
+
+            <FormSection icon={ListOrdered} title="Variantes">
+                {isEdit && formData.uses_variants && variantsChanged && (
+                    <Alert variant="default" className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950">
+                        <AlertCircle className="h-4 w-4 text-yellow-600" />
+                        <AlertTitle className="text-yellow-800 dark:text-yellow-200">Atención</AlertTitle>
+                        <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+                            Los cambios se aplicarán a todos los productos de esta categoría.
+                        </AlertDescription>
+                    </Alert>
+                )}
+
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <Label htmlFor="uses_variants" className="text-base">
+                        Usa variantes
+                    </Label>
+                    <Switch
+                        id="uses_variants"
+                        checked={formData.uses_variants}
+                        onCheckedChange={(checked) => onInputChange('uses_variants', checked as boolean)}
+                    />
+                </div>
+
+                {formData.uses_variants && (
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium">
+                            Variantes <span className="text-destructive">*</span>
+                        </Label>
+                        <VariantDefinitionsInput
+                            variants={formData.variant_definitions}
+                            onChange={(variants) => onInputChange('variant_definitions', variants)}
+                            error={errors.variant_definitions}
+                        />
+                    </div>
+                )}
+            </FormSection>
+        </>
+    );
+}

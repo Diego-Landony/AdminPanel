@@ -14,9 +14,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Modelo de Producto Base
  *
- * Representa la información general de un producto SIN precios.
- * Los precios se definen en las variantes (ProductVariant).
- * La relación con categorías es N:N a través de la tabla pivot category_product.
+ * Representa la información general de un producto.
+ * Los precios se definen en las variantes (ProductVariant) o directamente en el producto.
+ * La relación con categoría es N:1 (products.category_id).
  */
 class Product extends Model
 {
@@ -72,19 +72,6 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
-    }
-
-    /**
-     * Relación N:N: Un producto puede estar en múltiples categorías (legacy)
-     *
-     * El pivot contiene precios si la categoría NO usa variantes
-     */
-    public function categories(): BelongsToMany
-    {
-        return $this->belongsToMany(Category::class, 'category_product')
-            ->withPivot(['sort_order'])
-            ->withTimestamps()
-            ->orderByPivot('sort_order');
     }
 
     /**

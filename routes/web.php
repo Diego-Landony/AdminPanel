@@ -242,17 +242,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('categories/reorder', [CategoryController::class, 'reorder'])->name('categories.reorder')
             ->middleware('permission:menu.categories.edit');
 
-        // Category Products Management (attach/detach products to categories)
-        Route::post('categories/{category}/products/attach', [CategoryController::class, 'attachProduct'])
-            ->name('categories.products.attach')
-            ->middleware('permission:menu.categories.edit');
-        Route::delete('categories/{category}/products/{product}', [CategoryController::class, 'detachProduct'])
-            ->name('categories.products.detach')
-            ->middleware('permission:menu.categories.edit');
-        Route::patch('categories/{category}/products/{product}/prices', [CategoryController::class, 'updateProductPrices'])
-            ->name('categories.products.update-prices')
-            ->middleware('permission:menu.categories.edit');
-
         // Products
         Route::get('products', [ProductController::class, 'index'])->name('products.index')
             ->middleware('permission:menu.products.view');

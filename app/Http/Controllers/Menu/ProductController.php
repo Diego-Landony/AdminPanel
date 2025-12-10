@@ -116,12 +116,35 @@ class ProductController extends Controller
         unset($validated['sections'], $validated['variants']);
 
         // Handle image upload
-        if ($request->hasFile('image')) {
+        \Log::info('=== DEBUG IMAGE UPLOAD (store) ===');
+        \Log::info('hasFile image: '.($request->hasFile('image') ? 'true' : 'false'));
+        \Log::info('All files: '.json_encode($request->allFiles()));
+
+        if ($request->hasFile('image') && $request->file('image')->isValid()) {
             $image = $request->file('image');
-            $filename = Str::uuid().'.'.$image->getClientOriginalExtension();
+            \Log::info('Image is valid');
+            \Log::info('Original name: '.$image->getClientOriginalName());
+            \Log::info('Extension: '.$image->getClientOriginalExtension());
+            \Log::info('Size: '.$image->getSize());
+
+            $extension = $image->getClientOriginalExtension() ?: $image->guessExtension() ?: 'jpg';
+            $filename = Str::uuid().'.'.$extension;
             $path = $image->storeAs('images', $filename, 'public');
-            $validated['image'] = '/storage/'.$path;
+
+            \Log::info('Stored path: '.($path ?: 'FAILED'));
+
+            if ($path) {
+                $validated['image'] = '/storage/'.$path;
+                \Log::info('Final image path: '.$validated['image']);
+            } else {
+                \Log::error('Failed to store image');
+                unset($validated['image']);
+            }
         } else {
+            \Log::info('No valid image file received');
+            if ($request->hasFile('image')) {
+                \Log::info('File exists but is not valid: '.$request->file('image')->getError());
+            }
             unset($validated['image']);
         }
 
@@ -206,25 +229,50 @@ class ProductController extends Controller
         unset($validated['sections'], $validated['variants'], $validated['remove_image']);
 
         // Handle image upload
-        if ($request->hasFile('image')) {
+        \Log::info('=== DEBUG IMAGE UPLOAD (update) ===');
+        \Log::info('hasFile image: '.($request->hasFile('image') ? 'true' : 'false'));
+        \Log::info('All files: '.json_encode($request->allFiles()));
+        \Log::info('removeImage flag: '.($removeImage ? 'true' : 'false'));
+
+        if ($request->hasFile('image') && $request->file('image')->isValid()) {
             // Delete old image if exists
-            if ($product->image) {
+            if ($product->image && $product->image !== '/storage/') {
                 $oldPath = str_replace('/storage/', '', $product->image);
                 Storage::disk('public')->delete($oldPath);
             }
 
             $image = $request->file('image');
-            $filename = Str::uuid().'.'.$image->getClientOriginalExtension();
+            \Log::info('Image is valid');
+            \Log::info('Original name: '.$image->getClientOriginalName());
+            \Log::info('Extension: '.$image->getClientOriginalExtension());
+            \Log::info('Size: '.$image->getSize());
+
+            $extension = $image->getClientOriginalExtension() ?: $image->guessExtension() ?: 'jpg';
+            $filename = Str::uuid().'.'.$extension;
             $path = $image->storeAs('images', $filename, 'public');
-            $validated['image'] = '/storage/'.$path;
+
+            \Log::info('Stored path: '.($path ?: 'FAILED'));
+
+            if ($path) {
+                $validated['image'] = '/storage/'.$path;
+                \Log::info('Final image path: '.$validated['image']);
+            } else {
+                \Log::error('Failed to store image');
+                unset($validated['image']);
+            }
         } elseif ($removeImage) {
             // Remove image if requested
-            if ($product->image) {
+            if ($product->image && $product->image !== '/storage/') {
                 $oldPath = str_replace('/storage/', '', $product->image);
                 Storage::disk('public')->delete($oldPath);
             }
             $validated['image'] = null;
+            \Log::info('Image removed');
         } else {
+            \Log::info('No valid image file received');
+            if ($request->hasFile('image')) {
+                \Log::info('File exists but is not valid: '.$request->file('image')->getError());
+            }
             unset($validated['image']);
         }
 

@@ -28,6 +28,8 @@ class Restaurant extends Model
         'minimum_order_amount',
         'email',
         'estimated_delivery_time',
+        'ip',
+        'franchise_number',
     ];
 
     /**

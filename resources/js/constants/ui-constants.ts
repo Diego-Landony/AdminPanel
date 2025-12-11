@@ -18,6 +18,10 @@ export const PLACEHOLDERS = {
     // Identificación
     nit: '12345678-9',
     subwayCard: '1234567890',
+    franchiseNumber: 'F-001',
+
+    // Técnicos
+    ip: '192.168.1.100',
 
     // Valores numéricos con unidad/formato
     price: '0.00',

@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import L from 'leaflet';
-import { Building2, Clock, Mail, MapPin, Navigation, Pentagon, Phone, Search, Settings } from 'lucide-react';
+import { Building2, Clock, Hash, Mail, MapPin, Navigation, Network, Pentagon, Phone, Search, Settings } from 'lucide-react';
 import React, { useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
@@ -37,6 +37,8 @@ interface RestaurantFormData {
     pickup_active: boolean;
     phone: string;
     email: string;
+    ip: string;
+    franchise_number: string;
     schedule: Record<string, { is_open: boolean; open: string; close: string }>;
     minimum_order_amount: string;
     estimated_delivery_time: string;
@@ -86,6 +88,8 @@ export default function RestaurantCreate() {
         pickup_active: true,
         phone: '',
         email: '',
+        ip: '',
+        franchise_number: '',
         schedule: {
             monday: { is_open: true, open: '08:00', close: '22:00' },
             tuesday: { is_open: true, open: '08:00', close: '22:00' },
@@ -338,6 +342,34 @@ export default function RestaurantCreate() {
                         />
                     </div>
                 </FormField>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <FormField label="IP del Restaurante" error={errors.ip}>
+                        <div className="relative">
+                            <Network className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="ip"
+                                value={data.ip}
+                                onChange={(e) => setData('ip', e.target.value)}
+                                placeholder={PLACEHOLDERS.ip}
+                                className="pl-10"
+                            />
+                        </div>
+                    </FormField>
+
+                    <FormField label="Número de Franquicia" error={errors.franchise_number}>
+                        <div className="relative">
+                            <Hash className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="franchise_number"
+                                value={data.franchise_number}
+                                onChange={(e) => setData('franchise_number', e.target.value)}
+                                placeholder={PLACEHOLDERS.franchiseNumber}
+                                className="pl-10"
+                            />
+                        </div>
+                    </FormField>
+                </div>
             </FormSection>
 
             <FormSection icon={MapPin} title="Ubicación del Restaurante" description="Selecciona la ubicación exacta del restaurante">

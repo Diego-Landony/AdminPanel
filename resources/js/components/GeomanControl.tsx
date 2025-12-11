@@ -8,6 +8,7 @@ interface GeomanControlProps {
     onPolygonCreate?: (coordinates: [number, number][][]) => void;
     onPolygonEdit?: (coordinates: [number, number][][]) => void;
     existingPolygon?: [number, number][];
+    fitBoundsOnLoad?: boolean;
 }
 
 // Type definitions for Geoman events
@@ -22,7 +23,7 @@ type GeomanMap = L.Map & {
     };
 };
 
-export function GeomanControl({ onPolygonCreate, onPolygonEdit, existingPolygon }: GeomanControlProps) {
+export function GeomanControl({ onPolygonCreate, onPolygonEdit, existingPolygon, fitBoundsOnLoad = true }: GeomanControlProps) {
     const map = useMap() as GeomanMap;
     const polygonLayerRef = useRef<L.Polygon | null>(null);
     const isInitializedRef = useRef(false);
@@ -105,7 +106,17 @@ export function GeomanControl({ onPolygonCreate, onPolygonEdit, existingPolygon 
 
         // Cleanup
         return () => {
+            // Disable edit mode on the polygon first
+            if (polygonLayerRef.current && 'pm' in polygonLayerRef.current) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (polygonLayerRef.current as any).pm.disable();
+            }
+
             if ('pm' in map) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (map as any).pm.disableDraw();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (map as any).pm.disableGlobalEditMode();
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (map as any).pm.removeControls();
             }
@@ -119,6 +130,8 @@ export function GeomanControl({ onPolygonCreate, onPolygonEdit, existingPolygon 
                 map.removeLayer(polygonLayerRef.current);
                 polygonLayerRef.current = null;
             }
+
+            isInitializedRef.current = false;
         };
     }, [map, onPolygonCreate, onPolygonEdit]);
 
@@ -171,9 +184,11 @@ export function GeomanControl({ onPolygonCreate, onPolygonEdit, existingPolygon 
                 });
             }
 
-            map.fitBounds(polygon.getBounds());
+            if (fitBoundsOnLoad) {
+                map.fitBounds(polygon.getBounds());
+            }
         }
-    }, [existingPolygon, map, onPolygonEdit]);
+    }, [existingPolygon, map, onPolygonEdit, fitBoundsOnLoad]);
 
     return null;
 }

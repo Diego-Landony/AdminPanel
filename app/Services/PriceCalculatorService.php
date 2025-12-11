@@ -141,13 +141,8 @@ class PriceCalculatorService
         array $selectedOptionIds,
         Carbon $orderTime
     ): array {
-        // Verificar que el producto está en la categoría
-        $pivot = $product->categories()
-            ->where('category_id', $categoryId)
-            ->first()
-            ?->pivot;
-
-        if (! $pivot) {
+        // Verificar que el producto pertenece a la categoría
+        if ($product->category_id !== $categoryId) {
             throw new \InvalidArgumentException('El producto no está en la categoría especificada');
         }
 
@@ -243,10 +238,9 @@ class PriceCalculatorService
                 $q->whereHas('items', fn ($q2) => $q2->where('variant_id', $variant->id))
                     // O al producto padre
                     ->orWhereHas('items', fn ($q2) => $q2->where('product_id', $variant->product_id))
-                    // O a las categorías del producto
+                    // O a la categoría del producto
                     ->orWhereHas('items', function ($q2) use ($variant) {
-                        $categoryIds = $variant->product->categories()->pluck('categories.id');
-                        $q2->whereIn('category_id', $categoryIds);
+                        $q2->where('category_id', $variant->product->category_id);
                     });
             })
             // Día de la semana

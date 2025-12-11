@@ -11,6 +11,9 @@
 |
 */
 
+// Set memory limit for tests
+ini_set('memory_limit', '512M');
+
 // Load Composer's autoloader first
 require __DIR__.'/../vendor/autoload.php';
 

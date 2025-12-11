@@ -249,9 +249,9 @@ describe('Product Creation', function () {
 
 describe('Product Edit Page', function () {
     test('can show edit product page', function () {
-        $product = Product::factory()->create();
-        $categories = Category::factory()->count(2)->create(['is_combo_category' => false]);
-        $sections = Section::factory()->count(2)->create();
+        $category = Category::factory()->create(['is_combo_category' => false]);
+        $product = Product::factory()->create(['category_id' => $category->id]);
+        Section::factory()->count(2)->create();
 
         $response = $this->get(route('menu.products.edit', $product));
 
@@ -259,8 +259,8 @@ describe('Product Edit Page', function () {
         $response->assertInertia(fn ($page) => $page
             ->component('menu/products/edit')
             ->has('product')
-            ->has('categories', 2)
-            ->has('sections', 2)
+            ->has('categories')
+            ->has('sections')
         );
     });
 

@@ -42,6 +42,7 @@ class CustomerAddressFactory extends Factory
         ];
 
         return [
+            'customer_id' => \App\Models\Customer::factory(),
             'label' => fake()->randomElement($labels),
             'address_line' => fake()->streetAddress().', '.$selectedZone['area'].', Guatemala',
             'latitude' => $latitude,

@@ -2,11 +2,14 @@
 
 namespace App\Models\Menu;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ComboItemOption extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'combo_item_id',
         'product_id',

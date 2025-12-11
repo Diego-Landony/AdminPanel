@@ -130,16 +130,112 @@ Route::prefix('v1')->group(function () {
         // Customer NITs (Tax IDs)
         // TODO: Future phase
 
-        // Menu & products
-        // TODO: Future phase
+        // Cart management
+        Route::prefix('cart')->name('api.v1.cart.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Api\V1\CartController::class, 'show'])
+                ->name('show');
+
+            Route::post('/items', [App\Http\Controllers\Api\V1\CartController::class, 'addItem'])
+                ->name('items.add');
+
+            Route::put('/items/{id}', [App\Http\Controllers\Api\V1\CartController::class, 'updateItem'])
+                ->name('items.update');
+
+            Route::delete('/items/{id}', [App\Http\Controllers\Api\V1\CartController::class, 'removeItem'])
+                ->name('items.remove');
+
+            Route::delete('/', [App\Http\Controllers\Api\V1\CartController::class, 'clear'])
+                ->name('clear');
+
+            Route::put('/restaurant', [App\Http\Controllers\Api\V1\CartController::class, 'updateRestaurant'])
+                ->name('restaurant.update');
+
+            Route::put('/service-type', [App\Http\Controllers\Api\V1\CartController::class, 'updateServiceType'])
+                ->name('service-type.update');
+
+            Route::post('/validate', [App\Http\Controllers\Api\V1\CartController::class, 'validate'])
+                ->name('validate');
+
+            Route::post('/apply-promotion', [App\Http\Controllers\Api\V1\CartController::class, 'applyPromotion'])
+                ->name('apply-promotion');
+        });
 
         // Orders
-        // TODO: Phase 6
+        Route::prefix('orders')->name('api.v1.orders.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Api\V1\OrderController::class, 'index'])
+                ->name('index');
+
+            Route::post('/', [App\Http\Controllers\Api\V1\OrderController::class, 'store'])
+                ->name('store');
+
+            Route::get('/active', [App\Http\Controllers\Api\V1\OrderController::class, 'active'])
+                ->name('active');
+
+            Route::get('/{order}', [App\Http\Controllers\Api\V1\OrderController::class, 'show'])
+                ->name('show');
+
+            Route::get('/{order}/track', [App\Http\Controllers\Api\V1\OrderController::class, 'track'])
+                ->name('track');
+
+            Route::post('/{order}/cancel', [App\Http\Controllers\Api\V1\OrderController::class, 'cancel'])
+                ->name('cancel');
+
+            Route::post('/{order}/reorder', [App\Http\Controllers\Api\V1\OrderController::class, 'reorder'])
+                ->name('reorder');
+        });
 
         // Loyalty points & rewards
         // TODO: Phase 6
+    });
 
-        // Restaurants & locations
-        // TODO: Phase 6
+    /*
+    |--------------------------------------------------------------------------
+    | Menu API Routes (Public - No Authentication Required)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['throttle:60,1'])->prefix('menu')->name('api.v1.menu.')->group(function () {
+        // Menú completo
+        Route::get('/', [App\Http\Controllers\Api\V1\Menu\MenuController::class, 'index'])
+            ->name('index');
+
+        // Categorías
+        Route::get('/categories', [App\Http\Controllers\Api\V1\Menu\CategoryController::class, 'index'])
+            ->name('categories.index');
+        Route::get('/categories/{category}', [App\Http\Controllers\Api\V1\Menu\CategoryController::class, 'show'])
+            ->name('categories.show');
+
+        // Productos
+        Route::get('/products', [App\Http\Controllers\Api\V1\Menu\ProductController::class, 'index'])
+            ->name('products.index');
+        Route::get('/products/{product}', [App\Http\Controllers\Api\V1\Menu\ProductController::class, 'show'])
+            ->name('products.show');
+
+        // Combos
+        Route::get('/combos', [App\Http\Controllers\Api\V1\Menu\ComboController::class, 'index'])
+            ->name('combos.index');
+        Route::get('/combos/{combo}', [App\Http\Controllers\Api\V1\Menu\ComboController::class, 'show'])
+            ->name('combos.show');
+
+        // Promociones
+        Route::get('/promotions', [App\Http\Controllers\Api\V1\Menu\PromotionController::class, 'index'])
+            ->name('promotions.index');
+        Route::get('/promotions/daily', [App\Http\Controllers\Api\V1\Menu\PromotionController::class, 'daily'])
+            ->name('promotions.daily');
+        Route::get('/promotions/combinados', [App\Http\Controllers\Api\V1\Menu\PromotionController::class, 'combinados'])
+            ->name('promotions.combinados');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Restaurants API Routes (Public - No Authentication Required)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['throttle:60,1'])->prefix('restaurants')->name('api.v1.restaurants.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\V1\Menu\RestaurantController::class, 'index'])
+            ->name('index');
+        Route::get('/nearby', [App\Http\Controllers\Api\V1\Menu\RestaurantController::class, 'nearby'])
+            ->name('nearby');
+        Route::get('/{restaurant}', [App\Http\Controllers\Api\V1\Menu\RestaurantController::class, 'show'])
+            ->name('show');
     });
 });

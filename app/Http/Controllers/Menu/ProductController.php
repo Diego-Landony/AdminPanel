@@ -401,7 +401,8 @@ class ProductController extends Controller
         }
 
         try {
-            // Eliminar el producto
+            // Soft delete variants first, then the product
+            $product->variants()->delete();
             $product->delete();
 
             if ($request->expectsJson()) {

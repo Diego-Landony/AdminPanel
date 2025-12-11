@@ -17,7 +17,7 @@ beforeEach(function () {
     // Create category without variants
     $this->category = Category::factory()->create(['uses_variants' => false]);
 
-    // Create product with prices and associate it to the category
+    // Create product with prices (category_id already associates product to category)
     $this->product = Product::factory()->create([
         'category_id' => $this->category->id,
         'precio_pickup_capital' => 50.00,
@@ -25,14 +25,12 @@ beforeEach(function () {
         'precio_pickup_interior' => 45.00,
         'precio_domicilio_interior' => 50.00,
     ]);
-    $this->product->categories()->attach($this->category->id);
 
     // Create category with variants
     $this->categoryWithVariants = Category::factory()->create(['uses_variants' => true]);
     $this->productWithVariants = Product::factory()->create([
         'category_id' => $this->categoryWithVariants->id,
     ]);
-    $this->productWithVariants->categories()->attach($this->categoryWithVariants->id);
 
     // Create variant
     $this->variant = ProductVariant::factory()->create([

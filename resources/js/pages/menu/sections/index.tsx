@@ -134,7 +134,7 @@ export default function SectionsIndex({ sections, stats }: SectionsPageProps) {
             key: 'status',
             title: 'Estado',
             width: 'w-32',
-            textAlign: 'center' as const,
+            align: 'center' as const,
             render: (section: Section) => (
                 <div className="flex justify-center">
                     <StatusBadge status={section.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />
@@ -145,7 +145,7 @@ export default function SectionsIndex({ sections, stats }: SectionsPageProps) {
             key: 'actions',
             title: 'Acciones',
             width: 'w-24',
-            textAlign: 'right' as const,
+            align: 'right' as const,
             render: (section: Section) => (
                 <TableActions
                     editHref={`/menu/sections/${section.id}/edit`}

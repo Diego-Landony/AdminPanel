@@ -6,11 +6,11 @@ import React from 'react';
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
 import { CreateCustomerTypesSkeleton } from '@/components/skeletons';
-import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { ENTITY_ICONS } from '@/constants/section-icons';
 import { NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
@@ -145,11 +145,14 @@ export default function CustomerTypeCreate() {
                 </div>
 
                 {/* Estado activo */}
-                <div className="flex items-center space-x-2">
-                    <Checkbox id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked as boolean)} />
-                    <Label htmlFor="is_active" className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Tipo activo
-                    </Label>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                        <Label htmlFor="is_active" className="text-sm font-medium">
+                            Tipo Activo
+                        </Label>
+                        <p className="text-xs text-muted-foreground">El tipo estará disponible para asignar a clientes</p>
+                    </div>
+                    <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked)} />
                 </div>
             </FormSection>
         </CreatePageLayout>

@@ -9,6 +9,7 @@ import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
 import { CreateProductsSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -221,180 +222,201 @@ export default function BundleSpecialCreate({ products }: CreateBundleSpecialPag
             loading={processing}
             loadingSkeleton={CreateProductsSkeleton}
         >
-            <FormSection icon={Gift} title="Información Básica" description="Datos principales del combinado">
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                    <Label htmlFor="is_active" className="text-base">
-                        Combinado activo
-                    </Label>
-                    <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked as boolean)} />
-                </div>
+            <div className="space-y-8">
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={Gift} title="Información Básica" description="Datos principales del combinado">
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between rounded-lg border p-4">
+                                    <Label htmlFor="is_active" className="text-base">
+                                        Combinado activo
+                                    </Label>
+                                    <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked as boolean)} />
+                                </div>
 
-                <FormField label="Nombre" error={errors.name} required>
-                    <Input
-                        id="name"
-                        type="text"
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
-                    />
-                </FormField>
-
-                <FormField label="Descripción" error={errors.description}>
-                    <Textarea
-                        id="description"
-                        value={data.description}
-                        onChange={(e) => setData('description', e.target.value)}
-                        rows={2}
-                    />
-                </FormField>
-            </FormSection>
-
-            {hasInactiveProducts && (
-                <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
-                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                        ⚠ Advertencia: Este combinado tiene productos inactivos seleccionados. El combinado no estará disponible para los clientes hasta
-                        que se activen todos los productos.
-                    </p>
-                </div>
-            )}
-
-            <FormSection icon={Banknote} title={FORM_SECTIONS.specialPrices.title} description={FORM_SECTIONS.specialPrices.description} className="mt-8">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <FormField label="Precio Capital" error={errors.special_bundle_price_capital} required>
-                        <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
-                            <Input
-                                id="special_bundle_price_capital"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={data.special_bundle_price_capital}
-                                onChange={(e) => setData('special_bundle_price_capital', e.target.value)}
-                                placeholder={PLACEHOLDERS.price}
-                                className="pl-8"
-                            />
-                        </div>
-                    </FormField>
-
-                    <FormField label="Precio Interior" error={errors.special_bundle_price_interior} required>
-                        <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
-                            <Input
-                                id="special_bundle_price_interior"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={data.special_bundle_price_interior}
-                                onChange={(e) => setData('special_bundle_price_interior', e.target.value)}
-                                placeholder={PLACEHOLDERS.price}
-                                className="pl-8"
-                            />
-                        </div>
-                    </FormField>
-                </div>
-            </FormSection>
-
-            <FormSection
-                icon={Calendar}
-                title={FORM_SECTIONS.temporalValidity.title}
-                description={FORM_SECTIONS.temporalValidity.description}
-                className="mt-8"
-            >
-                <div className="space-y-4">
-                    <FormField label="Vigencia" required error={errors.validity_type}>
-                        <Select value={data.validity_type} onValueChange={(value) => setData('validity_type', value as typeof data.validity_type)}>
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="permanent">Permanente</SelectItem>
-                                <SelectItem value="date_range">Rango de Fechas</SelectItem>
-                                <SelectItem value="time_range">Rango de Horario</SelectItem>
-                                <SelectItem value="date_time_range">Fechas + Horario</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </FormField>
-
-                    {(data.validity_type === 'date_range' || data.validity_type === 'date_time_range') && (
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <FormField label="Fecha Inicio" required error={errors.valid_from}>
-                                <Input type="date" value={data.valid_from} onChange={(e) => setData('valid_from', e.target.value)} required />
-                            </FormField>
-
-                            <FormField label="Fecha Fin" required error={errors.valid_until}>
-                                <Input type="date" value={data.valid_until} onChange={(e) => setData('valid_until', e.target.value)} required />
-                            </FormField>
-                        </div>
-                    )}
-
-                    {(data.validity_type === 'time_range' || data.validity_type === 'date_time_range') && (
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <FormField label="Hora Inicio" required error={errors.time_from}>
-                                <Input type="time" value={data.time_from} onChange={(e) => setData('time_from', e.target.value)} required />
-                            </FormField>
-
-                            <FormField label="Hora Fin" required error={errors.time_until}>
-                                <Input type="time" value={data.time_until} onChange={(e) => setData('time_until', e.target.value)} required />
-                            </FormField>
-                        </div>
-                    )}
-
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between rounded-lg border p-4">
-                            <Label htmlFor="enable_weekdays" className="text-base">
-                                Limitar por días de la semana
-                            </Label>
-                            <Switch id="enable_weekdays" checked={enableWeekdays} onCheckedChange={setEnableWeekdays} />
-                        </div>
-
-                        {enableWeekdays && (
-                            <div className="rounded-lg border p-4">
-                                <WeekdaySelector value={data.weekdays} onChange={(days) => setData('weekdays', days)} error={errors.weekdays} />
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </FormSection>
-
-            <FormSection icon={Package} title={FORM_SECTIONS.combinadoItems.title} description={FORM_SECTIONS.combinadoItems.description} className="mt-8">
-                <div className="mb-4 flex items-center justify-between rounded-lg border border-muted bg-muted/50 px-4 py-2">
-                    <p className="text-sm text-muted-foreground">Un combinado debe tener al menos 2 items</p>
-                    <span className="text-xs font-medium text-muted-foreground">Actual: {localItems.length}</span>
-                </div>
-
-                {localItems.length > 0 ? (
-                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                        <SortableContext items={localItems.map((item) => item.id)} strategy={verticalListSortingStrategy}>
-                            <div className="space-y-4">
-                                {localItems.map((item, index) => (
-                                    <ComboItemCard
-                                        key={item.id}
-                                        item={item}
-                                        index={index}
-                                        products={products}
-                                        onUpdate={(field, value) => updateItem(index, field, value)}
-                                        onBatchUpdate={(updates) => batchUpdateItem(index, updates)}
-                                        onRemove={() => removeItem(index)}
-                                        errors={errors}
-                                        canDelete={true}
+                                <FormField label="Nombre" error={errors.name} required>
+                                    <Input
+                                        id="name"
+                                        type="text"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
                                     />
-                                ))}
+                                </FormField>
+
+                                <FormField label="Descripción" error={errors.description}>
+                                    <Textarea
+                                        id="description"
+                                        value={data.description}
+                                        onChange={(e) => setData('description', e.target.value)}
+                                        rows={2}
+                                    />
+                                </FormField>
                             </div>
-                        </SortableContext>
-                    </DndContext>
-                ) : (
-                    <div className="rounded-lg border border-dashed border-muted-foreground/25 p-8 text-center">
-                        <p className="text-sm text-muted-foreground">No hay items en el combinado</p>
-                        <p className="mt-1 text-xs text-muted-foreground">Agrega al menos 2 items para crear el combinado</p>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+
+                {hasInactiveProducts && (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
+                        <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                            ⚠ Advertencia: Este combinado tiene productos inactivos seleccionados. El combinado no estará disponible para los clientes hasta
+                            que se activen todos los productos.
+                        </p>
                     </div>
                 )}
 
-                <Button type="button" variant="outline" onClick={addItem} className="mt-4 w-full">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Agregar Item
-                </Button>
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={Banknote} title={FORM_SECTIONS.specialPrices.title} description={FORM_SECTIONS.specialPrices.description}>
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <FormField label="Precio Capital" error={errors.special_bundle_price_capital} required>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
+                                        <Input
+                                            id="special_bundle_price_capital"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={data.special_bundle_price_capital}
+                                            onChange={(e) => setData('special_bundle_price_capital', e.target.value)}
+                                            placeholder={PLACEHOLDERS.price}
+                                            className="pl-8"
+                                        />
+                                    </div>
+                                </FormField>
 
-                {errors.items && <p className="mt-2 text-sm text-destructive">{errors.items}</p>}
-            </FormSection>
+                                <FormField label="Precio Interior" error={errors.special_bundle_price_interior} required>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
+                                        <Input
+                                            id="special_bundle_price_interior"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={data.special_bundle_price_interior}
+                                            onChange={(e) => setData('special_bundle_price_interior', e.target.value)}
+                                            placeholder={PLACEHOLDERS.price}
+                                            className="pl-8"
+                                        />
+                                    </div>
+                                </FormField>
+                            </div>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection
+                            icon={Calendar}
+                            title={FORM_SECTIONS.temporalValidity.title}
+                            description={FORM_SECTIONS.temporalValidity.description}
+                        >
+                            <div className="space-y-4">
+                                <FormField label="Vigencia" required error={errors.validity_type}>
+                                    <Select value={data.validity_type} onValueChange={(value) => setData('validity_type', value as typeof data.validity_type)}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="permanent">Permanente</SelectItem>
+                                            <SelectItem value="date_range">Rango de Fechas</SelectItem>
+                                            <SelectItem value="time_range">Rango de Horario</SelectItem>
+                                            <SelectItem value="date_time_range">Fechas + Horario</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </FormField>
+
+                                {(data.validity_type === 'date_range' || data.validity_type === 'date_time_range') && (
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <FormField label="Fecha Inicio" required error={errors.valid_from}>
+                                            <Input type="date" value={data.valid_from} onChange={(e) => setData('valid_from', e.target.value)} required />
+                                        </FormField>
+
+                                        <FormField label="Fecha Fin" required error={errors.valid_until}>
+                                            <Input type="date" value={data.valid_until} onChange={(e) => setData('valid_until', e.target.value)} required />
+                                        </FormField>
+                                    </div>
+                                )}
+
+                                {(data.validity_type === 'time_range' || data.validity_type === 'date_time_range') && (
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <FormField label="Hora Inicio" required error={errors.time_from}>
+                                            <Input type="time" value={data.time_from} onChange={(e) => setData('time_from', e.target.value)} required />
+                                        </FormField>
+
+                                        <FormField label="Hora Fin" required error={errors.time_until}>
+                                            <Input type="time" value={data.time_until} onChange={(e) => setData('time_until', e.target.value)} required />
+                                        </FormField>
+                                    </div>
+                                )}
+
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between rounded-lg border p-4">
+                                        <Label htmlFor="enable_weekdays" className="text-base">
+                                            Limitar por días de la semana
+                                        </Label>
+                                        <Switch id="enable_weekdays" checked={enableWeekdays} onCheckedChange={setEnableWeekdays} />
+                                    </div>
+
+                                    {enableWeekdays && (
+                                        <div className="rounded-lg border p-4">
+                                            <WeekdaySelector value={data.weekdays} onChange={(days) => setData('weekdays', days)} error={errors.weekdays} />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={Package} title={FORM_SECTIONS.combinadoItems.title} description={FORM_SECTIONS.combinadoItems.description}>
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between rounded-lg border border-muted bg-muted/50 px-4 py-2">
+                                    <p className="text-sm text-muted-foreground">Un combinado debe tener al menos 2 items</p>
+                                    <span className="text-xs font-medium text-muted-foreground">Actual: {localItems.length}</span>
+                                </div>
+
+                                {localItems.length > 0 ? (
+                                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                        <SortableContext items={localItems.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+                                            <div className="space-y-4">
+                                                {localItems.map((item, index) => (
+                                                    <ComboItemCard
+                                                        key={item.id}
+                                                        item={item}
+                                                        index={index}
+                                                        products={products}
+                                                        onUpdate={(field, value) => updateItem(index, field, value)}
+                                                        onBatchUpdate={(updates) => batchUpdateItem(index, updates)}
+                                                        onRemove={() => removeItem(index)}
+                                                        errors={errors}
+                                                        canDelete={true}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </SortableContext>
+                                    </DndContext>
+                                ) : (
+                                    <div className="rounded-lg border border-dashed border-muted-foreground/25 p-8 text-center">
+                                        <p className="text-sm text-muted-foreground">No hay items en el combinado</p>
+                                        <p className="mt-1 text-xs text-muted-foreground">Agrega al menos 2 items para crear el combinado</p>
+                                    </div>
+                                )}
+
+                                <Button type="button" variant="outline" onClick={addItem} className="w-full">
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Agregar Item
+                                </Button>
+
+                                {errors.items && <p className="mt-2 text-sm text-destructive">{errors.items}</p>}
+                            </div>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+            </div>
         </CreatePageLayout>
     );
 }

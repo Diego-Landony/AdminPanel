@@ -10,10 +10,12 @@ import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
 import { CreateSectionsSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { ENTITY_ICONS } from '@/constants/section-icons';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
@@ -210,99 +212,110 @@ export default function SectionCreate() {
             loading={processing}
             loadingSkeleton={CreateSectionsSkeleton}
         >
-            <FormSection icon={ListChecks} title="Información Básica" description="Datos principales de la sección">
-                {/* Título */}
-                <FormField label="Título" error={errors.title} required>
-                    <Input id="title" type="text" value={data.title} onChange={(e) => setData('title', e.target.value)} />
-                </FormField>
+            <div className="space-y-8">
+                {/* Información Básica */}
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={ListChecks} title="Información Básica" description="Datos principales de la sección">
+                            <div className="space-y-6">
+                                <FormField label="Título" error={errors.title} required>
+                                    <Input id="title" type="text" value={data.title} onChange={(e) => setData('title', e.target.value)} />
+                                </FormField>
 
-                {/* Descripción */}
-                <FormField label="Descripción" error={errors.description}>
-                    <Textarea id="description" value={data.description} onChange={(e) => setData('description', e.target.value)} rows={2} />
-                </FormField>
+                                <FormField label="Descripción" error={errors.description}>
+                                    <Textarea id="description" value={data.description} onChange={(e) => setData('description', e.target.value)} rows={2} />
+                                </FormField>
 
-                <div className="space-y-3">
-                    {/* Es requerida */}
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
-                            id="is_required"
-                            checked={data.is_required}
-                            onCheckedChange={(checked) => setData('is_required', checked as boolean)}
-                        />
-                        <Label htmlFor="is_required" className="cursor-pointer text-sm leading-none font-medium">
-                            Obligatoria
-                        </Label>
-                    </div>
-
-                    {/* Permite múltiples selecciones */}
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
-                            id="allow_multiple"
-                            checked={data.allow_multiple}
-                            onCheckedChange={(checked) => setData('allow_multiple', checked as boolean)}
-                        />
-                        <Label htmlFor="allow_multiple" className="cursor-pointer text-sm leading-none font-medium">
-                            Selección múltiple
-                        </Label>
-                    </div>
-
-                    {/* Sección activa */}
-                    <div className="flex items-center space-x-2">
-                        <Checkbox id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked as boolean)} />
-                        <Label htmlFor="is_active" className="cursor-pointer text-sm leading-none font-medium">
-                            Sección activa
-                        </Label>
-                    </div>
-                </div>
-
-                {/* Selecciones mínimas/máximas - solo si allow_multiple */}
-                {data.allow_multiple && (
-                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                        <FormField label="Mínimo de items seleccionables" error={errors.min_selections}>
-                            <Input
-                                id="min_selections"
-                                type="number"
-                                min="1"
-                                value={data.min_selections}
-                                onChange={(e) => setData('min_selections', e.target.value)}
-                            />
-                        </FormField>
-
-                        <FormField label="Máximo de items seleccionables" error={errors.max_selections}>
-                            <Input
-                                id="max_selections"
-                                type="number"
-                                min="1"
-                                value={data.max_selections}
-                                onChange={(e) => setData('max_selections', e.target.value)}
-                            />
-                        </FormField>
-                    </div>
-                )}
-            </FormSection>
-
-            <FormSection icon={ENTITY_ICONS.menu.sectionOptions} title="Opciones" description="Define las opciones disponibles en esta sección">
-                <div className="space-y-3">
-                    {localOptions.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">Sin items aún</p>
-                    ) : (
-                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                            <SortableContext items={localOptions.map((opt) => opt.id)} strategy={verticalListSortingStrategy}>
-                                <div className="space-y-3">
-                                    {localOptions.map((option, index) => (
-                                        <SortableItem key={option.id} option={option} index={index} onUpdate={updateOption} onRemove={removeOption} />
-                                    ))}
+                                <div className="flex items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                        <Label htmlFor="is_active" className="text-sm font-medium">
+                                            Sección Activa
+                                        </Label>
+                                        <p className="text-xs text-muted-foreground">La sección estará disponible en el menú</p>
+                                    </div>
+                                    <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked)} />
                                 </div>
-                            </SortableContext>
-                        </DndContext>
-                    )}
 
-                    <Button type="button" onClick={addOption} size="sm" variant="outline" className="w-full">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Agregar Item
-                    </Button>
-                </div>
-            </FormSection>
+                                <div className="grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2">
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id="is_required"
+                                            checked={data.is_required}
+                                            onCheckedChange={(checked) => setData('is_required', checked as boolean)}
+                                        />
+                                        <Label htmlFor="is_required" className="cursor-pointer text-sm font-medium leading-none">
+                                            Obligatoria
+                                        </Label>
+                                    </div>
+
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id="allow_multiple"
+                                            checked={data.allow_multiple}
+                                            onCheckedChange={(checked) => setData('allow_multiple', checked as boolean)}
+                                        />
+                                        <Label htmlFor="allow_multiple" className="cursor-pointer text-sm font-medium leading-none">
+                                            Selección múltiple
+                                        </Label>
+                                    </div>
+                                </div>
+
+                                {data.allow_multiple && (
+                                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                        <FormField label="Mínimo de items seleccionables" error={errors.min_selections}>
+                                            <Input
+                                                id="min_selections"
+                                                type="number"
+                                                min="1"
+                                                value={data.min_selections}
+                                                onChange={(e) => setData('min_selections', e.target.value)}
+                                            />
+                                        </FormField>
+
+                                        <FormField label="Máximo de items seleccionables" error={errors.max_selections}>
+                                            <Input
+                                                id="max_selections"
+                                                type="number"
+                                                min="1"
+                                                value={data.max_selections}
+                                                onChange={(e) => setData('max_selections', e.target.value)}
+                                            />
+                                        </FormField>
+                                    </div>
+                                )}
+                            </div>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+
+                {/* Opciones */}
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={ENTITY_ICONS.menu.sectionOptions} title="Opciones" description="Define las opciones disponibles en esta sección">
+                            <div className="space-y-3">
+                                {localOptions.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground">Sin items aún</p>
+                                ) : (
+                                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                        <SortableContext items={localOptions.map((opt) => opt.id)} strategy={verticalListSortingStrategy}>
+                                            <div className="space-y-3">
+                                                {localOptions.map((option, index) => (
+                                                    <SortableItem key={option.id} option={option} index={index} onUpdate={updateOption} onRemove={removeOption} />
+                                                ))}
+                                            </div>
+                                        </SortableContext>
+                                    </DndContext>
+                                )}
+
+                                <Button type="button" onClick={addOption} size="sm" variant="outline" className="w-full">
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Agregar Item
+                                </Button>
+                            </div>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+            </div>
         </CreatePageLayout>
     );
 }

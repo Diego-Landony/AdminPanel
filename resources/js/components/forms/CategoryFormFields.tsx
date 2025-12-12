@@ -5,6 +5,7 @@
 
 import { FormSection } from '@/components/form-section';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Card, CardContent } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,75 +33,91 @@ export function CategoryFormFields({
     const isEdit = mode === 'edit';
 
     return (
-        <>
-            <FormSection icon={Layers} title="Información Básica">
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                    <Label htmlFor="is_active" className="text-base">
-                        Activa
-                    </Label>
-                    <Switch
-                        id="is_active"
-                        checked={formData.is_active}
-                        onCheckedChange={(checked) => onInputChange('is_active', checked as boolean)}
-                    />
-                </div>
+        <div className="space-y-8">
+            {/* Informacion Basica */}
+            <Card>
+                <CardContent className="pt-6">
+                    <FormSection icon={Layers} title="Información Básica" description="Configuración general de la categoría">
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2">
+                                <div className="flex items-center justify-between md:flex-col md:items-start md:gap-2">
+                                    <Label htmlFor="is_active" className="cursor-pointer text-sm font-medium">
+                                        Activa
+                                    </Label>
+                                    <Switch
+                                        id="is_active"
+                                        checked={formData.is_active}
+                                        onCheckedChange={(checked) => onInputChange('is_active', checked as boolean)}
+                                    />
+                                </div>
 
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                    <Label htmlFor="is_combo_category" className="text-base">
-                        Categoría de combos
-                    </Label>
-                    <Switch
-                        id="is_combo_category"
-                        checked={formData.is_combo_category}
-                        onCheckedChange={(checked) => onInputChange('is_combo_category', checked as boolean)}
-                    />
-                </div>
+                                <div className="flex items-center justify-between md:flex-col md:items-start md:gap-2">
+                                    <Label htmlFor="is_combo_category" className="cursor-pointer text-sm font-medium">
+                                        Categoría de combos
+                                    </Label>
+                                    <Switch
+                                        id="is_combo_category"
+                                        checked={formData.is_combo_category}
+                                        onCheckedChange={(checked) => onInputChange('is_combo_category', checked as boolean)}
+                                    />
+                                </div>
+                            </div>
 
-                <FormField label="Nombre" error={errors.name} required>
-                    <Input
-                        id="name"
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => onInputChange('name', e.target.value)}
-                    />
-                </FormField>
-            </FormSection>
+                            <FormField label="Nombre" error={errors.name} required>
+                                <Input
+                                    id="name"
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={(e) => onInputChange('name', e.target.value)}
+                                />
+                            </FormField>
+                        </div>
+                    </FormSection>
+                </CardContent>
+            </Card>
 
-            <FormSection icon={ListOrdered} title="Variantes">
-                {isEdit && formData.uses_variants && variantsChanged && (
-                    <Alert variant="default" className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950">
-                        <AlertCircle className="h-4 w-4 text-yellow-600" />
-                        <AlertTitle className="text-yellow-800 dark:text-yellow-200">Atención</AlertTitle>
-                        <AlertDescription className="text-yellow-700 dark:text-yellow-300">
-                            Los cambios se aplicarán a todos los productos de esta categoría.
-                        </AlertDescription>
-                    </Alert>
-                )}
+            {/* Variantes */}
+            <Card>
+                <CardContent className="pt-6">
+                    <FormSection icon={ListOrdered} title="Variantes" description="Define las variantes disponibles para los productos">
+                        <div className="space-y-6">
+                            {isEdit && formData.uses_variants && variantsChanged && (
+                                <Alert variant="default" className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950">
+                                    <AlertCircle className="h-4 w-4 text-yellow-600" />
+                                    <AlertTitle className="text-yellow-800 dark:text-yellow-200">Atención</AlertTitle>
+                                    <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+                                        Los cambios se aplicarán a todos los productos de esta categoría.
+                                    </AlertDescription>
+                                </Alert>
+                            )}
 
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                    <Label htmlFor="uses_variants" className="text-base">
-                        Usa variantes
-                    </Label>
-                    <Switch
-                        id="uses_variants"
-                        checked={formData.uses_variants}
-                        onCheckedChange={(checked) => onInputChange('uses_variants', checked as boolean)}
-                    />
-                </div>
+                            <div className="flex items-center justify-between rounded-lg border p-4">
+                                <Label htmlFor="uses_variants" className="cursor-pointer text-sm font-medium">
+                                    Usa variantes
+                                </Label>
+                                <Switch
+                                    id="uses_variants"
+                                    checked={formData.uses_variants}
+                                    onCheckedChange={(checked) => onInputChange('uses_variants', checked as boolean)}
+                                />
+                            </div>
 
-                {formData.uses_variants && (
-                    <div className="space-y-2">
-                        <Label className="text-sm font-medium">
-                            Variantes <span className="text-destructive">*</span>
-                        </Label>
-                        <VariantDefinitionsInput
-                            variants={formData.variant_definitions}
-                            onChange={(variants) => onInputChange('variant_definitions', variants)}
-                            error={errors.variant_definitions}
-                        />
-                    </div>
-                )}
-            </FormSection>
-        </>
+                            {formData.uses_variants && (
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium">
+                                        Variantes <span className="text-destructive">*</span>
+                                    </Label>
+                                    <VariantDefinitionsInput
+                                        variants={formData.variant_definitions}
+                                        onChange={(variants) => onInputChange('variant_definitions', variants)}
+                                        error={errors.variant_definitions}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </FormSection>
+                </CardContent>
+            </Card>
+        </div>
     );
 }

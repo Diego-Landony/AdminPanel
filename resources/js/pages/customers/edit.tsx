@@ -11,6 +11,7 @@ import { FormSection } from '@/components/form-section';
 import { EditCustomersSkeleton } from '@/components/skeletons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -248,88 +249,101 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
             onReset={handleReset}
             showResetButton={true}
         >
-            <FormSection icon={User} title="Información Personal">
-                <FormField label="Nombre" error={errors.first_name} required>
-                    <Input type="text" value={data.first_name} onChange={(e) => setData('first_name', e.target.value)} autoComplete="given-name" />
-                </FormField>
+            <div className="space-y-8">
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection
+                            icon={User}
+                            title="Información Personal"
+                            description="Detalles básicos del perfil del cliente"
+                        >
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FormField label="Nombre" error={errors.first_name} required>
+                                    <Input type="text" value={data.first_name} onChange={(e) => setData('first_name', e.target.value)} autoComplete="given-name" />
+                                </FormField>
 
-                <FormField label="Apellido" error={errors.last_name} required>
-                    <Input type="text" value={data.last_name} onChange={(e) => setData('last_name', e.target.value)} autoComplete="family-name" />
-                </FormField>
+                                <FormField label="Apellido" error={errors.last_name} required>
+                                    <Input type="text" value={data.last_name} onChange={(e) => setData('last_name', e.target.value)} autoComplete="family-name" />
+                                </FormField>
 
-                <FormField label="Email" error={errors.email} required>
-                    <div className="relative">
-                        <Mail className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="email"
-                            value={data.email}
-                            onChange={(e) => setData('email', e.target.value)}
-                            placeholder={PLACEHOLDERS.email}
-                            autoComplete={AUTOCOMPLETE.email}
-                            className="pl-10"
-                        />
-                    </div>
-                </FormField>
+                                <FormField label="Email" error={errors.email} required>
+                                    <div className="relative">
+                                        <Mail className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            type="email"
+                                            value={data.email}
+                                            onChange={(e) => setData('email', e.target.value)}
+                                            placeholder={PLACEHOLDERS.email}
+                                            autoComplete={AUTOCOMPLETE.email}
+                                            className="pl-10"
+                                        />
+                                    </div>
+                                </FormField>
 
-                <FormField label="Tarjeta Subway" error={errors.subway_card} required description={FIELD_DESCRIPTIONS.subwayCard}>
-                    <div className="relative">
-                        <CreditCard className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="text"
-                            value={data.subway_card}
-                            onChange={(e) => setData('subway_card', e.target.value)}
-                            placeholder={PLACEHOLDERS.subwayCard}
-                            className="pl-10"
-                        />
-                    </div>
-                </FormField>
+                                <FormField label="Tarjeta Subway" error={errors.subway_card} required description={FIELD_DESCRIPTIONS.subwayCard}>
+                                    <div className="relative">
+                                        <CreditCard className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            type="text"
+                                            value={data.subway_card}
+                                            onChange={(e) => setData('subway_card', e.target.value)}
+                                            placeholder={PLACEHOLDERS.subwayCard}
+                                            className="pl-10"
+                                        />
+                                    </div>
+                                </FormField>
 
-                <FormField label="Fecha de Nacimiento" error={errors.birth_date} required>
-                    <div className="relative">
-                        <Calendar className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="date"
-                            value={data.birth_date}
-                            onChange={(e) => setData('birth_date', e.target.value)}
-                            className="pl-10"
-                            max={new Date().toISOString().split('T')[0]}
-                        />
-                    </div>
-                </FormField>
+                                <FormField label="Fecha de Nacimiento" error={errors.birth_date} required>
+                                    <div className="relative">
+                                        <Calendar className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            type="date"
+                                            value={data.birth_date}
+                                            onChange={(e) => setData('birth_date', e.target.value)}
+                                            className="pl-10"
+                                            max={new Date().toISOString().split('T')[0]}
+                                        />
+                                    </div>
+                                </FormField>
 
-                <FormField label="Género" error={errors.gender}>
-                    <Select value={data.gender} onValueChange={(value) => setData('gender', value)}>
-                        <SelectTrigger>
-                            <SelectValue placeholder={PLACEHOLDERS.selectGender} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="male">Masculino</SelectItem>
-                            <SelectItem value="female">Femenino</SelectItem>
-                            <SelectItem value="other">Otro</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </FormField>
+                                <FormField label="Género" error={errors.gender}>
+                                    <Select value={data.gender} onValueChange={(value) => setData('gender', value)}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={PLACEHOLDERS.selectGender} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="male">Masculino</SelectItem>
+                                            <SelectItem value="female">Femenino</SelectItem>
+                                            <SelectItem value="other">Otro</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </FormField>
 
-                <FormField label="Tipo de Cliente" error={errors.customer_type_id}>
-                    <Select
-                        value={data.customer_type_id?.toString() || ''}
-                        onValueChange={(value) => setData('customer_type_id', value ? parseInt(value) : null)}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder={PLACEHOLDERS.selectCustomerType} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {customer_types.map((type) => (
-                                <SelectItem key={type.id} value={type.id.toString()}>
-                                    {type.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </FormField>
-            </FormSection>
+                                <FormField label="Tipo de Cliente" error={errors.customer_type_id}>
+                                    <Select
+                                        value={data.customer_type_id?.toString() || ''}
+                                        onValueChange={(value) => setData('customer_type_id', value ? parseInt(value) : null)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={PLACEHOLDERS.selectCustomerType} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {customer_types.map((type) => (
+                                                <SelectItem key={type.id} value={type.id.toString()}>
+                                                    {type.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </FormField>
+                            </div>
+                        </FormSection>
+                    </CardContent>
+                </Card>
 
-            <FormSection icon={Phone} title="Información de Contacto">
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={Phone} title="Información de Contacto" description="Teléfono, direcciones y datos fiscales">
                 <FormField label="Teléfono" error={errors.phone}>
                     <div className="relative">
                         <Phone className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
@@ -471,9 +485,13 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
                         </div>
                     )}
                 </div>
-            </FormSection>
+                        </FormSection>
+                    </CardContent>
+                </Card>
 
-            <FormSection icon={Lock} title="Seguridad">
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={Lock} title="Seguridad" description="Configuración de acceso y contraseña">
                 <FormField label="Contraseña" error={errors.password} description={FIELD_DESCRIPTIONS.password}>
                     <div className="relative">
                         <Lock className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
@@ -510,9 +528,13 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
                         />
                     </div>
                 </FormField>
-            </FormSection>
+                        </FormSection>
+                    </CardContent>
+                </Card>
 
-            <FormSection icon={User} title="Información del Sistema">
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={User} title="Información del Sistema" description="Datos del registro del cliente">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
                         <span className="text-xs text-muted-foreground">ID</span>
@@ -545,7 +567,10 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
                         <p className="text-sm">{formatDate(customer.last_activity_at)}</p>
                     </div>
                 </div>
-            </FormSection>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+            </div>
 
             <AddressFormModal isOpen={addressModalOpen} onClose={() => setAddressModalOpen(false)} customerId={customer.id} address={selectedAddress} />
 

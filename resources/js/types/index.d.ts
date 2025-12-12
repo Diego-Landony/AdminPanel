@@ -7,6 +7,12 @@ declare global {
 // Re-export model types
 export * from './models';
 
+// Re-export common types (pagination, filters, columns, etc.)
+export * from './common';
+
+// Re-export component types (advanced type-safe components)
+export * from './components';
+
 // Extend Inertia core types
 declare module '@inertiajs/core' {
     export interface PageProps {

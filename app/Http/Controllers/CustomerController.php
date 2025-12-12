@@ -26,19 +26,9 @@ class CustomerController extends Controller
     {
         // Obtener parámetros de búsqueda, paginación y ordenamiento
         $search = $request->get('search', '');
-        $perPage = $request->get('per_page', 10);
+        $perPage = $request->get('per_page', 15);
         $sortField = $request->get('sort_field', 'created_at');
         $sortDirection = $request->get('sort_direction', 'desc');
-        $sortCriteria = $request->get('sort_criteria');
-
-        // Parse multiple sort criteria if provided
-        $multipleSortCriteria = [];
-        if ($sortCriteria) {
-            $decoded = json_decode($sortCriteria, true);
-            if (is_array($decoded)) {
-                $multipleSortCriteria = $decoded;
-            }
-        }
 
         // Query base con relación de tipo de cliente y conteo de direcciones y NITs
         // IMPORTANTE: select() debe ir ANTES de withCount() para no sobrescribir las columnas de conteo
@@ -78,49 +68,23 @@ class CustomerController extends Controller
             });
         }
 
-        // Aplicar ordenamiento múltiple si está disponible
-        if (! empty($multipleSortCriteria)) {
-            foreach ($multipleSortCriteria as $criteria) {
-                $field = $criteria['field'] ?? 'created_at';
-                $direction = $criteria['direction'] ?? 'desc';
-
-                if ($field === 'customer' || $field === 'name') {
-                    $query->orderBy('first_name', $direction)->orderBy('last_name', $direction);
-                } elseif ($field === 'status') {
-                    $query->orderByRaw('
-                        CASE
-                            WHEN last_activity_at IS NULL THEN 4
-                            WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
-                            WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
-                            ELSE 3
-                        END '.($direction === 'asc' ? 'ASC' : 'DESC'));
-                } elseif ($field === 'points') {
-                    $query->orderBy('points', $direction);
-                } elseif ($field === 'last_purchase') {
-                    $query->orderBy('last_purchase_at', $direction);
-                } else {
-                    $query->orderBy($field, $direction);
-                }
-            }
+        // Aplicar ordenamiento
+        if ($sortField === 'customer' || $sortField === 'name') {
+            $query->orderBy('first_name', $sortDirection)->orderBy('last_name', $sortDirection);
+        } elseif ($sortField === 'status') {
+            $query->orderByRaw('
+                CASE
+                    WHEN last_activity_at IS NULL THEN 4
+                    WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
+                    WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
+                    ELSE 3
+                END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
+        } elseif ($sortField === 'points') {
+            $query->orderBy('points', $sortDirection);
+        } elseif ($sortField === 'last_purchase') {
+            $query->orderBy('last_purchase_at', $sortDirection);
         } else {
-            // Fallback a ordenamiento único
-            if ($sortField === 'customer' || $sortField === 'name') {
-                $query->orderBy('first_name', $sortDirection)->orderBy('last_name', $sortDirection);
-            } elseif ($sortField === 'status') {
-                $query->orderByRaw('
-                    CASE
-                        WHEN last_activity_at IS NULL THEN 4
-                        WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
-                        WHEN last_activity_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 2
-                        ELSE 3
-                    END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
-            } elseif ($sortField === 'points') {
-                $query->orderBy('points', $sortDirection);
-            } elseif ($sortField === 'last_purchase') {
-                $query->orderBy('last_purchase_at', $sortDirection);
-            } else {
-                $query->orderBy($sortField, $sortDirection);
-            }
+            $query->orderBy($sortField, $sortDirection);
         }
 
         // Paginar y obtener clientes
@@ -212,7 +176,6 @@ class CustomerController extends Controller
                 'per_page' => (int) $perPage,
                 'sort_field' => $sortField,
                 'sort_direction' => $sortDirection,
-                'sort_criteria' => $multipleSortCriteria,
             ],
         ]);
     }

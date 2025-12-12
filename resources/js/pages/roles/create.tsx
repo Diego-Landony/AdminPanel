@@ -6,6 +6,7 @@ import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
 import { PermissionsTable } from '@/components/PermissionsTable';
 import { CreateRolesSkeleton } from '@/components/skeletons';
+import { Card, CardContent } from '@/components/ui/card';
 import { FormError } from '@/components/ui/form-error';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
@@ -81,29 +82,43 @@ export default function CreateRole({ permissions }: CreateRolePageProps) {
             loading={processing}
             loadingSkeleton={CreateRolesSkeleton}
         >
-            <FormSection icon={ENTITY_ICONS.role.info} title="Información del Rol">
-                <FormField label="Nombre del Rol" error={errors.name} required>
-                    <Input id="name" type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} />
-                </FormField>
+            <div className="space-y-8">
+                {/* Información del Rol */}
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={ENTITY_ICONS.role.info} title="Información del Rol" description="Datos básicos del rol">
+                            <div className="space-y-6">
+                                <FormField label="Nombre del Rol" error={errors.name} required>
+                                    <Input id="name" type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} />
+                                </FormField>
 
-                <FormField label="Descripción" error={errors.description}>
-                    <Textarea
-                        id="description"
-                        value={data.description}
-                        onChange={(e) => setData('description', e.target.value)}
-                        className="min-h-[100px]"
-                    />
-                </FormField>
-            </FormSection>
+                                <FormField label="Descripción" error={errors.description}>
+                                    <Textarea
+                                        id="description"
+                                        value={data.description}
+                                        onChange={(e) => setData('description', e.target.value)}
+                                        className="min-h-[100px]"
+                                    />
+                                </FormField>
+                            </div>
+                        </FormSection>
+                    </CardContent>
+                </Card>
 
-            <FormSection
-                icon={ENTITY_ICONS.role.permissions}
-                title="Permisos del Rol"
-                description="Selecciona las acciones que este rol puede realizar"
-            >
-                <PermissionsTable selectedPermissions={data.permissions} onPermissionChange={handlePermissionChange} permissions={permissions} />
-                {errors.permissions && <FormError message={errors.permissions} />}
-            </FormSection>
+                {/* Permisos del Rol */}
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection
+                            icon={ENTITY_ICONS.role.permissions}
+                            title="Permisos del Rol"
+                            description="Selecciona las acciones que este rol puede realizar"
+                        >
+                            <PermissionsTable selectedPermissions={data.permissions} onPermissionChange={handlePermissionChange} permissions={permissions} />
+                            {errors.permissions && <FormError message={errors.permissions} />}
+                        </FormSection>
+                    </CardContent>
+                </Card>
+            </div>
         </CreatePageLayout>
     );
 }

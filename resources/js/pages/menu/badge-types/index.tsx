@@ -140,14 +140,14 @@ export default function BadgeTypesIndex({ badgeTypes, stats }: BadgeTypesPagePro
             key: 'usage',
             title: 'Usos',
             width: 'w-24',
-            textAlign: 'center' as const,
+            align: 'center' as const,
             render: (badge: BadgeType) => <span className="text-sm text-muted-foreground">{badge.product_badges_count}</span>,
         },
         {
             key: 'status',
             title: 'Estado',
             width: 'w-32',
-            textAlign: 'center' as const,
+            align: 'center' as const,
             render: (badge: BadgeType) => (
                 <div className="flex justify-center">
                     <StatusBadge status={badge.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />
@@ -158,7 +158,7 @@ export default function BadgeTypesIndex({ badgeTypes, stats }: BadgeTypesPagePro
             key: 'actions',
             title: 'Acciones',
             width: 'w-24',
-            textAlign: 'right' as const,
+            align: 'right' as const,
             render: (badge: BadgeType) => (
                 <TableActions
                     editHref={`/menu/badge-types/${badge.id}/edit`}

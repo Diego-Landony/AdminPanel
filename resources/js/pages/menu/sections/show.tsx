@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 
 import { ACTIVE_STATUS_CONFIGS, StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
+import { CURRENCY } from '@/constants/ui-constants';
 import AppLayout from '@/layouts/app-layout';
 import { ArrowLeft, Check, ListChecks, Package, X } from 'lucide-react';
 
@@ -100,7 +101,7 @@ export default function ShowSection({ section }: ShowSectionProps) {
                                         <span className="font-medium">{option.name}</span>
                                         {option.is_extra && (
                                             <span className="ml-2 text-sm text-muted-foreground">
-                                                (+Q{Number(option.price_modifier).toFixed(2)})
+                                                (+{CURRENCY.symbol}{Number(option.price_modifier).toFixed(2)})
                                             </span>
                                         )}
                                     </div>

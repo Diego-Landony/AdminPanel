@@ -7,6 +7,7 @@ import { FormSection } from '@/components/form-section';
 import { PermissionsTable } from '@/components/PermissionsTable';
 import { EditRolesSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { FormError } from '@/components/ui/form-error';
@@ -168,29 +169,36 @@ export default function EditRole({ role, all_users, permissions }: EditRolePageP
             loading={processing}
             loadingSkeleton={EditRolesSkeleton}
         >
-            <FormSection icon={ENTITY_ICONS.role.info} title="Información Básica">
-                <FormField label="Nombre del Rol" error={errors.name}>
-                    <Input
-                        id="name"
-                        type="text"
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
-                        placeholder={PLACEHOLDERS.roleName}
-                        disabled={isAdminRole}
-                        className={isAdminRole ? 'cursor-not-allowed opacity-50' : ''}
-                    />
-                </FormField>
+            <div className="space-y-8">
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={ENTITY_ICONS.role.info} title="Información Básica" description="Datos básicos del rol">
+                            <div className="space-y-6">
+                                <FormField label="Nombre del Rol" error={errors.name}>
+                                    <Input
+                                        id="name"
+                                        type="text"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
+                                        placeholder={PLACEHOLDERS.roleName}
+                                        disabled={isAdminRole}
+                                        className={isAdminRole ? 'cursor-not-allowed opacity-50' : ''}
+                                    />
+                                </FormField>
 
-                <FormField label="Descripción" error={errors.description}>
-                    <Textarea
-                        id="description"
-                        value={data.description}
-                        onChange={(e) => setData('description', e.target.value)}
-                        className={`min-h-[100px] ${isAdminRole ? 'cursor-not-allowed opacity-50' : ''}`}
-                        disabled={isAdminRole}
-                    />
-                </FormField>
-            </FormSection>
+                                <FormField label="Descripción" error={errors.description}>
+                                    <Textarea
+                                        id="description"
+                                        value={data.description}
+                                        onChange={(e) => setData('description', e.target.value)}
+                                        className={`min-h-[100px] ${isAdminRole ? 'cursor-not-allowed opacity-50' : ''}`}
+                                        disabled={isAdminRole}
+                                    />
+                                </FormField>
+                            </div>
+                        </FormSection>
+                    </CardContent>
+                </Card>
 
             {/* Gestión de usuarios */}
             <div className="flex justify-start py-6">
@@ -253,32 +261,37 @@ export default function EditRole({ role, all_users, permissions }: EditRolePageP
                 </Dialog>
             </div>
 
-            <FormSection
-                icon={ENTITY_ICONS.role.permissions}
-                title="Permisos del Rol"
-                description={
-                    role.name === 'admin'
-                        ? 'Este rol tiene automáticamente todos los permisos del sistema'
-                        : 'Selecciona las acciones que este rol puede realizar en cada página'
-                }
-            >
-                {role.name === 'admin' && (
-                    <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-3">
-                        <p className="text-sm text-green-800">
-                            <strong>Permisos Automáticos:</strong> El rol Administrador tiene acceso completo a todas las funcionalidades del sistema
-                            y se actualiza automáticamente cuando se agregan nuevas páginas o funcionalidades.
-                        </p>
-                    </div>
-                )}
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection
+                            icon={ENTITY_ICONS.role.permissions}
+                            title="Permisos del Rol"
+                            description={
+                                role.name === 'admin'
+                                    ? 'Este rol tiene automáticamente todos los permisos del sistema'
+                                    : 'Selecciona las acciones que este rol puede realizar en cada página'
+                            }
+                        >
+                            {role.name === 'admin' && (
+                                <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-3">
+                                    <p className="text-sm text-green-800">
+                                        <strong>Permisos Automáticos:</strong> El rol Administrador tiene acceso completo a todas las funcionalidades del sistema
+                                        y se actualiza automáticamente cuando se agregan nuevas páginas o funcionalidades.
+                                    </p>
+                                </div>
+                            )}
 
-                <PermissionsTable
-                    selectedPermissions={data.permissions}
-                    onPermissionChange={handlePermissionChange}
-                    permissions={permissions}
-                    disabled={isAdminRole}
-                />
-                {errors.permissions && <FormError message={errors.permissions} />}
-            </FormSection>
+                            <PermissionsTable
+                                selectedPermissions={data.permissions}
+                                onPermissionChange={handlePermissionChange}
+                                permissions={permissions}
+                                disabled={isAdminRole}
+                            />
+                            {errors.permissions && <FormError message={errors.permissions} />}
+                        </FormSection>
+                    </CardContent>
+                </Card>
+            </div>
         </EditPageLayout>
     );
 }

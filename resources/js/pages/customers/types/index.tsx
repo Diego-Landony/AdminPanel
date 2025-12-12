@@ -148,7 +148,7 @@ export default function CustomerTypesIndex({ customer_types, stats, filters }: C
             key: 'customers_count',
             title: 'Clientes',
             width: 'sm' as const,
-            textAlign: 'center' as const,
+            align: 'center' as const,
             render: (type: CustomerType) => (
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                     <Users className="h-4 w-4" />
@@ -160,7 +160,7 @@ export default function CustomerTypesIndex({ customer_types, stats, filters }: C
             key: 'is_active',
             title: 'Estado',
             width: 'sm' as const,
-            textAlign: 'center' as const,
+            align: 'center' as const,
             sortable: true,
             render: (type: CustomerType) => (
                 <StatusBadge status={type.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />
@@ -186,7 +186,7 @@ export default function CustomerTypesIndex({ customer_types, stats, filters }: C
             key: 'actions',
             title: 'Acciones',
             width: 'xs' as const,
-            textAlign: 'right' as const,
+            align: 'right' as const,
             render: (type: CustomerType) => (
                 <TableActions
                     editHref={`/customer-types/${type.id}/edit`}

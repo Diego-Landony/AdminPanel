@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import type { BadgeConfig, ItemBadge, MenuItem, BadgeType } from '@/types/menu';
+import type { BadgeConfig, ItemBadge, MenuItem } from '@/types/menu';
 
 export interface UseBadgeManagerOptions {
     item: MenuItem | null;

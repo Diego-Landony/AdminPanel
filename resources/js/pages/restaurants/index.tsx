@@ -1,4 +1,4 @@
-import { NOTIFICATIONS } from '@/constants/ui-constants';
+import { CURRENCY, NOTIFICATIONS } from '@/constants/ui-constants';
 import { showNotification } from '@/hooks/useNotifications';
 import { Head, router } from '@inertiajs/react';
 import { Building2, CheckCircle, Clock, FileText, MapPin, Phone, ShoppingBag, Truck } from 'lucide-react';
@@ -122,22 +122,22 @@ export default function RestaurantsIndex({
 
     const stats = [
         {
-            title: 'Total',
+            title: 'total',
             value: total_restaurants,
             icon: <Building2 className="h-4 w-4" />,
         },
         {
-            title: 'Activos',
+            title: 'activos',
             value: active_restaurants,
             icon: <CheckCircle className="h-4 w-4" />,
         },
         {
-            title: 'Con Delivery',
+            title: 'con Delivery',
             value: delivery_restaurants,
             icon: <Truck className="h-4 w-4" />,
         },
         {
-            title: 'Con Pickup',
+            title: 'con Pickup',
             value: pickup_restaurants,
             icon: <ShoppingBag className="h-4 w-4" />,
         },
@@ -202,7 +202,7 @@ export default function RestaurantsIndex({
                     <div className="space-y-2">
                         <StatusBadge status={serviceType} configs={SERVICE_STATUS_CONFIGS} className="text-xs" />
                         <div className="text-xs text-muted-foreground">
-                            <div>Min. orden: Q{formatNumber(restaurant.minimum_order_amount)}</div>
+                            <div>Min. orden: {CURRENCY.symbol}{formatNumber(restaurant.minimum_order_amount)}</div>
                             <div className="mt-1 flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 {restaurant.estimated_delivery_time}min
@@ -235,7 +235,7 @@ export default function RestaurantsIndex({
             key: 'actions',
             title: 'Acciones',
             width: 'xs' as const,
-            textAlign: 'right' as const,
+            align: 'right' as const,
             render: (restaurant: Restaurant) => (
                 <TableActions
                     editHref={`/restaurants/${restaurant.id}/edit`}
@@ -312,7 +312,7 @@ export default function RestaurantsIndex({
                 },
                 {
                     label: 'Pedido Mínimo',
-                    value: `Q${formatNumber(restaurant.minimum_order_amount)}`,
+                    value: `${CURRENCY.symbol}${formatNumber(restaurant.minimum_order_amount)}`,
                 },
                 {
                     label: 'Tiempo Entrega',

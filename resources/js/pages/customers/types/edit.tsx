@@ -5,7 +5,8 @@ import { useState } from 'react';
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
 import { EditCustomerTypesSkeleton } from '@/components/skeletons';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -197,15 +198,14 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
                 </div>
 
                 {/* Estado activo */}
-                <div className="flex items-center space-x-2">
-                    <Checkbox
-                        id="is_active"
-                        checked={formData.is_active}
-                        onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)}
-                    />
-                    <Label htmlFor="is_active" className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Tipo activo
-                    </Label>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                        <Label htmlFor="is_active" className="text-sm font-medium">
+                            Tipo Activo
+                        </Label>
+                        <p className="text-xs text-muted-foreground">El tipo estará disponible para asignar a clientes</p>
+                    </div>
+                    <Switch id="is_active" checked={formData.is_active} onCheckedChange={(checked) => handleInputChange('is_active', checked)} />
                 </div>
             </FormSection>
         </EditPageLayout>

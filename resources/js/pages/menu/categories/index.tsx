@@ -143,14 +143,14 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
             key: 'type',
             title: 'Tipo',
             width: 'w-24',
-            textAlign: 'center' as const,
+            align: 'center' as const,
             render: (category: Category) => <div className="text-sm text-muted-foreground">{category.is_combo_category ? 'Combo' : '-'}</div>,
         },
         {
             key: 'status',
             title: 'Estado',
             width: 'w-32',
-            textAlign: 'center' as const,
+            align: 'center' as const,
             render: (category: Category) => (
                 <div className="flex justify-center">
                     <StatusBadge status={category.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />
@@ -161,7 +161,7 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
             key: 'actions',
             title: 'Acciones',
             width: 'w-24',
-            textAlign: 'right' as const,
+            align: 'right' as const,
             render: (category: Category) => (
                 <TableActions
                     editHref={`/menu/categories/${category.id}/edit`}

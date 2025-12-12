@@ -56,10 +56,15 @@ const PromotionMobileCard: React.FC<{
 }> = ({ promotion, onDelete, isDeleting }) => (
     <StandardMobileCard
         title={promotion.name}
+        subtitle={promotion.description || 'Sin descripción'}
         badge={{
             children: <StatusBadge status={promotion.is_active ? 'active' : 'inactive'} configs={PROMOTION_STATUS_CONFIGS} showIcon={false} />,
         }}
-        dataFields={[]}
+        dataFields={[
+            { label: 'Tipo', value: 'Descuento porcentual' },
+            { label: 'Items aplicables', value: promotion.items_count > 0 ? `${promotion.items_count}` : 'Sin items' },
+            { label: 'Creado', value: formatDate(promotion.created_at) },
+        ]}
         actions={{
             editHref: `/menu/promotions/${promotion.id}/edit`,
             onDelete: () => onDelete(promotion),
@@ -123,7 +128,7 @@ export default function PercentageIndex({ promotions, stats, filters }: Promotio
             key: 'status',
             title: 'Estado',
             width: 'md' as const,
-            textAlign: 'center' as const,
+            align: 'center' as const,
             render: (promotion: Promotion) => (
                 <div className="flex justify-center">
                     <StatusBadge status={promotion.is_active ? 'active' : 'inactive'} configs={PROMOTION_STATUS_CONFIGS} showIcon={false} />
@@ -134,7 +139,7 @@ export default function PercentageIndex({ promotions, stats, filters }: Promotio
             key: 'actions',
             title: 'Acciones',
             width: 'sm' as const,
-            textAlign: 'right' as const,
+            align: 'right' as const,
             render: (promotion: Promotion) => (
                 <TableActions
                     editHref={`/menu/promotions/${promotion.id}/edit`}

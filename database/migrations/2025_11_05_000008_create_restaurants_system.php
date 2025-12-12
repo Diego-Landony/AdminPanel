@@ -25,13 +25,17 @@ return new class extends Migration
             $table->decimal('longitude', 10, 7)->nullable();
             $table->longText('geofence_kml')->nullable();
             $table->string('address');
+            $table->enum('price_location', ['capital', 'interior'])->default('capital');
             $table->boolean('is_active')->default(true);
+            $table->unsignedInteger('sort_order')->default(0);
             $table->boolean('delivery_active')->default(true);
             $table->boolean('pickup_active')->default(true);
             $table->string('phone')->nullable();
             $table->json('schedule')->nullable();
             $table->decimal('minimum_order_amount', 8, 2)->default(0);
             $table->string('email')->nullable();
+            $table->string('ip')->nullable();
+            $table->string('franchise_number')->nullable();
             $table->integer('estimated_delivery_time')->nullable();
             $table->timestamps();
             $table->softDeletes();

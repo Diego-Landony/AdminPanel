@@ -62,7 +62,7 @@ export function CreatePageLayout({
                         </div>
 
                         <form onSubmit={onSubmit} className="space-y-6">
-                            <div className="mx-auto w-full max-w-2xl min-w-0 px-1">{children}</div>
+                            <div className="mx-auto w-full max-w-4xl min-w-0 px-1">{children}</div>
 
                             {/* Botones de Acción */}
                             <div className="mt-8 flex flex-col items-stretch justify-end gap-3 px-1 sm:flex-row sm:items-center sm:gap-4">

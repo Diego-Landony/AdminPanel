@@ -59,7 +59,26 @@ const PromotionMobileCard: React.FC<{
         badge={{
             children: <StatusBadge status={promotion.is_active ? 'active' : 'inactive'} configs={PROMOTION_STATUS_CONFIGS} showIcon={false} />,
         }}
-        dataFields={[]}
+        dataFields={[
+            {
+                label: 'Descripción',
+                value: promotion.description || 'Sin descripción',
+                condition: !!promotion.description,
+            },
+            {
+                label: 'Productos',
+                value: (
+                    <div className="flex items-center gap-1">
+                        <Tag className="h-3 w-3 text-muted-foreground" />
+                        <span>{promotion.items_count} producto{promotion.items_count !== 1 ? 's' : ''}</span>
+                    </div>
+                ),
+            },
+            {
+                label: 'Creado',
+                value: formatDate(promotion.created_at),
+            },
+        ]}
         actions={{
             editHref: `/menu/promotions/${promotion.id}/edit`,
             onDelete: () => onDelete(promotion),
@@ -123,7 +142,7 @@ export default function TwoForOneIndex({ promotions, stats, filters }: Promotion
             key: 'status',
             title: 'Estado',
             width: 'md' as const,
-            textAlign: 'center' as const,
+            align: 'center' as const,
             render: (promotion: Promotion) => (
                 <div className="flex justify-center">
                     <StatusBadge status={promotion.is_active ? 'active' : 'inactive'} configs={PROMOTION_STATUS_CONFIGS} showIcon={false} />
@@ -134,7 +153,7 @@ export default function TwoForOneIndex({ promotions, stats, filters }: Promotion
             key: 'actions',
             title: 'Acciones',
             width: 'sm' as const,
-            textAlign: 'right' as const,
+            align: 'right' as const,
             render: (promotion: Promotion) => (
                 <TableActions
                     editHref={`/menu/promotions/${promotion.id}/edit`}

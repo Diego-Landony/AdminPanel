@@ -12,6 +12,7 @@ import { ConfirmationDialog } from '@/components/promotions/ConfirmationDialog';
 import { PromotionItemEditor } from '@/components/promotions/PromotionItemEditor';
 import { EditPageSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

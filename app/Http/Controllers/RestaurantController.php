@@ -16,25 +16,16 @@ class RestaurantController extends Controller
     public function index(Request $request): Response
     {
         $search = $request->get('search', '');
-        $perPage = $request->get('per_page', 10);
+        $perPage = $request->get('per_page', 15);
         $sortField = $request->get('sort_field', 'sort_order');
         $sortDirection = $request->get('sort_direction', 'asc');
-        $sortCriteria = $request->get('sort_criteria');
-
-        // Parse multiple sort criteria if provided
-        $multipleSortCriteria = [];
-        if ($sortCriteria) {
-            $decoded = json_decode($sortCriteria, true);
-            if (is_array($decoded)) {
-                $multipleSortCriteria = $decoded;
-            }
-        }
 
         $query = Restaurant::query()
             ->select([
                 'id',
                 'name',
                 'address',
+                'price_location',
                 'latitude',
                 'longitude',
                 'is_active',
@@ -59,37 +50,16 @@ class RestaurantController extends Controller
             });
         }
 
-        // Aplicar ordenamiento múltiple si está disponible
-        if (! empty($multipleSortCriteria)) {
-            foreach ($multipleSortCriteria as $criteria) {
-                $field = $criteria['field'] ?? 'name';
-                $direction = $criteria['direction'] ?? 'asc';
-
-                if ($field === 'restaurant') {
-                    $query->orderBy('name', $direction);
-                } elseif ($field === 'status') {
-                    $query->orderByRaw('
-                        CASE
-                            WHEN is_active = 1 THEN 1
-                            ELSE 2
-                        END '.($direction === 'asc' ? 'ASC' : 'DESC'));
-                } else {
-                    $query->orderBy($field, $direction);
-                }
-            }
+        if ($sortField === 'restaurant') {
+            $query->orderBy('name', $sortDirection);
+        } elseif ($sortField === 'status') {
+            $query->orderByRaw('
+                CASE
+                    WHEN is_active = 1 THEN 1
+                    ELSE 2
+                END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
         } else {
-            // Fallback a ordenamiento único
-            if ($sortField === 'restaurant') {
-                $query->orderBy('name', $sortDirection);
-            } elseif ($sortField === 'status') {
-                $query->orderByRaw('
-                    CASE
-                        WHEN is_active = 1 THEN 1
-                        ELSE 2
-                    END '.($sortDirection === 'asc' ? 'ASC' : 'DESC'));
-            } else {
-                $query->ordered();
-            }
+            $query->orderBy($sortField, $sortDirection);
         }
 
         $restaurants = $query->paginate($perPage)
@@ -99,6 +69,7 @@ class RestaurantController extends Controller
                     'id' => $restaurant->id,
                     'name' => $restaurant->name,
                     'address' => $restaurant->address,
+                    'price_location' => $restaurant->price_location,
                     'latitude' => $restaurant->latitude,
                     'longitude' => $restaurant->longitude,
                     'is_active' => $restaurant->is_active,
@@ -132,7 +103,6 @@ class RestaurantController extends Controller
                 'per_page' => (int) $perPage,
                 'sort_field' => $sortField,
                 'sort_direction' => $sortDirection,
-                'sort_criteria' => $multipleSortCriteria,
             ],
         ]);
     }
@@ -158,6 +128,7 @@ class RestaurantController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
+            'price_location' => 'required|in:capital,interior',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'is_active' => 'boolean',
@@ -195,6 +166,7 @@ class RestaurantController extends Controller
                 'id' => $restaurant->id,
                 'name' => $restaurant->name,
                 'address' => $restaurant->address,
+                'price_location' => $restaurant->price_location,
                 'latitude' => $restaurant->latitude,
                 'longitude' => $restaurant->longitude,
                 'is_active' => $restaurant->is_active,
@@ -220,6 +192,7 @@ class RestaurantController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
+            'price_location' => 'required|in:capital,interior',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'is_active' => 'boolean',

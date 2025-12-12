@@ -20,6 +20,7 @@ class Restaurant extends Model
         'longitude',
         'geofence_kml',
         'address',
+        'price_location',
         'is_active',
         'delivery_active',
         'pickup_active',

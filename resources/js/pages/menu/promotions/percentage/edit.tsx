@@ -12,6 +12,7 @@ import { ConfirmationDialog } from '@/components/promotions/ConfirmationDialog';
 import { PromotionItemEditor } from '@/components/promotions/PromotionItemEditor';
 import { EditPageSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -418,38 +419,43 @@ export default function EditPercentagePromotion({ promotion, products, categorie
             loading={processing}
             loadingSkeleton={EditPageSkeleton}
         >
-            <FormSection icon={Package} title="Información Básica">
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
-                        <Label htmlFor="is-active" className="text-base">
-                            Promoción activa
-                        </Label>
-                        <Switch
-                            id="is-active"
-                            checked={formData.is_active}
-                            onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                        />
-                    </div>
+            <div className="space-y-8">
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={Package} title="Información Básica" description="Configura el nombre y descripción de la promoción">
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
+                                    <Label htmlFor="is-active" className="text-base">
+                                        Promoción activa
+                                    </Label>
+                                    <Switch
+                                        id="is-active"
+                                        checked={formData.is_active}
+                                        onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                                    />
+                                </div>
 
-                    <FormField label="Nombre" required error={errors.name}>
-                        <Input
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            placeholder={PLACEHOLDERS.name}
-                            required
-                        />
-                    </FormField>
+                                <FormField label="Nombre" required error={errors.name}>
+                                    <Input
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        placeholder={PLACEHOLDERS.name}
+                                        required
+                                    />
+                                </FormField>
 
-                    <FormField label="Descripción" error={errors.description}>
-                        <Textarea
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            placeholder={PLACEHOLDERS.description}
-                            rows={3}
-                        />
-                    </FormField>
-                </div>
-            </FormSection>
+                                <FormField label="Descripción" error={errors.description}>
+                                    <Textarea
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                        placeholder={PLACEHOLDERS.description}
+                                        rows={3}
+                                    />
+                                </FormField>
+                            </div>
+                        </FormSection>
+                    </CardContent>
+                </Card>
 
             {hasInactiveProducts && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
@@ -459,7 +465,9 @@ export default function EditPercentagePromotion({ promotion, products, categorie
                 </div>
             )}
 
-            <FormSection icon={Store} title="Configuración Global">
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={Store} title="Configuración Global" description="Configura el tipo de servicio y disponibilidad">
                 <div className="space-y-4">
                     <FormField label="Tipo de servicio" required error={errors.service_type}>
                         <Select
@@ -554,9 +562,13 @@ export default function EditPercentagePromotion({ promotion, products, categorie
                         </div>
                     )}
                 </div>
-            </FormSection>
+                        </FormSection>
+                    </CardContent>
+                </Card>
 
-            <FormSection icon={Banknote} title="Items de la Promoción">
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={Banknote} title="Items de la Promoción" description="Gestiona los productos con descuento">
                 <div className="space-y-6">
                     {localItems.map((item, index) => {
                         const excludedVariantIds = localItems
@@ -604,7 +616,10 @@ export default function EditPercentagePromotion({ promotion, products, categorie
                         Agregar Item
                     </Button>
                 </div>
-            </FormSection>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+            </div>
 
             <ConfirmationDialog
                 open={confirmDialog.open}

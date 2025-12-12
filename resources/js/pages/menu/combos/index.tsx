@@ -8,6 +8,7 @@ import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { TableActions } from '@/components/TableActions';
 import { ACTIVE_STATUS_CONFIGS, StatusBadge } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
+import { CURRENCY } from '@/constants/ui-constants';
 import AppLayout from '@/layouts/app-layout';
 import { CheckCircle2, ListChecks, Package2 } from 'lucide-react';
 
@@ -164,7 +165,7 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
             key: 'items',
             title: 'Items',
             width: 'w-32',
-            textAlign: 'center' as const,
+            align: 'center' as const,
             render: (combo: Combo) => {
                 const choiceGroupsCount = combo.items?.filter((item) => item.is_choice_group).length || 0;
                 const totalItems = combo.items_count;
@@ -193,13 +194,13 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
                     <div className="flex items-center gap-2">
                         <span className="min-w-[3.5rem] text-muted-foreground">Capital:</span>
                         <span className="font-medium tabular-nums">
-                            Q{Number(combo.precio_pickup_capital).toFixed(2)} / Q{Number(combo.precio_domicilio_capital).toFixed(2)}
+                            {CURRENCY.symbol}{Number(combo.precio_pickup_capital).toFixed(2)} / {CURRENCY.symbol}{Number(combo.precio_domicilio_capital).toFixed(2)}
                         </span>
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="min-w-[3.5rem] text-muted-foreground">Interior:</span>
                         <span className="font-medium tabular-nums">
-                            Q{Number(combo.precio_pickup_interior).toFixed(2)} / Q{Number(combo.precio_domicilio_interior).toFixed(2)}
+                            {CURRENCY.symbol}{Number(combo.precio_pickup_interior).toFixed(2)} / {CURRENCY.symbol}{Number(combo.precio_domicilio_interior).toFixed(2)}
                         </span>
                     </div>
                 </div>
@@ -209,7 +210,7 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
             key: 'status',
             title: 'Estado',
             width: 'w-32',
-            textAlign: 'center' as const,
+            align: 'center' as const,
             render: (combo: Combo) => (
                 <div className="flex justify-center">
                     <button
@@ -226,7 +227,7 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
             key: 'actions',
             title: 'Acciones',
             width: 'w-24',
-            textAlign: 'right' as const,
+            align: 'right' as const,
             render: (combo: Combo) => (
                 <TableActions
                     editHref={route('menu.combos.edit', combo.id)}
@@ -279,13 +280,13 @@ export default function CombosIndex({ combos, stats }: CombosPageProps) {
                                 <div className="flex justify-between gap-2">
                                     <span className="text-muted-foreground">Capital:</span>
                                     <span className="font-medium tabular-nums">
-                                        Q{Number(combo.precio_pickup_capital).toFixed(2)} / Q{Number(combo.precio_domicilio_capital).toFixed(2)}
+                                        {CURRENCY.symbol}{Number(combo.precio_pickup_capital).toFixed(2)} / {CURRENCY.symbol}{Number(combo.precio_domicilio_capital).toFixed(2)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between gap-2">
                                     <span className="text-muted-foreground">Interior:</span>
                                     <span className="font-medium tabular-nums">
-                                        Q{Number(combo.precio_pickup_interior).toFixed(2)} / Q{Number(combo.precio_domicilio_interior).toFixed(2)}
+                                        {CURRENCY.symbol}{Number(combo.precio_pickup_interior).toFixed(2)} / {CURRENCY.symbol}{Number(combo.precio_domicilio_interior).toFixed(2)}
                                     </span>
                                 </div>
                             </div>

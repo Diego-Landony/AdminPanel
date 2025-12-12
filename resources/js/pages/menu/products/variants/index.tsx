@@ -11,6 +11,7 @@ import { ProductsSkeleton } from '@/components/skeletons';
 import { ACTIVE_STATUS_CONFIGS, StatusBadge } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CURRENCY } from '@/constants/ui-constants';
 import AppLayout from '@/layouts/app-layout';
 import { ArrowLeft, Banknote, Package, Star } from 'lucide-react';
 
@@ -94,7 +95,7 @@ const VariantMobileCard: React.FC<{
                 value: (
                     <div className="flex items-center gap-2">
                         <Banknote className="h-4 w-4 text-muted-foreground" />
-                        <span>Q{Number(variant.precio_pickup_capital).toFixed(2)}</span>
+                        <span>{CURRENCY.symbol}{Number(variant.precio_pickup_capital).toFixed(2)}</span>
                     </div>
                 ),
             },
@@ -103,7 +104,7 @@ const VariantMobileCard: React.FC<{
                 value: (
                     <div className="flex items-center gap-2">
                         <Banknote className="h-4 w-4 text-muted-foreground" />
-                        <span>Q{Number(variant.precio_domicilio_capital).toFixed(2)}</span>
+                        <span>{CURRENCY.symbol}{Number(variant.precio_domicilio_capital).toFixed(2)}</span>
                     </div>
                 ),
             },
@@ -164,12 +165,12 @@ export default function VariantsIndex({ product, variants, stats, filters }: Var
             key: 'precio_pickup_capital',
             title: 'Precio Pickup Capital',
             width: 'sm' as const,
-            textAlign: 'right' as const,
+            align: 'right' as const,
             sortable: true,
             render: (variant: ProductVariant) => (
                 <div className="flex items-center justify-end gap-1 text-sm font-medium text-foreground">
                     <Banknote className="h-3 w-3" />
-                    <span>Q{Number(variant.precio_pickup_capital).toFixed(2)}</span>
+                    <span>{CURRENCY.symbol}{Number(variant.precio_pickup_capital).toFixed(2)}</span>
                 </div>
             ),
         },
@@ -177,12 +178,12 @@ export default function VariantsIndex({ product, variants, stats, filters }: Var
             key: 'precio_domicilio_capital',
             title: 'Precio Domicilio Capital',
             width: 'sm' as const,
-            textAlign: 'right' as const,
+            align: 'right' as const,
             sortable: true,
             render: (variant: ProductVariant) => (
                 <div className="flex items-center justify-end gap-1 text-sm font-medium text-foreground">
                     <Banknote className="h-3 w-3" />
-                    <span>Q{Number(variant.precio_domicilio_capital).toFixed(2)}</span>
+                    <span>{CURRENCY.symbol}{Number(variant.precio_domicilio_capital).toFixed(2)}</span>
                 </div>
             ),
         },
@@ -190,12 +191,12 @@ export default function VariantsIndex({ product, variants, stats, filters }: Var
             key: 'precio_pickup_interior',
             title: 'Precio Pickup Interior',
             width: 'sm' as const,
-            textAlign: 'right' as const,
+            align: 'right' as const,
             sortable: true,
             render: (variant: ProductVariant) => (
                 <div className="flex items-center justify-end gap-1 text-sm font-medium text-muted-foreground">
                     <Banknote className="h-3 w-3" />
-                    <span>Q{Number(variant.precio_pickup_interior).toFixed(2)}</span>
+                    <span>{CURRENCY.symbol}{Number(variant.precio_pickup_interior).toFixed(2)}</span>
                 </div>
             ),
         },
@@ -203,12 +204,12 @@ export default function VariantsIndex({ product, variants, stats, filters }: Var
             key: 'precio_domicilio_interior',
             title: 'Precio Domicilio Interior',
             width: 'sm' as const,
-            textAlign: 'right' as const,
+            align: 'right' as const,
             sortable: true,
             render: (variant: ProductVariant) => (
                 <div className="flex items-center justify-end gap-1 text-sm font-medium text-muted-foreground">
                     <Banknote className="h-3 w-3" />
-                    <span>Q{Number(variant.precio_domicilio_interior).toFixed(2)}</span>
+                    <span>{CURRENCY.symbol}{Number(variant.precio_domicilio_interior).toFixed(2)}</span>
                 </div>
             ),
         },
@@ -216,7 +217,7 @@ export default function VariantsIndex({ product, variants, stats, filters }: Var
             key: 'is_daily_special',
             title: 'Sub del Día',
             width: 'sm' as const,
-            textAlign: 'center' as const,
+            align: 'center' as const,
             render: (variant: ProductVariant) =>
                 variant.is_daily_special ? (
                     <Badge variant="default" className="bg-amber-500">
@@ -231,7 +232,7 @@ export default function VariantsIndex({ product, variants, stats, filters }: Var
             key: 'is_active',
             title: 'Estado',
             width: 'sm' as const,
-            textAlign: 'center' as const,
+            align: 'center' as const,
             sortable: true,
             render: (variant: ProductVariant) => (
                 <StatusBadge status={variant.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />
@@ -241,7 +242,7 @@ export default function VariantsIndex({ product, variants, stats, filters }: Var
             key: 'actions',
             title: 'Acciones',
             width: 'xs' as const,
-            textAlign: 'right' as const,
+            align: 'right' as const,
             render: (variant: ProductVariant) => (
                 <TableActions
                     editHref={`/menu/products/${product.id}/variants/${variant.id}/edit`}

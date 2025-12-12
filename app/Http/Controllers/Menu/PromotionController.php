@@ -87,7 +87,7 @@ class PromotionController extends Controller
             $query->orderBy('created_at', 'desc');
         }
 
-        $perPage = (int) $request->input('per_page', 10);
+        $perPage = (int) $request->input('per_page', 15);
         $promotions = $query->with(['items.variant.product', 'items.product', 'items.combo', 'items.category'])
             ->paginate($perPage)
             ->withQueryString();

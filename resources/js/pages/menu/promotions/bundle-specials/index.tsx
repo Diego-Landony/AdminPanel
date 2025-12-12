@@ -7,7 +7,7 @@ import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { SortableTable } from '@/components/SortableTable';
 import { TableActions } from '@/components/TableActions';
 import { COMBINADO_STATUS_CONFIGS, StatusBadge } from '@/components/status-badge';
-import { PLACEHOLDERS } from '@/constants/ui-constants';
+import { CURRENCY, PLACEHOLDERS } from '@/constants/ui-constants';
 import AppLayout from '@/layouts/app-layout';
 import { Clock, Gift, Star } from 'lucide-react';
 
@@ -217,19 +217,19 @@ export default function BundleSpecialsIndex({ combinados, stats }: CombinadosPag
             key: 'prices',
             title: 'Precio',
             width: 'w-28',
-            textAlign: 'center' as const,
+            align: 'center' as const,
             render: (combinado: Combinado) => (
                 <div className="space-y-0.5 text-xs">
                     <div className="flex items-center justify-center gap-1">
                         <span className="text-muted-foreground">C:</span>
                         <span className="font-medium tabular-nums">
-                            Q{combinado.special_bundle_price_capital ? Number(combinado.special_bundle_price_capital).toFixed(2) : '0.00'}
+                            {CURRENCY.symbol}{combinado.special_bundle_price_capital ? Number(combinado.special_bundle_price_capital).toFixed(2) : '0.00'}
                         </span>
                     </div>
                     <div className="flex items-center justify-center gap-1">
                         <span className="text-muted-foreground">I:</span>
                         <span className="font-medium tabular-nums">
-                            Q{combinado.special_bundle_price_interior ? Number(combinado.special_bundle_price_interior).toFixed(2) : '0.00'}
+                            {CURRENCY.symbol}{combinado.special_bundle_price_interior ? Number(combinado.special_bundle_price_interior).toFixed(2) : '0.00'}
                         </span>
                     </div>
                 </div>
@@ -249,7 +249,7 @@ export default function BundleSpecialsIndex({ combinados, stats }: CombinadosPag
             key: 'status',
             title: 'Estado',
             width: 'w-32',
-            textAlign: 'center' as const,
+            align: 'center' as const,
             render: (combinado: Combinado) => (
                 <div className="flex justify-center">
                     <StatusBadge
@@ -264,7 +264,7 @@ export default function BundleSpecialsIndex({ combinados, stats }: CombinadosPag
             key: 'actions',
             title: 'Acciones',
             width: 'w-24',
-            textAlign: 'right' as const,
+            align: 'right' as const,
             render: (combinado: Combinado) => (
                 <TableActions
                     editHref={route('menu.promotions.bundle-specials.edit', combinado.id)}
@@ -294,11 +294,11 @@ export default function BundleSpecialsIndex({ combinados, stats }: CombinadosPag
             dataFields={[
                 {
                     label: 'Precio Capital',
-                    value: `Q${combinado.special_bundle_price_capital ? Number(combinado.special_bundle_price_capital).toFixed(2) : '0.00'}`,
+                    value: `${CURRENCY.symbol}${combinado.special_bundle_price_capital ? Number(combinado.special_bundle_price_capital).toFixed(2) : '0.00'}`,
                 },
                 {
                     label: 'Precio Interior',
-                    value: `Q${combinado.special_bundle_price_interior ? Number(combinado.special_bundle_price_interior).toFixed(2) : '0.00'}`,
+                    value: `${CURRENCY.symbol}${combinado.special_bundle_price_interior ? Number(combinado.special_bundle_price_interior).toFixed(2) : '0.00'}`,
                 },
                 {
                     label: 'Vigencia',

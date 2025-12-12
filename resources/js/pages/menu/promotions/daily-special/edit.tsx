@@ -13,6 +13,7 @@ import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
 import { EditPageSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -313,41 +314,53 @@ export default function EditPromotion({ promotion, products, combos }: EditPromo
             loading={processing}
             loadingSkeleton={EditPageSkeleton}
         >
-            {/* INFORMACIÓN BÁSICA */}
-            <FormSection title="Información de la Promoción">
-                {/* Switch Activo */}
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                    <Label htmlFor="is_active" className="text-base">
-                        Promoción activa
-                    </Label>
-                    <Switch
-                        id="is_active"
-                        checked={formData.is_active}
-                        onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                    />
-                </div>
+            <div className="space-y-8">
+                {/* INFORMACIÓN BÁSICA */}
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection
+                            title="Información de la Promoción"
+                            description="Configura el nombre y descripción de la promoción"
+                        >
+                            <div className="flex items-center justify-between rounded-lg border p-4">
+                                <Label htmlFor="is_active" className="text-base">
+                                    Promoción activa
+                                </Label>
+                                <Switch
+                                    id="is_active"
+                                    checked={formData.is_active}
+                                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                                />
+                            </div>
 
-                <FormField label="Nombre" error={errors.name} required>
-                    <Input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder={PLACEHOLDERS.name}
-                    />
-                </FormField>
+                            <FormField label="Nombre" error={errors.name} required>
+                                <Input
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    placeholder={PLACEHOLDERS.name}
+                                />
+                            </FormField>
 
-                <FormField label="Descripción" error={errors.description}>
-                    <Textarea
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        placeholder={PLACEHOLDERS.description}
-                        rows={2}
-                    />
-                </FormField>
-            </FormSection>
+                            <FormField label="Descripción" error={errors.description}>
+                                <Textarea
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    placeholder={PLACEHOLDERS.description}
+                                    rows={2}
+                                />
+                            </FormField>
+                        </FormSection>
+                    </CardContent>
+                </Card>
 
-            {/* PRODUCTOS Y COMBOS */}
-            <FormSection title="Productos y Combos">
+                {/* PRODUCTOS Y COMBOS */}
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection
+                            title="Productos y Combos"
+                            description="Agrega los productos o combos que forman parte de esta promoción"
+                        >
                 <div className="space-y-4">
                     {localItems.map((item, index) => {
                         const isProduct = item.item_type === 'product';
@@ -554,7 +567,10 @@ export default function EditPromotion({ promotion, products, combos }: EditPromo
                         Agregar otro producto
                     </Button>
                 </div>
-            </FormSection>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+            </div>
 
             <ConfirmationDialog
                 open={confirmDialog.open}

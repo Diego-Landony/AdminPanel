@@ -2,7 +2,7 @@
  * Helpers para el sistema de menú
  */
 
-import type { ValidityType, PriceSet, PriceRange, BadgeConfig, ItemBadge } from '@/types/menu';
+import type { PriceSet, PriceRange, BadgeConfig, ItemBadge } from '@/types/menu';
 import { formatWeekdays } from '@/constants/weekdays';
 
 // ============================================

@@ -6,8 +6,8 @@ import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
 import { EditProductsSkeleton } from '@/components/skeletons';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -359,15 +359,14 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
 
             {/* Estado */}
             <FormSection icon={Package} title="Estado" description="Configuración de activación">
-                <div className="flex items-center space-x-2">
-                    <Checkbox
-                        id="is_active"
-                        checked={formData.is_active}
-                        onCheckedChange={(checked) => handleInputChange('is_active', checked as boolean)}
-                    />
-                    <Label htmlFor="is_active" className="text-sm leading-none font-medium">
-                        Variante activa
-                    </Label>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                        <Label htmlFor="is_active" className="text-sm font-medium">
+                            Variante Activa
+                        </Label>
+                        <p className="text-xs text-muted-foreground">Las variantes inactivas no se mostrarán en el menú</p>
+                    </div>
+                    <Switch id="is_active" checked={formData.is_active} onCheckedChange={(checked) => handleInputChange('is_active', checked)} />
                 </div>
             </FormSection>
         </EditPageLayout>

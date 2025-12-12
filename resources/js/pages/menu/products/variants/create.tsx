@@ -6,11 +6,11 @@ import React from 'react';
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
 import { CreateProductsSkeleton } from '@/components/skeletons';
-import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { ENTITY_ICONS } from '@/constants/section-icons';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
 import { Banknote, Layers } from 'lucide-react';
@@ -199,13 +199,15 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
             </FormSection>
 
             <FormSection icon={ENTITY_ICONS.menu.productInfo} title="Configuración">
-                <div className="flex items-center space-x-2">
-                    <Checkbox id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked as boolean)} />
-                    <Label htmlFor="is_active" className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Variante activa
-                    </Label>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                        <Label htmlFor="is_active" className="text-sm font-medium">
+                            Variante Activa
+                        </Label>
+                        <p className="text-xs text-muted-foreground">Las variantes inactivas no se mostrarán en el menú</p>
+                    </div>
+                    <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked)} />
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">Las variantes inactivas no se mostrarán en el menú del cliente.</p>
             </FormSection>
         </CreatePageLayout>
     );

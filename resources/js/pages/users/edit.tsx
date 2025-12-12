@@ -8,6 +8,7 @@ import { FormSection } from '@/components/form-section';
 import { EditUsersSkeleton } from '@/components/skeletons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { FormField } from '@/components/ui/form-field';
@@ -203,32 +204,39 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
             loading={processing}
             loadingSkeleton={EditUsersSkeleton}
         >
-            <FormSection icon={User} title="Información del Usuario">
-                <FormField label="Nombre Completo" error={errors.name} required>
-                    <Input
-                        id="name"
-                        type="text"
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
-                        autoComplete={AUTOCOMPLETE.name}
-                    />
-                </FormField>
+            <div className="space-y-8">
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={User} title="Información del Usuario" description="Actualiza el nombre y correo del usuario">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <FormField label="Nombre Completo" error={errors.name} required>
+                                    <Input
+                                        id="name"
+                                        type="text"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
+                                        autoComplete={AUTOCOMPLETE.name}
+                                    />
+                                </FormField>
 
-                <FormField label="Correo Electrónico" error={errors.email} required>
-                    <div className="relative">
-                        <Mail className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            id="email"
-                            type="email"
-                            placeholder={PLACEHOLDERS.email}
-                            value={data.email}
-                            onChange={(e) => setData('email', e.target.value)}
-                            className="pl-10"
-                            autoComplete={AUTOCOMPLETE.email}
-                        />
-                    </div>
-                </FormField>
-            </FormSection>
+                                <FormField label="Correo Electrónico" error={errors.email} required>
+                                    <div className="relative">
+                                        <Mail className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            placeholder={PLACEHOLDERS.email}
+                                            value={data.email}
+                                            onChange={(e) => setData('email', e.target.value)}
+                                            className="pl-10"
+                                            autoComplete={AUTOCOMPLETE.email}
+                                        />
+                                    </div>
+                                </FormField>
+                            </div>
+                        </FormSection>
+                    </CardContent>
+                </Card>
 
             {/* Modal para gestionar roles del usuario */}
             <div className="flex justify-start py-8">
@@ -306,7 +314,9 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
                 </Dialog>
             </div>
 
-            <FormSection icon={Lock} title="Cambiar Contraseña" description="Opcional: Cambiar la contraseña del usuario" className="mt-4">
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={Lock} title="Cambiar Contraseña" description="Opcional: Cambiar la contraseña del usuario">
                 <div className="space-y-4">
                     <div className="flex items-center space-x-2 py-2">
                         <Checkbox
@@ -360,9 +370,13 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
                         </div>
                     )}
                 </div>
-            </FormSection>
+                        </FormSection>
+                    </CardContent>
+                </Card>
 
-            <FormSection icon={User} title="Información del Sistema" className="mt-6">
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={User} title="Información del Sistema" description="Datos del registro del usuario">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
                         <Label className="text-xs text-muted-foreground">ID</Label>
@@ -395,7 +409,10 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
                         <p className="text-sm">{formatDate(user.last_activity_at || null)}</p>
                     </div>
                 </div>
-            </FormSection>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+            </div>
         </EditPageLayout>
     );
 }

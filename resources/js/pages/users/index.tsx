@@ -14,20 +14,15 @@ import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { StatusBadge, USER_STATUS_CONFIGS } from '@/components/status-badge';
 import { TableActions } from '@/components/TableActions';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
+import { Filters, PaginatedData } from '@/types';
 import { Clock, Users } from 'lucide-react';
 
-/**
- * Interfaz para los roles
- */
 interface Role {
     id: number;
     name: string;
     is_system: boolean;
 }
 
-/**
- * Interfaz para los datos del usuario
- */
 interface User {
     id: number;
     name: string;
@@ -41,28 +36,12 @@ interface User {
     roles: Role[];
 }
 
-/**
- * Interfaz para las props de la página
- */
 interface UsersPageProps {
-    users: {
-        data: User[];
-        current_page: number;
-        last_page: number;
-        per_page: number;
-        total: number;
-        from: number;
-        to: number;
-    };
+    users: PaginatedData<User>;
     total_users: number;
     verified_users: number;
     online_users: number;
-    filters: {
-        search: string | null;
-        per_page: number;
-        sort_field?: string;
-        sort_direction?: 'asc' | 'desc';
-    };
+    filters: Filters;
 }
 
 /**
@@ -241,7 +220,7 @@ export default function UsersIndex({ users, total_users, online_users, filters }
             key: 'status',
             title: 'Estado',
             width: 'sm' as const,
-            textAlign: 'center' as const,
+            align: 'center' as const,
             sortable: true,
             render: (user: User) => <UserStatusBadge status={user.status} />,
         },
@@ -249,7 +228,7 @@ export default function UsersIndex({ users, total_users, online_users, filters }
             key: 'actions',
             title: 'Acciones',
             width: 'xs' as const,
-            textAlign: 'right' as const,
+            align: 'right' as const,
             render: (user: User) => (
                 <TableActions
                     editHref={`/users/${user.id}/edit`}

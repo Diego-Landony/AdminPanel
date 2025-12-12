@@ -7,6 +7,7 @@ import { GroupedSortableTable } from '@/components/GroupedSortableTable';
 import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { TableActions } from '@/components/TableActions';
 import { ACTIVE_STATUS_CONFIGS, StatusBadge } from '@/components/status-badge';
+import { CURRENCY } from '@/constants/ui-constants';
 import AppLayout from '@/layouts/app-layout';
 import { Package } from 'lucide-react';
 
@@ -78,34 +79,34 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
                 capital: {
                     pickup:
                         minPickupCapital === maxPickupCapital
-                            ? `Q${minPickupCapital.toFixed(2)}`
-                            : `Q${minPickupCapital.toFixed(2)} - Q${maxPickupCapital.toFixed(2)}`,
+                            ? `${CURRENCY.symbol}${minPickupCapital.toFixed(2)}`
+                            : `${CURRENCY.symbol}${minPickupCapital.toFixed(2)} - ${CURRENCY.symbol}${maxPickupCapital.toFixed(2)}`,
                     domicilio:
                         minDomicilioCapital === maxDomicilioCapital
-                            ? `Q${minDomicilioCapital.toFixed(2)}`
-                            : `Q${minDomicilioCapital.toFixed(2)} - Q${maxDomicilioCapital.toFixed(2)}`,
+                            ? `${CURRENCY.symbol}${minDomicilioCapital.toFixed(2)}`
+                            : `${CURRENCY.symbol}${minDomicilioCapital.toFixed(2)} - ${CURRENCY.symbol}${maxDomicilioCapital.toFixed(2)}`,
                 },
                 interior: {
                     pickup:
                         minPickupInterior === maxPickupInterior
-                            ? `Q${minPickupInterior.toFixed(2)}`
-                            : `Q${minPickupInterior.toFixed(2)} - Q${maxPickupInterior.toFixed(2)}`,
+                            ? `${CURRENCY.symbol}${minPickupInterior.toFixed(2)}`
+                            : `${CURRENCY.symbol}${minPickupInterior.toFixed(2)} - ${CURRENCY.symbol}${maxPickupInterior.toFixed(2)}`,
                     domicilio:
                         minDomicilioInterior === maxDomicilioInterior
-                            ? `Q${minDomicilioInterior.toFixed(2)}`
-                            : `Q${minDomicilioInterior.toFixed(2)} - Q${maxDomicilioInterior.toFixed(2)}`,
+                            ? `${CURRENCY.symbol}${minDomicilioInterior.toFixed(2)}`
+                            : `${CURRENCY.symbol}${minDomicilioInterior.toFixed(2)} - ${CURRENCY.symbol}${maxDomicilioInterior.toFixed(2)}`,
                 },
             };
         }
 
         return {
             capital: {
-                pickup: `Q${Number(product.precio_pickup_capital).toFixed(2)}`,
-                domicilio: `Q${Number(product.precio_domicilio_capital).toFixed(2)}`,
+                pickup: `${CURRENCY.symbol}${Number(product.precio_pickup_capital).toFixed(2)}`,
+                domicilio: `${CURRENCY.symbol}${Number(product.precio_domicilio_capital).toFixed(2)}`,
             },
             interior: {
-                pickup: `Q${Number(product.precio_pickup_interior).toFixed(2)}`,
-                domicilio: `Q${Number(product.precio_domicilio_interior).toFixed(2)}`,
+                pickup: `${CURRENCY.symbol}${Number(product.precio_pickup_interior).toFixed(2)}`,
+                domicilio: `${CURRENCY.symbol}${Number(product.precio_domicilio_interior).toFixed(2)}`,
             },
         };
     };
@@ -236,7 +237,7 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
             key: 'status',
             title: 'Estado',
             width: 'w-32',
-            textAlign: 'center' as const,
+            align: 'center' as const,
             render: (product: Product) => (
                 <div className="flex justify-center">
                     <StatusBadge status={product.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />
@@ -247,7 +248,7 @@ export default function ProductsIndex({ groupedProducts, stats }: ProductsPagePr
             key: 'actions',
             title: 'Acciones',
             width: 'w-24',
-            textAlign: 'right' as const,
+            align: 'right' as const,
             render: (product: Product) => (
                 <TableActions
                     editHref={`/menu/products/${product.id}/edit`}

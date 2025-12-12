@@ -18,7 +18,6 @@ import type {
     FormMode,
     FormErrors,
     LocalComboItem,
-    LocalChoiceOption,
 } from '@/types/menu';
 
 export interface ComboFormData {
@@ -134,7 +133,7 @@ export function useComboForm({
     mode,
     combo,
     products,
-    categories,
+    categories: _categories,
     onSuccess,
 }: UseComboFormOptions): UseComboFormReturn {
     const isEdit = mode === 'edit';

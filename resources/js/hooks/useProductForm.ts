@@ -105,7 +105,7 @@ export function useProductForm({
     mode,
     product,
     categories,
-    sections,
+    sections: _sections,
     onSuccess,
 }: UseProductFormOptions): UseProductFormReturn {
     const isEdit = mode === 'edit';

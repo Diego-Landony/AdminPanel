@@ -1,6 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { ArrowDown, ArrowUp, ArrowUpDown, Plus, RefreshCw, Search, X } from 'lucide-react';
-import React, { memo, useCallback, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { PaginationWrapper } from '@/components/PaginationWrapper';
@@ -11,16 +11,16 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Column, DataTableFilters, DataTableStat, PaginatedData } from '@/types';
 
-// Professional column width system based on CSS Grid and Flexbox standards
 const columnWidthConfig = {
-    xs: 'w-16 min-w-16 max-w-16', // 64px - Actions, icons
-    sm: 'w-24 min-w-24 max-w-24', // 96px - Status, dates
-    md: 'w-32 min-w-32 max-w-48', // 128-192px - Short text
-    lg: 'w-48 min-w-48 max-w-64', // 192-256px - Names, emails
-    xl: 'w-64 min-w-64 max-w-80', // 256-320px - Long content
-    auto: 'w-auto min-w-0', // Content-based
-    full: 'w-full min-w-0', // Full width
+    xs: 'w-[5rem]',
+    sm: 'w-[7rem]',
+    md: 'w-[9rem]',
+    lg: 'w-[12rem]',
+    xl: 'w-[16rem]',
+    auto: '',
+    full: 'w-full',
 } as const;
 
 const textAlignmentConfig = {
@@ -29,52 +29,11 @@ const textAlignmentConfig = {
     right: 'text-right',
 } as const;
 
-interface DataTableColumn<T> {
-    key: string;
-    title: string;
-    width?: keyof typeof columnWidthConfig;
-    align?: keyof typeof textAlignmentConfig;
-    truncate?: boolean | number;
-    sortable?: boolean;
-    render?: (item: T, value: unknown) => React.ReactNode;
-    className?: string;
-}
-
-interface DataTableStat {
-    title: string;
-    value: number | string;
-    icon: React.ReactNode;
-    description?: string;
-}
-
-interface PaginatedData<T> {
-    data: T[];
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-    from: number;
-    to: number;
-}
-
-interface SortCriteria {
-    field: string;
-    direction: 'asc' | 'desc';
-}
-
-interface DataTableFilters {
-    search?: string | null;
-    per_page: number;
-    sort_field?: string;
-    sort_direction?: 'asc' | 'desc';
-    sort_criteria?: SortCriteria[];
-}
-
 interface DataTableProps<T> {
     title: string;
     description?: string;
     data: PaginatedData<T>;
-    columns: DataTableColumn<T>[];
+    columns: Column<T>[];
     stats?: DataTableStat[];
     filters: DataTableFilters;
     createUrl?: string;
@@ -82,14 +41,10 @@ interface DataTableProps<T> {
     searchPlaceholder?: string;
     loadingSkeleton?: React.ComponentType<{ rows: number }>;
     renderMobileCard?: (item: T) => React.ReactNode;
-    onRefresh?: () => void;
     routeName: string;
     breakpoint?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-/**
- * Truncated text component with tooltip for overflow content
- */
 interface TruncatedTextProps {
     children: React.ReactNode;
     maxLength?: number;
@@ -121,46 +76,12 @@ const TruncatedText: React.FC<TruncatedTextProps> = ({ children, maxLength, clas
 };
 
 /**
- * Professional data table with unified mobile/desktop experience
+ * DataTable - Componente de tabla con paginación server-side
  *
- * Features:
- * - Responsive design with mobile card fallback
- * - Server-side sorting, filtering, and pagination
- * - Professional column system with truncation
- * - Real-time stats display with icons
- * - Debounced search with URL state management
- * - Loading states and skeleton support
- * - Customizable breakpoints and theming
- *
- * @template T - Entity type with required `id` field for row identification
- *
- * @param title - Page/table title displayed in header
- * @param description - Descriptive text below title
- * @param data - Paginated data from Laravel backend
- * @param columns - Column configuration with render functions
- * @param stats - Optional statistics to display above table
- * @param filters - Current filter state from backend
- * @param createUrl - URL for create new entity button
- * @param createLabel - Text for create button (default: "Create New")
- * @param searchPlaceholder - Placeholder text for search input
- * @param loadingSkeleton - Component to show during loading
- * @param renderMobileCard - Function to render mobile card for each item
- * @param onRefresh - Optional custom refresh handler
- * @param routeName - Route name for Inertia navigation
- * @param breakpoint - Responsive breakpoint for mobile/desktop switch
- *
- * @example
- * ```tsx
- * <DataTable
- *   title="Users"
- *   description="Manage system users"
- *   data={users}
- *   columns={userColumns}
- *   stats={userStats}
- *   renderMobileCard={(user) => <UserCard user={user} />}
- *   routeName="/users"
- * />
- * ```
+ * Arquitectura:
+ * - Los props del backend (filters) son la fuente de verdad
+ * - Solo el input de búsqueda tiene estado local (para debounce)
+ * - Soporta ordenamiento múltiple con sort_criteria
  */
 const DataTableComponent = function DataTable<T extends { id: number | string }>({
     title,
@@ -170,352 +91,144 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
     stats,
     filters,
     createUrl,
-    createLabel = 'Create New',
-    searchPlaceholder = 'Search...',
+    createLabel = 'Crear',
+    searchPlaceholder = 'Buscar...',
     loadingSkeleton: LoadingSkeleton,
     renderMobileCard,
-    onRefresh,
     routeName,
     breakpoint = 'md',
 }: DataTableProps<T>) {
-    const [search, setSearch] = useState<string>(filters.search || '');
-    const [perPage, setPerPage] = useState<number>(filters.per_page);
-    const [sortField, setSortField] = useState<string>(filters.sort_field || 'created_at');
-    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(filters.sort_direction || 'desc');
-    const [sortCriteria, setSortCriteria] = useState<SortCriteria[]>(
-        filters.sort_criteria ||
-            (filters.sort_field && filters.sort_direction ? [{ field: filters.sort_field, direction: filters.sort_direction }] : []),
-    );
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+    const [searchInput, setSearchInput] = useState(filters.search || '');
+    const [isLoading, setIsLoading] = useState(false);
+    const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
     const breakpointClass = breakpoint === 'md' ? 'md:' : `${breakpoint}:`;
 
-    /**
-     * Sync local state with props when filters change from backend
-     */
+    // Current sort state (single column)
+    const currentSortField = filters.sort_field || '';
+    const currentSortDirection = filters.sort_direction || 'asc';
+
+    // Sync search input cuando cambian los filtros del backend
     useEffect(() => {
-        setSearch(filters.search || '');
-        setPerPage(filters.per_page);
-        setSortField(filters.sort_field || 'created_at');
-        setSortDirection(filters.sort_direction || 'desc');
-        setSortCriteria(
-            filters.sort_criteria ||
-                (filters.sort_field && filters.sort_direction ? [{ field: filters.sort_field, direction: filters.sort_direction }] : []),
-        );
-    }, [filters]);
+        setSearchInput(filters.search || '');
+    }, [filters.search]);
 
-    /**
-     * Get human-readable label for a field based on column definitions
-     */
-    const getFieldLabel = useCallback(
-        (fieldKey: string): string => {
-            const column = columns.find((col) => col.key === fieldKey);
-            return column?.title || fieldKey;
-        },
-        [columns],
-    );
-
-    /**
-     * Updates filters in URL with state preservation
-     */
-    const updateFilters = useCallback(
-        (newFilters: Record<string, string | number | undefined>) => {
+    // Navegación centralizada
+    const navigate = useCallback(
+        (params: Record<string, string | number | undefined>, resetPage = false) => {
             setIsLoading(true);
-            router.post(routeName, newFilters, {
+            const payload: Record<string, string | number | undefined> = { ...params };
+            if (!resetPage && data.current_page > 1) {
+                payload.page = data.current_page;
+            }
+            router.get(routeName, payload, {
                 preserveState: true,
+                preserveScroll: true,
                 replace: true,
                 onFinish: () => setIsLoading(false),
             });
         },
-        [routeName],
+        [routeName, data.current_page],
     );
 
-    /**
-     * Apply filters manually when search button is clicked
-     */
-    const applyFilters = useCallback(() => {
-        const payload: Record<string, string | number | undefined> = {
-            per_page: perPage,
-            sort_field: sortField,
-            sort_direction: sortDirection,
-            sort_criteria: JSON.stringify(sortCriteria),
-        };
-
-        if (search && search.trim()) {
-            payload.search = search.trim();
-        }
-
-        updateFilters(payload);
-    }, [search, perPage, sortField, sortDirection, sortCriteria, updateFilters]);
-
-    /**
-     * Debounced search effect - executes search automatically after user stops typing
-     * Waits 800ms after last keystroke to avoid overwhelming the server
-     */
-    useEffect(() => {
-        // Don't trigger on initial load or when syncing from backend
-        if (search === filters.search) return;
-
-        const debounceTimer = setTimeout(() => {
-            applyFilters();
-        }, 800); // 800ms delay - adjust if needed
-
-        return () => clearTimeout(debounceTimer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [search, applyFilters]);
-
-    /**
-     * Clear search input and apply immediately
-     */
-    const clearSearch = useCallback(() => {
-        setSearch('');
-
-        // Apply to backend immediately
-        router.post(
-            routeName,
-            {
-                per_page: perPage,
-                sort_field: sortField,
-                sort_direction: sortDirection,
-                sort_criteria: JSON.stringify(sortCriteria),
-            },
-            {
-                preserveState: true,
-                replace: true,
-            },
-        );
-    }, [routeName, perPage, sortField, sortDirection, sortCriteria]);
-
-    /**
-     * Clear all filters and return to default state
-     */
-    const clearAllFilters = useCallback(() => {
-        setSearch('');
-        setPerPage(filters.per_page || 10);
-        setSortField('');
-        setSortDirection('desc');
-        setSortCriteria([]);
-
-        // Navigate to clean state
-        router.post(
-            routeName,
-            {
-                per_page: filters.per_page || 10,
-            },
-            {
-                preserveState: true,
-                replace: true,
-            },
-        );
-    }, [routeName, filters.per_page]);
-
-    /**
-     * Get active filters for display
-     * NOTE: Search is not included as a chip - it stays in the search input only
-     */
-    const getActiveFilters = useCallback(() => {
-        const activeFilters = [];
-
-        // Add sorting filters
-        if (sortCriteria.length > 0) {
-            sortCriteria.forEach((criteria, index) => {
-                const fieldLabel = getFieldLabel(criteria.field);
-                activeFilters.push({
-                    key: `sort_${criteria.field}_${index}`,
-                    label: `${fieldLabel} ${criteria.direction === 'asc' ? '↑' : '↓'}${sortCriteria.length > 1 ? ` #${index + 1}` : ''}`,
-                    onRemove: () => {
-                        const newCriteria = sortCriteria.filter((_, i) => i !== index);
-                        if (newCriteria.length === 0) {
-                            // Reset to empty (no default)
-                            setSortCriteria([]);
-                            setSortField('');
-                            setSortDirection('desc');
-
-                            // Apply to backend immediately
-                            router.post(
-                                routeName,
-                                {
-                                    per_page: perPage,
-                                    ...(filters.search && filters.search.trim() ? { search: filters.search.trim() } : {}),
-                                },
-                                {
-                                    preserveState: true,
-                                    replace: true,
-                                },
-                            );
-                        } else {
-                            setSortCriteria(newCriteria);
-                            setSortField(newCriteria[0].field);
-                            setSortDirection(newCriteria[0].direction);
-
-                            // Apply to backend immediately
-                            router.post(
-                                routeName,
-                                {
-                                    per_page: perPage,
-                                    sort_field: newCriteria[0].field,
-                                    sort_direction: newCriteria[0].direction,
-                                    sort_criteria: JSON.stringify(newCriteria),
-                                    ...(filters.search && filters.search.trim() ? { search: filters.search.trim() } : {}),
-                                },
-                                {
-                                    preserveState: true,
-                                    replace: true,
-                                },
-                            );
-                        }
-                    },
-                });
-            });
-        }
-
-        // Add per_page filter (only if not default)
-        if (perPage !== (filters.per_page || 10)) {
-            activeFilters.push({
-                key: 'per_page',
-                label: `Mostrar: ${perPage} por página`,
-                onRemove: () => {
-                    const defaultPerPage = filters.per_page || 10;
-                    setPerPage(defaultPerPage);
-
-                    // Apply to backend immediately
-                    router.post(
-                        routeName,
-                        {
-                            per_page: defaultPerPage,
-                            sort_field: sortField,
-                            sort_direction: sortDirection,
-                            sort_criteria: JSON.stringify(sortCriteria),
-                            ...(filters.search && filters.search.trim() ? { search: filters.search.trim() } : {}),
-                        },
-                        {
-                            preserveState: true,
-                            replace: true,
-                        },
-                    );
-                },
-            });
-        }
-
-        return activeFilters;
-    }, [sortCriteria, perPage, filters.per_page, filters.search, routeName, sortField, sortDirection, getFieldLabel]);
-
-    const activeFilters = getActiveFilters();
-    const hasActiveFilters = activeFilters.length > 0;
-
-    /**
-     * Effect for handling per_page and sorting changes (apply automatically)
-     * NOTE: search is NOT in dependencies to avoid executing on every keystroke
-     * Search is only applied when user explicitly triggers it (Enter key or Search button)
-     */
-    useEffect(() => {
-        const payload: Record<string, string | number | undefined> = {
-            per_page: perPage,
-            sort_field: sortField,
-            sort_direction: sortDirection,
-            sort_criteria: JSON.stringify(sortCriteria),
-        };
-
-        // Include current search value from filters prop (not local state)
-        // This ensures search persists when other filters change
-        if (filters.search && filters.search.trim()) {
-            payload.search = filters.search.trim();
-        }
-
-        updateFilters(payload);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [perPage, sortField, sortDirection, sortCriteria, updateFilters]);
-
-    /**
-     * Handles column sorting with multiple criteria support
-     */
-    const handleSort = (field: string) => {
-        setSortCriteria((prevCriteria) => {
-            // Check if this field is already in the criteria
-            const existingIndex = prevCriteria.findIndex((criteria) => criteria.field === field);
-
-            if (existingIndex >= 0) {
-                // Field exists, toggle its direction
-                const newCriteria = [...prevCriteria];
-                newCriteria[existingIndex] = {
-                    field,
-                    direction: newCriteria[existingIndex].direction === 'asc' ? 'desc' : 'asc',
-                };
-                return newCriteria;
-            } else {
-                // Field doesn't exist, add it with 'asc' direction
-                return [...prevCriteria, { field, direction: 'asc' }];
+    // Construir payload base desde filtros actuales
+    const buildPayload = useCallback(
+        (overrides: Record<string, string | number | undefined> = {}) => {
+            const payload: Record<string, string | number | undefined> = {
+                per_page: filters.per_page,
+            };
+            if (filters.search) payload.search = filters.search;
+            if (currentSortField) {
+                payload.sort_field = currentSortField;
+                payload.sort_direction = currentSortDirection;
             }
-        });
+            return { ...payload, ...overrides };
+        },
+        [filters.per_page, filters.search, currentSortField, currentSortDirection],
+    );
 
-        // Also update single field state for backward compatibility
-        const existingCriteria = sortCriteria.find((criteria) => criteria.field === field);
-        if (existingCriteria) {
-            setSortDirection(existingCriteria.direction === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortField(field);
-            setSortDirection('asc');
-        }
+    // Búsqueda con debounce
+    const handleSearchChange = (value: string) => {
+        setSearchInput(value);
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+
+        debounceRef.current = setTimeout(() => {
+            const payload = buildPayload();
+            if (value.trim()) {
+                payload.search = value.trim();
+            } else {
+                delete payload.search;
+            }
+            navigate(payload, true);
+        }, 500);
     };
 
-    /**
-     * Returns appropriate sort icon based on current sort state
-     */
-    const getSortIcon = (field: string) => {
-        const criteria = sortCriteria.find((c) => c.field === field);
-        const criteriaIndex = sortCriteria.findIndex((c) => c.field === field);
+    // Búsqueda inmediata
+    const handleSearchSubmit = () => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        const payload = buildPayload();
+        if (searchInput.trim()) {
+            payload.search = searchInput.trim();
+        } else {
+            delete payload.search;
+        }
+        navigate(payload, true);
+    };
 
-        if (!criteria) {
+    // Limpiar búsqueda
+    const handleClearSearch = () => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        setSearchInput('');
+        const payload = buildPayload();
+        delete payload.search;
+        navigate(payload, true);
+    };
+
+    // Cambiar items por página
+    const handlePerPageChange = (value: string) => {
+        navigate(buildPayload({ per_page: parseInt(value) }), true);
+    };
+
+    // Ordenar por columna (single column - click reemplaza, no acumula)
+    const handleSort = (field: string) => {
+        let newDirection: 'asc' | 'desc' = 'asc';
+
+        // Si ya está ordenado por este campo, toggle direction
+        if (currentSortField === field) {
+            newDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+        }
+
+        const payload = buildPayload({
+            sort_field: field,
+            sort_direction: newDirection,
+        });
+        navigate(payload);
+    };
+
+    // Icono de ordenamiento
+    const getSortIcon = (field: string) => {
+        if (currentSortField !== field) {
             return <ArrowUpDown className="h-4 w-4 text-muted-foreground/50" />;
         }
 
-        const icon = criteria.direction === 'asc' ? <ArrowUp className="h-4 w-4 text-primary" /> : <ArrowDown className="h-4 w-4 text-primary" />;
-
-        // Show order number if there are multiple criteria
-        if (sortCriteria.length > 1) {
-            return (
-                <div className="flex items-center gap-1">
-                    {icon}
-                    <span className="min-w-[1rem] text-center text-xs font-semibold text-primary">{criteriaIndex + 1}</span>
-                </div>
-            );
-        }
-
-        return icon;
+        return currentSortDirection === 'asc'
+            ? <ArrowUp className="h-4 w-4 text-primary" />
+            : <ArrowDown className="h-4 w-4 text-primary" />;
     };
 
-    /**
-     * Refreshes data with current filters
-     */
-    const refreshData = () => {
-        if (onRefresh) {
-            onRefresh();
-        } else {
-            setIsRefreshing(true);
-            const payload: Record<string, string | number | undefined> = {
-                per_page: perPage,
-                sort_field: sortField,
-                sort_direction: sortDirection,
-                sort_criteria: JSON.stringify(sortCriteria),
-            };
-
-            if (search && search.trim()) {
-                payload.search = search.trim();
-            }
-
-            router.post(routeName, payload, {
-                preserveState: true,
-                replace: true,
-                onFinish: () => setIsRefreshing(false),
-            });
-        }
+    // Refresh
+    const handleRefresh = () => {
+        setIsLoading(true);
+        router.get(routeName, buildPayload({ page: data.current_page }), {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+            onFinish: () => setIsLoading(false),
+        });
     };
 
-    /**
-     * Renders cell content with intelligent truncation
-     */
-    const renderCellContent = (column: DataTableColumn<T>, item: T) => {
+    // Render cell content
+    const renderCellContent = (column: Column<T>, item: T) => {
         const value = column.render
             ? column.render(item, (item as Record<string, unknown>)[column.key])
             : (item as Record<string, unknown>)[column.key];
@@ -524,14 +237,13 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
             const maxLength = typeof column.truncate === 'number' ? column.truncate : 30;
             return <TruncatedText maxLength={maxLength}>{value}</TruncatedText>;
         }
-
         return value as React.ReactNode;
     };
 
     return (
         <ErrorBoundary context="tabla de datos" showRetry={true}>
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
-                {/* Page Header */}
+                {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="space-y-1">
                         <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
@@ -547,113 +259,52 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                     )}
                 </div>
 
-                {/* Data Table Card */}
                 <Card>
                     <CardHeader className="pb-6">
-                        <div className="flex flex-col space-y-4">
-                            {/* Stats and Actions Row */}
-                            <div className="flex flex-wrap items-start justify-between gap-4">
-                                {/* Statistics */}
-                                {stats && stats.length > 0 && (
-                                    <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                                        {stats.map((stat, index) => (
-                                            <div key={index} className="flex max-w-[200px] min-w-0 flex-shrink-0 items-center gap-2">
-                                                {React.cloneElement(stat.icon as React.ReactElement<{ className?: string }>, {
-                                                    className: `flex-shrink-0 ${(stat.icon as React.ReactElement<{ className?: string }>).props.className || ''}`,
-                                                })}
-                                                <span className="flex min-w-0 items-center gap-1 overflow-hidden">
-                                                    <span className="truncate overflow-hidden text-ellipsis lowercase" title={stat.title}>
-                                                        {stat.title}
-                                                    </span>
-                                                    <span
-                                                        className="font-medium whitespace-nowrap text-foreground tabular-nums"
-                                                        title={String(stat.value)}
-                                                    >
-                                                        {stat.value}
-                                                    </span>
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {/* Refresh Button with Last Sync */}
-                                <div className="flex flex-shrink-0 flex-col items-end gap-1">
-                                    <Button variant="ghost" size="sm" onClick={refreshData} disabled={isRefreshing} className="h-8 px-2">
-                                        <RefreshCw className={`mr-1 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                                        {isRefreshing ? 'Sincronizando...' : 'Sincronizar'}
-                                    </Button>
-                                    <span className="text-xs text-muted-foreground">
-                                        Última:{' '}
-                                        {new Date().toLocaleString('es-GT', {
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                            second: '2-digit',
-                                            hour12: true,
-                                        })}
-                                    </span>
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                            {/* Stats */}
+                            {stats && stats.length > 0 && (
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                                    {stats.map((stat, index) => (
+                                        <div key={index} className="flex items-center gap-2">
+                                            {stat.icon}
+                                            <span className="lowercase">{stat.title}</span>
+                                            <span className="font-medium text-foreground tabular-nums">{stat.value}</span>
+                                        </div>
+                                    ))}
                                 </div>
-                            </div>
+                            )}
+
+                            {/* Refresh */}
+                            <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={isLoading}>
+                                <RefreshCw className={`mr-1 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                                Sincronizar
+                            </Button>
                         </div>
                     </CardHeader>
 
                     <CardContent>
-                        {/* Active Filters Chips */}
-                        {hasActiveFilters && (
-                            <div className="mb-4 flex flex-wrap items-center gap-2">
-                                {activeFilters.map((filter) => (
-                                    <div
-                                        key={filter.key}
-                                        className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
-                                    >
-                                        <span>{filter.label}</span>
-                                        <button
-                                            type="button"
-                                            onClick={filter.onRemove}
-                                            className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full transition-colors hover:bg-blue-200 dark:hover:bg-blue-800"
-                                            aria-label={`Remover filtro: ${filter.label}`}
-                                        >
-                                            <X className="h-3 w-3" />
-                                        </button>
-                                    </div>
-                                ))}
-                                <button
-                                    type="button"
-                                    onClick={clearAllFilters}
-                                    className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                                >
-                                    <X className="h-3 w-3" />
-                                    Limpiar todo
-                                </button>
-                            </div>
-                        )}
                         {/* Search and Filters */}
                         <div className="mb-6 flex flex-col gap-4 sm:flex-row">
                             <div className="flex flex-1 gap-2">
                                 <div className="flex-1">
-                                    <Label htmlFor="search" className="sr-only">
-                                        Search
-                                    </Label>
+                                    <Label htmlFor="search" className="sr-only">Buscar</Label>
                                     <div className="relative">
                                         <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                         <Input
                                             id="search"
                                             placeholder={searchPlaceholder}
-                                            value={search}
-                                            onChange={(e) => setSearch(e.target.value)}
+                                            value={searchInput}
+                                            onChange={(e) => handleSearchChange(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
                                             className="pr-10 pl-10"
                                             disabled={isLoading}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    applyFilters();
-                                                }
-                                            }}
                                         />
-                                        {search && (
+                                        {searchInput && (
                                             <button
                                                 type="button"
-                                                onClick={clearSearch}
-                                                className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                                                onClick={handleClearSearch}
+                                                className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                                 disabled={isLoading}
                                             >
                                                 <X className="h-4 w-4" />
@@ -661,42 +312,40 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                                         )}
                                     </div>
                                 </div>
-                                <Button onClick={applyFilters} disabled={isLoading} className="flex-shrink-0">
+                                <Button onClick={handleSearchSubmit} disabled={isLoading}>
                                     <Search className="mr-2 h-4 w-4" />
                                     Buscar
                                 </Button>
                             </div>
 
-                            <div className="flex gap-2">
-                                <Select value={perPage.toString()} onValueChange={(value) => setPerPage(parseInt(value))}>
-                                    <SelectTrigger className="w-[100px]">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="10">10</SelectItem>
-                                        <SelectItem value="25">25</SelectItem>
-                                        <SelectItem value="50">50</SelectItem>
-                                        <SelectItem value="100">100</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                            <Select value={filters.per_page.toString()} onValueChange={handlePerPageChange}>
+                                <SelectTrigger className="w-[100px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="15">15</SelectItem>
+                                    <SelectItem value="25">25</SelectItem>
+                                    <SelectItem value="50">50</SelectItem>
+                                    <SelectItem value="100">100</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
-                        {/* Table Content */}
+                        {/* Content */}
                         {isLoading && LoadingSkeleton ? (
-                            <LoadingSkeleton rows={perPage} />
+                            <LoadingSkeleton rows={filters.per_page} />
                         ) : (
                             <>
-                                {/* Desktop Table View */}
+                                {/* Desktop Table */}
                                 <div className={`hidden ${breakpointClass}block`}>
-                                    <div className="rounded-md border">
+                                    <div className="overflow-x-auto rounded-md border">
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
                                                     {columns.map((column) => (
                                                         <TableHead
                                                             key={column.key}
-                                                            className={` ${column.width ? columnWidthConfig[column.width] : columnWidthConfig.auto} ${column.align ? textAlignmentConfig[column.align] : textAlignmentConfig.left} ${column.className || ''} break-words whitespace-normal`}
+                                                            className={`${column.width ? columnWidthConfig[column.width] : ''} ${column.align ? textAlignmentConfig[column.align] : textAlignmentConfig.left} ${column.className || ''}`}
                                                         >
                                                             {column.sortable ? (
                                                                 <Button
@@ -714,19 +363,11 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                                                     ))}
                                                 </TableRow>
                                             </TableHeader>
-
                                             <TableBody>
                                                 {data.data.length === 0 ? (
                                                     <TableRow>
-                                                        <TableCell colSpan={columns.length} className="h-40 text-center md:h-32">
-                                                            <div className="flex flex-col items-center justify-center space-y-2">
-                                                                <p className="text-sm text-muted-foreground">No se encontraron resultados</p>
-                                                                {search && (
-                                                                    <p className="text-xs text-muted-foreground">
-                                                                        Intenta con términos de búsqueda diferentes
-                                                                    </p>
-                                                                )}
-                                                            </div>
+                                                        <TableCell colSpan={columns.length} className="h-32 text-center">
+                                                            <p className="text-muted-foreground">No se encontraron resultados</p>
                                                         </TableCell>
                                                     </TableRow>
                                                 ) : (
@@ -735,12 +376,7 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                                                             {columns.map((column) => (
                                                                 <TableCell
                                                                     key={column.key}
-                                                                    className={` ${column.align ? textAlignmentConfig[column.align] : textAlignmentConfig.left} ${column.className || ''} py-5 leading-relaxed break-words whitespace-normal md:py-4`}
-                                                                    style={{
-                                                                        wordWrap: 'break-word',
-                                                                        overflowWrap: 'break-word',
-                                                                        hyphens: 'auto',
-                                                                    }}
+                                                                    className={`${column.width ? columnWidthConfig[column.width] : ''} ${column.align ? textAlignmentConfig[column.align] : textAlignmentConfig.left} ${column.className || ''} py-4`}
                                                                 >
                                                                     {renderCellContent(column, item)}
                                                                 </TableCell>
@@ -753,18 +389,13 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                                     </div>
                                 </div>
 
-                                {/* Mobile/Tablet Card View */}
+                                {/* Mobile Cards */}
                                 {renderMobileCard && (
                                     <div className={`${breakpointClass}hidden`}>
                                         <div className="grid gap-4">
                                             {data.data.length === 0 ? (
-                                                <div className="flex flex-col items-center justify-center space-y-3 py-16 md:py-12">
-                                                    <p className="text-base text-muted-foreground">No se encontraron resultados</p>
-                                                    {search && (
-                                                        <p className="text-center text-sm text-muted-foreground">
-                                                            Intenta con términos de búsqueda diferentes
-                                                        </p>
-                                                    )}
+                                                <div className="py-12 text-center">
+                                                    <p className="text-muted-foreground">No se encontraron resultados</p>
                                                 </div>
                                             ) : (
                                                 data.data.map((item) => <div key={item.id}>{renderMobileCard(item)}</div>)
@@ -778,10 +409,10 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                                     data={data}
                                     routeName={routeName}
                                     filters={{
-                                        search,
-                                        per_page: perPage,
-                                        sort_field: sortField,
-                                        sort_direction: sortDirection,
+                                        per_page: filters.per_page,
+                                        search: filters.search,
+                                        sort_field: currentSortField || undefined,
+                                        sort_direction: currentSortDirection,
                                     }}
                                     className="mt-8"
                                 />
@@ -794,17 +425,6 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
     );
 };
 
-// Memoized export with custom comparison for better performance
-export const DataTable = memo(DataTableComponent, (prevProps, nextProps) => {
-    // Deep compare data arrays and key props for optimal re-rendering
-    return (
-        prevProps.title === nextProps.title &&
-        prevProps.description === nextProps.description &&
-        prevProps.data.current_page === nextProps.data.current_page &&
-        prevProps.data.total === nextProps.data.total &&
-        prevProps.filters.search === nextProps.filters.search &&
-        prevProps.filters.per_page === nextProps.filters.per_page &&
-        prevProps.routeName === nextProps.routeName &&
-        JSON.stringify(prevProps.data.data) === JSON.stringify(nextProps.data.data)
-    );
-}) as <T extends { id: number | string }>(props: DataTableProps<T>) => React.ReactElement;
+export const DataTable = memo(DataTableComponent) as <T extends { id: number | string }>(
+    props: DataTableProps<T>,
+) => React.ReactElement;

@@ -26,7 +26,7 @@ class ActivityController extends Controller
         $userId = $request->get('user_id', '');
         $startDate = $request->get('start_date', '');
         $endDate = $request->get('end_date', '');
-        $perPage = $request->get('per_page', 10);
+        $perPage = $request->get('per_page', 15);
 
         // Query base para actividades de usuarios
         $activitiesQuery = UserActivity::with('user')
@@ -203,7 +203,7 @@ class ActivityController extends Controller
             'options' => [
                 'event_types' => $eventTypes,
                 'users' => $users,
-                'per_page_options' => [10, 25, 50, 100],
+                'per_page_options' => [15, 25, 50, 100],
             ],
         ]);
     }

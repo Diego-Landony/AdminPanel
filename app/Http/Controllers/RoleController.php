@@ -24,20 +24,10 @@ class RoleController extends Controller
     public function index(Request $request): Response
     {
         // Obtener parámetros de paginación y ordenamiento
-        $perPage = $request->get('per_page', 10);
+        $perPage = $request->get('per_page', 15);
         $search = $request->get('search', '');
         $sortField = $request->get('sort_field', 'name');
         $sortDirection = $request->get('sort_direction', 'asc');
-        $sortCriteria = $request->get('sort_criteria');
-
-        // Parse multiple sort criteria if provided
-        $multipleSortCriteria = [];
-        if ($sortCriteria) {
-            $decoded = json_decode($sortCriteria, true);
-            if (is_array($decoded)) {
-                $multipleSortCriteria = $decoded;
-            }
-        }
 
         // Query base con eager loading optimizado
         $query = Role::with([
@@ -60,29 +50,13 @@ class RoleController extends Controller
             });
         }
 
-        // Aplicar ordenamiento múltiple si está disponible
-        if (! empty($multipleSortCriteria)) {
-            foreach ($multipleSortCriteria as $criteria) {
-                $field = $criteria['field'] ?? 'name';
-                $direction = $criteria['direction'] ?? 'asc';
-
-                if ($field === 'role' || $field === 'name') {
-                    $query->orderBy('name', $direction);
-                } elseif ($field === 'created_at') {
-                    $query->orderBy('created_at', $direction);
-                } else {
-                    $query->orderBy($field, $direction);
-                }
-            }
+        // Aplicar ordenamiento
+        if ($sortField === 'role' || $sortField === 'name') {
+            $query->orderBy('name', $sortDirection);
+        } elseif ($sortField === 'created_at') {
+            $query->orderBy('created_at', $sortDirection);
         } else {
-            // Fallback a ordenamiento único
-            if ($sortField === 'role' || $sortField === 'name') {
-                $query->orderBy('name', $sortDirection);
-            } elseif ($sortField === 'created_at') {
-                $query->orderBy('created_at', $sortDirection);
-            } else {
-                $query->orderBy('is_system', 'desc')->orderBy('name', 'asc');
-            }
+            $query->orderBy($sortField, $sortDirection);
         }
 
         // Paginar y obtener roles
@@ -125,7 +99,6 @@ class RoleController extends Controller
                 'per_page' => $perPage,
                 'sort_field' => $sortField,
                 'sort_direction' => $sortDirection,
-                'sort_criteria' => $multipleSortCriteria,
             ],
             'roleStats' => $roleStats,
         ]);

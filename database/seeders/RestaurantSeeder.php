@@ -1,7 +1,5 @@
 <?php
 
-
-
 namespace Database\Seeders;
 
 use App\Models\Restaurant;
@@ -18,6 +16,7 @@ class RestaurantSeeder extends Seeder
             [
                 'name' => 'Subway Obelisco',
                 'address' => '16 Calle 1-01 Zona 10 Plaza Obelisco local 15',
+                'price_location' => 'capital',
                 'latitude' => 14.5951050,
                 'longitude' => -90.5166110,
                 'is_active' => true,
@@ -29,55 +28,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.4.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjUxMzc3NzMsMTQuNjE0MDI1OSwwIC05MC41MTcxMDMyLDE0LjU5NDg4MTIsMCAtOTAuNTE3MjYyMSwxNC41OTM3MzQyLDAgLTkwLjUxMzMyOSwxNC41ODg5NDUzLDAgLTkwLjUxMTA2OTYsMTQuNTg4MTQzNCwwIC05MC41MDg5MDI0LDE0LjU4NjkxNTUsMCAtOTAuNTA5NDYwNCwxNC41ODU1MDA3LDAgLTkwLjUxMjU3MTksMTQuNTgwNzYzMywwIC05MC41MDk1NDY0LDE0LjU3OTgyNzUsMCAtOTAuNTA5MjQ2LDE0LjU4MTEyNDEsMCAtOTAuNTA3MTU0LDE0LjU4MDYyMzEsMCAtOTAuNTA3MTcwMiwxNC41Nzk4Mzc4LDAgLTkwLjUwNjE5OTMsMTQuNTc4ODg2NCwwIC05MC41MDI0MDE2LDE0LjU3NzMyMzYsMCAtOTAuNDkzMzQ3MiwxNC41NzcwMjIxLDAgLTkwLjQ4OTgyODY0OTk5OTk5LDE0LjU3MzY3MzE3NTQ0NjExOCwwIC05MC40ODg3NTIxMjY2OTM3NCwxNC41NzIyODYyNzkyMzg3NDgsMCAtOTAuNDg3MTg1NzE2NjI5MDMsMTQuNTcwNDI3NTg5MTEyMzA2LDAgLTkwLjQ4Njc0NzkwODMxNDUzLDE0LjU3MDM3NTg5NDU2MjIxNywwIC05MC40ODYzMTAxLDE0LjU3MDMyNDIsMCAtOTAuNDkwMTQwNCwxNC41NzYzNTcsMCAtOTAuNDg5MDMxMywxNC41NzY5MDM1LDAgLTkwLjQ4Njg5MjIsMTQuNTc2OTEsMCAtOTAuNDgzNjQ0MSwxNC41Nzc4NzgzLDAgLTkwLjQ4MzYyNzksMTQuNTc5NTY1NiwwIC05MC40ODYyMDk2LDE0LjU3OTQ0NjcsMCAtOTAuNDg2OTIyLDE0LjU4MDA1MjksMCAtOTAuNDg4NzYxLDE0LjU4MTAzMjksMCAtOTAuNDkxNTAxMiwxNC41ODI0MzM0LDAgLTkwLjQ5MjA1MjgsMTQuNTgyMTcyNiwwIC05MC40OTMyODI2LDE0LjU4MTA0NjQsMCAtOTAuNDkzODMzMSwxNC41ODEzOTcsMCAtOTAuNDk0Njg0MSwxNC41ODA3OTIzLDAgLTkwLjQ5NDk2OTgsMTQuNTgwODAwNSwwIC05MC40OTU1NzczLDE0LjU4MTM0ODUsMCAtOTAuNDk1ODYxNywxNC41ODE5MjAzLDAgLTkwLjQ5NTM2MDIsMTQuNTgyMDkyMywwIC05MC40OTQ4MjkzLDE0LjU4MjQ2MTYsMCAtOTAuNDkzNzQwNCwxNC41ODI5MDQ4LDAgLTkwLjQ5MzgxNTYsMTQuNTgzMDE1OSwwIC05MC40OTQzMTUyLDE0LjU4NDIyODQsMCAtOTAuNTAxMDMxNSwxNC41OTYxMjcxLDAgLTkwLjUwMTQyODQsMTQuNjAwNTYwMywwIC05MC41MDI4NzE0LDE0LjYwMjMyMDEsMCAtOTAuNTAzNDIxMywxNC42MDY5Mzc2LDAgLTkwLjUwNTQ3MzMsMTQuNjExMDk4MywwIC05MC41MDk3MjcyLDE0LjYxMjExMDUsMCAtOTAuNTA5NjQ2NywxNC42MTMzNzE5LDAgLTkwLjUxMzc3NzMsMTQuNjE0MDI1OSwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Prisa',
                 'address' => '10 Avenida 18-02  Zona 10 Centro Comerical Prisa',
+                'price_location' => 'capital',
                 'latitude' => 14.5912500,
                 'longitude' => -90.5097530,
                 'is_active' => true,
@@ -89,55 +82,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.5.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Zona 1 Café',
                 'address' => '6 Avenida 9-18 Zona 1',
+                'price_location' => 'capital',
                 'latitude' => 14.6402750,
                 'longitude' => -90.5142720,
                 'is_active' => true,
@@ -149,55 +136,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.74.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjUzNDc0NjIsMTQuNjEzNjEyNiwwIC05MC41MzE2NzYyLDE0LjYxNTI5MjYsMCAtOTAuNTI2MzE2MSwxNC42MjA2OTI2LDAgLTkwLjUyNDMwNjIsMTQuNjIyNjMyNiwwIC05MC41MjIyNDYyLDE0LjYyNDMwMjYsMCAtOTAuNTIxNzU1NywxNC42MjQ2Nzg0LDAgLTkwLjUxODgwNSwxNC42MjQ0MTI5LDAgLTkwLjUxODE4OTYsMTQuNjI1MjQzMywwIC05MC41MTYyNTQ1LDE0LjYyNTQ3MTYsMCAtOTAuNTE0ODQxMiwxNC42MjUyMjIyLDAgLTkwLjUxMzEwMDIsMTQuNjI1MjE5NiwwIC05MC41MTExOTgzLDE0LjYyNjgxNTYsMCAtOTAuNTA5NTUwOSwxNC42MjI4NDQ3LDAgLTkwLjUwMzIxNjMsMTQuNjIxODM3OCwwIC05MC40OTk5ODYzLDE0LjYyMTc4MjYsMCAtOTAuNDk3MTA2MywxNC42MjU1MzI2LDAgLTkwLjQ5NTA0NjIsMTQuNjI2OTIyNiwwIC05MC40OTM3NTYzLDE0LjYyNzUzMjYsMCAtOTAuNDkyMTg2MywxNC42MzYwNDI2LDAgLTkwLjQ5NDY4NjIsMTQuNjM0NTMyNiwwIC05MC40OTYyMTYzLDE0LjYzMjQ5MjYsMCAtOTAuNDk3NjA2MywxNC42MzMyMTI2LDAgLTkwLjQ5OTE5NjMsMTQuNjI2OTkyNiwwIC05MC41MDA0MTYzLDE0LjYyNzE0MjYsMCAtOTAuNTAyODc2MywxNC42Mjc0NTI2LDAgLTkwLjUwMzExNjMsMTQuNjI1NTUyNiwwIC05MC41MDU3NTYyLDE0LjYyNTgyMjYsMCAtOTAuNTA2MTM2MiwxNC42MjI5MzI2LDAgLTkwLjUwODU5NjMsMTQuNjIzMTEyNiwwIC05MC41MDg0NjYzLDE0LjYyMzkwMjYsMCAtOTAuNTA5NDQ2MywxNC42MjQxMTI2LDAgLTkwLjUwOTIzNjMsMTQuNjI2MDAyNiwwIC05MC41MDkxMTYzLDE0LjYyNzA1MjYsMCAtOTAuNTA4NTU2MywxNC42MjY5NDI2LDAgLTkwLjUwNzgxNjMsMTQuNjI3MDAyNiwwIC05MC41MDc0MzYzLDE0LjYyOTQ4MjYsMCAtOTAuNTA2NTE2MiwxNC42MjkyNTI2LDAgLTkwLjUwNjM3NjIsMTQuNjI5OTQyNiwwIC05MC41MDQ2MDYyLDE0LjYyOTc1MjYsMCAtOTAuNTA0MzI2MywxNC42MzE1MDI2LDAgLTkwLjUwMzc0NjMsMTQuNjM2ODQyNiwwIC05MC41MDU0NzYyLDE0LjYzNzI5MjYsMCAtOTAuNTA1MjI2MiwxNC42MzkzMjI2LDAgLTkwLjUwMDcxNjMsMTQuNjQwMDIyNiwwIC05MC40OTgyNzYzLDE0LjY0MTgwMjYsMCAtOTAuNDk2OTAyMSwxNC42NDE3NzAxLDAgLTkwLjQ5NjM3MDUsMTQuNjQxOTQ1OSwwIC05MC40OTQ4NTE4LDE0LjY0NDM0MzEsMCAtOTAuNDk2NDc4OCwxNC42NDUwMjYxLDAgLTkwLjUwMzAzMDQsMTQuNjQ3NzMzMiwwIC05MC41MDQ2MDkzLDE0LjY0ODAzMzYsMCAtOTAuNTA2MDg1NSwxNC42NDc2NjQ3LDAgLTkwLjUwODgwNjMsMTQuNjQ3NzUyNiwwIC05MC41MTI2NzI4LDE0LjY0ODExNzksMCAtOTAuNTE3Mzk3NiwxNC42NDg3NzM5LDAgLTkwLjUyMDAwOTYsMTQuNjQ5MTU0NywwIC05MC41MjE3MjA0LDE0LjY0ODExMzQsMCAtOTAuNTE5Njg2OCwxNC42NTQzNDg1LDAgLTkwLjUyMDc4NiwxNC42NTYzOTAyLDAgLTkwLjUyNDA2ODMsMTQuNjU0MTM4MywwIC05MC41MjQ0OTc2LDE0LjY0OTI5MjksMCAtOTAuNTI0ODg0MSwxNC42NDY0MTk3LDAgLTkwLjUyMjIwODEsMTQuNjQ3MDYwOSwwIC05MC41MjI0ODI2LDE0LjY0NTIyMTMsMCAtOTAuNTIxNTc5LDE0LjY0NDQ4OTEsMCAtOTAuNTIyMTAyNCwxNC42NDEyMjQxLDAgLTkwLjUyMjkxNjIsMTQuNjM2ODQyNiwwIC05MC41MjM1ODYyLDE0LjYzNjkwMjYsMCAtOTAuNTI2Nzc2MSwxNC42MzIzODI2LDAgLTkwLjUyODAxNjEsMTQuNjI2NDQyNiwwIC05MC41MjgyNTYxLDE0LjYyNTY2MjYsMCAtOTAuNTI5MjU1NSwxNC42MjU4ODk0LDAgLTkwLjUzMDE3ODQsMTQuNjE5MDczMywwIC05MC41MzUwMjY1LDE0LjYxNDQzMjcsMCAtOTAuNTM0NzQ2MiwxNC42MTM2MTI2LDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
             [
                 'name' => 'Subway Zona Pradera',
                 'address' => '18 Calle 24-69 Zona 10 Empresarial Zona Pradera Torre 3 nivel 1',
+                'price_location' => 'capital',
                 'latitude' => 14.5819211,
                 'longitude' => -90.4972285,
                 'is_active' => true,
@@ -209,55 +190,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.25.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '18:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '18:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '18:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '18:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '18:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '18:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '18:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '18:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '18:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '18:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '18:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '18:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '18:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '18:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjQ5NTg4NzcsMTQuNTgxOTMxOSwwIC05MC40OTUzNzI3LDE0LjU4MTM1MDQsMCAtOTAuNDkzMDU1MiwxNC41ODIyNzcxLDAgLTkwLjQ5MzQwMzksMTQuNTgyNjg3MywwIC05MC40OTU4ODc3LDE0LjU4MTkzMTksMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway Zona 9 Café',
                 'address' => '7 Avenida y 8 Calle Esquina Zona 9',
+                'price_location' => 'capital',
                 'latitude' => 14.6062750,
                 'longitude' => -90.5175880,
                 'is_active' => true,
@@ -269,55 +244,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.9.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjUyMDg1NDQsMTQuNjAwODA4OCwwIC05MC41MjA5Mjk1LDE0LjYwMDQzNTEsMCAtOTAuNTIwOTgzMSwxNC42MDAxMjM2LDAgLTkwLjUyMTE1NzEsMTQuNTk5MTE5OCwwIC05MC41MjEzODAxLDE0LjU5Nzk4NDgsMCAtOTAuNTIxNjM4MSwxNC41OTcwOTUyLDAgLTkwLjUyMTc1NjYsMTQuNTk2MTUzNywwIC05MC41MTgyMzE0LDE0LjU5NDc2NDQsMCAtOTAuNTE3ODA0OCwxNC41OTQ5ODQxLDAgLTkwLjUxMzkwNDUsMTQuNjE1MjYwNCwwIC05MC41MTA3NTcyLDE0LjYxNDg0MzYsMCAtOTAuNTA4ODk3NSwxNC42MTY3OTM3LDAgLTkwLjUwNDUzNDQsMTQuNjE0MzQwNCwwIC05MC41MDI1NTQ0LDE0LjYxNzg2MDQsMCAtOTAuNTAwNDg0NCwxNC42MTcxMDA0LDAgLTkwLjQ5OTYxNDQsMTQuNjIxNzIwNCwwIC05MC41MDQ1MDQ0LDE0LjYyMjEyMDQsMCAtOTAuNTA5Mzg0NCwxNC42MjI3MzA0LDAgLTkwLjUxMTc4NDksMTQuNjI0NjUxMywwIC05MC41MTQ3ODk2LDE0LjYyNTIxNTEsMCAtOTAuNTE2MTY3MywxNC42MjU0MTA5LDAgLTkwLjUxODA5MjIsMTQuNjI1MjEyMiwwIC05MC41MTgyNzQ1LDE0LjYyNDg2MDQsMCAtOTAuNTIwNzUzNywxNC42MjA1NzY3LDAgLTkwLjUyMjIzNjUsMTQuNjE4Njg1MiwwIC05MC41MjExNTEsMTQuNjE4MDI1MSwwIC05MC41MjAwMDExLDE0LjYxNzQ0OCwwIC05MC41MjAyNTQ4LDE0LjYxNTY4MTMsMCAtOTAuNTIzNTA4OCwxNC42MTY4MTk3LDAgLTkwLjUyNDExNTksMTQuNjE1Nzk1LDAgLTkwLjUxODIwNDQsMTQuNjE0ODA4OSwwIC05MC41MTg0NDA1LDE0LjYxMzQwNzYsMCAtOTAuNTE4Nzc5LDE0LjYxMTcwMTUsMCAtOTAuNTE4OTc1NSwxNC42MTA2NDM5LDAgLTkwLjUxOTU4OTQsMTQuNjA3NDA4NSwwIC05MC41MTk3NzQ4LDE0LjYwNjQ1MDcsMCAtOTAuNTE5ODE3NywxNC42MDYyNjM5LDAgLTkwLjUxOTg2MDYsMTQuNjA2MDY2NiwwIC05MC41MTk5MjUsMTQuNjA1NzI0LDAgLTkwLjUyMDE4MjUsMTQuNjA0MjA4MiwwIC05MC41MjA4NTQ0LDE0LjYwMDgwODgsMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway Mix',
                 'address' => 'Zona 8 de Mixco Centro Comercial Mix Sankris local 2',
+                'price_location' => 'capital',
                 'latitude' => 14.6131527,
                 'longitude' => -90.6010509,
                 'is_active' => true,
@@ -329,55 +298,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.26.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjYwMDM0NjMsMTQuNTkwNTA4MywwIC05MC41OTkyNTM2LDE0LjU5MDA4MjUsMCAtOTAuNTk4MDU3NiwxNC41OTAwMTg3LDAgLTkwLjU5ODExMywxNC41OTE5ODg5LDAgLTkwLjU5NzIzMzUsMTQuNTk3NjkzOCwwIC05MC41OTYzMTEsMTQuNTk4MjI4MiwwIC05MC41OTYzNTI2LDE0LjU5NTQ3NSwwIC05MC41ODg4NzMzLDE0LjU5MjY2OTksMCAtOTAuNTg4NDI2NywxNC41OTI2MjEzLDAgLTkwLjU4NzQzMywxNC41OTIzNjUsMCAtOTAuNTg0MTEyNywxNC41OTA1MDk2LDAgLTkwLjU4Mzk1MiwxNC41OTE4MTY3LDAgLTkwLjU4Mjk4NjEsMTQuNTkzOTA4MywwIC05MC41ODU5NzcyLDE0LjU5OTc5MDUsMCAtOTAuNTg0NjA2MiwxNC42MDUyODY1LDAgLTkwLjU4MjY3NjIsMTQuNjA3Mjk4NSwwIC05MC41ODIyMTYyLDE0LjYxMDExODUsMCAtOTAuNTg2Mjg0MiwxNC42MTE1NDY1LDAgLTkwLjU4ODExMDIsMTQuNjE0MDQ0NSwwIC05MC41ODk4MDcyLDE0LjYxNDc1NjUsMCAtOTAuNTkxMjMyMiwxNC42MTUwMjg1LDAgLTkwLjU5MDYwNDIsMTQuNjE4MzU2NSwwIC05MC41OTA3NDUyLDE0LjYyMDAyMDUsMCAtOTAuNTkwMTM5OCwxNC42MjIwOSwwIC05MC41OTQ0MTMzLDE0LjYyNDE2NDgsMCAtOTAuNTk3ODA3MSwxNC42MjQ0MzM0LDAgLTkwLjU5ODk0MzIsMTQuNjI0NzcxNiwwIC05MC42MDA1MDk2LDE0LjYyNDYwNTUsMCAtOTAuNjAyODc5NSwxNC42MjQ0MywwIC05MC42MDYyNDgzLDE0LjYyNTQ0NzQsMCAtOTAuNjA3MDE4NywxNC42MjU0MDEzLDAgLTkwLjYwODM0NjcsMTQuNjI1MzE3OCwwIC05MC42MDk3MzksMTQuNjI1MzU4OSwwIC05MC42MTEwNjI3LDE0LjYyNTQ1MiwwIC05MC42MTQ3NjgxLDE0LjYyNzQ5NjcsMCAtOTAuNjE3MzYxNywxNC42MjY5OTE0LDAgLTkwLjYxOTU0ODksMTQuNjI3MzgyNCwwIC05MC42MTc2NTkxLDE0LjYyMTIxMjUsMCAtOTAuNjEzNDk5NCwxNC42MTYyOTQxLDAgLTkwLjYxNzY2NTEsMTQuNjEyNDUzNSwwIC05MC42MTc3MzE2LDE0LjYxMDUyMjYsMCAtOTAuNjE1NzM4MSwxNC42MTEyNDk1LDAgLTkwLjYxMzY1MjgsMTQuNjA5NzE4NSwwIC05MC42MTE1MDMyLDE0LjYwODk3NjUsMCAtOTAuNjEwNzQ1MSwxNC42MDY5NTI1LDAgLTkwLjYwNzk0NDEsMTQuNjA3NjQzNSwwIC05MC42MDQzOTMyLDE0LjYwNDI2NDUsMCAtOTAuNjAxNTkyNiwxNC42MDAzODc3LDAgLTkwLjYwMTQ5MzMsMTQuNTk4MjkyLDAgLTkwLjYwMTgyMzEsMTQuNTk2MzIwOSwwIC05MC42MDM4NTg4LDE0LjU5NTU1NDEsMCAtOTAuNjAzODU4MSwxNC41OTQ3MjM5LDAgLTkwLjYwMzQ5MjYsMTQuNTkzNDE2MSwwIC05MC42MDIwODY1LDE0LjU5MzY2NTcsMCAtOTAuNjAxNjg5MiwxNC41OTMxNDE2LDAgLTkwLjYwMTEzMDksMTQuNTkyOTI4OSwwIC05MC42MDAzNDYzLDE0LjU5MDUwODMsMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway Atanasio',
                 'address' => 'Calzada Atanasio Tzul 51-57 zona 12 Centro Comercial Atanasio Tzul local 4',
+                'price_location' => 'capital',
                 'latitude' => 14.5590177,
                 'longitude' => -90.5490385,
                 'is_active' => true,
@@ -389,55 +352,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.3.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjU1NjExMTgsMTQuNTE2OTk2LDAgLTkwLjU1Mjk3NDYsMTQuNTE3NjA1MSwwIC05MC41NTIxMjQ4LDE0LjUyMTI0MzYsMCAtOTAuNTUyNjU0OCwxNC41MjI2NjgxLDAgLTkwLjU1MTUxMSwxNC41MjQwMzA0LDAgLTkwLjU0NTE0NDEsMTQuNTM2MjcxNSwwIC05MC41NDc0NDg3LDE0LjUzODM3MjksMCAtOTAuNTU0NzMxNiwxNC41MzkzNzMzLDAgLTkwLjU1MzgxNzYsMTQuNTQzNTMwOSwwIC05MC41NTEzMzcyLDE0LjU0MjMxOTQsMCAtOTAuNTQ2OTU5NCwxNC41NDEzOTg2LDAgLTkwLjU0ODEwNzEsMTQuNTQ0NjQwNCwwIC05MC41NDg3Mzk5LDE0LjU0ODc1NDYsMCAtOTAuNTQ0NjYxOSwxNC41NTM0MTQsMCAtOTAuNTQzNDU5MSwxNC41NTIwOTE4LDAgLTkwLjUzNjU0ODYsMTQuNTUwODk0MSwwIC05MC41MzgwMDU3LDE0LjU0MDE5MDYsMCAtOTAuNTM3NDg4NiwxNC41Mzk0NTY4LDAgLTkwLjUzNDg4MiwxNC41NTE2ODQsMCAtOTAuNTQ4MjQwMywxNC41NTY2ODMzLDAgLTkwLjU0MzkyNzcsMTQuNTY3ODA0NywwIC05MC41NDA1ODg0LDE0LjU3MjQ2NTYsMCAtOTAuNTQxNzk4MSwxNC41ODA2OTg2LDAgLTkwLjUzNjE0OTIsMTQuNTg0NjIxMSwwIC05MC41MzU0NjE5LDE0LjU4ODQzODQsMCAtOTAuNTM5NTgwNCwxNC41OTAzMzg1LDAgLTkwLjU0NjE0NTEsMTQuNTkyMjgwMSwwIC05MC41NDgyODgyLDE0LjU5MTU5NDksMCAtOTAuNTUwODU3OSwxNC41OTMyOTc1LDAgLTkwLjU1Mjg0ODUsMTQuNTk1MDIzNywwIC05MC41NTQ4MzkxLDE0LjU5NjUwMDcsMCAtOTAuNTU3NDk0NywxNC41OTQxMTUyLDAgLTkwLjU1OTI0OSwxNC41OTEzOTc2LDAgLTkwLjU1ODc1NTUsMTQuNTkwNjcwNywwIC05MC41NTgxNjU0LDE0LjU4NzI3NTQsMCAtOTAuNTU4MDA0NCwxNC41NzgyMzE4LDAgLTkwLjU1NDY1MDYsMTQuNTcxODk1MSwwIC05MC41NTUwNzM0LDE0LjU1ODQ5NzUsMCAtOTAuNTU3ODYyMSwxNC41NTc4NjEyLDAgLTkwLjU1OTE5MTcsMTQuNTU2NDc3MywwIC05MC41NTkyNTU3LDE0LjU1NTk1MTUsMCAtOTAuNTU3Njg4OSwxNC41NTE4NTM0LDAgLTkwLjU1Njk1ODUsMTQuNTUwNDY5NSwwIC05MC41NTYxMjA5LDE0LjU1MjA4NjcsMCAtOTAuNTU1ODYyNiwxNC41NTI3Mjc4LDAgLTkwLjU1NDYxNzMsMTQuNTUzOTA4OCwwIC05MC41NTUwNjcxLDE0LjU1Mjg2NzYsMCAtOTAuNTYwMjk2LDE0LjUyNTEzODcsMCAtOTAuNTU2MTExOCwxNC41MTY5OTYsMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway Tikal Futura',
                 'address' => 'Calzada Roosevelt 23-43 Zona 11 Centro Comercial Tikal Futura local 305',
+                'price_location' => 'capital',
                 'latitude' => 14.6227866,
                 'longitude' => -90.5538534,
                 'is_active' => true,
@@ -449,55 +406,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.6.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '22:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '22:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '22:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '22:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '22:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '22:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '22:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '08:00',
+                        'close' => '22:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '08:00',
+                        'close' => '22:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '08:00',
+                        'close' => '22:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '08:00',
+                        'close' => '22:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '08:00',
+                        'close' => '22:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '08:00',
+                        'close' => '22:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '08:00',
+                        'close' => '22:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjU1MDUwNTksMTQuNjEzNzA4NSwwIC05MC41NDc3NjcxLDE0LjYxNzc4NzMsMCAtOTAuNTQ2MzIwNSwxNC42MTk5MTYyLDAgLTkwLjU0Njc1NjksMTQuNjIwMTY2MSwwIC05MC41NDcxMDAyLDE0LjYyMDM0MjYsMCAtOTAuNTQ5MzIxLDE0LjYyMTU2NzUsMCAtOTAuNTUzODA1NywxNC42MjQwMjgsMCAtOTAuNTU1MDcxOCwxNC42MjQ2NzE2LDAgLTkwLjU1NjgzMTMsMTQuNjI1NTY0NCwwIC05MC41NTc5NzkyLDE0LjYyNjI3MDMsMCAtOTAuNTU5MTU5MywxNC42MjY4OTMyLDAgLTkwLjU1OTczMjgsMTQuNjI3MjI1NywwIC05MC41NjAzMzksMTQuNjI3NTQ3NSwwIC05MC41NjEwMjU3LDE0LjYyNzg3OTcsMCAtOTAuNTYxOTA1NCwxNC42MjgzNjc2LDAgLTkwLjU2Mjc1MjksMTQuNjI4ODAzNywwIC05MC41NjQwODM0LDE0LjYyOTU1MTEsMCAtOTAuNTY2NDMzLDE0LjYzMDgyOCwwIC05MC41NjgzMTA1LDE0LjYzMjAyMTcsMCAtOTAuNTcwNTcxNiwxNC42MzI5MzU1LDAgLTkwLjU3MjAwOTMsMTQuNjMwMTg0NiwwIC05MC41NzIwOTUxLDE0LjYyODM0NzEsMCAtOTAuNTcxMDY1MSwxNC42MjcxMTcsMCAtOTAuNTY5NTA5NSwxNC42MjU3NDQxLDAgLTkwLjU2Nzg0NjUsMTQuNjEwNDgwNywwIC05MC41NzM5MTgxLDE0LjYwNjM1NjIsMCAtOTAuNTcyNjI1LDE0LjYwMTE4MjYsMCAtOTAuNTcwMzg3OCwxNC41OTg5MTYsMCAtOTAuNTcyNjAzMSwxNC41OTAzMTU5LDAgLTkwLjU3NDE5MjMsMTQuNTgyMDA4NiwwIC05MC41NzM1MDY5LDE0LjU4MTM0MzMsMCAtOTAuNTY4ODk2MiwxNC41ODQ0NTY3LDAgLTkwLjU2NTU3NTUsMTQuNTg4MTY1MiwwIC05MC41NjU1NTkzLDE0LjU5MjEyMjksMCAtOTAuNTYwNTA1NiwxNC42MDA1NzgxLDAgLTkwLjU1MDUwNTksMTQuNjEzNzA4NSwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Naranjo',
                 'address' => 'Boulevard Bosques de San Nicolas 24-53 Zona 4 de Mixco Centro Comercial El Naranjo',
+                'price_location' => 'capital',
                 'latitude' => 14.6520091,
                 'longitude' => -90.5413813,
                 'is_active' => true,
@@ -509,55 +460,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.11.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:40',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:40',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:40',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:40',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:40',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:40',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:40',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:40',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:40',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:40',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:40',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:40',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:40',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:40',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjU2NTAxODcsMTQuNjYzNjY4NCwwIC05MC41NjQ0OTU2LDE0LjY2MzM3NzQsMCAtOTAuNTYzNTUzLDE0LjY2Mjg4MzgsMCAtOTAuNTYyNTIzOCwxNC42NjIyOTQzLDAgLTkwLjU2MzE2MDksMTQuNjYwNTc1MSwwIC05MC41NTc0NTEsMTQuNjU3NzIyOSwwIC05MC41NTYwMTMzLDE0LjY1ODA5NjUsMCAtOTAuNTUzNDE2OSwxNC42NTQzMTgzLDAgLTkwLjU1MjU1MTksMTQuNjUzODYzOCwwIC05MC41NTQwNDEsMTQuNjQ4NDE4OSwwIC05MC41NTM3MjAzLDE0LjY0NjE4MTUsMCAtOTAuNTUyMzUwMywxNC42NDcwMTE1LDAgLTkwLjU1MDMwMDMsMTQuNjQ3MTcxNSwwIC05MC41NDkxNTAzLDE0LjY0Njk5MTUsMCAtOTAuNTQ4MjkwMywxNC42NDgxMDE1LDAgLTkwLjU0NzkzMDMsMTQuNjQ4MzQxNSwwIC05MC41NDgyOTcyLDE0LjY0OTYwMjIsMCAtOTAuNTQ4Mjg1MSwxNC42NDk2MzU5LDAgLTkwLjU0ODI2NzYsMTQuNjQ5Njc3NCwwIC05MC41NDcxNjc5LDE0LjY0ODU3MzIsMCAtOTAuNTQ1OTQ0OSwxNC42NDkwMTgxLDAgLTkwLjU0NDA0NDEsMTQuNjQ4NDc0NSwwIC05MC41NDMxNTEzLDE0LjY1MDQzMjYsMCAtOTAuNTQyMDAwMywxNC42NTAzMDE1LDAgLTkwLjUzOTA4MDMsMTQuNjQ1ODExNSwwIC05MC41MzY4MTAyLDE0LjY0NTkxMTUsMCAtOTAuNTMzNjEwMiwxNC42NDU5ODE1LDAgLTkwLjUzMjQxMDIsMTQuNjQ4NzkxNSwwIC05MC41MzExNzAyLDE0LjY1MDU2MTUsMCAtOTAuNTMzNDMwMiwxNC42NTI0NTE1LDAgLTkwLjUzNzg3ODksMTQuNjUxODAyMywwIC05MC41Mzc0NDAyLDE0LjY1MjQyNCwwIC05MC41MzYzOSwxNC42NTMzNDEyLDAgLTkwLjUzNDM0OTEsMTQuNjU1OTM5LDAgLTkwLjUzNTI5NDUsMTQuNjU2ODM0OCwwIC05MC41MzY1NTA2LDE0LjY1NzQ3OSwwIC05MC41Mzk0NTAzLDE0LjY1NjA5MTUsMCAtOTAuNTM5MTQwMywxNC42NTY4MTE1LDAgLTkwLjUzODQyMDMsMTQuNjU3MTkxNSwwIC05MC41MzgyNjAzLDE0LjY1Nzg1MTUsMCAtOTAuNTM3ODMwMywxNC42NTg2NTE1LDAgLTkwLjUzODQ0MDMsMTQuNjU5MDkxNSwwIC05MC41MzkxODAzLDE0LjY1OTE3MTUsMCAtOTAuNTM4MzMwMywxNC42NTkzODE1LDAgLTkwLjUzNzczMDMsMTQuNjU5MDcxNSwwIC05MC41MzY4MTAyLDE0LjY1OTIxMTUsMCAtOTAuNTM2MDAwMiwxNC42NTk2OTE1LDAgLTkwLjUzNTYxMDIsMTQuNjYwMjAxNSwwIC05MC41MzQ3NjAyLDE0LjY2MDQ1MTUsMCAtOTAuNTM0MzUwMiwxNC42NjE0NDE1LDAgLTkwLjUzNTAzMDIsMTQuNjYxNzIxNSwwIC05MC41MzQ4NzAyLDE0LjY2MjAxMTUsMCAtOTAuNTM0MjIwMiwxNC42NjE4MDE1LDAgLTkwLjUzNDA1MDIsMTQuNjYyMjAxNSwwIC05MC41MzM5MjAyLDE0LjY2MjQ5MTUsMCAtOTAuNTMzNjAwMiwxNC42NjI3ODE1LDAgLTkwLjUzMzgzMDIsMTQuNjYyOTgxNSwwIC05MC41MzMzODAyLDE0LjY2MzY0MTUsMCAtOTAuNTMzOTMwMiwxNC42NjM4NTE1LDAgLTkwLjUzMzkxMDIsMTQuNjY0MDIxNSwwIC05MC41MzQwMjAyLDE0LjY2NDIwMTUsMCAtOTAuNTM0NDUwMiwxNC42NjQzNjE1LDAgLTkwLjUzNDY0OTcsMTQuNjY2MDgyNSwwIC05MC41MzQ2NjkzLDE0LjY2NjUzMTgsMCAtOTAuNTM0NzA4MSwxNC42Njc2ODcsMCAtOTAuNTM2MDYzOSwxNC42Njc4OTQ3LDAgLTkwLjUzNjczNjQsMTQuNjY3MjA4OSwwIC05MC41MzY3ODAyLDE0LjY2NjA5MTUsMCAtOTAuNTM2ODYwMiwxNC42NjU3MzE1LDAgLTkwLjUzNzI1MDgsMTQuNjY1NTIxLDAgLTkwLjUzNzY2OTIsMTQuNjY1MzI0OCwwIC05MC41Mzg1OTAzLDE0LjY2NTA1MTUsMCAtOTAuNTM4NDUyOSwxNC42NjU0Mzg5LDAgLTkwLjUzODE0NzIsMTQuNjY2MjI3OSwwIC05MC41Mzg3OTQ1LDE0LjY2NjU4OTEsMCAtOTAuNTM5MjQyNSwxNC42NjY2NzYxLDAgLTkwLjU0MDIzNCwxNC42NjY0NTkxLDAgLTkwLjU0MDY0NCwxNC42NjYyNTA3LDAgLTkwLjU0MDg3NDgsMTQuNjY1NjM1MywwIC05MC41NDA5NzAzLDE0LjY2NTIxMTUsMCAtOTAuNTQwODEwMywxNC42NjM4MTE1LDAgLTkwLjU0MTQzNjEsMTQuNjYzNDgyOSwwIC05MC41NDEwNTAzLDE0LjY2MzIzMTUsMCAtOTAuNTQxNTQwMywxNC42NjI5NTE1LDAgLTkwLjU0MTUzMDMsMTQuNjYyMjUxNSwwIC05MC41NDIxNTAzLDE0LjY2MDk5MTUsMCAtOTAuNTQyNjMzMywxNC42NjAyOTkxLDAgLTkwLjU0MjgyMjIsMTQuNjU5NTIxMSwwIC05MC41NDIzMzAzLDE0LjY1ODg1MTUsMCAtOTAuNTQyNjkwMywxNC42NTgyNDE1LDAgLTkwLjU0MjgxMDMsMTQuNjU3NjMxNSwwIC05MC41NDE2NTAzLDE0LjY1NzEwMTUsMCAtOTAuNTQyMDgwMywxNC42NTYzMjE1LDAgLTkwLjU0MzA3MDMsMTQuNjU2MzgxNSwwIC05MC41NDM1MzAzLDE0LjY1NjMxMTUsMCAtOTAuNTQzOTkwMywxNC42NTYxMzE1LDAgLTkwLjU0MzgxMDMsMTQuNjU1MjYxNSwwIC05MC41NDQ3NDAzLDE0LjY1NDczMTUsMCAtOTAuNTQ1MDAwMywxNC42NTQ0MjE1LDAgLTkwLjU0NTI3MDMsMTQuNjU0MTExNSwwIC05MC41NDU2ODAzLDE0LjY1MjgzMTUsMCAtOTAuNTQ3MjcwMywxNC42NTI4MzE1LDAgLTkwLjU0NzYyMDMsMTQuNjUyNDQxNSwwIC05MC41NDc1NDAzLDE0LjY1MTc3MTUsMCAtOTAuNTQ3MjUwMywxNC42NTA5MjE1LDAgLTkwLjU0Nzk2MDMsMTQuNjUwOTExNSwwIC05MC41NDg3MzAzLDE0LjY1MTQxMTUsMCAtOTAuNTQ4ODcwMywxNC42NTI2MjE1LDAgLTkwLjU0ODUwMDMsMTQuNjU1MTExNSwwIC05MC41NTA4NTAzLDE0LjY1Nzg0MTUsMCAtOTAuNTUwNDM3OCwxNC42NjAxMDQ1LDAgLTkwLjU1MTM5MDMsMTQuNjYwNjMxNSwwIC05MC41NDg0ODIxLDE0LjY2MjQzNDksMCAtOTAuNTUxMzgwMywxNC42NjQyMTE1LDAgLTkwLjU1MTcyMjksMTQuNjY4OTE1MSwwIC05MC41NTA3OTQ2LDE0LjY2OTU0NSwwIC05MC41NTAxOTA4LDE0LjY3MTc4MTEsMCAtOTAuNTUxNTYwMywxNC42NzMzNjE1LDAgLTkwLjU1MDU3MDMsMTQuNjc0MzkxNSwwIC05MC41NDkwMDAzLDE0LjY3Mzk0MTUsMCAtOTAuNTQ5MTkwMywxNC42NzI2NjE1LDAgLTkwLjU0NjYzMDMsMTQuNjcyMzQxNSwwIC05MC41NDUyOTAzLDE0LjY3MDU2MTUsMCAtOTAuNTQyNzUwMywxNC42Njg3MTE1LDAgLTkwLjU0MDYxMDMsMTQuNjY4OTExNSwwIC05MC41NDA2MDAzLDE0LjY3MDAwMTUsMCAtOTAuNTM5MDIwMywxNC42NzA4NjE1LDAgLTkwLjUzODIyMDMsMTQuNjcwODExNSwwIC05MC41MzYyMTAyLDE0LjY3MTYwMTUsMCAtOTAuNTMzNDkwMiwxNC42NzI5MzE1LDAgLTkwLjUzMjM4MDIsMTQuNjc0NDQxNSwwIC05MC41MzM1NTAyLDE0LjY3NjAyMTUsMCAtOTAuNTMzNDIwMiwxNC42Nzc4MTE1LDAgLTkwLjUzNzExMDMsMTQuNjc4MTkxNSwwIC05MC41Mzg1MDAzLDE0LjY3Nzc0MTUsMCAtOTAuNTQxMTMwMywxNC42Nzg0NDE1LDAgLTkwLjU0MDcyMDMsMTQuNjgwMDExNSwwIC05MC41NDE3MTAzLDE0LjY4MTQ2MTUsMCAtOTAuNTQxNTkwMywxNC42ODI1MzE1LDAgLTkwLjUzOTg1MDMsMTQuNjgxNjcxNSwwIC05MC41MzgxMjAzLDE0LjY4MDIzMTUsMCAtOTAuNTM3NDEwMywxNC42ODE0MDE1LDAgLTkwLjUzMzYyMDIsMTQuNjgwMTMxNSwwIC05MC41MzIzODAyLDE0LjY4MTUwMTUsMCAtOTAuNTMwNjMwMiwxNC42ODA5NTE1LDAgLTkwLjUzMTIxMDIsMTQuNjgzMjkxNSwwIC05MC41MzAzNzU5LDE0LjY4NDI3NzgsMCAtOTAuNTI5MzE1LDE0LjY4NTIzOTIsMCAtOTAuNTI3ODAzNCwxNC42ODY4MjMyLDAgLTkwLjUxOTg0MzksMTQuNjkwNzgzOCwwIC05MC41MTk2ODM2LDE0LjY5MjIyNDUsMCAtOTAuNTI0MzcyNywxNC42OTI0MTk3LDAgLTkwLjUyOTM0MDIsMTQuNjg4MjYxNSwwIC05MC41MzIxNDAyLDE0LjY4NDIzMTUsMCAtOTAuNTMyNjcwMiwxNC42ODI0MzE1LDAgLTkwLjUzNDExMDIsMTQuNjgwNjMxNSwwIC05MC41MzYxMjAyLDE0LjY4MTUyMTUsMCAtOTAuNTMzOTIxMSwxNC42ODU1NzAyLDAgLTkwLjUzODU4MDMsMTQuNjgxOTgxNSwwIC05MC41MzkyMjAzLDE0LjY4NTA2MTUsMCAtOTAuNTQxNDUwMywxNC42ODMwODE1LDAgLTkwLjU0MjIyMDMsMTQuNjgzNDUxNSwwIC05MC41NDI0NjAzLDE0LjY4NDQ0MTUsMCAtOTAuNTQzODgwMywxNC42ODQ2MjE1LDAgLTkwLjU0NDEyMDMsMTQuNjg1MTIxNSwwIC05MC41NDUxODAzLDE0LjY4NTE1MTUsMCAtOTAuNTQ3MDIwMywxNC42ODU2MzE1LDAgLTkwLjU0Njc4MDMsMTQuNjg2NTkxNSwwIC05MC41NDc0MzAzLDE0LjY4NjIxMTUsMCAtOTAuNTQ4MDIwMywxNC42ODYzNTE1LDAgLTkwLjU0ODAxMDMsMTQuNjg2NzYxNSwwIC05MC41NDgxMTAzLDE0LjY4NzExMTUsMCAtOTAuNTQ3OTYwMywxNC42ODc2NDE1LDAgLTkwLjU0OTE5MDMsMTQuNjg2NzExNSwwIC05MC41NDk4NDAzLDE0LjY4NjcyMTUsMCAtOTAuNTUwMDAwMywxNC42ODc0NDE1LDAgLTkwLjU0OTMxMDMsMTQuNjg4NTIxNSwwIC05MC41NDk4NTAzLDE0LjY4OTI5MTUsMCAtOTAuNTUxMzYwMywxNC42ODc3NzE1LDAgLTkwLjU1MTIzMDMsMTQuNjg2NjIxNSwwIC05MC41NTI1MTAzLDE0LjY4NTM2MTUsMCAtOTAuNTUzMjgwMywxNC42ODMyMjE1LDAgLTkwLjU1MTk4MDMsMTQuNjgxNTYxNSwwIC05MC41NTIwMjAzLDE0LjY3OTA2MTUsMCAtOTAuNTU0NjgwMywxNC42NzY3NDE1LDAgLTkwLjU1NTI4MDMsMTQuNjc0NjIxNSwwIC05MC41NTU0MTAzLDE0LjY3Mjg5MTUsMCAtOTAuNTU2NzkwMywxNC42NzE5NjE1LDAgLTkwLjU1Nzg3MDMsMTQuNjcxOTUxNSwwIC05MC41NTcxMTAzLDE0LjY3NDQ4MTUsMCAtOTAuNTU2NzUwMywxNC42NzcwMDE1LDAgLTkwLjU1NzY5MDMsMTQuNjc3NDgxNSwwIC05MC41NTgzMDAzLDE0LjY3NzExMTUsMCAtOTAuNTU4MDgwMywxNC42NzY1NzE1LDAgLTkwLjU1ODM2MDMsMTQuNjc1NjAxNSwwIC05MC41NTkzMjAzLDE0LjY3NDkwMTUsMCAtOTAuNTU5OTMwMywxNC42NzM1NDE1LDAgLTkwLjU1OTcxMDMsMTQuNjczMTMxNSwwIC05MC41NTk4NTAzLDE0LjY3MjQyMTUsMCAtOTAuNTYwNjEwMywxNC42NzE2MDE1LDAgLTkwLjU2MDc3MDMsMTQuNjcxMjIxNSwwIC05MC41NjExNjAzLDE0LjY3MDM0MTUsMCAtOTAuNTU5NDYwMywxNC42Njk3MDE1LDAgLTkwLjU1OTU3MDMsMTQuNjY4NjUxNSwwIC05MC41NjA0NTAzLDE0LjY2ODc1MTUsMCAtOTAuNTYwNTQwMywxNC42Njc1OTE1LDAgLTkwLjU2MTUyNjEsMTQuNjY2ODM1OCwwIC05MC41NjI5NDIzLDE0LjY2NzI5MjUsMCAtOTAuNTYzODIyMSwxNC42NjY1ODY3LDAgLTkwLjU2NTkwNTEsMTQuNjY0MTI5OCwwIC05MC41NjUwMTg3LDE0LjY2MzY2ODQsMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway Condado Concepción',
                 'address' => 'Kilometro 15.5 Carretera A El Salvador Centro Comercial de conveniencia Local N. 6 Zona 8 Santa Catarina Pinula',
+                'price_location' => 'capital',
                 'latitude' => 14.5513569,
                 'longitude' => -90.4547149,
                 'is_active' => true,
@@ -569,55 +514,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.16.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjQ4NTc5NjQsMTQuNTY5NTU0OSwwIC05MC40Nzc5NzY0LDE0LjU2MDQ2NDksMCAtOTAuNDc0MTQ2NCwxNC41NTg3ODQ5LDAgLTkwLjQ3NTE5NjQsMTQuNTUzNDU0OSwwIC05MC40Nzk1MTY0LDE0LjU0MTg1NDksMCAtOTAuNDc1Nzk2NCwxNC41MzcyOTQ5LDAgLTkwLjQ3NjQxMDksMTQuNTM1MjM2MywwIC05MC40Nzc0ODU1LDE0LjUzMDk1NTgsMCAtOTAuNDczODE2NiwxNC41MjY0MDY0LDAgLTkwLjQ3MTgwOTQsMTQuNTI3MTAwNSwwIC05MC40NzA2NTk1LDE0LjUyNjQ0MiwwIC05MC40NjkyNjUsMTQuNTI3ODY4MiwwIC05MC40NjY3OTc3LDE0LjUyNzM0MTgsMCAtOTAuNDY1NzQyNSwxNC41MjYzMDExLDAgLTkwLjQ1ODUwNzUsMTQuNTI0MzI1NywwIC05MC40NTMzOTMyLDE0LjUyMTE4NSwwIC05MC40NTA4ODkyLDE0LjUyMDY3ODEsMCAtOTAuNDQ4NDk4NCwxNC41MTg1MzM0LDAgLTkwLjQ0OTYwOTcsMTQuNTE2ODE4NywwIC05MC40NTAzMDE0LDE0LjUxNTYwMzksMCAtOTAuNDUwMjIyNywxNC41MTUzNTQ3LDAgLTkwLjQ0OTgyODcsMTQuNTE0MjIsMCAtOTAuNDQ4OTE3NCwxNC41MTI3MTYzLDAgLTkwLjQ0ODgwNywxNC41MTIwMDE1LDAgLTkwLjQ0ODY1ODksMTQuNTExMDI5LDAgLTkwLjQ0ODAwMzUsMTQuNTExMDk3OSwwIC05MC40NDY1MjAzLDE0LjUxMTI1OSwwIC05MC40NDc2MTY0LDE0LjUxMzIyNDksMCAtOTAuNDQ3NTY2NCwxNC41MTQ2MTQ5LDAgLTkwLjQ0NzAzNjQsMTQuNTE0NTc0OSwwIC05MC40NDY5NzY0LDE0LjUxNDcyNDksMCAtOTAuNDQ2ODc2NCwxNC41MTQ4MzQ5LDAgLTkwLjQ0Njc0NjQsMTQuNTE0OTI0OSwwIC05MC40NDY0ODY0LDE0LjUxNDgxNDksMCAtOTAuNDQ2NDE2NCwxNC41MTUwMzQ5LDAgLTkwLjQ0NDgxNjQsMTQuNTE1ODI0OSwwIC05MC40NDQyMDcsMTQuNTE1OTYzNywwIC05MC40NDM3MjY0LDE0LjUxNjQzNDksMCAtOTAuNDQyODQ2NCwxNC41MTY2MTQ5LDAgLTkwLjQ0MjAwNjQsMTQuNTE2MTE0OSwwIC05MC40MzkwODY0LDE0LjUxNDU5NDksMCAtOTAuNDM3NTE4MSwxNC41MDg2NDI5LDAgLTkwLjQzNjU1MDYsMTQuNTA3MTM2MywwIC05MC40MzI5MzY4LDE0LjUwNTg3ODUsMCAtOTAuNDMyMjQzNiwxNC41MDUzNDIyLDAgLTkwLjQzMjI1MTEsMTQuNTA0ODkyMiwwIC05MC40MzIxNTEzLDE0LjUwNDU0NjEsMCAtOTAuNDMxNjU1NiwxNC41MDM5MzA1LDAgLTkwLjQzMTIxMTMsMTQuNTAzODUyLDAgLTkwLjQzMDUwNjksMTQuNTA0NTU2MywwIC05MC40MzQ3MzY0LDE0LjUxMzMyNDksMCAtOTAuNDMzNTc2NCwxNC41MTY1ODQ5LDAgLTkwLjQzNjAxNjQsMTQuNTE4Njc0OSwwIC05MC40Mzg5MzY0LDE0LjUyMDY2NDksMCAtOTAuNDM4MTk2NCwxNC41MjI3MDQ5LDAgLTkwLjQzNTY5NjQsMTQuNTI3MTY0OSwwIC05MC40MjY4OTY0LDE0LjUzMzkwNDksMCAtOTAuNDE5NjM2NCwxNC41NDI5NzQ5LDAgLTkwLjQxODk0NjQsMTQuNTQ4ODU0OSwwIC05MC40NDIzNzY0LDE0LjU0NTU1NDksMCAtOTAuNDQ5ODgxNywxNC41NTU1Mjk1LDAgLTkwLjQ0OTAyMDksMTQuNTU3NTY1NywwIC05MC40NDg4MjUzLDE0LjU1OTA0MTIsMCAtOTAuNDUxMTE2NCwxNC41NjgyODQ5LDAgLTkwLjQ1NjIzNjQsMTQuNTY5NDQ0OSwwIC05MC40NjA0NDY0LDE0LjU2OTUyNDksMCAtOTAuNDY1Mzk2NCwxNC41Njg2NjQ5LDAgLTkwLjQ3MzAzNjQsMTQuNTgzMTc0OSwwIC05MC40NzU4MzY0LDE0LjU4MTk5NDksMCAtOTAuNDc3Mzc2NCwxNC41ODA4NTQ5LDAgLTkwLjQ3NzkzNjQsMTQuNTc5NTc0OSwwIC05MC40Nzg0ODY0LDE0LjU3ODI5NDksMCAtOTAuNDc5Nzk2NCwxNC41Nzc0MzQ5LDAgLTkwLjQ4MDY0NjQsMTQuNTc0NzM0OSwwIC05MC40Nzk1MTY0LDE0LjU3NDg3NDksMCAtOTAuNDc5MjE2NCwxNC41NzM0OTQ5LDAgLTkwLjQ3OTExNjQsMTQuNTcyMDI0OSwwIC05MC40ODExMzY0LDE0LjU2OTIwNDksMCAtOTAuNDgzNTU2NCwxNC41Njk0NTQ5LDAgLTkwLjQ4NTI2NjQsMTQuNTcwMTU0OSwwIC05MC40ODU3OTY0LDE0LjU2OTU1NDksMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway San Isidro',
                 'address' => '24 Calle 12-70 zona 16 Centro Comercial Paseo San Isidro local 34 y 35',
+                'price_location' => 'capital',
                 'latitude' => 14.6246854,
                 'longitude' => -90.4706930,
                 'is_active' => true,
@@ -629,55 +568,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.23.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjQ4OTMzMzcsMTQuNjM3ODY1OCwwIC05MC40ODg3ODE2LDE0LjYzMjY0NTUsMCAtOTAuNDg2OTM5MiwxNC42Mjg4NjIzLDAgLTkwLjQ4Nzk3MiwxNC42Mjc1MjksMCAtOTAuNDg5MDA1LDE0LjYyNTk5MjQsMCAtOTAuNDg5MDM4NywxNC42MjQ5MDIzLDAgLTkwLjQ4ODE3MTIsMTQuNjIzMzEzOSwwIC05MC40OTA1MDgxLDE0LjYyMTc5ODIsMCAtOTAuNDkxNjY0OSwxNC42MjE1OTA1LDAgLTkwLjQ5Mjg0MTIsMTQuNjIxNDAzNiwwIC05MC40OTQ0ODYxLDE0LjYxOTk5OTQsMCAtOTAuNDk3NTc3NywxNC42MjI3NjQ4LDAgLTkwLjQ5ODA1NiwxNC42MjI5MDE2LDAgLTkwLjQ5ODI5ODIsMTQuNjIxOTU4OSwwIC05MC40OTcyOTg1LDE0LjYyMDk5NiwwIC05MC40OTY1MTk2LDE0LjYyMDQyMTEsMCAtOTAuNDk2MTE5NSwxNC42MTk4NzQxLDAgLTkwLjQ5NDc0MywxNC42MTkyNjQ4LDAgLTkwLjQ5MjU5NzMsMTQuNjIwMDg1OCwwIC05MC40OTAyMDQ4LDE0LjYyMTQzMTEsMCAtOTAuNDg5MDQwNywxNC42MTk1MDg3LDAgLTkwLjQ4ODA0MTYsMTQuNjIyMzA4NywwIC05MC40ODcxNzEyLDE0LjYyMzA1MzEsMCAtOTAuNDg1OTg4NCwxNC42MTk2NDE5LDAgLTkwLjQ4NDM4MDEsMTQuNjE5NTg3OCwwIC05MC40ODMyNTQyLDE0LjYxOTY4NTQsMCAtOTAuNDgyNjQzMiwxNC42MTc1ODIsMCAtOTAuNDgyNDk1MiwxNC42MTY0MTQ5LDAgLTkwLjQ3ODU3MzEsMTQuNjE4MTcxMSwwIC05MC40NzUzNDg0LDE0LjYxMDY1NjUsMCAtOTAuNDczOTU3NiwxNC42MTAzMDY1LDAgLTkwLjQ3MjM3MTYsMTQuNjA4OTU4MywwIC05MC40NzEzMjExLDE0LjYwODgzNDUsMCAtOTAuNDY4MTY3OCwxNC42MDM3MjczLDAgLTkwLjQ2NzQ2NzUsMTQuNjAyNzI2MywwIC05MC40NjUwNDQyLDE0LjYwNDI1NjQsMCAtOTAuNDY0NDg3NiwxNC42MDc4ODM3LDAgLTkwLjQ2MzQ2MDEsMTQuNjE5NTQwMiwwIC05MC40NjI2Njg3LDE0LjYyNDAzMzIsMCAtOTAuNDU5Njg3MywxNC42Mjg4MzM1LDAgLTkwLjQ1OTMwMjIsMTQuNjI5OTc5NiwwIC05MC40NTQ4NDg4LDE0LjYzNDg3MDYsMCAtOTAuNDU3OTAwNywxNC42MzM5OTQzLDAgLTkwLjQ1OTY2MjcsMTQuNjM0NzYwMywwIC05MC40NTk0MDY0LDE0LjYzNTg0OTIsMCAtOTAuNDU4MjkxOCwxNC42MzY1MjI4LDAgLTkwLjQ1ODk4ODMsMTQuNjM3OTI1OSwwIC05MC40NjIwMTgzLDE0LjYzODA5MzcsMCAtOTAuNDY0NjU5NywxNC42MzEyOTUxLDAgLTkwLjQ2NzIxNTMsMTQuNjI5MzEzMywwIC05MC40NzIyMDYyLDE0LjYyODg3MjksMCAtOTAuNDc5NzcyMiwxNC42MzIyNTI2LDAgLTkwLjQ4Mjk3MzYsMTQuNjMyMTE5LDAgLTkwLjQ4MzAxMjcsMTQuNjM1MjIxNiwwIC05MC40ODE3NTM3LDE0LjYzNzIxMzUsMCAtOTAuNDgxNzE3OCwxNC42NDA2Nzk1LDAgLTkwLjQ4NDk4NjQsMTQuNjQyNDg0NSwwIC05MC40ODU4Njk0LDE0LjY0MTUxNjcsMCAtOTAuNDg2NTE2NCwxNC42MzkwOTU2LDAgLTkwLjQ4ODUxNTIsMTQuNjM5MjEyNSwwIC05MC40ODg4NDkzLDE0LjYzNzgyMjksMCAtOTAuNDg5MzMzNywxNC42Mzc4NjU4LDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
             [
                 'name' => 'Subway Europlaza',
                 'address' => '5 Avenida 5-55 Zona 14 Edificio Europlaza Torre 3 1 Nivel Sec. Privada Area Corporativa 109',
+                'price_location' => 'capital',
                 'latitude' => 14.5870618,
                 'longitude' => -90.5137825,
                 'is_active' => true,
@@ -689,55 +622,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.79.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjUxNDQyNjMsMTQuNTg2ODg1OCwwIC05MC41MTM3NzQ1LDE0LjU4NjQ3MDUsMCAtOTAuNTEzMjE2NiwxNC41ODczNDc5LDAgLTkwLjUxMzU3MDcsMTQuNTg3NTQsMCAtOTAuNTEzNDAxNywxNC41ODc3OTcsMCAtOTAuNTEzNjY3MiwxNC41ODc5MDM0LDAgLTkwLjUxMzc4NzksMTQuNTg3ODkwNCwwIC05MC41MTQ0MjYzLDE0LjU4Njg4NTgsMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway Pradera Z. 10',
                 'address' => '20 Calle 25-85 Zona 10 Centro Comercial Pradera local 364',
+                'price_location' => 'capital',
                 'latitude' => 14.5797104,
                 'longitude' => -90.4952227,
                 'is_active' => true,
@@ -749,55 +676,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.36.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:30',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:30',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:30',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:30',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:30',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:30',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:30',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '08:30',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '08:30',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '08:30',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '08:30',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '08:30',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '08:30',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '08:30',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Zona 9',
                 'address' => '6 Avenida 5-58 Zona 9 Centro Comercial 6ta. y 6ta. Zona 9',
+                'price_location' => 'capital',
                 'latitude' => 14.6094256,
                 'longitude' => -90.5192557,
                 'is_active' => true,
@@ -809,55 +730,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.12.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjUyMTkwODYsMTQuNTk2MjM5MiwwIC05MC41MjE1NjI2LDE0LjU5Njc2MzQsMCAtOTAuNTIxMzY2OSwxNC41OTc5NTIyLDAgLTkwLjUxOTk2NjgsMTQuNjA1MDIyNSwwIC05MC41MTgyMzk0LDE0LjYxNDgwMjUsMCAtOTAuNTI0MzIyNiwxNC42MTU3OTkyLDAgLTkwLjUyMzczNjYsMTQuNjE3MTc5OSwwIC05MC41MjEwOTA2LDE0LjYyMDkyNzcsMCAtOTAuNTE5ODE3NiwxNC42MjI1MDMsMCAtOTAuNTE5MDU5NSwxNC42MjQyNDQ1LDAgLTkwLjUyMTczODMsMTQuNjI0NjQ0MiwwIC05MC41MjM2MDkyLDE0LjYyMzEwNzgsMCAtOTAuNTI3MTQ4NSwxNC42MTk1MTU4LDAgLTkwLjUzMTAwOTUsMTQuNjE1NjMzLDAgLTkwLjUzNDk1NDksMTQuNjEzMzkwNSwwIC05MC41MzE5MDc4LDE0LjYwOTMsMCAtOTAuNTMxMDQ5MywxNC42MDcwNzgyLDAgLTkwLjUyMTkwODYsMTQuNTk2MjM5MiwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Galerias Miraflores',
                 'address' => '21 Avenida 4-32 zona 11 Centro Comercial Galerias Miraflores local 312-B',
+                'price_location' => 'capital',
                 'latitude' => 14.6215886,
                 'longitude' => -90.5529418,
                 'is_active' => true,
@@ -869,55 +784,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.33.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '22:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '22:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '22:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '22:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '22:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '22:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '22:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '22:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '22:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '22:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '22:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '22:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '22:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '22:30',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Eskala',
                 'address' => 'Km 13.8 Calzada Roosevelt Zona 3 de Mixco Centro Comercial Eskala Local L, Food Court 08',
+                'price_location' => 'capital',
                 'latitude' => 14.6351604,
                 'longitude' => -90.5826416,
                 'is_active' => true,
@@ -929,55 +838,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.32.250',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjU3MzYwNDEsMTQuNjMzODQ4MSwwIC05MC41NzA0NDM0LDE0LjYzMzI3NzgsMCAtOTAuNTcwMjI5NywxNC42MzQ0ODM2LDAgLTkwLjU3MDIzMzgsMTQuNjM1MDcyNywwIC05MC41NjU3MzE2LDE0LjY0MDAyMTcsMCAtOTAuNTY0Njg5NCwxNC42NDA4MTMyLDAgLTkwLjU2MzMzNDQsMTQuNjQxMTA5NywwIC05MC41NTg0NjIsMTQuNjQxNTI3OCwwIC05MC41NTY3ODY3LDE0LjY0MjExMiwwIC05MC41NTQ3NDUxLDE0LjY0NjAwMDIsMCAtOTAuNTU1MTQ5NiwxNC42NTAxOTk1LDAgLTkwLjU1NTM5MDQsMTQuNjU3NzMzNywwIC05MC41NTgwMzQ2LDE0LjY1ODAwMiwwIC05MC41NjM1MDExLDE0LjY2MDUyNiwwIC05MC41NjI1ODk5LDE0LjY2MjI5MTksMCAtOTAuNTY1NzM0MiwxNC42NjQwNTc3LDAgLTkwLjU2NzkxMjgsMTQuNjYyMjY0NSwwIC05MC41Njg0OTcsMTQuNjU5ODc2MiwwIC05MC41NzAyODI4LDE0LjY1ODU2NzQsMCAtOTAuNTc0NTI1OSwxNC42NTU4MDE4LDAgLTkwLjU3NzAxNzIsMTQuNjU0MTM5MywwIC05MC41ODMyOTc5LDE0LjY0OTkzNSwwIC05MC41ODE4OTM3LDE0LjY0ODM3MywwIC05MC41ODg3Mjc0LDE0LjY0MjY3NTcsMCAtOTAuNTkyODA5NCwxNC42NDAzODc1LDAgLTkwLjU5NDI5NDksMTQuNjQwMTc1NCwwIC05MC41OTU3NTA4MDg3MTU4MywxNC42Mzk2OTczMTYxNDcyNTIsMCAtOTAuNTk3MzM2MSwxNC42MzkzNTI5LDAgLTkwLjU5OTMzNTksMTQuNjM5NzY4OSwwIC05MC41OTk5NzExLDE0LjYzNjM1NzgsMCAtOTAuNTk4MjEzMSwxNC42MzUyNTgzLDAgLTkwLjU5NDUwMDcsMTQuNjM1MDA5MSwwIC05MC41OTAyMjIyLDE0LjYzNDc0OTIsMCAtOTAuNTg3NjA1NiwxNC42MzQ3NjU0LDAgLTkwLjU4NDY0NzcsMTQuNjM0NTc1MiwwIC05MC41ODIwMjExLDE0LjYzNDQ1NjksMCAtOTAuNTgwMzgzLDE0LjYzNDE4MjMsMCAtOTAuNTc2ODkzOCwxNC42MzQxMTc0LDAgLTkwLjU3NTY1MTksMTQuNjM0MDMyMiwwIC05MC41NzQxOTYzLDE0LjYzMzk4OTcsMCAtOTAuNTczNTg4LDE0LjYzMzkyNiwwIC05MC41NzM2MDQxLDE0LjYzMzg0ODEsMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway Interplaza Escuintla',
                 'address' => 'Km. 60 autopista Escuintla a Palín, Escuintla C.C. Interplaza Escuintla,',
+                'price_location' => 'interior',
                 'latitude' => 14.2931739,
                 'longitude' => -90.7985917,
                 'is_active' => true,
@@ -989,55 +892,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.43.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjc5OTYxMTcsMTQuMzMyODEzLDAgLTkwLjgxNTgxMTQsMTQuMjg1MTQxOSwwIC05MC44NTEyOTUsMTQuMjAwMzU3OCwwIC05MC44NDcyOTc0LDE0LjE5NzU1ODcsMCAtOTAuODE0OTE0MywxNC4yMzE5MzU5LDAgLTkwLjc4NjU3NzcsMTQuMjY0MzQwMywwIC05MC43OTAwNDIxLDE0LjI3MTg5NzUsMCAtOTAuNzg2Nzk2MSwxNC4yNzcxNzMzLDAgLTkwLjc4NzY3LDE0LjI4MTk1LDAgLTkwLjc4NzQxMywxNC4yODIzNywwIC05MC43OTEyMzEyLDE0LjI4NjI1MjgsMCAtOTAuNzkxNzAyNiwxNC4yODk5NzM0LDAgLTkwLjc5MjYzMzgsMTQuMjk2MTgsMCAtOTAuNzkyMjgwMSwxNC4zMDA5MjQ4LDAgLTkwLjc5MTM0MTUsMTQuMzAxNDI1OCwwIC05MC43ODg0NzE2LDE0LjMwMTAxMTksMCAtOTAuNzg4MDI4MywxNC4zMDE0MDcsMCAtOTAuNzg3NzIwOCwxNC4zMDU0NTEyLDAgLTkwLjc4NzQ1OTgsMTQuMzA2OTk1MSwwIC05MC43ODcwNywxNC4zMDc4MzIsMCAtOTAuNzg2MTEyLDE0LjMwODA0OCwwIC05MC43ODM4NjE1LDE0LjMwNzQ2NDEsMCAtOTAuNzgxMzUzNCwxNC4zMDY5NjMzLDAgLTkwLjc4MDcsMTQuMzA4OTE4LDAgLTkwLjc3OTA3NywxNC4zMTEyMDgsMCAtOTAuNzc3MDEzLDE0LjMxNjI5NywwIC05MC43NzQ5NDIsMTQuMzI0MTQzLDAgLTkwLjc2OTE4NzMsMTQuMzMwMzc5LDAgLTkwLjc2MTAyODYsMTQuMzQ1OTI4NiwwIC05MC43ODcwNzYxLDE0LjMzMTgxNDYsMCAtOTAuNzk5NjExNywxNC4zMzI4MTMsMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway Zona Sur',
                 'address' => 'CA-9 Sur Kilómetro 27.5 \" Zona Sur \" sector B local 1 Amatitlán, Guatemala.',
+                'price_location' => 'capital',
                 'latitude' => 14.4842769,
                 'longitude' => -90.6307002,
                 'is_active' => true,
@@ -1049,55 +946,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.78.254',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjYxNTk0NzgsMTQuNTE0Njg3OSwwIC05MC42MTcwMDEyLDE0LjUyNjk5MDcsMCAtOTAuNjMzNjExNSwxNC41MzA5NDI5LDAgLTkwLjYzNDEzNzcsMTQuNTI3MzM1MiwwIC05MC42MzE5MzAzLDE0LjUyNjQ0MzcsMCAtOTAuNjMxMTYwNywxNC41MjUzMjM3LDAgLTkwLjYzMDkxNjcsMTQuNTIzODI5NywwIC05MC42MjgwOTc5LDE0LjUyMTQwMTEsMCAtOTAuNjI3NzU1NiwxNC41MjAzNTQ4LDAgLTkwLjYyODgwOCwxNC41MTIxMDA1LDAgLTkwLjYyNTE4MjUsMTQuNTA3NzMwNiwwIC05MC42MjgwNjUyLDE0LjQ5NDQ1ODEsMCAtOTAuNjQzMjcyNiwxNC40OTQ4MzUzLDAgLTkwLjY0NTg2MjUsMTQuNDkxNjgwOSwwIC05MC42NDU1MjY3LDE0LjQ4NzgxODUsMCAtOTAuNjQ2MTYxNSwxNC40ODY4NzM3LDAgLTkwLjY0NjMyNDMsMTQuNDg1OTQ5NiwwIC05MC42NDU2NzE3LDE0LjQ4NTUwMzUsMCAtOTAuNjQ1MjEzNSwxNC40ODU1MDYyLDAgLTkwLjY0Mzk0NTYsMTQuNDg1Mzg3NSwwIC05MC42NDI4MDY1LDE0LjQ4NDg3MzksMCAtOTAuNjQyNDE2NSwxNC40Nzk3MzMzLDAgLTkwLjY0MTI2NDEsMTQuNDc4MDk3NCwwIC05MC42Mjc2MTE2LDE0LjQ3MzY1NjUsMCAtOTAuNjI2ODEzNiwxNC40NzI4MzE5LDAgLTkwLjYyNTgzMzMsMTQuNDcyMjk4MiwwIC05MC42MjU1NTAzLDE0LjQ3MDE3NSwwIC05MC42MjE3MDU0LDE0LjQ2NTU1ODUsMCAtOTAuNjEwNDU4LDE0LjQ2OTcyMiwwIC05MC42MDM1ODY3LDE0LjQ3MDgzMTQsMCAtOTAuNTk0NzQxLDE0LjQ3NjY3NzUsMCAtOTAuNTk3OTM2OSwxNC40Nzg0MzAxLDAgLTkwLjYwMzY5NzcsMTQuNDcyNjE2MywwIC05MC42MDU0NjIyLDE0LjQ3MjQ5MzUsMCAtOTAuNjA2NzExNywxNC40NzM5OTEyLDAgLTkwLjYwNzE5MzksMTQuNDc3ODI4LDAgLTkwLjYwNjc3NDgsMTQuNDgwNDU5OCwwIC05MC42MDgzODI5LDE0LjQ4MjYwNywwIC05MC42MTE1NTYyLDE0LjQ4NjgxODIsMCAtOTAuNjEwNzgxNCwxNC40OTEzNjE4LDAgLTkwLjYwNjA0MDUsMTQuNTAyNTMwNywwIC05MC42MDYxNzE3LDE0LjUwNTUwNywwIC05MC42MDM5ODc3LDE0LjUxMDU0NTgsMCAtOTAuNjA2MjI4OSwxNC41MTE2OTEsMCAtOTAuNjA5NDU3NSwxNC41MTAxNTY2LDAgLTkwLjYxNTk0NzgsMTQuNTE0Njg3OSwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Periroosevelt',
                 'address' => 'Calzada San Juan 30-29 Zona 7 Centro Comercial Peri Roosevelt, local 1',
+                'price_location' => 'capital',
                 'latitude' => 14.6271048,
                 'longitude' => -90.5555801,
                 'is_active' => true,
@@ -1109,55 +1000,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.35.30',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjU0MTUwNTMsMTQuNjE3NjE3MSwwIC05MC41NDAyMjM5LDE0LjYxOTM1NzIsMCAtOTAuNTM5NjA0NywxNC42MjAyMzI0LDAgLTkwLjUzOTExNDEsMTQuNjIxMjMyMiwwIC05MC41NDE4NDUzLDE0LjYyNDgwOTgsMCAtOTAuNTQyODAzMiwxNC42MjU2OTAyLDAgLTkwLjU0MTgyOTksMTQuNjI4NDgwOCwwIC05MC41NDAxODAyLDE0LjYzMDc5MDUsMCAtOTAuNTQyODQ2MywxNC42MzM0OTk5LDAgLTkwLjU0NDcwNTEsMTQuNjM0OTE2OSwwIC05MC41NDY1NjM4LDE0LjYzNTUwMzQsMCAtOTAuNTQ2MjQ3NCwxNC42Mzc3NTYsMCAtOTAuNTQ0MjA5LDE0LjY0MTUzNDksMCAtOTAuNTQzOTAwNiwxNC42NDMxNDg0LDAgLTkwLjU0NDA0MjcsMTQuNjQzNzg2MSwwIC05MC41NDQ3NTYyLDE0LjY0NjMzODQsMCAtOTAuNTQ2MDE2OCwxNC42NDYxMTQsMCAtOTAuNTQ4ODY1MywxNC42NDQzMTE3LDAgLTkwLjU1MTI3OTMsMTQuNjQ0MjQ1MiwwIC05MC41NTI1MzQ2LDE0LjY0NTU5MDUsMCAtOTAuNTU0MzgsMTQuNjQ0NzkzMSwwIC05MC41NTUxMzEsMTQuNjQxOTMyMSwwIC05MC41NjQzMzY0LDE0LjY0MDg2MDMsMCAtOTAuNTY1MTc4NiwxNC42MzkyNzk4LDAgLTkwLjU2NjEyODEsMTQuNjM3OTI3NywwIC05MC41NzAzMDE2LDE0LjYzNDY0MjIsMCAtOTAuNTcwMzc2NCwxNC42MzMxNjg0LDAgLTkwLjU0MTUwNTMsMTQuNjE3NjE3MSwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Alamos',
                 'address' => 'Km 4.5 Carretera al Atlantico, Zona 18 Centro Comercial La esquina Los Alamos Local 12',
+                'price_location' => 'capital',
                 'latitude' => 14.6496878,
                 'longitude' => -90.4801102,
                 'is_active' => true,
@@ -1169,55 +1054,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.13.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjQ3Nzg1NDIsMTQuNjYyODAwNSwwIC05MC40ODA5NDk2LDE0LjY2MzExMTcsMCAtOTAuNDgzMzc5NywxNC42NTYzODU3LDAgLTkwLjQ4MzU0ODcsMTQuNjUyMDcyOSwwIC05MC40ODQ1MzMsMTQuNjUxMDgxNiwwIC05MC40ODQ5MTM4LDE0LjY0OTI2NTIsMCAtOTAuNDc4MzA0OSwxNC42NDg2MDExLDAgLTkwLjQ3MzY3MDEsMTQuNjQ5MDg4OSwwIC05MC40NzI0MDk1LDE0LjY1MDE1MDIsMCAtOTAuNDcxOTIxMywxNC42NTA5MjA5LDAgLTkwLjQ3Mzc1NzMsMTQuNjUxNDk3NiwwIC05MC40NzQzNjQxLDE0LjY1MzE0NTgsMCAtOTAuNDc1MTU1NywxNC42NTU0MDIyLDAgLTkwLjQ3NTEzMTksMTQuNjU1NzQ4OCwwIC05MC40NzMzNjUsMTQuNjU0OTY4MSwwIC05MC40NzMzNzkxLDE0LjY1NDY5NTksMCAtOTAuNDcxMTU0MiwxNC42NTQ2NjAzLDAgLTkwLjQ2ODY5OTksMTQuNjU2MjA4MiwwIC05MC40NjcwMzI5LDE0LjY1NjQzMiwwIC05MC40NjM2MzUyLDE0LjY1NTkwMDMsMCAtOTAuNDU3NjgyNSwxNC42NTI5OTI0LDAgLTkwLjQ1NDc1MTIsMTQuNjUyMzM4MSwwIC05MC40NTIyNDc2LDE0LjY1MTMwNDQsMCAtOTAuNDQ5MTg2MSwxNC42NDg2NTE0LDAgLTkwLjQ0NDA1MDIsMTQuNjQ3Nzg3OSwwIC05MC40NDEyNTcsMTQuNjQ3ODIzMiwwIC05MC40NDAwMDg3LDE0LjY0ODUyMjksMCAtOTAuNDM4MzQzOSwxNC42NDg1NjEzLDAgLTkwLjQzNjY2MzksMTQuNjQ3OTM2OSwwIC05MC40MzU2OTIsMTQuNjQ4MDE4NCwwIC05MC40MzMwMTg3LDE0LjY1MDA4MDksMCAtOTAuNDMxMjY3OSwxNC42NTA3NzMyLDAgLTkwLjQzMTUxNTgsMTQuNjU0ODc5NiwwIC05MC40MzQzMTcyLDE0LjY1NDU0MzUsMCAtOTAuNDM0OTUxMywxNC42NTM4NTQ0LDAgLTkwLjQzNTUwNDQsMTQuNjUxODI4MywwIC05MC40MzY0MjIzLDE0LjY1MDA3MjEsMCAtOTAuNDQ0MzQ0NywxNC42NTA3NDA5LDAgLTkwLjQ0Nzc0MjYsMTQuNjUyMzY3NiwwIC05MC40NDk5ODE5LDE0LjY1MjI3MTIsMCAtOTAuNDUxODQ1NiwxNC42NTMyMzM1LDAgLTkwLjQ1MzQzMDUsMTQuNjU0NDg2NSwwIC05MC40NTQyNTU1LDE0LjY1NjgyMTcsMCAtOTAuNDUwMDA4NCwxNC42NjAyMzksMCAtOTAuNDUxMTE0MywxNC42NjI1NzA0LDAgLTkwLjQ1MjE5ODcsMTQuNjYzMTE2NSwwIC05MC40NTYzMDMyLDE0LjY2MzQzOTUsMCAtOTAuNDU1NTc5OCwxNC42NTk4MTgzLDAgLTkwLjQ1NjEwNzEsMTQuNjU3NzAzMiwwIC05MC40NTY3ODkyLDE0LjY2MjQ0MDcsMCAtOTAuNDU2Mzk4NSwxNC42NjU5NzQxLDAgLTkwLjQ1ODgxNDIsMTQuNjY2MDg2NywwIC05MC40NjA1Mzk4LDE0LjY2NTM3NDksMCAtOTAuNDYxNTg1LDE0LjY2MzM2ODcsMCAtOTAuNDYyMTc5NSwxNC42NjEyMTcyLDAgLTkwLjQ2NjE2NywxNC42NjA4MzE2LDAgLTkwLjQ2NjM5OTUsMTQuNjU4NTY3MiwwIC05MC40NjY4Njc5LDE0LjY1NzI3ODYsMCAtOTAuNDcxMzg0NiwxNC42NTk1NzI0LDAgLTkwLjQ3MzExMiwxNC42NjAyNzgyLDAgLTkwLjQ3MTY3NSwxNC42NjMwMTY3LDAgLTkwLjQ3MDMyMzksMTQuNjY0MzY0NCwwIC05MC40Njk5NTQsMTQuNjY1MjMwMywwIC05MC40Njg1MzI4LDE0LjY2NjY1NjYsMCAtOTAuNDY3NzkyOCwxNC42NjY2ODE4LDAgLTkwLjQ2Njk4OTYsMTQuNjY2ODIzLDAgLTkwLjQ2NjUyMzYsMTQuNjY2MjY1NiwwIC05MC40NjU2Mjg0LDE0LjY2NTY3NzIsMCAtOTAuNDYzMzY3NSwxNC42NjYzMjI5LDAgLTkwLjQ2MzIyMzYsMTQuNjY2NTQ1MywwIC05MC40NjQ1NjA0LDE0LjY2NzQ2MzIsMCAtOTAuNDY2MTkzMiwxNC42Njc3NzMzLDAgLTkwLjQ2NzAwNTIsMTQuNjY3MTY0NywwIC05MC40Njc3MjA3LDE0LjY2NzM1NTQsMCAtOTAuNDY2NTQzMywxNC42Njg4NzU3LDAgLTkwLjQ2NTMxNDksMTQuNjY5MzAwOSwwIC05MC40NjA0NzYzLDE0LjY2Nzc0MzEsMCAtOTAuNDU5NjkzMSwxNC42NzI0MTI4LDAgLTkwLjQ2MTYyODMsMTQuNjc2NDAwOCwwIC05MC40NjE2NzUyLDE0LjY3OTMwOTMsMCAtOTAuNDY0OTAxOCwxNC42ODAzNTIxLDAgLTkwLjQ2NjI0MDMsMTQuNjgxNzY4NiwwIC05MC40Njk1OTU5LDE0LjY4NTk2NjUsMCAtOTAuNDc2Njg3OSwxNC42Nzk2NjUsMCAtOTAuNDc0MTgyNywxNC42NzM2OTEyLDAgLTkwLjQ3MjcwNzYsMTQuNjczMzYzNSwwIC05MC40Njk3ODk3LDE0LjY3MTI5NDcsMCAtOTAuNDY5MDE3NiwxNC42NjgzMTI1LDAgLTkwLjQ3MzM3NDgsMTQuNjcwNDE2MiwwIC05MC40NzQ2NTI5LDE0LjY2Nzg4MDQsMCAtOTAuNDc0NTc5MiwxNC42NjU0NDg0LDAgLTkwLjQ3NTQ4MzEsMTQuNjYxMzczMywwIC05MC40Nzc4NTQyLDE0LjY2MjgwMDUsMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway Calle Marti',
                 'address' => '5 Calle 7-38 zona 2 Centro Comercial Calle Martí 7 Local 1',
+                'price_location' => 'capital',
                 'latitude' => 14.6515048,
                 'longitude' => -90.5103225,
                 'is_active' => true,
@@ -1229,55 +1108,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.77.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjQ5MTgxLDE0LjY2MDk3MjMsMCAtOTAuNDg1MDEsMTQuNjY2NTQyMywwIC05MC40ODkxMSwxNC42Njk4MjIzLDAgLTkwLjQ4Mzk1LDE0LjY3MzQ3MjMsMCAtOTAuNDg4MzksMTQuNjgxMDcyMywwIC05MC40ODg5NiwxNC42ODAxMzIzLDAgLTkwLjQ4OTE2LDE0LjY3NzAwMjMsMCAtOTAuNDg5NDksMTQuNjcwOTcyMywwIC05MC40OTQxOSwxNC42NjU0NTIzLDAgLTkwLjQ5NDg2LDE0LjY2MDY2MjMsMCAtOTAuNDk2MTY4MSwxNC42NTgzNDI0LDAgLTkwLjQ5OTQwNzUsMTQuNjYwODM4NiwwIC05MC40OTg5NywxNC42NjU5MjIzLDAgLTkwLjUwMDE3LDE0LjY2ODE1MjMsMCAtOTAuNDk1MTQxOCwxNC42NzQ5MjI2LDAgLTkwLjQ5NzE0NjQsMTQuNjgwMDY0MSwwIC05MC41MDM3NywxNC42ODAwMTY1LDAgLTkwLjUwNTY5LDE0LjY3OTYyNjIsMCAtOTAuNTA3OTUzMywxNC42NzMwNTAyLDAgLTkwLjUwNzQ5MjQsMTQuNjcxMDIzMiwwIC05MC41MDYwOTE2LDE0LjY2ODQ1MTEsMCAtOTAuNTA0ODczMywxNC42NjY5NDkyLDAgLTkwLjUwMTQyLDE0LjY2NzU2MjMsMCAtOTAuNTAwNjc3MSwxNC42NjQ1NjM0LDAgLTkwLjUwMDg1NjQsMTQuNjYwMDMxMSwwIC05MC41MDAzMjgxLDE0LjY1ODczNjIsMCAtOTAuNTAwNzYzMywxNC42NTczNDkxLDAgLTkwLjUwMTc1LDE0LjY1NTIzMjMsMCAtOTAuNTAyMzkzMSwxNC42NTU3ODQxLDAgLTkwLjUwMjY5LDE0LjY1NDk3MjMsMCAtOTAuNTA0MjEsMTQuNjUzNjIyMywwIC05MC41MDE0MSwxNC42NjAyMTIzLDAgLTkwLjUwMjQ0NSwxNC42NjIzMDU5LDAgLTkwLjUwMzUyMjksMTQuNjYzMDcxLDAgLTkwLjUwNDcxNzUsMTQuNjYwMzQ3MSwwIC05MC41MDc0NTcxLDE0LjY1MzMyNjEsMCAtOTAuNTA3NzUsMTQuNjUxODcyMywwIC05MC41MDg4NywxNC42NTE5MDIzLDAgLTkwLjUwODE3MjgsMTQuNjUzNTg3NiwwIC05MC41MDc4NTA3LDE0LjY1NDQ5MzUsMCAtOTAuNTA3NTc3NCwxNC42NTUyMzIsMCAtOTAuNTA3NjM3NiwxNC42NTY0MjU3LDAgLTkwLjUwNzgzMjYsMTQuNjU5MjAwNywwIC05MC41MTAwNDQ2LDE0LjY1OTQwMTUsMCAtOTAuNTEyNjUsMTQuNjUyODcyMywwIC05MC41MTMzMiwxNC42NTMxMDIzLDAgLTkwLjUxNDU0LDE0LjY1MzE0MjMsMCAtOTAuNTEzNTEsMTQuNjU0MjkyMywwIC05MC41MTMyOCwxNC42NTQ4NDIzLDAgLTkwLjUxMzI1LDE0LjY1NTI5MjMsMCAtOTAuNTEzMjEsMTQuNjU1NzMyMywwIC05MC41MTMwMywxNC42NTcxMjIzLDAgLTkwLjUxMjcxLDE0LjY1ODExMjMsMCAtOTAuNTEzMTQsMTQuNjU5MzcyMywwIC05MC41MTI4NzI3LDE0LjY1OTY5NzcsMCAtOTAuNTEyNTI1NywxNC42NjE0NTk0LDAgLTkwLjUxMTM2NDMsMTQuNjc4ODc4OSwwIC05MC41MTI5NzA5LDE0LjY4MjA3OTQsMCAtOTAuNTE1NzA0MiwxNC42Nzc0NDM3LDAgLTkwLjUxNjUzNDMsMTQuNjY5NDM4MywwIC05MC41MTgwOTQxLDE0LjY1OTE3MDEsMCAtOTAuNTE4MjQ0NSwxNC42NTczNTk0LDAgLTkwLjUxODI4NjYsMTQuNjU2MDc5NiwwIC05MC41MTc3OTY0LDE0LjY1NDUwMzMsMCAtOTAuNTE4OTkxMiwxNC42NTI1ODMyLDAgLTkwLjUxOTk3NDMsMTQuNjUxNjE3LDAgLTkwLjUyMTAxODcsMTQuNjQ5MzA1OSwwIC05MC41MTk5NCwxNC42NDkzNDIzLDAgLTkwLjUxMTYzLDE0LjY0ODExMjMsMCAtOTAuNTExNjQsMTQuNjQ3NjEyMywwIC05MC41MTAwNSwxNC42NDczODIzLDAgLTkwLjUwOTkxLDE0LjY0NzQ2MjMsMCAtOTAuNTA3MiwxNC42NDcxMDIzLDAgLTkwLjUwNTAyLDE0LjY0ODA1MjMsMCAtOTAuNTAzOTUsMTQuNjQ4MjEyMywwIC05MC40OTM3MSwxNC42NDQyNzIzLDAgLTkwLjQ5MzM1LDE0LjY0ODMxMjMsMCAtOTAuNDkyNTIsMTQuNjQ5ODEyMywwIC05MC40OTA4MTQ3LDE0LjY1MDgxMDksMCAtOTAuNDkwMDg1NywxNC42NTI3MTIxLDAgLTkwLjQ4OTM5MTIsMTQuNjU0NjQ0OCwwIC05MC40ODg4MTA2LDE0LjY1NTk1OTIsMCAtOTAuNDkxMTI0OSwxNC42NTcxMzg2LDAgLTkwLjQ5NDA0MDEsMTQuNjU4MzE3OSwwIC05MC40OTE4MSwxNC42NjA5NzIzLDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
             [
                 'name' => 'Subway Pradera Xela',
                 'address' => 'Avenida Las Americas 7-12 Zona 3 Centro Comercial Pradera Xela local 209, Quetzaltenango',
+                'price_location' => 'interior',
                 'latitude' => 14.8498158,
                 'longitude' => -91.5337093,
                 'is_active' => true,
@@ -1289,55 +1162,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.7.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkxLjUzNDc4MiwxNC44NDk2MjAzLDAgLTkxLjUzNDQyOCwxNC44NDk3ODYyLDAgLTkxLjUzNDgxNDIsMTQuODQ5ODI3NywwIC05MS41MzQ3ODIsMTQuODQ5NjIwMywwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Xela Américas',
                 'address' => 'Avenida de las Americas, Zona 9 Parcela 2, Local A, Centro Comercial Paseo Las Americas Xela, Quetzaltenango',
+                'price_location' => 'interior',
                 'latitude' => 14.8491873,
                 'longitude' => -91.5379657,
                 'is_active' => true,
@@ -1349,55 +1216,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.8.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkxLjUzMzAyNTcsMTQuODI1NzA0NywwIC05MS41Mjk1MDYzLDE0LjgyNzU1MjIsMCAtOTEuNTI5ODAxMSwxNC44MjkwMjA0LDAgLTkxLjUyOTY0ODEsMTQuODMwNzkxNiwwIC05MS41MzA1ODk1LDE0LjgzMjIzMSwwIC05MS41MzAyMDQ1LDE0LjgzMjc1OCwwIC05MS41MzAyNTM1LDE0LjgzMzk3NDQsMCAtOTEuNTMwMTA5NCwxNC44MzUxMTgyLDAgLTkxLjUzMjAyMTEsMTQuODM1MTU1OSwwIC05MS41MzIwNjc4LDE0LjgzODc1NzcsMCAtOTEuNTI5NzU4LDE0LjgzODMyOCwwIC05MS41Mjc1MTMsMTQuODQ4Mjg1LDAgLTkxLjUyNjY4NTMsMTQuODU2NTYzMiwwIC05MS41MjcwNTkxLDE0Ljg1ODEyMTUsMCAtOTEuNTI1NzQ4LDE0Ljg2Njg0NywwIC05MS41MjU0MDQ1LDE0Ljg4MDMzNDgsMCAtOTEuNTM2NjQ4NCwxNC44ODAwNTIyLDAgLTkxLjU0MjkxNDMsMTQuODc4OTgxMywwIC05MS41NDY5NDg0LDE0Ljg3NzI0NjYsMCAtOTEuNTQ3NTgyLDE0Ljg3MDM1ODEsMCAtOTEuNTQxNzc4MywxNC44NjYxMDMzLDAgLTkxLjU0MjQzMDksMTQuODY0OTg5OCwwIC05MS41NDI3NDAxLDE0Ljg2MzE3MTEsMCAtOTEuNTQ1MjQ2OCwxNC44NjM2MTk0LDAgLTkxLjU0NjE0MDIsMTQuODU5NTM4NSwwIC05MS41NDYyNDgzLDE0Ljg1NTM1MjgsMCAtOTEuNTUwNjQ3NiwxNC44NDc1MTY2LDAgLTkxLjU1MDM3MjYsMTQuODQ3MDk3LDAgLTkxLjU1MzI3MzIsMTQuODQ4Mzc4MiwwIC05MS41NTc4NTc0LDE0Ljg0ODkwMzcsMCAtOTEuNTYzNjg2MSwxNC44NDY5NjA5LDAgLTkxLjU2NjIwMjMsMTQuODM5MTM0MywwIC05MS41NjM2ODE0LDE0LjgzMjA2ODEsMCAtOTEuNTU0MjYyOCwxNC44Mjk4MDA2LDAgLTkxLjU0MTY1OTksMTQuODI2MjY3NywwIC05MS41MzY0NzQzLDE0LjgyNDc1MDEsMCAtOTEuNTMzMDI1NywxNC44MjU3MDQ3LDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
             [
                 'name' => 'Subway Antigua',
                 'address' => '6 Avenida Norte Casa No. 9 Antigua Guatemala',
+                'price_location' => 'interior',
                 'latitude' => 14.5582325,
                 'longitude' => -90.7374486,
                 'is_active' => true,
@@ -1409,55 +1270,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.14.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjc0ODAzLDE0LjU3MDQyNDIsMCAtOTAuNzQ5MzI0MiwxNC41NjkyMzkxLDAgLTkwLjc0OTU2MzMsMTQuNTU4MTgwMSwwIC05MC43NTIyNDg0LDE0LjU1MTc3MzEsMCAtOTAuNzU1MTkwNSwxNC41Mzg0NzY2LDAgLTkwLjc0OTIyNzUsMTQuNTMzODYxMiwwIC05MC43NDA2Njc4LDE0LjUzOTY5MzYsMCAtOTAuNzM5NTQ4NiwxNC41NDA2NzEsMCAtOTAuNzM5MjgxNiwxNC41NDEwNzY0LDAgLTkwLjczOTAyNDEsMTQuNTQwNDExNywwIC05MC43Mzg1OTUsMTQuNTQwNzQ0LDAgLTkwLjczODU5NSwxNC41NDE2MzcyLDAgLTkwLjczODMxNiwxNC41NDE2MTY0LDAgLTkwLjczNzg4NjksMTQuNTQyMjYwMywwIC05MC43Mzc1NDM2LDE0LjU0MzA5MTEsMCAtOTAuNzM2MjU5NCwxNC41NDI5MDU5LDAgLTkwLjczNTUxNjYsMTQuNTQzMDgyOCwwIC05MC43MzQ1NTEsMTQuNTQzNDE1MSwwIC05MC43MzI2NzksMTQuNTQ0MjY3MywwIC05MC43MjkxOTQ0LDE0LjU0NTgxMywwIC05MC43Mjg3MjkxLDE0LjU0ODgxNDksMCAtOTAuNzI3ODM0NiwxNC41NTEwNjkyLDAgLTkwLjcyNjA3NjQsMTQuNTU4MjU5NSwwIC05MC43Mjg3MjYyLDE0LjU2MDc1MDksMCAtOTAuNzI5NTMwNywxNC41NjA3NzA4LDAgLTkwLjcyOTY1MjUsMTQuNTYyOTA5MywwIC05MC43Mjk4NDAyLDE0LjU2Njk2OTgsMCAtOTAuNzI1OTg1OCwxNC41NzY4NTAyLDAgLTkwLjczMDE5OTYsMTQuNTgxMzMxMSwwIC05MC43MzIwMzEzLDE0LjU4NDU4NjYsMCAtOTAuNzM5Njk5OCwxNC41OTA5OTg0LDAgLTkwLjc0NzU2OTUsMTQuNTg3MDQyOSwwIC05MC43NTExMTcsMTQuNTg0MDk0NSwwIC05MC43NTEwNTk1LDE0LjU3ODE1NTcsMCAtOTAuNzQ4MDMsMTQuNTcwNDI0MiwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Pradera Escuintla',
                 'address' => '1 Avenida 1-43 zona 3 Centro Comercial Pradera Escuintla local 80',
+                'price_location' => 'interior',
                 'latitude' => 14.2899243,
                 'longitude' => -90.7853113,
                 'is_active' => true,
@@ -1469,55 +1324,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.31.254',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjc0MjgyMTgsMTQuMjkxMjQyMSwwIC05MC43NjA5MzA2LDE0LjMxOTMzMTksMCAtOTAuNzY0MDQyMSwxNC4zMjc0MzUyLDAgLTkwLjc2MzIwNTQsMTQuMzM1NTM4NCwwIC05MC43NjUxMzcxLDE0LjMzNzc3NDEsMCAtOTAuNzc0NjY1MiwxNC4zMjQxMTQ0LDAgLTkwLjc3NzcxMjIsMTQuMzEyNzEwMywwIC05MC43ODAxMDQ3LDE0LjMwOTQ2NDIsMCAtOTAuNzgyMDY4LDE0LjMwNzQ2NTYsMCAtOTAuNzgyMTMyMiwxNC4zMDY5NjE1LDAgLTkwLjc4NjQ4NDMsMTQuMzA3OTY4LDAgLTkwLjc4NzA2MjYsMTQuMzA3NTc1LDAgLTkwLjc4NzUxMjIsMTQuMzA2NzY2MiwwIC05MC43ODgyMTgzLDE0LjMwMDgyMzgsMCAtOTAuNzkxOTg2OSwxNC4zMDEwMDY5LDAgLTkwLjc5MTk3MDcsMTQuMjk3NTQ3MywwIC05MC43OTE2ODA5LDE0LjI5NDYyMDQsMCAtOTAuNzg5MjEzLDE0LjI4NDEwOSwwIC05MC43ODY4NTIxLDE0LjI4MjYzMjUsMCAtOTAuNzg3NzQyMywxNC4yODEyMzQsMCAtOTAuNzc3ODg3NywxNC4yNzMyOTgxLDAgLTkwLjc3ODQxODksMTQuMjYyNzAwMywwIC05MC43NzUxMzYyLDE0LjI2MjM5OTIsMCAtOTAuNzYzNzY0NSwxNC4yNjQxMjU2LDAgLTkwLjc2MjQ3NzQsMTQuMjc3ODkxNywwIC05MC43NjQyODAxLDE0LjI5MDY1OTcsMCAtOTAuNzQyODIxOCwxNC4yOTEyNDIxLDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
             [
                 'name' => 'Subway Chiquimula',
                 'address' => 'Kilometro 17.5 Carretera Centroamericana 10 a esquipulas Centro Comercial La Pradera Chiquimula',
+                'price_location' => 'interior',
                 'latitude' => 14.7993173,
                 'longitude' => -89.5477367,
                 'is_active' => true,
@@ -1529,55 +1378,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.28.253',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Zona 4',
                 'address' => '6 Avenida 0-79 Zona 4 local 306 Plaza Pricesmart',
+                'price_location' => 'capital',
                 'latitude' => 14.6246538,
                 'longitude' => -90.5157792,
                 'is_active' => true,
@@ -1589,55 +1432,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.45.3',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '19:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '19:30',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway UFM',
                 'address' => '6 Calle final interior UFM nivel 4 Food Court Zona 10',
+                'price_location' => 'capital',
                 'latitude' => 14.6070861,
                 'longitude' => -90.5057959,
                 'is_active' => true,
@@ -1649,55 +1486,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.113.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Próceres Kiosco',
                 'address' => '16 Calle 2-00 Zona 10 Gran Centro los Proceres Kiosko 5 plaza 1821',
+                'price_location' => 'capital',
                 'latitude' => 14.5946970,
                 'longitude' => -90.5154495,
                 'is_active' => true,
@@ -1709,55 +1540,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '25.22.70.210',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Pacific Center',
                 'address' => 'Calzada Aguilar Batres 32-10 zona 11 Centro Comercial Pacific Center',
+                'price_location' => 'capital',
                 'latitude' => 14.5934524,
                 'longitude' => -90.5589134,
                 'is_active' => true,
@@ -1769,55 +1594,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.34.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:00',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Centrasur',
                 'address' => '23 Calle 1-55 zona 12 Centro Comercial Plaza Centrasur Local No.12 Planta baja Villa Nueva',
+                'price_location' => 'capital',
                 'latitude' => 14.5617154,
                 'longitude' => -90.5619550,
                 'is_active' => true,
@@ -1829,55 +1648,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.57.251',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:30',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:30',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:30',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:30',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:30',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:30',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:30',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:30',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:30',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:30',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:30',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:30',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:30',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:30',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Zona 15',
                 'address' => 'Boulevard Vista Hermosa 19-58 Zona 15 local 1',
+                'price_location' => 'capital',
                 'latitude' => 14.5904985,
                 'longitude' => -90.4919171,
                 'is_active' => true,
@@ -1889,55 +1702,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.21.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjUwMjc1LDE0LjYxMDU4LDAgLTkwLjUwMjkxLDE0LjYwOTg0LDAgLTkwLjUwMjk0LDE0LjYwOTI3LDAgLTkwLjUwMjY1LDE0LjYwODg2LDAgLTkwLjUwMTk3LDE0LjYwNzMyLDAgLTkwLjUwMTY2LDE0LjYwNTc4LDAgLTkwLjUwMTQ5LDE0LjYwNDYxLDAgLTkwLjUwMjMzLDE0LjYwMzk3LDAgLTkwLjUwMjQ5LDE0LjYwMzAyLDAgLTkwLjUwMTcyLDE0LjYwMjA1LDAgLTkwLjQ5OTYxLDE0LjU5ODIsMCAtOTAuNTAwNTcsMTQuNTk3NzMsMCAtOTAuNDk5NTMsMTQuNTk1MDUsMCAtOTAuNDk5NTEsMTQuNTk0NDksMCAtOTAuNDk4MTksMTQuNTkzNzQsMCAtOTAuNDk4MDIsMTQuNTkzMTgsMCAtOTAuNDk4MTcsMTQuNTkyMDksMCAtOTAuNDk2NDIsMTQuNTg5NjMsMCAtOTAuNDk1ODYsMTQuNTg4NzksMCAtOTAuNDk2MTUsMTQuNTg4MjIsMCAtOTAuNDk1MTQsMTQuNTg2OTYsMCAtOTAuNDk0ODUsMTQuNTg2NTMsMCAtOTAuNDkzMzEsMTQuNTg2MywwIC05MC40OTM0MSwxNC41ODUwOSwwIC05MC40OTMyNCwxNC41ODQ1LDAgLTkwLjQ5MjQxLDE0LjU4NDA0LDAgLTkwLjQ5MTg5LDE0LjU4MzUsMCAtOTAuNDkxMjQsMTQuNTgzNTEsMCAtOTAuNDkwNjIsMTQuNTgzNDYsMCAtOTAuNDkwNywxNC41ODI4NywwIC05MC40OTAwNywxNC41ODIzMiwwIC05MC40ODk3MiwxNC41ODE4NywwIC05MC40ODkzOSwxNC41ODE2NSwwIC05MC40ODg3NiwxNC41ODE3NiwwIC05MC40ODgwOCwxNC41ODI1NywwIC05MC40ODc4NSwxNC41ODIzLDAgLTkwLjQ4ODA1LDE0LjU4MTcxLDAgLTkwLjQ4NzkzLDE0LjU4MTI1LDAgLTkwLjQ4Nzk1LDE0LjU4MDk5LDAgLTkwLjQ4NzcsMTQuNTgwNzMsMCAtOTAuNDg3MzksMTQuNTgwNTQsMCAtOTAuNDg2NzEsMTQuNTgwNDEsMCAtOTAuNDg1OTIsMTQuNTgwNzQsMCAtOTAuNDg1ODQsMTQuNTc5NywwIC05MC40ODQyNiwxNC41Nzk1NCwwIC05MC40ODQxMiwxNC41Nzk4NCwwIC05MC40ODM4NiwxNC41ODAxMiwwIC05MC40ODM0MywxNC41ODAxNCwwIC05MC40ODI4NCwxNC41OCwwIC05MC40ODI1NCwxNC41Nzk3LDAgLTkwLjQ4Mjg5LDE0LjU3OTIzLDAgLTkwLjQ4Mjg2LDE0LjU3ODg0LDAgLTkwLjQ4MjU1LDE0LjU3ODY5LDAgLTkwLjQ4NTIzLDE0LjU3NjksMCAtOTAuNDg1MjMsMTQuNTc1OTEsMCAtOTAuNDg1NDksMTQuNTc1MDQsMCAtOTAuNDg1NjgsMTQuNTc0MjgsMCAtOTAuNDg2NDQsMTQuNTczNDUsMCAtOTAuNDg2OTMsMTQuNTcyNSwwIC05MC40ODY5NCwxNC41NzE4NSwwIC05MC40ODY2MywxNC41NzE1NSwwIC05MC40ODYyMSwxNC41NzExNCwwIC05MC40ODUwOCwxNC41NzA5NSwwIC05MC40ODM5MSwxNC41NzAxMSwwIC05MC40ODMyOSwxNC41NzAzMiwwIC05MC40ODIzOSwxNC41NzE0MywwIC05MC40ODIxNSwxNC41NzE5MSwwIC05MC40ODExNCwxNC41NzE4MiwwIC05MC40ODA1NywxNC41NzEyNSwwIC05MC40NzkzNCwxNC41NzEzNCwwIC05MC40NzkxNSwxNC41NzI5NywwIC05MC40Nzk4MiwxNC41NzQwNCwwIC05MC40ODA2OSwxNC41NzUxLDAgLTkwLjQ4MTAxLDE0LjU3NDg4LDAgLTkwLjQ4MTQzLDE0LjU3NDMsMCAtOTAuNDgxNzUsMTQuNTc0NzcsMCAtOTAuNDgxMTIsMTQuNTc1OTEsMCAtOTAuNDc4NTEsMTQuNTc3ODIsMCAtOTAuNDc4MTMsMTQuNTc5OSwwIC05MC40Nzc5MiwxNC41ODEyLDAgLTkwLjQ3NTk4LDE0LjU4MjQ1LDAgLTkwLjQ3NjE4LDE0LjU4NDA2LDAgLTkwLjQ4MjU0LDE0LjU4OTIsMCAtOTAuNDg4NTIsMTQuNTk0ODksMCAtOTAuNDkwNSwxNC41OTk0MSwwIC05MC40OTM5NSwxNC42MDEzMywwIC05MC40OTQ0MiwxNC42MDMwOSwwIC05MC40OTQ3OSwxNC42MDMzNSwwIC05MC40OTU0MiwxNC42MDMxNCwwIC05MC40OTU1OCwxNC42MDI1NSwwIC05MC40OTU0NiwxNC42MDA5MSwwIC05MC40OTU5NSwxNC42MDA2NCwwIC05MC40OTYzOCwxNC42MDA3MywwIC05MC40OTY2NiwxNC42MDI5MiwwIC05MC40OTUzOSwxNC42MDUxMywwIC05MC40OTczOSwxNC42MDYxNywwIC05MC40OTY5LDE0LjYwNzI2LDAgLTkwLjQ5NjU2LDE0LjYwODM5LDAgLTkwLjQ5NjcsMTQuNjEwNzYsMCAtOTAuNDk1ODQsMTQuNjE0NzcsMCAtOTAuNDk0MzgsMTQuNjE2MzIsMCAtOTAuNDkzODEsMTQuNjE3ODQsMCAtOTAuNDkzNzYsMTQuNjE4NTksMCAtOTAuNDkzOTEsMTQuNjE4ODIsMCAtOTAuNDk0ODcsMTQuNjE3OTEsMCAtOTAuNDk2MTUsMTQuNjE3MDgsMCAtOTAuNDk3MjUsMTQuNjE2MDcsMCAtOTAuNDk4ODQsMTQuNjE1NSwwIC05MC41MDI1MiwxNC42MTE4OSwwIC05MC41MDI3NiwxNC42MTE1NCwwIC05MC41MDI3NSwxNC42MTA1OCwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Américas',
                 'address' => 'Avenida Las Americas 15-00 zona 13 Local 0 Plaza Subway',
+                'price_location' => 'capital',
                 'latitude' => 14.5819481,
                 'longitude' => -90.5220813,
                 'is_active' => true,
@@ -1949,55 +1756,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.10.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjUzNDE1NjQsMTQuNTk2MTQxNCwwIC05MC41MzU0OTQzLDE0LjU4NTQyMywwIC05MC41MzY5MTQyLDE0LjU3MDY1NjMsMCAtOTAuNTM5Mzg1MiwxNC41NjY2MDU3LDAgLTkwLjUzODczNjEsMTQuNTY0MjQ1OSwwIC05MC41MzgwNDQxLDE0LjU2MzkwMDYsMCAtOTAuNTM3NzY3OCwxNC41NjQ3OTI0LDAgLTkwLjUzNzI3NywxNC41NjYwNTc5LDAgLTkwLjUzNjA4MDcsMTQuNTY3MDkzNywwIC05MC41MzEzODE0LDE0LjU2NTk4MjYsMCAtOTAuNTMzMTQwOSwxNC41NTg3MzQ1LDAgLTkwLjUyODk1NjcsMTQuNTU0NzA1MywwIC05MC41Mjc4NzMxLDE0LjU1NzczNzUsMCAtOTAuNTI1NzE2NiwxNC41NTk2NDgyLDAgLTkwLjUyNTEwNDUsMTQuNTYxMTg5NCwwIC05MC41MjA1NDQxLDE0LjU2OTMzNSwwIC05MC41MTg1OTAzLDE0LjU3MzI0ODMsMCAtOTAuNTE2MjUwOSwxNC41NzYyNTM3LDAgLTkwLjUxNDY4MzksMTQuNTc3ODY3NywwIC05MC41MTMwNDc1LDE0LjU3OTk5MzMsMCAtOTAuNTEyMjkwOCwxNC41ODI4NDU4LDAgLTkwLjUxMTg2MSwxNC41ODU1MDg0LDAgLTkwLjUxMjM1OTksMTQuNTg1NzczMiwwIC05MC41MTEzMTM4LDE0LjU4ODIxODUsMCAtOTAuNTEyODQxMywxNC41ODg2OTIyLDAgLTkwLjUxMzQ4OTEsMTQuNTg3NTc3MywwIC05MC41MTMyMDA3LDE0LjU4NzM3MSwwIC05MC41MTM3ODY4LDE0LjU4NjM1NDcsMCAtOTAuNTE0ODMyOSwxNC41ODY2ODE5LDAgLTkwLjUxMzM1NTEsMTQuNTg5MDAwMSwwIC05MC41MTEzNzE2LDE0LjU4ODMyMTQsMCAtOTAuNTEzNDA1NCwxNC41ODkxNTUzLDAgLTkwLjUyMTc5MDgsMTQuNTk2MjYwNCwwIC05MC41MjQ0MzA2LDE0LjU5ODg4NTMsMCAtOTAuNTMwNzgyOSwxNC42MDY0MzEzLDAgLTkwLjUzMjYyOTksMTQuNjA1NzQyNCwwIC05MC41MzU4NSwxNC42MDQ5MTgzLDAgLTkwLjUzMzY2OTYsMTQuNjAyNzkzNCwwIC05MC41MzIwMjU2LDE0LjYwMDM3NzcsMCAtOTAuNTMyNDQ5OCwxNC41OTk2NTc4LDAgLTkwLjUzNDE1NjQsMTQuNTk2MTQxNCwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Cobán',
                 'address' => '1 Calle 15-20 Zona 2 Centro Comercial Plaza Magdalena Local F6, Cobán Alta Verapaz',
+                'price_location' => 'interior',
                 'latitude' => 15.4696848,
                 'longitude' => -90.3884214,
                 'is_active' => true,
@@ -2009,55 +1810,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.0.254',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjM3ODE2LDE1LjQ5MDI2LDAgLTkwLjM4Mzk4LDE1LjQ4Mzc0LDAgLTkwLjM4ODg4LDE1LjQ3ODU5LDAgLTkwLjQwNDIxLDE1LjQ3NjMxLDAgLTkwLjQxMDg3LDE1LjQ3MTMsMCAtOTAuNDA3ODQsMTUuNDYxNDUsMCAtOTAuMzkyNDYsMTUuNDU0OTIsMCAtOTAuMzg1NjEsMTUuNDU0NCwwIC05MC4zNzg3NSwxNS40NTk0MywwIC05MC4zNzA3OCwxNS40NTI2NywwIC05MC4zNjgzLDE1LjQ1MjYsMCAtOTAuMzY0MjUsMTUuNDU2NDMsMCAtOTAuMzU3ODcsMTUuNDU5MDUsMCAtOTAuMzUwNjksMTUuNDYyMywwIC05MC4zMzc4NCwxNS40NjUwNSwwIC05MC4zMzkyNiwxNS40NzEzNSwwIC05MC4zNTA2MywxNS40NzkxLDAgLTkwLjM2MDQ2LDE1LjQ4MDgyLDAgLTkwLjM2NDE0LDE1LjQ4NzA1LDAgLTkwLjM3ODE2LDE1LjQ5MDI2LDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
             [
                 'name' => 'Subway Cayalá',
                 'address' => 'Diagonal 35 Boulevard Austriaco 16-25 Centro Comercial Villa Deportiva local N-104 Ciudad de Cayalá',
+                'price_location' => 'capital',
                 'latitude' => 14.6119981,
                 'longitude' => -90.4828940,
                 'is_active' => true,
@@ -2069,55 +1864,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.17.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjQ2NTg0NTksMTQuNTkzMzIzMSwwIC05MC40NjEzMjU5LDE0LjU5MjY0MzEsMCAtOTAuNDU2MjI1OSwxNC41OTEwNTMxLDAgLTkwLjQ1MjM5NTksMTQuNTkxNTQzMSwwIC05MC40NDgzOTU5LDE0LjU5MDc1MzEsMCAtOTAuNDQ2NjkzNiwxNC41OTIxMzMyLDAgLTkwLjQ0NjMzMDksMTQuNTkyNTYzNSwwIC05MC40NDY4MzU5LDE0LjU5NDEwMzEsMCAtOTAuNDQ0NDI4OSwxNC41OTU0MTA1LDAgLTkwLjQ0MjIwNzIsMTQuNTk2NDU1NSwwIC05MC40NDM2Nzg1LDE0LjU5ODM0NjEsMCAtOTAuNDUwMjc1OSwxNC41OTUwODMxLDAgLTkwLjQ1NTkwNTksMTQuNTk0MjMzMSwwIC05MC40NTY5OTU5LDE0LjU5NTAyMzEsMCAtOTAuNDU0NzQ1OSwxNC41OTc2ODMxLDAgLTkwLjQ1MTA0NTksMTQuNjAxMjIzMSwwIC05MC40NDU5MTM2LDE0LjYwMjAzNzQsMCAtOTAuNDQ1NTg5MiwxNC42MDMzOTY1LDAgLTkwLjQ0ODI5MDUsMTQuNjA0NTk5OCwwIC05MC40NTE2NjU5LDE0LjYwNTkxMzEsMCAtOTAuNDU2NDI1OSwxNC42MDYzODMxLDAgLTkwLjQ1NjgzNTksMTQuNjEwNDAzMSwwIC05MC40NTczNjU5LDE0LjYxMzMyMzEsMCAtOTAuNDU2NDc1OSwxNC42MjEwNzMxLDAgLTkwLjQ1MzgxNTksMTQuNjI3MDgzMSwwIC05MC40NTc0ODk3LDE0LjYyODA3NzIsMCAtOTAuNDU4NjIwOCwxNC42MjY0MjY5LDAgLTkwLjQ2MTM2MjcsMTQuNjIyNzEwNSwwIC05MC40NjIxOTMyLDE0LjYxODM3NDMsMCAtOTAuNDYzNTgxNSwxNC42MTI3OTIyLDAgLTkwLjQ2NDU4NzgsMTQuNjA0MDk5MSwwIC05MC40Njc0OCwxNC42MDI0MTAzLDAgLTkwLjQ2OTgzMSwxNC42MDQ1MTQ1LDAgLTkwLjQ3MDg3OTcsMTQuNjA1OTE2MSwwIC05MC40NzE5Mjg0LDE0LjYwODI3MjgsMCAtOTAuNDcyOTUzLDE0LjYwODc5MTksMCAtOTAuNDc4MTEzNiwxNC42MTAxNDE2LDAgLTkwLjQ3ODExMzcsMTQuNjE0OTc5NSwwIC05MC40Nzk4MjcxLDE0LjYxNjc1NDgsMCAtOTAuNDgyNTExNiwxNC42MTYzNTI2LDAgLTkwLjQ4MzI3OTksMTQuNjE5NjE4OSwwIC05MC40ODQ0MjU4LDE0LjYxOTU0OTQsMCAtOTAuNDg1OTkwMSwxNC42MTk2MzU3LDAgLTkwLjQ4Njk0MTQsMTQuNjIwNjI1MywwIC05MC40ODc3Nzc5LDE0LjYyMTYyLDAgLTkwLjQ4ODAwMzgsMTQuNjIxMDkxMywwIC05MC40ODgwNDYsMTQuNjIxMDQwNiwwIC05MC40ODgwNzI1LDE0LjYyMDk0MTQsMCAtOTAuNDg4MDY1OCwxNC42MjA1NTg2LDAgLTkwLjQ4ODAyNjksMTQuNjIwMTIyNiwwIC05MC40ODc5NTc2LDE0LjYxOTEwODEsMCAtOTAuNDg5MzM2NiwxNC42MTkxODY0LDAgLTkwLjQ4OTczNzQsMTQuNjIwNTY3NiwwIC05MC40OTAxNDksMTQuNjIxMDk3NiwwIC05MC40OTA4NjYzLDE0LjYyMDk1MjgsMCAtOTAuNDkxMzY5LDE0LjYyMDUzOCwwIC05MC40OTE2MTE5LDE0LjYxNzY1ODMsMCAtOTAuNDk1OTY1OCwxNC42MTMyODMxLDAgLTkwLjQ5NDMxNTgsMTQuNjEwMzQzMSwwIC05MC40OTQyMTU4LDE0LjYwOTQ5MzEsMCAtOTAuNDk1MjIyOCwxNC42MDgxNDE5LDAgLTkwLjQ5NTM4NDMsMTQuNjA3NjI5NywwIC05MC40OTU0ODE2LDE0LjYwNjkzNTQsMCAtOTAuNDk1NzA0MiwxNC42MDQ2ODI4LDAgLTkwLjQ5NjY0MjMsMTQuNjAyODUxOSwwIC05MC40OTY0NjU1LDE0LjYwMTY0MjIsMCAtOTAuNDk2MTY0LDE0LjYwMTUyODksMCAtOTAuNDk1ODgzOSwxNC42MDE1ODQ1LDAgLTkwLjQ5NTgwNTgsMTQuNjAyMDgzMSwwIC05MC40OTU2NDU4LDE0LjYwMjc0MzEsMCAtOTAuNDk0OTM1OCwxNC42MDM2NDMxLDAgLTkwLjQ5Mzc3NTgsMTQuNjAzMzYzMSwwIC05MC40OTMzNzU4LDE0LjYwMjMxMzEsMCAtOTAuNDkzMjQ1OCwxNC42MDE5MTMxLDAgLTkwLjQ5MjY2NTgsMTQuNjAxMzMzMSwwIC05MC40OTE5NTU4LDE0LjYwMTA2MzEsMCAtOTAuNDkyMDQ1OCwxNC42MDE5MTMxLDAgLTkwLjQ5MDI3NTgsMTQuNjAxNTQzMSwwIC05MC40ODg5NTU4LDE0LjYwMjYzMzEsMCAtOTAuNDg4Njk1OCwxNC42MDIyMzMxLDAgLTkwLjQ4OTA2NTgsMTQuNjAxNTEzMSwwIC05MC40ODkyMzU4LDE0LjYwMDcxMzEsMCAtOTAuNDg4NjQ1OCwxNC42MDAwMTMxLDAgLTkwLjQ4ODc3NTgsMTQuNTk3ODEzMSwwIC05MC40ODg0NzU4LDE0LjU5NjIyMzEsMCAtOTAuNDg2MDU1OCwxNC41OTUxMDMxLDAgLTkwLjQ4NDA2NTgsMTQuNTkyNDIzMSwwIC05MC40ODM3MzE2LDE0LjU5MTEzOTUsMCAtOTAuNDgyOTM3NCwxNC41OTAyNTgxLDAgLTkwLjQ4MTk3NjQsMTQuNTg4Nzk2NiwwIC05MC40Nzg3NTU4LDE0LjU5MzI1MzEsMCAtOTAuNDc2NzU1OCwxNC41OTE0NTMxLDAgLTkwLjQ3NTEzNTgsMTQuNTg4NjMzMSwwIC05MC40NzEwNzU5LDE0LjU4NjAyMzEsMCAtOTAuNDY4MzI1OSwxNC41ODcyMjMxLDAgLTkwLjQ2ODQ5NTksMTQuNTkyMTYzMSwwIC05MC40NjU4NDU5LDE0LjU5MzMyMzEsMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway Portales',
                 'address' => 'Carretera al Atlántico CA-9 Norte 3-20 Zona 17 Centro Comercial Portales local FC-10',
+                'price_location' => 'capital',
                 'latitude' => 14.6474774,
                 'longitude' => -90.4817730,
                 'is_active' => true,
@@ -2129,55 +1918,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.44.250',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway San Cristobal',
                 'address' => 'Boulevard Principal Manzana C Sector B1 Lote 208 Centro Comercial Plaza San Cristóbal locales 165 y 166 Zona 8 de Mixco',
+                'price_location' => 'capital',
                 'latitude' => 14.6026254,
                 'longitude' => -90.5813098,
                 'is_active' => true,
@@ -2189,55 +1972,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.73.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjU4MjUyNjEsMTQuNjA3OTg5NSwwIC05MC41ODQ2MzA5LDE0LjYwNTkxNzEsMCAtOTAuNTgzNjg4NiwxNC42MDQ3OTk4LDAgLTkwLjU4NTgzNjMsMTQuNjAwNjE5NywwIC05MC41ODU0NTE5LDE0LjYwMDAxMTIsMCAtOTAuNTgxOTc0MywxNC41OTMxMjAxLDAgLTkwLjU4MzI5ODksMTQuNTkxODMzNCwwIC05MC41ODM2NTkyLDE0LjU5MDQzNzUsMCAtOTAuNTg0NzM2NywxNC41ODkwMTMzLDAgLTkwLjU4OTM0OTMsMTQuNTkyMjA0OCwwIC05MC41OTY1NjQzLDE0LjU5NTY1MDIsMCAtOTAuNTk2Mzc2NSwxNC41OTc5ODgxLDAgLTkwLjU5NzI3NzYsMTQuNTk3ODM0MSwwIC05MC41OTc4MjQ0LDE0LjU5MzYzMTEsMCAtOTAuNTk4MDUxLDE0LjU5MTk1NDQsMCAtOTAuNTk3NjU1MiwxNC41OTExNDk5LDAgLTkwLjU5Nzc4NTIsMTQuNTg5OTUwOCwwIC05MC41OTc1MDc1LDE0LjU4OTc5LDAgLTkwLjU5NzA2MTcsMTQuNTg4NDUxNCwwIC05MC41OTcxNDc1LDE0LjU4NzE2MzksMCAtOTAuNTk4NTUzNSwxNC41ODc0NTkxLDAgLTkwLjYwMDg2NDEsMTQuNTg3OTE2OCwwIC05MC42MDA5OTY4LDE0LjU4NTAyMDgsMCAtOTAuNjAwNjcxOSwxNC41ODAyMTUyLDAgLTkwLjU5ODIwMTMsMTQuNTc3OTQzMSwwIC05MC41OTUwOTc1LDE0LjU3NDA4MjIsMCAtOTAuNTkyNjg3NCwxNC41NjkyODYsMCAtOTAuNTg5MjQ3NiwxNC41Njk1Nzc5LDAgLTkwLjU4NDIwMjMsMTQuNTcxOTI2NSwwIC05MC41ODM0MjcyLDE0LjU3Mjg4MzcsMCAtOTAuNTgxNjgxNSwxNC41NzU4MjE5LDAgLTkwLjU4MDk4MDIsMTQuNTc3MTg3NSwwIC05MC41NzU1MTUzLDE0LjU4NTkwNDgsMCAtOTAuNTc1NzExLDE0LjU4OTE4NjQsMCAtOTAuNTczNTQ2MywxNC41OTc4MjU2LDAgLTkwLjU4MjUyNjEsMTQuNjA3OTg5NSwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Mazatenango',
                 'address' => 'Centro Comercila Anexo Plaza Americas local F-406, Kilometro 158 Carretera que conduce a Mazatenango, Suchitepequez',
+                'price_location' => 'interior',
                 'latitude' => 14.5345721,
                 'longitude' => -91.4973673,
                 'is_active' => true,
@@ -2249,55 +2026,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.22.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '18:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '18:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '18:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '18:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '18:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '18:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '18:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '18:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '18:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '18:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '18:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '18:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '18:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '18:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkxLjUwNDk2ODUsMTQuNTUxNzI2MywwIC05MS41MDU0MzksMTQuNTQ1ODE0MSwwIC05MS41MDYwNzcxLDE0LjUzNzE4MSwwIC05MS41MDY0NDY0LDE0LjUyODAwNTQsMCAtOTEuNTA2Mjc4NywxNC41MjQ0NzcyLDAgLTkxLjUwNjc3MjEsMTQuNTIzOTEyOCwwIC05MS41MDY0MTkxLDE0LjUyMzA4MjEsMCAtOTEuNTA2MTQ0MiwxNC41MjE3OTIyLDAgLTkxLjUwNzg0LDE0LjUxNTczLDAgLTkxLjQ5NTE5LDE0LjUyMDUzLDAgLTkxLjQ4OTc5LDE0LjUyMTI0LDAgLTkxLjQ4ODg1LDE0LjUyNjE5LDAgLTkxLjQ3NjE2LDE0LjUyNjM4LDAgLTkxLjQ1NDcyNzMsMTQuNTM0MDQ1OCwwIC05MS40NTE1NTUxLDE0LjUzNjA4MTQsMCAtOTEuNDU2NiwxNC41NTM4MjU1LDAgLTkxLjQ4OTg5LDE0LjU0NzA2LDAgLTkxLjQ5Mzc1MTUsMTQuNTQ4MDQwMSwwIC05MS41MDQ5Njg1LDE0LjU1MTcyNjMsMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway UMG',
                 'address' => '3 Avenida 9-00 Zona 2 Interior Finca El Zapote, Cafeteria Central del Campus UMG, Local 2',
+                'price_location' => 'capital',
                 'latitude' => 14.6591762,
                 'longitude' => -90.5068331,
                 'is_active' => true,
@@ -2309,55 +2080,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.41.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '15:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '15:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '15:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '15:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '15:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '15:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '15:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '15:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '15:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '15:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '15:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '15:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '15:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '15:00',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway San Lucas',
                 'address' => '7 Calle Carretera Interamericana 1-17 Zona 1 San Lucas Centro Comercial Las Puertas San Lucas',
+                'price_location' => 'capital',
                 'latitude' => 14.6090156,
                 'longitude' => -90.6604028,
                 'is_active' => true,
@@ -2369,55 +2134,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.46.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjY1MTA2NzYsMTQuNjQxNTA5LDAgLTkwLjY1NDE3MTQsMTQuNjM5NzQ3MSwwIC05MC42NTcwMTc2LDE0LjYzMzI1MTYsMCAtOTAuNjc0ODc2MSwxNC42MjUzODgsMCAtOTAuNjY4NjQ2NywxNC42MTgyNjE0LDAgLTkwLjY4MjQ4MjQsMTQuNjE2MjQyNCwwIC05MC42ODUwNjM3LDE0LjYxNTE5MDEsMCAtOTAuNjgzNTk0NywxNC42MDkwMzcxLDAgLTkwLjY4NTYwMTcsMTQuNjA2NTM4NCwwIC05MC42ODc3NjM5LDE0LjYwNDg0MjcsMCAtOTAuNjg1MDMzOCwxNC42MDE1Njg5LDAgLTkwLjY4MjcwNjYsMTQuNTk5NDIzMSwwIC05MC42Nzc4NjA1LDE0LjU5ODY0NzcsMCAtOTAuNjc1NzcwNiwxNC41OTk0MDg1LDAgLTkwLjY3NDEyMzEsMTQuNTg5NzU4OCwwIC05MC42NjMyNzU4LDE0LjU4NjY5NzYsMCAtOTAuNjUwNjIxNiwxNC41ODIxODM2LDAgLTkwLjY1MDQ2NzUsMTQuNTg3MzM5OCwwIC05MC42NDU2Nzg2LDE0LjU3OTQ5NjIsMCAtOTAuNjQ0Njg3NywxNC41ODk2MzYyLDAgLTkwLjYzNTAyNzgsMTQuNTg0OTkwNywwIC05MC42MzMyNTEyLDE0LjU5MDU5NjIsMCAtOTAuNjMzNjMyMywxNC41OTQwMzUyLDAgLTkwLjYzNzQwNDEsMTQuNTk4NzIwMiwwIC05MC42Mzc1ODc2LDE0LjU5OTQzMTIsMCAtOTAuNjM4MTg1OCwxNC42MDM3NTgxLDAgLTkwLjY0Nzk2NzksMTQuNjA0ODQ1NiwwIC05MC42NDk3MDExLDE0LjYxMjgxMzksMCAtOTAuNjQzODk3NywxNC42MTg0NTE2LDAgLTkwLjY0MTY0NjQsMTQuNjI2NTcxNCwwIC05MC42NDgyMzU4LDE0LjYyNjQyNzcsMCAtOTAuNjQ0NDM5NywxNC42MjkwNjYxLDAgLTkwLjY0NDcyNDcsMTQuNjMyMjEwNiwwIC05MC42NDU1NzI5LDE0LjYzNzYwNzcsMCAtOTAuNjUxMDY3NiwxNC42NDE1MDksMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway Aeropuerto',
                 'address' => 'Aeropuerto Internacional La Aurora nivel 4 local 402',
+                'price_location' => 'capital',
                 'latitude' => 14.5840400,
                 'longitude' => -90.5277300,
                 'is_active' => true,
@@ -2429,55 +2188,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.81.3',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Zona 1',
                 'address' => '6 Avenida 12-09 Zona 1',
+                'price_location' => 'capital',
                 'latitude' => 14.6369197,
                 'longitude' => -90.5146132,
                 'is_active' => true,
@@ -2489,55 +2242,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.24.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Utz Ulew mall',
                 'address' => '19 avenida 2-40 zona 3 de Quetzaltenango Utz Ulew mall local 204',
+                'price_location' => 'capital',
                 'latitude' => 14.8432509,
                 'longitude' => -91.5250679,
                 'is_active' => true,
@@ -2549,55 +2296,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.40.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkxLjUxMDQ3MzIsMTQuODc1NjYwNywwIC05MS41MjQ5NDQ4LDE0Ljg3MjIwNiwwIC05MS41MjU2NjgxLDE0Ljg2OTc5NDIsMCAtOTEuNTI1NTMsMTQuODY3MTMzLDAgLTkxLjUyNjc3NywxNC44NjE2NjMsMCAtOTEuNTI2MDMyLDE0Ljg2MDYyMiwwIC05MS41MjY2NzUsMTQuODU4NDEyLDAgLTkxLjUyNTUxMiwxNC44NTUzMjMsMCAtOTEuNTI2MDg1LDE0Ljg1NTEyMywwIC05MS41MjY3MzMsMTQuODU0MDE1LDAgLTkxLjUyNzg4OCwxNC44NDQzNTgsMCAtOTEuNTI4ODQwNSwxNC44NDI0NzkxLDAgLTkxLjUyOTc5MywxNC44Mzg0NDMsMCAtOTEuNTI5ODc4OCwxNC44MzgwOTA0LDAgLTkxLjUyODc3OTgsMTQuODM3Njg4OCwwIC05MS41MzAwNDExLDE0LjgzNDkwMTksMCAtOTEuNTMwMjcwOSwxNC44MzI2OTU5LDAgLTkxLjUzMDA5NzYsMTQuODMxODQxMSwwIC05MS41Mjg3NTQ4LDE0LjgzMDY0NDEsMCAtOTEuNTI5NzM1LDE0LjgyOTAwNywwIC05MS41Mjk2MDIsMTQuODI4NDEsMCAtOTEuNTE2Nzg1NCwxNC44MjM5MjIyLDAgLTkxLjUwNjk4MjIsMTQuODI3ODM2NSwwIC05MS41MDc0MDE5LDE0LjgzMTUzNiwwIC05MS41MDQyMTY4LDE0LjgzMzI0NDIsMCAtOTEuNDc5MzI5OCwxNC44MzYzMDAxLDAgLTkxLjQ3ODM5MzgsMTQuODQwNDU5MywwIC05MS40Nzc0NTc4LDE0Ljg0OTE4MTcsMCAtOTEuNDc5MzYyLDE0Ljg2MzcyMiwwIC05MS40OTI4MjUsMTQuODcyOTkzLDAgLTkxLjUxMDQ3MzIsMTQuODc1NjYwNywwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Metrocentro',
                 'address' => '0 Calle 16-20 Zona 4 de Villa Nueva local 1 y 2 Food Court Centro Comercial Metro Centro',
+                'price_location' => 'capital',
                 'latitude' => 14.5137506,
                 'longitude' => -90.5768593,
                 'is_active' => true,
@@ -2609,55 +2350,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.48.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '21:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '21:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '21:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '21:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '21:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '21:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '21:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '21:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '21:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '21:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '21:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '21:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '21:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '21:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjU5NTg3MjQsMTQuNTMwMTYxMywwIC05MC41OTY3NTc0LDE0LjUyNzg2MDYsMCAtOTAuNTk2NDQwOCwxNC41MjU3MjYsMCAtOTAuNTk0ODIwNSwxNC41MTY1MTMyLDAgLTkwLjU5MDkyNTgsMTQuNTEyMDQ2OCwwIC05MC41ODc4MDM4LDE0LjUwNzUzODgsMCAtOTAuNTgzNjQxMiwxNC41MDU4OTc5LDAgLTkwLjU4Nzg5LDE0LjQ4NzYxNywwIC05MC41ODQ2NSwxNC40ODcyODQ5LDAgLTkwLjU4MjE4MjQsMTQuNDkzMTg1MywwIC05MC41ODExMDk1LDE0LjQ5ODU4NjcsMCAtOTAuNTc2OTY3OSwxNC40OTk4NzUsMCAtOTAuNTU3Mzc3LDE0LjQ5MjM1NDMsMCAtOTAuNTUzOTkyLDE0LjQ5MTI0MjksMCAtOTAuNTQ3MjU5NywxNC40OTA5NjIzLDAgLTkwLjU0NjM2OTIsMTQuNDkwODk5OCwwIC05MC41NDU5MDI0LDE0LjQ5MzI1NzYsMCAtOTAuNTQ3MTk1MiwxNC40OTY2MTI3LDAgLTkwLjU1MjY5OTEsMTQuNTAwODI5OCwwIC05MC41NDc5MTM5LDE0LjUwNjQzODYsMCAtOTAuNTUyNTcwMSwxNC41MTE3MTUxLDAgLTkwLjU1OTI0MzQsMTQuNTE3NzgwOSwwIC05MC41NjA4MjA2LDE0LjUyNDA5NTgsMCAtOTAuNTYxODE4NiwxNC41MjYxMTA4LDAgLTkwLjU2ODU4ODMsMTQuNTI4OTY3LDAgLTkwLjU3MzM2NywxNC41MjY4NTksMCAtOTAuNTc1Nzg2LDE0LjUyNjc4MSwwIC05MC41Nzc1NjYsMTQuNTI2MTQ4LDAgLTkwLjU3OTM0OTUsMTQuNTI2MTczOCwwIC05MC41ODI1NjUsMTQuNTI1OTQsMCAtOTAuNTg2NTM4MiwxNC41Mjc5OTYyLDAgLTkwLjU4NzI0NSwxNC41MjgxNzMsMCAtOTAuNTkwNjQyLDE0LjUzMDA3MzMsMCAtOTAuNTk1MTEsMTQuNTMyMjMsMCAtOTAuNTk1ODcyNCwxNC41MzAxNjEzLDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
             [
                 'name' => 'Subway Chiquimula 2',
                 'address' => '7 Avenida 4-33 zona 1 Chiquimula',
+                'price_location' => 'interior',
                 'latitude' => 14.7991755,
                 'longitude' => -89.5457059,
                 'is_active' => true,
@@ -2669,55 +2404,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.75.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTg5LjUzNjU0NiwxNC44MTQ2MzAxLDAgLTg5LjUzOTEyNiwxNC44MTUwMTkxLDAgLTg5LjU0MzgyMTEsMTQuODEzNDA0MSwwIC04OS41NTI2NTAyLDE0LjgxNzMxMjEsMCAtODkuNTUzOTY2MiwxNC44MTUwMjgxLDAgLTg5LjU1MzY2MjIsMTQuODEwOTE2MSwwIC04OS41NTk1NTEyLDE0LjgwMjgyMzEsMCAtODkuNTU3NTczMiwxNC43OTQ5OTYxLDAgLTg5LjU2MjcxNTMsMTQuNzk0ODkzMSwwIC04OS41NjQ2NzUzLDE0Ljc5MDA0MDEsMCAtODkuNTYwMDUzMiwxNC43ODU0OTcxLDAgLTg5LjU1MjQxOTIsMTQuNzgzODk0MSwwIC04OS41NTE1NDgyLDE0Ljc4NjYyMzEsMCAtODkuNTM5NTExLDE0Ljc4NTkwOTEsMCAtODkuNTMyMjIsMTQuNzc5Mjk0MSwwIC04OS41MzE2ODU5LDE0Ljc4MDMxMjEsMCAtODkuNTM4OTA2LDE0Ljc4Njc3MDEsMCAtODkuNTMxMzQ0OSwxNC43OTUwNDcxLDAgLTg5LjUzMjQyNSwxNC44MDI3NDAxLDAgLTg5LjUyMjQxNDksMTQuODEwMzAxMSwwIC04OS41MjIxMTM5LDE0LjgyNDEwOTEsMCAtODkuNTI0NzgzOSwxNC44MjQ5NzExLDAgLTg5LjUyNjMwMTksMTQuODI1MDE4MSwwIC04OS41MzY1NDYsMTQuODE0NjMwMSwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Aeropuerto 2',
                 'address' => 'Aeropuerto Internacional La Aurora Área Internacional',
+                'price_location' => 'capital',
                 'latitude' => 14.5846437,
                 'longitude' => -90.5274104,
                 'is_active' => true,
@@ -2729,55 +2458,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.2.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '00:00',
-    'close' => '23:59',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '00:00',
-    'close' => '23:59',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '00:00',
-    'close' => '23:59',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '00:00',
-    'close' => '23:59',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '00:00',
-    'close' => '23:59',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '00:00',
-    'close' => '23:59',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '00:00',
-    'close' => '23:59',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '00:00',
+                        'close' => '23:59',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '00:00',
+                        'close' => '23:59',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '00:00',
+                        'close' => '23:59',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '00:00',
+                        'close' => '23:59',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '00:00',
+                        'close' => '23:59',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '00:00',
+                        'close' => '23:59',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '00:00',
+                        'close' => '23:59',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Arkadia',
                 'address' => '18 Calle Boulevard Los Próceres 26-21 Zona 10 C.C. Arkadia Shopping local 305',
+                'price_location' => 'capital',
                 'latitude' => 14.5796378,
                 'longitude' => -90.4932261,
                 'is_active' => true,
@@ -2789,55 +2512,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.50.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Aguilar Batres',
                 'address' => 'Calzada Aguilar Batres 17-14 zona 11 Plaza Subway',
+                'price_location' => 'capital',
                 'latitude' => 14.6034518,
                 'longitude' => -90.5471344,
                 'is_active' => true,
@@ -2849,55 +2566,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.82.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjU2Mzg0NjIsMTQuNTg4NTAyNCwwIC05MC41NjI1NjUxLDE0LjU4OTQ2MTIsMCAtOTAuNTYwNjk0MiwxNC41ODk2NjQxLDAgLTkwLjU1OTY0LDE0LjU5MTQyLDAgLTkwLjU1NzQ4LDE0LjU5NDE2LDAgLTkwLjU1NTA2LDE0LjU5NjcsMCAtOTAuNTUxMzg0NCwxNC41OTk3MDk4LDAgLTkwLjU0ODE5ODEsMTQuNjAyMzMxNSwwIC05MC41NDc0OTkyLDE0LjYwMjc5MTcsMCAtOTAuNTQ2NjIwNCwxNC42MDM1NDY3LDAgLTkwLjU0NTc0MzQsMTQuNjA0MjUwNiwwIC05MC41NDQ5OTA5LDE0LjYwNDkyMjksMCAtOTAuNTQ0MDk0NywxNC42MDU5NjU3LDAgLTkwLjU0MzMwMjYsMTQuNjA2NTkwMywwIC05MC41MzU1NDY1LDE0LjYxMzU1OTMsMCAtOTAuNTQ2MTQ3NCwxNC42MTk5NzgxLDAgLTkwLjU1NDY0NDMsMTQuNjA4MzcwMSwwIC05MC41NTUzNjE5LDE0LjYwNzIzOSwwIC05MC41NTU5MDI2LDE0LjYwNzI2LDAgLTkwLjU1NjA1NywxNC42MDY4NDUxLDAgLTkwLjU1NjcyODcsMTQuNjA2MDIzMSwwIC05MC41NTgxMzc3LDE0LjYwMzksMCAtOTAuNTYwNDgwNiwxNC42MDA1NTA4LDAgLTkwLjU2MTI5NDUsMTQuNTk4NzM5MSwwIC05MC41NjUxMjI1LDE0LjU5Mjc4MzEsMCAtOTAuNTY1NTA5MSwxNC41OTIxMTU2LDAgLTkwLjU2NTA5MDcsMTQuNTg5MjI5MiwwIC05MC41NjM4NDYyLDE0LjU4ODUwMjQsMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway Chimaltenango',
                 'address' => 'Diagonal 1 1-75 zona 6 Pradera Chimaltenango Local R-4',
+                'price_location' => 'interior',
                 'latitude' => 14.6606643,
                 'longitude' => -90.8097842,
                 'is_active' => true,
@@ -2909,55 +2620,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.51.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjg1ODM5LDE0LjY2MDc1LDAgLTkwLjg0NTksMTQuNjU5MzIsMCAtOTAuODM5OTgsMTQuNjUwNDEsMCAtOTAuODMwNjksMTQuNjU0NTMsMCAtOTAuODIyMDEsMTQuNjQ5MzcsMCAtOTAuODE5MDcsMTQuNjQ3MzEsMCAtOTAuODE3NDcsMTQuNjQ1MTYsMCAtOTAuODE1MDMsMTQuNjM0MzgsMCAtOTAuODA3MDcsMTQuNjMzMDYsMCAtOTAuODA0NzcsMTQuNjI5NTgsMCAtOTAuNzg3MTMsMTQuNjMxMTcsMCAtOTAuNzcyNjMsMTQuNjM0NTQsMCAtOTAuNzU5MzMsMTQuNjM3NTcsMCAtOTAuNzcyMTcsMTQuNjQ0ODQsMCAtOTAuNzgwNjksMTQuNjQ1MTUsMCAtOTAuNzg4MzksMTQuNjUyNDQsMCAtOTAuNzkwNDU4OSwxNC42NTkwNTU2LDAgLTkwLjc4OTc4OTUsMTQuNjY2NzQ0NywwIC05MC44MDM0NCwxNC42NjM4MSwwIC05MC43OTMxMywxNC42ODM1OSwwIC05MC43OTAzMywxNC42OTc1MSwwIC05MC43OTkyNywxNC42OTExMiwwIC05MC44MDkzMywxNC42ODIzMiwwIC05MC44MTE5LDE0LjY3MDc5LDAgLTkwLjgyMTI1LDE0LjY3MDMxLDAgLTkwLjgzMzg5LDE0LjY2OTQyLDAgLTkwLjg0MjgzLDE0LjY3NDU5LDAgLTkwLjg1MTIzLDE0LjY3MDUyLDAgLTkwLjg1NTEzLDE0LjY2NjE2LDAgLTkwLjg1ODM5LDE0LjY2MDc1LDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
             [
                 'name' => 'Subway Plaza Madero',
                 'address' => 'Kilometro 21.7 Carretera a el Salvador Zona 3 Centro Comercial Plaza Madero Local 10 Villa Canales',
+                'price_location' => 'capital',
                 'latitude' => 14.5036077,
                 'longitude' => -90.4813794,
                 'is_active' => true,
@@ -2969,55 +2674,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.52.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjQ0OTk0MzIsMTQuNTEwODY4NiwwIC05MC40NTQwMTksMTQuNTE5NTcsMCAtOTAuNDY2MzM2LDE0LjUyNzU2MSwwIC05MC40NjcyMjQ2LDE0LjUyNzU1OTYsMCAtOTAuNDczMDcsMTQuNTI0ODk5NCwwIC05MC40ODg5ODc2LDE0LjUyMzU2NjcsMCAtOTAuNDkzMzA2LDE0LjUyMjk1MTMsMCAtOTAuNDkzNzY4NSwxNC41MjEzNzQ1LDAgLTkwLjQ4NTgxOTksMTQuNTEzMTUwNSwwIC05MC40ODQ1OTk0LDE0LjUwOTc4OTIsMCAtOTAuNDkyNjUxMSwxNC41MDY2ODA4LDAgLTkwLjQ5Mjk2MTYsMTQuNTA1NDIzOSwwIC05MC40OTE1MTU3LDE0LjUwNDQ4NjUsMCAtOTAuNDg2Mzc5MiwxNC41MDQyOTY5LDAgLTkwLjQ4OTU4MTUsMTQuNDk4MjY3MywwIC05MC40ODk4MTYyLDE0LjQ5NjYwNTMsMCAtOTAuNDg3MjE4NiwxNC40OTA1MzkxLDAgLTkwLjQ4NDkyNzQsMTQuNDg4OTA5NywwIC05MC40ODY3NTYsMTQuNDgyOTU5LDAgLTkwLjQ4OTQ3NTEsMTQuNDgxNjM4NSwwIC05MC40OTYyNzEsMTQuNDc3MTYsMCAtOTAuNDk4MjgsMTQuNDY5MDY2MiwwIC05MC41MDE3MDkxLDE0LjQ1NzU2MDEsMCAtOTAuNTAwMTYsMTQuNDUxOTU1LDAgLTkwLjQ5MzkyOTgsMTQuNDUyNTk0NCwwIC05MC40Nzg0MywxNC40NTE1NzEsMCAtOTAuNDc2Mjk1MSwxNC40NTI1ODgxLDAgLTkwLjQ3MTUyMDksMTQuNDU4ODIwNSwwIC05MC40NjUzNDA4LDE0LjQ2OTAyMDQsMCAtOTAuNDcyODc3NSwxNC40NzgwNzg0LDAgLTkwLjQ3MjY4OTcsMTQuNDg0MTQ0NiwwIC05MC40NTYxOTkyLDE0LjQ4NTAzNzUsMCAtOTAuNDU1MjMzMywxNC40ODUzMTc1LDAgLTkwLjQ1MzU3MDIsMTQuNDg1MzMyOCwwIC05MC40NTMwNzEyLDE0LjQ4NDY4NjEsMCAtOTAuNDUxNjkyNSwxNC40ODQ0NzU2LDAgLTkwLjQ1NDExOTQsMTQuNTAzMDcxMSwwIC05MC40NTQwMTQ3LDE0LjUwNjk1ODMsMCAtOTAuNDQ5OTQzMiwxNC41MTA4Njg2LDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
             [
                 'name' => 'Subway Oakland Mall',
                 'address' => 'Centro Comercial Oakalnd Mall',
+                'price_location' => 'capital',
                 'latitude' => 14.5983271,
                 'longitude' => -90.5073452,
                 'is_active' => true,
@@ -3029,55 +2728,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.53.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:00',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Naranjo Mall',
                 'address' => '23 Calle 10-00 Zona 4, Condado Naranjo Centro Comercial Naranjo Mall',
+                'price_location' => 'capital',
                 'latitude' => 14.6503163,
                 'longitude' => -90.5414629,
                 'is_active' => true,
@@ -3089,55 +2782,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.19.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway El Frutal',
                 'address' => 'Bulevar El Frutal 14-00 Zona 5 Villa Nueva C.C. El Frutal',
+                'price_location' => 'capital',
                 'latitude' => 14.5209433,
                 'longitude' => -90.5649161,
                 'is_active' => true,
@@ -3149,55 +2836,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.58.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:30',
-    'close' => '20:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:30',
-    'close' => '20:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:30',
-    'close' => '20:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:30',
-    'close' => '20:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:30',
-    'close' => '20:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:30',
-    'close' => '20:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:30',
-    'close' => '20:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '09:30',
+                        'close' => '20:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '09:30',
+                        'close' => '20:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '09:30',
+                        'close' => '20:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '09:30',
+                        'close' => '20:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '09:30',
+                        'close' => '20:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '09:30',
+                        'close' => '20:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '09:30',
+                        'close' => '20:00',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Pradera Concepción',
                 'address' => 'Kilometro 15.5 Carretera A El Salvador Centro Comercial Pradera Concepción Local 353',
+                'price_location' => 'capital',
                 'latitude' => 14.5513569,
                 'longitude' => -90.4547149,
                 'is_active' => true,
@@ -3209,55 +2890,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.30.254',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '19:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '19:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '19:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '19:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '19:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '19:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '19:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '19:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '19:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '19:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '19:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '19:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '19:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '19:00',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway El Recreo',
                 'address' => '11 Avenida 30-33 zona 12 colonia Santa Rosa local 8',
+                'price_location' => 'capital',
                 'latitude' => 14.5910488,
                 'longitude' => -90.5509901,
                 'is_active' => true,
@@ -3269,55 +2944,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.70.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Atanasio Madero',
                 'address' => 'Diagonal 3 Calzada Atanasio Tzul 17-13 Zona 12 C.C. Plaza Madero Atanasio Local 6',
+                'price_location' => 'capital',
                 'latitude' => 14.5979533,
                 'longitude' => -90.5388933,
                 'is_active' => true,
@@ -3329,55 +2998,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.59.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjUzNTUwODcsMTQuNjEzMDczOSwwIC05MC41NDY1OTIsMTQuNjAzMzk3LDAgLTkwLjU1NDYzNzksMTQuNTk2ODgwNiwwIC05MC41NTI4NiwxNC41OTU0MzcsMCAtOTAuNTUwOTg2MiwxNC41OTM3NTUyLDAgLTkwLjU0ODk3MjksMTQuNTkyMTQ2LDAgLTkwLjU0ODA0ODUsMTQuNTkxNjcyMSwwIC05MC41NDU5NjU0LDE0LjU5MjM1MDcsMCAtOTAuNTQxMzM4LDE0LjU5MDQ1OCwwIC05MC41MzYxNjgxLDE0LjU4OTQ5MTUsMCAtOTAuNTM1OTE5LDE0LjU5MDY2ODEsMCAtOTAuNTM2MjM2MiwxNC41OTQ0NzQ4LDAgLTkwLjUzMzk4MDgsMTQuNTk2NjI3MywwIC05MC41MzIyODMyLDE0LjYwMDY0ODcsMCAtOTAuNTM1NjY4OCwxNC42MDQ5MTIzLDAgLTkwLjUzNDEwODIsMTQuNjA1NjQwNywwIC05MC41MzEyMTczLDE0LjYwNjYzOSwwIC05MC41MzE0ODY2LDE0LjYwNzM0ODMsMCAtOTAuNTMyOTUsMTQuNjEwMjI3LDAgLTkwLjUzNTUwODcsMTQuNjEzMDczOSwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Miraflores 2',
                 'address' => '21 Avenida 4-32 zona 11 Centro Comercial Galerias Miraflores local FC 14',
+                'price_location' => 'capital',
                 'latitude' => 14.6210168,
                 'longitude' => -90.5531359,
                 'is_active' => true,
@@ -3389,55 +3052,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.72.254',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '22:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '22:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '22:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '22:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '22:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '22:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '22:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '22:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '22:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '22:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '22:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '22:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '22:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '22:30',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Plaza Florida',
                 'address' => 'Cz San juan 1-83 Z-7 Mixco CC Plaza florida',
+                'price_location' => 'capital',
                 'latitude' => 14.6500759,
                 'longitude' => -90.5841160,
                 'is_active' => true,
@@ -3449,55 +3106,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.62.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjU5ODgyNzUsMTQuNjQyOTU0OSwwIC05MC41OTczODE1LDE0LjY0MjM0MjYsMCAtOTAuNTk3MjU1MSwxNC42Mzk2NTQyLDAgLTkwLjU5NjA2NjYsMTQuNjM5ODEwMSwwIC05MC41OTQyNzczLDE0LjY0MDQ2NDIsMCAtOTAuNTg5NzAzNywxNC42NDI0MTY4LDAgLTkwLjU4MjQ4NzMsMTQuNjQ3OTk0MiwwIC05MC41ODIwMTcyLDE0LjY0ODMyNjIsMCAtOTAuNTgzMjg1MiwxNC42NDk3NzkzLDAgLTkwLjU3OTIxMjksMTQuNjUyNjMxMSwwIC05MC41NzU3ODg1LDE0LjY1NDc0MTksMCAtOTAuNTczMDUwOSwxNC42NTY5NTYxLDAgLTkwLjU3MTExNTIsMTQuNjU4MTkxMiwwIC05MC41Njk1MTI3LDE0LjY1OTM0NDIsMCAtOTAuNTcxNjM3MywxNC42NjIxMzQyLDAgLTkwLjU2NjgxNTMsMTQuNjY2MTYwMiwwIC05MC41NjM5NjczLDE0LjY3MDkzNDIsMCAtOTAuNTYyODk3MywxNC42NzM1NzQyLDAgLTkwLjU2MjA1NjMsMTQuNjc1MDEwMiwwIC05MC41NjI0MTczLDE0LjY3Njk0NDIsMCAtOTAuNTY3MDk3MywxNC42NzU1MjQyLDAgLTkwLjU3NTI3NzMsMTQuNjcwNjk0MiwwIC05MC41Nzg4MzAzLDE0LjY3MzMwOTIsMCAtOTAuNTc3NDkwMywxNC42NzkwNzkyLDAgLTkwLjYwNzY5NzMsMTQuNjcwNDg0MiwwIC05MC42MTkyNTkzLDE0LjY2NDc1NDIsMCAtOTAuNjE4ODQ1MywxNC42NjA2NzYyLDAgLTkwLjYwOTQ4MjMsMTQuNjU3NDc3MiwwIC05MC42MDM1OTUzLDE0LjY1MzE1NzIsMCAtOTAuNTk3MzkyMywxNC42NTE3ODMyLDAgLTkwLjU5ODExMzMsMTQuNjQ5NTM4MiwwIC05MC41OTc1NjczLDE0LjY0NzMxNDIsMCAtOTAuNTk4MTk3MywxNC42NDYyNTQyLDAgLTkwLjU5ODgyNzUsMTQuNjQyOTU0OSwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Trinidad',
                 'address' => '2 Avenida 4-40 Zona 5 Expansion del Centro Comercial La Trinidad Local 22 y 23. Retalhuleu',
+                'price_location' => 'capital',
                 'latitude' => 14.5315930,
                 'longitude' => -91.6828505,
                 'is_active' => true,
@@ -3509,55 +3160,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.80.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '21:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '21:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkxLjcwMTYxMjEsMTQuNTI4ODkzNywwIC05MS42OTgxNTEzLDE0LjUyNTYwNTgsMCAtOTEuNjk1MzUyNCwxNC41MjI0Njg4LDAgLTkxLjcwNDU3LDE0LjUxNDUxLDAgLTkxLjY5NTk1LDE0LjUwNTg3LDAgLTkxLjY4MDIyLDE0LjUwNjAzLDAgLTkxLjY3MzcxLDE0LjUxMTYsMCAtOTEuNjY3OTIsMTQuNTE4NSwwIC05MS42NjEwMSwxNC41MjI5MSwwIC05MS42NTgxMywxNC41MjgwMiwwIC05MS42NTc1NiwxNC41MzMzLDAgLTkxLjY2NSwxNC41NDEzOCwwIC05MS42NjA4OCwxNC41NDQ5MywwIC05MS42NjM1NSwxNC41NDgxNCwwIC05MS42NzE5LDE0LjU1MjQ3LDAgLTkxLjY3ODYzLDE0LjU1NDc0LDAgLTkxLjY3Mzk4LDE0LjU1OTI5LDAgLTkxLjY3NjM5LDE0LjU2MjcyLDAgLTkxLjY3ODEyLDE0LjU2NTE5LDAgLTkxLjY4MTA0LDE0LjU2NTQ5LDAgLTkxLjY4NTQ5LDE0LjU2MjMsMCAtOTEuNjgwNTgsMTQuNTQ5MDMsMCAtOTEuNjg2MjYsMTQuNTQ1MTQsMCAtOTEuNjkyNDYsMTQuNTUyMDUsMCAtOTEuNjk1NzYsMTQuNTQ4OTYsMCAtOTEuNjk2MDQ5OSwxNC41NDc3OTIzLDAgLTkxLjY5NTk1NDksMTQuNTQ2NTE0NywwIC05MS42OTc5Nzk3LDE0LjU0NDg3NywwIC05MS43MDExMDMsMTQuNTQyMDI0LDAgLTkxLjcwMjEwMTQsMTQuNTM5MzQ0OCwwIC05MS43MDI0MTgxLDE0LjUzMzg1MzQsMCAtOTEuNzAxNjEyMSwxNC41Mjg4OTM3LDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
             [
                 'name' => 'Subway Amatitlan',
                 'address' => 'Centro Comercial Flores del Lago locales 21 y 22 Sector C',
+                'price_location' => 'capital',
                 'latitude' => 14.4711105,
                 'longitude' => -90.6406703,
                 'is_active' => true,
@@ -3569,55 +3214,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.76.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjY0NTYyMywxNC40NjI0MzMsMCAtOTAuNjQzNjksMTQuNDU5OTgsMCAtOTAuNjUxOTk2MiwxNC40NDMwMDY2LDAgLTkwLjY1NzY0MTEsMTQuNDM2NTQ3NSwwIC05MC42NjI2MzYwNzY4MDQ2MiwxNC40MzMzNTYyNjU5MzIxMzcsMCAtOTAuNjY4NDA4MDg0NDY3NDcsMTQuNDI5NjY4NTM4NjgwMDE2LDAgLTkwLjY3ODUxODA1LDE0LjQyMzIwOTE0OTMyNjk2MywwIC05MC42OTkzOTUsMTQuNDA5ODcsMCAtOTAuNjk3Nzg1LDE0LjQwOTM5OSwwIC05MC42OTU2MDYsMTQuNDEwOTcxLDAgLTkwLjY4NzUwNSwxNC40MTA1NDgsMCAtOTAuNjgyNzkzLDE0LjQxMDUzNSwwIC05MC42Nzk4NzksMTQuNDEwNzU3LDAgLTkwLjY3MzI3NCwxNC40MTM5MywwIC05MC42NzE2NjcxLDE0LjQxMTU0MDIsMCAtOTAuNjYzNzM5OSwxNC40MDczMzE5LDAgLTkwLjY1MzgzNDksMTQuNDIzOTk3NSwwIC05MC42NDg5MDI4NSwxNC40MzM2NjAwNTk2OTY5ODgsMCAtOTAuNjQzOTcwOCwxNC40NDMzMjIyLDAgLTkwLjY0MDM3ODYsMTQuNDQzNzM1NCwwIC05MC42MzQ5MTA1LDE0LjQ0MjA2NzgsMCAtOTAuNjMyMTY2LDE0LjQ0NjE4MjcsMCAtOTAuNjI5NTQ5MywxNC40NDg0Mjk3LDAgLTkwLjYyOTAwMSwxNC40NTI2OSwwIC05MC42MzAwMTEsMTQuNDU3NCwwIC05MC42Mjk2NjMzLDE0LjQ1Nzk5MzIsMCAtOTAuNjI3ODk5NCwxNC40NjAyMDYsMCAtOTAuNjI4NDkyNywxNC40NjMwNTQzLDAgLTkwLjYyNTc1MTcsMTQuNDYxOTk2NSwwIC05MC42MjY2MjE3LDE0LjQ2NTk2MDcsMCAtOTAuNjIzNDYyOCwxNC40NjQ5NjE4LDAgLTkwLjYyMjQ0MSwxNC40NjI1OTIsMCAtOTAuNjIxNTkwNywxNC40NjUyOTE5LDAgLTkwLjYyMjUxNjIsMTQuNDY2MDg1MiwwIC05MC42MjMxMjg5LDE0LjQ2NzM3NiwwIC05MC42MjQ0MjA2LDE0LjQ2ODc0NzEsMCAtOTAuNjI2MTIwMSwxNC40NzA1NzUzLDAgLTkwLjYyNjI5OTUsMTQuNDcxNzE3MSwwIC05MC42MjY1Nzc1LDE0LjQ3MjE3OSwwIC05MC42Mjc2MjA3LDE0LjQ3MzU4MTEsMCAtOTAuNjI5NTY1MywxNC40NzQwNjgzLDAgLTkwLjYzMzM1ODksMTQuNDczODE1MywwIC05MC42MzQyNzc3LDE0LjQ3NDA4MTUsMCAtOTAuNjM1NTcxMSwxNC40NzI0OTQsMCAtOTAuNjQwNjk5NCwxNC40NzY5NzY1LDAgLTkwLjY0Njc1ODcsMTQuNDc0Nzc0MiwwIC05MC42NDczODkzLDE0LjQ3NDQwMDIsMCAtOTAuNjQ4MjQwNywxNC40NzMzMzUzLDAgLTkwLjY0ODc1MjMsMTQuNDcxOTE5OSwwIC05MC42NDcxNjEsMTQuNDY3NDcxLDAgLTkwLjY0NTYyMywxNC40NjI0MzMsMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway InterPlaza',
                 'address' => 'C.C. InterPlaza Xela Local C-3 la Esperanza Quetzaltenango',
+                'price_location' => 'interior',
                 'latitude' => 14.8617487,
                 'longitude' => -91.5506142,
                 'is_active' => true,
@@ -3629,55 +3268,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.66.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:30',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:30',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:30',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:30',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:30',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:30',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:30',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '09:30',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '09:30',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '09:30',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '09:30',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '09:30',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '09:30',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '09:30',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway MetroNorte',
                 'address' => 'Km. 5 Carretera al Atlantico Z.17  C.C Metronorte Local 13 y 14',
+                'price_location' => 'capital',
                 'latitude' => 14.6476000,
                 'longitude' => -90.4766386,
                 'is_active' => true,
@@ -3689,55 +3322,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.38.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '21:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '21:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjQ4OTAyODUsMTQuNjM3Nzk0NywwIC05MC40ODQ5NzM0LDE0LjY0MzQwMDYsMCAtOTAuNDc5NTE3OSwxNC42NDQ1OTQ1LDAgLTkwLjQ3NDgxMzMsMTQuNjQ0NjY3MSwwIC05MC40NzM0MTk5LDE0LjY0NDU4MTQsMCAtOTAuNDcyNzc2OCwxNC42NDYzOTY3LDAgLTkwLjQ3NDcyMTUsMTQuNjQ2Mzg0OCwwIC05MC40NzQzNDg4LDE0LjY0NzE2MTksMCAtOTAuNDc0NTI2LDE0LjY0Nzk0NzgsMCAtOTAuNDcyNjkxNywxNC42NDg4MTM5LDAgLTkwLjQ3MDkxNjcsMTQuNjQ3MjI0NSwwIC05MC40NzA4NTg0LDE0LjY0NjI1NzgsMCAtOTAuNDY4NjMyOCwxNC42NDQzMTUzLDAgLTkwLjQ2NjM2NDQsMTQuNjQ0MjgyOSwwIC05MC40NTc3NDM5LDE0LjY0MTA3NDgsMCAtOTAuNDUyNjI2MSwxNC42NDI5NzQ1LDAgLTkwLjQ1NDE4NzEsMTQuNjQ1NzUxNCwwIC05MC40NDY0NTgsMTQuNjQ1MzY0NCwwIC05MC40NDU4OTksMTQuNjQzNTQ0NSwwIC05MC40NDQ2MzE5LDE0LjY0MzUxMDEsMCAtOTAuNDM4MTU2LDE0LjY0NTQ4NDIsMCAtOTAuNDM3NjIzOCwxNC42NDc5OTgsMCAtOTAuNDM5MTk0NSwxNC42NDgzMTY1LDAgLTkwLjQ0MTg0ODgsMTQuNjQ3MzM3NSwwIC05MC40NDU4MjcsMTQuNjQ3OTEyMSwwIC05MC40NDg3MTA4LDE0LjY0ODAzLDAgLTkwLjQ1MDgyMjMsMTQuNjQ5NzI1NiwwIC05MC40NTMzMjQxLDE0LjY1MTQyMjEsMCAtOTAuNDU0MjMxNywxNC42NTE4NzU5LDAgLTkwLjQ1NDYzNSwxNC42NTE5NzY3LDAgLTkwLjQ1OTI0MTgsMTQuNjUzMjcyOSwwIC05MC40NjM4NTkzLDE0LjY1NTI1NDEsMCAtOTAuNDY1NDQ2NiwxNC42NTU2OTg4LDAgLTkwLjQ2NzM1NTYsMTQuNjU1OTk4MiwwIC05MC40Njg1MzQ1LDE0LjY1NTc0NTksMCAtOTAuNDcwNDg1OCwxNC42NTQ5OTUzLDAgLTkwLjQ3MTk1NSwxNC42NDk5NTk0LDAgLTkwLjQ3NDkyNjEsMTQuNjQ4MDE2NywwIC05MC40ODI4NiwxNC42NDg2NjgsMCAtOTAuNDg4NTc4MywxNC42NDA5NjA3LDAgLTkwLjQ4OTEzNiwxNC42MzkwMjQ3LDAgLTkwLjQ4OTAyODUsMTQuNjM3Nzk0NywwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Santa Clara',
                 'address' => 'Km . 17.5 Carretera al Pacifico Z.3 de Villa Nueva, C.C. Santa Clara Local 215A',
+                'price_location' => 'capital',
                 'latitude' => 14.5307984,
                 'longitude' => -90.5984248,
                 'is_active' => true,
@@ -3749,55 +3376,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.15.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjYyMjEyLDE0LjU0Nzc1NSwwIC05MC42Mjk5NzYsMTQuNTQxODA4LDAgLTkwLjYzMzU1OTUsMTQuNTMxMTA0NSwwIC05MC42MTY3NTksMTQuNTI3MDg5NSwwIC05MC42MTY2NzUsMTQuNTIyNDcyLDAgLTkwLjYxNTk5ODEsMTQuNTE3NTkyMiwwIC05MC42MTU5MjY1LDE0LjUxNDgzMzQsMCAtOTAuNjA5NDU4LDE0LjUxMDE1NywwIC05MC42MDY0NzQsMTQuNTEyNTYzLDAgLTkwLjYwNjIyOSwxNC41MTE2OTEsMCAtOTAuNjAzOTg4LDE0LjUxMDU0NiwwIC05MC42MDU4NDgsMTQuNTA1NzM4LDAgLTkwLjYwMTk1MywxNC40OTg1NjIsMCAtOTAuNjAwMjA0LDE0LjQ5ODc4MSwwIC05MC41OTUzOTYsMTQuNDk2NjY2LDAgLTkwLjU5NDE0MSwxNC40OTk2ODQsMCAtOTAuNTk1MDMzLDE0LjUwNzUyMSwwIC05MC41OTQ3OTgsMTQuNTE3MjEzLDAgLTkwLjU5NTc4OSwxNC41MzEyMzcsMCAtOTAuNTk0NjE0LDE0LjUzNDUxMSwwIC05MC41OTMzNzUsMTQuNTM1NzI5LDAgLTkwLjU4ODgzMiwxNC41MzQ2NDEsMCAtOTAuNTg3NjQzLDE0LjUzNDgxNCwwIC05MC41ODYzNjksMTQuNTM2MDY3LDAgLTkwLjU4NTA4NywxNC41Mzg2NTUsMCAtOTAuNTgzNjc2LDE0LjU0MzM4MywwIC05MC41ODM4MzcsMTQuNTQ0MTM2LDAgLTkwLjU4NDM1MiwxNC41NDQ4ODQsMCAtOTAuNTg0ODI3LDE0LjU0NTg4NSwwIC05MC41ODU1ODMsMTQuNTQ2NzE2LDAgLTkwLjU4NjczNCwxNC41NDgzMzYsMCAtOTAuNTg5MjE4LDE0LjU1MTI1NSwwIC05MC41OTU1MjksMTQuNTUzMzQzLDAgLTkwLjYwNjIwNiwxNC41NTMyMjQsMCAtOTAuNjA3MDEyLDE0LjU1NDUxNiwwIC05MC42MTI0MDEsMTQuNTU2MTA1LDAgLTkwLjYyMjEyLDE0LjU0Nzc1NSwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Zacapa',
                 'address' => 'Foodcourt C.C Pradera Zacapa, local FC-2',
+                'price_location' => 'interior',
                 'latitude' => 14.9722204,
                 'longitude' => -89.5305634,
                 'is_active' => true,
@@ -3809,55 +3430,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.71.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '21:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '21:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '21:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '21:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '21:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '21:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '21:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '21:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '21:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '21:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '21:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '21:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '21:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '21:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTg5LjUzODIwNSwxNC45NTI1NCwwIC04OS41MjYxMDMsMTQuOTU5NDM4LDAgLTg5LjUyMjI4OCwxNC45NjAxMTUsMCAtODkuNTE5ODA2LDE0Ljk2NjE1NCwwIC04OS41MTgyMDEsMTQuOTY3Njk4LDAgLTg5LjUxNDY4NSwxNC45NzE3NjgsMCAtODkuNTE0OTE2LDE0Ljk3NjA3NCwwIC04OS41MjUwMywxNC45NzQ1OTQsMCAtODkuNTI4NzQ5LDE0Ljk4MDQxMSwwIC04OS41MjYxMTQsMTQuOTg2MzA1LDAgLTg5LjUzNzM3OSwxNC45ODgzMTEsMCAtODkuNTM2Njg0LDE0Ljk4MzMyMiwwIC04OS41Mzg4MjgsMTQuOTgxOTU3LDAgLTg5LjUzODQ5OCwxNC45ODA2NDUsMCAtODkuNTMwNzkzLDE0Ljk3ODUwOCwwIC04OS41MzI3NjksMTQuOTc2ODU1LDAgLTg5LjUzNDczLDE0Ljk3NjQ3MywwIC04OS41MzQ2NjQsMTQuOTc0ODExLDAgLTg5LjUzNzAwNCwxNC45NzM3MjMsMCAtODkuNTQ0ODg5LDE0Ljk3NjY5LDAgLTg5LjU0NzA1MiwxNC45NzY3OTQsMCAtODkuNTQzNDI3LDE0Ljk2NTQyMywwIC04OS41NDQzNDQsMTQuOTYyOTAxLDAgLTg5LjU0NjY1MiwxNC45NjEzOTYsMCAtODkuNTUwMjI1LDE0Ljk2MzI3MiwwIC04OS41NTQ1NTgsMTQuOTYxNTU5LDAgLTg5LjU1MjIxMSwxNC45NTc5NTMsMCAtODkuNTQ5NTE3LDE0Ljk1NzMzLDAgLTg5LjUzODU5NiwxNC45NTE4ODIsMCAtODkuNTI1MjkyLDE0LjkzNTYwOCwwIC04OS41MjU5LDE0LjkzMzcxNCwwIC04OS41MjUzMzUsMTQuOTMwNjc2LDAgLTg5LjUxODM4MSwxNC45MzEzLDAgLTg5LjUxOTM1MSwxNC45MzU2NDUsMCAtODkuNTI0MzQ0LDE0LjkzNTcwMywwIC04OS41MzgyMDUsMTQuOTUyNTQsMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway Pradera Vistares',
                 'address' => 'Diagonal 19 36-01 C.C La Pradera Vistares, segundo nivel, Local FC-5',
+                'price_location' => 'capital',
                 'latitude' => 14.5832713,
                 'longitude' => -90.5439882,
                 'is_active' => true,
@@ -3869,55 +3484,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.55.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '10:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '10:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Montufar',
                 'address' => '12 calle 0-93 zona 9 local 19 centro comercial montufar',
+                'price_location' => 'capital',
                 'latitude' => 14.6031630,
                 'longitude' => -90.5278326,
                 'is_active' => true,
@@ -3929,55 +3538,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.18.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Barberena',
                 'address' => 'km 56 ruta cal Rumbo a Cuilapa zona 1 CC Plaza Barberena local R4',
+                'price_location' => 'interior',
                 'latitude' => 14.2974470,
                 'longitude' => -90.3502090,
                 'is_active' => true,
@@ -3989,55 +3592,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.83.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '09:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '09:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjQxMjI0NDUsMTQuMzM0MzMwMSwwIC05MC4zOTk3MDMyLDE0LjMxNDg3NDUsMCAtOTAuMzg2OTU1MiwxNC4zMDU4NTI2LDAgLTkwLjM1MzYxMDUsMTQuMjg4Njc3OCwwIC05MC4zMjgzMzcyLDE0LjI4OTIxNjcsMCAtOTAuMjkyNTk2NSwxNC4yNjc3MTAyLDAgLTkwLjI4NzM0MDgsMTQuMjczNjQyNCwwIC05MC4yOTYzMzMyLDE0LjI4MTgyMDksMCAtOTAuMzAyNjY1NiwxNC4yODM4NDQyLDAgLTkwLjMyNTY1MDEsMTQuMjk1NTE1MSwwIC05MC4zMzU4MDM2LDE0LjMwNzQ3NywwIC05MC4zNTg5MTg5LDE0LjMxMjI4NTIsMCAtOTAuMzg1MzI2MiwxNC4zMzI1NDQ1LDAgLTkwLjQwMjcxNzMsMTQuMzQ0MzkyLDAgLTkwLjQxMjI0NDUsMTQuMzM0MzMwMSwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Metroplaza Jutiapa',
                 'address' => 'Carretera Interamericana Km. 116 C.C. Metroplaza Jutiapa, local 152 y 153',
+                'price_location' => 'interior',
                 'latitude' => 14.2930096,
                 'longitude' => -89.9102891,
                 'is_active' => true,
@@ -4049,55 +3646,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.37.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '20:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '20:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '20:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '20:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '20:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '20:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '20:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '08:00',
+                        'close' => '20:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '08:00',
+                        'close' => '20:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '08:00',
+                        'close' => '20:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '08:00',
+                        'close' => '20:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '08:00',
+                        'close' => '20:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '08:00',
+                        'close' => '20:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '08:00',
+                        'close' => '20:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTg5LjkyNDgzNjEsMTQuMzA0ODU5MywwIC04OS45Mjg2MTE3LDE0LjI5MDU1NCwwIC04OS45Mjk1NTU4LDE0LjI4MDg2NDUsMCAtODkuOTI0ODM1NiwxNC4yNzg5NzI2LDAgLTg5LjkxMDcxNjcsMTQuMjc5Mjc0MSwwIC04OS45MDI0MTI4LDE0LjI3ODUzMDMsMCAtODkuODg4NzQ0MywxNC4yNjA2MDg4LDAgLTg5Ljg3NTE4ODYsMTQuMjU2MiwwIC04OS44NjU3NTI4LDE0LjI1ODg2MTcsMCAtODkuODU3ODY2OCwxNC4yNzQwMDA0LDAgLTg5Ljg3NzE4ODUsMTQuMjg0MTA3MiwwIC04OS44ODQ0ODY2LDE0LjI4NzMxOTgsMCAtODkuODg3NjY1MiwxNC4yOTUzNTY1LDAgLTg5Ljg4ODc0MTIsMTQuMzA5MzgxMiwwIC04OS44OTA1ODk3LDE0LjMxMjU5MzksMCAtODkuOTAwMzc0NywxNC4zMDU4NTc5LDAgLTg5LjkxMzQyMDgsMTQuMzAyNTcyNywwIC04OS45MjQ4MzYxLDE0LjMwNDg1OTMsMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway Interplaza Chimaltenango',
                 'address' => 'KM 50.4 Carretera al libramiento CC Interplaza Chimaltenango. Local F8 El Tejar Chimaltenango',
+                'price_location' => 'interior',
                 'latitude' => 14.6384867,
                 'longitude' => -90.7827430,
                 'is_active' => true,
@@ -4109,55 +3700,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.102.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Metroplaza 4 caminos',
                 'address' => 'kilómetro 187.6 de San Cristóbal Totonicapán',
+                'price_location' => 'capital',
                 'latitude' => 14.9088798,
                 'longitude' => -91.4482143,
                 'is_active' => true,
@@ -4169,55 +3754,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.103.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkxLjQ1MjI5NDcsMTQuODkxNjY4NiwwIC05MS40NTA5NCwxNC44OTEwNDcsMCAtOTEuNDQ5MTUzMywxNC44ODk5NTU1LDAgLTkxLjQ0NjkwODEsMTQuODg5NzA3OSwwIC05MS40NDQ1MjQ1LDE0Ljg4OTEzMjEsMCAtOTEuNDQyNjc0NCwxNC44ODg5MjY5LDAgLTkxLjQ0MDE4MjgsMTQuODg5MTI1NywwIC05MS40Mzc3OTg5LDE0Ljg5MTIxMzYsMCAtOTEuNDM2MjAyLDE0Ljg5MTE3MywwIC05MS40MzUwOTMsMTQuODk1OTgyLDAgLTkxLjQzMzc4NiwxNC44OTgyNjIsMCAtOTEuNDM2NTk1OSwxNC45MDIyOTQsMCAtOTEuNDMxMzQyLDE0LjkwNjY4NiwwIC05MS40MjQzMTEsMTQuOTE1MTQ4LDAgLTkxLjQzNDIzOTYsMTQuOTIyOTE4LDAgLTkxLjQzMDQzNTQsMTQuOTI4MzY1OCwwIC05MS40MzYyMjQ4LDE0LjkzNDgyNTUsMCAtOTEuNDM1MTQ3OSwxNC45NDA0NTU4LDAgLTkxLjQ0MDAzMiwxNC45NTM2MjQ0LDAgLTkxLjQ0NjcyMjcsMTQuOTUxMDc2MiwwIC05MS40NDc4NzcyLDE0Ljk0NDI1NzEsMCAtOTEuNDUyMjg5MSwxNC45MTY5MzQxLDAgLTkxLjQ1NDI3MiwxNC45MDk1ODcsMCAtOTEuNDc3NTU3LDE0LjkxMTg4MTIsMCAtOTEuNDg3NDUyMSwxNC45MDYzNzc4LDAgLTkxLjQ4NzE3MjQsMTQuOTA0Njk1NywwIC05MS40ODM2MzEyLDE0Ljg5OTE5ODIsMCAtOTEuNDgwNzk1MywxNC44OTcwNTcxLDAgLTkxLjQ1OTY3NzcsMTQuODk1OTkzNiwwIC05MS40NTc1NjUyLDE0Ljg5NDk3MDcsMCAtOTEuNDU1MTk1MywxNC44OTM4NDQxLDAgLTkxLjQ1MjI5NDcsMTQuODkxNjY4NiwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Metroplaza Reu',
                 'address' => 'Km 180 carretera CA-2 Sur San Sebastian, Retalhuleu',
+                'price_location' => 'capital',
                 'latitude' => 14.5732204,
                 'longitude' => -91.6479370,
                 'is_active' => true,
@@ -4229,55 +3808,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.104.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkxLjY1ODg2NTIsMTQuNTUwNzk4LDAgLTkxLjY0ODE3NSwxNC41NTQ5NTkzLDAgLTkxLjY0MzYzMTEsMTQuNTU5MDYyLDAgLTkxLjYzODA1NjgsMTQuNTcyOTY3MiwwIC05MS42MjEyNDIzLDE0LjU3ODg0NTksMCAtOTEuNTg3Mzg4MywxNC42MjAxNDk2LDAgLTkxLjU5MDgwMTgsMTQuNjMxNjY0NywwIC05MS42MDA5MTAzLDE0LjYyODM5NywwIC05MS42MjMyMzExLDE0LjU5OTI3NTgsMCAtOTEuNjM0NTYwNCwxNC41ODE0NzQ0LDAgLTkxLjY0NDc3MzIsMTQuNTgwNzEzOSwwIC05MS42NTc3MzIyLDE0LjU3MTk3ODMsMCAtOTEuNjU4ODY1MiwxNC41NTA3OTgsMDwvY29vcmRpbmF0ZXM+CiAgICAgICAgICA8L0xpbmVhclJpbmc+CiAgICAgICAgPC9vdXRlckJvdW5kYXJ5SXM+CiAgICAgIDwvUG9seWdvbj4KICAgIDwvUGxhY2VtYXJrPgogIDwvRG9jdW1lbnQ+Cjwva21sPg=='),
             ],
             [
                 'name' => 'Subway Sanarate',
                 'address' => 'Sanarate',
+                'price_location' => 'interior',
                 'latitude' => 14.7842424,
                 'longitude' => -90.1975571,
                 'is_active' => true,
@@ -4289,55 +3862,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.105.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjIwNjQ2NzgsMTQuODExMDAyOSwwIC05MC4yMjcxOTYxLDE0LjgxNDcxNjcsMCAtOTAuMjM5NTk5LDE0LjgxNDk0NDIsMCAtOTAuMjQxMzM2NywxNC44MTE4ODQzLDAgLTkwLjI0MDE1NjIsMTQuODA0ODQxMywwIC05MC4yMjYyMDg5LDE0Ljc4ODE4MjUsMCAtOTAuMjEyNTQsMTQuNzgzMzY5MiwwIC05MC4yMDQ3MDgzLDE0Ljc3MjkxMjIsMCAtOTAuMjAzNTg0NSwxNC43NzI4NjU1LDAgLTkwLjIwMTI1OTEsMTQuNzc4OTYwMywwIC05MC4xOTE4ODc0LDE0Ljc3NDg4MzEsMCAtOTAuMTg0ODE3LDE0Ljc3ODM0NzQsMCAtOTAuMTU1Mjk3MywxNC44MTAwMzcyLDAgLTkwLjE1NzUzMjcsMTQuODEyODQ4NCwwIC05MC4xNzMxOTk3LDE0LjgxODQwNCwwIC05MC4xODY4NDk4LDE0LjgxODYwNjYsMCAtOTAuMjAxNzIzLDE0LjgxNzk1ODEsMCAtOTAuMjA2NDY3OCwxNC44MTEwMDI5LDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
             [
                 'name' => 'Subway Metroplaza Jalapa',
                 'address' => 'km. 93.7 carretera RN-19 de Sanarate a, Jalapa',
+                'price_location' => 'interior',
                 'latitude' => 14.6606857,
                 'longitude' => -90.0010789,
                 'is_active' => true,
@@ -4349,55 +3916,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.106.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjAwMDg0OTIsMTQuNjYyMTE4NSwwIC05MC4wMDE2OTcxLDE0LjY2MTI5ODEsMCAtOTAuMDAwMTQxOCwxNC42NTA1MTMzLDAgLTkwLjAwNTM3MjQsMTQuNjQ1ODI2NiwwIC05MC4wMDU0OTg0LDE0LjY0MTE1OCwwIC05MC4wMDA3NzY0LDE0LjY0MDE5NCwwIC04OS45OTc5MzI2LDE0LjYzNzczOTcsMCAtOTAuMDA2ODI2LDE0LjYzMTQyMzcsMCAtOTAuMDE1NTY5MiwxNC42MjQxMjY0LDAgLTkwLjAwNDI0MDEsMTQuNjI0NzA4OSwwIC04OS45OTc3Njg0LDE0LjYyNDg2MjEsMCAtODkuOTk1NzYsMTQuNjE4MDM5LDAgLTg5Ljk4OTk5MjMsMTQuNjI1NDc3LDAgLTg5Ljk4MzcyNjUsMTQuNjI2NzEyMSwwIC04OS45NzkwMDUsMTQuNjE1MDYwMiwwIC04OS45Njc5MzI4LDE0LjU5OTM5MTksMCAtODkuOTY1OTU5LDE0LjYwMTkxMywwIC04OS45NjI0MTMyLDE0LjYxMjE3NTIsMCAtODkuOTYzMDczLDE0LjYxODI4NDcsMCAtODkuOTY2MzkzNywxNC42MjE1NzAzLDAgLTg5Ljk3MjQxODIsMTQuNjI0NzcyOCwwIC04OS45NzMxNTg0LDE0LjYyOTM0OTQsMCAtODkuOTcwNzIyNywxNC42MzI4NDY1LDAgLTg5Ljk3MDEwNDEsMTQuNjM5MjMwNSwwIC04OS45NzA4MTYsMTQuNjQ4MzU1LDAgLTg5Ljk3ODIxNzgsMTQuNjQzMzU5NywwIC04OS45ODExNTY1LDE0LjY0ODA4MDIsMCAtODkuOTg3ODkyMSwxNC42NDkwNTA4LDAgLTg5Ljk5MTY1NzQsMTQuNjUwMjYzOSwwIC04OS45OTI2NzYyLDE0LjY1NDA5MjcsMCAtODkuOTg3MDc0OCwxNC42NTU3NzE2LDAgLTg5Ljk5MTg5MTYsMTQuNjU3Nzk0NCwwIC04OS45OTkxMTE4LDE0LjY1NzgyNDEsMCAtOTAuMDAwODQ5MiwxNC42NjIxMTg1LDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
             [
                 'name' => 'Subway Interplaza Xela 2',
                 'address' => 'km. 205 carretera que conduce a San Marcos camino Labor Xela Z. 1, ampliacion de cc Interplaza Xela, Local FS-18, LA ESPERANZA QUETZALTENANGO',
+                'price_location' => 'interior',
                 'latitude' => 14.8649292,
                 'longitude' => -91.5540999,
                 'is_active' => true,
@@ -4409,55 +3970,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.108.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkxLjU3NTM4MDgsMTQuODc2NDUyNiwwIC05MS41NzkzNTA0LDE0Ljg3MzIxNzIsMCAtOTEuNTgxMDg4NCwxNC44NzA4MTEyLDAgLTkxLjU3NjQxMDYsMTQuODYzMDEzLDAgLTkxLjU3NjczMjYsMTQuODU4MjIyMiwwIC05MS41NzYyMzkxLDE0Ljg0NTUwODYsMCAtOTEuNTY5MjI2MSwxNC44MzkyMzA5LDAgLTkxLjU2NDYwNCwxNC44NDczNzUyLDAgLTkxLjU1ODMwMTUsMTQuODQ5NDk3NiwwIC05MS41NTM1ODM3LDE0Ljg0ODUyNjEsMCAtOTEuNTUzODIxMiwxNC44NTA5NDQsMCAtOTEuNTUyODE4NCwxNC44NTEyNTgxLDAgLTkxLjU1Mjg0NTYsMTQuODUzMTA3MSwwIC05MS41NDk0NDUyLDE0Ljg1MzgxODIsMCAtOTEuNTQ3NTU1NiwxNC44NTQxNzg2LDAgLTkxLjU0NjM1MjYsMTQuODU5MTQzNCwwIC05MS41NDU0NTA3LDE0Ljg2MzY5OTgsMCAtOTEuNTQzMDAzOCwxNC44NjM0NDQ1LDAgLTkxLjU0Mjk4MjIsMTQuODY0MTg5NSwwIC05MS41NDMyNjA5LDE0Ljg2NDQ1NzYsMCAtOTEuNTQyNTMxLDE0Ljg2Njg4MDksMCAtOTEuNTQ1NDQ4NiwxNC44NjkwNzI5LDAgLTkxLjU0NzU4MiwxNC44NzAzNTgsMCAtOTEuNTQ3NzI0NiwxNC44NzM4MTExLDAgLTkxLjU0NzY1MjcsMTQuODc4Nzk4OCwwIC05MS41NTY3MTU4LDE0Ljg3OTQxMDMsMCAtOTEuNTYwNzE0OCwxNC44ODA0NzgsMCAtOTEuNTc1MzgwOCwxNC44NzY0NTI2LDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
             [
                 'name' => 'Subway Plaza Madero Proceres',
                 'address' => 'Kilometro 6.5 CA-1 CENTRO COMERCIAL PLAZA MADERO PROCERES SOTANO 2, ZONA 4 SANTA CATARINA PINULA,GUATEMALA',
+                'price_location' => 'capital',
                 'latitude' => 14.5793101,
                 'longitude' => -90.4941524,
                 'is_active' => true,
@@ -4469,55 +4024,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.109.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => null,
             ],
             [
                 'name' => 'Subway Metroplaza Salcaja',
                 'address' => 'La raya sector barrio san juan, centro comercial Metroplaza Salcaja local fs-2 , Salcaja, Quetzaltenango',
+                'price_location' => 'interior',
                 'latitude' => 14.8639637,
                 'longitude' => -91.4685158,
                 'is_active' => true,
@@ -4529,55 +4078,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.107.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkxLjQ2MTE5NDMsMTQuODk1NTUzNiwwIC05MS40NjU5MjYsMTQuODk1MTM4OCwwIC05MS40NzU5NzkyLDE0Ljg5Mjk0MDUsMCAtOTEuNDgwMjgxMywxNC44NzAyNzM3LDAgLTkxLjQ3ODU3NSwxNC44Njc2ODE4LDAgLTkxLjQ3NDE4MTUsMTQuODY0MzM3NywwIC05MS40NzMyMjEzLDE0Ljg1ODY3MDcsMCAtOTEuNDcyMzIwMSwxNC44NTc5NzA3LDAgLTkxLjQ3MTE3MjIsMTQuODU4MzU3LDAgLTkxLjQ2NzM4NSwxNC44NTY1NDQ4LDAgLTkxLjQ1NTk1ODcsMTQuODY1NDQyLDAgLTkxLjQ0NTY1OTQsMTQuODcwNTEyNiwwIC05MS40NDA1OTUzLDE0Ljg3ODMyMDQsMCAtOTEuNDM5NjUwNywxNC44ODg2MjcsMCAtOTEuNDQ5MjQyMSwxNC44ODkyMjg4LDAgLTkxLjQ1NTYwNDQsMTQuODkzMjYyMiwwIC05MS40NTkyNTc2LDE0Ljg5NTQwMzMsMCAtOTEuNDYxMTk0MywxNC44OTU1NTM2LDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
             [
                 'name' => 'Subway Metroplaza Morales',
                 'address' => 'KILOMETRO 242,  CENTRO COMERCIAL METROPLAZA MORALES, CARRETERA CA-9 LOCAL FS-6 MORALES IZABAL',
+                'price_location' => 'interior',
                 'latitude' => 15.4914703,
                 'longitude' => -88.8600267,
                 'is_active' => true,
@@ -4589,55 +4132,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.110.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '22:00',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '22:00',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTg4Ljg2MjIwNTcsMTUuNDkxNzIxMSwwIC04OC44Njg3Mjg5LDE1LjQ4NTQzMzksMCAtODguODc2MDIzNywxNS40NjkxMzc4LDAgLTg4Ljg4OTA3MTMsMTUuMzk2ODY1NSwwIC04OC44ODcwMTA4LDE1LjM5MzQzNTUsMCAtODguODU2MDI4OCwxNS4zOTQwOTgyLDAgLTg4LjgyODQ3NjQsMTUuNDM2NzExOSwwIC04OC44MTQwNTQ3LDE1LjQ4ODgyNjEsMCAtODguODI1MTIyOSwxNS41MDYwMzEzLDAgLTg4Ljg0NTYzOCwxNS41MTAwMDI2LDAgLTg4Ljg2MjIwNTcsMTUuNDkxNzIxMSwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Subway Paseo Antigua',
                 'address' => 'CC PASEO ANTIGUA, Finca las Animas, local Subway',
+                'price_location' => 'interior',
                 'latitude' => 14.5596640,
                 'longitude' => -90.7148130,
                 'is_active' => true,
@@ -4649,55 +4186,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.112.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjcxNzY3MTcsMTQuNTgwNTk0LDAgLTkwLjcyMzUzLDE0LjU3NjA4NzEsMCAtOTAuNzI2MjE3OCwxNC41NzQ4MzU0LDAgLTkwLjcyNzU4NDcsMTQuNTcxNjIsMCAtOTAuNzI4MDk5NCwxNC41NzEwNjI4LDAgLTkwLjcyODU5NDcsMTQuNTcwMTg5NywwIC05MC43Mjk3MTcyLDE0LjU2Njc0MzEsMCAtOTAuNzI5NDMyOCwxNC41NjUxNTg0LDAgLTkwLjcyOTY4NTIyNzc0NzU4LDE0LjU2MzYxNzMwMjI4NjAxLDAgLTkwLjcyOTY1MjUsMTQuNTYyOTA5MywwIC05MC43Mjk1OTE2MDAwMDAwMiwxNC41NjE4NDAwNTI1OTE3NzgsMCAtOTAuNzI5NTMwNywxNC41NjA3NzA4LDAgLTkwLjcyODcyNjIsMTQuNTYwNzUwOSwwIC05MC43MjY5MDU4Njk2NDU5LDE0LjU1OTAzOTM4ODU1NDcxNiwwIC05MC43MjYwNzY0LDE0LjU1ODI1OTUsMCAtOTAuNzMwMjY0OSwxNC41NDA3MjgyLDAgLTkwLjc1MDIxNjUsMTQuNTMyNzg1LDAgLTkwLjc2MDA5NjYsMTQuNTM1MTYxMiwwIC05MC43NTk2NDQ1MDgzNjE4MywxNC41MzI3ODMxNDgwNDk4MzIsMCAtOTAuNzY2OTkxMSwxNC41MzExNTY4LDAgLTkwLjc3NDQwOTIsMTQuNTIyMDUwOSwwIC05MC43Njc5MSwxNC41MTYzNTk1LDAgLTkwLjc0ODY2NzgsMTQuNTIwMTM2NCwwIC05MC43NDQwNjg2LDE0LjUyMTI1NDMsMCAtOTAuNzM3Njc2OSwxNC41MjE3ODQ4LDAgLTkwLjczNDM2MjcsMTQuNTIzMTI0NiwwIC05MC43MzMzNzkyLDE0LjUyMDk0NjEsMCAtOTAuNzI4ODUyNywxNC41MTc4NzI1LDAgLTkwLjcyMzU4NTUsMTQuNTIzMDY1NywwIC05MC43MjExMjMxLDE0LjUyOTgxNjMsMCAtOTAuNzE0NzQxNywxNC41MzUzNTE3LDAgLTkwLjcwNzE1OTA0MjM1ODQxLDE0LjU1NDg0MDk3MzIxNzI4LDAgLTkwLjcwMDM0MSwxNC41NTc2NTUyLDAgLTkwLjY5MzgwNSwxNC41NTYwNzk3LDAgLTkwLjY5MjI0NzQsMTQuNTQ3MDI3MiwwIC05MC42NzU0ODYsMTQuNTQxNjMyMywwIC05MC42NjE5ODgxLDE0LjU2NTI4NzgsMCAtOTAuNjY3NjE5NywxNC41NzM1NjQzLDAgLTkwLjY2MTEyMjksMTQuNTc5MzYzOSwwIC05MC42NjQxNTM0LDE0LjU4MjQyMjIsMCAtOTAuNjkxNTQzNywxNC41OTM3NTEyLDAgLTkwLjY5ODk3OTksMTQuNjAxNjMxNywwIC05MC43MDc3NDA5LDE0LjU5NjA2MTEsMCAtOTAuNzExMTgsMTQuNTg5MTYxMywwIC05MC43MTc2NzE3LDE0LjU4MDU5NCwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Subway Roosevelt 80',
                 'address' => '5 Avenida 0-20 zona 2 mixco colonia cotio,',
+                'price_location' => 'capital',
                 'latitude' => 14.6343480,
                 'longitude' => -90.5859810,
                 'is_active' => true,
@@ -4709,55 +4240,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.111.2',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjU5ODEyOTEsMTQuNjM1MDM4MywwIC05MC41OTk3ODA0LDE0LjYzNjQxNTcsMCAtOTAuNTk5NTA2NiwxNC42Mzg1MzUxLDAgLTkwLjU5OTEwNDEsMTQuNjM5ODAzMywwIC05MC41OTgwMiwxNC42NDI2NzE5LDAgLTkwLjU5OTIwMjcsMTQuNjQ1MTgzMSwwIC05MC41OTg1NCwxNC42NDgzMTcyLDAgLTkwLjU5Nzc3MjUsMTQuNjUxMjAxNCwwIC05MC41OTk3Njk0LDE0LjY1MTg4MzUsMCAtOTAuNjA0MTI2NiwxNC42NTE3MzUzLDAgLTkwLjYwNjQ0NjYsMTQuNjU0NzYwMywwIC05MC42MjMxMjQ2LDE0LjY1Njk0ODYsMCAtOTAuNjI2MTYwOSwxNC42NTUwMzMxLDAgLTkwLjYyNzQzNzUsMTQuNjU1NDAxMSwwIC05MC42Mjk0NzU4LDE0LjY1MjE1MTQsMCAtOTAuNjE1Mzc3OSwxNC42NDI3NDUzLDAgLTkwLjYxNzEzNjcsMTQuNjM3MDk1MiwwIC05MC42MTc2MDc0LDE0LjYzNTQyNzcsMCAtOTAuNjE1MDQ0NSwxNC42MzE0MjIsMCAtOTAuNjE3NTM0OSwxNC42Mjg5MjE0LDAgLTkwLjYwODcxODQsMTQuNjI1NzU3OCwwIC05MC41OTA1MzIxLDE0LjYyNDMxNjUsMCAtOTAuNTg2NzY1NSwxNC42MjU0MzkzLDAgLTkwLjU4MjQyMTQsMTQuNjI2MDc1LDAgLTkwLjU3NDc1NjIsMTQuNjIzOTYzNSwwIC05MC41NzEzODI2LDE0LjYyMTUxOTgsMCAtOTAuNTcyMTc2NSwxNC42Mjk5Mjg1LDAgLTkwLjU3MTQyNTUsMTQuNjMzMzMzNiwwIC05MC41NzM4MzEzLDE0LjYzMzY5NzcsMCAtOTAuNTg0NDc2OCwxNC42MzQ0MzU0LDAgLTkwLjU5ODEyOTEsMTQuNjM1MDM4MywwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
             ],
             [
                 'name' => 'Subway Subway Interplaza Villa Lobos',
                 'address' => 'Kilometro 13.8 carretera al pacifico, zona 6 villa nueva,CC Interplaza Villa Lobos, 1er Nivel, local 1.',
+                'price_location' => 'capital',
                 'latitude' => 14.5524337,
                 'longitude' => -90.5774722,
                 'is_active' => true,
@@ -4769,55 +4294,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '25.42.206.78',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjYwMjQ1OTUsMTQuNTY1NDM4MSwwIC05MC42MDQxODk0LDE0LjU2NDI1NjgsMCAtOTAuNjA0NjAzNywxNC41NjMyNjYzLDAgLTkwLjYwNDc4MTksMTQuNTYyMjU1MSwwIC05MC41OTg2NjksMTQuNTU4MjU0NCwwIC05MC41OTU3NzQ5LDE0LjU1NzQzMTMsMCAtOTAuNTk1NjI5NiwxNC41NTQ1MTMxLDAgLTkwLjU5MjEzNywxNC41NTI2MzM0LDAgLTkwLjU4ODYxMjIsMTQuNTUxMTA2NiwwIC05MC41ODU5NDU3LDE0LjU0NzUwMjksMCAtOTAuNTg0ODE4NSwxNC41NDY0MjI1LDAgLTkwLjU4MzM1MzcsMTQuNTQzMzc5NSwwIC05MC41ODQ0NjM4LDE0LjUzOTU4ODgsMCAtOTAuNTg1NzY2MSwxNC41MzY4OTgyLDAgLTkwLjU4NjcxNzcsMTQuNTM1NDgwMSwwIC05MC41ODczNDc0LDE0LjUzNDc1MjgsMCAtOTAuNTg3OTY5OCwxNC41MzQ0NTY4LDAgLTkwLjU4OTA0MjgsMTQuNTM0Mzk0NCwwIC05MC41OTIwNDkzNjAyNzUyOCwxNC41MzUyOTEyNDYyMTg1MTEsMCAtOTAuNTkyOTI3LDE0LjUzNTU5OTEsMCAtOTAuNTk0MDc1NSwxNC41MzQ3Nzg1LDAgLTkwLjU5NTExMDMsMTQuNTMyMjMwMiwwIC05MC41OTMyMTYsMTQuNTMxNTYxNiwwIC05MC41OTE0NTUzLDE0LjUzMDc2NDUsMCAtOTAuNTg5MzE3OSwxNC41MjkyMTE4LDAgLTkwLjU4NzI0NDksMTQuNTI4MTczMiwwIC05MC41ODY1NTcxLDE0LjUyODA3NDUsMCAtOTAuNTgyNTY0OCwxNC41MjU5NDAyLDAgLTkwLjU4MTc0OTYsMTQuNTI1OTA2NCwwIC05MC41Nzk5Njg4LDE0LjUyNjE4NDIsMCAtOTAuNTc3NTY1OSwxNC41MjYxNDc4LDAgLTkwLjU3NTc4NTUsMTQuNTI2NzgxMywwIC05MC41NzMzNjY5LDE0LjUyNjg1OTEsMCAtOTAuNTY5NzM1OSwxNC41Mjg1Nzc4LDAgLTkwLjU2ODY3NjYsMTQuNTI5NTU5MiwwIC05MC41NjczNzM3LDE0LjUyOTcyMTQsMCAtOTAuNTY3MjA4MSwxNC41MjkxNjcxLDAgLTkwLjU2NjMwODMsMTQuNTI5MjExMiwwIC05MC41NjU4NDE5LDE0LjUyOTkwNywwIC05MC41NjkyNzI2LDE0LjUzMTIzNjMsMCAtOTAuNTcwMzQyOSwxNC41MzIyNTQxLDAgLTkwLjU3MDYzODMsMTQuNTMzNjY2NCwwIC05MC41Njc1NDksMTQuNTM0Mjk5OCwwIC05MC41NjcwNzc1LDE0LjUzNDgyOTQsMCAtOTAuNTc3MTQyNCwxNC41NDMxMzc1LDAgLTkwLjU3OTcwNzQsMTQuNTQ0NjQzMywwIC05MC41Nzc1NTE2LDE0LjU0Njg1NTIsMCAtOTAuNTcyNjkxMiwxNC41NDY4NTM3LDAgLTkwLjU2OTMxMSwxNC41NDkwMzE1LDAgLTkwLjU2ODIxNTMsMTQuNTUxMzEsMCAtOTAuNTcxNDQyLDE0LjU1OTAzNDQsMCAtOTAuNTcyNTczMiwxNC41NTkyNzIsMCAtOTAuNTc0MjQyNywxNC41NTQ4ODQyLDAgLTkwLjU3NTc4MzUsMTQuNTU1MTkwMiwwIC05MC41NzQ3Mjc5LDE0LjU2MTk4ODksMCAtOTAuNTcxOTU1NSwxNC41Njg3ODc2LDAgLTkwLjU3MzA2MjksMTQuNTcyOTM5MiwwIC05MC41NzExNjYzLDE0LjU3NTI4NCwwIC05MC41NjI3MTMsMTQuNTcxMjIzLDAgLTkwLjU1OTY2NzQsMTQuNTY1OTk4OCwwIC05MC41NTg2MTcsMTQuNTY2MjI2MiwwIC05MC41NTkxMjE3LDE0LjU4NjMwNzIsMCAtOTAuNTU5OTk5LDE0LjU4ODM1NzgsMCAtOTAuNTYxMDkwOCwxNC41ODkwMzc5LDAgLTkwLjU2MzgzMjQsMTQuNTg4NDg3NSwwIC05MC41NzgzMjU3LDE0LjU3MTk1NDYsMCAtOTAuNTc5ODgsMTQuNTY3NDY2MSwwIC05MC41ODIzODc5LDE0LjU3MTc0OTMsMCAtOTAuNTgzMzQwMSwxNC41NzI4NjU0LDAgLTkwLjU4NDQ5NTUsMTQuNTY5OTk1NSwwIC05MC41ODU1MjIxLDE0LjU2MzgwMjcsMCAtOTAuNTg3MzYwNywxNC41NjQwMDI1LDAgLTkwLjU4Njk1MTcsMTQuNTYxMTIzNCwwIC05MC41ODgyMTY0LDE0LjU1OTE5OTYsMCAtOTAuNTg1MzI3LDE0LjU1NTgyNTksMCAtOTAuNTg1MzEyOSwxNC41NTMzODY5LDAgLTkwLjU4ODcxMDYsMTQuNTUzMzE1NCwwIC05MC41OTM5NzE0LDE0LjU1NDU4ODEsMCAtOTAuNTkzOTk2NiwxNC41NTc4NTQ3LDAgLTkwLjU5NDM5NzYsMTQuNTYxMTY5NywwIC05MC41OTU2NTY5LDE0LjU2MjQwNzksMCAtOTAuNjAwMTc0LDE0LjU2NDk0MDcsMCAtOTAuNjAyNDU5NSwxNC41NjU0MzgxLDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
             [
                 'name' => 'Subway Subway Plaza Teca',
                 'address' => '7a Calle 0-22 zona 2, Lotificacion Las Conchitas, Centro Comercial Plaza Teca Loca FS 2A, COATEPEQUE, QUETZALTENANGO',
+                'price_location' => 'capital',
                 'latitude' => 14.7046990,
                 'longitude' => -91.8662330,
                 'is_active' => true,
@@ -4829,55 +4348,49 @@ class RestaurantSeeder extends Seeder
                 'ip' => '25.30.219.31',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkxLjkxNTA0OTMsMTQuNjk5Mzk0LDAgLTkxLjkxNDQyNjUsMTQuNjg4MTY1NywwIC05MS45MDYzNjY0LDE0LjY5MDM0MjYsMCAtOTEuODk5Njc5NiwxNC42OTU0MjUzLDAgLTkxLjg5NjA5MSwxNC42ODM4MzgzLDAgLTkxLjg4NTEzNzYsMTQuNjY5ODc4MywwIC05MS44Nzg2OTMzLDE0LjY3MDY0NDIsMCAtOTEuODYyODA2NywxNC42ODc2ODM2LDAgLTkxLjg1MDk0NTgsMTQuNjg3Mzg3NywwIC05MS44NTAyMDE2LDE0LjY5MzYwMjgsMCAtOTEuODQ2MTk1NywxNC42OTQ4MzY1LDAgLTkxLjgzODA2OTksMTQuNjkwMjU4NCwwIC05MS44MzQ5MjI0LDE0LjY5MTI0MjgsMCAtOTEuODM0MjYyMywxNC42OTU1MTI2LDAgLTkxLjgzMTMyNzUsMTQuNjk4MTY0MSwwIC05MS44MzQ5NTg4LDE0LjcwMjcyNSwwIC05MS44NDA2NTAxLDE0LjcwODgyMTgsMCAtOTEuODQ4NTMwNSwxNC43MTgxNTYsMCAtOTEuODUwOTc2OCwxNC43MTg1MDk1LDAgLTkxLjg1ODg5NDcsMTQuNzE3MDI1OSwwIC05MS44NzE2MTksMTQuNzE1NDU4OCwwIC05MS44ODc5MjY4LDE0LjcxNjY2MTcsMCAtOTEuOTA4NTY5NSwxNC43MTQxMzA1LDAgLTkxLjkxNTA0OTMsMTQuNjk5Mzk0LDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
             [
                 'name' => 'Subway Subway City Plaza Mazate',
                 'address' => 'CA9 Sur km 162.5 CC City Mazate, local FS-3, mazatenango, Suchitepequez',
+                'price_location' => 'interior',
                 'latitude' => 14.5347576,
                 'longitude' => -91.5252492,
                 'is_active' => true,
@@ -4889,111 +4402,44 @@ class RestaurantSeeder extends Seeder
                 'ip' => '172.18.116.3',
                 'franchise_number' => null,
                 'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '07:00',
-    'close' => '20:30',
-  ),
-),
+                'schedule' => [
+                    'monday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'tuesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'wednesday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'thursday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'friday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'saturday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                    'sunday' => [
+                        'is_open' => true,
+                        'open' => '07:00',
+                        'close' => '20:30',
+                    ],
+                ],
                 'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkxLjUwMjc1NDcsMTQuNTYyMzEwNiwwIC05MS41MzU0MDM0LDE0LjU1NDY5MjQsMCAtOTEuNTUwMTk5NSwxNC41NjMzNTQ1LDAgLTkxLjU4MDgxOTcsMTQuNTUyMjYzMSwwIC05MS41ODUyMzgsMTQuNTQyNTM4MiwwIC05MS41ODg4MTk4LDE0LjUzMzQ5MjYsMCAtOTEuNTg3OTM4MywxNC41MjMxMTc2LDAgLTkxLjU4MDg1NDgsMTQuNTE4NDg2MiwwIC05MS41NTM4NjAzLDE0LjUzMjk2NSwwIC05MS41NTAxNDg0LDE0LjUwMTY0OTQsMCAtOTEuNTM4MTk4MywxNC40ODkyNzksMCAtOTEuNTE4MTE4NCwxNC40OTM2ODEzLDAgLTkxLjUwNDk5NzIsMTQuNTAwOTY2NCwwIC05MS41MDMyNDI4LDE0LjUxMzAwMTQsMCAtOTEuNTA3ODQsMTQuNTE1NzMsMCAtOTEuNTA2MTQ0LDE0LjUyMTc5MiwwIC05MS41MDYyMzIsMTQuNTI1MTcxMSwwIC05MS41MDU1NjY0LDE0LjU0NDYzNCwwIC05MS41MDQ5NjgsMTQuNTUxNzI2LDAgLTkxLjUwMjc1NDcsMTQuNTYyMzEwNiwwPC9jb29yZGluYXRlcz4KICAgICAgICAgIDwvTGluZWFyUmluZz4KICAgICAgICA8L291dGVyQm91bmRhcnlJcz4KICAgICAgPC9Qb2x5Z29uPgogICAgPC9QbGFjZW1hcms+CiAgPC9Eb2N1bWVudD4KPC9rbWw+'),
-            ],
-            [
-                'name' => 'restaurante prueba geocerca desde el frontend',
-                'address' => 'ciudad',
-                'latitude' => 14.6210635,
-                'longitude' => -90.4352045,
-                'is_active' => true,
-                'delivery_active' => true,
-                'pickup_active' => true,
-                'minimum_order_amount' => 0.00,
-                'phone' => '89873743434',
-                'email' => 'testgeocerca@gmail.com',
-                'ip' => null,
-                'franchise_number' => null,
-                'estimated_delivery_time' => 30,
-                'schedule' => array (
-  'monday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '22:00',
-  ),
-  'tuesday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '22:00',
-  ),
-  'wednesday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '22:00',
-  ),
-  'thursday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '22:00',
-  ),
-  'friday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '22:00',
-  ),
-  'saturday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '22:00',
-  ),
-  'sunday' => 
-  array (
-    'is_open' => true,
-    'open' => '08:00',
-    'close' => '22:00',
-  ),
-),
-                'geofence_kml' => base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGttbCB4bWxucz0iaHR0cDovL3d3dy5vcGVuZ2lzLm5ldC9rbWwvMi4yIj4KICA8RG9jdW1lbnQ+CiAgICA8bmFtZT5SZXN0YXVyYW50IEdlb2ZlbmNlPC9uYW1lPgogICAgPFBsYWNlbWFyaz4KICAgICAgPG5hbWU+RGVsaXZlcnkgQXJlYTwvbmFtZT4KICAgICAgPFBvbHlnb24+CiAgICAgICAgPG91dGVyQm91bmRhcnlJcz4KICAgICAgICAgIDxMaW5lYXJSaW5nPgogICAgICAgICAgICA8Y29vcmRpbmF0ZXM+LTkwLjQ0NDQzMTMwNDkzMTY1LDE0LjYzMDg0MjU1NjYxOTM5OSwwIC05MC40MjA3NDIwMzQ5MTIxMiwxNC41OTkyODIyNDQ2MjQ5MjcsMCAtOTAuNDUxMTI2MDk4NjMyODMsMTQuNTk3NDU0OTI5ODk3MzksMCAtOTAuNDQ0NDMxMzA0OTMxNjUsMTQuNjMwODQyNTU2NjE5Mzk5LDA8L2Nvb3JkaW5hdGVzPgogICAgICAgICAgPC9MaW5lYXJSaW5nPgogICAgICAgIDwvb3V0ZXJCb3VuZGFyeUlzPgogICAgICA8L1BvbHlnb24+CiAgICA8L1BsYWNlbWFyaz4KICA8L0RvY3VtZW50Pgo8L2ttbD4='),
             ],
         ];
 

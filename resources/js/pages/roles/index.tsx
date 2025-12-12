@@ -234,7 +234,7 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
             key: 'users',
             title: 'Usuarios',
             width: 'sm' as const,
-            textAlign: 'center' as const,
+            align: 'center' as const,
             render: (role: Role) =>
                 role.users_count > 0 ? (
                     <Button variant="outline" size="sm" onClick={() => openUsersModal(role)} className="h-8 px-3 text-xs">
@@ -249,7 +249,7 @@ export default function RolesIndex({ roles, filters, roleStats }: RolesIndexProp
             key: 'actions',
             title: 'Acciones',
             width: 'xs' as const,
-            textAlign: 'right' as const,
+            align: 'right' as const,
             render: (role: Role) => (
                 <TableActions
                     editHref={route('roles.edit', role.id)}

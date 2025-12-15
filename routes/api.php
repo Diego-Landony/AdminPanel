@@ -183,9 +183,6 @@ Route::prefix('v1')->group(function () {
 
             Route::post('/validate', [App\Http\Controllers\Api\V1\CartController::class, 'validate'])
                 ->name('validate');
-
-            Route::post('/apply-promotion', [App\Http\Controllers\Api\V1\CartController::class, 'applyPromotion'])
-                ->name('apply-promotion');
         });
 
         // Orders

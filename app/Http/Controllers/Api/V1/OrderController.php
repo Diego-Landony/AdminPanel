@@ -16,6 +16,23 @@ use App\Models\OrderReview;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * Order Management Controller
+ *
+ * This controller handles order creation, tracking, and management.
+ *
+ * **Order Status Flow:**
+ * - **Pickup orders:** pending → confirmed → preparing → ready → completed
+ * - **Delivery orders:** pending → confirmed → preparing → ready → out_for_delivery → delivered → completed
+ * - **Cancellation:** Orders can be cancelled from pending or confirmed status
+ * - **Available statuses:** pending, confirmed, preparing, ready, out_for_delivery, delivered, completed, cancelled
+ *
+ * **Important Notes:**
+ * - scheduled_pickup_time must be at least 30 minutes from current time for pickup orders
+ * - Orders can only be reviewed after completion (completed or delivered status)
+ * - Points are earned upon order completion
+ * - Reorder creates a new cart with the same items from a previous order
+ */
 class OrderController extends Controller
 {
     public function __construct(private OrderService $orderService) {}
@@ -27,21 +44,71 @@ class OrderController extends Controller
      *     path="/api/v1/orders",
      *     tags={"Orders"},
      *     summary="Create order from cart",
-     *     description="Creates a new order from the customer's active cart.",
+     *     description="Creates a new order from the customer's active cart. Important validations: restaurant_id is required for pickup orders, delivery_address_id is required for delivery orders, scheduled_pickup_time must be at least 30 minutes from now for pickup orders, cart must not be empty and all items must be valid.",
      *     security={{"sanctum":{}}},
      *
      *     @OA\RequestBody(
      *         required=true,
      *
      *         @OA\JsonContent(
+     *             required={"restaurant_id", "service_type", "payment_method"},
      *
-     *             @OA\Property(property="restaurant_id", type="integer", example=1),
-     *             @OA\Property(property="service_type", type="string", enum={"pickup", "delivery"}, example="pickup"),
-     *             @OA\Property(property="delivery_address_id", type="integer", example=1),
-     *             @OA\Property(property="payment_method", type="string", enum={"cash", "card", "online"}, example="cash"),
-     *             @OA\Property(property="nit_id", type="integer", example=1),
-     *             @OA\Property(property="notes", type="string", example="Sin cebolla"),
-     *             @OA\Property(property="points_to_redeem", type="integer", example=100)
+     *             @OA\Property(
+     *                 property="restaurant_id",
+     *                 type="integer",
+     *                 description="Restaurant ID (required for pickup)",
+     *                 example=1
+     *             ),
+     *             @OA\Property(
+     *                 property="service_type",
+     *                 type="string",
+     *                 enum={"pickup", "delivery"},
+     *                 description="Service type: pickup or delivery",
+     *                 example="pickup"
+     *             ),
+     *             @OA\Property(
+     *                 property="delivery_address_id",
+     *                 type="integer",
+     *                 description="Customer address ID (required if service_type=delivery)",
+     *                 example=1,
+     *                 nullable=true
+     *             ),
+     *             @OA\Property(
+     *                 property="scheduled_pickup_time",
+     *                 type="string",
+     *                 format="date-time",
+     *                 description="Scheduled pickup time (optional, must be >= 30 min from now for pickup)",
+     *                 example="2025-12-15T15:30:00Z",
+     *                 nullable=true
+     *             ),
+     *             @OA\Property(
+     *                 property="payment_method",
+     *                 type="string",
+     *                 enum={"cash", "card", "online"},
+     *                 description="Payment method",
+     *                 example="cash"
+     *             ),
+     *             @OA\Property(
+     *                 property="nit_id",
+     *                 type="integer",
+     *                 description="Customer NIT ID for invoice (optional)",
+     *                 example=1,
+     *                 nullable=true
+     *             ),
+     *             @OA\Property(
+     *                 property="notes",
+     *                 type="string",
+     *                 description="Order notes (max 500 chars)",
+     *                 example="Sin cebolla, extra tomate",
+     *                 nullable=true
+     *             ),
+     *             @OA\Property(
+     *                 property="points_to_redeem",
+     *                 type="integer",
+     *                 description="Loyalty points to redeem (optional)",
+     *                 example=100,
+     *                 nullable=true
+     *             )
      *         )
      *     ),
      *
@@ -51,13 +118,55 @@ class OrderController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="data", type="object"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 description="Order details",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="order_number", type="string", example="ORD-20251215-0001"),
+     *                 @OA\Property(property="status", type="string", enum={"pending","confirmed","preparing","ready","out_for_delivery","delivered","completed","cancelled"}, example="pending"),
+     *                 @OA\Property(property="service_type", type="string", enum={"pickup","delivery"}, example="pickup"),
+     *                 @OA\Property(property="zone", type="string", enum={"capital","interior"}, example="capital"),
+     *                 @OA\Property(property="restaurant", type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Subway Pradera Concepción"),
+     *                     @OA\Property(property="address", type="string", example="Pradera Concepción, Zona 14")
+     *                 ),
+     *                 @OA\Property(property="summary", type="object",
+     *                     @OA\Property(property="subtotal", type="number", format="float", example=125.00),
+     *                     @OA\Property(property="discount_total", type="number", format="float", example=0.00),
+     *                     @OA\Property(property="delivery_fee", type="number", format="float", example=15.00),
+     *                     @OA\Property(property="tax", type="number", format="float", example=0.00),
+     *                     @OA\Property(property="total", type="number", format="float", example=140.00)
+     *                 ),
+     *                 @OA\Property(property="payment", type="object",
+     *                     @OA\Property(property="method", type="string", example="cash"),
+     *                     @OA\Property(property="status", type="string", example="pending")
+     *                 )
+     *             ),
      *             @OA\Property(property="message", type="string", example="Orden creada exitosamente")
      *         )
      *     ),
      *
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=422, description="Validation error")
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="La hora de recogida debe ser al menos 30 minutos desde ahora."),
+     *             @OA\Property(property="errors", type="object",
+     *                 @OA\Property(property="scheduled_pickup_time", type="array",
+     *
+     *                     @OA\Items(type="string", example="La hora de recogida debe ser al menos 30 minutos desde ahora.")
+     *                 )
+     *             )
+     *         )
+     *     )
      * )
      */
     public function store(CreateOrderRequest $request): JsonResponse
@@ -255,7 +364,7 @@ class OrderController extends Controller
      *     path="/api/v1/orders/{order}/track",
      *     tags={"Orders"},
      *     summary="Track order",
-     *     description="Returns current order status and status history.",
+     *     description="Returns current order status and complete status history with timestamps. Status Flow - Pickup: pending to confirmed to preparing to ready to completed. Delivery: pending to confirmed to preparing to ready to out_for_delivery to delivered to completed.",
      *     security={{"sanctum":{}}},
      *
      *     @OA\Parameter(
@@ -273,7 +382,31 @@ class OrderController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="data", type="object")
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="order_number", type="string", example="ORD-20251215-0001"),
+     *                 @OA\Property(property="current_status", type="string", enum={"pending","confirmed","preparing","ready","out_for_delivery","delivered","completed","cancelled"}, example="preparing"),
+     *                 @OA\Property(property="restaurant", type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Subway Pradera Concepción")
+     *                 ),
+     *                 @OA\Property(property="service_type", type="string", enum={"pickup","delivery"}, example="pickup"),
+     *                 @OA\Property(property="estimated_ready_at", type="string", format="date-time", nullable=true, example="2025-12-15T15:30:00Z"),
+     *                 @OA\Property(property="ready_at", type="string", format="date-time", nullable=true, example="2025-12-15T15:25:00Z"),
+     *                 @OA\Property(property="delivered_at", type="string", format="date-time", nullable=true, example=null),
+     *                 @OA\Property(property="status_history", type="array",
+     *
+     *                     @OA\Items(type="object",
+     *
+     *                         @OA\Property(property="status", type="string", example="preparing"),
+     *                         @OA\Property(property="previous_status", type="string", example="confirmed"),
+     *                         @OA\Property(property="changed_by", type="string", example="restaurant"),
+     *                         @OA\Property(property="notes", type="string", nullable=true, example=null),
+     *                         @OA\Property(property="timestamp", type="string", format="date-time", example="2025-12-15T15:10:00Z")
+     *                     )
+     *                 )
+     *             )
      *         )
      *     ),
      *

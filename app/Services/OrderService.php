@@ -52,6 +52,15 @@ class OrderService
 
         $serviceType = $data['service_type'] ?? $cart->service_type;
 
+        if ($serviceType === 'pickup' && isset($data['scheduled_pickup_time'])) {
+            $scheduledTime = \Carbon\Carbon::parse($data['scheduled_pickup_time']);
+            $minimumTime = now()->addMinutes(30);
+
+            if ($scheduledTime->lt($minimumTime)) {
+                throw new \InvalidArgumentException('La hora de recogida debe ser al menos 30 minutos desde ahora.');
+            }
+        }
+
         if ($serviceType === 'delivery') {
             if (empty($data['delivery_address_id'])) {
                 throw new \InvalidArgumentException('La dirección de entrega es requerida para delivery');
@@ -130,6 +139,7 @@ class OrderService
                 'payment_method' => $data['payment_method'],
                 'payment_status' => 'pending',
                 'estimated_ready_at' => now()->addMinutes(30),
+                'scheduled_pickup_time' => $data['scheduled_pickup_time'] ?? null,
                 'points_earned' => $pointsToEarn,
                 'points_redeemed' => $pointsRedeemed,
                 'nit_id' => $data['nit_id'] ?? null,

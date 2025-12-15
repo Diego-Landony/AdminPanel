@@ -391,6 +391,151 @@ describe('store (POST /api/v1/orders)', function () {
 
         $response->assertStatus(422);
     });
+
+    test('validates scheduled_pickup_time is at least 30 minutes from now for pickup', function () {
+        $customer = Customer::factory()->create();
+        $restaurant = Restaurant::factory()->create();
+        $category = Category::factory()->create(['is_active' => true]);
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'is_active' => true,
+            'precio_pickup_capital' => 50.00,
+        ]);
+
+        $cart = Cart::factory()->create([
+            'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'pickup',
+            'zone' => 'capital',
+            'status' => 'active',
+        ]);
+
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price' => 50.00,
+            'subtotal' => 50.00,
+        ]);
+
+        $response = actingAs($customer, 'sanctum')
+            ->postJson('/api/v1/orders', [
+                'restaurant_id' => $restaurant->id,
+                'service_type' => 'pickup',
+                'payment_method' => 'cash',
+                'scheduled_pickup_time' => now()->addMinutes(15)->toIso8601String(),
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['scheduled_pickup_time']);
+    });
+
+    test('accepts scheduled_pickup_time that is 30 minutes or more from now', function () {
+        $customer = Customer::factory()->create();
+        $restaurant = Restaurant::factory()->create();
+        $category = Category::factory()->create(['is_active' => true]);
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'is_active' => true,
+            'precio_pickup_capital' => 50.00,
+        ]);
+
+        $cart = Cart::factory()->create([
+            'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'pickup',
+            'zone' => 'capital',
+            'status' => 'active',
+        ]);
+
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price' => 50.00,
+            'subtotal' => 50.00,
+        ]);
+
+        $scheduledTime = now()->addMinutes(45);
+
+        $response = actingAs($customer, 'sanctum')
+            ->postJson('/api/v1/orders', [
+                'restaurant_id' => $restaurant->id,
+                'service_type' => 'pickup',
+                'payment_method' => 'cash',
+                'scheduled_pickup_time' => $scheduledTime->toIso8601String(),
+            ]);
+
+        $response->assertCreated();
+        expect($response->json('data.timestamps.scheduled_pickup_time'))->not->toBeNull();
+    });
+
+    test('does not validate scheduled_pickup_time for delivery orders', function () {
+        $customer = Customer::factory()->create();
+        $kml = '<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <Placemark>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              -90.51,14.63 -90.50,14.63 -90.50,14.64 -90.51,14.64 -90.51,14.63
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+  </Document>
+</kml>';
+        $restaurant = Restaurant::factory()->create([
+            'latitude' => 14.6349,
+            'longitude' => -90.5069,
+            'is_active' => true,
+            'delivery_active' => true,
+            'geofence_kml' => $kml,
+            'price_location' => 'capital',
+        ]);
+        $category = Category::factory()->create(['is_active' => true]);
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'is_active' => true,
+            'precio_domicilio_capital' => 55.00,
+        ]);
+
+        $address = CustomerAddress::factory()->create([
+            'customer_id' => $customer->id,
+            'latitude' => 14.6350,
+            'longitude' => -90.5070,
+        ]);
+
+        $cart = Cart::factory()->create([
+            'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'delivery',
+            'zone' => 'capital',
+            'status' => 'active',
+        ]);
+
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price' => 55.00,
+            'subtotal' => 55.00,
+        ]);
+
+        $response = actingAs($customer, 'sanctum')
+            ->postJson('/api/v1/orders', [
+                'restaurant_id' => $restaurant->id,
+                'service_type' => 'delivery',
+                'delivery_address_id' => $address->id,
+                'payment_method' => 'cash',
+                'scheduled_pickup_time' => now()->addMinutes(10)->toIso8601String(),
+            ]);
+
+        $response->assertCreated();
+    });
 });
 
 describe('index (GET /api/v1/orders)', function () {

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Cart\AddCartItemRequest;
-use App\Http\Requests\Api\V1\Cart\ApplyPromotionRequest;
 use App\Http\Requests\Api\V1\Cart\SetDeliveryAddressRequest;
 use App\Http\Requests\Api\V1\Cart\UpdateCartItemRequest;
 use App\Http\Requests\Api\V1\Cart\UpdateCartServiceTypeRequest;
@@ -15,7 +14,6 @@ use App\Models\CustomerAddress;
 use App\Models\Restaurant;
 use App\Services\CartService;
 use App\Services\DeliveryValidationService;
-use App\Services\PromotionApplicationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -23,7 +21,6 @@ class CartController extends Controller
 {
     public function __construct(
         protected CartService $cartService,
-        protected PromotionApplicationService $promotionService,
         protected DeliveryValidationService $deliveryValidation
     ) {}
 
@@ -485,13 +482,13 @@ class CartController extends Controller
     }
 
     /**
-     * Apply promotion code to cart.
+     * Set delivery address for cart.
      *
-     * @OA\Post(
-     *     path="/api/v1/cart/apply-promotion",
+     * @OA\Put(
+     *     path="/api/v1/cart/delivery-address",
      *     tags={"Cart"},
-     *     summary="Apply promotion",
-     *     description="Applies a promotion code to the cart.",
+     *     summary="Set delivery address",
+     *     description="Assigns delivery address and automatically assigns restaurant based on geofence validation. If address is outside delivery zone, returns nearest pickup locations.",
      *     security={{"sanctum":{}}},
      *
      *     @OA\RequestBody(
@@ -499,53 +496,65 @@ class CartController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="code", type="string", example="PROMO2024")
+     *             @OA\Property(
+     *                 property="delivery_address_id",
+     *                 type="integer",
+     *                 description="ID of customer's saved address",
+     *                 example=1
+     *             )
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Promotion applied successfully",
+     *         description="Delivery address set successfully",
      *
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="message", type="string", example="Promoción aplicada")
-     *             )
+     *                 @OA\Property(property="delivery_address", type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="street_address", type="string", example="5ta Avenida 10-50, Zona 14"),
+     *                     @OA\Property(property="city", type="string", example="Guatemala")
+     *                 ),
+     *                 @OA\Property(property="assigned_restaurant", type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Subway Pradera Concepción")
+     *                 ),
+     *                 @OA\Property(property="zone", type="string", enum={"capital", "interior"}, example="capital"),
+     *                 @OA\Property(property="prices_updated", type="boolean", example=true)
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Dirección de entrega asignada exitosamente")
      *         )
      *     ),
      *
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=422, description="Invalid or expired promotion code")
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Address outside delivery zone",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="La dirección está fuera de la zona de entrega"),
+     *             @OA\Property(property="error_code", type="string", example="ADDRESS_OUTSIDE_DELIVERY_ZONE"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="nearest_pickup_locations", type="array",
+     *
+     *                     @OA\Items(type="object",
+     *
+     *                         @OA\Property(property="id", type="integer", example=2),
+     *                         @OA\Property(property="name", type="string", example="Subway Miraflores"),
+     *                         @OA\Property(property="address", type="string", example="Calzada Roosevelt 22-43, Zona 11"),
+     *                         @OA\Property(property="distance_km", type="number", format="float", example=2.5)
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     )
      * )
-     */
-    public function applyPromotion(ApplyPromotionRequest $request): JsonResponse
-    {
-        $customer = auth()->user();
-        $validated = $request->validated();
-
-        $cart = $this->cartService->getOrCreateCart($customer);
-
-        try {
-            $result = $this->promotionService->applyPromoCode($cart, $validated['code']);
-
-            return response()->json([
-                'data' => [
-                    'applied' => $result['applied'],
-                    'discount' => $result['discount'] ?? 0,
-                    'message' => 'Promoción aplicada',
-                ],
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], 422);
-        }
-    }
-
-    /**
-     * PUT /api/v1/cart/delivery-address
-     * Asigna dirección de entrega y auto-asigna restaurante basado en geocerca
      */
     public function setDeliveryAddress(SetDeliveryAddressRequest $request): JsonResponse
     {

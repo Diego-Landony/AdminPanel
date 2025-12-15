@@ -13,6 +13,39 @@ use Illuminate\Http\Request;
 
 class ProductViewController extends Controller
 {
+    /**
+     * Record product view.
+     *
+     * @OA\Post(
+     *     path="/api/v1/products/{product}/view",
+     *     tags={"Product Views"},
+     *     summary="Registrar vista de producto",
+     *     description="Registra que un cliente vio un producto. Se usa para el historial de productos vistos recientemente.",
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="product",
+     *         in="path",
+     *         description="Product ID",
+     *         required=true,
+     *
+     *         @OA\Schema(type="integer")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Vista registrada exitosamente",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Vista registrada exitosamente")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="No autenticado"),
+     *     @OA\Response(response=404, description="Producto no encontrado")
+     * )
+     */
     public function recordProductView(Request $request, Product $product): JsonResponse
     {
         $customer = $request->user();
@@ -24,6 +57,39 @@ class ProductViewController extends Controller
         ]);
     }
 
+    /**
+     * Record combo view.
+     *
+     * @OA\Post(
+     *     path="/api/v1/combos/{combo}/view",
+     *     tags={"Product Views"},
+     *     summary="Registrar vista de combo",
+     *     description="Registra que un cliente vio un combo. Se usa para el historial de productos vistos recientemente.",
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="combo",
+     *         in="path",
+     *         description="Combo ID",
+     *         required=true,
+     *
+     *         @OA\Schema(type="integer")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Vista registrada exitosamente",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Vista registrada exitosamente")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="No autenticado"),
+     *     @OA\Response(response=404, description="Combo no encontrado")
+     * )
+     */
     public function recordComboView(Request $request, Combo $combo): JsonResponse
     {
         $customer = $request->user();
@@ -35,6 +101,40 @@ class ProductViewController extends Controller
         ]);
     }
 
+    /**
+     * Get recently viewed products and combos.
+     *
+     * @OA\Get(
+     *     path="/api/v1/me/recently-viewed",
+     *     tags={"Product Views"},
+     *     summary="Obtener productos vistos recientemente",
+     *     description="Retorna los últimos 20 productos y combos vistos por el cliente autenticado.",
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Productos vistos recientemente",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *
+     *                 @OA\Items(
+     *                     type="object",
+     *
+     *                     @OA\Property(property="type", type="string", example="product", description="Tipo: product o combo"),
+     *                     @OA\Property(property="data", type="object", description="Datos del producto o combo"),
+     *                     @OA\Property(property="viewed_at", type="string", format="date-time", example="2025-12-15T10:30:00Z")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="No autenticado")
+     * )
+     */
     public function getRecentlyViewed(Request $request): JsonResponse
     {
         $customer = $request->user();

@@ -58,6 +58,7 @@ class Order extends Model
         'notes',
         'cancellation_reason',
         'scheduled_for',
+        'scheduled_pickup_time',
         'delivery_person_rating',
         'delivery_person_comment',
     ];
@@ -79,6 +80,7 @@ class Order extends Model
             'points_earned' => 'integer',
             'points_redeemed' => 'integer',
             'scheduled_for' => 'datetime',
+            'scheduled_pickup_time' => 'datetime',
             'delivery_person_rating' => 'integer',
         ];
     }

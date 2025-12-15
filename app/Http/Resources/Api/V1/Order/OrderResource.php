@@ -54,6 +54,7 @@ class OrderResource extends JsonResource
                 'ready_at' => $this->ready_at?->toIso8601String(),
                 'delivered_at' => $this->delivered_at?->toIso8601String(),
                 'scheduled_for' => $this->scheduled_for?->toIso8601String(),
+                'scheduled_pickup_time' => $this->scheduled_pickup_time?->toIso8601String(),
                 'created_at' => $this->created_at->toIso8601String(),
             ],
             'delivery_person_rating' => $this->delivery_person_rating,

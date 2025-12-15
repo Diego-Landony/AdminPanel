@@ -16,15 +16,15 @@ class RestaurantController extends Controller
      * List active restaurants with optional filters.
      *
      * @OA\Get(
-     *     path="/api/v1/menu/restaurants",
-     *     tags={"Menu - Restaurants"},
-     *     summary="List active restaurants",
-     *     description="Returns list of active restaurants with optional filters for delivery and pickup services.",
+     *     path="/api/v1/restaurants",
+     *     tags={"Restaurants"},
+     *     summary="Listar restaurantes activos",
+     *     description="Retorna lista de restaurantes activos con filtros opcionales para servicios de delivery y pickup.",
      *
      *     @OA\Parameter(
      *         name="delivery_active",
      *         in="query",
-     *         description="Filter by delivery active status",
+     *         description="Filtrar por servicio de domicilio activo",
      *         required=false,
      *
      *         @OA\Schema(type="boolean", example=true)
@@ -33,7 +33,7 @@ class RestaurantController extends Controller
      *     @OA\Parameter(
      *         name="pickup_active",
      *         in="query",
-     *         description="Filter by pickup active status",
+     *         description="Filtrar por servicio de pickup activo",
      *         required=false,
      *
      *         @OA\Schema(type="boolean", example=true)
@@ -41,7 +41,7 @@ class RestaurantController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="List retrieved successfully",
+     *         description="Lista obtenida exitosamente",
      *
      *         @OA\JsonContent(
      *
@@ -80,10 +80,10 @@ class RestaurantController extends Controller
      * Show restaurant details.
      *
      * @OA\Get(
-     *     path="/api/v1/menu/restaurants/{id}",
-     *     tags={"Menu - Restaurants"},
-     *     summary="Get restaurant details",
-     *     description="Returns detailed information about a specific restaurant.",
+     *     path="/api/v1/restaurants/{id}",
+     *     tags={"Restaurants"},
+     *     summary="Obtener detalles de restaurante",
+     *     description="Retorna información detallada de un restaurante específico con horarios y servicios.",
      *
      *     @OA\Parameter(
      *         name="id",
@@ -96,7 +96,7 @@ class RestaurantController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Restaurant details retrieved successfully",
+     *         description="Detalles de restaurante obtenidos exitosamente",
      *
      *         @OA\JsonContent(
      *
@@ -106,7 +106,7 @@ class RestaurantController extends Controller
      *         )
      *     ),
      *
-     *     @OA\Response(response=404, description="Restaurant not found")
+     *     @OA\Response(response=404, description="Restaurante no encontrado")
      * )
      */
     public function show(int $id): JsonResponse
@@ -126,15 +126,15 @@ class RestaurantController extends Controller
      * Get nearby restaurants based on user location.
      *
      * @OA\Get(
-     *     path="/api/v1/menu/restaurants/nearby",
-     *     tags={"Menu - Restaurants"},
-     *     summary="Get nearby restaurants",
-     *     description="Returns restaurants near a specific location using Haversine formula to calculate distance. Results are ordered by distance.",
+     *     path="/api/v1/restaurants/nearby",
+     *     tags={"Restaurants"},
+     *     summary="Buscar restaurantes cercanos",
+     *     description="Retorna restaurantes cercanos a una ubicación específica usando fórmula de Haversine para calcular distancia. Resultados ordenados por distancia.",
      *
      *     @OA\Parameter(
      *         name="lat",
      *         in="query",
-     *         description="Latitude of user location",
+     *         description="Latitud de la ubicación del usuario",
      *         required=true,
      *
      *         @OA\Schema(type="number", format="float", example=14.6349)
@@ -143,7 +143,7 @@ class RestaurantController extends Controller
      *     @OA\Parameter(
      *         name="lng",
      *         in="query",
-     *         description="Longitude of user location",
+     *         description="Longitud de la ubicación del usuario",
      *         required=true,
      *
      *         @OA\Schema(type="number", format="float", example=-90.5069)
@@ -152,7 +152,7 @@ class RestaurantController extends Controller
      *     @OA\Parameter(
      *         name="radius_km",
      *         in="query",
-     *         description="Search radius in kilometers (default: 10km, max: 50km)",
+     *         description="Radio de búsqueda en kilómetros (default: 10km, max: 50km)",
      *         required=false,
      *
      *         @OA\Schema(type="number", format="float", example=5)
@@ -161,7 +161,7 @@ class RestaurantController extends Controller
      *     @OA\Parameter(
      *         name="delivery_active",
      *         in="query",
-     *         description="Filter by delivery active status",
+     *         description="Filtrar por servicio de domicilio activo",
      *         required=false,
      *
      *         @OA\Schema(type="boolean", example=true)
@@ -170,7 +170,7 @@ class RestaurantController extends Controller
      *     @OA\Parameter(
      *         name="pickup_active",
      *         in="query",
-     *         description="Filter by pickup active status",
+     *         description="Filtrar por servicio de pickup activo",
      *         required=false,
      *
      *         @OA\Schema(type="boolean", example=true)
@@ -178,7 +178,7 @@ class RestaurantController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Nearby restaurants retrieved successfully",
+     *         description="Restaurantes cercanos obtenidos exitosamente",
      *
      *         @OA\JsonContent(
      *
@@ -191,24 +191,24 @@ class RestaurantController extends Controller
      *                             @OA\Schema(ref="#/components/schemas/Restaurant"),
      *                             @OA\Schema(
      *
-     *                                 @OA\Property(property="distance_km", type="number", format="float", example=2.45, description="Distance in kilometers from user location")
+     *                                 @OA\Property(property="distance_km", type="number", format="float", example=2.45, description="Distancia en kilómetros desde la ubicación del usuario")
      *                             )
      *                         }
      *                     )
      *                 ),
-     *                 @OA\Property(property="search_radius_km", type="number", format="float", example=5, description="Search radius used"),
-     *                 @OA\Property(property="total_found", type="integer", example=3, description="Total restaurants found within radius")
+     *                 @OA\Property(property="search_radius_km", type="number", format="float", example=5, description="Radio de búsqueda usado"),
+     *                 @OA\Property(property="total_found", type="integer", example=3, description="Total de restaurantes encontrados dentro del radio")
      *             )
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=422,
-     *         description="Validation error",
+     *         description="Error de validación",
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="The lat field is required."),
+     *             @OA\Property(property="message", type="string", example="El campo lat es requerido."),
      *             @OA\Property(property="errors", type="object")
      *         )
      *     )

@@ -40,6 +40,8 @@ export interface Product {
     is_active: boolean;
     is_customizable?: boolean;
     has_variants: boolean;
+    is_redeemable: boolean;
+    points_cost: number | null;
     precio_pickup_capital: number | null;
     precio_domicilio_capital: number | null;
     precio_pickup_interior: number | null;
@@ -77,6 +79,8 @@ export interface ProductVariant {
     sku: string;
     name: string;
     size: string;
+    is_redeemable: boolean;
+    points_cost: number | null;
     precio_pickup_capital: number;
     precio_domicilio_capital: number;
     precio_pickup_interior: number;
@@ -146,6 +150,8 @@ export interface Combo {
     description: string | null;
     image: string | null;
     category_id: number | null;
+    is_redeemable: boolean;
+    points_cost: number | null;
     precio_pickup_capital: number;
     precio_domicilio_capital: number;
     precio_pickup_interior: number;

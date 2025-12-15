@@ -71,7 +71,6 @@ export default function BadgeTypeCreate() {
                                         type="text"
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
-                                        placeholder="Ej: Nuevo, Popular, Oferta"
                                         maxLength={50}
                                     />
                                 </FormField>

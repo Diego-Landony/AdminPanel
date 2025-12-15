@@ -18,3 +18,9 @@ Schedule::command('devices:cleanup --inactive-days=180 --delete-days=365')->dail
 
 // Purge customers that were soft-deleted more than 30 days ago
 Schedule::command('customers:purge-deleted --days=30')->daily();
+
+// Expire inactive points daily (6 months inactivity)
+Schedule::job(new \App\Jobs\ExpireInactivePoints)->daily();
+
+// Cleanup expired carts every hour
+Schedule::job(new \App\Jobs\CleanupExpiredCarts)->hourly();

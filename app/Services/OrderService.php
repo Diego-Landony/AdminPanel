@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\Delivery\AddressOutsideDeliveryZoneException;
 use App\Models\Cart;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
@@ -28,7 +29,8 @@ class OrderService
     public function __construct(
         private OrderNumberGenerator $numberGenerator,
         private PointsService $pointsService,
-        private CartService $cartService
+        private CartService $cartService,
+        private DeliveryValidationService $deliveryValidation
     ) {}
 
     /**
@@ -46,6 +48,34 @@ class OrderService
         $validation = $this->cartService->validateCart($cart);
         if (! $validation['valid']) {
             throw new \InvalidArgumentException('El carrito no es válido: '.implode(', ', $validation['messages']));
+        }
+
+        $serviceType = $data['service_type'] ?? $cart->service_type;
+
+        if ($serviceType === 'delivery') {
+            if (empty($data['delivery_address_id'])) {
+                throw new \InvalidArgumentException('La dirección de entrega es requerida para delivery');
+            }
+
+            $address = CustomerAddress::where('id', $data['delivery_address_id'])
+                ->where('customer_id', $cart->customer_id)
+                ->firstOrFail();
+
+            $result = $this->deliveryValidation->validateDeliveryAddress($address);
+
+            if (! $result->isValid) {
+                throw new AddressOutsideDeliveryZoneException(
+                    $address->latitude,
+                    $address->longitude,
+                    $result->errorMessage ?? 'La dirección está fuera de las zonas de entrega'
+                );
+            }
+
+            $data['restaurant_id'] = $result->restaurant->id;
+
+            if ($cart->zone !== $result->zone) {
+                $cart->update(['zone' => $result->zone]);
+            }
         }
 
         return DB::transaction(function () use ($cart, $data) {

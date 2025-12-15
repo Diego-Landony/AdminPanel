@@ -34,10 +34,10 @@ class CreateOrderRequest extends FormRequest
                 Rule::in(['pickup', 'delivery']),
             ],
             'delivery_address_id' => [
+                Rule::requiredIf(fn () => $this->service_type === 'delivery'),
                 'nullable',
                 'integer',
-                Rule::exists('customer_addresses', 'id'),
-                'required_if:service_type,delivery',
+                Rule::exists('customer_addresses', 'id')->where('customer_id', auth()->id()),
             ],
             'payment_method' => [
                 'required',
@@ -74,8 +74,8 @@ class CreateOrderRequest extends FormRequest
             'restaurant_id.exists' => 'El restaurante seleccionado no existe.',
             'service_type.required' => 'El tipo de servicio es requerido.',
             'service_type.in' => 'El tipo de servicio debe ser pickup o delivery.',
-            'delivery_address_id.required_if' => 'La dirección de entrega es requerida para el servicio a domicilio.',
-            'delivery_address_id.exists' => 'La dirección seleccionada no existe.',
+            'delivery_address_id.required' => 'La dirección de entrega es requerida para pedidos delivery.',
+            'delivery_address_id.exists' => 'La dirección seleccionada no existe o no te pertenece.',
             'payment_method.required' => 'El método de pago es requerido.',
             'payment_method.in' => 'El método de pago debe ser cash, card u online.',
             'nit_id.exists' => 'El NIT seleccionado no existe.',

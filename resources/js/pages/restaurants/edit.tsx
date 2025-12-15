@@ -46,6 +46,7 @@ interface Restaurant {
     schedule: Record<string, { is_open: boolean; open: string; close: string }> | null;
     minimum_order_amount: number;
     estimated_delivery_time: number;
+    estimated_pickup_time: number;
     geofence_kml: string | null;
     created_at: string;
     updated_at: string;
@@ -71,6 +72,7 @@ interface RestaurantFormData {
     schedule: Record<string, { is_open: boolean; open: string; close: string }>;
     minimum_order_amount: string;
     estimated_delivery_time: string;
+    estimated_pickup_time: string;
 }
 
 // Component to handle map clicks
@@ -130,6 +132,7 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
         },
         minimum_order_amount: restaurant.minimum_order_amount.toString(),
         estimated_delivery_time: restaurant.estimated_delivery_time.toString(),
+        estimated_pickup_time: restaurant.estimated_pickup_time?.toString() || '15',
     });
 
     // Map marker position state
@@ -688,24 +691,36 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
                     </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                    <FormField label="Monto Mínimo de Pedido (Q)" error={errors.minimum_order_amount}>
-                        <Input
-                            id="minimum_order_amount"
-                            type="number"
-                            step="0.01"
-                            value={data.minimum_order_amount}
-                            onChange={(e) => setData('minimum_order_amount', e.target.value)}
-                            placeholder={PLACEHOLDERS.amount}
-                        />
-                    </FormField>
+                <FormField label="Monto Mínimo de Pedido (Q)" error={errors.minimum_order_amount}>
+                    <Input
+                        id="minimum_order_amount"
+                        type="number"
+                        step="0.01"
+                        value={data.minimum_order_amount}
+                        onChange={(e) => setData('minimum_order_amount', e.target.value)}
+                        placeholder={PLACEHOLDERS.amount}
+                    />
+                </FormField>
 
+                <div className="grid gap-4 md:grid-cols-2">
                     <FormField label="Tiempo Estimado de Entrega (min)" error={errors.estimated_delivery_time}>
                         <Input
                             id="estimated_delivery_time"
                             type="number"
+                            min="1"
                             value={data.estimated_delivery_time}
                             onChange={(e) => setData('estimated_delivery_time', e.target.value)}
+                            placeholder={PLACEHOLDERS.estimatedTime}
+                        />
+                    </FormField>
+
+                    <FormField label="Tiempo Estimado de Pickup (min)" error={errors.estimated_pickup_time}>
+                        <Input
+                            id="estimated_pickup_time"
+                            type="number"
+                            min="1"
+                            value={data.estimated_pickup_time}
+                            onChange={(e) => setData('estimated_pickup_time', e.target.value)}
                             placeholder={PLACEHOLDERS.estimatedTime}
                         />
                     </FormField>

@@ -199,12 +199,9 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
 
                 {/* Estado activo */}
                 <div className="flex items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                        <Label htmlFor="is_active" className="text-sm font-medium">
-                            Tipo Activo
-                        </Label>
-                        <p className="text-xs text-muted-foreground">El tipo estará disponible para asignar a clientes</p>
-                    </div>
+                    <Label htmlFor="is_active" className="cursor-pointer text-sm font-medium">
+                        Tipo Activo
+                    </Label>
                     <Switch id="is_active" checked={formData.is_active} onCheckedChange={(checked) => handleInputChange('is_active', checked)} />
                 </div>
             </FormSection>

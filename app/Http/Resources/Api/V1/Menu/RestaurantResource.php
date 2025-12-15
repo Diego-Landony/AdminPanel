@@ -27,6 +27,7 @@ class RestaurantResource extends JsonResource
             'pickup_active' => $this->pickup_active,
             'schedule' => $this->schedule,
             'estimated_delivery_time' => $this->estimated_delivery_time,
+            'estimated_pickup_time' => $this->estimated_pickup_time,
             'minimum_order_amount' => $this->minimum_order_amount ? (float) $this->minimum_order_amount : null,
             'has_geofence' => $this->hasGeofence(),
             'is_open_now' => $this->isOpenNow(),

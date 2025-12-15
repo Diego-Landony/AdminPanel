@@ -278,12 +278,9 @@ export default function SectionEdit({ section }: EditPageProps) {
                             </div>
 
                             <div className="flex items-center justify-between rounded-lg border p-4">
-                                <div className="space-y-0.5">
-                                    <Label htmlFor="is_active" className="text-sm font-medium">
-                                        Sección Activa
-                                    </Label>
-                                    <p className="text-xs text-muted-foreground">La sección estará disponible en el menú</p>
-                                </div>
+                                <Label htmlFor="is_active" className="cursor-pointer text-sm font-medium">
+                                    Sección Activa
+                                </Label>
                                 <Switch
                                     id="is_active"
                                     checked={formData.is_active}

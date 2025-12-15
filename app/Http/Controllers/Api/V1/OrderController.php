@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Exceptions\Delivery\AddressOutsideDeliveryZoneException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Order\CancelOrderRequest;
 use App\Http\Requests\Api\V1\Order\CreateOrderRequest;
+use App\Http\Requests\Api\V1\Order\StoreOrderReviewRequest;
 use App\Http\Resources\Api\V1\Order\OrderResource;
+use App\Http\Resources\Api\V1\Order\OrderReviewResource;
 use App\Http\Resources\Api\V1\Order\OrderStatusResource;
 use App\Models\Cart;
 use App\Models\Order;
+use App\Models\OrderReview;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 
@@ -71,6 +75,15 @@ class OrderController extends Controller
                 'data' => new OrderResource($order->load(['items', 'promotions', 'restaurant'])),
                 'message' => 'Orden creada exitosamente',
             ], 201);
+        } catch (AddressOutsideDeliveryZoneException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'error_code' => 'ADDRESS_OUTSIDE_DELIVERY_ZONE',
+                'data' => [
+                    'latitude' => $e->lat,
+                    'longitude' => $e->lng,
+                ],
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => $e->getMessage(),
@@ -426,5 +439,88 @@ class OrderController extends Controller
                 'message' => $e->getMessage(),
             ], 422);
         }
+    }
+
+    /**
+     * Create a review for an order
+     *
+     * @OA\Post(
+     *     path="/api/v1/orders/{order}/review",
+     *     tags={"Orders"},
+     *     summary="Create order review",
+     *     description="Creates a review for a completed order. Only allowed for completed/delivered orders.",
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="path",
+     *         description="Order ID",
+     *         required=true,
+     *
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="overall_rating", type="integer", minimum=1, maximum=5, example=5),
+     *             @OA\Property(property="quality_rating", type="integer", minimum=1, maximum=5, example=4),
+     *             @OA\Property(property="speed_rating", type="integer", minimum=1, maximum=5, example=5),
+     *             @OA\Property(property="service_rating", type="integer", minimum=1, maximum=5, example=4),
+     *             @OA\Property(property="comment", type="string", example="Muy buena comida!")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Review created successfully",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", type="object"),
+     *             @OA\Property(property="message", type="string", example="Gracias por tu calificación")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthenticated"),
+     *     @OA\Response(response=403, description="Forbidden - Order does not belong to customer"),
+     *     @OA\Response(response=422, description="Validation error or order cannot be reviewed")
+     * )
+     */
+    public function review(StoreOrderReviewRequest $request, Order $order): JsonResponse
+    {
+        $customer = auth()->user();
+
+        if ($order->customer_id !== $customer->id) {
+            return response()->json([
+                'message' => 'No tienes acceso a esta orden',
+            ], 403);
+        }
+
+        if (! in_array($order->status, ['completed', 'delivered'])) {
+            return response()->json([
+                'message' => 'Solo puedes calificar órdenes completadas',
+            ], 422);
+        }
+
+        if ($order->review()->exists()) {
+            return response()->json([
+                'message' => 'Ya calificaste esta orden',
+            ], 422);
+        }
+
+        $review = OrderReview::create([
+            'order_id' => $order->id,
+            'customer_id' => $customer->id,
+            'restaurant_id' => $order->restaurant_id,
+            ...$request->validated(),
+        ]);
+
+        return response()->json([
+            'data' => new OrderReviewResource($review),
+            'message' => 'Gracias por tu calificación',
+        ], 201);
     }
 }

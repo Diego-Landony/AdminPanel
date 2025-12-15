@@ -25,6 +25,8 @@ class Combo extends Model
         'precio_domicilio_capital',
         'precio_pickup_interior',
         'precio_domicilio_interior',
+        'is_redeemable',
+        'points_cost',
         'is_active',
         'sort_order',
     ];
@@ -37,6 +39,8 @@ class Combo extends Model
             'precio_domicilio_capital' => 'decimal:2',
             'precio_pickup_interior' => 'decimal:2',
             'precio_domicilio_interior' => 'decimal:2',
+            'is_redeemable' => 'boolean',
+            'points_cost' => 'integer',
             'is_active' => 'boolean',
             'sort_order' => 'integer',
         ];

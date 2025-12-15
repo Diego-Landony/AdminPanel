@@ -227,12 +227,9 @@ export default function SectionCreate() {
                                 </FormField>
 
                                 <div className="flex items-center justify-between rounded-lg border p-4">
-                                    <div className="space-y-0.5">
-                                        <Label htmlFor="is_active" className="text-sm font-medium">
-                                            Sección Activa
-                                        </Label>
-                                        <p className="text-xs text-muted-foreground">La sección estará disponible en el menú</p>
-                                    </div>
+                                    <Label htmlFor="is_active" className="cursor-pointer text-sm font-medium">
+                                        Sección Activa
+                                    </Label>
                                     <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked)} />
                                 </div>
 

@@ -31,6 +31,7 @@ class Restaurant extends Model
         'estimated_delivery_time',
         'ip',
         'franchise_number',
+        'estimated_pickup_time',
     ];
 
     /**
@@ -45,6 +46,7 @@ class Restaurant extends Model
         'longitude' => 'decimal:7',
         'minimum_order_amount' => 'decimal:2',
         'estimated_delivery_time' => 'integer',
+        'estimated_pickup_time' => 'integer',
     ];
 
     /**

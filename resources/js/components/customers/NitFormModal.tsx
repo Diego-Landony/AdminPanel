@@ -143,12 +143,11 @@ export const NitFormModal: React.FC<NitFormModalProps> = ({ isOpen, onClose, cus
                         </FormField>
 
                         {formData.nit_type === 'company' && (
-                            <FormField label="Nombre de Empresa" error={errors.business_name} description="Razón social de la empresa">
+                            <FormField label="Nombre de Empresa" error={errors.business_name}>
                                 <Input
                                     type="text"
                                     value={formData.business_name}
                                     onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
-                                    placeholder="Ej: Subway Guatemala S.A."
                                 />
                             </FormField>
                         )}

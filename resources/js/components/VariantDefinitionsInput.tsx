@@ -54,7 +54,6 @@ function SortableVariantItem({ variant, index, onUpdate, onRemove, canDelete, ha
                 type="text"
                 value={variant}
                 onChange={(e) => onUpdate(index, e.target.value)}
-                placeholder="Ej: 15cm, 30cm, Grande"
                 className={hasDuplicate ? 'border-destructive' : ''}
             />
 

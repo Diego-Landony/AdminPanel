@@ -111,7 +111,30 @@ describe('store (POST /api/v1/orders)', function () {
 
     test('creates order with delivery address', function () {
         $customer = Customer::factory()->create();
-        $restaurant = Restaurant::factory()->create();
+        $kml = '<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <Placemark>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              -90.51,14.63 -90.50,14.63 -90.50,14.64 -90.51,14.64 -90.51,14.63
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+  </Document>
+</kml>';
+        $restaurant = Restaurant::factory()->create([
+            'latitude' => 14.6349,
+            'longitude' => -90.5069,
+            'is_active' => true,
+            'delivery_active' => true,
+            'geofence_kml' => $kml,
+            'price_location' => 'capital',
+        ]);
         $category = Category::factory()->create(['is_active' => true]);
         $product = Product::factory()->create([
             'category_id' => $category->id,
@@ -121,6 +144,8 @@ describe('store (POST /api/v1/orders)', function () {
 
         $address = CustomerAddress::factory()->create([
             'customer_id' => $customer->id,
+            'latitude' => 14.6350,
+            'longitude' => -90.5070,
         ]);
 
         $cart = Cart::factory()->create([

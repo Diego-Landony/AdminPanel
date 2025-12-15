@@ -37,7 +37,7 @@ export function CategoryFormFields({
             {/* Informacion Basica */}
             <Card>
                 <CardContent className="pt-6">
-                    <FormSection icon={Layers} title="Información Básica" description="Configuración general de la categoría">
+                    <FormSection icon={Layers} title="Información Básica">
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2">
                                 <div className="flex items-center justify-between md:flex-col md:items-start md:gap-2">
@@ -79,7 +79,7 @@ export function CategoryFormFields({
             {/* Variantes */}
             <Card>
                 <CardContent className="pt-6">
-                    <FormSection icon={ListOrdered} title="Variantes" description="Define las variantes disponibles para los productos">
+                    <FormSection icon={ListOrdered} title="Variantes">
                         <div className="space-y-6">
                             {isEdit && formData.uses_variants && variantsChanged && (
                                 <Alert variant="default" className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950">

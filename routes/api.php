@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\OAuthController;
+use App\Http\Controllers\Api\V1\CustomerAddressController;
+use App\Http\Controllers\Api\V1\CustomerNitController;
 use App\Http\Controllers\Api\V1\DeviceController;
+use App\Http\Controllers\Api\V1\FavoriteController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -125,10 +128,32 @@ Route::prefix('v1')->group(function () {
         });
 
         // Customer addresses
-        // TODO: Future phase
+        Route::prefix('addresses')->name('api.v1.addresses.')->group(function () {
+            Route::get('/', [CustomerAddressController::class, 'index'])->name('index');
+            Route::post('/', [CustomerAddressController::class, 'store'])->name('store');
+            Route::post('/validate', [CustomerAddressController::class, 'validateLocation'])->name('validate');
+            Route::get('/{address}', [CustomerAddressController::class, 'show'])->name('show');
+            Route::put('/{address}', [CustomerAddressController::class, 'update'])->name('update');
+            Route::delete('/{address}', [CustomerAddressController::class, 'destroy'])->name('destroy');
+            Route::post('/{address}/set-default', [CustomerAddressController::class, 'setDefault'])->name('set-default');
+        });
 
         // Customer NITs (Tax IDs)
-        // TODO: Future phase
+        Route::prefix('nits')->name('api.v1.nits.')->group(function () {
+            Route::get('/', [CustomerNitController::class, 'index'])->name('index');
+            Route::post('/', [CustomerNitController::class, 'store'])->name('store');
+            Route::get('/{nit}', [CustomerNitController::class, 'show'])->name('show');
+            Route::put('/{nit}', [CustomerNitController::class, 'update'])->name('update');
+            Route::delete('/{nit}', [CustomerNitController::class, 'destroy'])->name('destroy');
+            Route::post('/{nit}/set-default', [CustomerNitController::class, 'setDefault'])->name('set-default');
+        });
+
+        // Favorites
+        Route::prefix('favorites')->name('api.v1.favorites.')->group(function () {
+            Route::get('/', [FavoriteController::class, 'index'])->name('index');
+            Route::post('/', [FavoriteController::class, 'store'])->name('store');
+            Route::delete('/{type}/{id}', [FavoriteController::class, 'destroy'])->name('destroy');
+        });
 
         // Cart management
         Route::prefix('cart')->name('api.v1.cart.')->group(function () {
@@ -152,6 +177,9 @@ Route::prefix('v1')->group(function () {
 
             Route::put('/service-type', [App\Http\Controllers\Api\V1\CartController::class, 'updateServiceType'])
                 ->name('service-type.update');
+
+            Route::put('/delivery-address', [App\Http\Controllers\Api\V1\CartController::class, 'setDeliveryAddress'])
+                ->name('delivery-address.update');
 
             Route::post('/validate', [App\Http\Controllers\Api\V1\CartController::class, 'validate'])
                 ->name('validate');
@@ -182,10 +210,33 @@ Route::prefix('v1')->group(function () {
 
             Route::post('/{order}/reorder', [App\Http\Controllers\Api\V1\OrderController::class, 'reorder'])
                 ->name('reorder');
+
+            Route::post('/{order}/review', [App\Http\Controllers\Api\V1\OrderController::class, 'review'])
+                ->name('review');
         });
 
         // Loyalty points & rewards
-        // TODO: Phase 6
+        Route::prefix('points')->name('api.v1.points.')->group(function () {
+            Route::get('/balance', [App\Http\Controllers\Api\V1\PointsController::class, 'balance'])
+                ->name('balance');
+
+            Route::get('/history', [App\Http\Controllers\Api\V1\PointsController::class, 'history'])
+                ->name('history');
+
+            Route::post('/redeem', [App\Http\Controllers\Api\V1\PointsController::class, 'redeem'])
+                ->name('redeem');
+
+            Route::get('/rewards', [App\Http\Controllers\Api\V1\PointsController::class, 'rewards'])
+                ->name('rewards');
+        });
+
+        // Product views (recently viewed)
+        Route::post('/products/{product}/view', [App\Http\Controllers\Api\V1\ProductViewController::class, 'recordProductView'])
+            ->name('api.v1.products.view');
+        Route::post('/combos/{combo}/view', [App\Http\Controllers\Api\V1\ProductViewController::class, 'recordComboView'])
+            ->name('api.v1.combos.view');
+        Route::get('/me/recently-viewed', [App\Http\Controllers\Api\V1\ProductViewController::class, 'getRecentlyViewed'])
+            ->name('api.v1.me.recently-viewed');
     });
 
     /*
@@ -237,5 +288,7 @@ Route::prefix('v1')->group(function () {
             ->name('nearby');
         Route::get('/{restaurant}', [App\Http\Controllers\Api\V1\Menu\RestaurantController::class, 'show'])
             ->name('show');
+        Route::get('/{restaurant}/reviews', [App\Http\Controllers\Api\V1\Menu\RestaurantController::class, 'reviews'])
+            ->name('reviews');
     });
 });

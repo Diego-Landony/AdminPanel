@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Customer;
+use App\Models\CustomerAddress;
 use App\Models\Menu\Combo;
 use App\Models\Menu\Product;
 use App\Models\Menu\ProductVariant;
@@ -324,5 +325,59 @@ class CartService
             ['interior', 'delivery'] => 'precio_domicilio_interior',
             default => 'precio_pickup_capital',
         };
+    }
+
+    /**
+     * Actualiza la dirección de entrega del carrito y asigna el restaurante
+     */
+    public function updateDeliveryAddress(
+        Cart $cart,
+        CustomerAddress $address,
+        Restaurant $restaurant,
+        string $zone
+    ): Cart {
+        $oldZone = $cart->zone;
+
+        $cart->update([
+            'delivery_address_id' => $address->id,
+            'restaurant_id' => $restaurant->id,
+            'zone' => $zone,
+            'service_type' => 'delivery',
+        ]);
+
+        if ($oldZone !== $zone) {
+            $this->recalculatePricesForZone($cart, $zone);
+        }
+
+        return $cart->fresh(['items', 'restaurant', 'deliveryAddress']);
+    }
+
+    /**
+     * Recalcula los precios de los items del carrito según la nueva zona
+     */
+    private function recalculatePricesForZone(Cart $cart, string $zone): void
+    {
+        $serviceType = $cart->service_type ?? 'delivery';
+        $priceField = "precio_{$serviceType}_{$zone}";
+
+        foreach ($cart->items as $item) {
+            if ($item->product_id && $item->variant_id) {
+                $variant = $item->variant;
+                if ($variant && isset($variant->$priceField)) {
+                    $item->update([
+                        'unit_price' => $variant->$priceField,
+                        'subtotal' => $variant->$priceField * $item->quantity,
+                    ]);
+                }
+            } elseif ($item->combo_id) {
+                $combo = $item->combo;
+                if ($combo && isset($combo->$priceField)) {
+                    $item->update([
+                        'unit_price' => $combo->$priceField,
+                        'subtotal' => $combo->$priceField * $item->quantity,
+                    ]);
+                }
+            }
+        }
     }
 }

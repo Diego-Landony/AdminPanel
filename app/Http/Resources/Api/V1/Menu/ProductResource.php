@@ -4,6 +4,7 @@ namespace App\Http\Resources\Api\V1\Menu;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class ProductResource extends JsonResource
 {
@@ -18,7 +19,7 @@ class ProductResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'image_url' => $this->image,
+            'image_url' => $this->image ? Storage::url($this->image) : null,
             'category_id' => $this->category_id,
             'has_variants' => (bool) $this->has_variants,
             'prices' => [
@@ -27,6 +28,8 @@ class ProductResource extends JsonResource
                 'pickup_interior' => (float) $this->precio_pickup_interior,
                 'domicilio_interior' => (float) $this->precio_domicilio_interior,
             ],
+            'is_redeemable' => (bool) $this->is_redeemable,
+            'points_cost' => $this->points_cost,
 
             // Relationships
             'variants' => ProductVariantResource::collection($this->whenLoaded('variants')),

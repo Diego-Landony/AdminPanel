@@ -53,11 +53,16 @@ class OrderResource extends JsonResource
                 'estimated_ready_at' => $this->estimated_ready_at?->toIso8601String(),
                 'ready_at' => $this->ready_at?->toIso8601String(),
                 'delivered_at' => $this->delivered_at?->toIso8601String(),
+                'scheduled_for' => $this->scheduled_for?->toIso8601String(),
                 'created_at' => $this->created_at->toIso8601String(),
             ],
+            'delivery_person_rating' => $this->delivery_person_rating,
+            'delivery_person_comment' => $this->when($this->delivery_person_rating, $this->delivery_person_comment),
             'notes' => $this->notes,
             'cancellation_reason' => $this->when($this->status === 'cancelled', $this->cancellation_reason),
             'can_cancel' => $this->when(method_exists($this->resource, 'canBeCancelled'), fn () => (bool) $this->canBeCancelled()),
+            'has_review' => $this->review()->exists(),
+            'review' => $this->when($this->relationLoaded('review') && $this->review, fn () => new OrderReviewResource($this->review)),
         ];
     }
 }

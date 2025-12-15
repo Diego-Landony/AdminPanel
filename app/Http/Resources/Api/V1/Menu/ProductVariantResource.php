@@ -25,6 +25,8 @@ class ProductVariantResource extends JsonResource
                 'pickup_interior' => (float) $this->precio_pickup_interior,
                 'domicilio_interior' => (float) $this->precio_domicilio_interior,
             ],
+            'is_redeemable' => (bool) $this->is_redeemable,
+            'points_cost' => $this->points_cost,
             'is_daily_special' => $this->is_daily_special,
             'daily_special_days' => $this->daily_special_days,
             'daily_special_prices' => [

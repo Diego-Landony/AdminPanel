@@ -14,6 +14,7 @@ class Cart extends Model
     protected $fillable = [
         'customer_id',
         'restaurant_id',
+        'delivery_address_id',
         'service_type',
         'zone',
         'status',
@@ -43,6 +44,14 @@ class Cart extends Model
     public function restaurant(): BelongsTo
     {
         return $this->belongsTo(Restaurant::class);
+    }
+
+    /**
+     * Relación con la dirección de entrega
+     */
+    public function deliveryAddress(): BelongsTo
+    {
+        return $this->belongsTo(CustomerAddress::class, 'delivery_address_id');
     }
 
     /**

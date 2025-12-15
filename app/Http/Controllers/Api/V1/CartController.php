@@ -5,12 +5,16 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Cart\AddCartItemRequest;
 use App\Http\Requests\Api\V1\Cart\ApplyPromotionRequest;
+use App\Http\Requests\Api\V1\Cart\SetDeliveryAddressRequest;
 use App\Http\Requests\Api\V1\Cart\UpdateCartItemRequest;
 use App\Http\Requests\Api\V1\Cart\UpdateCartServiceTypeRequest;
 use App\Http\Resources\Api\V1\Cart\CartItemResource;
+use App\Http\Resources\Api\V1\CustomerAddressResource;
 use App\Models\CartItem;
+use App\Models\CustomerAddress;
 use App\Models\Restaurant;
 use App\Services\CartService;
+use App\Services\DeliveryValidationService;
 use App\Services\PromotionApplicationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,7 +23,8 @@ class CartController extends Controller
 {
     public function __construct(
         protected CartService $cartService,
-        protected PromotionApplicationService $promotionService
+        protected PromotionApplicationService $promotionService,
+        protected DeliveryValidationService $deliveryValidation
     ) {}
 
     /**
@@ -536,5 +541,51 @@ class CartController extends Controller
                 'message' => $e->getMessage(),
             ], 422);
         }
+    }
+
+    /**
+     * PUT /api/v1/cart/delivery-address
+     * Asigna dirección de entrega y auto-asigna restaurante basado en geocerca
+     */
+    public function setDeliveryAddress(SetDeliveryAddressRequest $request): JsonResponse
+    {
+        $customer = auth()->user();
+        $cart = $this->cartService->getOrCreateCart($customer);
+
+        $address = CustomerAddress::where('id', $request->delivery_address_id)
+            ->where('customer_id', $customer->id)
+            ->firstOrFail();
+
+        $result = $this->deliveryValidation->validateDeliveryAddress($address);
+
+        if (! $result->isValid) {
+            return response()->json([
+                'message' => $result->errorMessage,
+                'error_code' => 'ADDRESS_OUTSIDE_DELIVERY_ZONE',
+                'data' => [
+                    'nearest_pickup_locations' => $result->nearbyPickupRestaurants,
+                ],
+            ], 422);
+        }
+
+        $cart = $this->cartService->updateDeliveryAddress(
+            $cart,
+            $address,
+            $result->restaurant,
+            $result->zone
+        );
+
+        return response()->json([
+            'data' => [
+                'delivery_address' => new CustomerAddressResource($address),
+                'assigned_restaurant' => [
+                    'id' => $result->restaurant->id,
+                    'name' => $result->restaurant->name,
+                ],
+                'zone' => $result->zone,
+                'prices_updated' => true,
+            ],
+            'message' => 'Dirección de entrega asignada exitosamente',
+        ]);
     }
 }

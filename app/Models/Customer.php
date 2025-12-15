@@ -41,6 +41,7 @@ class Customer extends Authenticatable implements MustVerifyEmail
         'last_purchase_at',
         'points',
         'points_updated_at',
+        'points_last_activity_at',
         'customer_type_id',
     ];
 
@@ -70,6 +71,7 @@ class Customer extends Authenticatable implements MustVerifyEmail
             'last_purchase_at' => 'datetime',
             'points' => 'integer',
             'points_updated_at' => 'datetime',
+            'points_last_activity_at' => 'datetime',
         ];
     }
 
@@ -180,6 +182,22 @@ class Customer extends Authenticatable implements MustVerifyEmail
     public function defaultNit(): ?CustomerNit
     {
         return $this->nits()->where('is_default', true)->first();
+    }
+
+    /**
+     * Relación con los favoritos del cliente
+     */
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
+    /**
+     * Relación con las transacciones de puntos del cliente
+     */
+    public function pointsTransactions(): HasMany
+    {
+        return $this->hasMany(CustomerPointsTransaction::class);
     }
 
     /**

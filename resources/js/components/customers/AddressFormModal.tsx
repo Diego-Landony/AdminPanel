@@ -169,11 +169,10 @@ export const AddressFormModal: React.FC<AddressFormModalProps> = ({ isOpen, onCl
                             </FormField>
                         </div>
 
-                        <FormField label="Notas de Entrega" error={errors.delivery_notes} description="Instrucciones adicionales">
+                        <FormField label="Notas de Entrega" error={errors.delivery_notes}>
                             <Textarea
                                 value={formData.delivery_notes}
                                 onChange={(e) => setFormData({ ...formData, delivery_notes: e.target.value })}
-                                placeholder="Ej: Casa con portón azul, tocar el timbre..."
                                 rows={2}
                             />
                         </FormField>

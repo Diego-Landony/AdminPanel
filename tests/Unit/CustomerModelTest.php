@@ -26,6 +26,7 @@ test('customer has fillable attributes', function () {
         'last_purchase_at',
         'points',
         'points_updated_at',
+        'points_last_activity_at',
         'customer_type_id',
     ];
 

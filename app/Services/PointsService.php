@@ -20,13 +20,55 @@ class PointsService
     /**
      * Calcula los puntos a ganar basado en el total de la orden
      * Regla: 1 punto por cada Q10 gastados
+     * Redondeo: Si la parte decimal es >= 0.7, se redondea hacia arriba
      *
      * @param  float  $total  Total de la orden en quetzales
+     * @param  Customer|null  $customer  Cliente para aplicar multiplicador de tipo
      * @return int Cantidad de puntos a ganar
      */
-    public function calculatePointsToEarn(float $total): int
+    public function calculatePointsToEarn(float $total, ?Customer $customer = null): int
     {
-        return (int) floor($total / 10);
+        // Calcular puntos base con redondeo 0.7
+        $basePoints = $this->roundWithThreshold($total / 10);
+
+        // Aplicar multiplicador de tipo de cliente si existe
+        $multiplier = $this->getMultiplier($customer);
+        if ($multiplier > 1.0) {
+            $finalPoints = $basePoints * $multiplier;
+            return $this->roundWithThreshold($finalPoints);
+        }
+
+        return $basePoints;
+    }
+
+    /**
+     * Redondea un número con umbral de 0.7
+     * Si la parte decimal es >= 0.7, redondea hacia arriba
+     */
+    private function roundWithThreshold(float $value): int
+    {
+        $intPart = (int) floor($value);
+        // Usar round para evitar problemas de precisión de punto flotante
+        $decimalPart = round($value - $intPart, 2);
+
+        if ($decimalPart >= 0.7) {
+            return $intPart + 1;
+        }
+
+        return $intPart;
+    }
+
+    /**
+     * Obtiene el multiplicador del tipo de cliente
+     */
+    private function getMultiplier(?Customer $customer): float
+    {
+        if (!$customer || !$customer->customerType) {
+            return 1.0;
+        }
+
+        $multiplier = $customer->customerType->multiplier;
+        return $multiplier > 0 ? $multiplier : 1.0;
     }
 
     /**
@@ -37,7 +79,7 @@ class PointsService
      */
     public function creditPoints(Customer $customer, Order $order): void
     {
-        $pointsToCredit = $this->calculatePointsToEarn($order->total);
+        $pointsToCredit = $this->calculatePointsToEarn($order->total, $customer);
 
         if ($pointsToCredit > 0) {
             $customer->points += $pointsToCredit;

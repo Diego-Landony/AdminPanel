@@ -43,7 +43,6 @@ describe('index', function () {
                 'data' => [
                     'categories',
                     'combos',
-                    'promotions',
                 ],
             ]);
     });
@@ -164,25 +163,8 @@ describe('index', function () {
         expect($comboNames)->not->toContain('Unavailable Combo');
     });
 
-    test('only returns active promotions', function () {
-        Promotion::factory()->create([
-            'name' => 'Active Promotion',
-            'is_active' => true,
-        ]);
-
-        Promotion::factory()->create([
-            'name' => 'Inactive Promotion',
-            'is_active' => false,
-        ]);
-
-        $response = $this->getJson('/api/v1/menu');
-
-        $response->assertOk();
-        $promotionNames = collect($response->json('data.promotions'))->pluck('name');
-
-        expect($promotionNames)->toContain('Active Promotion');
-        expect($promotionNames)->not->toContain('Inactive Promotion');
-    });
+    // Nota: Las promotions se obtienen desde /api/v1/menu/promotions
+    // Este endpoint solo devuelve categories y combos
 
     test('orders categories by sort_order', function () {
         Category::factory()->create([

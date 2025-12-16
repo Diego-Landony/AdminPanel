@@ -11,47 +11,48 @@ uses(RefreshDatabase::class);
 
 describe('index', function () {
     test('returns list of active promotions', function () {
-        Promotion::factory()->count(3)->create(['is_active' => true]);
-        Promotion::factory()->create(['is_active' => false]);
+        // Crear promociones de diferentes tipos
+        Promotion::factory()->create(['is_active' => true, 'type' => 'daily_special']);
+        Promotion::factory()->create(['is_active' => true, 'type' => 'two_for_one']);
+        Promotion::factory()->create(['is_active' => true, 'type' => 'bundle_special']);
+        Promotion::factory()->create(['is_active' => false, 'type' => 'daily_special']);
 
         $response = $this->getJson('/api/v1/menu/promotions');
 
         $response->assertOk()
             ->assertJsonStructure([
                 'data' => [
-                    'promotions' => [
-                        '*' => [
-                            'id',
-                            'name',
-                            'description',
-                            'type',
-                            'prices',
-                        ],
-                    ],
+                    'daily_special',
+                    'two_for_one',
+                    'percentage_discounts',
+                    'bundle_specials',
                 ],
             ]);
 
-        expect($response->json('data.promotions'))->toHaveCount(3);
+        // Verificar que daily_special es un objeto (no array)
+        expect($response->json('data.daily_special'))->not->toBeNull();
     });
 
     test('excludes inactive promotions', function () {
         Promotion::factory()->create([
             'name' => 'Active Promotion',
             'is_active' => true,
+            'type' => 'daily_special',
         ]);
 
         Promotion::factory()->create([
             'name' => 'Inactive Promotion',
             'is_active' => false,
+            'type' => 'daily_special',
         ]);
 
         $response = $this->getJson('/api/v1/menu/promotions');
 
         $response->assertOk();
-        $promotionNames = collect($response->json('data.promotions'))->pluck('name');
+        // daily_special devuelve solo uno activo
+        $dailySpecial = $response->json('data.daily_special');
 
-        expect($promotionNames)->toContain('Active Promotion');
-        expect($promotionNames)->not->toContain('Inactive Promotion');
+        expect($dailySpecial['name'])->toBe('Active Promotion');
     });
 
     test('includes promotion items with products', function () {
@@ -74,9 +75,9 @@ describe('index', function () {
         $response = $this->getJson('/api/v1/menu/promotions');
 
         $response->assertOk();
-        $promotions = $response->json('data.promotions');
+        $dailySpecial = $response->json('data.daily_special');
 
-        expect($promotions[0]['items'])->not->toBeEmpty();
+        expect($dailySpecial['items'])->not->toBeEmpty();
     });
 
     test('includes bundle items for bundle special promotions', function () {
@@ -99,9 +100,10 @@ describe('index', function () {
         $response = $this->getJson('/api/v1/menu/promotions');
 
         $response->assertOk();
-        $promotions = $response->json('data.promotions');
+        $bundleSpecials = $response->json('data.bundle_specials');
 
-        expect($promotions[0]['bundle_items'])->not->toBeEmpty();
+        expect($bundleSpecials)->not->toBeEmpty();
+        expect($bundleSpecials[0]['bundle_items'])->not->toBeEmpty();
     });
 
     test('orders promotions by sort_order', function () {
@@ -109,28 +111,31 @@ describe('index', function () {
             'name' => 'Third',
             'is_active' => true,
             'sort_order' => 3,
+            'type' => 'bundle_special',
         ]);
 
         Promotion::factory()->create([
             'name' => 'First',
             'is_active' => true,
             'sort_order' => 1,
+            'type' => 'bundle_special',
         ]);
 
         Promotion::factory()->create([
             'name' => 'Second',
             'is_active' => true,
             'sort_order' => 2,
+            'type' => 'bundle_special',
         ]);
 
         $response = $this->getJson('/api/v1/menu/promotions');
 
         $response->assertOk();
-        $promotions = $response->json('data.promotions');
+        $bundleSpecials = $response->json('data.bundle_specials');
 
-        expect($promotions[0]['name'])->toBe('First');
-        expect($promotions[1]['name'])->toBe('Second');
-        expect($promotions[2]['name'])->toBe('Third');
+        expect($bundleSpecials[0]['name'])->toBe('First');
+        expect($bundleSpecials[1]['name'])->toBe('Second');
+        expect($bundleSpecials[2]['name'])->toBe('Third');
     });
 });
 

@@ -177,12 +177,12 @@ test('genera subway_card automaticamente', function () {
     // Verificar que se generó subway_card
     expect($customer->subway_card)->not->toBeNull();
 
-    // Verificar formato: debe tener 12 dígitos y comenzar con 8
-    expect($customer->subway_card)->toHaveLength(12);
+    // Verificar formato: debe tener 11 dígitos y comenzar con 8
+    expect($customer->subway_card)->toHaveLength(11);
     expect($customer->subway_card)->toStartWith('8');
 
     // Verificar que es numérico
-    expect($customer->subway_card)->toMatch('/^\d{12}$/');
+    expect($customer->subway_card)->toMatch('/^\d{11}$/');
 });
 
 // Test 7: Genera subway_card unica

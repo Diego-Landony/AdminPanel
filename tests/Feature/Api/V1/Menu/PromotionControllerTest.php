@@ -215,6 +215,102 @@ describe('daily', function () {
         expect($items)->not->toBeEmpty();
         expect($items[0]['product'])->not->toBeNull();
     });
+
+    test('filters items by today when today=1 parameter is passed', function () {
+        $category = Category::factory()->create(['is_active' => true]);
+        $product1 = Product::factory()->create([
+            'name' => 'Sub de Hoy',
+            'category_id' => $category->id,
+            'is_active' => true,
+        ]);
+        $product2 = Product::factory()->create([
+            'name' => 'Sub de Otro Día',
+            'category_id' => $category->id,
+            'is_active' => true,
+        ]);
+
+        $promotion = Promotion::factory()->create([
+            'is_active' => true,
+            'type' => 'daily_special',
+        ]);
+
+        $todayWeekday = (int) now()->dayOfWeekIso;
+        $otherWeekday = $todayWeekday === 7 ? 1 : $todayWeekday + 1;
+
+        // Item válido hoy
+        PromotionItem::factory()->create([
+            'promotion_id' => $promotion->id,
+            'product_id' => $product1->id,
+            'weekdays' => [$todayWeekday],
+        ]);
+
+        // Item válido otro día
+        PromotionItem::factory()->create([
+            'promotion_id' => $promotion->id,
+            'product_id' => $product2->id,
+            'weekdays' => [$otherWeekday],
+        ]);
+
+        $response = $this->getJson('/api/v1/menu/promotions/daily?today=1');
+
+        $response->assertOk();
+        $items = $response->json('data.promotion.items');
+
+        expect($items)->toHaveCount(1);
+        expect($items[0]['product']['name'])->toBe('Sub de Hoy');
+    });
+
+    test('includes today info when today=1 parameter is passed', function () {
+        Promotion::factory()->create([
+            'is_active' => true,
+            'type' => 'daily_special',
+        ]);
+
+        $response = $this->getJson('/api/v1/menu/promotions/daily?today=1');
+
+        $response->assertOk()
+            ->assertJsonStructure([
+                'data' => [
+                    'promotion',
+                    'today' => [
+                        'weekday',
+                        'weekday_name',
+                    ],
+                ],
+            ]);
+
+        $todayWeekday = (int) now()->dayOfWeekIso;
+        expect($response->json('data.today.weekday'))->toBe($todayWeekday);
+    });
+
+    test('includes items valid all days when filtering by today', function () {
+        $category = Category::factory()->create(['is_active' => true]);
+        $product = Product::factory()->create([
+            'name' => 'Sub Disponible Siempre',
+            'category_id' => $category->id,
+            'is_active' => true,
+        ]);
+
+        $promotion = Promotion::factory()->create([
+            'is_active' => true,
+            'type' => 'daily_special',
+        ]);
+
+        // Item sin weekdays (válido todos los días)
+        PromotionItem::factory()->create([
+            'promotion_id' => $promotion->id,
+            'product_id' => $product->id,
+            'weekdays' => null,
+        ]);
+
+        $response = $this->getJson('/api/v1/menu/promotions/daily?today=1');
+
+        $response->assertOk();
+        $items = $response->json('data.promotion.items');
+
+        expect($items)->toHaveCount(1);
+        expect($items[0]['product']['name'])->toBe('Sub Disponible Siempre');
+    });
 });
 
 describe('combinados', function () {

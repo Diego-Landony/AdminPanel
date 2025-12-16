@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Menu\PromotionResource;
 use App\Models\Menu\Promotion;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class PromotionController extends Controller
 {
@@ -91,7 +92,16 @@ class PromotionController extends Controller
      *     path="/api/v1/menu/promotions/daily",
      *     tags={"Menu"},
      *     summary="Get daily special",
-     *     description="Returns active daily special promotion (Sub del Día).",
+     *     description="Returns active daily special promotion (Sub del Día). Use ?today=1 to get only today's special.",
+     *
+     *     @OA\Parameter(
+     *         name="today",
+     *         in="query",
+     *         description="If set to 1, returns only items valid for today",
+     *         required=false,
+     *
+     *         @OA\Schema(type="integer", enum={0, 1})
+     *     ),
      *
      *     @OA\Response(
      *         response=200,
@@ -100,7 +110,11 @@ class PromotionController extends Controller
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="promotion", ref="#/components/schemas/Promotion")
+     *                 @OA\Property(property="promotion", ref="#/components/schemas/Promotion"),
+     *                 @OA\Property(property="today", type="object", nullable=true,
+     *                     @OA\Property(property="weekday", type="integer", example=1),
+     *                     @OA\Property(property="weekday_name", type="string", example="Lunes")
+     *                 )
      *             )
      *         )
      *     ),
@@ -116,8 +130,11 @@ class PromotionController extends Controller
      *     )
      * )
      */
-    public function daily(): JsonResponse
+    public function daily(Request $request): JsonResponse
     {
+        $filterToday = $request->boolean('today');
+        $currentWeekday = (int) now()->dayOfWeekIso; // 1=Lunes, 7=Domingo
+
         $promotion = Promotion::query()
             ->active()
             ->dailySpecial()
@@ -134,11 +151,46 @@ class PromotionController extends Controller
             ], 404);
         }
 
-        return response()->json([
+        // Si se solicita solo el de hoy, filtrar los items
+        if ($filterToday && $promotion->items) {
+            $todayItems = $promotion->items->filter(function ($item) use ($currentWeekday) {
+                // Si weekdays es null o vacío, el item es válido todos los días
+                if (empty($item->weekdays)) {
+                    return true;
+                }
+
+                return in_array($currentWeekday, $item->weekdays);
+            });
+
+            // Reemplazar la colección de items con los filtrados
+            $promotion->setRelation('items', $todayItems->values());
+        }
+
+        $response = [
             'data' => [
                 'promotion' => PromotionResource::make($promotion),
             ],
-        ]);
+        ];
+
+        // Agregar información del día actual si se filtró
+        if ($filterToday) {
+            $weekdayNames = [
+                1 => 'Lunes',
+                2 => 'Martes',
+                3 => 'Miércoles',
+                4 => 'Jueves',
+                5 => 'Viernes',
+                6 => 'Sábado',
+                7 => 'Domingo',
+            ];
+
+            $response['data']['today'] = [
+                'weekday' => $currentWeekday,
+                'weekday_name' => $weekdayNames[$currentWeekday],
+            ];
+        }
+
+        return response()->json($response);
     }
 
     /**

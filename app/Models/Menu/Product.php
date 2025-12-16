@@ -142,6 +142,35 @@ class Product extends Model
     }
 
     /**
+     * Obtiene la URL completa de la imagen del producto
+     * Maneja correctamente las rutas que ya contienen /storage/
+     */
+    public function getImageUrl(): ?string
+    {
+        if (! $this->image) {
+            return null;
+        }
+
+        // Si la imagen ya es una URL completa, devolverla tal cual
+        if (str_starts_with($this->image, 'http://') || str_starts_with($this->image, 'https://')) {
+            return $this->image;
+        }
+
+        // Si ya tiene /storage/ al inicio, construir URL sin duplicar
+        if (str_starts_with($this->image, '/storage/')) {
+            return $this->image;
+        }
+
+        // Si tiene storage/ sin slash inicial
+        if (str_starts_with($this->image, 'storage/')) {
+            return '/' . $this->image;
+        }
+
+        // Caso normal: usar Storage::url()
+        return \Illuminate\Support\Facades\Storage::url($this->image);
+    }
+
+    /**
      * Accessor: has_variants se calcula automáticamente desde la categoría
      * Si el producto tiene categoría, usa uses_variants de la categoría
      * Si no tiene categoría, usa el valor directo de has_variants (legacy)

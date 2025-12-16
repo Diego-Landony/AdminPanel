@@ -14,7 +14,7 @@
             "description": "Local Development Server"
         },
         {
-            "url": "admin.subwaycardgt.com",
+            "url": "http://localhost",
             "description": "Application Server"
         }
     ],
@@ -3499,7 +3499,7 @@
                     "Menu"
                 ],
                 "summary": "Get complete menu",
-                "description": "Returns complete menu grouped by categories with products, combos and active promotions.",
+                "description": "Returns complete menu with categories, products and permanent combos. For promotions/offers, use GET /api/v1/menu/promotions.",
                 "operationId": "fa6c34f6134451c1793d68fdbf350ec6",
                 "responses": {
                     "200": {
@@ -3511,21 +3511,17 @@
                                         "data": {
                                             "properties": {
                                                 "categories": {
+                                                    "description": "Product categories with their products",
                                                     "type": "array",
                                                     "items": {
                                                         "$ref": "#/components/schemas/Category"
                                                     }
                                                 },
                                                 "combos": {
+                                                    "description": "Permanent menu combos (not promotional)",
                                                     "type": "array",
                                                     "items": {
                                                         "$ref": "#/components/schemas/Combo"
-                                                    }
-                                                },
-                                                "promotions": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "$ref": "#/components/schemas/Promotion"
                                                     }
                                                 }
                                             },
@@ -3655,8 +3651,8 @@
                 "tags": [
                     "Menu"
                 ],
-                "summary": "Get list of promotions",
-                "description": "Returns list of active promotions.",
+                "summary": "Get all promotions grouped by type",
+                "description": "Returns all active promotions separated by type: daily_special (single object), two_for_one, percentage_discounts, and bundle_specials.",
                 "operationId": "7d50101a4043d405ea335b1d93bb010b",
                 "responses": {
                     "200": {
@@ -3667,7 +3663,31 @@
                                     "properties": {
                                         "data": {
                                             "properties": {
-                                                "promotions": {
+                                                "daily_special": {
+                                                    "oneOf": [
+                                                        {
+                                                            "$ref": "#/components/schemas/Promotion"
+                                                        }
+                                                    ],
+                                                    "nullable": true,
+                                                    "description": "Sub del Día - single object or null"
+                                                },
+                                                "two_for_one": {
+                                                    "description": "2x1 promotions",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Promotion"
+                                                    }
+                                                },
+                                                "percentage_discounts": {
+                                                    "description": "Percentage discount promotions",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Promotion"
+                                                    }
+                                                },
+                                                "bundle_specials": {
+                                                    "description": "Promotional combos (temporary bundles)",
                                                     "type": "array",
                                                     "items": {
                                                         "$ref": "#/components/schemas/Promotion"

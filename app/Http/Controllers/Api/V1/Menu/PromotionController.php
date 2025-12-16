@@ -10,13 +10,13 @@ use Illuminate\Http\JsonResponse;
 class PromotionController extends Controller
 {
     /**
-     * Get list of active promotions.
+     * Get all active promotions grouped by type.
      *
      * @OA\Get(
      *     path="/api/v1/menu/promotions",
      *     tags={"Menu"},
-     *     summary="Get list of promotions",
-     *     description="Returns list of active promotions.",
+     *     summary="Get all promotions grouped by type",
+     *     description="Returns all active promotions separated by type: daily_special (single object), two_for_one, percentage_discounts, and bundle_specials.",
      *
      *     @OA\Response(
      *         response=200,
@@ -25,7 +25,18 @@ class PromotionController extends Controller
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="promotions", type="array",
+     *                 @OA\Property(property="daily_special", ref="#/components/schemas/Promotion", nullable=true, description="Sub del Día - single object or null"),
+     *                 @OA\Property(property="two_for_one", type="array", description="2x1 promotions",
+     *
+     *                     @OA\Items(ref="#/components/schemas/Promotion")
+     *                 ),
+     *
+     *                 @OA\Property(property="percentage_discounts", type="array", description="Percentage discount promotions",
+     *
+     *                     @OA\Items(ref="#/components/schemas/Promotion")
+     *                 ),
+     *
+     *                 @OA\Property(property="bundle_specials", type="array", description="Promotional combos (temporary bundles)",
      *
      *                     @OA\Items(ref="#/components/schemas/Promotion")
      *                 )
@@ -57,9 +68,18 @@ class PromotionController extends Controller
             ])
             ->get();
 
+        // Agrupar por tipo para facilitar consumo del frontend
+        $grouped = $promotions->groupBy('type');
+
+        // daily_special: objeto único (solo hay 1 sub del día)
+        $dailySpecial = $grouped->get('daily_special')?->first();
+
         return response()->json([
             'data' => [
-                'promotions' => PromotionResource::collection($promotions),
+                'daily_special' => $dailySpecial ? PromotionResource::make($dailySpecial) : null,
+                'two_for_one' => PromotionResource::collection($grouped->get('two_for_one', collect())),
+                'percentage_discounts' => PromotionResource::collection($grouped->get('percentage_discount', collect())),
+                'bundle_specials' => PromotionResource::collection($grouped->get('bundle_special', collect())),
             ],
         ]);
     }

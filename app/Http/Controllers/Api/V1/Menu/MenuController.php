@@ -5,10 +5,8 @@ namespace App\Http\Controllers\Api\V1\Menu;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Menu\CategoryResource;
 use App\Http\Resources\Api\V1\Menu\ComboResource;
-use App\Http\Resources\Api\V1\Menu\PromotionResource;
 use App\Models\Menu\Category;
 use App\Models\Menu\Combo;
-use App\Models\Menu\Promotion;
 use Illuminate\Http\JsonResponse;
 
 class MenuController extends Controller
@@ -20,7 +18,7 @@ class MenuController extends Controller
      *     path="/api/v1/menu",
      *     tags={"Menu"},
      *     summary="Get complete menu",
-     *     description="Returns complete menu grouped by categories with products, combos and active promotions.",
+     *     description="Returns complete menu with categories, products and permanent combos. For promotions/offers, use GET /api/v1/menu/promotions.",
      *
      *     @OA\Response(
      *         response=200,
@@ -29,19 +27,14 @@ class MenuController extends Controller
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="categories", type="array",
+     *                 @OA\Property(property="categories", type="array", description="Product categories with their products",
      *
      *                     @OA\Items(ref="#/components/schemas/Category")
      *                 ),
      *
-     *                 @OA\Property(property="combos", type="array",
+     *                 @OA\Property(property="combos", type="array", description="Permanent menu combos (not promotional)",
      *
      *                     @OA\Items(ref="#/components/schemas/Combo")
-     *                 ),
-     *
-     *                 @OA\Property(property="promotions", type="array",
-     *
-     *                     @OA\Items(ref="#/components/schemas/Promotion")
      *                 )
      *             )
      *         )
@@ -82,24 +75,10 @@ class MenuController extends Controller
             ])
             ->get();
 
-        $promotions = Promotion::query()
-            ->active()
-            ->ordered()
-            ->with([
-                'items.product',
-                'items.variant',
-                'bundleItems.product',
-                'bundleItems.variant',
-                'bundleItems.options.product',
-                'bundleItems.options.variant',
-            ])
-            ->get();
-
         return response()->json([
             'data' => [
                 'categories' => CategoryResource::collection($categories),
                 'combos' => ComboResource::collection($combos),
-                'promotions' => PromotionResource::collection($promotions),
             ],
         ]);
     }

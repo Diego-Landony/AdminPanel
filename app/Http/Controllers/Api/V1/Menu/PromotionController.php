@@ -91,29 +91,48 @@ class PromotionController extends Controller
      * @OA\Get(
      *     path="/api/v1/menu/promotions/daily",
      *     tags={"Menu"},
-     *     summary="Get daily special",
-     *     description="Returns active daily special promotion (Sub del Día). Use ?today=1 to get only today's special.",
+     *     summary="Get daily special (Sub del Día)",
+     *     description="Returns active daily special promotion (Sub del Día). Without parameters, returns ALL items for the entire week. Use ?today=1 to filter and get only items valid for today's weekday. Note: Multiple subs can be valid for the same day (e.g., 'Italian B.M.T.' + 'Pechuga de Pollo' on Tuesday). Each item has a 'weekdays' array indicating which days it's available (1=Monday to 7=Sunday, ISO-8601 format).",
      *
      *     @OA\Parameter(
      *         name="today",
      *         in="query",
-     *         description="If set to 1, returns only items valid for today",
+     *         description="Filter by today's weekday. If set to 1, returns only items where the current weekday is in their 'weekdays' array. Multiple items may be returned if more than one sub is available for today.",
      *         required=false,
      *
-     *         @OA\Schema(type="integer", enum={0, 1})
+     *         @OA\Schema(type="integer", enum={0, 1}, default=0)
      *     ),
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Daily special retrieved successfully",
+     *         description="Daily special retrieved successfully. The 'items' array inside 'promotion' contains all subs valid for the requested period. When using ?today=1, 'today' object is included with current weekday info.",
      *
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="promotion", ref="#/components/schemas/Promotion"),
-     *                 @OA\Property(property="today", type="object", nullable=true,
-     *                     @OA\Property(property="weekday", type="integer", example=1),
-     *                     @OA\Property(property="weekday_name", type="string", example="Lunes")
+     *                 @OA\Property(property="promotion", type="object", description="The daily special promotion containing filtered items",
+     *                     @OA\Property(property="id", type="integer", example=3),
+     *                     @OA\Property(property="name", type="string", example="Sub del Día"),
+     *                     @OA\Property(property="type", type="string", example="daily_special"),
+     *                     @OA\Property(property="items", type="array", description="Array of subs valid for the period. Multiple items can appear for the same day.",
+     *                         @OA\Items(type="object",
+     *                             @OA\Property(property="id", type="integer", example=14),
+     *                             @OA\Property(property="weekdays", type="array", description="Days when this item is available (1=Mon, 7=Sun)",
+     *                                 @OA\Items(type="integer", example=2)
+     *                             ),
+     *                             @OA\Property(property="special_price_capital", type="string", example="22.00"),
+     *                             @OA\Property(property="special_price_interior", type="string", example="24.00"),
+     *                             @OA\Property(property="product", type="object",
+     *                                 @OA\Property(property="id", type="integer", example=1),
+     *                                 @OA\Property(property="name", type="string", example="Italian B.M.T."),
+     *                                 @OA\Property(property="image_url", type="string", nullable=true, example="https://example.com/storage/products/italian-bmt.jpg")
+     *                             )
+     *                         )
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="today", type="object", nullable=true, description="Only present when ?today=1 is used",
+     *                     @OA\Property(property="weekday", type="integer", example=2, description="Current weekday (1=Monday to 7=Sunday)"),
+     *                     @OA\Property(property="weekday_name", type="string", example="Martes", description="Weekday name in Spanish")
      *                 )
      *             )
      *         )
@@ -121,7 +140,7 @@ class PromotionController extends Controller
      *
      *     @OA\Response(
      *         response=404,
-     *         description="No daily special available",
+     *         description="No daily special promotion configured or active",
      *
      *         @OA\JsonContent(
      *

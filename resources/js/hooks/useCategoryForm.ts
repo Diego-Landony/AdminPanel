@@ -4,7 +4,7 @@
  */
 
 import { router } from '@inertiajs/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { showNotification } from '@/hooks/useNotifications';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
@@ -19,12 +19,14 @@ export interface UseCategoryFormOptions {
 export interface UseCategoryFormReturn {
     // Estado
     formData: CategoryFormData;
+    imagePreview: string | null;
     errors: FormErrors;
     processing: boolean;
     variantsChanged: boolean;
 
     // Handlers
     handleInputChange: (field: keyof CategoryFormData, value: string | boolean | string[]) => void;
+    handleImageChange: (file: File | null, preview: string | null) => void;
     handleSubmit: (e: React.FormEvent) => void;
     resetForm: () => void;
 }
@@ -33,6 +35,7 @@ const getInitialFormData = (category?: Category): CategoryFormData => {
     if (!category) {
         return {
             name: '',
+            description: '',
             is_active: true,
             is_combo_category: false,
             uses_variants: false,
@@ -42,6 +45,7 @@ const getInitialFormData = (category?: Category): CategoryFormData => {
 
     return {
         name: category.name,
+        description: category.description || '',
         is_active: category.is_active,
         is_combo_category: category.is_combo_category,
         uses_variants: category.uses_variants,
@@ -58,6 +62,10 @@ export function useCategoryForm({
 
     // Estado principal
     const [formData, setFormData] = useState<CategoryFormData>(() => getInitialFormData(category));
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(category?.image_url || null);
+    const [removeImage, setRemoveImage] = useState(false);
+    const imageFileRef = useRef<File | null>(null);
     const [errors, setErrors] = useState<FormErrors>({});
     const [processing, setProcessing] = useState(false);
 
@@ -116,8 +124,30 @@ export function useCategoryForm({
         [validateField]
     );
 
+    const handleImageChange = useCallback(
+        (file: File | null, previewUrl: string | null) => {
+            setImageFile(file);
+            imageFileRef.current = file;
+            setImagePreview(previewUrl);
+            setRemoveImage(file === null && previewUrl === null);
+
+            if (errors.image) {
+                setErrors((prev) => {
+                    const newErrors = { ...prev };
+                    delete newErrors.image;
+                    return newErrors;
+                });
+            }
+        },
+        [errors.image]
+    );
+
     const resetForm = useCallback(() => {
         setFormData(getInitialFormData());
+        setImageFile(null);
+        imageFileRef.current = null;
+        setImagePreview(null);
+        setRemoveImage(false);
         setErrors({});
     }, []);
 
@@ -126,11 +156,37 @@ export function useCategoryForm({
             e.preventDefault();
             setProcessing(true);
 
+            const currentImageFile = imageFileRef.current || imageFile;
+
+            // Build FormData for file upload
+            const submitData = new FormData();
+            submitData.append('name', formData.name);
+            submitData.append('description', formData.description || '');
+            submitData.append('is_active', formData.is_active ? '1' : '0');
+            submitData.append('is_combo_category', formData.is_combo_category ? '1' : '0');
+            submitData.append('uses_variants', formData.uses_variants ? '1' : '0');
+
+            if (formData.variant_definitions && formData.variant_definitions.length > 0) {
+                formData.variant_definitions.forEach((variant, index) => {
+                    submitData.append(`variant_definitions[${index}]`, variant);
+                });
+            }
+
+            if (currentImageFile) {
+                submitData.append('image', currentImageFile);
+            }
+
+            if (removeImage) {
+                submitData.append('remove_image', '1');
+            }
+
             if (isEdit) {
-                router.put(
+                submitData.append('_method', 'PUT');
+                router.post(
                     `/menu/categories/${category!.id}`,
-                    formData as unknown as Record<string, string | number | boolean>,
+                    submitData,
                     {
+                        forceFormData: true,
                         onSuccess: () => {
                             setProcessing(false);
                             onSuccess?.();
@@ -142,7 +198,8 @@ export function useCategoryForm({
                     }
                 );
             } else {
-                router.post(route('menu.categories.store'), formData as unknown as Record<string, string | number | boolean>, {
+                router.post(route('menu.categories.store'), submitData, {
+                    forceFormData: true,
                     onSuccess: () => {
                         resetForm();
                         setProcessing(false);
@@ -158,18 +215,20 @@ export function useCategoryForm({
                 });
             }
         },
-        [formData, isEdit, category, resetForm, onSuccess]
+        [formData, imageFile, removeImage, isEdit, category, resetForm, onSuccess]
     );
 
     return {
         // Estado
         formData,
+        imagePreview,
         errors,
         processing,
         variantsChanged,
 
         // Handlers
         handleInputChange,
+        handleImageChange,
         handleSubmit,
         resetForm,
     };

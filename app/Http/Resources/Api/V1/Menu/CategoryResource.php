@@ -17,6 +17,8 @@ class CategoryResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'description' => $this->description,
+            'image' => $this->getImageUrl(),
             'uses_variants' => (bool) $this->uses_variants,
             'variant_definitions' => $this->variant_definitions,
             'is_combo_category' => (bool) $this->is_combo_category,

@@ -4,12 +4,14 @@
  */
 
 import { FormSection } from '@/components/form-section';
+import { ImageUpload } from '@/components/ImageUpload';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { VariantDefinitionsInput } from '@/components/VariantDefinitionsInput';
 import { AlertCircle, Layers, ListOrdered } from 'lucide-react';
 
@@ -18,6 +20,8 @@ import type { CategoryFormData, FormErrors } from '@/types/menu';
 export interface CategoryFormFieldsProps {
     formData: CategoryFormData;
     onInputChange: (field: keyof CategoryFormData, value: string | boolean | string[]) => void;
+    imagePreview: string | null;
+    onImageChange: (file: File | null, preview: string | null) => void;
     errors: FormErrors;
     variantsChanged?: boolean;
     mode: 'create' | 'edit';
@@ -26,6 +30,8 @@ export interface CategoryFormFieldsProps {
 export function CategoryFormFields({
     formData,
     onInputChange,
+    imagePreview,
+    onImageChange,
     errors,
     variantsChanged = false,
     mode,
@@ -71,6 +77,23 @@ export function CategoryFormFields({
                                     onChange={(e) => onInputChange('name', e.target.value)}
                                 />
                             </FormField>
+
+                            <FormField label="Descripción" error={errors.description}>
+                                <Textarea
+                                    id="description"
+                                    value={formData.description}
+                                    onChange={(e) => onInputChange('description', e.target.value)}
+                                    rows={2}
+                                    placeholder="Descripción opcional de la categoría"
+                                />
+                            </FormField>
+
+                            <ImageUpload
+                                label="Imagen"
+                                currentImage={imagePreview}
+                                onImageChange={onImageChange}
+                                error={errors.image}
+                            />
                         </div>
                     </FormSection>
                 </CardContent>

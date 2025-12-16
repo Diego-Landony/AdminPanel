@@ -10,6 +10,9 @@
 export interface Category {
     id: number;
     name: string;
+    description?: string | null;
+    image?: string | null;
+    image_url?: string | null;
     is_active: boolean;
     is_combo_category: boolean;
     uses_variants: boolean;
@@ -21,6 +24,9 @@ export interface Category {
 
 export interface CategoryFormData {
     name: string;
+    description: string;
+    image?: File | null;
+    remove_image?: boolean;
     is_active: boolean;
     is_combo_category: boolean;
     uses_variants: boolean;

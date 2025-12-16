@@ -1832,6 +1832,15 @@
                                                         "example": "Casa color amarillo, portón negro",
                                                         "nullable": true
                                                     },
+                                                    "zone": {
+                                                        "description": "Zona de precios determinada automáticamente por geofencing",
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "capital",
+                                                            "interior"
+                                                        ],
+                                                        "example": "capital"
+                                                    },
                                                     "is_default": {
                                                         "type": "boolean",
                                                         "example": true
@@ -1957,6 +1966,15 @@
                                                     "type": "number",
                                                     "format": "float",
                                                     "example": -90.525
+                                                },
+                                                "zone": {
+                                                    "description": "Zona determinada automáticamente",
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "capital",
+                                                        "interior"
+                                                    ],
+                                                    "example": "capital"
                                                 },
                                                 "is_default": {
                                                     "type": "boolean",

@@ -23,7 +23,7 @@ class CustomerFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => bcrypt('password'),
-            'subway_card' => '8'.fake()->unique()->numerify('###########'),
+            'subway_card' => '8'.fake()->unique()->numerify('##########'),
             'birth_date' => fake()->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),
             'gender' => fake()->randomElement(['male', 'female', 'other']),
             'customer_type_id' => CustomerType::factory(),

@@ -103,9 +103,8 @@ class Customer extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Generate unique 12-digit subway card starting with 8.
-     * Format: 8XXXXXXXXXXX (12 digits total)
-     * Legacy cards starting with 7 are 11 digits (maintained for compatibility)
+     * Generate unique 11-digit subway card starting with 8.
+     * Format: 8XXXXXXXXXX (11 digits total)
      */
     protected static function generateUniqueSubwayCard(): string
     {
@@ -114,7 +113,7 @@ class Customer extends Authenticatable implements MustVerifyEmail
 
         do {
             $randomDigits = '';
-            for ($i = 0; $i < 11; $i++) {
+            for ($i = 0; $i < 10; $i++) {
                 $randomDigits .= random_int(0, 9);
             }
             $subwayCard = '8'.$randomDigits;

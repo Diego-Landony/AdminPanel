@@ -16,6 +16,7 @@ class CustomerAddressResource extends JsonResource
             'latitude' => (float) $this->latitude,
             'longitude' => (float) $this->longitude,
             'delivery_notes' => $this->delivery_notes,
+            'zone' => $this->zone ?? 'capital',
             'is_default' => $this->is_default,
             'created_at' => $this->created_at->toISOString(),
         ];

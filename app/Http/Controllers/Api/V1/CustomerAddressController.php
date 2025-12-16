@@ -44,6 +44,7 @@ class CustomerAddressController extends Controller
      *                     @OA\Property(property="latitude", type="number", format="float", example=14.6017),
      *                     @OA\Property(property="longitude", type="number", format="float", example=-90.5250),
      *                     @OA\Property(property="delivery_notes", type="string", nullable=true, example="Casa color amarillo, portón negro"),
+     *                     @OA\Property(property="zone", type="string", enum={"capital","interior"}, example="capital", description="Zona de precios determinada automáticamente por geofencing"),
      *                     @OA\Property(property="is_default", type="boolean", example=true),
      *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-12-10T15:30:00Z")
      *                 )
@@ -105,6 +106,7 @@ class CustomerAddressController extends Controller
      *                 @OA\Property(property="address_line", type="string", example="10 Calle 5-20 Zona 10"),
      *                 @OA\Property(property="latitude", type="number", format="float", example=14.6017),
      *                 @OA\Property(property="longitude", type="number", format="float", example=-90.5250),
+     *                 @OA\Property(property="zone", type="string", enum={"capital","interior"}, example="capital", description="Zona determinada automáticamente"),
      *                 @OA\Property(property="is_default", type="boolean", example=false)
      *             )
      *         )
@@ -135,7 +137,16 @@ class CustomerAddressController extends Controller
             $customer->addresses()->update(['is_default' => false]);
         }
 
-        $address = $customer->addresses()->create($request->validated());
+        // Determinar zona automáticamente via geofencing
+        $result = $this->deliveryValidation->validateCoordinates(
+            $request->float('latitude'),
+            $request->float('longitude')
+        );
+
+        $data = $request->validated();
+        $data['zone'] = $result->zone ?? 'capital';
+
+        $address = $customer->addresses()->create($data);
 
         return response()->json([
             'data' => new CustomerAddressResource($address),
@@ -241,7 +252,21 @@ class CustomerAddressController extends Controller
                 ->update(['is_default' => false]);
         }
 
-        $address->update($request->validated());
+        $data = $request->validated();
+
+        // Recalcular zona si cambiaron las coordenadas
+        $latChanged = $request->has('latitude') && (float) $request->latitude !== (float) $address->latitude;
+        $lngChanged = $request->has('longitude') && (float) $request->longitude !== (float) $address->longitude;
+
+        if ($latChanged || $lngChanged) {
+            $result = $this->deliveryValidation->validateCoordinates(
+                $request->float('latitude'),
+                $request->float('longitude')
+            );
+            $data['zone'] = $result->zone ?? 'capital';
+        }
+
+        $address->update($data);
 
         return response()->json([
             'data' => new CustomerAddressResource($address->fresh()),

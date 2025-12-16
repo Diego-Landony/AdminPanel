@@ -23,6 +23,7 @@ class CustomerAddress extends Model
         'latitude',
         'longitude',
         'delivery_notes',
+        'zone',
         'is_default',
     ];
 

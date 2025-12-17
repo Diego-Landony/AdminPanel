@@ -212,19 +212,13 @@ Route::prefix('v1')->group(function () {
                 ->name('review');
         });
 
-        // Loyalty points & rewards
+        // Loyalty points (view only - redemption happens in-store)
         Route::prefix('points')->name('api.v1.points.')->group(function () {
             Route::get('/balance', [App\Http\Controllers\Api\V1\PointsController::class, 'balance'])
                 ->name('balance');
 
             Route::get('/history', [App\Http\Controllers\Api\V1\PointsController::class, 'history'])
                 ->name('history');
-
-            Route::post('/redeem', [App\Http\Controllers\Api\V1\PointsController::class, 'redeem'])
-                ->name('redeem');
-
-            Route::get('/rewards', [App\Http\Controllers\Api\V1\PointsController::class, 'rewards'])
-                ->name('rewards');
         });
 
         // Product views (recently viewed)

@@ -35,6 +35,7 @@ class ProductVariantResource extends JsonResource
                 'pickup_interior' => (float) $this->daily_special_precio_pickup_interior,
                 'domicilio_interior' => (float) $this->daily_special_precio_domicilio_interior,
             ],
+            'sort_order' => $this->sort_order,
         ];
     }
 }

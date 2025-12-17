@@ -22,6 +22,7 @@ class SectionResource extends JsonResource
             'allow_multiple' => $this->allow_multiple,
             'min_selections' => $this->min_selections,
             'max_selections' => $this->max_selections,
+            'sort_order' => $this->sort_order,
 
             // Relationships
             'options' => SectionOptionResource::collection($this->whenLoaded('options')),

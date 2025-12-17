@@ -3728,12 +3728,28 @@
                 "tags": [
                     "Menu"
                 ],
-                "summary": "Get daily special",
-                "description": "Returns active daily special promotion (Sub del Día).",
+                "summary": "Get daily special (Sub del Día)",
+                "description": "Returns active daily special promotion (Sub del Día). Without parameters, returns ALL items for the entire week. Use ?today=1 to filter and get only items valid for today's weekday. Note: Multiple subs can be valid for the same day (e.g., 'Italian B.M.T.' + 'Pechuga de Pollo' on Tuesday). Each item has a 'weekdays' array indicating which days it's available (1=Monday to 7=Sunday, ISO-8601 format).",
                 "operationId": "efb6cc4ff9cab714b76379c92b44fffd",
+                "parameters": [
+                    {
+                        "name": "today",
+                        "in": "query",
+                        "description": "Filter by today's weekday. If set to 1, returns only items where the current weekday is in their 'weekdays' array. Multiple items may be returned if more than one sub is available for today.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "enum": [
+                                0,
+                                1
+                            ]
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Daily special retrieved successfully",
+                        "description": "Daily special retrieved successfully. The 'items' array inside 'promotion' contains all subs valid for the requested period. When using ?today=1, 'today' object is included with current weekday info.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3741,7 +3757,86 @@
                                         "data": {
                                             "properties": {
                                                 "promotion": {
-                                                    "$ref": "#/components/schemas/Promotion"
+                                                    "description": "The daily special promotion containing filtered items",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 3
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Sub del Día"
+                                                        },
+                                                        "type": {
+                                                            "type": "string",
+                                                            "example": "daily_special"
+                                                        },
+                                                        "items": {
+                                                            "description": "Array of subs valid for the period. Multiple items can appear for the same day.",
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 14
+                                                                    },
+                                                                    "weekdays": {
+                                                                        "description": "Days when this item is available (1=Mon, 7=Sun)",
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "integer",
+                                                                            "example": 2
+                                                                        }
+                                                                    },
+                                                                    "special_price_capital": {
+                                                                        "type": "string",
+                                                                        "example": "22.00"
+                                                                    },
+                                                                    "special_price_interior": {
+                                                                        "type": "string",
+                                                                        "example": "24.00"
+                                                                    },
+                                                                    "product": {
+                                                                        "properties": {
+                                                                            "id": {
+                                                                                "type": "integer",
+                                                                                "example": 1
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string",
+                                                                                "example": "Italian B.M.T."
+                                                                            },
+                                                                            "image_url": {
+                                                                                "type": "string",
+                                                                                "example": "https://example.com/storage/products/italian-bmt.jpg",
+                                                                                "nullable": true
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "today": {
+                                                    "description": "Only present when ?today=1 is used",
+                                                    "properties": {
+                                                        "weekday": {
+                                                            "description": "Current weekday (1=Monday to 7=Sunday)",
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        },
+                                                        "weekday_name": {
+                                                            "description": "Weekday name in Spanish",
+                                                            "type": "string",
+                                                            "example": "Martes"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
                                                 }
                                             },
                                             "type": "object"
@@ -3753,7 +3848,7 @@
                         }
                     },
                     "404": {
-                        "description": "No daily special available",
+                        "description": "No daily special promotion configured or active",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -5037,236 +5132,6 @@
                                                 "total": {
                                                     "type": "integer",
                                                     "example": 87
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "No autenticado"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/points/redeem": {
-            "post": {
-                "tags": [
-                    "Points"
-                ],
-                "summary": "Canjear puntos",
-                "description": "Canjea puntos del cliente en una orden para aplicar un descuento. Cada punto equivale a Q0.10 de descuento.",
-                "operationId": "c107580e8cdb8b6daa6be4774d9be8fb",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "order_id",
-                                    "points_to_redeem"
-                                ],
-                                "properties": {
-                                    "order_id": {
-                                        "description": "ID de la orden",
-                                        "type": "integer",
-                                        "example": 123
-                                    },
-                                    "points_to_redeem": {
-                                        "description": "Cantidad de puntos a canjear (mínimo 1)",
-                                        "type": "integer",
-                                        "example": 100
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Puntos redimidos exitosamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Puntos redimidos exitosamente."
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "transaction": {
-                                                    "properties": {
-                                                        "id": {
-                                                            "type": "integer",
-                                                            "example": 456
-                                                        },
-                                                        "points": {
-                                                            "type": "integer",
-                                                            "example": -100
-                                                        },
-                                                        "type": {
-                                                            "type": "string",
-                                                            "example": "redeemed"
-                                                        },
-                                                        "description": {
-                                                            "type": "string",
-                                                            "example": "Redimidos 100 puntos en orden #123"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                },
-                                                "new_balance": {
-                                                    "properties": {
-                                                        "points_balance": {
-                                                            "type": "integer",
-                                                            "example": 150
-                                                        },
-                                                        "points_value_in_currency": {
-                                                            "type": "number",
-                                                            "format": "float",
-                                                            "example": 15
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Error de validación",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "No tienes suficientes puntos disponibles."
-                                        },
-                                        "errors": {
-                                            "properties": {
-                                                "points_to_redeem": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "No tienes suficientes puntos disponibles."
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "No autenticado"
-                    },
-                    "404": {
-                        "description": "Orden no encontrada"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/points/rewards": {
-            "get": {
-                "tags": [
-                    "Points"
-                ],
-                "summary": "Lista de recompensas disponibles",
-                "description": "Retorna todos los productos, variantes y combos que pueden ser canjeados con puntos, ordenados por costo en puntos ascendente.",
-                "operationId": "62073e7b62f1e8e221a924fb3fff784c",
-                "responses": {
-                    "200": {
-                        "description": "Recompensas obtenidas exitosamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 10
-                                                    },
-                                                    "type": {
-                                                        "type": "string",
-                                                        "enum": [
-                                                            "product",
-                                                            "variant",
-                                                            "combo"
-                                                        ],
-                                                        "example": "product"
-                                                    },
-                                                    "name": {
-                                                        "type": "string",
-                                                        "example": "Sub del Día"
-                                                    },
-                                                    "description": {
-                                                        "type": "string",
-                                                        "example": "Sub especial del día",
-                                                        "nullable": true
-                                                    },
-                                                    "points_cost": {
-                                                        "description": "Puntos requeridos para canjear",
-                                                        "type": "integer",
-                                                        "example": 500
-                                                    },
-                                                    "image": {
-                                                        "type": "string",
-                                                        "example": "/storage/products/sub.jpg",
-                                                        "nullable": true
-                                                    },
-                                                    "is_active": {
-                                                        "type": "boolean",
-                                                        "example": true
-                                                    }
-                                                },
-                                                "type": "object"
-                                            }
-                                        },
-                                        "meta": {
-                                            "properties": {
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": 15
-                                                },
-                                                "products_count": {
-                                                    "type": "integer",
-                                                    "example": 8
-                                                },
-                                                "variants_count": {
-                                                    "type": "integer",
-                                                    "example": 4
-                                                },
-                                                "combos_count": {
-                                                    "type": "integer",
-                                                    "example": 3
                                                 }
                                             },
                                             "type": "object"

@@ -126,11 +126,11 @@ class Product extends Model
     }
 
     /**
-     * Scope: Productos ordenados por nombre
+     * Scope: Productos ordenados por sort_order, luego por nombre
      */
     public function scopeOrdered($query)
     {
-        return $query->orderBy('name');
+        return $query->orderBy('sort_order')->orderBy('name');
     }
 
     /**
@@ -163,7 +163,7 @@ class Product extends Model
 
         // Si tiene storage/ sin slash inicial
         if (str_starts_with($this->image, 'storage/')) {
-            return '/' . $this->image;
+            return '/'.$this->image;
         }
 
         // Caso normal: usar Storage::url()

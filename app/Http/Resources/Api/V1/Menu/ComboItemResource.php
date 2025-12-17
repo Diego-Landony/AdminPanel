@@ -19,6 +19,7 @@ class ComboItemResource extends JsonResource
             'is_choice_group' => $this->is_choice_group,
             'choice_label' => $this->choice_label,
             'quantity' => $this->quantity,
+            'sort_order' => $this->sort_order,
 
             // Relationships
             'product' => ProductResource::make($this->whenLoaded('product')),

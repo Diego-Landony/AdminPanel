@@ -10,6 +10,7 @@ use App\Http\Requests\Api\V1\Auth\RegisterRequest;
 use App\Http\Requests\Api\V1\Auth\ResetPasswordRequest;
 use App\Http\Resources\Api\V1\AuthResource;
 use App\Models\Customer;
+use App\Models\CustomerType;
 use App\Services\DeviceService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Verified;
@@ -107,6 +108,7 @@ class AuthController extends Controller
             'birth_date' => $validated['birth_date'] ?? null,
             'gender' => $validated['gender'] ?? null,
             'oauth_provider' => 'local',
+            'customer_type_id' => CustomerType::getDefault()?->id,
         ]);
 
         event(new Registered($customer));
@@ -128,7 +130,7 @@ class AuthController extends Controller
             'message' => __('auth.register_success'),
             'data' => AuthResource::make([
                 'token' => $token,
-                'customer' => $customer,
+                'customer' => $customer->load('customerType'),
             ]),
         ], 201);
     }
@@ -425,7 +427,7 @@ class AuthController extends Controller
             'message' => __('auth.token_refreshed'),
             'data' => AuthResource::make([
                 'token' => $token,
-                'customer' => $customer,
+                'customer' => $customer->load('customerType'),
             ]),
         ]);
     }

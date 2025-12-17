@@ -18,7 +18,7 @@ class CustomerTypeSeeder extends Seeder
         $customerTypes = [
             [
                 'name' => 'Regular',
-                'points_required' => 25,
+                'points_required' => 0,
                 'multiplier' => 1.00,
                 'color' => 'gray',
                 'is_active' => true,

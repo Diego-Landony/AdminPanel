@@ -24,3 +24,10 @@ Schedule::job(new \App\Jobs\ExpireInactivePoints)->daily();
 
 // Cleanup expired carts every hour
 Schedule::job(new \App\Jobs\CleanupExpiredCarts)->hourly();
+
+// Update customer types daily based on points earned in the last 6 months
+// This handles both upgrades and downgrades automatically
+Schedule::job(new \App\Jobs\UpdateCustomerTypes)->dailyAt('23:00');
+
+// Notify customers at risk of tier downgrade (weekly, gives 7 days warning)
+Schedule::job(new \App\Jobs\NotifyCustomerTypeDowngradeRisk)->weeklyOn(1, '10:00'); // Lunes 10am

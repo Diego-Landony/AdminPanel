@@ -29,6 +29,7 @@ class ProductResource extends JsonResource
             ],
             'is_redeemable' => (bool) $this->is_redeemable,
             'points_cost' => $this->points_cost,
+            'sort_order' => $this->sort_order,
 
             // Relationships
             'variants' => ProductVariantResource::collection($this->whenLoaded('variants')),

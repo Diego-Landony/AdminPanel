@@ -177,10 +177,18 @@ class ProductController extends Controller
                         'precio_domicilio_capital' => $variantData['precio_domicilio_capital'],
                         'precio_pickup_interior' => $variantData['precio_pickup_interior'],
                         'precio_domicilio_interior' => $variantData['precio_domicilio_interior'],
+                        'is_redeemable' => $variantData['is_redeemable'] ?? false,
+                        'points_cost' => ! empty($variantData['points_cost']) ? $variantData['points_cost'] : null,
                         'is_active' => true,
                         'sort_order' => $index + 1,
                     ]);
                 }
+
+                // Si tiene variantes, limpiar redención a nivel producto
+                $product->update([
+                    'is_redeemable' => false,
+                    'points_cost' => null,
+                ]);
             }
 
             // Attach sections
@@ -314,6 +322,8 @@ class ProductController extends Controller
                                 'precio_domicilio_capital' => $variantData['precio_domicilio_capital'],
                                 'precio_pickup_interior' => $variantData['precio_pickup_interior'],
                                 'precio_domicilio_interior' => $variantData['precio_domicilio_interior'],
+                                'is_redeemable' => $variantData['is_redeemable'] ?? false,
+                                'points_cost' => ! empty($variantData['points_cost']) ? $variantData['points_cost'] : null,
                                 'is_active' => true,
                                 'sort_order' => $index + 1,
                             ]);
@@ -330,6 +340,8 @@ class ProductController extends Controller
                             'precio_domicilio_capital' => $variantData['precio_domicilio_capital'],
                             'precio_pickup_interior' => $variantData['precio_pickup_interior'],
                             'precio_domicilio_interior' => $variantData['precio_domicilio_interior'],
+                            'is_redeemable' => $variantData['is_redeemable'] ?? false,
+                            'points_cost' => ! empty($variantData['points_cost']) ? $variantData['points_cost'] : null,
                             'is_active' => true,
                             'sort_order' => $index + 1,
                         ]);
@@ -339,6 +351,10 @@ class ProductController extends Controller
 
                 // Desactivar variantes que ya no están en la lista (no eliminar para conservar historial)
                 $product->variants()->whereNotIn('id', $existingVariantIds)->update(['is_active' => false]);
+
+                // Si tiene variantes, limpiar redención a nivel producto
+                $validated['is_redeemable'] = false;
+                $validated['points_cost'] = null;
             }
 
             $product->update($validated);

@@ -107,38 +107,40 @@ export function ProductFormFields({
                 </CardContent>
             </Card>
 
-            {/* Redención por puntos */}
-            <Card>
-                <CardContent className="pt-6">
-                    <FormSection icon={Gift} title="Redención por Puntos">
-                        <div className="space-y-6">
-                            <div className="flex items-center justify-between rounded-lg border p-4">
-                                <Label htmlFor="is_redeemable" className="cursor-pointer text-sm font-medium">
-                                    Canjeable con puntos
-                                </Label>
-                                <Switch
-                                    id="is_redeemable"
-                                    checked={formData.is_redeemable}
-                                    onCheckedChange={(checked) => onInputChange('is_redeemable', checked as boolean)}
-                                />
-                            </div>
-
-                            {formData.is_redeemable && (
-                                <FormField label="Valor en puntos" error={errors.points_cost} required>
-                                    <Input
-                                        id="points_cost"
-                                        type="number"
-                                        min="0"
-                                        step="1"
-                                        value={formData.points_cost}
-                                        onChange={(e) => onInputChange('points_cost', e.target.value)}
+            {/* Redención por puntos - Solo para productos SIN variantes */}
+            {!selectedCategory?.uses_variants && (
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={Gift} title="Redención por Puntos">
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between rounded-lg border p-4">
+                                    <Label htmlFor="is_redeemable" className="cursor-pointer text-sm font-medium">
+                                        Canjeable con puntos
+                                    </Label>
+                                    <Switch
+                                        id="is_redeemable"
+                                        checked={formData.is_redeemable}
+                                        onCheckedChange={(checked) => onInputChange('is_redeemable', checked as boolean)}
                                     />
-                                </FormField>
-                            )}
-                        </div>
-                    </FormSection>
-                </CardContent>
-            </Card>
+                                </div>
+
+                                {formData.is_redeemable && (
+                                    <FormField label="Valor en puntos" error={errors.points_cost} required>
+                                        <Input
+                                            id="points_cost"
+                                            type="number"
+                                            min="0"
+                                            step="1"
+                                            value={formData.points_cost}
+                                            onChange={(e) => onInputChange('points_cost', e.target.value)}
+                                        />
+                                    </FormField>
+                                )}
+                            </div>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Precios */}
             <Card>

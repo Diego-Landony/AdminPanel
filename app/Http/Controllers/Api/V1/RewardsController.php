@@ -7,18 +7,19 @@ use App\Http\Resources\Api\V1\Menu\ComboResource;
 use App\Http\Resources\Api\V1\Menu\ProductResource;
 use App\Models\Menu\Combo;
 use App\Models\Menu\Product;
+use App\Models\Menu\ProductVariant;
 use Illuminate\Http\JsonResponse;
 
 class RewardsController extends Controller
 {
     /**
-     * Get all redeemable items (products and combos).
+     * Get all redeemable items (products, variants, and combos).
      *
      * @OA\Get(
      *     path="/api/v1/rewards",
      *     tags={"Rewards"},
      *     summary="Get redeemable items catalog",
-     *     description="Returns all products and combos that can be redeemed with loyalty points. Items are grouped by type (products and combos) and sorted by points_cost ascending.",
+     *     description="Returns all products, variants, and combos that can be redeemed with loyalty points. Items are grouped by type and sorted by points_cost ascending.",
      *
      *     @OA\Response(
      *         response=200,
@@ -27,29 +28,14 @@ class RewardsController extends Controller
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="products", type="array", description="Products redeemable with points",
-     *
-     *                     @OA\Items(type="object",
-     *
-     *                         @OA\Property(property="id", type="integer", example=5),
-     *                         @OA\Property(property="name", type="string", example="Cookie de Chocolate"),
-     *                         @OA\Property(property="description", type="string", example="Deliciosa galleta con chispas de chocolate"),
-     *                         @OA\Property(property="image_url", type="string", nullable=true, example="https://example.com/storage/products/cookie.jpg"),
-     *                         @OA\Property(property="points_cost", type="integer", example=50, description="Points required to redeem"),
-     *                         @OA\Property(property="is_redeemable", type="boolean", example=true)
-     *                     )
+     *                 @OA\Property(property="products", type="array", description="Products WITHOUT variants redeemable with points",
+     *                     @OA\Items(type="object")
+     *                 ),
+     *                 @OA\Property(property="variants", type="array", description="Product variants (sizes) redeemable with points",
+     *                     @OA\Items(type="object")
      *                 ),
      *                 @OA\Property(property="combos", type="array", description="Combos redeemable with points",
-     *
-     *                     @OA\Items(type="object",
-     *
-     *                         @OA\Property(property="id", type="integer", example=2),
-     *                         @OA\Property(property="name", type="string", example="Combo Sub del Día"),
-     *                         @OA\Property(property="description", type="string", example="Sub de 6 pulgadas + bebida + galleta"),
-     *                         @OA\Property(property="image_url", type="string", nullable=true, example="https://example.com/storage/combos/combo-dia.jpg"),
-     *                         @OA\Property(property="points_cost", type="integer", example=150, description="Points required to redeem"),
-     *                         @OA\Property(property="is_redeemable", type="boolean", example=true)
-     *                     )
+     *                     @OA\Items(type="object")
      *                 ),
      *                 @OA\Property(property="total_count", type="integer", example=8, description="Total number of redeemable items")
      *             )
@@ -59,15 +45,31 @@ class RewardsController extends Controller
      */
     public function index(): JsonResponse
     {
-        // Get redeemable products (active and with points_cost set)
+        // Get redeemable products WITHOUT variants (active and with points_cost set)
         $products = Product::query()
             ->where('is_active', true)
             ->where('is_redeemable', true)
             ->whereNotNull('points_cost')
             ->where('points_cost', '>', 0)
+            ->whereDoesntHave('variants', function ($q) {
+                $q->where('is_active', true);
+            })
             ->with(['category'])
             ->orderBy('points_cost')
             ->orderBy('name')
+            ->get();
+
+        // Get redeemable variants (for products WITH variants)
+        $variants = ProductVariant::query()
+            ->where('is_active', true)
+            ->where('is_redeemable', true)
+            ->whereNotNull('points_cost')
+            ->where('points_cost', '>', 0)
+            ->whereHas('product', function ($q) {
+                $q->where('is_active', true);
+            })
+            ->with(['product'])
+            ->orderBy('points_cost')
             ->get();
 
         // Get redeemable combos (active and with points_cost set)
@@ -80,11 +82,27 @@ class RewardsController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Transform variants to a cleaner format
+        $variantsData = $variants->map(function ($variant) {
+            return [
+                'id' => $variant->id,
+                'product_id' => $variant->product_id,
+                'product_name' => $variant->product->name,
+                'variant_name' => $variant->name,
+                'size' => $variant->size,
+                'image_url' => $variant->product->getImageUrl(),
+                'points_cost' => $variant->points_cost,
+                'is_redeemable' => true,
+                'type' => 'variant',
+            ];
+        });
+
         return response()->json([
             'data' => [
                 'products' => ProductResource::collection($products),
+                'variants' => $variantsData,
                 'combos' => ComboResource::collection($combos),
-                'total_count' => $products->count() + $combos->count(),
+                'total_count' => $products->count() + $variants->count() + $combos->count(),
             ],
         ]);
     }

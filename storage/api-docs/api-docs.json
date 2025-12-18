@@ -5882,7 +5882,7 @@
                     "Rewards"
                 ],
                 "summary": "Get redeemable items catalog",
-                "description": "Returns all products and combos that can be redeemed with loyalty points. Items are grouped by type (products and combos) and sorted by points_cost ascending.",
+                "description": "Returns all products, variants, and combos that can be redeemed with loyalty points. Items are grouped by type and sorted by points_cost ascending.",
                 "operationId": "e43af63bec0bd63488798eea37684e04",
                 "responses": {
                     "200": {
@@ -5894,37 +5894,16 @@
                                         "data": {
                                             "properties": {
                                                 "products": {
-                                                    "description": "Products redeemable with points",
+                                                    "description": "Products WITHOUT variants redeemable with points",
                                                     "type": "array",
                                                     "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer",
-                                                                "example": 5
-                                                            },
-                                                            "name": {
-                                                                "type": "string",
-                                                                "example": "Cookie de Chocolate"
-                                                            },
-                                                            "description": {
-                                                                "type": "string",
-                                                                "example": "Deliciosa galleta con chispas de chocolate"
-                                                            },
-                                                            "image_url": {
-                                                                "type": "string",
-                                                                "example": "https://example.com/storage/products/cookie.jpg",
-                                                                "nullable": true
-                                                            },
-                                                            "points_cost": {
-                                                                "description": "Points required to redeem",
-                                                                "type": "integer",
-                                                                "example": 50
-                                                            },
-                                                            "is_redeemable": {
-                                                                "type": "boolean",
-                                                                "example": true
-                                                            }
-                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "variants": {
+                                                    "description": "Product variants (sizes) redeemable with points",
+                                                    "type": "array",
+                                                    "items": {
                                                         "type": "object"
                                                     }
                                                 },
@@ -5932,34 +5911,6 @@
                                                     "description": "Combos redeemable with points",
                                                     "type": "array",
                                                     "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer",
-                                                                "example": 2
-                                                            },
-                                                            "name": {
-                                                                "type": "string",
-                                                                "example": "Combo Sub del Día"
-                                                            },
-                                                            "description": {
-                                                                "type": "string",
-                                                                "example": "Sub de 6 pulgadas + bebida + galleta"
-                                                            },
-                                                            "image_url": {
-                                                                "type": "string",
-                                                                "example": "https://example.com/storage/combos/combo-dia.jpg",
-                                                                "nullable": true
-                                                            },
-                                                            "points_cost": {
-                                                                "description": "Points required to redeem",
-                                                                "type": "integer",
-                                                                "example": 150
-                                                            },
-                                                            "is_redeemable": {
-                                                                "type": "boolean",
-                                                                "example": true
-                                                            }
-                                                        },
                                                         "type": "object"
                                                     }
                                                 },

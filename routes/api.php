@@ -234,6 +234,16 @@ Route::prefix('v1')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | Rewards Catalog (Public - No Authentication Required)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['throttle:60,1'])->group(function () {
+        Route::get('/rewards', [App\Http\Controllers\Api\V1\RewardsController::class, 'index'])
+            ->name('api.v1.rewards.index');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
     | Menu API Routes (Public - No Authentication Required)
     |--------------------------------------------------------------------------
     */

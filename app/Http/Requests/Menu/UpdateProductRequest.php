@@ -51,6 +51,10 @@ class UpdateProductRequest extends FormRequest
             'is_active' => 'boolean',
             'has_variants' => 'boolean',
 
+            // Campos de canje por puntos
+            'is_redeemable' => 'boolean',
+            'points_cost' => 'nullable|integer|min:1',
+
             // Precios del producto (requeridos si has_variants = false)
             'precio_pickup_capital' => 'required_if:has_variants,false|nullable|numeric|min:0',
             'precio_domicilio_capital' => 'required_if:has_variants,false|nullable|numeric|min:0',

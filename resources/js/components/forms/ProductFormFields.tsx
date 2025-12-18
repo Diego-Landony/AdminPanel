@@ -136,7 +136,6 @@ export function ProductFormFields({
                                                 const value = e.target.value.replace(/[^0-9]/g, '');
                                                 onInputChange('points_cost', value);
                                             }}
-                                            placeholder="Ej: 100"
                                         />
                                     </FormField>
                                 )}

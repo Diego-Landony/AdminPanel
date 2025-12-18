@@ -208,7 +208,6 @@ export function VariantsFromCategory({ categoryVariants, existingVariants = [], 
                                             type="text"
                                             inputMode="numeric"
                                             pattern="[0-9]*"
-                                            placeholder="Ej: 100"
                                             value={variant.points_cost}
                                             onChange={(e) => {
                                                 const value = e.target.value.replace(/[^0-9]/g, '');

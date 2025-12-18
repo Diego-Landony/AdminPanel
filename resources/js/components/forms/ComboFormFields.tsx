@@ -179,11 +179,15 @@ export function ComboFormFields({
                                 <FormField label="Valor en puntos" error={errors.points_cost} required>
                                     <Input
                                         id="points_cost"
-                                        type="number"
-                                        min="0"
-                                        step="1"
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
                                         value={formData.points_cost}
-                                        onChange={(e) => onInputChange('points_cost', e.target.value)}
+                                        onChange={(e) => {
+                                            const value = e.target.value.replace(/[^0-9]/g, '');
+                                            onInputChange('points_cost', value);
+                                        }}
+                                        placeholder="Ej: 100"
                                     />
                                 </FormField>
                             )}

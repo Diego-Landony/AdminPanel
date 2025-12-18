@@ -164,7 +164,7 @@ export function VariantsFromCategory({ categoryVariants, existingVariants = [], 
                     </div>
 
                     {variant.is_active && (
-                        <div className="pt-2 pl-8 space-y-6">
+                        <div className="space-y-6 pt-2 pl-8">
                             <PriceFields
                                 capitalPickup={variant.precio_pickup_capital}
                                 capitalDomicilio={variant.precio_domicilio_capital}
@@ -183,7 +183,7 @@ export function VariantsFromCategory({ categoryVariants, existingVariants = [], 
                             />
 
                             {/* Redemption section per variant */}
-                            <div className="rounded-lg border border-dashed border-muted-foreground/30 p-4 space-y-4">
+                            <div className="space-y-4 rounded-lg border border-dashed border-muted-foreground/30 p-4">
                                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                     <Gift className="h-4 w-4" />
                                     Redención por Puntos
@@ -205,12 +205,15 @@ export function VariantsFromCategory({ categoryVariants, existingVariants = [], 
                                         </Label>
                                         <Input
                                             id={`points-${index}`}
-                                            type="number"
-                                            min="1"
-                                            step="1"
+                                            type="text"
+                                            inputMode="numeric"
+                                            pattern="[0-9]*"
                                             placeholder="Ej: 100"
                                             value={variant.points_cost}
-                                            onChange={(e) => updateVariant(index, 'points_cost', e.target.value)}
+                                            onChange={(e) => {
+                                                const value = e.target.value.replace(/[^0-9]/g, '');
+                                                updateVariant(index, 'points_cost', value);
+                                            }}
                                             className="max-w-[200px]"
                                         />
                                         {errors[`variants.${index}.points_cost`] && (

@@ -29,14 +29,20 @@ class RewardsController extends Controller
      *
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="products", type="array", description="Products WITHOUT variants redeemable with points",
+     *
      *                     @OA\Items(type="object")
      *                 ),
+     *
      *                 @OA\Property(property="variants", type="array", description="Product variants (sizes) redeemable with points",
+     *
      *                     @OA\Items(type="object")
      *                 ),
+     *
      *                 @OA\Property(property="combos", type="array", description="Combos redeemable with points",
+     *
      *                     @OA\Items(type="object")
      *                 ),
+     *
      *                 @OA\Property(property="total_count", type="integer", example=8, description="Total number of redeemable items")
      *             )
      *         )

@@ -42,6 +42,10 @@ class StoreComboRequest extends FormRequest
             'is_active' => ['boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
 
+            // Campos de canje por puntos
+            'is_redeemable' => ['boolean'],
+            'points_cost' => ['nullable', 'integer', 'min:1'],
+
             // Items del combo (mínimo 2, sin máximo)
             'items' => ['required', 'array', 'min:2'],
             'items.*.is_choice_group' => ['boolean'],

@@ -28,6 +28,7 @@ class CustomerFactory extends Factory
             'gender' => fake()->randomElement(['male', 'female', 'other']),
             'customer_type_id' => CustomerType::factory(),
             'phone' => fake()->phoneNumber(),
+            'email_offers_enabled' => fake()->boolean(80), // 80% chance of true
             'last_login_at' => fake()->optional()->dateTimeBetween('-30 days', 'now'),
             'last_activity_at' => fake()->optional()->dateTimeBetween('-7 days', 'now'),
             'last_purchase_at' => fake()->optional()->dateTimeBetween('-60 days', 'now'),

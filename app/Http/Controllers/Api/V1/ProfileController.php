@@ -64,8 +64,8 @@ class ProfileController extends Controller
      * @OA\Put(
      *     path="/api/v1/profile",
      *     tags={"Profile"},
-     *     summary="Update customer profile",
-     *     description="Updates customer profile information. If email is changed, marks email as unverified.",
+     *     summary="Actualizar perfil del cliente",
+     *     description="Actualiza la información del perfil del cliente. Si el email cambia, se marca como no verificado.",
      *     security={{"sanctum":{}}},
      *
      *     @OA\RequestBody(
@@ -74,29 +74,38 @@ class ProfileController extends Controller
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="first_name", type="string", example="Juan"),
-     *             @OA\Property(property="last_name", type="string", example="Pérez Actualizado"),
-     *             @OA\Property(property="email", type="string", format="email", example="nuevo@example.com"),
+     *             @OA\Property(property="last_name", type="string", example="Pérez"),
+     *             @OA\Property(property="email", type="string", format="email", example="juan@example.com"),
      *             @OA\Property(property="phone", type="string", nullable=true, example="+50212345678"),
      *             @OA\Property(property="birth_date", type="string", format="date", nullable=true, example="1990-05-15"),
-     *             @OA\Property(property="gender", type="string", enum={"male","female","other"}, nullable=true, example="male")
+     *             @OA\Property(property="gender", type="string", enum={"male","female","other"}, nullable=true, example="male"),
+     *             @OA\Property(property="email_offers_enabled", type="boolean", example=true, description="Recibir ofertas y promociones por email")
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Profile updated successfully",
+     *         description="Perfil actualizado exitosamente",
      *
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="message", type="string", example="Perfil actualizado exitosamente."),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="customer", ref="#/components/schemas/Customer")
+     *                 @OA\Property(property="customer", type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="first_name", type="string", example="Juan"),
+     *                     @OA\Property(property="last_name", type="string", example="Pérez"),
+     *                     @OA\Property(property="email", type="string", example="juan@example.com"),
+     *                     @OA\Property(property="phone", type="string", example="+50212345678"),
+     *                     @OA\Property(property="email_offers_enabled", type="boolean", example=true),
+     *                     @OA\Property(property="points", type="integer", example=500)
+     *                 )
      *             )
      *         )
      *     ),
      *
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=422, description="Validation error")
+     *     @OA\Response(response=401, description="No autenticado"),
+     *     @OA\Response(response=422, description="Error de validación")
      * )
      */
     public function update(UpdateProfileRequest $request): JsonResponse

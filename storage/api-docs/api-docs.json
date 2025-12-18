@@ -5435,8 +5435,8 @@
                 "tags": [
                     "Profile"
                 ],
-                "summary": "Update customer profile",
-                "description": "Updates customer profile information. If email is changed, marks email as unverified.",
+                "summary": "Actualizar perfil del cliente",
+                "description": "Actualiza la información del perfil del cliente. Si el email cambia, se marca como no verificado.",
                 "operationId": "d682da2fd566e34f597e169ac582ad3f",
                 "requestBody": {
                     "required": true,
@@ -5450,12 +5450,12 @@
                                     },
                                     "last_name": {
                                         "type": "string",
-                                        "example": "Pérez Actualizado"
+                                        "example": "Pérez"
                                     },
                                     "email": {
                                         "type": "string",
                                         "format": "email",
-                                        "example": "nuevo@example.com"
+                                        "example": "juan@example.com"
                                     },
                                     "phone": {
                                         "type": "string",
@@ -5477,6 +5477,11 @@
                                         ],
                                         "example": "male",
                                         "nullable": true
+                                    },
+                                    "email_offers_enabled": {
+                                        "description": "Recibir ofertas y promociones por email",
+                                        "type": "boolean",
+                                        "example": true
                                     }
                                 },
                                 "type": "object"
@@ -5486,7 +5491,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Profile updated successfully",
+                        "description": "Perfil actualizado exitosamente",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -5498,7 +5503,37 @@
                                         "data": {
                                             "properties": {
                                                 "customer": {
-                                                    "$ref": "#/components/schemas/Customer"
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "first_name": {
+                                                            "type": "string",
+                                                            "example": "Juan"
+                                                        },
+                                                        "last_name": {
+                                                            "type": "string",
+                                                            "example": "Pérez"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "juan@example.com"
+                                                        },
+                                                        "phone": {
+                                                            "type": "string",
+                                                            "example": "+50212345678"
+                                                        },
+                                                        "email_offers_enabled": {
+                                                            "type": "boolean",
+                                                            "example": true
+                                                        },
+                                                        "points": {
+                                                            "type": "integer",
+                                                            "example": 500
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
@@ -5510,10 +5545,10 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "No autenticado"
                     },
                     "422": {
-                        "description": "Validation error"
+                        "description": "Error de validación"
                     }
                 },
                 "security": [

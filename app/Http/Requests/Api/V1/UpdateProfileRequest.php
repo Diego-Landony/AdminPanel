@@ -33,6 +33,7 @@ class UpdateProfileRequest extends FormRequest
             'birth_date' => ['nullable', 'date', 'before:today'],
             'gender' => ['nullable', Rule::enum(Gender::class)],
             'subway_card' => ['nullable', 'string', 'max:50'],
+            'email_offers_enabled' => ['sometimes', 'boolean'],
         ];
     }
 

@@ -27,6 +27,7 @@ class CustomerResource extends JsonResource
             'birth_date' => $this->birth_date?->format('Y-m-d'),
             'gender' => $this->gender,
             'phone' => $this->phone,
+            'email_offers_enabled' => (bool) $this->email_offers_enabled,
             'last_login_at' => $this->last_login_at,
             'last_activity_at' => $this->last_activity_at,
             'last_purchase_at' => $this->last_purchase_at,

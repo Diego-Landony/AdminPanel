@@ -43,6 +43,7 @@ class Customer extends Authenticatable implements MustVerifyEmail
         'points_updated_at',
         'points_last_activity_at',
         'customer_type_id',
+        'email_offers_enabled',
     ];
 
     /**
@@ -72,6 +73,7 @@ class Customer extends Authenticatable implements MustVerifyEmail
             'points' => 'integer',
             'points_updated_at' => 'datetime',
             'points_last_activity_at' => 'datetime',
+            'email_offers_enabled' => 'boolean',
         ];
     }
 

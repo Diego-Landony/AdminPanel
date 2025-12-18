@@ -16,13 +16,13 @@ class CustomerSeeder extends Seeder
      */
     public function run(): void
     {
-        // Crear 50 clientes de prueba con direcciones y dispositivos
+        // Crear 10 clientes de prueba con direcciones y dispositivos
         Customer::factory()
-            ->count(50)
+            ->count(10)
             ->create()
             ->each(function ($customer) {
-                // Crear entre 0 y 3 direcciones para cada cliente
-                $addressCount = rand(0, 3);
+                // Crear entre 0 y 2 direcciones para cada cliente
+                $addressCount = rand(0, 2);
 
                 if ($addressCount > 0) {
                     CustomerAddress::factory()
@@ -36,8 +36,8 @@ class CustomerSeeder extends Seeder
                     $customer->addresses()->first()->update(['is_default' => true]);
                 }
 
-                // Crear entre 1 y 3 dispositivos para cada cliente
-                $deviceCount = rand(1, 3);
+                // Crear 1-2 dispositivos para cada cliente
+                $deviceCount = rand(1, 2);
 
                 for ($i = 0; $i < $deviceCount; $i++) {
                     CustomerDevice::factory()
@@ -47,38 +47,26 @@ class CustomerSeeder extends Seeder
                         ]);
                 }
 
-                // Crear entre 0 y 2 NITs para cada cliente
-                $nitCount = rand(0, 2);
-
-                if ($nitCount > 0) {
-                    $nitTypes = ['personal', 'company', 'other'];
-
-                    for ($i = 0; $i < $nitCount; $i++) {
-                        $nitType = $nitTypes[$i % count($nitTypes)];
-
-                        CustomerNit::factory()
-                            ->state(['nit_type' => $nitType])
-                            ->create([
-                                'customer_id' => $customer->id,
-                                'is_default' => false,
-                            ]);
-                    }
-
-                    // Marcar el primer NIT como predeterminado
-                    $customer->nits()->first()->update(['is_default' => true]);
+                // Crear 0-1 NITs para cada cliente
+                if (rand(0, 1) === 1) {
+                    CustomerNit::factory()->personal()->default()->create([
+                        'customer_id' => $customer->id,
+                    ]);
                 }
             });
 
-        // Crear un cliente de prueba específico
+        // Crear un cliente de prueba específico con email conocido
         $testCustomer = Customer::factory()->create([
             'first_name' => 'Cliente',
-            'last_name' => 'de Prueba',
-            'email' => 'cliente@test.com',
-            'subway_card' => '1234567890',
+            'last_name' => 'Demo',
+            'email' => 'demo@subwaygt.com',
+            'subway_card' => '80000000001',
             'customer_type_id' => CustomerType::where('name', 'gold')->first()?->id ?? CustomerType::first()?->id,
+            'points' => 500,
+            'email_offers_enabled' => true,
         ]);
 
-        // Crear direcciones para el cliente de prueba
+        // Crear direcciones para el cliente demo
         CustomerAddress::factory()->create([
             'customer_id' => $testCustomer->id,
             'label' => 'Casa',
@@ -93,33 +81,16 @@ class CustomerSeeder extends Seeder
             'is_default' => false,
         ]);
 
-        // Crear dispositivos para el cliente de prueba
+        // Crear dispositivo para el cliente demo
         CustomerDevice::factory()->active()->create([
             'customer_id' => $testCustomer->id,
-            'device_name' => 'iPhone de Prueba',
+            'device_name' => 'iPhone Demo',
         ]);
 
-        CustomerDevice::factory()->active()->create([
-            'customer_id' => $testCustomer->id,
-            'device_name' => 'Samsung de Prueba',
-        ]);
-
-        CustomerDevice::factory()->active()->create([
-            'customer_id' => $testCustomer->id,
-            'device_name' => 'Navegador Chrome',
-        ]);
-
-        // Crear NITs para el cliente de prueba
+        // Crear NIT para el cliente demo
         CustomerNit::factory()->personal()->default()->create([
             'customer_id' => $testCustomer->id,
             'nit' => '12345678-9',
-        ]);
-
-        CustomerNit::factory()->company()->create([
-            'customer_id' => $testCustomer->id,
-            'nit' => '98765432-1',
-            'business_name' => 'Subway Guatemala S.A.',
-            'is_default' => false,
         ]);
     }
 }

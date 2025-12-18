@@ -10,6 +10,7 @@ use App\Http\Requests\Api\V1\Order\StoreOrderReviewRequest;
 use App\Http\Resources\Api\V1\Order\OrderResource;
 use App\Http\Resources\Api\V1\Order\OrderReviewResource;
 use App\Http\Resources\Api\V1\Order\OrderStatusResource;
+use App\Http\Resources\Api\V1\Order\RecentOrderResource;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderReview;
@@ -655,5 +656,59 @@ class OrderController extends Controller
             'data' => new OrderReviewResource($review),
             'message' => 'Gracias por tu calificación',
         ], 201);
+    }
+
+    /**
+     * Get recent completed orders
+     *
+     * @OA\Get(
+     *     path="/api/v1/me/recent-orders",
+     *     tags={"Orders"},
+     *     summary="Obtener órdenes recientes completadas",
+     *     description="Retorna las últimas 5 órdenes completadas (status completed o delivered) del cliente autenticado, ordenadas por más reciente primero. Incluye indicador de disponibilidad de productos para reordenar.",
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Órdenes recientes obtenidas exitosamente",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(type="object",
+     *                     @OA\Property(property="id", type="integer", example=123),
+     *                     @OA\Property(property="order_number", type="string", example="ORD-20251215-0001"),
+     *                     @OA\Property(property="ordered_at", type="string", format="date-time", example="2025-12-15T15:00:00Z"),
+     *                     @OA\Property(property="restaurant", type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Subway Pradera")
+     *                     ),
+     *                     @OA\Property(property="total", type="number", format="float", example=85.00),
+     *                     @OA\Property(property="items_summary", type="string", example="Italian BMT, Coca-Cola"),
+     *                     @OA\Property(property="items", type="array", @OA\Items(type="object")),
+     *                     @OA\Property(property="can_reorder", type="boolean", example=true)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="No autenticado")
+     * )
+     */
+    public function recentOrders(): JsonResponse
+    {
+        $customer = auth()->user();
+
+        $orders = Order::query()
+            ->where('customer_id', $customer->id)
+            ->whereIn('status', ['completed', 'delivered'])
+            ->with(['restaurant', 'items.product', 'items.combo', 'items.variant'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        return response()->json([
+            'data' => RecentOrderResource::collection($orders),
+        ]);
     }
 }

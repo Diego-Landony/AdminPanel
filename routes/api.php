@@ -228,6 +228,8 @@ Route::prefix('v1')->group(function () {
             ->name('api.v1.combos.view');
         Route::get('/me/recently-viewed', [App\Http\Controllers\Api\V1\ProductViewController::class, 'getRecentlyViewed'])
             ->name('api.v1.me.recently-viewed');
+        Route::get('/me/recent-orders', [App\Http\Controllers\Api\V1\OrderController::class, 'recentOrders'])
+            ->name('api.v1.me.recent-orders');
     });
 
     /*

@@ -263,7 +263,7 @@ export default function SectionCreate() {
                                             <Input
                                                 id="min_selections"
                                                 type="number"
-                                                min="1"
+                                                min="0"
                                                 value={data.min_selections}
                                                 onChange={(e) => setData('min_selections', e.target.value)}
                                             />

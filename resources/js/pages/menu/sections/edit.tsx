@@ -318,7 +318,7 @@ export default function SectionEdit({ section }: EditPageProps) {
                                         <Input
                                             id="min_selections"
                                             type="number"
-                                            min="1"
+                                            min="0"
                                             value={formData.min_selections}
                                             onChange={(e) => handleInputChange('min_selections', e.target.value)}
                                         />

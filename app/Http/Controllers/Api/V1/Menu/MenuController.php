@@ -55,7 +55,9 @@ class MenuController extends Controller
                             'variants' => function ($q) {
                                 $q->active()->ordered();
                             },
-                            'sections.options',
+                            'sections' => function ($q) {
+                                $q->orderByPivot('sort_order')->orderBy('sections.sort_order')->with('options');
+                            },
                             'badges.badgeType',
                         ]);
                 },

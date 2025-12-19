@@ -49,9 +49,9 @@ class SubwayMenuProductsSeeder extends Seeder
             'Tipo de Pan',
             'Queso',
             'Vegetales',
-            'Salsas',
-            'Preparación',
+            'Aderezos',
             'Extras',
+            'Especias',
         ])->pluck('id');
 
         $subs = [
@@ -178,6 +178,13 @@ class SubwayMenuProductsSeeder extends Seeder
         $this->command->line('   ⭐ Creando Subway Series...');
 
         $category = Category::where('name', 'Subway Series')->first();
+        $sections = Section::whereIn('title', [
+            'Queso',
+            'Vegetales',
+            'Aderezos',
+            'Extras',
+            'Especias',
+        ])->pluck('id');
 
         $series = [
             ['name' => 'DON B.M.T.', 'description' => 'Pepperoni, salami y jamón de la Serie Subway', 'precio_pickup_capital' => 45, 'precio_domicilio_capital' => 50, 'precio_pickup_interior' => 47, 'precio_domicilio_interior' => 52],
@@ -200,6 +207,9 @@ class SubwayMenuProductsSeeder extends Seeder
                 'sort_order' => 0,
             ]);
 
+            // Asociar secciones
+            $product->sections()->attach($sections);
+
             $this->command->line("      ✓ {$product->name}");
         }
     }
@@ -210,10 +220,12 @@ class SubwayMenuProductsSeeder extends Seeder
 
         $category = Category::where('name', 'Wraps')->first();
         $sections = Section::whereIn('title', [
+            'Tipo de tortilla',
             'Queso',
             'Vegetales',
-            'Salsas',
-            'Preparación',
+            'Aderezos',
+            'Extras',
+            'Especias',
         ])->pluck('id');
 
         $wraps = [
@@ -317,6 +329,13 @@ class SubwayMenuProductsSeeder extends Seeder
         $this->command->line('   🥗 Creando Ensaladas...');
 
         $category = Category::where('name', 'Ensaladas')->first();
+        $sections = Section::whereIn('title', [
+            'Queso',
+            'Vegetales',
+            'Aderezos',
+            'Extras',
+            'Especias',
+        ])->pluck('id');
 
         $ensaladas = [
             [
@@ -359,6 +378,9 @@ class SubwayMenuProductsSeeder extends Seeder
                 'is_active' => true,
                 'sort_order' => 0,
             ]);
+
+            // Asociar secciones
+            $product->sections()->attach($sections);
 
             $this->command->line("      ✓ {$product->name}");
         }
@@ -537,8 +559,9 @@ class SubwayMenuProductsSeeder extends Seeder
             'Tipo de Pan',
             'Queso',
             'Vegetales',
-            'Salsas',
-            'Preparación',
+            'Aderezos',
+            'Extras',
+            'Especias',
         ])->pluck('id');
 
         $desayunos = [

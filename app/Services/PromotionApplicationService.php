@@ -71,17 +71,6 @@ class PromotionApplicationService
     }
 
     /**
-     * Aplica un código promocional específico al carrito
-     * NOTA: Esta funcionalidad requiere agregar un campo 'code' a la tabla promotions
-     *
-     * @return array Array con información de la promoción aplicada
-     */
-    public function applyPromoCode(Cart $cart, string $code): array
-    {
-        throw new \BadMethodCallException('La funcionalidad de códigos promocionales aún no está implementada. Se requiere agregar el campo "code" a la tabla promotions.');
-    }
-
-    /**
      * Obtiene las promociones aplicables al carrito actual
      */
     public function getApplicablePromotions(Cart $cart): Collection

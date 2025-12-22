@@ -52,7 +52,7 @@ class ComboController extends Controller
                             },
                         ]);
                 },
-                'badges',
+                'activeBadges',
             ])
             ->get();
 
@@ -112,7 +112,7 @@ class ComboController extends Controller
                             },
                         ]);
                 },
-                'badges',
+                'activeBadges',
             ])
             ->findOrFail($id);
 

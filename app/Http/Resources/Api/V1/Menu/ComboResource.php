@@ -20,6 +20,7 @@ class ComboResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'image_url' => $this->image ? Storage::url($this->image) : null,
+            'precio' => (float) $this->precio_pickup_capital,
             'prices' => [
                 'pickup_capital' => (float) $this->precio_pickup_capital,
                 'domicilio_capital' => (float) $this->precio_domicilio_capital,
@@ -34,7 +35,7 @@ class ComboResource extends JsonResource
 
             // Relationships
             'items' => ComboItemResource::collection($this->whenLoaded('items')),
-            'badges' => BadgeResource::collection($this->whenLoaded('badges')),
+            'badges' => BadgeResource::collection($this->whenLoaded('activeBadges')),
         ];
     }
 }

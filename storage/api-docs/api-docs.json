@@ -3519,6 +3519,18 @@
                 "summary": "Get complete menu",
                 "description": "Returns complete menu with categories, products and permanent combos. For promotions/offers, use GET /api/v1/menu/promotions.",
                 "operationId": "fa6c34f6134451c1793d68fdbf350ec6",
+                "parameters": [
+                    {
+                        "name": "lite",
+                        "in": "query",
+                        "description": "If true, returns lightweight menu structure for navigation",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": true
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Menu retrieved successfully",
@@ -6227,6 +6239,12 @@
                         "type": "boolean",
                         "example": true
                     },
+                    "precio": {
+                        "description": "Precio de referencia (pickup_capital) para mostrar en UI",
+                        "type": "number",
+                        "format": "float",
+                        "example": 45
+                    },
                     "prices": {
                         "$ref": "#/components/schemas/PriceZones"
                     },
@@ -6285,6 +6303,12 @@
                         "type": "string",
                         "example": "15cm",
                         "nullable": true
+                    },
+                    "precio": {
+                        "description": "Precio de referencia (pickup_capital) para mostrar en UI",
+                        "type": "number",
+                        "format": "float",
+                        "example": 35
                     },
                     "prices": {
                         "$ref": "#/components/schemas/PriceZones"
@@ -6367,6 +6391,12 @@
                         "type": "string",
                         "example": "https://admin.subwaycardgt.com/storage/combos/combo-clasico.jpg",
                         "nullable": true
+                    },
+                    "precio": {
+                        "description": "Precio de referencia (pickup_capital) para mostrar en UI",
+                        "type": "number",
+                        "format": "float",
+                        "example": 75
                     },
                     "prices": {
                         "$ref": "#/components/schemas/PriceZones"

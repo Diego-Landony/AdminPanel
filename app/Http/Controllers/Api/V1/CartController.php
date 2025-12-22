@@ -65,9 +65,8 @@ class CartController extends Controller
                 'items' => CartItemResource::collection($cart->items),
                 'summary' => [
                     'subtotal' => number_format($summary['subtotal'], 2, '.', ''),
-                    'promotions_applied' => [],
+                    'promotions_applied' => $summary['promotions_applied'],
                     'total_discount' => number_format($summary['discounts'], 2, '.', ''),
-                    'delivery_fee' => number_format($summary['delivery_fee'], 2, '.', ''),
                     'total' => number_format($summary['total'], 2, '.', ''),
                 ],
                 'can_checkout' => $validation['valid'] && ! $cart->isEmpty(),

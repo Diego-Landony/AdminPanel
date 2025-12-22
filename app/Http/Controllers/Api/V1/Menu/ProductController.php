@@ -73,7 +73,7 @@ class ProductController extends Controller
                 'sections' => function ($q) {
                     $q->orderByPivot('sort_order')->orderBy('sections.sort_order')->with('options');
                 },
-                'badges',
+                'activeBadges',
             ]);
 
         if ($request->filled('category_id')) {
@@ -143,7 +143,7 @@ class ProductController extends Controller
                 'sections' => function ($q) {
                     $q->orderByPivot('sort_order')->orderBy('sections.sort_order')->with('options');
                 },
-                'badges',
+                'activeBadges',
             ])
             ->findOrFail($id);
 

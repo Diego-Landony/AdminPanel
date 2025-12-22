@@ -21,6 +21,7 @@ class ProductResource extends JsonResource
             'image_url' => $this->getImageUrl(),
             'category_id' => $this->category_id,
             'has_variants' => (bool) $this->has_variants,
+            'precio' => (float) $this->precio_pickup_capital,
             'prices' => [
                 'pickup_capital' => (float) $this->precio_pickup_capital,
                 'domicilio_capital' => (float) $this->precio_domicilio_capital,
@@ -34,7 +35,7 @@ class ProductResource extends JsonResource
             // Relationships
             'variants' => ProductVariantResource::collection($this->whenLoaded('variants')),
             'sections' => SectionResource::collection($this->whenLoaded('sections')),
-            'badges' => BadgeResource::collection($this->whenLoaded('badges')),
+            'badges' => BadgeResource::collection($this->whenLoaded('activeBadges')),
         ];
     }
 }

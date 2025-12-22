@@ -22,7 +22,13 @@ class ComboItemResource extends JsonResource
             'sort_order' => $this->sort_order,
 
             // Relationships
-            'product' => ProductResource::make($this->whenLoaded('product')),
+            'product' => $this->when($this->relationLoaded('product'), function () {
+                return [
+                    'id' => $this->product->id,
+                    'name' => $this->product->name,
+                    'image_url' => $this->product->image_url,
+                ];
+            }),
             'variant' => ProductVariantResource::make($this->whenLoaded('variant')),
             'options' => $this->when(
                 $this->is_choice_group,

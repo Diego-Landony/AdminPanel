@@ -16,7 +16,7 @@ class FavoriteResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'favorable_type' => class_basename($this->favorable_type),
+            'favorable_type' => $this->favorable_type,
             'favorable_id' => $this->favorable_id,
             'favorable' => $this->when($this->relationLoaded('favorable'), function () {
                 return [

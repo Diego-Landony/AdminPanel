@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Favorite\StoreFavoriteRequest;
 use App\Http\Resources\Api\V1\FavoriteResource;
-use App\Models\Menu\Combo;
-use App\Models\Menu\Product;
 use Illuminate\Http\JsonResponse;
 
 class FavoriteController extends Controller
@@ -139,10 +137,8 @@ class FavoriteController extends Controller
         $favorableType = $request->input('favorable_type');
         $favorableId = $request->integer('favorable_id');
 
-        $modelClass = $favorableType === 'product' ? Product::class : Combo::class;
-
         $existing = $customer->favorites()
-            ->where('favorable_type', $modelClass)
+            ->where('favorable_type', $favorableType)
             ->where('favorable_id', $favorableId)
             ->first();
 
@@ -154,7 +150,7 @@ class FavoriteController extends Controller
         }
 
         $favorite = $customer->favorites()->create([
-            'favorable_type' => $modelClass,
+            'favorable_type' => $favorableType,
             'favorable_id' => $favorableId,
         ]);
 
@@ -213,14 +209,13 @@ class FavoriteController extends Controller
     public function destroy(string $type, int $id): JsonResponse
     {
         $customer = auth()->user();
-        $modelClass = $type === 'product' ? Product::class : Combo::class;
 
         if (! in_array($type, ['product', 'combo'])) {
             abort(422, 'Tipo de favorito inválido');
         }
 
         $favorite = $customer->favorites()
-            ->where('favorable_type', $modelClass)
+            ->where('favorable_type', $type)
             ->where('favorable_id', $id)
             ->first();
 

@@ -20,9 +20,14 @@ use App\Models\Restaurant;
  * - Cálculo de precios
  * - Validación de disponibilidad
  * - Resumen de carrito
+ * - Aplicación automática de promociones
  */
 class CartService
 {
+    public function __construct(
+        protected PromotionApplicationService $promotionService
+    ) {}
+
     /**
      * Obtiene el carrito activo del cliente o crea uno nuevo
      */
@@ -260,28 +265,26 @@ class CartService
     }
 
     /**
-     * Obtiene el resumen del carrito con subtotal, descuentos, tarifa de envío y total
+     * Obtiene el resumen del carrito con subtotal, descuentos, promociones y total
      *
-     * @return array Array con 'subtotal', 'discounts', 'delivery_fee', 'total'
+     * @return array Array con 'subtotal', 'discounts', 'promotions_applied', 'total'
      */
     public function getCartSummary(Cart $cart): array
     {
         $items = $cart->items;
         $subtotal = $items->sum('subtotal');
-        $discounts = 0;
-        $deliveryFee = 0;
 
-        if ($cart->service_type === 'delivery' && $cart->restaurant) {
-            $deliveryFee = 0;
-        }
+        // Aplicar promociones automaticamente
+        $appliedPromotions = $this->promotionService->applyPromotions($cart);
+        $discounts = collect($appliedPromotions)->sum('discount_amount');
 
-        $total = $subtotal - $discounts + $deliveryFee;
+        $total = $subtotal - $discounts;
 
         return [
             'subtotal' => round($subtotal, 2),
             'discounts' => round($discounts, 2),
-            'delivery_fee' => round($deliveryFee, 2),
-            'total' => round($total, 2),
+            'promotions_applied' => $appliedPromotions,
+            'total' => round(max(0, $total), 2),
             'items_count' => $items->count(),
         ];
     }

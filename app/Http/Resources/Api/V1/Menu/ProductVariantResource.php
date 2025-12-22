@@ -19,6 +19,7 @@ class ProductVariantResource extends JsonResource
             'sku' => $this->sku,
             'name' => $this->name,
             'size' => $this->size,
+            'precio' => (float) $this->precio_pickup_capital,
             'prices' => [
                 'pickup_capital' => (float) $this->precio_pickup_capital,
                 'domicilio_capital' => (float) $this->precio_domicilio_capital,

@@ -1,6 +1,7 @@
 # Guia de API para Flutter - Subway Guatemala Loyalty App
 
 **Base URL:** `https://admin.subwaycardgt.com/api/v1`
+**Documentacion completa en:** https://admin.subwaycardgt.com/docs
 
 **Autenticacion:** Bearer Token (Sanctum)
 ```dart
@@ -29,11 +30,155 @@ headers: {
 
 ---
 
+## Flujo General de la App
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    EXPLORAR MENU (Sin ubicacion)                    │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ✅ Usuario puede ver menu SIN iniciar sesion                       │
+│  ✅ Usuario puede ver menu SIN seleccionar ubicacion                │
+│  ✅ Precios mostrados: PICKUP CAPITAL (precio de referencia)        │
+│                                                                     │
+│  ⚠️ OBLIGATORIO mostrar disclaimer del API:                         │
+│     "*El precio puede variar segun area y tipo de servicio."        │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+                                  ↓
+                    Usuario decide agregar al carrito
+                                  ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                    AGREGAR AL CARRITO                               │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ✅ Requiere iniciar sesion (login/registro)                        │
+│  ✅ Se agrega con precio temporal (pickup capital)                  │
+│  ❌ NO requiere seleccionar ubicacion todavia                       │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+                                  ↓
+                    Usuario va al checkout
+                                  ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                         CHECKOUT                                    │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  Usuario elige tipo de servicio:                                    │
+│                                                                     │
+│  ┌─────────────────────┐    ┌─────────────────────┐                 │
+│  │      PICKUP         │    │      DELIVERY       │                 │
+│  ├─────────────────────┤    ├─────────────────────┤                 │
+│  │                     │    │                     │                 │
+│  │ Seleccionar         │    │ Seleccionar         │                 │
+│  │ restaurante         │    │ direccion guardada  │                 │
+│  │ de la lista         │    │ (o crear nueva)     │                 │
+│  │                     │    │                     │                 │
+│  │ PUT /cart/restaurant│    │ PUT /cart/          │                 │
+│  │                     │    │   delivery-address  │                 │
+│  │        ↓            │    │        ↓            │                 │
+│  │ zone = restaurant.  │    │ zone = address.zone │                 │
+│  │   price_location    │    │                     │                 │
+│  │                     │    │        ↓            │                 │
+│  │        ↓            │    │ Valida geofence     │                 │
+│  │ Precios             │    │ Asigna restaurante  │                 │
+│  │ recalculados        │    │ Precios recalculados│                 │
+│  └─────────────────────┘    └─────────────────────┘                 │
+│                                                                     │
+│  ✅ Precios en carrito ahora son EXACTOS (sin disclaimer)           │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+                                  ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                    CREAR ORDEN                                      │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ⚠️ REQUIERE EMAIL VERIFICADO                                       │
+│                                                                     │
+│  Si email NO verificado → Error 403 EMAIL_NOT_VERIFIED              │
+│  Flutter debe mostrar pantalla para verificar email                 │
+│                                                                     │
+│  POST /orders → Crear orden                                         │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Widget de Disclaimer (OBLIGATORIO en pantallas de menu)
+
+El API devuelve `price_disclaimer` en la respuesta. Usarlo asi:
+
+```dart
+// El disclaimer viene del API en data.price_disclaimer
+// Ejemplo: "El precio puede variar segun area y tipo de servicio."
+
+Widget buildPriceDisclaimer(String disclaimer) {
+  return Container(
+    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    margin: EdgeInsets.only(bottom: 16),
+    decoration: BoxDecoration(
+      color: Colors.amber[50],
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: Colors.amber[200]!),
+    ),
+    child: Row(
+      children: [
+        Icon(Icons.info_outline, size: 18, color: Colors.amber[800]),
+        SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            disclaimer,  // <-- Usar el valor del API
+            style: TextStyle(fontSize: 12, color: Colors.amber[900]),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// Uso:
+final menuResponse = await getMenu();
+final disclaimer = menuResponse['data']['price_disclaimer'];
+buildPriceDisclaimer(disclaimer);
+```
+
+---
+
 ## 1. Autenticacion
 
 ### 1.1 Registro
 
 **POST** `/auth/register`
+
+> **⚠️ TERMINOS Y CONDICIONES (OBLIGATORIO)**
+>
+> El campo `terms_accepted` es **requerido**.
+> Flutter debe mostrar un checkbox que el usuario debe marcar antes de registrarse.
+>
+> ```dart
+> // Widget de checkbox (ejemplo)
+> CheckboxListTile(
+>   title: RichText(
+>     text: TextSpan(
+>       text: 'Acepto los ',
+>       style: TextStyle(color: Colors.black),
+>       children: [
+>         TextSpan(
+>           text: 'Terminos y Condiciones',
+>           style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+>           recognizer: TapGestureRecognizer()..onTap = () => launchUrl(termsUrl),
+>         ),
+>       ],
+>     ),
+>   ),
+>   value: termsAccepted,
+>   onChanged: (value) => setState(() => termsAccepted = value ?? false),
+> )
+> ```
+>
+> Si `terms_accepted` es `false` o no se envia, el API retorna error 422:
+> ```json
+> { "errors": { "terms_accepted": ["Debes aceptar los terminos y condiciones."] } }
+> ```
 
 ```dart
 // Request
@@ -43,17 +188,18 @@ headers: {
   "email": "juan@example.com",
   "password": "Pass123",
   "password_confirmation": "Pass123",
-  "phone": "+50212345678",
+  "phone": "12345678",
   "birth_date": "1990-05-15",
   "gender": "male",
-  "device_identifier": "550e8400-e29b-41d4-a716-446655440000"
+  "device_identifier": "550e8400-e29b-41d4-a716-446655440000",
+  "terms_accepted": true  // REQUERIDO - Aceptacion de terminos y condiciones
 }
 
 // Response 201
 {
   "message": "Registro exitoso. Por favor verifica tu email.",
   "data": {
-    "access_token": "1|abc123xyz...",
+    "token": "1|abc123xyz...",
     "token_type": "Bearer",
     "customer": { ... }
   }
@@ -93,14 +239,14 @@ Future<AuthResponse> register(RegisterData data) async {
 {
   "message": "Inicio de sesion exitoso.",
   "data": {
-    "access_token": "2|xyz456abc...",
+    "token": "2|xyz456abc...",
     "customer": { ... }
   }
 }
 
 // Response 409 - Cuenta OAuth (redirigir a Google/Apple)
 {
-  "code": "oauth_account_required",
+  "error_code": "oauth_account_required",
   "data": {
     "oauth_provider": "google",
     "email": "juan@example.com"
@@ -109,7 +255,7 @@ Future<AuthResponse> register(RegisterData data) async {
 
 // Response 409 - Cuenta eliminada (ofrecer reactivacion)
 {
-  "code": "account_deleted_recoverable",
+  "error_code": "account_deleted_recoverable",
   "data": {
     "days_until_permanent_deletion": 15,
     "points": 150,
@@ -137,10 +283,10 @@ Future<AuthResponse> login(String email, String password, String deviceId) async
   }
 
   if (response.statusCode == 409) {
-    if (data['code'] == 'oauth_account_required') {
+    if (data['error_code'] == 'oauth_account_required') {
       throw OAuthRequiredException(data['data']['oauth_provider']);
     }
-    if (data['code'] == 'account_deleted_recoverable') {
+    if (data['error_code'] == 'account_deleted_recoverable') {
       throw AccountDeletedException(data['data']);
     }
   }
@@ -192,7 +338,7 @@ await launchUrl(Uri.parse(url));
 // Response 200
 {
   "data": {
-    "access_token": "3|newtoken123...",
+    "token": "3|newtoken123...",
     "customer": { ... }
   }
 }
@@ -288,12 +434,7 @@ await launchUrl(Uri.parse(url));
 **DELETE** `/profile`
 
 ```dart
-// Cuenta local - requiere password
-{ "password": "SecurePass123!" }
-
-// Cuenta OAuth - body vacio
-{}
-
+// No requiere body - solo llamar al endpoint autenticado
 // Response 200
 {
   "message": "Cuenta eliminada exitosamente.",
@@ -303,6 +444,8 @@ await launchUrl(Uri.parse(url));
   }
 }
 ```
+
+> **Nota:** La cuenta se puede recuperar dentro de 30 dias usando `POST /auth/reactivate`
 
 ---
 
@@ -488,15 +631,45 @@ await launchUrl(Uri.parse(url));
 
 > **⚠️ IMPORTANTE - Disclaimer de Precios**
 >
-> El campo `precio` muestra el precio de referencia (pickup_capital).
-> **Los precios en el interior de la republica pueden variar.**
+> El API devuelve `price_disclaimer` en la respuesta del menu.
+> **Flutter DEBE mostrar este disclaimer** junto a los precios.
 >
-> **Recomendacion UI:**
+> El campo `price` muestra el **precio de PICKUP en CAPITAL** (precio base de referencia).
+> Este NO es el precio de delivery ni el precio en interior.
+>
+> **El precio final se calcula automaticamente cuando el usuario:**
+> - Selecciona un restaurante para pickup → `PUT /cart/restaurant`
+> - Selecciona una direccion para delivery → `PUT /cart/delivery-address`
+>
+> **Uso del disclaimer del API:**
 > ```dart
-> // Mostrar disclaimer en el menu
-> Text('Q${product.precio}', style: priceStyle);
-> Text('*Precios de referencia. Pueden variar segun ubicacion.',
->      style: TextStyle(fontSize: 10, color: Colors.grey));
+> // El API devuelve: data.price_disclaimer
+> // Valor: "El precio puede variar segun area y tipo de servicio."
+>
+> Widget buildMenuWithDisclaimer(MenuResponse menu) {
+>   return Column(
+>     children: [
+>       // Banner de disclaimer (usar valor del API)
+>       Container(
+>         padding: EdgeInsets.all(8),
+>         color: Colors.amber[50],
+>         child: Row(
+>           children: [
+>             Icon(Icons.info_outline, size: 16, color: Colors.amber[800]),
+>             SizedBox(width: 8),
+>             Expanded(
+>               child: Text(
+>                 menu.priceDisclaimer,  // <-- Usar valor del API
+>                 style: TextStyle(fontSize: 11, color: Colors.amber[900]),
+>               ),
+>             ),
+>           ],
+>         ),
+>       ),
+>       // Lista de productos...
+>     ],
+>   );
+> }
 > ```
 
 ### 6.1 Menu Completo
@@ -507,6 +680,7 @@ await launchUrl(Uri.parse(url));
 // Response 200 (~112KB)
 {
   "data": {
+    "price_disclaimer": "El precio puede variar segun area y tipo de servicio.",
     "categories": [
       {
         "id": 1,
@@ -515,12 +689,12 @@ await launchUrl(Uri.parse(url));
           {
             "id": 1,
             "name": "Italian BMT",
-            "precio": 45.00,  // <-- Precio referencia (pickup_capital)
+            "price": 45.00,  // <-- Precio referencia (pickup_capital)
             "prices": {
               "pickup_capital": 45.00,
-              "domicilio_capital": 50.00,
+              "delivery_capital": 50.00,
               "pickup_interior": 48.00,
-              "domicilio_interior": 53.00
+              "delivery_interior": 53.00
             },
             "badges": [
               {
@@ -577,7 +751,7 @@ Column(
   children: [
     if (product.badges.isNotEmpty) buildBadges(product.badges),
     Text(product.name),
-    Text('Q${product.precio}'),
+    Text('Q${product.price}'),
   ],
 )
 ```
@@ -641,12 +815,12 @@ Column(
     "product": {
       "id": 1,
       "name": "Italian BMT",
-      "precio": 45.00,
+      "price": 45.00,
       "prices": {
         "pickup_capital": 45.00,
-        "domicilio_capital": 50.00,
+        "delivery_capital": 50.00,
         "pickup_interior": 48.00,
-        "domicilio_interior": 53.00
+        "delivery_interior": 53.00
       },
       "badges": [
         {
@@ -657,8 +831,8 @@ Column(
         }
       ],
       "variants": [
-        { "id": 1, "name": "15cm", "precio": 35.00 },
-        { "id": 2, "name": "30cm", "precio": 55.00 }
+        { "id": 1, "name": "15cm", "price": 35.00 },
+        { "id": 2, "name": "30cm", "price": 55.00 }
       ],
       "sections": [
         {
@@ -780,25 +954,84 @@ Query params:
         "product": { "id": 1, "name": "Italian BMT" },
         "variant": { "id": 1, "name": "15cm" },
         "quantity": 2,
-        "unit_price": "45.00",  // <-- Precio real calculado
-        "total_price": "90.00"
+        "unit_price": 70.00,
+        "subtotal": 140.00,
+        // Campos para mostrar precio tachado
+        "discount_amount": 70.00,       // Descuento aplicado a este item
+        "final_price": 70.00,           // Precio despues del descuento
+        "is_daily_special": false,      // Si aplica Sub del Dia
+        "applied_promotion": {          // Promocion aplicada (null si ninguna)
+          "id": 1,
+          "name": "2x1 en Subs",
+          "type": "two_for_one",
+          "value": "2x1"
+        }
+      },
+      {
+        "id": 2,
+        "product": { "id": 1, "name": "Italian BMT" },
+        "variant": { "id": 1, "name": "15cm" },
+        "quantity": 1,
+        "unit_price": 70.00,
+        "subtotal": 70.00,
+        "discount_amount": 0.00,        // Sin descuento
+        "final_price": 70.00,
+        "is_daily_special": false,
+        "applied_promotion": null
       }
     ],
     "summary": {
-      "subtotal": "90.00",
+      "subtotal": "210.00",
       "promotions_applied": [
         {
           "promotion_id": 1,
           "promotion_name": "2x1 en Subs",
-          "discount_amount": 45.00
+          "promotion_type": "two_for_one",
+          "discount_amount": 70.00
         }
       ],
-      "total_discount": "45.00",
-      "total": "45.00"
+      "total_discount": "70.00",
+      "total": "140.00"
     },
     "can_checkout": true,
     "validation_messages": []
   }
+}
+```
+
+**Uso en Flutter para mostrar precio tachado:**
+
+```dart
+Widget buildCartItem(CartItem item) {
+  final hasDiscount = item.discountAmount > 0;
+
+  return Row(
+    children: [
+      if (hasDiscount) ...[
+        // Precio original tachado
+        Text(
+          'Q${item.subtotal.toStringAsFixed(2)}',
+          style: TextStyle(
+            decoration: TextDecoration.lineThrough,
+            color: Colors.grey,
+          ),
+        ),
+        SizedBox(width: 8),
+      ],
+      // Precio final
+      Text(
+        'Q${item.finalPrice.toStringAsFixed(2)}',
+        style: TextStyle(
+          color: hasDiscount ? Colors.green : Colors.black,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      if (item.appliedPromotion != null)
+        Badge(label: item.appliedPromotion.value),
+      if (item.isDailySpecial)
+        Badge(label: 'SUB DEL DIA', color: Colors.orange),
+    ],
+  );
 }
 ```
 
@@ -933,6 +1166,28 @@ Query params:
 ### 9.1 Crear Orden
 
 **POST** `/orders`
+
+> **⚠️ REQUIERE EMAIL VERIFICADO**
+>
+> Este endpoint requiere que el usuario tenga su email verificado.
+> Si el email no esta verificado, retorna error 403.
+>
+> ```dart
+> // Error 403 - Email no verificado
+> {
+>   "message": "Debes verificar tu correo electronico para realizar esta accion.",
+>   "error_code": "EMAIL_NOT_VERIFIED",
+>   "data": {
+>     "email": "usuario@email.com",
+>     "resend_verification_url": "/api/v1/auth/email/resend"
+>   }
+> }
+> ```
+>
+> **Flutter debe:**
+> 1. Detectar `error_code == 'EMAIL_NOT_VERIFIED'`
+> 2. Mostrar modal/pantalla pidiendo verificar email
+> 3. Ofrecer boton para reenviar email de verificacion (`POST /auth/email/resend`)
 
 ```dart
 // Pickup
@@ -1164,7 +1419,7 @@ Retorna ultimas 5 ordenes completadas con `can_reorder`.
       "favorable": {
         "id": 42,
         "name": "Italian BMT",
-        "precio": 45.00
+        "price": 45.00
       }
     }
   ]
@@ -1202,7 +1457,7 @@ Ejemplo: `DELETE /favorites/product/42`
 |--------|-------------|--------|
 | 401 | No autenticado | Redirigir a login |
 | 403 | Sin permisos | Mostrar error |
-| 409 | Conflicto (OAuth/cuenta eliminada) | Ver campo `code` |
+| 409 | Conflicto (OAuth/cuenta eliminada) | Ver campo `error_code` |
 | 422 | Error de validacion | Mostrar errores |
 | 429 | Rate limit | Esperar y reintentar |
 
@@ -1240,29 +1495,156 @@ class ApiException implements Exception {
 4. GET /profile
 ```
 
+---
+
+## Sistema de Precios y Zonas
+
+### Como Funciona
+
+El sistema maneja 4 tipos de precios:
+
+| Tipo de Servicio | Zona | Campo |
+|------------------|------|-------|
+| Pickup | Capital | `precio_pickup_capital` |
+| Pickup | Interior | `precio_pickup_interior` |
+| Delivery | Capital | `precio_domicilio_capital` |
+| Delivery | Interior | `precio_domicilio_interior` |
+
+### Determinacion Automatica de Zona
+
+**Para Pickup:**
+- La zona se determina por `restaurant.price_location`
+- Al llamar `PUT /cart/restaurant`, el sistema automaticamente:
+  1. Establece `service_type = 'pickup'`
+  2. Establece `zone = restaurant.price_location`
+  3. Recalcula precios de todos los items
+
+**Para Delivery:**
+- La zona se determina por la direccion del usuario (`address.zone`)
+- La direccion ya tiene zona guardada (se calcula al crearla via geofencing)
+- Al llamar `PUT /cart/delivery-address`, el sistema automaticamente:
+  1. Valida cobertura via geofence
+  2. Asigna restaurante cercano
+  3. Establece `service_type = 'delivery'`
+  4. Establece `zone = address.zone`
+  5. Recalcula precios de todos los items
+
+---
+
 ### Flujo de Pedido (Pickup)
 
 ```
-1. GET /menu?lite=1                    → Navegacion
-2. GET /menu/categories/{id}           → Productos
-3. POST /cart/items                    → Agregar al carrito
-4. PUT /cart/restaurant                → Seleccionar restaurante
-5. POST /cart/validate                 → Validar
-6. POST /orders                        → Crear orden
-7. GET /orders/{id}/track              → Seguimiento (polling)
+1. GET /menu?lite=1                    → Carga rapida de categorias
+2. GET /menu/categories/{id}           → Productos de una categoria
+3. POST /cart/items                    → Agregar al carrito (precio temporal)
+4. GET /restaurants?pickup_active=true → Lista de restaurantes
+5. PUT /cart/restaurant                → Seleccionar restaurante
+   ↳ Automaticamente:
+     - service_type = 'pickup'
+     - zone = restaurant.price_location
+     - Precios recalculados
+6. GET /cart                           → Ver carrito con precios correctos
+7. POST /cart/validate                 → Validar disponibilidad
+8. POST /orders                        → Crear orden
+9. GET /orders/{id}/track              → Seguimiento (polling)
 ```
+
+```dart
+// Ejemplo Flutter: Seleccionar restaurante
+Future<void> selectRestaurantForPickup(int restaurantId) async {
+  final response = await http.put(
+    Uri.parse('$baseUrl/cart/restaurant'),
+    headers: authHeaders,
+    body: jsonEncode({'restaurant_id': restaurantId}),
+  );
+
+  final data = jsonDecode(response.body)['data'];
+  // data.zone = 'capital' o 'interior' (automatico)
+  // data.service_type = 'pickup' (automatico)
+  // data.prices_updated = true
+
+  // Refrescar carrito para ver precios actualizados
+  await refreshCart();
+}
+```
+
+---
 
 ### Flujo de Pedido (Delivery)
 
 ```
 1. GET /menu?lite=1
-2. POST /cart/items
-3. PUT /cart/delivery-address          → Valida geofence, asigna restaurante
-4. (Si error) Mostrar pickup locations cercanos
-5. POST /cart/validate
-6. POST /orders
-7. GET /orders/{id}/track
+2. POST /cart/items                    → Agregar al carrito (precio temporal)
+3. GET /addresses                      → Direcciones guardadas del usuario
+   ↳ Cada direccion ya tiene zone = 'capital' o 'interior'
+4. PUT /cart/delivery-address          → Seleccionar direccion
+   ↳ Automaticamente:
+     - Valida geofence
+     - Asigna restaurante cercano
+     - service_type = 'delivery'
+     - zone = address.zone
+     - Precios recalculados
+5. (Si error 422) Mostrar pickup locations cercanos
+6. GET /cart                           → Ver carrito con precios correctos
+7. POST /cart/validate
+8. POST /orders
+9. GET /orders/{id}/track
 ```
+
+```dart
+// Ejemplo Flutter: Seleccionar direccion para delivery
+Future<void> selectAddressForDelivery(int addressId) async {
+  final response = await http.put(
+    Uri.parse('$baseUrl/cart/delivery-address'),
+    headers: authHeaders,
+    body: jsonEncode({'delivery_address_id': addressId}),
+  );
+
+  if (response.statusCode == 422) {
+    // Fuera de zona de cobertura
+    final data = jsonDecode(response.body);
+    if (data['error_code'] == 'ADDRESS_OUTSIDE_DELIVERY_ZONE') {
+      // Mostrar restaurantes cercanos para pickup
+      final nearbyPickups = data['data']['nearest_pickup_locations'];
+      showPickupSuggestions(nearbyPickups);
+      return;
+    }
+  }
+
+  final data = jsonDecode(response.body)['data'];
+  // data.zone = 'capital' o 'interior' (de la direccion)
+  // data.assigned_restaurant = restaurante asignado
+  // data.prices_updated = true
+
+  await refreshCart();
+}
+```
+
+---
+
+### Mostrar Precios en Menu (Antes de Seleccionar Ubicacion)
+
+Antes de que el usuario seleccione restaurante/direccion, mostrar precio de referencia con disclaimer del API:
+
+```dart
+// Widget para precio en catalogo/menu
+// Usar el disclaimer que viene del API: data.price_disclaimer
+Widget buildMenuPrice(Product product, String disclaimer) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text('Q${product.price.toStringAsFixed(2)}',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      Text(
+        '*$disclaimer',  // <-- Usar valor del API
+        style: TextStyle(fontSize: 9, color: Colors.grey[600], fontStyle: FontStyle.italic),
+      ),
+    ],
+  );
+}
+```
+
+**Despues de seleccionar restaurante/direccion**, los precios en el carrito son exactos y ya NO necesitan disclaimer.
 
 ---
 
@@ -1270,9 +1652,18 @@ class ApiException implements Exception {
 
 | Fecha | Cambio |
 |-------|--------|
+| 2025-12-23 | POST /auth/register ahora requiere `terms_accepted: true` (checkbox de T&C) |
+| 2025-12-23 | POST /orders ahora requiere email verificado (error 403 EMAIL_NOT_VERIFIED) |
+| 2025-12-23 | GET /menu ahora devuelve `price_disclaimer` para mostrar en UI |
+| 2025-12-23 | Agregado seccion "Flujo General de la App" con diagrama completo |
+| 2025-12-22 | PUT /cart/restaurant ahora auto-determina zone segun restaurant.price_location |
+| 2025-12-22 | Agregado seccion "Sistema de Precios y Zonas" con flujos detallados |
+| 2025-12-22 | Agregado campos de descuento por item: discount_amount, final_price, is_daily_special, applied_promotion |
+| 2025-12-22 | Estandarizado campos: price, delivery_capital, delivery_interior, error_code |
+| 2025-12-22 | Estandarizado `token` en lugar de `access_token` |
 | 2025-12-22 | Documentacion completa para Flutter |
 | 2025-12-22 | Agregado endpoint `/menu?lite=1` |
 | 2025-12-22 | Integradas promociones automaticas al carrito |
-| 2025-12-22 | Campo `precio` en productos/variantes/combos |
+| 2025-12-22 | Campo `price` en productos/variantes/combos |
 | 2025-12-22 | Eliminado delivery_fee (siempre 0) |
 | 2025-12-22 | Eliminado metodo applyPromoCode (no implementado) |

@@ -28,6 +28,7 @@ class Customer extends Authenticatable implements MustVerifyEmail
         'last_name',
         'email',
         'email_verified_at',
+        'terms_accepted_at',
         'password',
         'google_id',
         'avatar',
@@ -65,6 +66,7 @@ class Customer extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'terms_accepted_at' => 'datetime',
             'password' => 'hashed',
             'birth_date' => 'date',
             'last_login_at' => 'datetime',

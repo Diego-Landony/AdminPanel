@@ -301,4 +301,150 @@ class PromotionApplicationService
             return $item->isValidToday($datetime);
         });
     }
+
+    /**
+     * Calcula descuentos detallados por cada item del carrito
+     *
+     * @return array Array indexado por item_id con información de descuento
+     */
+    public function calculateItemDiscounts(Cart $cart): array
+    {
+        $itemDiscounts = [];
+        $items = $cart->items()->with(['product.category', 'variant', 'combo'])->get();
+
+        if ($items->isEmpty()) {
+            return $itemDiscounts;
+        }
+
+        $datetime = now();
+        $dayOfWeek = $datetime->dayOfWeek;
+
+        // Primero, identificar todas las promociones aplicables
+        $promotionsMap = [];
+
+        foreach ($items as $item) {
+            // Inicializar con valores por defecto
+            $itemDiscounts[$item->id] = [
+                'discount_amount' => 0.0,
+                'original_price' => (float) $item->subtotal,
+                'final_price' => (float) $item->subtotal,
+                'is_daily_special' => false,
+                'applied_promotion' => null,
+            ];
+
+            if ($item->isCombo()) {
+                continue;
+            }
+
+            // Verificar si es Sub del Día
+            if ($item->variant_id && $item->variant) {
+                $variant = $item->variant;
+                if ($variant->is_daily_special && ! empty($variant->daily_special_days)) {
+                    if (in_array($dayOfWeek, $variant->daily_special_days)) {
+                        $itemDiscounts[$item->id]['is_daily_special'] = true;
+
+                        // El precio ya está calculado con el precio especial
+                        continue; // Sub del día no acumula con otras promociones
+                    }
+                }
+            }
+
+            // Buscar promoción aplicable
+            $promotion = null;
+            if ($item->variant_id) {
+                $promotion = $this->findActivePromotionForVariant($item->variant, $datetime);
+            } else {
+                $promotion = $this->findActivePromotionForProduct(
+                    $item->product,
+                    $item->product->category->id,
+                    $datetime
+                );
+            }
+
+            if ($promotion) {
+                if (! isset($promotionsMap[$promotion->id])) {
+                    $promotionsMap[$promotion->id] = [
+                        'promotion' => $promotion,
+                        'items' => collect(),
+                    ];
+                }
+                $promotionsMap[$promotion->id]['items']->push($item);
+            }
+        }
+
+        // Calcular descuentos por tipo de promoción
+        foreach ($promotionsMap as $promoData) {
+            $promotion = $promoData['promotion'];
+            $promoItems = $promoData['items'];
+
+            if ($promotion->type === 'percentage_discount') {
+                foreach ($promoItems as $item) {
+                    $promotionItem = $this->getPromotionItemForCartItem($item, $promotion);
+                    if ($promotionItem && $promotionItem->discount_percentage) {
+                        $discount = $item->subtotal * ($promotionItem->discount_percentage / 100);
+                        $itemDiscounts[$item->id]['discount_amount'] = round($discount, 2);
+                        $itemDiscounts[$item->id]['final_price'] = round($item->subtotal - $discount, 2);
+                        $itemDiscounts[$item->id]['applied_promotion'] = [
+                            'id' => $promotion->id,
+                            'name' => $promotion->name,
+                            'type' => $promotion->type,
+                            'value' => $promotionItem->discount_percentage.'%',
+                        ];
+                    }
+                }
+            } elseif ($promotion->type === 'two_for_one') {
+                $totalQuantity = $promoItems->sum('quantity');
+
+                if ($totalQuantity >= 2) {
+                    $sorted = $promoItems->sortBy('unit_price');
+                    $freeItems = floor($totalQuantity / 2);
+                    $freeCount = 0;
+
+                    foreach ($sorted as $item) {
+                        if ($freeCount < $freeItems) {
+                            $quantityToDiscount = min($item->quantity, $freeItems - $freeCount);
+                            $discount = $item->unit_price * $quantityToDiscount;
+                            $freeCount += $quantityToDiscount;
+
+                            $itemDiscounts[$item->id]['discount_amount'] = round($discount, 2);
+                            $itemDiscounts[$item->id]['final_price'] = round($item->subtotal - $discount, 2);
+                            $itemDiscounts[$item->id]['applied_promotion'] = [
+                                'id' => $promotion->id,
+                                'name' => $promotion->name,
+                                'type' => $promotion->type,
+                                'value' => '2x1',
+                            ];
+                        }
+                    }
+                }
+            } elseif ($promotion->type === 'bundle_special') {
+                $bundlePrice = $cart->zone === 'capital'
+                    ? $promotion->special_bundle_price_capital
+                    : $promotion->special_bundle_price_interior;
+
+                if ($bundlePrice) {
+                    $normalTotal = $promoItems->sum('subtotal');
+                    if ($bundlePrice < $normalTotal) {
+                        $totalDiscount = $normalTotal - $bundlePrice;
+                        // Distribuir el descuento proporcionalmente
+                        foreach ($promoItems as $item) {
+                            $proportion = $item->subtotal / $normalTotal;
+                            $discount = $totalDiscount * $proportion;
+
+                            $itemDiscounts[$item->id]['discount_amount'] = round($discount, 2);
+                            $itemDiscounts[$item->id]['final_price'] = round($item->subtotal - $discount, 2);
+                            $itemDiscounts[$item->id]['applied_promotion'] = [
+                                'id' => $promotion->id,
+                                'name' => $promotion->name,
+                                'type' => $promotion->type,
+                                'value' => 'Q'.number_format($bundlePrice, 2),
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+
+        return $itemDiscounts;
+    }
 }

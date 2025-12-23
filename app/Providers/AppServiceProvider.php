@@ -118,14 +118,13 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function configurePasswordValidation(): void
     {
+        // Requisitos: mínimo 8 caracteres, al menos 1 letra, 1 número y 1 caracter especial
+        // Balance entre seguridad y facilidad de uso
         Password::defaults(function () {
-            $rule = Password::min(6)
+            return Password::min(8)
                 ->letters()
-                ->numbers();
-
-            return $this->app->environment('production')
-                ? $rule->uncompromised()
-                : $rule;
+                ->numbers()
+                ->symbols();
         });
     }
 

@@ -43,7 +43,7 @@ class AuthController extends Controller
      *         required=true,
      *
      *         @OA\JsonContent(
-     *             required={"first_name","last_name","email","password","password_confirmation","phone","birth_date","gender","device_identifier"},
+     *             required={"first_name","last_name","email","password","password_confirmation","phone","birth_date","gender","device_identifier","terms_accepted"},
      *
      *             @OA\Property(property="first_name", type="string", example="Juan", description="Nombre del cliente"),
      *             @OA\Property(property="last_name", type="string", example="Pérez", description="Apellido del cliente"),
@@ -53,7 +53,8 @@ class AuthController extends Controller
      *             @OA\Property(property="phone", type="string", example="+50212345678", description="Número de teléfono"),
      *             @OA\Property(property="birth_date", type="string", format="date", example="1990-05-15", description="Fecha de nacimiento"),
      *             @OA\Property(property="gender", type="string", enum={"male","female","other"}, example="male", description="Género"),
-     *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="UUID único del dispositivo")
+     *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="UUID único del dispositivo"),
+     *             @OA\Property(property="terms_accepted", type="boolean", example=true, description="Aceptacion de terminos y condiciones (requerido)")
      *         )
      *     ),
      *
@@ -85,7 +86,8 @@ class AuthController extends Controller
      *                 @OA\Property(property="password", type="array", @OA\Items(type="string", example="Las contraseñas no coinciden.")),
      *                 @OA\Property(property="phone", type="array", @OA\Items(type="string", example="El teléfono debe tener exactamente 8 dígitos.")),
      *                 @OA\Property(property="birth_date", type="array", @OA\Items(type="string", example="La fecha de nacimiento es requerida.")),
-     *                 @OA\Property(property="gender", type="array", @OA\Items(type="string", example="El género es requerido."))
+     *                 @OA\Property(property="gender", type="array", @OA\Items(type="string", example="El género es requerido.")),
+     *                 @OA\Property(property="terms_accepted", type="array", @OA\Items(type="string", example="Debes aceptar los terminos y condiciones."))
      *             )
      *         )
      *     ),
@@ -109,6 +111,7 @@ class AuthController extends Controller
             'gender' => $validated['gender'] ?? null,
             'oauth_provider' => 'local',
             'customer_type_id' => CustomerType::getDefault()?->id,
+            'terms_accepted_at' => now(),
         ]);
 
         event(new Registered($customer));
@@ -189,7 +192,7 @@ class AuthController extends Controller
      *                 @OA\Schema(
      *
      *                     @OA\Property(property="message", type="string", example="Esta cuenta usa autenticación con google. Por favor inicia sesión con google."),
-     *                     @OA\Property(property="code", type="string", example="oauth_account_required"),
+     *                     @OA\Property(property="error_code", type="string", example="oauth_account_required"),
      *                     @OA\Property(property="data", type="object",
      *                         @OA\Property(property="oauth_provider", type="string", enum={"google", "apple"}, example="google", description="Proveedor OAuth que debe usar"),
      *                         @OA\Property(property="email", type="string", format="email", example="juan@example.com")
@@ -199,7 +202,7 @@ class AuthController extends Controller
      *                 @OA\Schema(
      *
      *                     @OA\Property(property="message", type="string", example="Encontramos una cuenta eliminada con este correo."),
-     *                     @OA\Property(property="code", type="string", example="account_deleted_recoverable"),
+     *                     @OA\Property(property="error_code", type="string", example="account_deleted_recoverable"),
      *                     @OA\Property(property="data", type="object",
      *                         @OA\Property(property="deleted_at", type="string", format="date-time", example="2025-11-15T10:30:00Z"),
      *                         @OA\Property(property="days_until_permanent_deletion", type="integer", example=15),
@@ -248,7 +251,7 @@ class AuthController extends Controller
                 if ($daysUntilPermanentDeletion > 0) {
                     return response()->json([
                         'message' => __('auth.account_deleted_recoverable'),
-                        'code' => 'account_deleted_recoverable',
+                        'error_code' => 'account_deleted_recoverable',
                         'data' => [
                             'deleted_at' => $deletedAt->toIso8601String(),
                             'days_until_permanent_deletion' => $daysUntilPermanentDeletion,
@@ -275,7 +278,7 @@ class AuthController extends Controller
         if ($customer->oauth_provider !== 'local') {
             return response()->json([
                 'message' => __('auth.oauth_account', ['provider' => $customer->oauth_provider]),
-                'code' => 'oauth_account_required',
+                'error_code' => 'oauth_account_required',
                 'data' => [
                     'oauth_provider' => $customer->oauth_provider,
                     'email' => $customer->email,
@@ -647,29 +650,169 @@ class AuthController extends Controller
      *     @OA\Response(response=429, description="Too many requests")
      * )
      */
-    public function verifyEmail(Request $request): JsonResponse
+    public function verifyEmail(Request $request): JsonResponse|\Illuminate\Http\Response
     {
         $customer = Customer::findOrFail($request->route('id'));
 
         if (! hash_equals(sha1($customer->email), (string) $request->route('hash'))) {
+            if ($request->isMethod('get')) {
+                return $this->verifyEmailWebResponse(false, __('auth.invalid_verification_link'));
+            }
             throw ValidationException::withMessages([
                 'email' => [__('auth.invalid_verification_link')],
             ]);
         }
 
-        if ($customer->hasVerifiedEmail()) {
-            return response()->json([
-                'message' => __('auth.email_already_verified'),
-            ]);
-        }
+        $alreadyVerified = $customer->hasVerifiedEmail();
 
-        if ($customer->markEmailAsVerified()) {
+        if (! $alreadyVerified && $customer->markEmailAsVerified()) {
             event(new Verified($customer));
         }
 
-        return response()->json([
-            'message' => __('auth.email_verified'),
-        ]);
+        $message = $alreadyVerified
+            ? __('auth.email_already_verified')
+            : __('auth.email_verified');
+
+        // For GET requests (browser clicks), return HTML page
+        if ($request->isMethod('get')) {
+            return $this->verifyEmailWebResponse(true, $message);
+        }
+
+        // For POST requests (API), return JSON
+        return response()->json(['message' => $message]);
+    }
+
+    /**
+     * Generate HTML response for web-based email verification.
+     */
+    private function verifyEmailWebResponse(bool $success, string $message): \Illuminate\Http\Response
+    {
+        $scheme = config('app.mobile_scheme', 'subwayapp');
+        $appName = config('app.mobile_name', 'Subway App');
+        $baseUrl = config('app.url');
+        $status = $success ? 'success' : 'error';
+
+        $subtitle = $success
+            ? 'Tu correo ha sido verificado. Ya puedes usar todas las funciones de la app.'
+            : 'El enlace es inválido o ha expirado. Solicita uno nuevo desde la app.';
+
+        $html = <<<HTML
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{$message} - {$appName}</title>
+    <link rel="icon" href="{$baseUrl}/subway-icon.png" type="image/png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            padding: 24px;
+        }
+        .container {
+            padding: 48px 40px;
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+        }
+        .logo {
+            margin-bottom: 40px;
+        }
+        .logo img {
+            height: 50px;
+            width: auto;
+        }
+        h1 {
+            color: #111;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 36px;
+        }
+        .btn {
+            display: inline-block;
+            background: #009639;
+            color: white;
+            padding: 14px 36px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background: #007a2f;
+        }
+        .footer {
+            margin-top: 40px;
+            color: #999;
+            font-size: 13px;
+        }
+        .hint {
+            margin-top: 20px;
+            color: #888;
+            font-size: 14px;
+            display: none;
+        }
+        .hint.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="{$baseUrl}/subway-logo.png" alt="Subway">
+        </div>
+        <h1>{$message}</h1>
+        <p>{$subtitle}</p>
+        <button onclick="openApp()" class="btn">Abrir la App</button>
+        <p id="hint" class="hint">Si la app no se abre, asegúrate de tenerla instalada.</p>
+        <div class="footer">© 2025 Subway Guatemala</div>
+    </div>
+    <script>
+        function openApp() {
+            var deepLink = '{$scheme}://verified?status={$status}';
+            var timeout;
+
+            window.location.href = deepLink;
+
+            timeout = setTimeout(function() {
+                document.getElementById('hint').classList.add('show');
+            }, 2000);
+
+            window.addEventListener('blur', function() {
+                clearTimeout(timeout);
+            });
+        }
+    </script>
+</body>
+</html>
+HTML;
+
+        return response($html)->header('Content-Type', 'text/html');
+    }
+
+    /**
+     * Handle expired or invalid verification link.
+     * Called from exception handler for InvalidSignatureException.
+     */
+    public function handleExpiredVerificationLink(): \Illuminate\Http\Response
+    {
+        return $this->verifyEmailWebResponse(false, __('auth.verification_link_expired'));
     }
 
     /**

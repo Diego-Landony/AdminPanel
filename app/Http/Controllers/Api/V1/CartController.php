@@ -31,7 +31,7 @@ class CartController extends Controller
      *     path="/api/v1/cart",
      *     tags={"Cart"},
      *     summary="Get current cart",
-     *     description="Returns the current cart with items, totals and summary.",
+     *     description="Returns the current cart with items, totals and summary. Each item includes discount information for displaying strikethrough prices.",
      *     security={{"sanctum":{}}},
      *
      *     @OA\Response(
@@ -40,7 +40,38 @@ class CartController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="data", type="object")
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="service_type", type="string", enum={"pickup", "delivery"}),
+     *                 @OA\Property(property="zone", type="string", enum={"capital", "interior"}),
+     *                 @OA\Property(property="items", type="array",
+     *
+     *                     @OA\Items(type="object",
+     *
+     *                         @OA\Property(property="id", type="integer"),
+     *                         @OA\Property(property="type", type="string", enum={"product", "combo"}),
+     *                         @OA\Property(property="quantity", type="integer"),
+     *                         @OA\Property(property="unit_price", type="number", format="float"),
+     *                         @OA\Property(property="subtotal", type="number", format="float", description="Precio base sin descuento"),
+     *                         @OA\Property(property="discount_amount", type="number", format="float", description="Monto del descuento aplicado"),
+     *                         @OA\Property(property="final_price", type="number", format="float", description="Precio final despues del descuento"),
+     *                         @OA\Property(property="is_daily_special", type="boolean", description="Si aplica Sub del Dia"),
+     *                         @OA\Property(property="applied_promotion", type="object", nullable=true,
+     *                             @OA\Property(property="id", type="integer"),
+     *                             @OA\Property(property="name", type="string"),
+     *                             @OA\Property(property="type", type="string", enum={"two_for_one", "percentage_discount", "bundle_special"}),
+     *                             @OA\Property(property="value", type="string", example="2x1")
+     *                         )
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="summary", type="object",
+     *                     @OA\Property(property="subtotal", type="string"),
+     *                     @OA\Property(property="total_discount", type="string"),
+     *                     @OA\Property(property="total", type="string"),
+     *                     @OA\Property(property="promotions_applied", type="array", @OA\Items(type="object"))
+     *                 ),
+     *                 @OA\Property(property="can_checkout", type="boolean")
+     *             )
      *         )
      *     ),
      *
@@ -56,13 +87,28 @@ class CartController extends Controller
         $summary = $this->cartService->getCartSummary($cart);
         $validation = $this->cartService->validateCart($cart);
 
+        // Agregar información de descuentos a cada item
+        $itemDiscounts = $summary['item_discounts'] ?? [];
+        $itemsWithDiscounts = $cart->items->map(function ($item) use ($itemDiscounts) {
+            $discount = $itemDiscounts[$item->id] ?? [
+                'discount_amount' => 0.0,
+                'original_price' => (float) $item->subtotal,
+                'final_price' => (float) $item->subtotal,
+                'is_daily_special' => false,
+                'applied_promotion' => null,
+            ];
+            $item->discount_info = $discount;
+
+            return $item;
+        });
+
         return response()->json([
             'data' => [
                 'id' => $cart->id,
                 'restaurant' => $cart->restaurant,
                 'service_type' => $cart->service_type,
                 'zone' => $cart->zone,
-                'items' => CartItemResource::collection($cart->items),
+                'items' => CartItemResource::collection($itemsWithDiscounts),
                 'summary' => [
                     'subtotal' => number_format($summary['subtotal'], 2, '.', ''),
                     'promotions_applied' => $summary['promotions_applied'],
@@ -324,13 +370,13 @@ class CartController extends Controller
     }
 
     /**
-     * Update cart restaurant.
+     * Update cart restaurant (for pickup orders).
      *
      * @OA\Put(
      *     path="/api/v1/cart/restaurant",
      *     tags={"Cart"},
-     *     summary="Update cart restaurant",
-     *     description="Changes the restaurant for the cart.",
+     *     summary="Select restaurant for pickup",
+     *     description="Sets the restaurant for pickup orders. Automatically sets service_type to 'pickup', zone based on restaurant location, and recalculates all item prices.",
      *     security={{"sanctum":{}}},
      *
      *     @OA\RequestBody(
@@ -344,13 +390,20 @@ class CartController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Restaurant updated successfully",
+     *         description="Restaurant set successfully",
      *
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="message", type="string", example="Restaurante actualizado")
-     *             )
+     *                 @OA\Property(property="restaurant", type="object",
+     *                     @OA\Property(property="id", type="integer", example=2),
+     *                     @OA\Property(property="name", type="string", example="Subway Pradera")
+     *                 ),
+     *                 @OA\Property(property="service_type", type="string", example="pickup"),
+     *                 @OA\Property(property="zone", type="string", enum={"capital", "interior"}, example="capital"),
+     *                 @OA\Property(property="prices_updated", type="boolean", example=true)
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Restaurante seleccionado para pickup")
      *         )
      *     ),
      *
@@ -369,12 +422,19 @@ class CartController extends Controller
         $cart = $this->cartService->getOrCreateCart($customer);
         $restaurant = Restaurant::findOrFail($validated['restaurant_id']);
 
-        $this->cartService->updateRestaurant($cart, $restaurant);
+        $cart = $this->cartService->updateRestaurant($cart, $restaurant);
 
         return response()->json([
             'data' => [
-                'message' => 'Restaurante actualizado',
+                'restaurant' => [
+                    'id' => $restaurant->id,
+                    'name' => $restaurant->name,
+                ],
+                'service_type' => $cart->service_type,
+                'zone' => $cart->zone,
+                'prices_updated' => true,
             ],
+            'message' => 'Restaurante seleccionado para pickup',
         ]);
     }
 

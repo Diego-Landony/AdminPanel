@@ -154,15 +154,40 @@ class CartService
     }
 
     /**
-     * Actualiza el restaurante del carrito
+     * Actualiza el restaurante del carrito (para pickup)
+     * Automáticamente establece service_type como 'pickup' y zone según restaurant.price_location
      */
     public function updateRestaurant(Cart $cart, Restaurant $restaurant): Cart
     {
+        $oldZone = $cart->zone;
+        $oldServiceType = $cart->service_type;
+        $newZone = $restaurant->price_location ?? 'capital';
+
         $cart->update([
             'restaurant_id' => $restaurant->id,
+            'service_type' => 'pickup',
+            'zone' => $newZone,
+            'delivery_address_id' => null, // Limpiar dirección de delivery al cambiar a pickup
         ]);
 
-        return $cart->fresh();
+        // Recalcular precios si cambió zona o tipo de servicio
+        if ($oldZone !== $newZone || $oldServiceType !== 'pickup') {
+            $cart = $cart->fresh(['items.product', 'items.variant', 'items.combo']);
+            foreach ($cart->items as $item) {
+                if ($item->isCombo()) {
+                    $unitPrice = $this->getPriceForCombo($item->combo, $newZone, 'pickup');
+                } else {
+                    $unitPrice = $this->getPriceForProduct($item->product, $item->variant_id, $newZone, 'pickup');
+                }
+
+                $item->update([
+                    'unit_price' => $unitPrice,
+                    'subtotal' => $unitPrice * $item->quantity,
+                ]);
+            }
+        }
+
+        return $cart->fresh(['items', 'restaurant']);
     }
 
     /**
@@ -267,7 +292,7 @@ class CartService
     /**
      * Obtiene el resumen del carrito con subtotal, descuentos, promociones y total
      *
-     * @return array Array con 'subtotal', 'discounts', 'promotions_applied', 'total'
+     * @return array Array con 'subtotal', 'discounts', 'promotions_applied', 'total', 'item_discounts'
      */
     public function getCartSummary(Cart $cart): array
     {
@@ -278,6 +303,9 @@ class CartService
         $appliedPromotions = $this->promotionService->applyPromotions($cart);
         $discounts = collect($appliedPromotions)->sum('discount_amount');
 
+        // Calcular descuentos detallados por item
+        $itemDiscounts = $this->promotionService->calculateItemDiscounts($cart);
+
         $total = $subtotal - $discounts;
 
         return [
@@ -286,6 +314,7 @@ class CartService
             'promotions_applied' => $appliedPromotions,
             'total' => round(max(0, $total), 2),
             'items_count' => $items->count(),
+            'item_discounts' => $itemDiscounts,
         ];
     }
 

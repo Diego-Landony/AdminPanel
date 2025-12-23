@@ -15,6 +15,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\ThrottleRequestsException;
@@ -42,9 +43,10 @@ return Application::configure(basePath: dirname(__DIR__))
             ForceJsonResponse::class,
         ]);
 
-        // Registrar middleware de permisos
+        // Registrar middleware personalizados
         $middleware->alias([
             'permission' => CheckUserPermissions::class,
+            'verified.api' => \App\Http\Middleware\EnsureEmailIsVerifiedForApi::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
@@ -116,6 +118,21 @@ return Application::configure(basePath: dirname(__DIR__))
                     'message' => $e->getMessage(),
                     'errors' => $e->errors(),
                 ], 422);
+            }
+        });
+
+        // Handle InvalidSignatureException (403) - for expired/invalid signed URLs
+        $exceptions->render(function (InvalidSignatureException $e, Request $request) {
+            // Check if this is an email verification request
+            if ($request->is('api/v1/auth/email/verify/*')) {
+                return app(\App\Http\Controllers\Api\V1\Auth\AuthController::class)
+                    ->handleExpiredVerificationLink();
+            }
+
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => __('auth.invalid_or_expired_link'),
+                ], 403);
             }
         });
     })->create();

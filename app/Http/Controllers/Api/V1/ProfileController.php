@@ -9,7 +9,6 @@ use App\Http\Resources\Api\V1\CustomerResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
 {
@@ -135,27 +134,12 @@ class ProfileController extends Controller
      *     path="/api/v1/profile",
      *     tags={"Profile"},
      *     summary="Eliminar cuenta de cliente",
-     *     description="Soft delete de la cuenta del cliente. Revoca todos los tokens.
-     *
-     * **Para cuentas locales (email/contraseña):**
-     * - Requiere: password (contraseña actual para confirmar)
-     *
-     * **Para cuentas OAuth (Google/Apple) sin contraseña:**
-     * - NO requiere password (el body puede estar vacío o enviar `{}`)
+     *     description="Soft delete de la cuenta del cliente. Revoca todos los tokens. No requiere confirmacion de contrasena.
      *
      * **Período de gracia:**
      * - La cuenta se puede recuperar dentro de 30 días usando POST /api/v1/auth/reactivate
      * - Después de 30 días, la cuenta se elimina permanentemente",
      *     security={{"sanctum":{}}},
-     *
-     *     @OA\RequestBody(
-     *         required=false,
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="password", type="string", format="password", example="SecurePass123!", description="Contraseña actual. SOLO requerido para cuentas locales (oauth_provider='local'). NO enviar si es cuenta OAuth.")
-     *         )
-     *     ),
      *
      *     @OA\Response(
      *         response=200,
@@ -171,40 +155,12 @@ class ProfileController extends Controller
      *         )
      *     ),
      *
-     *     @OA\Response(response=401, description="No autenticado"),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Contraseña incorrecta (solo cuentas locales)",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="La contraseña es incorrecta."),
-     *             @OA\Property(property="errors", type="object",
-     *                 @OA\Property(property="password", type="array",
-     *
-     *                     @OA\Items(type="string", example="La contraseña es incorrecta.")
-     *                 )
-     *             )
-     *         )
-     *     )
+     *     @OA\Response(response=401, description="No autenticado")
      * )
      */
     public function destroy(Request $request): JsonResponse
     {
         $customer = $request->user();
-
-        // Solo validar y verificar contraseña para cuentas locales
-        if ($customer->oauth_provider === 'local') {
-            $request->validate([
-                'password' => ['required', 'string'],
-            ]);
-
-            if (! Hash::check($request->password, $customer->password)) {
-                throw ValidationException::withMessages([
-                    'password' => [__('auth.incorrect_password')],
-                ]);
-            }
-        }
 
         // Revoke all tokens
         $customer->tokens()->delete();

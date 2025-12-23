@@ -41,7 +41,8 @@
                                     "phone",
                                     "birth_date",
                                     "gender",
-                                    "device_identifier"
+                                    "device_identifier",
+                                    "terms_accepted"
                                 ],
                                 "properties": {
                                     "first_name": {
@@ -97,6 +98,11 @@
                                         "description": "UUID único del dispositivo",
                                         "type": "string",
                                         "example": "550e8400-e29b-41d4-a716-446655440000"
+                                    },
+                                    "terms_accepted": {
+                                        "description": "Aceptacion de terminos y condiciones (requerido)",
+                                        "type": "boolean",
+                                        "example": true
                                     }
                                 },
                                 "type": "object"
@@ -192,6 +198,13 @@
                                                     "items": {
                                                         "type": "string",
                                                         "example": "El género es requerido."
+                                                    }
+                                                },
+                                                "terms_accepted": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "Debes aceptar los terminos y condiciones."
                                                     }
                                                 }
                                             },
@@ -290,7 +303,7 @@
                                                     "type": "string",
                                                     "example": "Esta cuenta usa autenticación con google. Por favor inicia sesión con google."
                                                 },
-                                                "code": {
+                                                "error_code": {
                                                     "type": "string",
                                                     "example": "oauth_account_required"
                                                 },
@@ -322,7 +335,7 @@
                                                     "type": "string",
                                                     "example": "Encontramos una cuenta eliminada con este correo."
                                                 },
-                                                "code": {
+                                                "error_code": {
                                                     "type": "string",
                                                     "example": "account_deleted_recoverable"
                                                 },
@@ -1146,7 +1159,7 @@
                     "Cart"
                 ],
                 "summary": "Get current cart",
-                "description": "Returns the current cart with items, totals and summary.",
+                "description": "Returns the current cart with items, totals and summary. Each item includes discount information for displaying strikethrough prices.",
                 "operationId": "2949ba84adf7767b0d9724b8cfdb4f92",
                 "responses": {
                     "200": {
@@ -1156,6 +1169,117 @@
                                 "schema": {
                                     "properties": {
                                         "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "service_type": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "pickup",
+                                                        "delivery"
+                                                    ]
+                                                },
+                                                "zone": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "capital",
+                                                        "interior"
+                                                    ]
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "type": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "product",
+                                                                    "combo"
+                                                                ]
+                                                            },
+                                                            "quantity": {
+                                                                "type": "integer"
+                                                            },
+                                                            "unit_price": {
+                                                                "type": "number",
+                                                                "format": "float"
+                                                            },
+                                                            "subtotal": {
+                                                                "description": "Precio base sin descuento",
+                                                                "type": "number",
+                                                                "format": "float"
+                                                            },
+                                                            "discount_amount": {
+                                                                "description": "Monto del descuento aplicado",
+                                                                "type": "number",
+                                                                "format": "float"
+                                                            },
+                                                            "final_price": {
+                                                                "description": "Precio final despues del descuento",
+                                                                "type": "number",
+                                                                "format": "float"
+                                                            },
+                                                            "is_daily_special": {
+                                                                "description": "Si aplica Sub del Dia",
+                                                                "type": "boolean"
+                                                            },
+                                                            "applied_promotion": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "type": {
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "two_for_one",
+                                                                            "percentage_discount",
+                                                                            "bundle_special"
+                                                                        ]
+                                                                    },
+                                                                    "value": {
+                                                                        "type": "string",
+                                                                        "example": "2x1"
+                                                                    }
+                                                                },
+                                                                "type": "object",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "summary": {
+                                                    "properties": {
+                                                        "subtotal": {
+                                                            "type": "string"
+                                                        },
+                                                        "total_discount": {
+                                                            "type": "string"
+                                                        },
+                                                        "total": {
+                                                            "type": "string"
+                                                        },
+                                                        "promotions_applied": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "can_checkout": {
+                                                    "type": "boolean"
+                                                }
+                                            },
                                             "type": "object"
                                         }
                                     },
@@ -1468,8 +1592,8 @@
                 "tags": [
                     "Cart"
                 ],
-                "summary": "Update cart restaurant",
-                "description": "Changes the restaurant for the cart.",
+                "summary": "Select restaurant for pickup",
+                "description": "Sets the restaurant for pickup orders. Automatically sets service_type to 'pickup', zone based on restaurant location, and recalculates all item prices.",
                 "operationId": "f54a3a4dd8add9fc036db6848a5624b0",
                 "requestBody": {
                     "required": true,
@@ -1489,19 +1613,48 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Restaurant updated successfully",
+                        "description": "Restaurant set successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "data": {
                                             "properties": {
-                                                "message": {
+                                                "restaurant": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Subway Pradera"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "service_type": {
                                                     "type": "string",
-                                                    "example": "Restaurante actualizado"
+                                                    "example": "pickup"
+                                                },
+                                                "zone": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "capital",
+                                                        "interior"
+                                                    ],
+                                                    "example": "capital"
+                                                },
+                                                "prices_updated": {
+                                                    "type": "boolean",
+                                                    "example": true
                                                 }
                                             },
                                             "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Restaurante seleccionado para pickup"
                                         }
                                     },
                                     "type": "object"
@@ -3517,7 +3670,7 @@
                     "Menu"
                 ],
                 "summary": "Get complete menu",
-                "description": "Returns complete menu with categories, products and permanent combos. For promotions/offers, use GET /api/v1/menu/promotions.",
+                "description": "Returns complete menu with categories, products and permanent combos.\n     *\n     * **⚠️ IMPORTANTE - Disclaimer de Precios:**\n     * El campo `price` muestra el precio de PICKUP en CAPITAL (precio base de referencia).\n     * Este NO es el precio de delivery ni el precio en interior.\n     * Puede variar segun area (capital/interior) y tipo de servicio (pickup/delivery).\n     *\n     * El precio final se calcula automaticamente cuando el usuario:\n     * - Selecciona un restaurante para pickup (PUT /cart/restaurant)\n     * - Selecciona una direccion para delivery (PUT /cart/delivery-address)\n     *\n     * For promotions/offers, use GET /api/v1/menu/promotions.",
                 "operationId": "fa6c34f6134451c1793d68fdbf350ec6",
                 "parameters": [
                     {
@@ -3540,6 +3693,11 @@
                                     "properties": {
                                         "data": {
                                             "properties": {
+                                                "price_disclaimer": {
+                                                    "description": "Disclaimer obligatorio a mostrar en UI junto a los precios",
+                                                    "type": "string",
+                                                    "example": "El precio puede variar segun area y tipo de servicio."
+                                                },
                                                 "categories": {
                                                     "description": "Product categories with their products",
                                                     "type": "array",
@@ -4290,7 +4448,7 @@
                     "Orders"
                 ],
                 "summary": "Create order from cart",
-                "description": "Creates a new order from the customer's active cart. Important validations: restaurant_id is required for pickup orders, delivery_address_id is required for delivery orders, scheduled_pickup_time must be at least 30 minutes from now for pickup orders, cart must not be empty and all items must be valid.",
+                "description": "Creates a new order from the customer's active cart. **Requires verified email.** Important validations: restaurant_id is required for pickup orders, delivery_address_id is required for delivery orders, scheduled_pickup_time must be at least 30 minutes from now for pickup orders, cart must not be empty and all items must be valid.",
                 "operationId": "79da0a1adcc617490783dfd61927ff56",
                 "requestBody": {
                     "required": true,
@@ -4487,6 +4645,39 @@
                     },
                     "401": {
                         "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Email not verified",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Debes verificar tu correo electronico para realizar esta accion."
+                                        },
+                                        "error_code": {
+                                            "type": "string",
+                                            "example": "EMAIL_NOT_VERIFIED"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "usuario@email.com"
+                                                },
+                                                "resend_verification_url": {
+                                                    "type": "string",
+                                                    "example": "/api/v1/auth/email/resend"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "422": {
                         "description": "Validation error",
@@ -5574,26 +5765,8 @@
                     "Profile"
                 ],
                 "summary": "Eliminar cuenta de cliente",
-                "description": "Soft delete de la cuenta del cliente. Revoca todos los tokens.\n     *\n     * **Para cuentas locales (email/contraseña):**\n     * - Requiere: password (contraseña actual para confirmar)\n     *\n     * **Para cuentas OAuth (Google/Apple) sin contraseña:**\n     * - NO requiere password (el body puede estar vacío o enviar `{}`)\n     *\n     * **Período de gracia:**\n     * - La cuenta se puede recuperar dentro de 30 días usando POST /api/v1/auth/reactivate\n     * - Después de 30 días, la cuenta se elimina permanentemente",
+                "description": "Soft delete de la cuenta del cliente. Revoca todos los tokens. No requiere confirmacion de contrasena.\n     *\n     * **Período de gracia:**\n     * - La cuenta se puede recuperar dentro de 30 días usando POST /api/v1/auth/reactivate\n     * - Después de 30 días, la cuenta se elimina permanentemente",
                 "operationId": "dd388e266427403d3d4573c1104c784a",
-                "requestBody": {
-                    "required": false,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "password": {
-                                        "description": "Contraseña actual. SOLO requerido para cuentas locales (oauth_provider='local'). NO enviar si es cuenta OAuth.",
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "SecurePass123!"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "200": {
                         "description": "Cuenta eliminada exitosamente",
@@ -5629,34 +5802,6 @@
                     },
                     "401": {
                         "description": "No autenticado"
-                    },
-                    "422": {
-                        "description": "Contraseña incorrecta (solo cuentas locales)",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "La contraseña es incorrecta."
-                                        },
-                                        "errors": {
-                                            "properties": {
-                                                "password": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "La contraseña es incorrecta."
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
                     }
                 },
                 "security": [

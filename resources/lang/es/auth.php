@@ -42,6 +42,8 @@ return [
 
     // Verificación de email
     'invalid_verification_link' => 'El enlace de verificación no es válido.',
+    'verification_link_expired' => 'Enlace Expirado',
+    'invalid_or_expired_link' => 'El enlace es inválido o ha expirado.',
 
     // Errores generales
     'unauthenticated' => 'Sesión expirada. Inicia sesión nuevamente.',

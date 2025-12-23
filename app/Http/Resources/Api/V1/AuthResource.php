@@ -15,7 +15,7 @@ class AuthResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'access_token' => $this->resource['token'],
+            'token' => $this->resource['token'],
             'token_type' => 'Bearer',
             'expires_in' => config('sanctum.expiration', null),
             'customer' => CustomerResource::make($this->resource['customer']),

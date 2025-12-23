@@ -33,6 +33,7 @@ class RegisterRequest extends FormRequest
             'birth_date' => ['required', 'date', 'before:today'],
             'gender' => ['required', Rule::enum(Gender::class)],
             'device_identifier' => ['required', 'string', 'max:255'],
+            'terms_accepted' => ['required', 'accepted'],
         ];
     }
 
@@ -62,6 +63,8 @@ class RegisterRequest extends FormRequest
             'gender.enum' => 'El género seleccionado no es válido.',
             'device_identifier.required' => 'El identificador de dispositivo es requerido.',
             'device_identifier.max' => 'El identificador de dispositivo no puede exceder 255 caracteres.',
+            'terms_accepted.required' => 'Debes aceptar los terminos y condiciones.',
+            'terms_accepted.accepted' => 'Debes aceptar los terminos y condiciones.',
         ];
     }
 }

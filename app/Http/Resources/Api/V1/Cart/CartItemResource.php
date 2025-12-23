@@ -46,6 +46,11 @@ class CartItemResource extends JsonResource
             'quantity' => $this->quantity,
             'unit_price' => (float) $this->unit_price,
             'subtotal' => (float) $this->subtotal,
+            // Campos de descuento para mostrar precio tachado en Flutter
+            'discount_amount' => $this->discount_info['discount_amount'] ?? 0.0,
+            'final_price' => $this->discount_info['final_price'] ?? (float) $this->subtotal,
+            'is_daily_special' => $this->discount_info['is_daily_special'] ?? false,
+            'applied_promotion' => $this->discount_info['applied_promotion'] ?? null,
             'selected_options' => $this->selected_options ? collect($this->selected_options)->map(function ($option) {
                 return [
                     'section_id' => $option['section_id'] ?? null,

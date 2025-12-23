@@ -20,7 +20,18 @@ class MenuController extends Controller
      *     path="/api/v1/menu",
      *     tags={"Menu"},
      *     summary="Get complete menu",
-     *     description="Returns complete menu with categories, products and permanent combos. For promotions/offers, use GET /api/v1/menu/promotions.",
+     *     description="Returns complete menu with categories, products and permanent combos.
+     *
+     * **⚠️ IMPORTANTE - Disclaimer de Precios:**
+     * El campo `price` muestra el precio de PICKUP en CAPITAL (precio base de referencia).
+     * Este NO es el precio de delivery ni el precio en interior.
+     * Puede variar segun area (capital/interior) y tipo de servicio (pickup/delivery).
+     *
+     * El precio final se calcula automaticamente cuando el usuario:
+     * - Selecciona un restaurante para pickup (PUT /cart/restaurant)
+     * - Selecciona una direccion para delivery (PUT /cart/delivery-address)
+     *
+     * For promotions/offers, use GET /api/v1/menu/promotions.",
      *
      *     @OA\Parameter(
      *         name="lite",
@@ -38,6 +49,7 @@ class MenuController extends Controller
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="price_disclaimer", type="string", example="El precio puede variar segun area y tipo de servicio.", description="Disclaimer obligatorio a mostrar en UI junto a los precios"),
      *                 @OA\Property(property="categories", type="array", description="Product categories with their products",
      *
      *                     @OA\Items(ref="#/components/schemas/Category")
@@ -94,6 +106,7 @@ class MenuController extends Controller
 
         return response()->json([
             'data' => [
+                'price_disclaimer' => 'El precio puede variar segun area y tipo de servicio.',
                 'categories' => CategoryResource::collection($categories),
                 'combos' => ComboResource::collection($combos),
             ],
@@ -120,6 +133,7 @@ class MenuController extends Controller
 
         return response()->json([
             'data' => [
+                'price_disclaimer' => 'El precio puede variar segun area y tipo de servicio.',
                 'categories' => $categories->map(fn ($cat) => [
                     'id' => $cat->id,
                     'name' => $cat->name,

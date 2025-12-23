@@ -11,11 +11,11 @@ class VerifyEmailNotification extends VerifyEmailBase
 {
     /**
      * Get the verification URL for the given notifiable.
+     * Returns direct API URL that works in browser (GET request shows success page).
      */
     protected function verificationUrl($notifiable): string
     {
-        // Generate the signed API URL
-        $apiUrl = URL::temporarySignedRoute(
+        return URL::temporarySignedRoute(
             'api.v1.auth.verify-email',
             Carbon::now()->addMinutes(60),
             [
@@ -23,12 +23,6 @@ class VerifyEmailNotification extends VerifyEmailBase
                 'hash' => sha1($notifiable->getEmailForVerification()),
             ]
         );
-
-        // Wrap in deep link for mobile app
-        $scheme = config('app.mobile_scheme', 'subwayapp');
-        $encodedUrl = urlencode($apiUrl);
-
-        return "{$scheme}://verify-email?url={$encodedUrl}";
     }
 
     /**

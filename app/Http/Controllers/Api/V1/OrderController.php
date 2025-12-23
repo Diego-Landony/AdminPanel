@@ -45,7 +45,7 @@ class OrderController extends Controller
      *     path="/api/v1/orders",
      *     tags={"Orders"},
      *     summary="Create order from cart",
-     *     description="Creates a new order from the customer's active cart. Important validations: restaurant_id is required for pickup orders, delivery_address_id is required for delivery orders, scheduled_pickup_time must be at least 30 minutes from now for pickup orders, cart must not be empty and all items must be valid.",
+     *     description="Creates a new order from the customer's active cart. **Requires verified email.** Important validations: restaurant_id is required for pickup orders, delivery_address_id is required for delivery orders, scheduled_pickup_time must be at least 30 minutes from now for pickup orders, cart must not be empty and all items must be valid.",
      *     security={{"sanctum":{}}},
      *
      *     @OA\RequestBody(
@@ -153,6 +153,21 @@ class OrderController extends Controller
      *         response=401,
      *         description="Unauthenticated"
      *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Email not verified",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Debes verificar tu correo electronico para realizar esta accion."),
+     *             @OA\Property(property="error_code", type="string", example="EMAIL_NOT_VERIFIED"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="email", type="string", example="usuario@email.com"),
+     *                 @OA\Property(property="resend_verification_url", type="string", example="/api/v1/auth/email/resend")
+     *             )
+     *         )
+     *     ),
+     *
      *     @OA\Response(
      *         response=422,
      *         description="Validation error",
@@ -675,7 +690,9 @@ class OrderController extends Controller
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="data", type="array",
+     *
      *                 @OA\Items(type="object",
+     *
      *                     @OA\Property(property="id", type="integer", example=123),
      *                     @OA\Property(property="order_number", type="string", example="ORD-20251215-0001"),
      *                     @OA\Property(property="ordered_at", type="string", format="date-time", example="2025-12-15T15:00:00Z"),

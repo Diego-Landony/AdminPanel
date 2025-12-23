@@ -19,12 +19,12 @@ class ProductVariantResource extends JsonResource
             'sku' => $this->sku,
             'name' => $this->name,
             'size' => $this->size,
-            'precio' => (float) $this->precio_pickup_capital,
+            'price' => (float) $this->precio_pickup_capital,
             'prices' => [
                 'pickup_capital' => (float) $this->precio_pickup_capital,
-                'domicilio_capital' => (float) $this->precio_domicilio_capital,
+                'delivery_capital' => (float) $this->precio_domicilio_capital,
                 'pickup_interior' => (float) $this->precio_pickup_interior,
-                'domicilio_interior' => (float) $this->precio_domicilio_interior,
+                'delivery_interior' => (float) $this->precio_domicilio_interior,
             ],
             'is_redeemable' => (bool) $this->is_redeemable,
             'points_cost' => $this->points_cost,
@@ -32,9 +32,9 @@ class ProductVariantResource extends JsonResource
             'daily_special_days' => $this->daily_special_days,
             'daily_special_prices' => [
                 'pickup_capital' => (float) $this->daily_special_precio_pickup_capital,
-                'domicilio_capital' => (float) $this->daily_special_precio_domicilio_capital,
+                'delivery_capital' => (float) $this->daily_special_precio_domicilio_capital,
                 'pickup_interior' => (float) $this->daily_special_precio_pickup_interior,
-                'domicilio_interior' => (float) $this->daily_special_precio_domicilio_interior,
+                'delivery_interior' => (float) $this->daily_special_precio_domicilio_interior,
             ],
             'sort_order' => $this->sort_order,
         ];

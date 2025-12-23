@@ -24,10 +24,10 @@ class FavoriteResource extends JsonResource
                     'name' => $this->favorable->name,
                     'description' => $this->favorable->description ?? null,
                     'price' => $this->favorable->price ?? null,
-                    'image' => $this->favorable->image ?? null,
+                    'image_url' => $this->favorable->image ?? null,
                 ];
             }),
-            'created_at' => $this->created_at->toISOString(),
+            'created_at' => $this->created_at->toIso8601String(),
         ];
     }
 }

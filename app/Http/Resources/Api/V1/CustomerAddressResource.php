@@ -18,7 +18,7 @@ class CustomerAddressResource extends JsonResource
             'delivery_notes' => $this->delivery_notes,
             'zone' => $this->zone ?? 'capital',
             'is_default' => $this->is_default,
-            'created_at' => $this->created_at->toISOString(),
+            'created_at' => $this->created_at->toIso8601String(),
         ];
     }
 }

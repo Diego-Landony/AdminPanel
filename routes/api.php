@@ -44,8 +44,8 @@ Route::prefix('v1')->group(function () {
         Route::post('/reset-password', [AuthController::class, 'resetPassword'])
             ->name('api.v1.auth.reset-password');
 
-        // Email verification
-        Route::post('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+        // Email verification (POST for API, GET for web fallback)
+        Route::match(['get', 'post'], '/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
             ->middleware(['signed', 'throttle:6,1'])
             ->name('api.v1.auth.verify-email');
 
@@ -190,7 +190,9 @@ Route::prefix('v1')->group(function () {
             Route::get('/', [App\Http\Controllers\Api\V1\OrderController::class, 'index'])
                 ->name('index');
 
+            // Crear orden requiere email verificado
             Route::post('/', [App\Http\Controllers\Api\V1\OrderController::class, 'store'])
+                ->middleware('verified.api')
                 ->name('store');
 
             Route::get('/active', [App\Http\Controllers\Api\V1\OrderController::class, 'active'])

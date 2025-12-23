@@ -228,29 +228,33 @@ img {
 
 .button {
     -webkit-text-size-adjust: none;
-    border-radius: 4px;
+    border-radius: 12px;
     color: #fff;
     display: inline-block;
     overflow: hidden;
     text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .button-blue,
 .button-primary {
-    background-color: #2d3748;
-    border-bottom: 8px solid #2d3748;
-    border-left: 18px solid #2d3748;
-    border-right: 18px solid #2d3748;
-    border-top: 8px solid #2d3748;
+    background-color: #009639;
+    border-bottom: 14px solid #009639;
+    border-left: 32px solid #009639;
+    border-right: 32px solid #009639;
+    border-top: 14px solid #009639;
 }
 
 .button-green,
 .button-success {
-    background-color: #48bb78;
-    border-bottom: 8px solid #48bb78;
-    border-left: 18px solid #48bb78;
-    border-right: 18px solid #48bb78;
-    border-top: 8px solid #48bb78;
+    background-color: #009639;
+    border-bottom: 14px solid #009639;
+    border-left: 32px solid #009639;
+    border-right: 32px solid #009639;
+    border-top: 14px solid #009639;
 }
 
 .button-red,

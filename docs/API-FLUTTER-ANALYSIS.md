@@ -873,6 +873,206 @@ Column(
 
 ---
 
+### 6.7 Featured (Para Home Screen)
+
+**GET** `/menu/featured`
+
+Retorna productos y combos que tienen badges activos, junto con los tipos de badges disponibles. Ideal para construir carruseles en el Home Screen.
+
+Query params:
+- `limit` (default: 10, max: 50) - Limite de productos/combos a retornar
+
+```dart
+// Response 200
+{
+  "data": {
+    "badge_types": [
+      { "id": 1, "name": "Nuevo", "color": "green", "sort_order": 1 },
+      { "id": 2, "name": "Popular", "color": "orange", "sort_order": 2 },
+      { "id": 3, "name": "Mas Vendido", "color": "red", "sort_order": 3 }
+    ],
+    "products": [
+      {
+        "id": 1,
+        "name": "Italian BMT",
+        "price": 45.00,
+        "image_url": "...",
+        "badges": [
+          { "id": 1, "badge_type": { "name": "Popular", "color": "orange" } }
+        ]
+      }
+    ],
+    "combos": [...]
+  }
+}
+```
+
+**Uso en Flutter - Carruseles por Badge Type:**
+
+```dart
+class FeaturedResponse {
+  final List<BadgeType> badgeTypes;
+  final List<Product> products;
+  final List<Combo> combos;
+}
+
+// Agrupar productos por badge_type_id
+Map<int, List<Product>> groupProductsByBadge(FeaturedResponse data) {
+  final Map<int, List<Product>> groups = {};
+
+  for (final badgeType in data.badgeTypes) {
+    groups[badgeType.id] = data.products
+      .where((p) => p.badges.any((b) => b.badgeTypeId == badgeType.id))
+      .toList();
+  }
+
+  return groups;
+}
+
+// Widget para Home Screen
+Widget buildHomeCarousels(FeaturedResponse data) {
+  final groupedProducts = groupProductsByBadge(data);
+
+  return Column(
+    children: data.badgeTypes.map((badgeType) {
+      final products = groupedProducts[badgeType.id] ?? [];
+      if (products.isEmpty) return SizedBox.shrink();
+
+      return CarouselSection(
+        title: badgeType.name,           // "Popular", "Mas Vendido"
+        titleColor: Color(badgeType.color), // orange, red
+        products: products,
+      );
+    }).toList(),
+  );
+}
+```
+
+**Beneficios:**
+- Admin agrega/elimina badges → carruseles se actualizan automaticamente
+- No hay IDs hardcodeados - todo es dinamico
+- El orden de carruseles = `sort_order` del badge_type
+
+---
+
+### 6.8 Banners Promocionales (Para Home Screen)
+
+**GET** `/menu/banners`
+
+Retorna banners promocionales activos para el carrusel del Home Screen. Los banners se administran desde el panel de admin.
+
+Query params:
+- `orientation` (default: "horizontal") - Filtrar por orientacion: "horizontal" o "vertical"
+
+```dart
+// Response 200
+{
+  "data": {
+    "orientation": "horizontal",
+    "banners": [
+      {
+        "id": 1,
+        "title": "Nuevo Menu de Verano",
+        "description": "Prueba nuestros nuevos subs refrescantes",
+        "image_url": "https://admin.subwaycardgt.com/storage/banners/summer.jpg",
+        "display_seconds": 5,
+        "link": {
+          "type": "product",
+          "id": 42
+        }
+      },
+      {
+        "id": 2,
+        "title": "15% de Descuento",
+        "description": null,
+        "image_url": "https://admin.subwaycardgt.com/storage/banners/promo15.jpg",
+        "display_seconds": 5,
+        "link": {
+          "type": "url",
+          "url": "https://example.com/promo"
+        }
+      },
+      {
+        "id": 3,
+        "title": "SubwayCard",
+        "description": "Acumula puntos en cada compra",
+        "image_url": "https://admin.subwaycardgt.com/storage/banners/loyalty.jpg",
+        "display_seconds": 5,
+        "link": null
+      }
+    ]
+  }
+}
+```
+
+**Tipos de Link:**
+
+| Tipo | Descripcion | Accion en Flutter |
+|------|-------------|-------------------|
+| `product` | Producto | Navegar a ProductDetailScreen(id) |
+| `combo` | Combo | Navegar a ComboDetailScreen(id) |
+| `category` | Categoria | Navegar a CategoryScreen(id) |
+| `promotion` | Promocion | Navegar a PromotionDetailScreen(id) |
+| `url` | URL externa | Abrir en navegador con launchUrl() |
+| `null` | Sin accion | No hacer nada al tap |
+
+**Uso en Flutter:**
+
+```dart
+class BannerCarousel extends StatelessWidget {
+  final List<Banner> banners;
+
+  Widget build(BuildContext context) {
+    return CarouselSlider.builder(
+      itemCount: banners.length,
+      options: CarouselOptions(
+        autoPlay: true,
+        autoPlayInterval: Duration(seconds: banners[0].displaySeconds),
+        viewportFraction: 0.95,
+        aspectRatio: 16 / 9,  // Para horizontal
+      ),
+      itemBuilder: (context, index, _) {
+        final banner = banners[index];
+        return GestureDetector(
+          onTap: () => handleBannerTap(context, banner),
+          child: CachedNetworkImage(
+            imageUrl: banner.imageUrl,
+            fit: BoxFit.cover,
+          ),
+        );
+      },
+    );
+  }
+
+  void handleBannerTap(BuildContext context, Banner banner) {
+    if (banner.link == null) return;
+
+    switch (banner.link!.type) {
+      case 'product':
+        Navigator.push(context, ProductDetailScreen(id: banner.link!.id));
+        break;
+      case 'combo':
+        Navigator.push(context, ComboDetailScreen(id: banner.link!.id));
+        break;
+      case 'category':
+        Navigator.push(context, CategoryScreen(id: banner.link!.id));
+        break;
+      case 'url':
+        launchUrl(Uri.parse(banner.link!.url!));
+        break;
+    }
+  }
+}
+```
+
+**Caracteristicas:**
+- Validez temporal: permanente, por fechas, o por dias de la semana
+- Orientacion forzada: horizontal = todos horizontales, vertical = todos verticales
+- Tiempo de display configurable por banner (1-30 segundos)
+- Links opcionales a productos, combos, categorias, o URLs externas
+
+---
+
 ## 7. Restaurantes
 
 ### 7.1 Listar
@@ -1652,6 +1852,8 @@ Widget buildMenuPrice(Product product, String disclaimer) {
 
 | Fecha | Cambio |
 |-------|--------|
+| 2025-12-23 | Agregado GET /menu/banners - Banners promocionales para Home Screen con links y validez temporal |
+| 2025-12-23 | Agregado GET /menu/featured - Endpoint para Home Screen con productos/combos por badges (carruseles dinamicos) |
 | 2025-12-23 | POST /auth/register ahora requiere `terms_accepted: true` (checkbox de T&C) |
 | 2025-12-23 | POST /orders ahora requiere email verificado (error 403 EMAIL_NOT_VERIFIED) |
 | 2025-12-23 | GET /menu ahora devuelve `price_disclaimer` para mostrar en UI |

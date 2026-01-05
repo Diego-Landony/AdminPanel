@@ -10,10 +10,12 @@ import {
     Gift,
     HandPlatter,
     Home,
+    Image,
     Layers,
     ListChecks,
     LucideIcon,
     MapPin,
+    Megaphone,
     Package,
     Package2,
     Percent,
@@ -170,6 +172,14 @@ export const systemPages: PageConfig[] = [
         permission: 'menu.promotions.view',
     },
     {
+        name: 'marketing-banners',
+        title: 'Banners',
+        href: '/marketing/banners',
+        icon: Image,
+        group: 'Marketing',
+        permission: 'marketing.banners.view',
+    },
+    {
         name: 'activity',
         title: 'Actividad',
         href: '/activity',
@@ -202,6 +212,7 @@ export const groupIcons: Record<string, LucideIcon> = {
     Restaurantes: Utensils,
     Menú: HandPlatter,
     Promociones: Percent,
+    Marketing: Megaphone,
 };
 
 /**

@@ -17,6 +17,7 @@ class BadgeResource extends JsonResource
         return [
             'id' => $this->id,
             'badge_type' => [
+                'id' => $this->badgeType->id,
                 'name' => $this->badgeType->name,
                 'color' => $this->badgeType->color,
             ],

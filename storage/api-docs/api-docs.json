@@ -3724,6 +3724,190 @@
                 }
             }
         },
+        "/api/v1/menu/featured": {
+            "get": {
+                "tags": [
+                    "Menu"
+                ],
+                "summary": "Get featured products and combos",
+                "description": "Returns products and combos that have active badges, along with available badge types.\n     *\n     * Flutter can use this endpoint to build carousels for each badge type (Popular, Best Seller, New, etc.).\n     *\n     * **Usage:**\n     * 1. Get all badge_types from the response\n     * 2. Filter products/combos by badge_type_id\n     * 3. Render a carousel for each badge_type that has items\n     *\n     * Badge types are ordered by sort_order, so render carousels in that order.",
+                "operationId": "8bc6cf5c7d570acf66c9449c98fc0415",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Maximum number of products/combos to return per badge type (default: 10)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 50,
+                            "minimum": 1,
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Featured items retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "badge_types": {
+                                                    "description": "Available badge types ordered by sort_order",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Popular"
+                                                            },
+                                                            "color": {
+                                                                "type": "string",
+                                                                "example": "orange"
+                                                            },
+                                                            "sort_order": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "products": {
+                                                    "description": "Products with active badges",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Product"
+                                                    }
+                                                },
+                                                "combos": {
+                                                    "description": "Combos with active badges",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Combo"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/menu/banners": {
+            "get": {
+                "tags": [
+                    "Menu"
+                ],
+                "summary": "Get promotional banners",
+                "description": "Returns active promotional banners for the Home Screen carousel.\n     *\n     * Banners are filtered by:\n     * - Active status\n     * - Valid date range or weekdays\n     * - Orientation (horizontal/vertical)\n     *\n     * **Important:** All banners in the response have the same orientation.\n     * If you request horizontal, only horizontal banners are returned.\n     *\n     * **Link Types:**\n     * - `product` - Links to a product detail screen\n     * - `combo` - Links to a combo detail screen\n     * - `category` - Links to a category screen\n     * - `promotion` - Links to a promotion detail\n     * - `url` - External URL (open in browser)\n     * - `none` - No action on tap",
+                "operationId": "3d54f54ec71b2eedb5359310b6dcf901",
+                "parameters": [
+                    {
+                        "name": "orientation",
+                        "in": "query",
+                        "description": "Filter by orientation (default: horizontal)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "horizontal",
+                                "vertical"
+                            ],
+                            "example": "horizontal"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Banners retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "orientation": {
+                                                    "description": "Orientation of all banners in this response",
+                                                    "type": "string",
+                                                    "example": "horizontal"
+                                                },
+                                                "banners": {
+                                                    "description": "List of active banners",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "title": {
+                                                                "type": "string",
+                                                                "example": "New Summer Menu"
+                                                            },
+                                                            "description": {
+                                                                "type": "string",
+                                                                "example": "Try our refreshing new subs",
+                                                                "nullable": true
+                                                            },
+                                                            "image_url": {
+                                                                "type": "string",
+                                                                "example": "https://admin.subwaycardgt.com/storage/banners/abc123.jpg"
+                                                            },
+                                                            "display_seconds": {
+                                                                "description": "Seconds to show in carousel",
+                                                                "type": "integer",
+                                                                "example": 5
+                                                            },
+                                                            "link": {
+                                                                "description": "Action when banner is tapped",
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string",
+                                                                        "example": "product"
+                                                                    },
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 42,
+                                                                        "nullable": true
+                                                                    },
+                                                                    "url": {
+                                                                        "type": "string",
+                                                                        "example": "https://example.com",
+                                                                        "nullable": true
+                                                                    }
+                                                                },
+                                                                "type": "object",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/menu/products": {
             "get": {
                 "tags": [

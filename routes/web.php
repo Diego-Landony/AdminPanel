@@ -7,6 +7,7 @@ use App\Http\Controllers\CustomerDeviceController;
 use App\Http\Controllers\CustomerNitController;
 use App\Http\Controllers\CustomerTypeController;
 use App\Http\Controllers\ImageUploadController;
+use App\Http\Controllers\Marketing\PromotionalBannerController;
 use App\Http\Controllers\Menu\BadgeTypeController;
 use App\Http\Controllers\Menu\CategoryController;
 use App\Http\Controllers\Menu\ComboController;
@@ -392,6 +393,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('permission:menu.combos.edit');
         Route::post('combos/reorder', [ComboController::class, 'reorder'])->name('combos.reorder')
             ->middleware('permission:menu.combos.edit');
+    });
+
+    // Marketing
+    Route::prefix('marketing')->name('marketing.')->group(function () {
+        // Promotional Banners
+        Route::get('banners', [PromotionalBannerController::class, 'index'])->name('banners.index')
+            ->middleware('permission:marketing.banners.view');
+        Route::get('banners/create', [PromotionalBannerController::class, 'create'])->name('banners.create')
+            ->middleware('permission:marketing.banners.create');
+        Route::post('banners', [PromotionalBannerController::class, 'store'])->name('banners.store')
+            ->middleware('permission:marketing.banners.create');
+        Route::get('banners/{banner}/edit', [PromotionalBannerController::class, 'edit'])->name('banners.edit')
+            ->middleware('permission:marketing.banners.edit');
+        Route::put('banners/{banner}', [PromotionalBannerController::class, 'update'])->name('banners.update')
+            ->middleware('permission:marketing.banners.edit');
+        Route::delete('banners/{banner}', [PromotionalBannerController::class, 'destroy'])->name('banners.destroy')
+            ->middleware('permission:marketing.banners.delete');
+        Route::post('banners/reorder', [PromotionalBannerController::class, 'reorder'])->name('banners.reorder')
+            ->middleware('permission:marketing.banners.edit');
+        Route::post('banners/{banner}/toggle', [PromotionalBannerController::class, 'toggleActive'])->name('banners.toggle')
+            ->middleware('permission:marketing.banners.edit');
     });
 });
 

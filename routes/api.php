@@ -254,6 +254,14 @@ Route::prefix('v1')->group(function () {
         Route::get('/', [App\Http\Controllers\Api\V1\Menu\MenuController::class, 'index'])
             ->name('index');
 
+        // Featured products/combos (for Home screen carousels)
+        Route::get('/featured', [App\Http\Controllers\Api\V1\Menu\MenuController::class, 'featured'])
+            ->name('featured');
+
+        // Promotional banners (for Home screen carousel)
+        Route::get('/banners', [App\Http\Controllers\Api\V1\Menu\MenuController::class, 'banners'])
+            ->name('banners');
+
         // Categorías
         Route::get('/categories', [App\Http\Controllers\Api\V1\Menu\CategoryController::class, 'index'])
             ->name('categories.index');

@@ -96,7 +96,7 @@ export const systemPages: PageConfig[] = [
         title: 'Menú App',
         href: '/menu/order',
         icon: ArrowUpDown,
-        group: 'Menú',
+        group: 'Marketing',
         permission: 'menu.categories.view',
     },
     {
@@ -136,7 +136,7 @@ export const systemPages: PageConfig[] = [
         title: 'Badges',
         href: '/menu/badge-types',
         icon: Award,
-        group: 'Menú',
+        group: 'Marketing',
         permission: 'menu.categories.view',
     },
     {

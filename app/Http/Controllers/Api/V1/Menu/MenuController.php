@@ -265,38 +265,27 @@ class MenuController extends Controller
     }
 
     /**
-     * Get promotional banners for Home Screen carousel.
+     * Get promotional banners for Home Screen.
      *
      * @OA\Get(
      *     path="/api/v1/menu/banners",
      *     tags={"Menu"},
      *     summary="Get promotional banners",
-     *     description="Returns active promotional banners for the Home Screen carousel.
+     *     description="Returns active promotional banners separated by orientation.
      *
-     * Banners are filtered by:
-     * - Active status
-     * - Valid date range or weekdays
-     * - Orientation (horizontal/vertical)
+     * **Response structure:**
+     * - `horizontal` - Banners for the main carousel in Home Screen
+     * - `vertical` - Banners for stories, popups, or other vertical placements
      *
-     * **Important:** All banners in the response have the same orientation.
-     * If you request horizontal, only horizontal banners are returned.
+     * Both arrays are filtered by active status and valid date range/weekdays.
      *
      * **Link Types:**
-     * - `product` - Links to a product detail screen
-     * - `combo` - Links to a combo detail screen
-     * - `category` - Links to a category screen
-     * - `promotion` - Links to a promotion detail
-     * - `url` - External URL (open in browser)
-     * - `none` - No action on tap",
-     *
-     *     @OA\Parameter(
-     *         name="orientation",
-     *         in="query",
-     *         description="Filter by orientation (default: horizontal)",
-     *         required=false,
-     *
-     *         @OA\Schema(type="string", enum={"horizontal", "vertical"}, example="horizontal")
-     *     ),
+     * - `product` - Navigate to product detail screen
+     * - `combo` - Navigate to combo detail screen
+     * - `category` - Navigate to category screen
+     * - `promotion` - Navigate to promotion detail
+     * - `url` - Open external URL in browser
+     * - `null` - No action on tap",
      *
      *     @OA\Response(
      *         response=200,
@@ -305,54 +294,40 @@ class MenuController extends Controller
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="orientation", type="string", example="horizontal", description="Orientation of all banners in this response"),
-     *                 @OA\Property(property="banners", type="array", description="List of active banners",
+     *                 @OA\Property(property="horizontal", type="array", description="Horizontal banners for main carousel",
      *
-     *                     @OA\Items(type="object",
+     *                     @OA\Items(ref="#/components/schemas/Banner")
+     *                 ),
      *
-     *                         @OA\Property(property="id", type="integer", example=1),
-     *                         @OA\Property(property="title", type="string", example="New Summer Menu"),
-     *                         @OA\Property(property="description", type="string", example="Try our refreshing new subs", nullable=true),
-     *                         @OA\Property(property="image_url", type="string", example="https://admin.subwaycardgt.com/storage/banners/abc123.jpg"),
-     *                         @OA\Property(property="display_seconds", type="integer", example=5, description="Seconds to show in carousel"),
-     *                         @OA\Property(property="link", type="object", nullable=true, description="Action when banner is tapped",
-     *                             @OA\Property(property="type", type="string", example="product"),
-     *                             @OA\Property(property="id", type="integer", example=42, nullable=true),
-     *                             @OA\Property(property="url", type="string", example="https://example.com", nullable=true)
-     *                         )
-     *                     )
+     *                 @OA\Property(property="vertical", type="array", description="Vertical banners for stories/popups",
+     *
+     *                     @OA\Items(ref="#/components/schemas/Banner")
      *                 )
      *             )
      *         )
      *     )
      * )
      */
-    public function banners(Request $request): JsonResponse
+    public function banners(): JsonResponse
     {
-        $orientation = $request->input('orientation', 'horizontal');
-
-        if (! in_array($orientation, ['horizontal', 'vertical'])) {
-            $orientation = 'horizontal';
-        }
-
-        $banners = PromotionalBanner::query()
+        $allBanners = PromotionalBanner::query()
             ->validNow()
-            ->orientation($orientation)
             ->ordered()
-            ->get()
-            ->map(fn ($banner) => [
-                'id' => $banner->id,
-                'title' => $banner->title,
-                'description' => $banner->description,
-                'image_url' => $banner->getImageUrl(),
-                'display_seconds' => $banner->display_seconds,
-                'link' => $banner->getLinkData(),
-            ]);
+            ->get();
+
+        $mapBanner = fn ($banner) => [
+            'id' => $banner->id,
+            'title' => $banner->title,
+            'description' => $banner->description,
+            'image_url' => $banner->getImageUrl(),
+            'display_seconds' => $banner->display_seconds,
+            'link' => $banner->getLinkData(),
+        ];
 
         return response()->json([
             'data' => [
-                'orientation' => $orientation,
-                'banners' => $banners,
+                'horizontal' => $allBanners->where('orientation', 'horizontal')->values()->map($mapBanner),
+                'vertical' => $allBanners->where('orientation', 'vertical')->values()->map($mapBanner),
             ],
         ]);
     }

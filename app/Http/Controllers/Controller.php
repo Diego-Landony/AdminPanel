@@ -168,6 +168,24 @@ namespace App\Http\Controllers;
  * )
  *
  * @OA\Schema(
+ *     schema="Banner",
+ *     type="object",
+ *     title="Banner",
+ *     description="Banner promocional para carrusel",
+ *
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="title", type="string", example="Nuevo Menu de Verano"),
+ *     @OA\Property(property="description", type="string", nullable=true, example="Prueba nuestros nuevos subs"),
+ *     @OA\Property(property="image_url", type="string", example="https://admin.subwaycardgt.com/storage/banners/summer.jpg"),
+ *     @OA\Property(property="display_seconds", type="integer", example=5, description="Segundos a mostrar en carrusel"),
+ *     @OA\Property(property="link", type="object", nullable=true, description="Accion al tap",
+ *         @OA\Property(property="type", type="string", example="product", description="product, combo, category, promotion, url"),
+ *         @OA\Property(property="id", type="integer", example=42, nullable=true, description="ID de la entidad si type no es url"),
+ *         @OA\Property(property="url", type="string", example="https://example.com", nullable=true, description="URL si type es url")
+ *     )
+ * )
+ *
+ * @OA\Schema(
  *     schema="Product",
  *     type="object",
  *     title="Product",

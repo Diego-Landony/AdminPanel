@@ -3,14 +3,14 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
-import { SortableTable } from '@/components/SortableTable';
+import { GroupedSortableTable } from '@/components/GroupedSortableTable';
 import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { TableActions } from '@/components/TableActions';
 import { ACTIVE_STATUS_CONFIGS, StatusBadge } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { PLACEHOLDERS } from '@/constants/ui-constants';
 import AppLayout from '@/layouts/app-layout';
-import { Check, Image, Monitor, Smartphone, X } from 'lucide-react';
+import { Check, Clock, Image, Monitor, Smartphone } from 'lucide-react';
 
 interface Banner {
     id: number;
@@ -52,12 +52,41 @@ export default function BannersIndex({ banners, stats }: BannersPageProps) {
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
+    // Agrupar banners por orientación usando la estructura que espera GroupedSortableTable
+    const horizontalBanners = banners.filter((b) => b.orientation === 'horizontal');
+    const verticalBanners = banners.filter((b) => b.orientation === 'vertical');
+
+    const groupedData = [
+        ...(horizontalBanners.length > 0
+            ? [
+                  {
+                      category: {
+                          id: 1,
+                          name: 'Banners Horizontales (16:9) - Carrusel principal',
+                      },
+                      products: horizontalBanners,
+                  },
+              ]
+            : []),
+        ...(verticalBanners.length > 0
+            ? [
+                  {
+                      category: {
+                          id: 2,
+                          name: 'Banners Verticales (9:16) - Stories',
+                      },
+                      products: verticalBanners,
+                  },
+              ]
+            : []),
+    ];
+
     const handleReorder = (reordered: Banner[]) => {
         setIsSaving(true);
 
-        const orderData = reordered.map((item, index) => ({
+        const orderData = reordered.map((item) => ({
             id: item.id,
-            sort_order: index + 1,
+            sort_order: item.sort_order,
         }));
 
         router.post(
@@ -171,14 +200,14 @@ export default function BannersIndex({ banners, stats }: BannersPageProps) {
             ),
         },
         {
-            key: 'orientation',
-            title: 'Orientación',
-            width: 'w-28',
-            align: 'center' as const,
+            key: 'duration',
+            title: 'Duración',
+            width: 'w-24',
+            textAlign: 'center' as const,
             render: (banner: Banner) => (
-                <Badge variant="outline" className="capitalize">
-                    {banner.orientation === 'horizontal' ? <Monitor className="mr-1 h-3 w-3" /> : <Smartphone className="mr-1 h-3 w-3" />}
-                    {banner.orientation}
+                <Badge variant="outline" className="gap-1">
+                    <Clock className="h-3 w-3" />
+                    {banner.display_seconds}s
                 </Badge>
             ),
         },
@@ -186,7 +215,7 @@ export default function BannersIndex({ banners, stats }: BannersPageProps) {
             key: 'validity',
             title: 'Validez',
             width: 'w-28',
-            align: 'center' as const,
+            textAlign: 'center' as const,
             render: (banner: Banner) => (
                 <div className="flex flex-col items-center gap-1">
                     <span className="text-xs text-muted-foreground">{VALIDITY_LABELS[banner.validity_type]}</span>
@@ -206,7 +235,7 @@ export default function BannersIndex({ banners, stats }: BannersPageProps) {
             key: 'status',
             title: 'Estado',
             width: 'w-24',
-            align: 'center' as const,
+            textAlign: 'center' as const,
             render: (banner: Banner) => (
                 <button onClick={() => handleToggle(banner)} className="cursor-pointer" title="Click para cambiar estado">
                     <StatusBadge status={banner.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />
@@ -217,7 +246,7 @@ export default function BannersIndex({ banners, stats }: BannersPageProps) {
             key: 'actions',
             title: 'Acciones',
             width: 'w-24',
-            align: 'right' as const,
+            textAlign: 'right' as const,
             render: (banner: Banner) => (
                 <TableActions
                     editHref={`/marketing/banners/${banner.id}/edit`}
@@ -233,7 +262,7 @@ export default function BannersIndex({ banners, stats }: BannersPageProps) {
     const renderMobileCard = (banner: Banner) => (
         <StandardMobileCard
             title={banner.title}
-            subtitle={banner.description || `${banner.orientation} • ${banner.display_seconds}s`}
+            subtitle={banner.description || `${banner.display_seconds}s`}
             image={banner.image_url}
             badge={{
                 children: <StatusBadge status={banner.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />,
@@ -247,12 +276,8 @@ export default function BannersIndex({ banners, stats }: BannersPageProps) {
             }}
             dataFields={[
                 {
-                    label: 'Orientación',
-                    value: (
-                        <Badge variant="outline" className="capitalize">
-                            {banner.orientation}
-                        </Badge>
-                    ),
+                    label: 'Duración',
+                    value: `${banner.display_seconds}s`,
                 },
                 {
                     label: 'Validez',
@@ -270,10 +295,10 @@ export default function BannersIndex({ banners, stats }: BannersPageProps) {
         <AppLayout>
             <Head title="Banners Promocionales" />
 
-            <SortableTable
+            <GroupedSortableTable
                 title="Banners Promocionales"
                 description="Gestiona los banners del carrusel de la app"
-                data={banners}
+                groupedData={groupedData}
                 columns={columns}
                 stats={bannerStats}
                 createUrl="/marketing/banners/create"

@@ -965,17 +965,32 @@ Widget buildHomeCarousels(FeaturedResponse data) {
 
 **GET** `/menu/banners`
 
-Retorna banners promocionales activos para el carrusel del Home Screen. Los banners se administran desde el panel de admin.
+Retorna banners promocionales activos separados por orientacion. Una sola llamada trae todos los banners organizados.
 
-Query params:
-- `orientation` (default: "horizontal") - Filtrar por orientacion: "horizontal" o "vertical"
+**⚠️ IMPORTANTE - Aspect Ratios Pre-definidos:**
+
+Las imagenes ya vienen recortadas desde el Admin Panel con los aspect ratios correctos:
+
+| Orientacion | Aspect Ratio | Dimensiones Referencia | Uso |
+|-------------|--------------|------------------------|-----|
+| `horizontal` | **16:9** | 1920×1080px | Carrusel principal del Home |
+| `vertical` | **9:16** | 1080×1920px | Stories estilo Instagram |
+
+**Flutter NO debe:**
+- ❌ Recortar las imagenes
+- ❌ Aplicar transformaciones de aspect ratio
+- ❌ Modificar las proporciones
+
+**Flutter DEBE:**
+- ✅ Usar `BoxFit.cover` o `BoxFit.contain` para mostrar
+- ✅ Crear containers con el aspect ratio correcto (16:9 o 9:16)
+- ✅ Las imagenes se ajustaran perfectamente
 
 ```dart
 // Response 200
 {
   "data": {
-    "orientation": "horizontal",
-    "banners": [
+    "horizontal": [
       {
         "id": 1,
         "title": "Nuevo Menu de Verano",
@@ -997,7 +1012,9 @@ Query params:
           "type": "url",
           "url": "https://example.com/promo"
         }
-      },
+      }
+    ],
+    "vertical": [
       {
         "id": 3,
         "title": "SubwayCard",
@@ -1011,6 +1028,13 @@ Query params:
 }
 ```
 
+**Estructura de Response:**
+
+| Campo | Descripcion |
+|-------|-------------|
+| `horizontal` | Banners para el carrusel principal del Home |
+| `vertical` | Banners para stories, popups u otros espacios verticales |
+
 **Tipos de Link:**
 
 | Tipo | Descripcion | Accion en Flutter |
@@ -1022,35 +1046,88 @@ Query params:
 | `url` | URL externa | Abrir en navegador con launchUrl() |
 | `null` | Sin accion | No hacer nada al tap |
 
-**Uso en Flutter:**
+**Uso en Flutter - Home Screen:**
+
+```dart
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  List<Banner> horizontalBanners = [];
+  List<Banner> verticalBanners = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadBanners();
+  }
+
+  Future<void> loadBanners() async {
+    final response = await http.get(Uri.parse('$baseUrl/menu/banners'));
+    final data = jsonDecode(response.body)['data'];
+
+    setState(() {
+      horizontalBanners = (data['horizontal'] as List)
+          .map((b) => Banner.fromJson(b)).toList();
+      verticalBanners = (data['vertical'] as List)
+          .map((b) => Banner.fromJson(b)).toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Carrusel horizontal principal
+        if (horizontalBanners.isNotEmpty)
+          BannerCarousel(banners: horizontalBanners),
+
+        // Resto del Home...
+        // Los banners verticales se pueden usar en otro lugar
+        // (stories, popups, sidebar, etc.)
+      ],
+    );
+  }
+}
+```
+
+**Widget del Carrusel:**
 
 ```dart
 class BannerCarousel extends StatelessWidget {
   final List<Banner> banners;
 
+  const BannerCarousel({required this.banners});
+
+  @override
   Widget build(BuildContext context) {
     return CarouselSlider.builder(
       itemCount: banners.length,
       options: CarouselOptions(
         autoPlay: true,
-        autoPlayInterval: Duration(seconds: banners[0].displaySeconds),
+        autoPlayInterval: Duration(seconds: banners.first.displaySeconds),
         viewportFraction: 0.95,
-        aspectRatio: 16 / 9,  // Para horizontal
+        aspectRatio: 16 / 9,
       ),
       itemBuilder: (context, index, _) {
         final banner = banners[index];
         return GestureDetector(
-          onTap: () => handleBannerTap(context, banner),
-          child: CachedNetworkImage(
-            imageUrl: banner.imageUrl,
-            fit: BoxFit.cover,
+          onTap: () => _handleTap(context, banner),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: CachedNetworkImage(
+              imageUrl: banner.imageUrl,
+              fit: BoxFit.cover,
+            ),
           ),
         );
       },
     );
   }
 
-  void handleBannerTap(BuildContext context, Banner banner) {
+  void _handleTap(BuildContext context, Banner banner) {
     if (banner.link == null) return;
 
     switch (banner.link!.type) {
@@ -1071,9 +1148,72 @@ class BannerCarousel extends StatelessWidget {
 }
 ```
 
+**Widget para Stories Verticales (9:16):**
+
+```dart
+class VerticalStoriesViewer extends StatelessWidget {
+  final List<Banner> stories;
+
+  const VerticalStoriesViewer({required this.stories});
+
+  @override
+  Widget build(BuildContext context) {
+    return PageView.builder(
+      itemCount: stories.length,
+      itemBuilder: (context, index) {
+        final story = stories[index];
+        return AspectRatio(
+          aspectRatio: 9 / 16,  // IMPORTANTE: Usar 9:16 para verticales
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              CachedNetworkImage(
+                imageUrl: story.imageUrl,
+                fit: BoxFit.cover,  // La imagen ya viene en 9:16
+              ),
+              // Overlay con titulo si existe
+              if (story.title != null)
+                Positioned(
+                  bottom: 60,
+                  left: 16,
+                  right: 16,
+                  child: Text(
+                    story.title!,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      shadows: [Shadow(blurRadius: 10)],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+```
+
+**Resumen de Aspect Ratios:**
+
+```dart
+// Constantes recomendadas
+const double kHorizontalBannerAspectRatio = 16 / 9;  // 1.777...
+const double kVerticalStoryAspectRatio = 9 / 16;     // 0.5625
+
+// Uso en widgets
+AspectRatio(
+  aspectRatio: kHorizontalBannerAspectRatio,
+  child: Image.network(banner.imageUrl, fit: BoxFit.cover),
+)
+```
+
 **Caracteristicas:**
+- Una sola llamada al API trae ambos tipos de banners
+- **Imagenes pre-recortadas** desde Admin Panel (no requiere procesamiento en Flutter)
 - Validez temporal: permanente, por fechas, o por dias de la semana
-- Orientacion forzada: horizontal = todos horizontales, vertical = todos verticales
 - Tiempo de display configurable por banner (1-30 segundos)
 - Links opcionales a productos, combos, categorias, o URLs externas
 
@@ -1858,6 +1998,8 @@ Widget buildMenuPrice(Product product, String disclaimer) {
 
 | Fecha | Cambio |
 |-------|--------|
+| 2026-01-05 | Banners ahora vienen pre-recortados con aspect ratios estandar (16:9 horizontal, 9:16 vertical) |
+| 2026-01-05 | GET /menu/banners ahora devuelve `horizontal` y `vertical` separados en una sola llamada |
 | 2026-01-05 | Agregado `description` e `image_url` a categorias en GET /menu y GET /menu/categories |
 | 2025-12-23 | Agregado GET /menu/banners - Banners promocionales para Home Screen con links y validez temporal |
 | 2025-12-23 | Agregado GET /menu/featured - Endpoint para Home Screen con productos/combos por badges (carruseles dinamicos) |

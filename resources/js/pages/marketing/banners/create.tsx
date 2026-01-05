@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
-import { ImageUpload } from '@/components/ImageUpload';
+import { ImageCropperUpload } from '@/components/ImageCropperUpload';
 import { WeekdaySelector } from '@/components/WeekdaySelector';
 import { Card, CardContent } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
-import { Calendar, Clock, Image, Link2, Monitor, Smartphone } from 'lucide-react';
+import { Calendar, Image, Link2, Monitor, Smartphone } from 'lucide-react';
 
 interface LinkOption {
     id: number;
@@ -31,16 +31,23 @@ interface CreatePageProps {
     linkOptions: LinkOptions;
 }
 
+// Aspect ratios estándar
+const ASPECT_RATIOS = {
+    horizontal: 16 / 9,  // 16:9 para banners horizontales (carrusel)
+    vertical: 9 / 16,    // 9:16 para stories verticales
+};
+
 export default function BannerCreate({ linkOptions }: CreatePageProps) {
     const [processing, setProcessing] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [imageKey, setImageKey] = useState(0);
 
     const [data, setData] = useState({
         title: '',
         description: '',
         image: null as File | null,
         orientation: 'horizontal',
-        display_seconds: 5,
+        display_seconds: '' as number | '',
         link_type: '',
         link_id: '',
         link_url: '',
@@ -59,6 +66,19 @@ export default function BannerCreate({ linkOptions }: CreatePageProps) {
                 delete newErrors[field];
                 return newErrors;
             });
+        }
+    };
+
+    const handleOrientationChange = (orientation: string) => {
+        if (orientation !== data.orientation) {
+            // Si cambia la orientación, limpiar la imagen porque el aspect ratio es diferente
+            setData((prev) => ({
+                ...prev,
+                orientation,
+                image: null,
+            }));
+            // Forzar re-render del cropper
+            setImageKey((prev) => prev + 1);
         }
     };
 
@@ -111,6 +131,9 @@ export default function BannerCreate({ linkOptions }: CreatePageProps) {
         }
     };
 
+    const currentAspectRatio = ASPECT_RATIOS[data.orientation as keyof typeof ASPECT_RATIOS];
+    const aspectLabel = data.orientation === 'horizontal' ? '16:9' : '9:16';
+
     return (
         <CreatePageLayout
             title="Nuevo Banner"
@@ -121,9 +144,9 @@ export default function BannerCreate({ linkOptions }: CreatePageProps) {
             processing={processing}
             pageTitle="Crear Banner"
         >
-            <div className="space-y-8">
-                <Card>
-                    <CardContent className="pt-6">
+            <div className="space-y-6">
+                <Card className="border-0 shadow-none">
+                    <CardContent className="p-0">
                         <FormSection icon={Image} title="Información Básica" description="Datos principales del banner">
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between rounded-lg border p-4">
@@ -146,47 +169,52 @@ export default function BannerCreate({ linkOptions }: CreatePageProps) {
                                         rows={2}
                                     />
                                 </FormField>
-
-                                <ImageUpload
-                                    label="Imagen del Banner"
-                                    onImageChange={(file) => handleChange('image', file)}
-                                    error={errors.image}
-                                    required
-                                    maxSizeMB={5}
-                                />
                             </div>
                         </FormSection>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardContent className="pt-6">
-                        <FormSection icon={Monitor} title="Configuración de Display" description="Orientación y tiempo de visualización">
-                            <div className="grid gap-6 md:grid-cols-2">
+                <Card className="border-0 shadow-none">
+                    <CardContent className="p-0">
+                        <FormSection icon={Monitor} title="Configuración de Display" description="Orientación, imagen y tiempo de visualización">
+                            <div className="space-y-6">
                                 <FormField label="Orientación" error={errors.orientation} required>
                                     <div className="flex gap-4">
                                         <button
                                             type="button"
-                                            onClick={() => handleChange('orientation', 'horizontal')}
+                                            onClick={() => handleOrientationChange('horizontal')}
                                             className={`flex flex-1 flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors ${
                                                 data.orientation === 'horizontal' ? 'border-primary bg-primary/5' : 'border-input hover:bg-accent'
                                             }`}
                                         >
                                             <Monitor className="h-8 w-8" />
                                             <span className="text-sm font-medium">Horizontal</span>
+                                            <span className="text-xs text-muted-foreground">16:9 • Carrusel</span>
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => handleChange('orientation', 'vertical')}
+                                            onClick={() => handleOrientationChange('vertical')}
                                             className={`flex flex-1 flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors ${
                                                 data.orientation === 'vertical' ? 'border-primary bg-primary/5' : 'border-input hover:bg-accent'
                                             }`}
                                         >
                                             <Smartphone className="h-8 w-8" />
                                             <span className="text-sm font-medium">Vertical</span>
+                                            <span className="text-xs text-muted-foreground">9:16 • Stories</span>
                                         </button>
                                     </div>
                                 </FormField>
+
+                                <ImageCropperUpload
+                                    key={imageKey}
+                                    label="Imagen del Banner"
+                                    onImageChange={(file) => handleChange('image', file)}
+                                    error={errors.image}
+                                    required
+                                    maxSizeMB={5}
+                                    aspectRatio={currentAspectRatio}
+                                    aspectLabel={aspectLabel}
+                                />
 
                                 <FormField label="Tiempo de visualización (segundos)" error={errors.display_seconds} required>
                                     <Input
@@ -195,7 +223,7 @@ export default function BannerCreate({ linkOptions }: CreatePageProps) {
                                         min={1}
                                         max={30}
                                         value={data.display_seconds}
-                                        onChange={(e) => handleChange('display_seconds', parseInt(e.target.value) || 5)}
+                                        onChange={(e) => handleChange('display_seconds', e.target.value === '' ? '' : parseInt(e.target.value) || '')}
                                     />
                                 </FormField>
                             </div>
@@ -203,8 +231,8 @@ export default function BannerCreate({ linkOptions }: CreatePageProps) {
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardContent className="pt-6">
+                <Card className="border-0 shadow-none">
+                    <CardContent className="p-0">
                         <FormSection icon={Link2} title="Enlace (Opcional)" description="Acción al tocar el banner">
                             <div className="space-y-4">
                                 <FormField label="Tipo de enlace" error={errors.link_type}>
@@ -255,8 +283,8 @@ export default function BannerCreate({ linkOptions }: CreatePageProps) {
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardContent className="pt-6">
+                <Card className="border-0 shadow-none">
+                    <CardContent className="p-0">
                         <FormSection icon={Calendar} title="Validez" description="Cuándo se muestra el banner">
                             <div className="space-y-4">
                                 <FormField label="Tipo de validez" error={errors.validity_type} required>

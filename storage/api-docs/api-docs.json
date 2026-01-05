@@ -3812,24 +3812,8 @@
                     "Menu"
                 ],
                 "summary": "Get promotional banners",
-                "description": "Returns active promotional banners for the Home Screen carousel.\n     *\n     * Banners are filtered by:\n     * - Active status\n     * - Valid date range or weekdays\n     * - Orientation (horizontal/vertical)\n     *\n     * **Important:** All banners in the response have the same orientation.\n     * If you request horizontal, only horizontal banners are returned.\n     *\n     * **Link Types:**\n     * - `product` - Links to a product detail screen\n     * - `combo` - Links to a combo detail screen\n     * - `category` - Links to a category screen\n     * - `promotion` - Links to a promotion detail\n     * - `url` - External URL (open in browser)\n     * - `none` - No action on tap",
+                "description": "Returns active promotional banners separated by orientation.\n     *\n     * **Response structure:**\n     * - `horizontal` - Banners for the main carousel in Home Screen\n     * - `vertical` - Banners for stories, popups, or other vertical placements\n     *\n     * Both arrays are filtered by active status and valid date range/weekdays.\n     *\n     * **Link Types:**\n     * - `product` - Navigate to product detail screen\n     * - `combo` - Navigate to combo detail screen\n     * - `category` - Navigate to category screen\n     * - `promotion` - Navigate to promotion detail\n     * - `url` - Open external URL in browser\n     * - `null` - No action on tap",
                 "operationId": "3d54f54ec71b2eedb5359310b6dcf901",
-                "parameters": [
-                    {
-                        "name": "orientation",
-                        "in": "query",
-                        "description": "Filter by orientation (default: horizontal)",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "horizontal",
-                                "vertical"
-                            ],
-                            "example": "horizontal"
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Banners retrieved successfully",
@@ -3839,61 +3823,18 @@
                                     "properties": {
                                         "data": {
                                             "properties": {
-                                                "orientation": {
-                                                    "description": "Orientation of all banners in this response",
-                                                    "type": "string",
-                                                    "example": "horizontal"
-                                                },
-                                                "banners": {
-                                                    "description": "List of active banners",
+                                                "horizontal": {
+                                                    "description": "Horizontal banners for main carousel",
                                                     "type": "array",
                                                     "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer",
-                                                                "example": 1
-                                                            },
-                                                            "title": {
-                                                                "type": "string",
-                                                                "example": "New Summer Menu"
-                                                            },
-                                                            "description": {
-                                                                "type": "string",
-                                                                "example": "Try our refreshing new subs",
-                                                                "nullable": true
-                                                            },
-                                                            "image_url": {
-                                                                "type": "string",
-                                                                "example": "https://admin.subwaycardgt.com/storage/banners/abc123.jpg"
-                                                            },
-                                                            "display_seconds": {
-                                                                "description": "Seconds to show in carousel",
-                                                                "type": "integer",
-                                                                "example": 5
-                                                            },
-                                                            "link": {
-                                                                "description": "Action when banner is tapped",
-                                                                "properties": {
-                                                                    "type": {
-                                                                        "type": "string",
-                                                                        "example": "product"
-                                                                    },
-                                                                    "id": {
-                                                                        "type": "integer",
-                                                                        "example": 42,
-                                                                        "nullable": true
-                                                                    },
-                                                                    "url": {
-                                                                        "type": "string",
-                                                                        "example": "https://example.com",
-                                                                        "nullable": true
-                                                                    }
-                                                                },
-                                                                "type": "object",
-                                                                "nullable": true
-                                                            }
-                                                        },
-                                                        "type": "object"
+                                                        "$ref": "#/components/schemas/Banner"
+                                                    }
+                                                },
+                                                "vertical": {
+                                                    "description": "Vertical banners for stories/popups",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Banner"
                                                     }
                                                 }
                                             },
@@ -6543,6 +6484,59 @@
                         "items": {
                             "$ref": "#/components/schemas/Product"
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "Banner": {
+                "title": "Banner",
+                "description": "Banner promocional para carrusel",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Nuevo Menu de Verano"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Prueba nuestros nuevos subs",
+                        "nullable": true
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "https://admin.subwaycardgt.com/storage/banners/summer.jpg"
+                    },
+                    "display_seconds": {
+                        "description": "Segundos a mostrar en carrusel",
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "link": {
+                        "description": "Accion al tap",
+                        "properties": {
+                            "type": {
+                                "description": "product, combo, category, promotion, url",
+                                "type": "string",
+                                "example": "product"
+                            },
+                            "id": {
+                                "description": "ID de la entidad si type no es url",
+                                "type": "integer",
+                                "example": 42,
+                                "nullable": true
+                            },
+                            "url": {
+                                "description": "URL si type es url",
+                                "type": "string",
+                                "example": "https://example.com",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
                     }
                 },
                 "type": "object"

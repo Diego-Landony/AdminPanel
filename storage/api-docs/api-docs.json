@@ -6509,6 +6509,16 @@
                         "type": "string",
                         "example": "Sandwiches"
                     },
+                    "description": {
+                        "type": "string",
+                        "example": "Los mejores subs de Subway",
+                        "nullable": true
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "https://admin.subwaycardgt.com/storage/categories/sandwiches.jpg",
+                        "nullable": true
+                    },
                     "uses_variants": {
                         "description": "Si la categoría usa variantes (ej: tamaños)",
                         "type": "boolean",

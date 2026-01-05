@@ -152,6 +152,8 @@ namespace App\Http\Controllers;
  *
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="name", type="string", example="Sandwiches"),
+ *     @OA\Property(property="description", type="string", nullable=true, example="Los mejores subs de Subway"),
+ *     @OA\Property(property="image_url", type="string", nullable=true, example="https://admin.subwaycardgt.com/storage/categories/sandwiches.jpg"),
  *     @OA\Property(property="uses_variants", type="boolean", example=true, description="Si la categoría usa variantes (ej: tamaños)"),
  *     @OA\Property(property="variant_definitions", type="object", nullable=true, description="Definiciones de variantes para esta categoría"),
  *     @OA\Property(property="is_combo_category", type="boolean", example=false),

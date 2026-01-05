@@ -685,6 +685,12 @@ await launchUrl(Uri.parse(url));
       {
         "id": 1,
         "name": "Subs 15cm",
+        "description": "Los clasicos subs de Subway",
+        "image_url": "https://admin.subwaycardgt.com/storage/categories/subs.jpg",
+        "uses_variants": true,
+        "variant_definitions": ["15cm", "30cm"],
+        "is_combo_category": false,
+        "sort_order": 1,
         "products": [
           {
             "id": 1,
@@ -1852,6 +1858,7 @@ Widget buildMenuPrice(Product product, String disclaimer) {
 
 | Fecha | Cambio |
 |-------|--------|
+| 2026-01-05 | Agregado `description` e `image_url` a categorias en GET /menu y GET /menu/categories |
 | 2025-12-23 | Agregado GET /menu/banners - Banners promocionales para Home Screen con links y validez temporal |
 | 2025-12-23 | Agregado GET /menu/featured - Endpoint para Home Screen con productos/combos por badges (carruseles dinamicos) |
 | 2025-12-23 | POST /auth/register ahora requiere `terms_accepted: true` (checkbox de T&C) |

@@ -13,6 +13,7 @@ import { Layers, Package, Star } from 'lucide-react';
 interface Category {
     id: number;
     name: string;
+    image: string | null;
     is_active: boolean;
     is_combo_category: boolean;
     uses_variants: boolean;
@@ -117,7 +118,12 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
             key: 'name',
             title: 'Categoría',
             width: 'w-48',
-            render: (category: Category) => <div className="truncate text-sm font-medium text-foreground">{category.name}</div>,
+            render: (category: Category) => (
+                <div className="flex items-center gap-3">
+                    {category.image && <img src={category.image} alt={category.name} className="h-10 w-10 rounded-md object-cover" />}
+                    <div className="truncate text-sm font-medium text-foreground">{category.name}</div>
+                </div>
+            ),
         },
         {
             key: 'variants',
@@ -178,7 +184,8 @@ export default function CategoriesIndex({ categories, stats }: CategoriesPagePro
         <StandardMobileCard
             title={category.name}
             subtitle={category.is_combo_category ? 'Categoría de combos' : 'Categoría de productos'}
-            icon={Layers}
+            image={category.image}
+            icon={category.image ? undefined : Layers}
             badge={{
                 children: <StatusBadge status={category.is_active ? 'active' : 'inactive'} configs={ACTIVE_STATUS_CONFIGS} showIcon={false} />,
             }}

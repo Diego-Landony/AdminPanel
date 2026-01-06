@@ -19,6 +19,7 @@ class SectionOptionResource extends JsonResource
             'name' => $this->name,
             'is_extra' => $this->is_extra,
             'price_modifier' => (float) $this->price_modifier,
+            'sort_order' => $this->sort_order,
         ];
     }
 }

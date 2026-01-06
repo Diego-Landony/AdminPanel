@@ -34,8 +34,22 @@ export const StatusBadge = React.memo(StatusBadgeComponent);
 
 /**
  * Componente helper para badges de color personalizados (multipliers, etc.)
+ * Soporta nombres de colores (gray, blue) y códigos hexadecimales (#FFD700)
  */
 export function ColorBadge({ color, children, className = '' }: { color: string | null; children: React.ReactNode; className?: string }) {
+    // Si el color es un código hexadecimal, usar estilo inline
+    if (color && color.startsWith('#')) {
+        return (
+            <Badge
+                className={`border text-white ${className}`}
+                style={{ backgroundColor: color, borderColor: color }}
+            >
+                {children}
+            </Badge>
+        );
+    }
+
+    // Si es un nombre de color, usar la configuración predefinida
     const colorConfig = color ? CUSTOMER_TYPE_COLORS[color] : CUSTOMER_TYPE_COLORS.default;
     return <Badge className={`${colorConfig.color} ${className}`}>{children}</Badge>;
 }

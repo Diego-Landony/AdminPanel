@@ -301,6 +301,7 @@ class CustomerController extends Controller
                     'is_default' => $nit->is_default,
                 ];
             }),
+            'points' => $customer->points ?? 0,
             'email_verified_at' => $customer->email_verified_at ? $customer->email_verified_at->toISOString() : null,
             'created_at' => $customer->created_at ? $customer->created_at->toISOString() : null,
             'updated_at' => $customer->updated_at ? $customer->updated_at->toISOString() : null,
@@ -330,6 +331,7 @@ class CustomerController extends Controller
                 'gender' => 'nullable|string|max:50',
                 'customer_type_id' => 'nullable|exists:customer_types,id',
                 'phone' => 'nullable|string|max:255',
+                'points' => 'nullable|integer|min:0',
             ];
 
             // Solo validar contraseña si se proporciona
@@ -352,6 +354,12 @@ class CustomerController extends Controller
                 'customer_type_id' => $request->customer_type_id,
                 'phone' => $request->phone,
             ];
+
+            // Solo actualizar puntos si se proporciona
+            if ($request->filled('points')) {
+                $customerData['points'] = $request->points;
+                $customerData['points_updated_at'] = now();
+            }
 
             // Solo actualizar contraseña si se proporciona
             if ($request->filled('password')) {

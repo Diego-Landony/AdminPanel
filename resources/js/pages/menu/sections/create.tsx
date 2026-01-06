@@ -152,6 +152,12 @@ export default function SectionCreate() {
             ...updatedOptions[index],
             [field]: value,
         };
+
+        // Si se desmarca is_extra, limpiar el price_modifier
+        if (field === 'is_extra' && value === false) {
+            updatedOptions[index].price_modifier = 0;
+        }
+
         setLocalOptions(updatedOptions);
         setData('options', updatedOptions);
     };
@@ -184,7 +190,10 @@ export default function SectionCreate() {
         data.options = localOptions.map((option) => ({
             name: option.name,
             is_extra: option.is_extra,
-            price_modifier: typeof option.price_modifier === 'string' ? parseFloat(option.price_modifier) : option.price_modifier,
+            // Si no es extra, el precio debe ser 0
+            price_modifier: option.is_extra
+                ? (typeof option.price_modifier === 'string' ? parseFloat(option.price_modifier) : option.price_modifier)
+                : 0,
         })) as unknown as typeof data.options;
 
         post(route('menu.sections.store'), {

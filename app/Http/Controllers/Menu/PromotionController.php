@@ -175,6 +175,11 @@ class PromotionController extends Controller
         $items = $validated['items'] ?? [];
         unset($validated['items']);
 
+        // Manejar la imagen si se subió
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('promotions', 'public');
+        }
+
         $promotion = null;
 
         DB::transaction(function () use ($validated, $items, &$promotion) {
@@ -277,6 +282,15 @@ class PromotionController extends Controller
 
         $items = $validated['items'] ?? [];
         unset($validated['items']);
+
+        // Manejar la imagen si se subió
+        if ($request->hasFile('image')) {
+            // Eliminar imagen anterior si existe
+            if ($promotion->image) {
+                \Storage::disk('public')->delete($promotion->image);
+            }
+            $validated['image'] = $request->file('image')->store('promotions', 'public');
+        }
 
         DB::transaction(function () use ($validated, $items, $promotion) {
             $promotion->update($validated);
@@ -640,6 +654,11 @@ class PromotionController extends Controller
         $items = $validated['items'] ?? [];
         unset($validated['items']);
 
+        // Manejar la imagen si se subió
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('promotions', 'public');
+        }
+
         $promotion = null;
 
         DB::transaction(function () use ($validated, $items, &$promotion) {
@@ -691,6 +710,15 @@ class PromotionController extends Controller
 
         $items = $validated['items'] ?? [];
         unset($validated['items']);
+
+        // Manejar la imagen si se subió una nueva
+        if ($request->hasFile('image')) {
+            // Eliminar imagen anterior si existe
+            if ($promotion->image) {
+                \Storage::disk('public')->delete($promotion->image);
+            }
+            $validated['image'] = $request->file('image')->store('promotions', 'public');
+        }
 
         DB::transaction(function () use ($validated, $items, $promotion) {
             $promotion->update($validated);

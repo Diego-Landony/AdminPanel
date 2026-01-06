@@ -18,7 +18,7 @@ class PromotionResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'image_url' => null, // Promotions don't have images
+            'image_url' => $this->image_url,
             'type' => $this->type,
             'prices' => [
                 'bundle_capital' => $this->special_bundle_price_capital ? (float) $this->special_bundle_price_capital : null,

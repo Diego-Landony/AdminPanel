@@ -38,6 +38,10 @@ class CustomerResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
+            // Authentication state (for Flutter to know login options)
+            'has_password' => $this->oauth_provider === 'local',
+            'has_google_linked' => $this->google_id !== null,
+
             // Relationships
             'customer_type' => CustomerTypeResource::make($this->whenLoaded('customerType')),
             'addresses' => CustomerAddressResource::collection($this->whenLoaded('addresses')),

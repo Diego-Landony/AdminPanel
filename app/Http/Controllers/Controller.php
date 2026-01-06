@@ -84,6 +84,22 @@ namespace App\Http\Controllers;
  * )
  *
  * @OA\Schema(
+ *     schema="CustomerType",
+ *     type="object",
+ *     title="CustomerType",
+ *     description="Tipo de cliente basado en puntos de lealtad",
+ *
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="name", type="string", example="Gold", description="Nombre del tipo de cliente"),
+ *     @OA\Property(property="points_required", type="integer", example=500, description="Puntos requeridos para alcanzar este nivel"),
+ *     @OA\Property(property="multiplier", type="number", format="float", example=1.5, description="Multiplicador de puntos para este nivel"),
+ *     @OA\Property(property="color", type="string", example="#FFD700", description="Color representativo del nivel"),
+ *     @OA\Property(property="is_active", type="boolean", example=true),
+ *     @OA\Property(property="created_at", type="string", format="date-time", example="2024-01-10T08:00:00Z"),
+ *     @OA\Property(property="updated_at", type="string", format="date-time", example="2024-01-20T15:45:00Z")
+ * )
+ *
+ * @OA\Schema(
  *     schema="Customer",
  *     type="object",
  *     title="Customer",
@@ -101,6 +117,7 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="birth_date", type="string", format="date", nullable=true, example="1990-05-15"),
  *     @OA\Property(property="gender", type="string", enum={"male","female","other"}, nullable=true, example="male"),
  *     @OA\Property(property="phone", type="string", nullable=true, example="12345678", description="8-digit phone number (Guatemala)"),
+ *     @OA\Property(property="email_offers_enabled", type="boolean", example=true, description="Si el cliente acepta recibir ofertas por email"),
  *     @OA\Property(property="last_login_at", type="string", format="date-time", nullable=true, example="2024-01-20T15:45:00Z"),
  *     @OA\Property(property="last_activity_at", type="string", format="date-time", nullable=true, example="2024-01-20T16:00:00Z"),
  *     @OA\Property(property="last_purchase_at", type="string", format="date-time", nullable=true, example="2024-01-18T12:30:00Z"),
@@ -109,7 +126,16 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="status", type="string", enum={"active","inactive","suspended"}, example="active"),
  *     @OA\Property(property="is_online", type="boolean", example=true, description="True if customer is currently active"),
  *     @OA\Property(property="created_at", type="string", format="date-time", example="2024-01-10T08:00:00Z"),
- *     @OA\Property(property="updated_at", type="string", format="date-time", example="2024-01-20T15:45:00Z")
+ *     @OA\Property(property="updated_at", type="string", format="date-time", example="2024-01-20T15:45:00Z"),
+ *     @OA\Property(property="has_password", type="boolean", example=true, description="True si el usuario puede iniciar sesión con contraseña (oauth_provider=local)"),
+ *     @OA\Property(property="has_google_linked", type="boolean", example=false, description="True si el usuario tiene cuenta de Google vinculada"),
+ *     @OA\Property(property="customer_type", ref="#/components/schemas/CustomerType", nullable=true, description="Tipo de cliente basado en puntos de lealtad"),
+ *     @OA\Property(property="addresses", type="array", nullable=true, description="Direcciones del cliente (cuando se carga la relación)", @OA\Items(ref="#/components/schemas/CustomerAddress")),
+ *     @OA\Property(property="nits", type="array", nullable=true, description="NITs del cliente (cuando se carga la relación)", @OA\Items(ref="#/components/schemas/CustomerNit")),
+ *     @OA\Property(property="devices", type="array", nullable=true, description="Dispositivos activos del cliente (cuando se carga la relación)", @OA\Items(ref="#/components/schemas/CustomerDevice")),
+ *     @OA\Property(property="addresses_count", type="integer", nullable=true, example=2, description="Número de direcciones (cuando se incluye el count)"),
+ *     @OA\Property(property="nits_count", type="integer", nullable=true, example=1, description="Número de NITs (cuando se incluye el count)"),
+ *     @OA\Property(property="devices_count", type="integer", nullable=true, example=3, description="Número de dispositivos (cuando se incluye el count)")
  * )
  *
  * @OA\Schema(
@@ -128,6 +154,38 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="is_active", type="boolean", example=true),
  *     @OA\Property(property="login_count", type="integer", example=15),
  *     @OA\Property(property="is_current_device", type="boolean", example=true, description="True if this device is associated with current token"),
+ *     @OA\Property(property="created_at", type="string", format="date-time", example="2024-01-10T08:00:00Z"),
+ *     @OA\Property(property="updated_at", type="string", format="date-time", example="2024-01-20T15:45:00Z")
+ * )
+ *
+ * @OA\Schema(
+ *     schema="CustomerAddress",
+ *     type="object",
+ *     title="CustomerAddress",
+ *     description="Dirección de entrega del cliente",
+ *
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="label", type="string", example="Casa", description="Etiqueta de la dirección (Casa, Trabajo, etc.)"),
+ *     @OA\Property(property="address_line", type="string", example="12 Calle 1-25 Zona 10"),
+ *     @OA\Property(property="latitude", type="number", format="float", example=14.6349),
+ *     @OA\Property(property="longitude", type="number", format="float", example=-90.5069),
+ *     @OA\Property(property="delivery_notes", type="string", nullable=true, example="Portón negro, tocar timbre"),
+ *     @OA\Property(property="zone", type="string", enum={"capital","interior"}, example="capital", description="Zona de precios"),
+ *     @OA\Property(property="is_default", type="boolean", example=true, description="Si es la dirección predeterminada"),
+ *     @OA\Property(property="created_at", type="string", format="date-time", example="2024-01-10T08:00:00Z")
+ * )
+ *
+ * @OA\Schema(
+ *     schema="CustomerNit",
+ *     type="object",
+ *     title="CustomerNit",
+ *     description="NIT del cliente para facturación",
+ *
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="nit", type="string", example="12345678-9", description="Número de NIT"),
+ *     @OA\Property(property="business_name", type="string", example="Juan Pérez", description="Nombre o razón social"),
+ *     @OA\Property(property="nit_type", type="string", enum={"personal","business"}, example="personal", description="Tipo de NIT"),
+ *     @OA\Property(property="is_default", type="boolean", example=true, description="Si es el NIT predeterminado"),
  *     @OA\Property(property="created_at", type="string", format="date-time", example="2024-01-10T08:00:00Z"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", example="2024-01-20T15:45:00Z")
  * )
@@ -297,7 +355,7 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="name", type="string", example="Sub del Día - Lunes"),
  *     @OA\Property(property="description", type="string", nullable=true, example="Italian BMT 15cm a precio especial"),
- *     @OA\Property(property="image_url", type="string", nullable=true, example=null),
+ *     @OA\Property(property="image_url", type="string", nullable=true, example="https://admin.subwaycardgt.com/storage/promotions/combo-2x1.jpg", description="URL de la imagen de la promoción"),
  *     @OA\Property(property="type", type="string", example="daily_special", description="Tipo: daily_special o bundle"),
  *     @OA\Property(
  *         property="prices",

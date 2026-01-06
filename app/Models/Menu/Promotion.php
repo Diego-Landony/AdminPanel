@@ -16,6 +16,7 @@ class Promotion extends Model
     protected $fillable = [
         'name',
         'description',
+        'image',
         'type',
         'is_active',
         'special_bundle_price_capital',
@@ -33,6 +34,10 @@ class Promotion extends Model
         'special_bundle_price_capital' => 'decimal:2',
         'special_bundle_price_interior' => 'decimal:2',
         'weekdays' => 'array', // Array de enteros 1-7 (ISO-8601): 1=Lunes, 7=Domingo, null=todos los días
+    ];
+
+    protected $appends = [
+        'image_url',
     ];
 
     /**
@@ -73,6 +78,24 @@ class Promotion extends Model
         return \Illuminate\Database\Eloquent\Casts\Attribute::make(
             get: fn ($value) => $value ? substr($value, 0, 5) : null,
         );
+    }
+
+    /**
+     * Get full URL for the promotion image
+     */
+    public function getImageUrlAttribute(): ?string
+    {
+        if (! $this->image) {
+            return null;
+        }
+
+        // Si ya es una URL completa, retornarla
+        if (str_starts_with($this->image, 'http://') || str_starts_with($this->image, 'https://')) {
+            return $this->image;
+        }
+
+        // Retornar la URL del storage
+        return asset('storage/'.$this->image);
     }
 
     /**

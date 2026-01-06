@@ -1,12 +1,13 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { router, useForm } from '@inertiajs/react';
-import { Banknote, Package, Plus, Store, Truck } from 'lucide-react';
+import { Banknote, Image, Package, Plus, Store, Truck } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
+import { ImageUpload } from '@/components/ImageUpload';
 import { ConfirmationDialog } from '@/components/promotions/ConfirmationDialog';
 import { PromotionItemEditor } from '@/components/promotions/PromotionItemEditor';
 import { CreatePageSkeleton } from '@/components/skeletons';
@@ -101,6 +102,8 @@ export default function CreatePercentage({ products, categories, combos }: Creat
             discount_percentage: '',
         },
     ]);
+
+    const [image, setImage] = useState<File | null>(null);
 
     const [confirmDialog, setConfirmDialog] = useState<{
         open: boolean;
@@ -278,13 +281,33 @@ export default function CreatePercentage({ products, categories, combos }: Creat
             return [...productItems, ...comboItems];
         });
 
-        router.post(route('menu.promotions.store'), {
-            is_active: data.is_active,
-            name: data.name,
-            description: data.description,
-            type: data.type,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            items: expandedItems as any,
+        const formData = new FormData();
+        formData.append('is_active', data.is_active ? '1' : '0');
+        formData.append('name', data.name);
+        formData.append('description', data.description || '');
+        formData.append('type', data.type);
+
+        // Agregar items
+        expandedItems.forEach((item, index) => {
+            formData.append(`items[${index}][product_id]`, String(item.product_id));
+            if (item.variant_id) formData.append(`items[${index}][variant_id]`, String(item.variant_id));
+            formData.append(`items[${index}][category_id]`, String(item.category_id));
+            formData.append(`items[${index}][discount_percentage]`, item.discount_percentage);
+            formData.append(`items[${index}][service_type]`, item.service_type);
+            formData.append(`items[${index}][validity_type]`, item.validity_type);
+            if (item.valid_from) formData.append(`items[${index}][valid_from]`, item.valid_from);
+            if (item.valid_until) formData.append(`items[${index}][valid_until]`, item.valid_until);
+            if (item.time_from) formData.append(`items[${index}][time_from]`, item.time_from);
+            if (item.time_until) formData.append(`items[${index}][time_until]`, item.time_until);
+        });
+
+        // Agregar imagen si existe
+        if (image) {
+            formData.append('image', image);
+        }
+
+        router.post(route('menu.promotions.store'), formData, {
+            forceFormData: true,
         });
     };
 
@@ -340,6 +363,14 @@ export default function CreatePercentage({ products, categories, combos }: Creat
                         />
                     </FormField>
                 </div>
+            </FormSection>
+
+            <FormSection icon={Image} title="Imagen de la Promoción" description="Imagen que se mostrará en la app">
+                <ImageUpload
+                    label="Imagen"
+                    onImageChange={(file) => setImage(file)}
+                    error={errors.image}
+                />
             </FormSection>
 
             {hasInactiveProducts && (

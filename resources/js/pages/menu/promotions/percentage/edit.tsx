@@ -1,6 +1,6 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { router } from '@inertiajs/react';
-import { Banknote, Package, Plus, Store, Truck } from 'lucide-react';
+import { Banknote, Image, Package, Plus, Store, Truck } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { route } from 'ziggy-js';
 
@@ -8,6 +8,7 @@ import { NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
+import { ImageUpload } from '@/components/ImageUpload';
 import { ConfirmationDialog } from '@/components/promotions/ConfirmationDialog';
 import { PromotionItemEditor } from '@/components/promotions/PromotionItemEditor';
 import { EditPageSkeleton } from '@/components/skeletons';
@@ -81,6 +82,7 @@ interface Promotion {
     id: number;
     name: string;
     description: string;
+    image_url: string | null;
     type: string;
     is_active: boolean;
     items: PromotionItem[];
@@ -222,6 +224,9 @@ export default function EditPercentagePromotion({ promotion, products, categorie
     });
 
     const [localItems, setLocalItems] = useState<LocalPromotionItem[]>(() => groupPromotionItems(promotion.items, products, combos, categories));
+
+    const [image, setImage] = useState<File | null>(null);
+    const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(promotion.image_url);
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [processing, setProcessing] = useState(false);
@@ -373,22 +378,42 @@ export default function EditPercentagePromotion({ promotion, products, categorie
             return [...productItems, ...comboItems];
         });
 
-        router.put(
-            route('menu.promotions.update', promotion.id),
-            {
-                ...formData,
-                items: expandedItems,
+        const formDataObj = new FormData();
+        formDataObj.append('_method', 'PUT');
+        formDataObj.append('is_active', formData.is_active ? '1' : '0');
+        formDataObj.append('name', formData.name);
+        formDataObj.append('description', formData.description || '');
+        formDataObj.append('type', formData.type);
+
+        // Agregar items
+        expandedItems.forEach((item, index) => {
+            formDataObj.append(`items[${index}][product_id]`, String(item.product_id));
+            if (item.variant_id) formDataObj.append(`items[${index}][variant_id]`, String(item.variant_id));
+            formDataObj.append(`items[${index}][category_id]`, String(item.category_id));
+            formDataObj.append(`items[${index}][discount_percentage]`, item.discount_percentage);
+            formDataObj.append(`items[${index}][service_type]`, item.service_type);
+            formDataObj.append(`items[${index}][validity_type]`, item.validity_type);
+            if (item.valid_from) formDataObj.append(`items[${index}][valid_from]`, item.valid_from);
+            if (item.valid_until) formDataObj.append(`items[${index}][valid_until]`, item.valid_until);
+            if (item.time_from) formDataObj.append(`items[${index}][time_from]`, item.time_from);
+            if (item.time_until) formDataObj.append(`items[${index}][time_until]`, item.time_until);
+        });
+
+        // Agregar imagen si existe
+        if (image) {
+            formDataObj.append('image', image);
+        }
+
+        router.post(route('menu.promotions.update', promotion.id), formDataObj, {
+            forceFormData: true,
+            onError: (errors) => {
+                setErrors(errors);
+                setProcessing(false);
             },
-            {
-                onError: (errors) => {
-                    setErrors(errors);
-                    setProcessing(false);
-                },
-                onSuccess: () => {
-                    setProcessing(false);
-                },
-            }
-        );
+            onSuccess: () => {
+                setProcessing(false);
+            },
+        });
     };
 
     const getItemError = (index: number, field: string) => {
@@ -453,6 +478,19 @@ export default function EditPercentagePromotion({ promotion, products, categorie
                                     />
                                 </FormField>
                             </div>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={Image} title="Imagen de la Promoción" description="Imagen que se mostrará en la app">
+                            <ImageUpload
+                                label="Imagen"
+                                currentImage={currentImageUrl}
+                                onImageChange={(file) => setImage(file)}
+                                error={errors.image}
+                            />
                         </FormSection>
                     </CardContent>
                 </Card>

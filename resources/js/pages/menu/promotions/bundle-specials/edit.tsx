@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import { ComboItemCard } from '@/components/combos/ComboItemCard';
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
+import { ImageUpload } from '@/components/ImageUpload';
 import { EditProductsSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,7 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { WeekdaySelector } from '@/components/WeekdaySelector';
 import { CURRENCY, FORM_SECTIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 import { generateUniqueItemId, prepareComboDataForSubmit, validateMinimumComboStructure } from '@/utils/comboHelpers';
-import { AlertCircle, Banknote, Calendar, Gift, Package, Plus } from 'lucide-react';
+import { AlertCircle, Banknote, Calendar, Gift, Image, Package, Plus } from 'lucide-react';
 
 interface ProductVariant {
     id: number;
@@ -81,6 +82,7 @@ interface Combinado {
     id: number;
     name: string;
     description: string | null;
+    image_url: string | null;
     is_active: boolean;
     special_bundle_price_capital: number | null;
     special_bundle_price_interior: number | null;
@@ -161,6 +163,8 @@ export default function BundleSpecialEdit({ combinado, products }: EditBundleSpe
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [localItems, setLocalItems] = useState<LocalBundleItem[]>(initialItems);
     const [enableWeekdays, setEnableWeekdays] = useState(!!combinado.weekdays && combinado.weekdays.length > 0);
+    const [image, setImage] = useState<File | null>(null);
+    const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(combinado.image_url);
 
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -225,26 +229,59 @@ export default function BundleSpecialEdit({ combinado, products }: EditBundleSpe
 
         const preparedItems = prepareComboDataForSubmit(localItems);
 
-        const submitData = {
-            ...formData,
-            items: preparedItems,
-            weekdays: enableWeekdays && formData.weekdays.length > 0 ? formData.weekdays : null,
-        };
+        const formDataObj = new FormData();
+        formDataObj.append('_method', 'PUT');
+        formDataObj.append('name', formData.name);
+        formDataObj.append('description', formData.description || '');
+        formDataObj.append('is_active', formData.is_active ? '1' : '0');
+        formDataObj.append('special_bundle_price_capital', formData.special_bundle_price_capital);
+        formDataObj.append('special_bundle_price_interior', formData.special_bundle_price_interior);
+        formDataObj.append('validity_type', formData.validity_type);
+        if (formData.valid_from) formDataObj.append('valid_from', formData.valid_from);
+        if (formData.valid_until) formDataObj.append('valid_until', formData.valid_until);
+        if (formData.time_from) formDataObj.append('time_from', formData.time_from);
+        if (formData.time_until) formDataObj.append('time_until', formData.time_until);
 
-        router.put(
-            route('menu.promotions.bundle-specials.update', combinado.id),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            submitData as any,
-            {
-                onSuccess: () => {
-                    // Redirección manejada por el controlador
-                },
-                onError: (errors) => {
-                    setErrors(errors as Record<string, string>);
-                    setIsSubmitting(false);
-                },
+        const weekdaysValue = enableWeekdays && formData.weekdays.length > 0 ? formData.weekdays : null;
+        if (weekdaysValue) {
+            weekdaysValue.forEach((day, index) => {
+                formDataObj.append(`weekdays[${index}]`, String(day));
+            });
+        }
+
+        // Agregar items
+        preparedItems.forEach((item, itemIndex) => {
+            formDataObj.append(`items[${itemIndex}][is_choice_group]`, item.is_choice_group ? '1' : '0');
+            formDataObj.append(`items[${itemIndex}][quantity]`, String(item.quantity));
+            formDataObj.append(`items[${itemIndex}][sort_order]`, String(item.sort_order));
+            if (item.choice_label) formDataObj.append(`items[${itemIndex}][choice_label]`, item.choice_label);
+            if (item.product_id) formDataObj.append(`items[${itemIndex}][product_id]`, String(item.product_id));
+            if (item.variant_id) formDataObj.append(`items[${itemIndex}][variant_id]`, String(item.variant_id));
+
+            if (item.options) {
+                item.options.forEach((option, optIndex) => {
+                    formDataObj.append(`items[${itemIndex}][options][${optIndex}][product_id]`, String(option.product_id));
+                    if (option.variant_id) formDataObj.append(`items[${itemIndex}][options][${optIndex}][variant_id]`, String(option.variant_id));
+                    formDataObj.append(`items[${itemIndex}][options][${optIndex}][sort_order]`, String(option.sort_order));
+                });
+            }
+        });
+
+        // Agregar imagen si existe
+        if (image) {
+            formDataObj.append('image', image);
+        }
+
+        router.post(route('menu.promotions.bundle-specials.update', combinado.id), formDataObj, {
+            forceFormData: true,
+            onSuccess: () => {
+                // Redirección manejada por el controlador
             },
-        );
+            onError: (errors) => {
+                setErrors(errors as Record<string, string>);
+                setIsSubmitting(false);
+            },
+        });
     };
 
     // Detect inactive products in both fixed items and choice groups
@@ -370,6 +407,19 @@ export default function BundleSpecialEdit({ combinado, products }: EditBundleSpe
                                     />
                                 </FormField>
                             </div>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={Image} title="Imagen de la Promoción" description="Imagen que se mostrará en la app">
+                            <ImageUpload
+                                label="Imagen"
+                                currentImage={currentImageUrl}
+                                onImageChange={(file) => setImage(file)}
+                                error={errors.image}
+                            />
                         </FormSection>
                     </CardContent>
                 </Card>

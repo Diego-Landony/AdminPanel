@@ -37,6 +37,12 @@ Route::get('/', function () {
 Route::post('/theme/update', [ThemeController::class, 'update'])->name('theme.update');
 Route::get('/theme/get', [ThemeController::class, 'get'])->name('theme.get');
 
+// Customer Password Reset Web Page (for mobile app users clicking email link)
+Route::get('/password/reset', [App\Http\Controllers\CustomerPasswordResetController::class, 'showResetForm'])
+    ->name('customer.password.reset');
+Route::post('/password/reset', [App\Http\Controllers\CustomerPasswordResetController::class, 'reset'])
+    ->name('customer.password.update');
+
 // OAuth Success Route (Web platform)
 Route::get('/oauth/success', function (Illuminate\Http\Request $request) {
     // Recuperar datos de los query parameters (en lugar de sesión)

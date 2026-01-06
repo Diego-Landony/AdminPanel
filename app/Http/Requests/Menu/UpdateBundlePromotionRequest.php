@@ -19,6 +19,7 @@ class UpdateBundlePromotionRequest extends FormRequest
             // Información básica
             'name' => ['required', 'string', 'max:255', 'unique:promotions,name,'.$promotionId],
             'description' => ['nullable', 'string', 'max:500'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
             'is_active' => ['boolean'],
             'type' => ['required', 'string', 'in:bundle_special'],
 
@@ -64,6 +65,11 @@ class UpdateBundlePromotionRequest extends FormRequest
 
             // Descripción
             'description.max' => 'La descripción no puede tener más de 500 caracteres.',
+
+            // Imagen
+            'image.image' => 'El archivo debe ser una imagen.',
+            'image.mimes' => 'La imagen debe ser de tipo: jpeg, png, jpg o webp.',
+            'image.max' => 'La imagen no debe pesar más de 5MB.',
 
             // Precios
             'special_bundle_price_capital.required' => 'El precio para zona capital es obligatorio.',

@@ -244,7 +244,7 @@ Future<AuthResponse> register(RegisterData data) async {
   }
 }
 
-// Response 409 - Cuenta OAuth (redirigir a Google/Apple)
+// Response 409 - Cuenta OAuth (redirigir a Google)
 {
   "error_code": "oauth_account_required",
   "data": {
@@ -297,7 +297,7 @@ Future<AuthResponse> login(String email, String password, String deviceId) async
 
 ---
 
-### 1.3 OAuth (Google/Apple)
+### 1.3 OAuth (Google)
 
 **Flujo Mobile con Deep Link:**
 
@@ -418,14 +418,71 @@ await launchUrl(Uri.parse(url));
 
 **PUT** `/profile`
 
+> **Todos los campos son opcionales** - enviar solo los que se quieren actualizar.
+> Si se cambia el email, la cuenta queda como NO verificada y debe verificar el nuevo email.
+
 ```dart
+// Request - todos los campos son opcionales
 {
   "first_name": "Juan",
   "last_name": "Perez",
+  "email": "nuevo@email.com",        // Si cambia, marca email como NO verificado
   "phone": "+50212345678",
+  "birth_date": "1990-05-15",
+  "gender": "male",                  // "male", "female", "other"
   "email_offers_enabled": true
 }
+
+// Response 200
+{
+  "message": "Perfil actualizado exitosamente.",
+  "data": {
+    "customer": {
+      "id": 1,
+      "first_name": "Juan",
+      "last_name": "Perez",
+      "email": "nuevo@email.com",
+      "email_verified": false,       // false si cambio email
+      "phone": "+50212345678",
+      "birth_date": "1990-05-15",
+      "gender": "male",
+      "email_offers_enabled": true,
+      "points": 500,
+      "oauth_provider": "local"
+    }
+  }
+}
 ```
+
+**Implementacion Flutter:**
+```dart
+class ProfileRemoteDataSource {
+  /// Actualizar perfil (campos opcionales)
+  Future<CustomerModel> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? email,
+    String? phone,
+    String? birthDate,
+    String? gender,
+    bool? emailOffersEnabled,
+  }) async {
+    final body = <String, dynamic>{};
+    if (firstName != null) body['first_name'] = firstName;
+    if (lastName != null) body['last_name'] = lastName;
+    if (email != null) body['email'] = email;
+    if (phone != null) body['phone'] = phone;
+    if (birthDate != null) body['birth_date'] = birthDate;
+    if (gender != null) body['gender'] = gender;
+    if (emailOffersEnabled != null) body['email_offers_enabled'] = emailOffersEnabled;
+
+    final response = await dio.put('/profile', data: body);
+    return CustomerModel.fromJson(response.data['data']['customer']);
+  }
+}
+```
+
+> **⚠️ IMPORTANTE:** Si el usuario cambia su email, mostrar mensaje indicando que debe verificar el nuevo correo.
 
 ---
 
@@ -464,18 +521,171 @@ await launchUrl(Uri.parse(url));
 
 **PUT** `/profile/password`
 
+> **Endpoint unificado** para cambiar contrasena (cuenta local) o crear primera contrasena (cuenta OAuth).
+> El servidor detecta automaticamente que hacer segun el tipo de cuenta.
+
 ```dart
-// Cuenta local (cambiar)
+// Cuenta LOCAL (cambiar contrasena existente)
+// Requiere: current_password, password, password_confirmation
 {
   "current_password": "OldPass123!",
   "password": "NuevaPass123!",
   "password_confirmation": "NuevaPass123!"
 }
 
-// Cuenta OAuth (crear primera contrasena)
+// Cuenta OAUTH (crear primera contrasena)
+// Requiere: password, password_confirmation (NO enviar current_password)
 {
   "password": "NuevaPass123!",
   "password_confirmation": "NuevaPass123!"
+}
+
+// Response 200 (ambos casos)
+{
+  "message": "Contrasena actualizada exitosamente.",
+  "data": {
+    "password_created": false,        // true si era OAuth creando primera contrasena
+    "can_use_password_login": true    // siempre true despues de esta operacion
+  }
+}
+```
+
+**Implementacion Flutter:**
+```dart
+class ProfileRemoteDataSource {
+  /// Cambiar contrasena (cuenta local - oauth_provider='local')
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String newPasswordConfirmation,
+  }) async {
+    await dio.put('/profile/password', data: {
+      'current_password': currentPassword,
+      'password': newPassword,
+      'password_confirmation': newPasswordConfirmation,
+    });
+  }
+
+  /// Crear contrasena (cuenta OAuth sin contrasena)
+  /// Despues de esto, el usuario puede usar email+contrasena O Google
+  Future<void> createPassword({
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    await dio.put('/profile/password', data: {
+      'password': password,
+      'password_confirmation': passwordConfirmation,
+    });
+  }
+}
+```
+
+**Validaciones de contrasena:**
+- Minimo 6 caracteres
+- Al menos 1 letra
+- Al menos 1 numero
+- No puede ser igual a la contrasena actual (solo para cambio)
+
+**Errores posibles:**
+| Codigo | Mensaje |
+|--------|---------|
+| 422 | `current_password` - La contrasena actual es incorrecta |
+| 422 | `password` - Las contrasenas no coinciden |
+| 422 | `password` - La nueva contrasena debe ser diferente a la actual |
+
+---
+
+### 2.6 Sistema de Vinculacion de Cuentas (OAuth Linking)
+
+> **⚠️ IMPORTANTE: El sistema maneja automaticamente la vinculacion de cuentas.**
+
+**Escenario 1: Usuario local hace login con Google**
+```
+Usuario tiene: email=juan@gmail.com, oauth_provider='local', password='xxx'
+Usuario hace: Login con Google (mismo email)
+Resultado:
+  - Se vincula google_id a la cuenta
+  - oauth_provider SIGUE siendo 'local'
+  - Usuario puede usar AMBOS: contrasena O Google
+```
+
+**Escenario 2: Usuario Google crea contrasena**
+```
+Usuario tiene: email=juan@gmail.com, oauth_provider='google', google_id='xxx'
+Usuario hace: PUT /profile/password (crear contrasena)
+Resultado:
+  - Se guarda la contrasena
+  - oauth_provider cambia a 'local'
+  - Usuario puede usar AMBOS: contrasena O Google
+```
+
+**Escenario 3: Usuario intenta login local con cuenta OAuth**
+```
+Usuario tiene: oauth_provider='google' (nunca creo contrasena)
+Usuario intenta: POST /auth/login con email+password
+Resultado:
+  - Error 409 con error_code='oauth_account_required'
+  - Flutter debe redirigir al flujo OAuth de Google
+```
+
+**Como mostrar opciones de login en Flutter:**
+```dart
+Widget buildLoginOptions(Customer customer) {
+  final bool canUsePassword = customer.oauthProvider == 'local';
+  final bool hasGoogle = customer.hasGoogleLinked;
+
+  return Column(
+    children: [
+      if (canUsePassword)
+        ElevatedButton(
+          onPressed: () => showPasswordLogin(),
+          child: Text('Iniciar con Email'),
+        ),
+      if (hasGoogle || customer.oauthProvider == 'google')
+        ElevatedButton(
+          onPressed: () => loginWithGoogle(),
+          child: Text('Iniciar con Google'),
+        ),
+    ],
+  );
+}
+```
+
+**Campo `oauth_provider` en respuesta del perfil:**
+| Valor | Significado |
+|-------|-------------|
+| `local` | Puede usar email+contrasena (y puede tener Google vinculado tambien) |
+| `google` | Solo puede usar Google (hasta que cree contrasena) |
+
+**Campos de estado de autenticacion en perfil:**
+```dart
+{
+  "oauth_provider": "local",       // "local" o "google"
+  "has_password": true,            // true = puede usar email+contrasena
+  "has_google_linked": true        // true = puede usar Google Sign-In
+}
+```
+
+**Logica Flutter para mostrar opciones:**
+```dart
+class CustomerModel {
+  final String oauthProvider;
+  final bool hasPassword;
+  final bool hasGoogleLinked;
+
+  // Puede cambiar contrasena?
+  bool get canChangePassword => hasPassword;
+
+  // Puede crear contrasena? (solo OAuth sin contrasena)
+  bool get canCreatePassword => !hasPassword;
+
+  // Metodos de login disponibles
+  List<String> get availableLoginMethods {
+    final methods = <String>[];
+    if (hasPassword) methods.add('email');
+    if (hasGoogleLinked || oauthProvider == 'google') methods.add('google');
+    return methods;
+  }
 }
 ```
 
@@ -1998,6 +2208,10 @@ Widget buildMenuPrice(Product product, String disclaimer) {
 
 | Fecha | Cambio |
 |-------|--------|
+| 2026-01-05 | Agregado campos `has_password`, `has_google_linked` al perfil para facilitar manejo de autenticacion en Flutter |
+| 2026-01-05 | Documentado sistema de vinculacion de cuentas OAuth (seccion 2.6) |
+| 2026-01-05 | Expandida documentacion de PUT /profile con todos los campos y ejemplos Flutter |
+| 2026-01-05 | Expandida documentacion de PUT /profile/password con ejemplos detallados para cambiar/crear contrasena |
 | 2026-01-05 | Banners ahora vienen pre-recortados con aspect ratios estandar (16:9 horizontal, 9:16 vertical) |
 | 2026-01-05 | GET /menu/banners ahora devuelve `horizontal` y `vertical` separados en una sola llamada |
 | 2026-01-05 | Agregado `description` e `image_url` a categorias en GET /menu y GET /menu/categories |

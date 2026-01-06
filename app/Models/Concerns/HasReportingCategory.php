@@ -6,8 +6,8 @@ namespace App\Models\Concerns;
  * Trait para derivar categoría de reportería desde datos existentes.
  *
  * Categorías de reportería soportadas:
- * - footlong: Variantes de subs 30cm
- * - sixinch: Variantes de subs 15cm
+ * - 30cm: Variantes de subs 30cm
+ * - 15cm: Variantes de subs 15cm
  * - wraps, ensaladas, bebidas, postres, desayunos: Por categoría de menú
  * - complementos: Extras, chips, budín, etc.
  * - combos: Todos los combos
@@ -41,8 +41,8 @@ trait HasReportingCategory
     public static function getValidReportingCategories(): array
     {
         return [
-            'footlong',
-            'sixinch',
+            '30cm',
+            '15cm',
             'subs',
             'subway_series',
             'wraps',

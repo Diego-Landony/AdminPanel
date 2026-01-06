@@ -60,17 +60,15 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function configureCustomerNotifications(): void
     {
-        // Customize password reset URL for Customers (mobile app deep link)
+        // Customize password reset URL for Customers (web page that allows reset)
         ResetPassword::createUrlUsing(function ($notifiable, string $token) {
             // Only apply to Customer model
             if ($notifiable instanceof Customer) {
-                $scheme = config('app.mobile_scheme', 'subwayapp');
-                $queryParams = http_build_query([
+                // Use web URL - the web page will show a form to reset password
+                return url(route('customer.password.reset', [
                     'token' => $token,
                     'email' => $notifiable->getEmailForPasswordReset(),
-                ]);
-
-                return "{$scheme}://reset-password?{$queryParams}";
+                ], false));
             }
 
             // Default behavior for User model (AdminPanel)

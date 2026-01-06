@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Star } from 'lucide-react';
+import { Palette, Star } from 'lucide-react';
 import { useState } from 'react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
@@ -10,9 +10,19 @@ import { Switch } from '@/components/ui/switch';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ENTITY_ICONS } from '@/constants/section-icons';
 import { PLACEHOLDERS } from '@/constants/ui-constants';
+
+const PRESET_COLORS = [
+    { name: 'Gris', value: '#6B7280' },
+    { name: 'Bronce', value: '#CD7F32' },
+    { name: 'Plata', value: '#C0C0C0' },
+    { name: 'Oro', value: '#FFD700' },
+    { name: 'Platino', value: '#E5E4E2' },
+    { name: 'Verde', value: '#22c55e' },
+    { name: 'Azul', value: '#3b82f6' },
+    { name: 'Morado', value: '#8b5cf6' },
+];
 
 /**
  * Interfaz para el tipo de cliente
@@ -52,7 +62,7 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
         name: customer_type.name,
         points_required: customer_type.points_required,
         multiplier: customer_type.multiplier,
-        color: customer_type.color || 'blue',
+        color: customer_type.color || '#6B7280',
         is_active: customer_type.is_active,
     });
 
@@ -110,17 +120,6 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
         });
     };
 
-    const colorOptions = [
-        { value: 'gray', label: 'Gris', class: 'bg-gray-100 text-gray-800 border border-gray-200' },
-        { value: 'blue', label: 'Azul', class: 'bg-blue-100 text-blue-800 border border-blue-200' },
-        { value: 'green', label: 'Verde', class: 'bg-green-100 text-green-800 border border-green-200' },
-        { value: 'yellow', label: 'Amarillo', class: 'bg-yellow-100 text-yellow-800 border border-yellow-200' },
-        { value: 'orange', label: 'Naranja', class: 'bg-orange-100 text-orange-800 border border-orange-200' },
-        { value: 'red', label: 'Rojo', class: 'bg-red-100 text-red-800 border border-red-200' },
-        { value: 'purple', label: 'Púrpura', class: 'bg-purple-100 text-purple-800 border border-purple-200' },
-        { value: 'slate', label: 'Pizarra', class: 'bg-slate-100 text-slate-800 border border-slate-200' },
-    ];
-
     return (
         <EditPageLayout
             title="Editar Tipo de Cliente"
@@ -176,26 +175,55 @@ export default function CustomerTypeEdit({ customer_type }: EditPageProps) {
                     </FormField>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    {/* Color */}
-                    <FormField label="Color" error={errors.color}>
-                        <Select value={formData.color} onValueChange={(value) => handleInputChange('color', value)}>
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {colorOptions.map((color) => (
-                                    <SelectItem key={color.value} value={color.value}>
-                                        <div className="flex items-center gap-2">
-                                            <div className={`h-4 w-4 rounded ${color.class}`}></div>
-                                            {color.label}
-                                        </div>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </FormField>
+                {/* Vista Previa */}
+                <div className="rounded-lg border p-4">
+                    <Label className="mb-3 block text-sm font-medium">Vista Previa</Label>
+                    <div className="flex items-center justify-center rounded-lg bg-muted/50 p-6">
+                        <span
+                            className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium text-white shadow-sm"
+                            style={{ backgroundColor: formData.color }}
+                        >
+                            {formData.name || 'Tipo de Cliente'}
+                        </span>
+                    </div>
                 </div>
+
+                {/* Color */}
+                <FormField label="Color" error={errors.color}>
+                    <div className="space-y-3">
+                        <div className="flex flex-wrap gap-2">
+                            {PRESET_COLORS.map((preset) => (
+                                <button
+                                    key={preset.value}
+                                    type="button"
+                                    onClick={() => handleInputChange('color', preset.value)}
+                                    title={preset.name}
+                                    className={`h-8 w-8 rounded-full border-2 transition-all ${
+                                        formData.color === preset.value ? 'scale-110 border-foreground ring-2 ring-primary ring-offset-2' : 'border-transparent hover:scale-105'
+                                    }`}
+                                    style={{ backgroundColor: preset.value }}
+                                />
+                            ))}
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Input
+                                id="color"
+                                type="color"
+                                value={formData.color}
+                                onChange={(e) => handleInputChange('color', e.target.value)}
+                                className="h-10 w-14 cursor-pointer p-1"
+                            />
+                            <Input
+                                type="text"
+                                value={formData.color}
+                                onChange={(e) => handleInputChange('color', e.target.value)}
+                                placeholder="#000000"
+                                maxLength={30}
+                                className="flex-1"
+                            />
+                        </div>
+                    </div>
+                </FormField>
 
                 {/* Estado activo */}
                 <div className="flex items-center justify-between rounded-lg border p-4">

@@ -19,6 +19,7 @@ class StorePromotionRequest extends FormRequest
         return [
             'name' => 'required|string|max:150',
             'description' => 'nullable|string',
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
             'type' => 'required|in:two_for_one,percentage_discount,daily_special',
             'is_active' => 'boolean',
 

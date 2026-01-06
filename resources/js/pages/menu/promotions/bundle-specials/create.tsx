@@ -1,12 +1,13 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { closestCenter, DndContext, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { useForm } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
 import { ComboItemCard } from '@/components/combos/ComboItemCard';
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
+import { ImageUpload } from '@/components/ImageUpload';
 import { CreateProductsSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,7 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { WeekdaySelector } from '@/components/WeekdaySelector';
 import { CURRENCY, FORM_SECTIONS, NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 import { generateUniqueItemId, prepareComboDataForSubmit, validateMinimumComboStructure } from '@/utils/comboHelpers';
-import { Banknote, Calendar, Gift, Package, Plus } from 'lucide-react';
+import { Banknote, Calendar, Gift, Image, Package, Plus } from 'lucide-react';
 
 interface ProductVariant {
     id: number;
@@ -79,8 +80,10 @@ interface BundleSpecialFormData {
 }
 
 export default function BundleSpecialCreate({ products }: CreateBundleSpecialPageProps) {
-    // @ts-expect-error - Inertia's FormDataType doesn't support nested array types
-    const { data, setData, post, processing, errors, reset } = useForm<BundleSpecialFormData>({
+    const [processing, setProcessing] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const [data, setDataState] = useState<BundleSpecialFormData>({
         name: '',
         description: '',
         is_active: true,
@@ -94,6 +97,19 @@ export default function BundleSpecialCreate({ products }: CreateBundleSpecialPag
         weekdays: [],
         items: [],
     });
+
+    const [image, setImage] = useState<File | null>(null);
+
+    const setData = <K extends keyof BundleSpecialFormData>(key: K, value: BundleSpecialFormData[K]) => {
+        setDataState((prev) => ({ ...prev, [key]: value }));
+        if (errors[key]) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors[key];
+                return newErrors;
+            });
+        }
+    };
 
     const [localItems, setLocalItems] = useState<ComboItem[]>([]);
     const [enableWeekdays, setEnableWeekdays] = useState(false);
@@ -180,31 +196,71 @@ export default function BundleSpecialCreate({ products }: CreateBundleSpecialPag
             return;
         }
 
+        setProcessing(true);
+
         const preparedItems = prepareComboDataForSubmit(localItems);
 
-        const submitData = {
-            ...data,
-            items: preparedItems,
-            weekdays: enableWeekdays && data.weekdays.length > 0 ? data.weekdays : null,
-        };
+        const formData = new FormData();
+        formData.append('name', data.name);
+        formData.append('description', data.description || '');
+        formData.append('is_active', data.is_active ? '1' : '0');
+        formData.append('special_bundle_price_capital', data.special_bundle_price_capital);
+        formData.append('special_bundle_price_interior', data.special_bundle_price_interior);
+        formData.append('validity_type', data.validity_type);
+        if (data.valid_from) formData.append('valid_from', data.valid_from);
+        if (data.valid_until) formData.append('valid_until', data.valid_until);
+        if (data.time_from) formData.append('time_from', data.time_from);
+        if (data.time_until) formData.append('time_until', data.time_until);
 
-        post(route('menu.promotions.bundle-specials.store'), {
-            ...submitData,
+        const weekdaysValue = enableWeekdays && data.weekdays.length > 0 ? data.weekdays : null;
+        if (weekdaysValue) {
+            weekdaysValue.forEach((day, index) => {
+                formData.append(`weekdays[${index}]`, String(day));
+            });
+        }
+
+        // Agregar items como JSON
+        preparedItems.forEach((item, itemIndex) => {
+            formData.append(`items[${itemIndex}][is_choice_group]`, item.is_choice_group ? '1' : '0');
+            formData.append(`items[${itemIndex}][quantity]`, String(item.quantity));
+            formData.append(`items[${itemIndex}][sort_order]`, String(item.sort_order));
+            if (item.choice_label) formData.append(`items[${itemIndex}][choice_label]`, item.choice_label);
+            if (item.product_id) formData.append(`items[${itemIndex}][product_id]`, String(item.product_id));
+            if (item.variant_id) formData.append(`items[${itemIndex}][variant_id]`, String(item.variant_id));
+
+            if (item.options) {
+                item.options.forEach((option, optIndex) => {
+                    formData.append(`items[${itemIndex}][options][${optIndex}][product_id]`, String(option.product_id));
+                    if (option.variant_id) formData.append(`items[${itemIndex}][options][${optIndex}][variant_id]`, String(option.variant_id));
+                    formData.append(`items[${itemIndex}][options][${optIndex}][sort_order]`, String(option.sort_order));
+                });
+            }
+        });
+
+        // Agregar imagen si existe
+        if (image) {
+            formData.append('image', image);
+        }
+
+        router.post(route('menu.promotions.bundle-specials.store'), formData, {
+            forceFormData: true,
             onSuccess: () => {
-                reset();
                 setLocalItems([]);
             },
-            onError: (errors: Record<string, string>) => {
-                console.error('Errores de validación:', errors);
+            onError: (newErrors: Record<string, string>) => {
+                setErrors(newErrors);
+                console.error('Errores de validación:', newErrors);
 
-                if (Object.keys(errors).length === 0) {
+                if (Object.keys(newErrors).length === 0) {
                     showNotification.error(NOTIFICATIONS.error.dataLoading);
                 } else {
-                    // Mostrar el primer error encontrado
-                    const firstErrorKey = Object.keys(errors)[0];
-                    const firstError = errors[firstErrorKey];
+                    const firstErrorKey = Object.keys(newErrors)[0];
+                    const firstError = newErrors[firstErrorKey];
                     showNotification.error(firstError);
                 }
+            },
+            onFinish: () => {
+                setProcessing(false);
             },
         });
     };
@@ -252,6 +308,18 @@ export default function BundleSpecialCreate({ products }: CreateBundleSpecialPag
                                     />
                                 </FormField>
                             </div>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={Image} title="Imagen de la Promoción" description="Imagen que se mostrará en la app">
+                            <ImageUpload
+                                label="Imagen"
+                                onImageChange={(file) => setImage(file)}
+                                error={errors.image}
+                            />
                         </FormSection>
                     </CardContent>
                 </Card>

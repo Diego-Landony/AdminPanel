@@ -159,13 +159,13 @@ class ProductVariant extends Model
     /**
      * Accessor: Categoría de reportería derivada
      *
-     * Para variantes de subs: usa el size (footlong, sixinch)
+     * Para variantes de subs: usa el size (30cm, 15cm)
      * Para otras variantes: hereda de la categoría del producto
      */
     public function getReportingCategoryAttribute(): string
     {
-        // Si tiene size y es footlong/sixinch, usar directamente
-        if ($this->size && in_array($this->size, ['footlong', 'sixinch'])) {
+        // Si tiene size y es 30cm/15cm, usar directamente
+        if ($this->size && in_array($this->size, ['30cm', '15cm'])) {
             return $this->size;
         }
 
@@ -180,7 +180,7 @@ class ProductVariant extends Model
      */
     public function scopeByReportingCategory($query, string $category)
     {
-        if (in_array($category, ['footlong', 'sixinch'])) {
+        if (in_array($category, ['30cm', '15cm'])) {
             return $query->where('size', $category);
         }
 

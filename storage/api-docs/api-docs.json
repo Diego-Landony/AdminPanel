@@ -6216,6 +6216,52 @@
     },
     "components": {
         "schemas": {
+            "CustomerType": {
+                "title": "CustomerType",
+                "description": "Tipo de cliente basado en puntos de lealtad",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "description": "Nombre del tipo de cliente",
+                        "type": "string",
+                        "example": "Gold"
+                    },
+                    "points_required": {
+                        "description": "Puntos requeridos para alcanzar este nivel",
+                        "type": "integer",
+                        "example": 500
+                    },
+                    "multiplier": {
+                        "description": "Multiplicador de puntos para este nivel",
+                        "type": "number",
+                        "format": "float",
+                        "example": 1.5
+                    },
+                    "color": {
+                        "description": "Color representativo del nivel",
+                        "type": "string",
+                        "example": "#FFD700"
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-10T08:00:00Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-20T15:45:00Z"
+                    }
+                },
+                "type": "object"
+            },
             "Customer": {
                 "title": "Customer",
                 "description": "Customer model with profile information and loyalty data",
@@ -6288,6 +6334,11 @@
                         "example": "12345678",
                         "nullable": true
                     },
+                    "email_offers_enabled": {
+                        "description": "Si el cliente acepta recibir ofertas por email",
+                        "type": "boolean",
+                        "example": true
+                    },
                     "last_login_at": {
                         "type": "string",
                         "format": "date-time",
@@ -6340,6 +6391,67 @@
                         "type": "string",
                         "format": "date-time",
                         "example": "2024-01-20T15:45:00Z"
+                    },
+                    "has_password": {
+                        "description": "True si el usuario puede iniciar sesión con contraseña (oauth_provider=local)",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "has_google_linked": {
+                        "description": "True si el usuario tiene cuenta de Google vinculada",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "customer_type": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/CustomerType"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Tipo de cliente basado en puntos de lealtad"
+                    },
+                    "addresses": {
+                        "description": "Direcciones del cliente (cuando se carga la relación)",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CustomerAddress"
+                        },
+                        "nullable": true
+                    },
+                    "nits": {
+                        "description": "NITs del cliente (cuando se carga la relación)",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CustomerNit"
+                        },
+                        "nullable": true
+                    },
+                    "devices": {
+                        "description": "Dispositivos activos del cliente (cuando se carga la relación)",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CustomerDevice"
+                        },
+                        "nullable": true
+                    },
+                    "addresses_count": {
+                        "description": "Número de direcciones (cuando se incluye el count)",
+                        "type": "integer",
+                        "example": 2,
+                        "nullable": true
+                    },
+                    "nits_count": {
+                        "description": "Número de NITs (cuando se incluye el count)",
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "devices_count": {
+                        "description": "Número de dispositivos (cuando se incluye el count)",
+                        "type": "integer",
+                        "example": 3,
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -6391,6 +6503,105 @@
                     },
                     "is_current_device": {
                         "description": "True if this device is associated with current token",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-10T08:00:00Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-20T15:45:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "CustomerAddress": {
+                "title": "CustomerAddress",
+                "description": "Dirección de entrega del cliente",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "label": {
+                        "description": "Etiqueta de la dirección (Casa, Trabajo, etc.)",
+                        "type": "string",
+                        "example": "Casa"
+                    },
+                    "address_line": {
+                        "type": "string",
+                        "example": "12 Calle 1-25 Zona 10"
+                    },
+                    "latitude": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 14.6349
+                    },
+                    "longitude": {
+                        "type": "number",
+                        "format": "float",
+                        "example": -90.5069
+                    },
+                    "delivery_notes": {
+                        "type": "string",
+                        "example": "Portón negro, tocar timbre",
+                        "nullable": true
+                    },
+                    "zone": {
+                        "description": "Zona de precios",
+                        "type": "string",
+                        "enum": [
+                            "capital",
+                            "interior"
+                        ],
+                        "example": "capital"
+                    },
+                    "is_default": {
+                        "description": "Si es la dirección predeterminada",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-10T08:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "CustomerNit": {
+                "title": "CustomerNit",
+                "description": "NIT del cliente para facturación",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nit": {
+                        "description": "Número de NIT",
+                        "type": "string",
+                        "example": "12345678-9"
+                    },
+                    "business_name": {
+                        "description": "Nombre o razón social",
+                        "type": "string",
+                        "example": "Juan Pérez"
+                    },
+                    "nit_type": {
+                        "description": "Tipo de NIT",
+                        "type": "string",
+                        "enum": [
+                            "personal",
+                            "business"
+                        ],
+                        "example": "personal"
+                    },
+                    "is_default": {
+                        "description": "Si es el NIT predeterminado",
                         "type": "boolean",
                         "example": true
                     },
@@ -6791,8 +7002,9 @@
                         "nullable": true
                     },
                     "image_url": {
+                        "description": "URL de la imagen de la promoción",
                         "type": "string",
-                        "example": null,
+                        "example": "https://admin.subwaycardgt.com/storage/promotions/combo-2x1.jpg",
                         "nullable": true
                     },
                     "type": {

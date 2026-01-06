@@ -1,6 +1,6 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { router, useForm } from '@inertiajs/react';
-import { Building2, Calendar, CreditCard, Edit2, Eye, EyeOff, FileText, Lock, Mail, Phone, Plus, Trash2, User } from 'lucide-react';
+import { Building2, Calendar, CreditCard, Edit2, Eye, EyeOff, FileText, Lock, Mail, Phone, Plus, Star, Trash2, User } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { AddressFormModal } from '@/components/customers/AddressFormModal';
@@ -61,6 +61,7 @@ interface Customer {
     customer_type_id: number | null;
     customer_type: { id: number; name: string } | null;
     phone: string | null;
+    points: number;
     addresses: CustomerAddress[];
     nits: CustomerNit[];
     email_verified_at: string | null;
@@ -122,6 +123,7 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
         gender: customer.gender || '',
         customer_type_id: customer.customer_type_id,
         phone: customer.phone || '',
+        points: customer.points ?? 0,
     });
 
     /**
@@ -162,6 +164,7 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
             gender: customer.gender || '',
             customer_type_id: customer.customer_type_id,
             phone: customer.phone || '',
+            points: customer.points ?? 0,
         });
     };
 
@@ -335,6 +338,19 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
                                             ))}
                                         </SelectContent>
                                     </Select>
+                                </FormField>
+
+                                <FormField label="Puntos de Lealtad" error={errors.points} description="Puntos acumulados del cliente">
+                                    <div className="relative">
+                                        <Star className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            value={data.points}
+                                            onChange={(e) => setData('points', parseInt(e.target.value) || 0)}
+                                            className="pl-10"
+                                        />
+                                    </div>
                                 </FormField>
                             </div>
                         </FormSection>

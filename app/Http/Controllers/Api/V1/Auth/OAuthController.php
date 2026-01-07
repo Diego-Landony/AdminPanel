@@ -259,13 +259,22 @@ class OAuthController extends Controller
                 \Log::info('Redirecting to mobile app', [
                     'customer_id' => $customer->id,
                     'is_new' => $result['is_new'],
+                    'was_reactivated' => $result['was_reactivated'] ?? false,
                 ]);
 
-                return $this->redirectToApp([
+                $redirectParams = [
                     'token' => $token,
                     'customer_id' => $customer->id,
                     'is_new_customer' => $result['is_new'] ? '1' : '0',
-                ]);
+                ];
+
+                // Incluir info de reactivación si aplica
+                if ($result['was_reactivated'] ?? false) {
+                    $redirectParams['was_reactivated'] = '1';
+                    $redirectParams['points_recovered'] = (string) ($result['points_recovered'] ?? 0);
+                }
+
+                return $this->redirectToApp($redirectParams);
             }
 
             // WEB: Store in session and redirect to success route
@@ -578,11 +587,18 @@ class OAuthController extends Controller
             }
 
             if ($platform === 'mobile') {
-                return $this->redirectToApp([
+                $redirectParams = [
                     'token' => $token,
                     'customer_id' => $customer->id,
                     'is_new_customer' => $result['is_new'] ? '1' : '0',
-                ]);
+                ];
+
+                if ($result['was_reactivated'] ?? false) {
+                    $redirectParams['was_reactivated'] = '1';
+                    $redirectParams['points_recovered'] = (string) ($result['points_recovered'] ?? 0);
+                }
+
+                return $this->redirectToApp($redirectParams);
             }
 
             if ($redirectUrl) {
@@ -591,6 +607,7 @@ class OAuthController extends Controller
                     'customer_id' => $customer->id,
                     'is_new_customer' => $result['is_new'] ? '1' : '0',
                     'message' => __($result['message_key']),
+                    'was_reactivated' => ($result['was_reactivated'] ?? false) ? '1' : '0',
                 ]);
 
                 return redirect()->away($redirectUrl.'?'.$params);

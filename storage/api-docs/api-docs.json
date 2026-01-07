@@ -14,7 +14,7 @@
             "description": "Local Development Server"
         },
         {
-            "url": "https://admin.subwaycardgt.com",
+            "url": "https://appmobile.subwaycardgt.com",
             "description": "Application Server"
         }
     ],
@@ -815,7 +815,7 @@
                     "Authentication"
                 ],
                 "summary": "Reactivar cuenta eliminada",
-                "description": "Reactiva una cuenta de cliente que fue soft-deleted. Solo funciona si no han pasado más de 30 días desde la eliminación.\n     *\n     * **Flujo:**\n     * 1. Busca cuenta eliminada con el email proporcionado\n     * 2. Verifica que no hayan pasado más de 30 días desde eliminación\n     * 3. Para cuentas locales, verifica la contraseña\n     * 4. Restaura la cuenta y genera nuevo token\n     * 5. Retorna datos del usuario incluyendo puntos acumulados\n     *\n     * **Errores posibles:**\n     * - account_not_found_deleted: No existe cuenta eliminada con este email\n     * - reactivation_period_expired: Han pasado más de 30 días desde eliminación\n     * - incorrect_password: Contraseña incorrecta (solo cuentas locales)",
+                "description": "Reactiva una cuenta de cliente que fue soft-deleted. Solo funciona si no han pasado más de 30 días desde la eliminación.\n     *\n     * **Flujo:**\n     * 1. Busca cuenta eliminada con el email proporcionado\n     * 2. Verifica que no hayan pasado más de 30 días desde eliminación\n     * 3. Verifica identidad con: password, google_token, o apple_token\n     * 4. Restaura la cuenta y genera nuevo token\n     * 5. Retorna datos del usuario incluyendo puntos acumulados\n     *\n     * **Métodos de verificación (uno es requerido):**\n     * - password: Si la cuenta tiene contraseña configurada\n     * - google_token: Token de Google OAuth (si tiene google_id vinculado)\n     *\n     * **Errores posibles:**\n     * - account_not_found_deleted: No existe cuenta eliminada con este email\n     * - reactivation_period_expired: Han pasado más de 30 días desde eliminación\n     * - incorrect_password: Contraseña incorrecta\n     * - oauth_invalid_token: Token OAuth inválido",
                 "operationId": "e08ef1a6deb11a0fdce4b7e2ddd9ee7e",
                 "requestBody": {
                     "required": true,
@@ -834,10 +834,15 @@
                                         "example": "juan@example.com"
                                     },
                                     "password": {
-                                        "description": "Contraseña (requerida solo para cuentas locales, no OAuth)",
+                                        "description": "Contraseña (si la cuenta tiene password)",
                                         "type": "string",
                                         "format": "password",
                                         "example": "SecurePass123!"
+                                    },
+                                    "google_token": {
+                                        "description": "Token de Google OAuth (alternativa a password)",
+                                        "type": "string",
+                                        "example": "eyJhbGciOiJS..."
                                     },
                                     "device_identifier": {
                                         "description": "Identificador único del dispositivo",
@@ -6044,7 +6049,7 @@
                     "Profile"
                 ],
                 "summary": "Actualizar o crear contraseña",
-                "description": "Cambia o crea la contraseña del cliente. Revoca todos los tokens excepto el actual por seguridad.\n     *\n     * **Para cuentas locales (email/contraseña):**\n     * - Requiere: current_password, password, password_confirmation\n     * - La nueva contraseña debe ser diferente a la actual\n     *\n     * **Para cuentas OAuth (Google/Apple) sin contraseña:**\n     * - Requiere: password, password_confirmation\n     * - NO requiere current_password (están creando su primera contraseña)\n     * - Después de crear contraseña, pueden usar ambos métodos: OAuth y contraseña\n     *\n     * **Comportamiento después de crear contraseña (OAuth):**\n     * - El usuario mantiene su google_id/apple_id vinculado\n     * - oauth_provider cambia a 'local'\n     * - Puede iniciar sesión con Google/Apple O con email+contraseña",
+                "description": "Cambia o crea la contraseña del cliente. Revoca todos los tokens excepto el actual por seguridad.\n     *\n     * **Para cuentas locales (email/contraseña):**\n     * - Requiere: current_password, password, password_confirmation\n     * - La nueva contraseña debe ser diferente a la actual\n     *\n     * **Para cuentas OAuth (Google/Apple) sin contraseña:**\n     * - Requiere: password, password_confirmation\n     * - NO requiere current_password (están creando su primera contraseña)\n     * - Después de crear contraseña, pueden usar ambos métodos: OAuth y contraseña\n     *\n     * **Comportamiento después de crear contraseña (OAuth):**\n     * - El usuario mantiene su google_id/apple_id vinculado\n     * - oauth_provider NO cambia (mantiene 'google' o 'apple')\n     * - Puede iniciar sesión con Google/Apple O con email+contraseña\n     * - El campo password !== null indica que puede usar login con contraseña",
                 "operationId": "141e4afbe7b6c73bcd252f096680adb5",
                 "requestBody": {
                     "required": true,
@@ -6057,7 +6062,7 @@
                                 ],
                                 "properties": {
                                     "current_password": {
-                                        "description": "Contraseña actual. SOLO requerido para cuentas locales (oauth_provider='local'). NO enviar si es cuenta OAuth.",
+                                        "description": "Contraseña actual. SOLO requerido si el usuario YA tiene contraseña. NO enviar si es primera vez creando contraseña.",
                                         "type": "string",
                                         "format": "password",
                                         "example": "OldPass123!"

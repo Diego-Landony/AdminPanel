@@ -18,22 +18,13 @@ class ChangePasswordRequest extends FormRequest
     }
 
     /**
-     * Check if user has a password set (local account or has set one manually).
+     * Check if user has a password set.
+     * Un usuario tiene contraseña si el campo password no es null.
+     * Esto aplica tanto para cuentas locales como OAuth que agregaron contraseña.
      */
     protected function userHasPassword(): bool
     {
-        $user = $this->user();
-
-        // Usuario local siempre tiene contraseña
-        if ($user->oauth_provider === 'local') {
-            return true;
-        }
-
-        // Usuario OAuth podría haber creado una contraseña después
-        // Verificamos si la contraseña NO es un hash random (los OAuth tienen password random)
-        // Una forma simple: si puede hacer login con alguna contraseña conocida, tiene contraseña real
-        // Pero como no sabemos, asumimos que OAuth sin 'local' no tiene contraseña usable
-        return false;
+        return $this->user()->password !== null;
     }
 
     /**

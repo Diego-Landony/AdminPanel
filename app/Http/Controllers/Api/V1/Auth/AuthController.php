@@ -12,6 +12,7 @@ use App\Http\Resources\Api\V1\AuthResource;
 use App\Models\Customer;
 use App\Models\CustomerType;
 use App\Services\DeviceService;
+use App\Services\SocialAuthService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
@@ -25,7 +26,10 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    public function __construct(protected DeviceService $deviceService) {}
+    public function __construct(
+        protected DeviceService $deviceService,
+        protected SocialAuthService $socialAuthService
+    ) {}
 
     /**
      * Register a new customer account.
@@ -273,9 +277,9 @@ class AuthController extends Controller
             ]);
         }
 
-        // Verificar primero si es cuenta OAuth (antes de validar password)
-        // Esto evita revelar información sobre la contraseña y mejora UX
-        if ($customer->oauth_provider !== 'local') {
+        // Verificar si el usuario tiene contraseña configurada
+        // Un usuario OAuth puede tener contraseña si la agregó después
+        if ($customer->password === null) {
             return response()->json([
                 'message' => __('auth.oauth_account', ['provider' => $customer->oauth_provider]),
                 'error_code' => 'oauth_account_required',
@@ -498,8 +502,9 @@ class AuthController extends Controller
             ]);
         }
 
-        // Verificar si es cuenta OAuth (no tiene contraseña local)
-        if ($customer->oauth_provider !== 'local') {
+        // Verificar si el usuario tiene contraseña configurada
+        // Un usuario OAuth puede tener contraseña si la agregó después
+        if ($customer->password === null) {
             throw ValidationException::withMessages([
                 'email' => [__('auth.oauth_no_password', ['provider' => ucfirst($customer->oauth_provider)])],
             ]);
@@ -887,14 +892,19 @@ HTML;
      * **Flujo:**
      * 1. Busca cuenta eliminada con el email proporcionado
      * 2. Verifica que no hayan pasado más de 30 días desde eliminación
-     * 3. Para cuentas locales, verifica la contraseña
+     * 3. Verifica identidad con: password, google_token, o apple_token
      * 4. Restaura la cuenta y genera nuevo token
      * 5. Retorna datos del usuario incluyendo puntos acumulados
+     *
+     * **Métodos de verificación (uno es requerido):**
+     * - password: Si la cuenta tiene contraseña configurada
+     * - google_token: Token de Google OAuth (si tiene google_id vinculado)
      *
      * **Errores posibles:**
      * - account_not_found_deleted: No existe cuenta eliminada con este email
      * - reactivation_period_expired: Han pasado más de 30 días desde eliminación
-     * - incorrect_password: Contraseña incorrecta (solo cuentas locales)",
+     * - incorrect_password: Contraseña incorrecta
+     * - oauth_invalid_token: Token OAuth inválido",
      *
      *     @OA\RequestBody(
      *         required=true,
@@ -903,7 +913,8 @@ HTML;
      *             required={"email","device_identifier"},
      *
      *             @OA\Property(property="email", type="string", format="email", example="juan@example.com", description="Email de la cuenta eliminada"),
-     *             @OA\Property(property="password", type="string", format="password", example="SecurePass123!", description="Contraseña (requerida solo para cuentas locales, no OAuth)"),
+     *             @OA\Property(property="password", type="string", format="password", example="SecurePass123!", description="Contraseña (si la cuenta tiene password)"),
+     *             @OA\Property(property="google_token", type="string", example="eyJhbGciOiJS...", description="Token de Google OAuth (alternativa a password)"),
      *             @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="Identificador único del dispositivo")
      *         )
      *     ),
@@ -971,19 +982,61 @@ HTML;
             ]);
         }
 
-        // Si es cuenta local, verificar la contraseña
-        if ($customer->oauth_provider === 'local') {
-            if (! isset($validated['password'])) {
-                throw ValidationException::withMessages([
-                    'password' => ['La contraseña es requerida para cuentas locales.'],
-                ]);
-            }
+        // Verificar identidad del usuario con uno de los métodos disponibles
+        $identityVerified = false;
 
-            if (! Hash::check($validated['password'], $customer->password)) {
+        // Opción 1: Verificar con Google token
+        if (! $identityVerified && isset($validated['google_token'])) {
+            try {
+                $providerData = $this->socialAuthService->verifyGoogleToken($validated['google_token']);
+                // Verificar que el email coincida
+                if ($providerData->email === $customer->email) {
+                    $identityVerified = true;
+                    // Actualizar google_id si no estaba vinculado
+                    if (! $customer->google_id) {
+                        $customer->google_id = $providerData->provider_id;
+                    }
+                }
+            } catch (ValidationException $e) {
+                // Token inválido, continuar con otros métodos
+            }
+        }
+
+        // Opción 2: Verificar con contraseña
+        if (! $identityVerified && isset($validated['password'])) {
+            if ($customer->password !== null && Hash::check($validated['password'], $customer->password)) {
+                $identityVerified = true;
+            }
+        }
+
+        // Si no se verificó identidad, determinar qué método se esperaba
+        if (! $identityVerified) {
+            // Si enviaron password pero falló
+            if (isset($validated['password'])) {
                 throw ValidationException::withMessages([
                     'password' => [__('auth.incorrect_password')],
                 ]);
             }
+
+            // Si enviaron token OAuth pero falló
+            if (isset($validated['google_token'])) {
+                throw ValidationException::withMessages([
+                    'google_token' => [__('auth.oauth_invalid_token')],
+                ]);
+            }
+
+            // No enviaron ningún método de verificación
+            $availableMethods = [];
+            if ($customer->password !== null) {
+                $availableMethods[] = 'password';
+            }
+            if ($customer->google_id) {
+                $availableMethods[] = 'google_token';
+            }
+
+            throw ValidationException::withMessages([
+                'auth' => ['Se requiere verificación de identidad. Métodos disponibles: '.implode(', ', $availableMethods)],
+            ]);
         }
 
         // Guardar puntos antes de restaurar

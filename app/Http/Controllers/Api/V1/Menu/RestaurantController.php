@@ -217,16 +217,27 @@ class RestaurantController extends Controller
     public function nearby(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'lat' => ['required', 'numeric', 'between:-90,90'],
-            'lng' => ['required', 'numeric', 'between:-180,180'],
+            'lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'lng' => ['nullable', 'numeric', 'between:-180,180'],
             'radius_km' => ['nullable', 'numeric', 'min:0.1', 'max:50'],
-            'delivery_active' => ['nullable', 'boolean'],
-            'pickup_active' => ['nullable', 'boolean'],
         ]);
 
-        $lat = $validated['lat'];
-        $lng = $validated['lng'];
+        $lat = $validated['lat'] ?? null;
+        $lng = $validated['lng'] ?? null;
         $radiusKm = $validated['radius_km'] ?? 10;
+
+        // Si no hay coordenadas, devolver error para que la app pida activar ubicación
+        if ($lat === null || $lng === null) {
+            return response()->json([
+                'error' => 'location_required',
+                'message' => 'Por favor activa tu ubicación para ver los restaurantes cercanos.',
+                'data' => [
+                    'restaurants' => [],
+                    'search_radius_km' => null,
+                    'total_found' => 0,
+                ],
+            ], 422);
+        }
 
         $query = Restaurant::query()
             ->active()

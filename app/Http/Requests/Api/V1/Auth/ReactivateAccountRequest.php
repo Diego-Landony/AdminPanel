@@ -24,6 +24,7 @@ class ReactivateAccountRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['nullable', 'string'],
+            'google_token' => ['nullable', 'string'],
             'device_identifier' => ['required', 'string', 'max:255'],
         ];
     }

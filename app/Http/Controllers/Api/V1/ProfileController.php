@@ -284,8 +284,9 @@ class ProfileController extends Controller
      *
      * **Comportamiento después de crear contraseña (OAuth):**
      * - El usuario mantiene su google_id/apple_id vinculado
-     * - oauth_provider cambia a 'local'
-     * - Puede iniciar sesión con Google/Apple O con email+contraseña",
+     * - oauth_provider NO cambia (mantiene 'google' o 'apple')
+     * - Puede iniciar sesión con Google/Apple O con email+contraseña
+     * - El campo password !== null indica que puede usar login con contraseña",
      *     security={{"sanctum":{}}},
      *
      *     @OA\RequestBody(
@@ -294,7 +295,7 @@ class ProfileController extends Controller
      *         @OA\JsonContent(
      *             required={"password","password_confirmation"},
      *
-     *             @OA\Property(property="current_password", type="string", format="password", example="OldPass123!", description="Contraseña actual. SOLO requerido para cuentas locales (oauth_provider='local'). NO enviar si es cuenta OAuth."),
+     *             @OA\Property(property="current_password", type="string", format="password", example="OldPass123!", description="Contraseña actual. SOLO requerido si el usuario YA tiene contraseña. NO enviar si es primera vez creando contraseña."),
      *             @OA\Property(property="password", type="string", format="password", example="NuevaPass123!", description="Nueva contraseña (mínimo 6 caracteres, al menos 1 letra y 1 número)"),
      *             @OA\Property(property="password_confirmation", type="string", format="password", example="NuevaPass123!", description="Debe coincidir con password")
      *         )
@@ -342,20 +343,16 @@ class ProfileController extends Controller
         $customer = $request->user();
         $validated = $request->validated();
 
-        // Determinar si es creación de contraseña (OAuth) o cambio (local)
-        $isCreatingPassword = $customer->oauth_provider !== 'local';
+        // Determinar si es creación de contraseña (primera vez) o cambio de contraseña existente
+        $isCreatingPassword = $customer->password === null;
 
         $customer->update([
             'password' => Hash::make($validated['password']),
         ]);
 
-        // Si era cuenta OAuth, ahora puede usar contraseña también
-        // Cambiamos a 'local' para permitir login con contraseña
-        if ($isCreatingPassword) {
-            $customer->update([
-                'oauth_provider' => 'local',
-            ]);
-        }
+        // oauth_provider NO se cambia - el usuario puede usar ambos métodos:
+        // - Su método OAuth original (google/apple)
+        // - Login con email+contraseña (porque password !== null)
 
         // Revoke all tokens except current one for security
         $currentToken = $customer->currentAccessToken();

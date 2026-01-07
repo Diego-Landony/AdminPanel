@@ -58,11 +58,14 @@ class Restaurant extends Model
     }
 
     /**
-     * Scope para restaurantes con delivery activo
+     * Scope para restaurantes con delivery activo (requiere geofence)
      */
     public function scopeDeliveryActive($query)
     {
-        return $query->where('delivery_active', true)->where('is_active', true);
+        return $query->where('delivery_active', true)
+            ->where('is_active', true)
+            ->whereNotNull('geofence_kml')
+            ->where('geofence_kml', '!=', '');
     }
 
     /**

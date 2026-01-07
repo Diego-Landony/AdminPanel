@@ -53,9 +53,10 @@ class CustomerPasswordResetController extends Controller
         $status = Password::broker('customers')->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (Customer $customer, string $password) {
+                // Solo actualizar password, NO cambiar oauth_provider
+                // El usuario puede usar ambos métodos: OAuth y contraseña
                 $customer->forceFill([
                     'password' => Hash::make($password),
-                    'oauth_provider' => 'local', // Enable password login
                 ])->setRememberToken(Str::random(60));
 
                 $customer->save();

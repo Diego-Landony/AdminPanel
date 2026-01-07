@@ -39,8 +39,9 @@ class CustomerResource extends JsonResource
             'updated_at' => $this->updated_at,
 
             // Authentication state (for Flutter to know login options)
-            'has_password' => $this->oauth_provider === 'local',
+            'has_password' => $this->password !== null,
             'has_google_linked' => $this->google_id !== null,
+            'has_apple_linked' => $this->apple_id !== null,
 
             // Relationships
             'customer_type' => CustomerTypeResource::make($this->whenLoaded('customerType')),

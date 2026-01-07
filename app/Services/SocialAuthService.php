@@ -5,8 +5,6 @@ namespace App\Services;
 use App\Exceptions\AccountDeletedException;
 use App\Models\Customer;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -50,8 +48,7 @@ class SocialAuthService
     {
         $providerIdField = $provider.'_id';
 
-        // Caso 0: Verificar PRIMERO si existe una cuenta eliminada (soft deleted)
-        // Esto debe ir antes de cualquier otra búsqueda para detectar cuentas recuperables
+        // Caso 0: Verificar si existe una cuenta eliminada (soft deleted)
         $deletedCustomer = Customer::where('email', $providerData->email)
             ->onlyTrashed()
             ->first();
@@ -61,9 +58,24 @@ class SocialAuthService
             $daysSinceDeletion = $deletedAt->diffInDays(now());
             $daysLeft = max(0, 30 - $daysSinceDeletion);
 
-            // Si la cuenta fue eliminada hace menos de 30 días, lanzar excepción especial
             if ($daysLeft > 0) {
-                throw new AccountDeletedException($deletedCustomer, $daysLeft);
+                // OAuth login ya verificó la identidad → reactivar automáticamente
+                $deletedCustomer->restore();
+
+                $deletedCustomer->update([
+                    $providerIdField => $providerData->provider_id,
+                    'avatar' => $providerData->avatar ?? $deletedCustomer->avatar,
+                    'last_login_at' => now(),
+                    'last_activity_at' => now(),
+                ]);
+
+                return [
+                    'customer' => $deletedCustomer,
+                    'message_key' => 'auth.account_reactivated',
+                    'is_new' => false,
+                    'was_reactivated' => true,
+                    'points_recovered' => $deletedCustomer->points ?? 0,
+                ];
             }
 
             // Si pasaron más de 30 días, eliminar permanentemente
@@ -198,7 +210,7 @@ class SocialAuthService
             'avatar' => $providerData->avatar,
             'oauth_provider' => $provider,
             'email_verified_at' => now(),
-            'password' => Hash::make(Str::random(32)),
+            'password' => null, // OAuth users don't have password until they create one
         ]);
 
         event(new Registered($customer));

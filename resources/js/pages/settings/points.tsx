@@ -93,7 +93,7 @@ export default function PointsSettingsPage({ settings }: PageProps) {
 
                                 <FormField
                                     label="Umbral de redondeo"
-                                    description="Si la fraccion es >= a este valor, se redondea hacia arriba."
+                                    description={`Ej: Factura de Q${data.quetzales_per_point * 2 + Math.round(data.rounding_threshold * 10)} ÷ Q${data.quetzales_per_point} = ${(2 + data.rounding_threshold).toFixed(1)} → como 0.${Math.round(data.rounding_threshold * 100)} >= 0.${Math.round(data.rounding_threshold * 100)}, da ${Math.ceil(2 + data.rounding_threshold)} puntos.`}
                                     error={errors.rounding_threshold}
                                 >
                                     <div className="flex items-center gap-2">

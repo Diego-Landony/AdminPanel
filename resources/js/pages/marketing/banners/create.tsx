@@ -64,6 +64,9 @@ export default function BannerCreate({ linkOptions }: CreatePageProps) {
         validity_type: 'permanent',
         valid_from: '',
         valid_until: '',
+        has_time_restriction: false,
+        time_from: '',
+        time_until: '',
         weekdays: [] as number[],
         is_active: true,
     });
@@ -110,6 +113,8 @@ export default function BannerCreate({ linkOptions }: CreatePageProps) {
         formData.append('validity_type', data.validity_type);
         formData.append('valid_from', data.valid_from || '');
         formData.append('valid_until', data.valid_until || '');
+        formData.append('time_from', data.time_from || '');
+        formData.append('time_until', data.time_until || '');
         if (data.weekdays.length > 0) {
             data.weekdays.forEach((day) => formData.append('weekdays[]', String(day)));
         }
@@ -346,6 +351,46 @@ export default function BannerCreate({ linkOptions }: CreatePageProps) {
                                         required
                                     />
                                 )}
+
+                                {/* Restricción por horario */}
+                                <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="checkbox"
+                                            id="has_time_restriction"
+                                            checked={data.has_time_restriction}
+                                            onChange={(e) => handleChange('has_time_restriction', e.target.checked)}
+                                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                        />
+                                        <label
+                                            htmlFor="has_time_restriction"
+                                            className="cursor-pointer text-sm font-medium leading-none"
+                                        >
+                                            Restringir por horario
+                                        </label>
+                                    </div>
+
+                                    {data.has_time_restriction && (
+                                        <div className="grid gap-4 border-l-2 border-primary/20 pl-6 md:grid-cols-2">
+                                            <FormField label="Hora inicio" error={errors.time_from}>
+                                                <Input
+                                                    id="time_from"
+                                                    type="time"
+                                                    value={data.time_from}
+                                                    onChange={(e) => handleChange('time_from', e.target.value)}
+                                                />
+                                            </FormField>
+                                            <FormField label="Hora fin" error={errors.time_until}>
+                                                <Input
+                                                    id="time_until"
+                                                    type="time"
+                                                    value={data.time_until}
+                                                    onChange={(e) => handleChange('time_until', e.target.value)}
+                                                />
+                                            </FormField>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </FormSection>
                     </CardContent>

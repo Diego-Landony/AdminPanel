@@ -25,6 +25,8 @@ class StorePromotionalBannerRequest extends FormRequest
             'validity_type' => 'required|in:permanent,date_range,weekdays',
             'valid_from' => 'nullable|required_if:validity_type,date_range|date',
             'valid_until' => 'nullable|required_if:validity_type,date_range|date|after_or_equal:valid_from',
+            'time_from' => 'nullable|date_format:H:i',
+            'time_until' => 'nullable|date_format:H:i|after:time_from',
             'weekdays' => 'nullable|required_if:validity_type,weekdays|array|min:1',
             'weekdays.*' => 'integer|min:1|max:7',
             'is_active' => 'boolean',
@@ -54,6 +56,9 @@ class StorePromotionalBannerRequest extends FormRequest
             'valid_until.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
             'weekdays.required_if' => 'Debe seleccionar al menos un dia de la semana.',
             'weekdays.min' => 'Debe seleccionar al menos un dia de la semana.',
+            'time_from.date_format' => 'La hora de inicio debe tener el formato HH:MM.',
+            'time_until.date_format' => 'La hora de fin debe tener el formato HH:MM.',
+            'time_until.after' => 'La hora de fin debe ser posterior a la hora de inicio.',
         ];
     }
 }

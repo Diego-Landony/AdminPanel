@@ -78,8 +78,8 @@ async function getCroppedImg(image: HTMLImageElement, crop: Crop): Promise<Blob>
                     reject(new Error('Canvas is empty'));
                 }
             },
-            'image/jpeg',
-            0.95
+            'image/webp',
+            0.85
         );
     });
 }
@@ -152,7 +152,7 @@ export function ImageCropperUpload({
         setIsProcessing(true);
         try {
             const croppedBlob = await getCroppedImg(imgRef.current, crop);
-            const croppedFile = new File([croppedBlob], 'banner.jpg', { type: 'image/jpeg' });
+            const croppedFile = new File([croppedBlob], 'banner.webp', { type: 'image/webp' });
 
             const previewUrl = URL.createObjectURL(croppedBlob);
             setPreview(previewUrl);

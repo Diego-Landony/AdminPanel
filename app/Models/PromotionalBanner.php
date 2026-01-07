@@ -24,6 +24,8 @@ class PromotionalBanner extends Model
         'validity_type',
         'valid_from',
         'valid_until',
+        'time_from',
+        'time_until',
         'weekdays',
         'is_active',
     ];
@@ -74,19 +76,52 @@ class PromotionalBanner extends Model
     }
 
     /**
-     * Scope: only banners valid right now (active + within date/weekday range).
+     * Check if current time is within time range.
+     */
+    private function isWithinTimeRange(): bool
+    {
+        if (! $this->time_from && ! $this->time_until) {
+            return true;
+        }
+
+        $currentTime = now()->format('H:i:s');
+
+        if ($this->time_from && $currentTime < $this->time_from) {
+            return false;
+        }
+
+        if ($this->time_until && $currentTime > $this->time_until) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Scope: only banners valid right now (active + within date/weekday/time range).
      */
     public function scopeValidNow($query)
     {
         $today = now()->toDateString();
+        $currentTime = now()->format('H:i:s');
         $currentWeekday = (int) now()->format('N'); // 1=Monday, 7=Sunday
 
         return $query->active()
-            ->where(function ($q) use ($today, $currentWeekday) {
-                // Permanent
-                $q->where('validity_type', 'permanent')
-                    // Or valid date range
-                    ->orWhere(function ($q2) use ($today) {
+            ->where(function ($q) use ($today, $currentTime, $currentWeekday) {
+                // Permanent (with optional time restriction)
+                $q->where(function ($q2) use ($currentTime) {
+                    $q2->where('validity_type', 'permanent')
+                        ->where(function ($q3) use ($currentTime) {
+                            $q3->whereNull('time_from')
+                                ->orWhere('time_from', '<=', $currentTime);
+                        })
+                        ->where(function ($q3) use ($currentTime) {
+                            $q3->whereNull('time_until')
+                                ->orWhere('time_until', '>=', $currentTime);
+                        });
+                })
+                    // Or valid date range (with optional time restriction)
+                    ->orWhere(function ($q2) use ($today, $currentTime) {
                         $q2->where('validity_type', 'date_range')
                             ->where(function ($q3) use ($today) {
                                 $q3->whereNull('valid_from')
@@ -95,12 +130,28 @@ class PromotionalBanner extends Model
                             ->where(function ($q3) use ($today) {
                                 $q3->whereNull('valid_until')
                                     ->orWhere('valid_until', '>=', $today);
+                            })
+                            ->where(function ($q3) use ($currentTime) {
+                                $q3->whereNull('time_from')
+                                    ->orWhere('time_from', '<=', $currentTime);
+                            })
+                            ->where(function ($q3) use ($currentTime) {
+                                $q3->whereNull('time_until')
+                                    ->orWhere('time_until', '>=', $currentTime);
                             });
                     })
-                    // Or weekdays (stored as strings in JSON)
-                    ->orWhere(function ($q2) use ($currentWeekday) {
+                    // Or weekdays (with optional time restriction)
+                    ->orWhere(function ($q2) use ($currentWeekday, $currentTime) {
                         $q2->where('validity_type', 'weekdays')
-                            ->whereJsonContains('weekdays', (string) $currentWeekday);
+                            ->whereJsonContains('weekdays', (string) $currentWeekday)
+                            ->where(function ($q3) use ($currentTime) {
+                                $q3->whereNull('time_from')
+                                    ->orWhere('time_from', '<=', $currentTime);
+                            })
+                            ->where(function ($q3) use ($currentTime) {
+                                $q3->whereNull('time_until')
+                                    ->orWhere('time_until', '>=', $currentTime);
+                            });
                     });
             });
     }
@@ -111,6 +162,11 @@ class PromotionalBanner extends Model
     public function isValidNow(): bool
     {
         if (! $this->is_active) {
+            return false;
+        }
+
+        // Check time restriction first (applies to all validity types)
+        if (! $this->isWithinTimeRange()) {
             return false;
         }
 

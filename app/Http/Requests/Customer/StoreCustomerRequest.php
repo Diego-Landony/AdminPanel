@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Customer;
 
+use App\Rules\CustomPassword;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreCustomerRequest extends FormRequest
@@ -24,7 +25,7 @@ class StoreCustomerRequest extends FormRequest
         return [
             'full_name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:customers',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => ['required', 'string', 'confirmed', new CustomPassword],
             'subway_card' => 'nullable|string|max:255|unique:customers',
             'birth_date' => 'required|date|before:today',
             'gender' => 'nullable|string|max:50',
@@ -50,7 +51,6 @@ class StoreCustomerRequest extends FormRequest
             'email.email' => 'El correo electrónico debe ser válido',
             'email.unique' => 'Este correo electrónico ya está registrado',
             'password.required' => 'La contraseña es obligatoria',
-            'password.min' => 'La contraseña debe tener al menos 6 caracteres',
             'password.confirmed' => 'Las contraseñas no coinciden',
             'subway_card.unique' => 'Esta tarjeta Subway ya está registrada',
             'birth_date.required' => 'La fecha de nacimiento es obligatoria',

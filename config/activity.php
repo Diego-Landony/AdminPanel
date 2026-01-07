@@ -1,14 +1,24 @@
 <?php
 
+use App\Models\BadgeType;
 use App\Models\Customer;
+use App\Models\CustomerAddress;
+use App\Models\CustomerDevice;
+use App\Models\CustomerNit;
 use App\Models\CustomerType;
+use App\Models\LegalDocument;
 use App\Models\Menu\Category;
 use App\Models\Menu\Combo;
 use App\Models\Menu\Product;
+use App\Models\Menu\ProductVariant;
 use App\Models\Menu\Promotion;
 use App\Models\Menu\Section;
+use App\Models\PointsSetting;
+use App\Models\PromotionalBanner;
 use App\Models\Restaurant;
 use App\Models\Role;
+use App\Models\SupportReason;
+use App\Models\SupportTicket;
 use App\Models\User;
 
 return [
@@ -61,6 +71,46 @@ return [
             'name' => 'Promoción',
             'icon' => 'percent',
         ],
+        BadgeType::class => [
+            'name' => 'Tipo de badge',
+            'icon' => 'badge',
+        ],
+        ProductVariant::class => [
+            'name' => 'Variante de producto',
+            'icon' => 'box',
+        ],
+        PromotionalBanner::class => [
+            'name' => 'Banner',
+            'icon' => 'image',
+        ],
+        SupportTicket::class => [
+            'name' => 'Ticket de soporte',
+            'icon' => 'ticket',
+        ],
+        SupportReason::class => [
+            'name' => 'Razón de soporte',
+            'icon' => 'help-circle',
+        ],
+        LegalDocument::class => [
+            'name' => 'Documento legal',
+            'icon' => 'file-text',
+        ],
+        CustomerAddress::class => [
+            'name' => 'Dirección de cliente',
+            'icon' => 'map-pin',
+        ],
+        CustomerNit::class => [
+            'name' => 'NIT de cliente',
+            'icon' => 'file',
+        ],
+        CustomerDevice::class => [
+            'name' => 'Dispositivo de cliente',
+            'icon' => 'smartphone',
+        ],
+        PointsSetting::class => [
+            'name' => 'Configuración de puntos',
+            'icon' => 'settings',
+        ],
     ],
 
     /*
@@ -78,6 +128,8 @@ return [
         'deleted' => 'Eliminado',
         'restored' => 'Restaurado',
         'force_deleted' => 'Eliminado permanentemente',
+        'reordered' => 'Reordenado',
+        'badges_updated' => 'Badges actualizados',
 
         // Eventos de autenticación
         'login' => 'Inicio de sesión',
@@ -114,6 +166,66 @@ return [
         'restaurant_deleted' => 'Restaurante eliminado',
         'restaurant_restored' => 'Restaurante restaurado',
         'restaurant_force_deleted' => 'Restaurante eliminado permanentemente',
+
+        'badge_type_created' => 'Tipo de badge creado',
+        'badge_type_updated' => 'Tipo de badge actualizado',
+        'badge_type_deleted' => 'Tipo de badge eliminado',
+        'badge_type_restored' => 'Tipo de badge restaurado',
+        'badge_type_force_deleted' => 'Tipo de badge eliminado permanentemente',
+
+        'product_variant_created' => 'Variante de producto creada',
+        'product_variant_updated' => 'Variante de producto actualizada',
+        'product_variant_deleted' => 'Variante de producto eliminada',
+        'product_variant_restored' => 'Variante de producto restaurada',
+        'product_variant_force_deleted' => 'Variante de producto eliminada permanentemente',
+
+        'promotional_banner_created' => 'Banner creado',
+        'promotional_banner_updated' => 'Banner actualizado',
+        'promotional_banner_deleted' => 'Banner eliminado',
+        'promotional_banner_restored' => 'Banner restaurado',
+        'promotional_banner_force_deleted' => 'Banner eliminado permanentemente',
+
+        'support_ticket_created' => 'Ticket de soporte creado',
+        'support_ticket_updated' => 'Ticket de soporte actualizado',
+        'support_ticket_deleted' => 'Ticket de soporte eliminado',
+        'support_ticket_restored' => 'Ticket de soporte restaurado',
+        'support_ticket_force_deleted' => 'Ticket de soporte eliminado permanentemente',
+
+        'support_reason_created' => 'Razón de soporte creada',
+        'support_reason_updated' => 'Razón de soporte actualizada',
+        'support_reason_deleted' => 'Razón de soporte eliminada',
+        'support_reason_restored' => 'Razón de soporte restaurada',
+        'support_reason_force_deleted' => 'Razón de soporte eliminada permanentemente',
+
+        'legal_document_created' => 'Documento legal creado',
+        'legal_document_updated' => 'Documento legal actualizado',
+        'legal_document_deleted' => 'Documento legal eliminado',
+        'legal_document_restored' => 'Documento legal restaurado',
+        'legal_document_force_deleted' => 'Documento legal eliminado permanentemente',
+
+        'customer_address_created' => 'Dirección de cliente creada',
+        'customer_address_updated' => 'Dirección de cliente actualizada',
+        'customer_address_deleted' => 'Dirección de cliente eliminada',
+        'customer_address_restored' => 'Dirección de cliente restaurada',
+        'customer_address_force_deleted' => 'Dirección de cliente eliminada permanentemente',
+
+        'customer_nit_created' => 'NIT de cliente creado',
+        'customer_nit_updated' => 'NIT de cliente actualizado',
+        'customer_nit_deleted' => 'NIT de cliente eliminado',
+        'customer_nit_restored' => 'NIT de cliente restaurado',
+        'customer_nit_force_deleted' => 'NIT de cliente eliminado permanentemente',
+
+        'customer_device_created' => 'Dispositivo de cliente creado',
+        'customer_device_updated' => 'Dispositivo de cliente actualizado',
+        'customer_device_deleted' => 'Dispositivo de cliente eliminado',
+        'customer_device_restored' => 'Dispositivo de cliente restaurado',
+        'customer_device_force_deleted' => 'Dispositivo de cliente eliminado permanentemente',
+
+        'points_setting_created' => 'Configuración de puntos creada',
+        'points_setting_updated' => 'Configuración de puntos actualizada',
+        'points_setting_deleted' => 'Configuración de puntos eliminada',
+        'points_setting_restored' => 'Configuración de puntos restaurada',
+        'points_setting_force_deleted' => 'Configuración de puntos eliminada permanentemente',
     ],
 
     /*
@@ -159,6 +271,8 @@ return [
         'deleted' => 'red',
         'restored' => 'yellow',
         'force_deleted' => 'red',
+        'reordered' => 'purple',
+        'badges_updated' => 'purple',
         'login' => 'green',
         'logout' => 'blue',
     ],

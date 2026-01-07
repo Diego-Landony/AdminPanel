@@ -68,7 +68,7 @@ class OrderFactory extends Factory
             'nit_id' => fake()->optional(0.3)->boolean() ? CustomerNit::factory() : null,
             'nit_snapshot' => fake()->optional(0.3)->boolean() ? [
                 'nit' => fake()->numerify('########-#'),
-                'business_name' => fake()->company(),
+                'nit_name' => fake()->name(),
             ] : null,
             'notes' => fake()->optional()->sentence(),
             'cancellation_reason' => null,
@@ -164,7 +164,7 @@ class OrderFactory extends Factory
             'nit_id' => CustomerNit::factory(),
             'nit_snapshot' => [
                 'nit' => fake()->numerify('########-#'),
-                'business_name' => fake()->company(),
+                'nit_name' => fake()->name(),
             ],
         ]);
     }

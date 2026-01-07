@@ -110,7 +110,21 @@ class MenuOrderController extends Controller
             ? Combo::findOrFail($validated['item_id'])
             : Product::findOrFail($validated['item_id']);
 
+        $badgesCount = count($validated['badges'] ?? []);
         $model->syncBadges($validated['badges'] ?? []);
+
+        // Log de asignación de badges
+        $modelName = $validated['item_type'] === 'combo' ? 'Combo' : 'Producto';
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id(),
+            'event_type' => 'badges_updated',
+            'target_model' => get_class($model),
+            'target_id' => $model->id,
+            'description' => "{$modelName} '{$model->name}' - badges actualizados ({$badgesCount} badges)",
+            'old_values' => null,
+            'new_values' => ['badges_count' => $badgesCount],
+            'user_agent' => request()->userAgent(),
+        ]);
 
         return redirect()->back()
             ->with('success', 'Badges actualizados exitosamente.');

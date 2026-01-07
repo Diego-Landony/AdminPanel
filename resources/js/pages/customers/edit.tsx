@@ -45,7 +45,7 @@ interface CustomerNit {
     id: number;
     nit: string;
     nit_type: 'personal' | 'company' | 'other';
-    business_name: string | null;
+    nit_name: string | null;
     is_default: boolean;
 }
 
@@ -469,10 +469,10 @@ export default function EditCustomer({ customer, customer_types }: EditCustomerP
                                                 </Badge>
                                             </div>
                                             <p className="text-sm font-medium font-mono">{nit.nit}</p>
-                                            {nit.business_name && (
+                                            {nit.nit_name && (
                                                 <p className="text-xs text-muted-foreground mt-1">
                                                     <Building2 className="inline h-3 w-3 mr-1" />
-                                                    {nit.business_name}
+                                                    {nit.nit_name}
                                                 </p>
                                             )}
                                         </div>

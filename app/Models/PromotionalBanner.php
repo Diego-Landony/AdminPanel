@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Contracts\ActivityLoggable;
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 
-class PromotionalBanner extends Model
+class PromotionalBanner extends Model implements ActivityLoggable
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'title',
@@ -214,5 +216,21 @@ class PromotionalBanner extends Model
             'type' => $this->link_type,
             'id' => $this->link_id,
         ];
+    }
+
+    /**
+     * Campo usado para identificar el modelo en los logs de actividad
+     */
+    public function getActivityLabelField(): string
+    {
+        return 'title';
+    }
+
+    /**
+     * Nombre del modelo para los logs de actividad
+     */
+    public static function getActivityModelName(): string
+    {
+        return 'Banner promocional';
     }
 }

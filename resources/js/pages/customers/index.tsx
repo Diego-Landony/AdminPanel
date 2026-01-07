@@ -1,17 +1,14 @@
-import { NOTIFICATIONS } from '@/constants/ui-constants';
-import { showNotification } from '@/hooks/useNotifications';
-import { Head, router } from '@inertiajs/react';
-import { Award, Check, Clock, CreditCard, FileText, MapPin, Phone, Users, X } from 'lucide-react';
-import React, { useCallback, useState } from 'react';
+import { Head, Link } from '@inertiajs/react';
+import { Award, Check, Clock, CreditCard, Eye, FileText, MapPin, Phone, Users, X } from 'lucide-react';
+import React from 'react';
 
 import { DataTable } from '@/components/DataTable';
-import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { EntityInfoCell } from '@/components/EntityInfoCell';
 import { CustomersSkeleton } from '@/components/skeletons';
 import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { CUSTOMER_TYPE_COLORS } from '@/components/status-badge';
-import { TableActions } from '@/components/TableActions';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { calculateAge, daysSince, formatDate, formatPoints } from '@/utils/format';
 
@@ -128,41 +125,6 @@ const getClientTypeColor = (customerType: Customer['customer_type']): string => 
  * Refactorizada para usar DataTable unificado directamente
  */
 export default function CustomersIndex({ customers, customer_type_stats, filters }: CustomersPageProps) {
-    const [deletingCustomer, setDeletingCustomer] = useState<number | null>(null);
-    const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
-    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-    const openDeleteDialog = useCallback((customer: Customer) => {
-        setCustomerToDelete(customer);
-        setShowDeleteDialog(true);
-    }, []);
-
-    const closeDeleteDialog = useCallback(() => {
-        setCustomerToDelete(null);
-        setShowDeleteDialog(false);
-        setDeletingCustomer(null);
-    }, []);
-
-    const handleDeleteCustomer = async () => {
-        if (!customerToDelete) return;
-
-        setDeletingCustomer(customerToDelete.id);
-        router.delete(`/customers/${customerToDelete.id}`, {
-            preserveState: false,
-            onBefore: () => {
-                closeDeleteDialog();
-            },
-            onError: (error) => {
-                setDeletingCustomer(null);
-                if (error.message) {
-                    showNotification.error(error.message);
-                } else {
-                    showNotification.error(NOTIFICATIONS.error.deleteCustomer);
-                }
-            },
-        });
-    };
-
     // Generar estadísticas dinámicas basadas en los tipos de cliente reales
     const stats = [
         {
@@ -310,13 +272,11 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
             width: 'xs' as const,
             align: 'right' as const,
             render: (customer: Customer) => (
-                <TableActions
-                    editHref={`/customers/${customer.id}/edit`}
-                    onDelete={() => openDeleteDialog(customer)}
-                    isDeleting={deletingCustomer === customer.id}
-                    editTooltip="Editar cliente"
-                    deleteTooltip="Eliminar cliente"
-                />
+                <Link href={`/customers/${customer.id}`}>
+                    <Button variant="ghost" size="sm">
+                        <Eye className="h-4 w-4" />
+                    </Button>
+                </Link>
             ),
         },
     ];
@@ -327,11 +287,8 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
             title={customer.full_name}
             subtitle={customer.email}
             actions={{
-                editHref: `/customers/${customer.id}/edit`,
-                onDelete: () => openDeleteDialog(customer),
-                isDeleting: deletingCustomer === customer.id,
-                editTooltip: 'Editar cliente',
-                deleteTooltip: 'Eliminar cliente',
+                viewHref: `/customers/${customer.id}`,
+                viewTooltip: 'Ver detalles',
             }}
             dataFields={[
                 {
@@ -436,22 +393,11 @@ export default function CustomersIndex({ customers, customer_type_stats, filters
                 columns={columns}
                 stats={stats}
                 filters={filters}
-                createUrl="/customers/create"
-                createLabel="Crear"
                 searchPlaceholder="Buscar por nombre, email, tarjeta subway o teléfono..."
                 loadingSkeleton={CustomersSkeleton}
                 renderMobileCard={(customer) => <CustomerMobileCard customer={customer} />}
                 routeName="/customers"
                 breakpoint="lg"
-            />
-
-            <DeleteConfirmationDialog
-                isOpen={showDeleteDialog}
-                onClose={closeDeleteDialog}
-                onConfirm={handleDeleteCustomer}
-                isDeleting={deletingCustomer !== null}
-                entityName={customerToDelete?.full_name || ''}
-                entityType="cliente"
             />
         </AppLayout>
     );

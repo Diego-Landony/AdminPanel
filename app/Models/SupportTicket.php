@@ -2,18 +2,31 @@
 
 namespace App\Models;
 
+use App\Contracts\ActivityLoggable;
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class SupportTicket extends Model
+class SupportTicket extends Model implements ActivityLoggable
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, LogsActivity, SoftDeletes;
+
+    public function getActivityLabelField(): string
+    {
+        return 'subject';
+    }
+
+    public static function getActivityModelName(): string
+    {
+        return 'Ticket de soporte';
+    }
 
     protected $fillable = [
         'customer_id',
+        'support_reason_id',
         'subject',
         'status',
         'priority',
@@ -31,6 +44,11 @@ class SupportTicket extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function reason(): BelongsTo
+    {
+        return $this->belongsTo(SupportReason::class, 'support_reason_id');
     }
 
     public function assignedUser(): BelongsTo
@@ -61,16 +79,6 @@ class SupportTicket extends Model
         return $query->where('status', 'open');
     }
 
-    public function scopeInProgress($query)
-    {
-        return $query->where('status', 'in_progress');
-    }
-
-    public function scopeResolved($query)
-    {
-        return $query->where('status', 'resolved');
-    }
-
     public function scopeClosed($query)
     {
         return $query->where('status', 'closed');
@@ -78,7 +86,7 @@ class SupportTicket extends Model
 
     public function scopeActive($query)
     {
-        return $query->whereIn('status', ['open', 'in_progress']);
+        return $query->where('status', 'open');
     }
 
     public function scopeAssignedTo($query, int $userId)
@@ -91,26 +99,26 @@ class SupportTicket extends Model
         return $query->whereNull('assigned_to');
     }
 
-    public function markAsResolved(): void
+    public function close(): void
     {
         $this->update([
-            'status' => 'resolved',
+            'status' => 'closed',
             'resolved_at' => now(),
         ]);
     }
 
-    public function markAsClosed(): void
+    public function reopen(): void
     {
         $this->update([
-            'status' => 'closed',
+            'status' => 'open',
+            'resolved_at' => null,
         ]);
     }
 
-    public function assign(User $user): void
+    public function take(User $user): void
     {
         $this->update([
             'assigned_to' => $user->id,
-            'status' => 'in_progress',
         ]);
     }
 }

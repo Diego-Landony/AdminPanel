@@ -18,6 +18,8 @@ class CustomerPointsTransaction extends Model
         'reference_type',
         'reference_id',
         'description',
+        'expires_at',
+        'is_expired',
     ];
 
     protected function casts(): array
@@ -26,6 +28,8 @@ class CustomerPointsTransaction extends Model
             'customer_id' => 'integer',
             'points' => 'integer',
             'reference_id' => 'integer',
+            'expires_at' => 'datetime',
+            'is_expired' => 'boolean',
         ];
     }
 

@@ -332,6 +332,8 @@ Route::prefix('v1')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware(['auth:sanctum', 'throttle:api'])->prefix('support')->name('api.v1.support.')->group(function () {
+        Route::get('/reasons', [App\Http\Controllers\Api\V1\Support\SupportReasonController::class, 'index'])
+            ->name('reasons.index');
         Route::get('/tickets', [App\Http\Controllers\Api\V1\Support\SupportTicketController::class, 'index'])
             ->name('tickets.index');
         Route::post('/tickets', [App\Http\Controllers\Api\V1\Support\SupportTicketController::class, 'store'])

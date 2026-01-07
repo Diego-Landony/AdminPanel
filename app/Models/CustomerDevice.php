@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
+use App\Contracts\ActivityLoggable;
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\PersonalAccessToken;
 
-class CustomerDevice extends Model
+class CustomerDevice extends Model implements ActivityLoggable
 {
     /** @use HasFactory<\Database\Factories\CustomerDeviceFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -46,6 +48,22 @@ class CustomerDevice extends Model
             'last_used_at' => 'datetime',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Get the field to use as the activity label.
+     */
+    public function getActivityLabelField(): string
+    {
+        return 'device_name';
+    }
+
+    /**
+     * Get the human-readable model name for activity logs.
+     */
+    public static function getActivityModelName(): string
+    {
+        return 'Dispositivo de cliente';
     }
 
     /**

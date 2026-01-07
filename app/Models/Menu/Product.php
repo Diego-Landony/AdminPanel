@@ -2,6 +2,7 @@
 
 namespace App\Models\Menu;
 
+use App\Contracts\ActivityLoggable;
 use App\Models\Concerns\HasBadges;
 use App\Models\Concerns\HasReportingCategory;
 use App\Models\Concerns\LogsActivity;
@@ -20,9 +21,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * Los precios se definen en las variantes (ProductVariant) o directamente en el producto.
  * La relación con categoría es N:1 (products.category_id).
  */
-class Product extends Model
+class Product extends Model implements ActivityLoggable
 {
     use HasBadges, HasFactory, HasReportingCategory, LogsActivity, SoftDeletes;
+
+    public function getActivityLabelField(): string
+    {
+        return 'name';
+    }
+
+    public static function getActivityModelName(): string
+    {
+        return 'Producto';
+    }
 
     /**
      * Los atributos que se pueden asignar masivamente

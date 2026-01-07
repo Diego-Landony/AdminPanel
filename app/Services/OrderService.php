@@ -38,7 +38,7 @@ class OrderService
      *
      * @param  Cart  $cart  Carrito a convertir en orden
      * @param  array  $data  Datos de la orden: restaurant_id, service_type, delivery_address_id (opcional),
-     *                       payment_method, nit_id (opcional), notes (opcional), points_to_redeem (opcional)
+     *                       payment_method, nit_id (opcional), notes (opcional)
      * @return Order Orden creada con todas las relaciones cargadas
      *
      * @throws \InvalidArgumentException Si el carrito está vacío o los datos son inválidos
@@ -113,14 +113,6 @@ class OrderService
             $summary = $this->cartService->getCartSummary($cart);
 
             $pointsToEarn = $this->pointsService->calculatePointsToEarn($summary['total']);
-            $pointsRedeemed = 0;
-
-            if (isset($data['points_to_redeem']) && $data['points_to_redeem'] > 0) {
-                $discount = $this->pointsService->redeemPoints($customer, $data['points_to_redeem']);
-                $pointsRedeemed = $data['points_to_redeem'];
-                $summary['discounts'] += $discount;
-                $summary['total'] -= $discount;
-            }
 
             $order = Order::create([
                 'order_number' => $orderNumber,
@@ -141,7 +133,7 @@ class OrderService
                 'estimated_ready_at' => now()->addMinutes(30),
                 'scheduled_pickup_time' => $data['scheduled_pickup_time'] ?? null,
                 'points_earned' => $pointsToEarn,
-                'points_redeemed' => $pointsRedeemed,
+                'points_redeemed' => 0,
                 'nit_id' => $data['nit_id'] ?? null,
                 'nit_snapshot' => $nitSnapshot,
                 'notes' => $data['notes'] ?? null,

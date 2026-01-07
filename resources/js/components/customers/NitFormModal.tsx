@@ -13,7 +13,7 @@ interface CustomerNit {
     id: number;
     nit: string;
     nit_type: 'personal' | 'company' | 'other';
-    business_name: string | null;
+    nit_name: string | null;
     is_default: boolean;
 }
 
@@ -31,7 +31,7 @@ export const NitFormModal: React.FC<NitFormModalProps> = ({ isOpen, onClose, cus
     const [formData, setFormData] = useState({
         nit: '',
         nit_type: 'personal' as 'personal' | 'company' | 'other',
-        business_name: '',
+        nit_name: '',
         is_default: false,
     });
 
@@ -40,14 +40,14 @@ export const NitFormModal: React.FC<NitFormModalProps> = ({ isOpen, onClose, cus
             setFormData({
                 nit: nit.nit,
                 nit_type: nit.nit_type,
-                business_name: nit.business_name || '',
+                nit_name: nit.nit_name || '',
                 is_default: nit.is_default,
             });
         } else {
             setFormData({
                 nit: '',
                 nit_type: 'personal',
-                business_name: '',
+                nit_name: '',
                 is_default: false,
             });
         }
@@ -61,7 +61,7 @@ export const NitFormModal: React.FC<NitFormModalProps> = ({ isOpen, onClose, cus
 
         const submitData = {
             ...formData,
-            business_name: formData.business_name || null,
+            nit_name: formData.nit_name || null,
         };
 
         if (nit) {
@@ -142,15 +142,14 @@ export const NitFormModal: React.FC<NitFormModalProps> = ({ isOpen, onClose, cus
                             </Select>
                         </FormField>
 
-                        {formData.nit_type === 'company' && (
-                            <FormField label="Nombre de Empresa" error={errors.business_name}>
-                                <Input
-                                    type="text"
-                                    value={formData.business_name}
-                                    onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
-                                />
-                            </FormField>
-                        )}
+                        <FormField label="Nombre del NIT" error={errors.nit_name}>
+                            <Input
+                                type="text"
+                                value={formData.nit_name}
+                                onChange={(e) => setFormData({ ...formData, nit_name: e.target.value })}
+                                placeholder={formData.nit_type === 'company' ? 'Nombre de empresa' : 'Nombre completo'}
+                            />
+                        </FormField>
 
                         <FormField label="" error={errors.is_default}>
                             <label className="flex items-center gap-2">

@@ -2,6 +2,7 @@
 
 namespace App\Models\Menu;
 
+use App\Contracts\ActivityLoggable;
 use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,9 +11,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Promotion extends Model
+class Promotion extends Model implements ActivityLoggable
 {
     use HasFactory, LogsActivity, SoftDeletes;
+
+    public function getActivityLabelField(): string
+    {
+        return 'name';
+    }
+
+    public static function getActivityModelName(): string
+    {
+        return 'Promoción';
+    }
 
     protected $fillable = [
         'name',

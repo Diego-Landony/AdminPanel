@@ -2,13 +2,25 @@
 
 namespace App\Models\Menu;
 
+use App\Contracts\ActivityLoggable;
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class BadgeType extends Model
+class BadgeType extends Model implements ActivityLoggable
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
+
+    public function getActivityLabelField(): string
+    {
+        return 'name';
+    }
+
+    public static function getActivityModelName(): string
+    {
+        return 'Tipo de badge';
+    }
 
     protected $fillable = [
         'name',

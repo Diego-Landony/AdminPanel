@@ -16,8 +16,8 @@ const sidebarNavItems: NavItem[] = [
         icon: null,
     },
     {
-        title: 'Contraseña',
-        href: '/settings/password',
+        title: 'Puntos',
+        href: '/settings/points',
         icon: null,
     },
 ];

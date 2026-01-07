@@ -20,7 +20,7 @@ class SupportTicketController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = SupportTicket::with(['customer:id,first_name,last_name,email', 'assignedUser:id,name', 'latestMessage'])
+        $query = SupportTicket::with(['reason:id,name,slug', 'customer:id,first_name,last_name,email', 'assignedUser:id,name', 'latestMessage'])
             ->withCount(['messages as unread_count' => function ($q) {
                 $q->where('is_read', false)->where('sender_type', \App\Models\Customer::class);
             }]);
@@ -46,23 +46,13 @@ class SupportTicketController extends Controller
         $stats = [
             'total' => SupportTicket::count(),
             'open' => SupportTicket::open()->count(),
-            'in_progress' => SupportTicket::inProgress()->count(),
-            'resolved' => SupportTicket::resolved()->count(),
+            'closed' => SupportTicket::closed()->count(),
             'unassigned' => SupportTicket::unassigned()->active()->count(),
         ];
-
-        $admins = User::whereHas('roles', function ($q) {
-            $q->whereHas('permissions', function ($q2) {
-                $q2->where('name', 'support.tickets.manage');
-            });
-        })->orWhereHas('permissions', function ($q) {
-            $q->where('name', 'support.tickets.manage');
-        })->get(['id', 'name']);
 
         return Inertia::render('support/tickets/index', [
             'tickets' => $tickets,
             'stats' => $stats,
-            'admins' => $admins,
             'filters' => $request->only(['status', 'priority', 'assigned_to']),
         ]);
     }
@@ -70,6 +60,7 @@ class SupportTicketController extends Controller
     public function show(SupportTicket $ticket): Response
     {
         $ticket->load([
+            'reason:id,name,slug',
             'customer:id,first_name,last_name,email,avatar',
             'assignedUser:id,name',
             'messages' => function ($q) {
@@ -82,17 +73,28 @@ class SupportTicketController extends Controller
             ->where('is_read', false)
             ->update(['is_read' => true]);
 
-        $admins = User::whereHas('roles', function ($q) {
-            $q->whereHas('permissions', function ($q2) {
-                $q2->where('name', 'support.tickets.manage');
-            });
-        })->orWhereHas('permissions', function ($q) {
-            $q->where('name', 'support.tickets.manage');
-        })->get(['id', 'name']);
+        // Cargar pedidos recientes del cliente
+        $customerOrders = \App\Models\Order::where('customer_id', $ticket->customer_id)
+            ->with('restaurant:id,name')
+            ->select(['id', 'order_number', 'restaurant_id', 'service_type', 'status', 'total', 'created_at'])
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        // Cargar datos completos del cliente para el modal
+        $customerProfile = \App\Models\Customer::where('id', $ticket->customer_id)
+            ->with(['customerType', 'addresses', 'nits'])
+            ->first();
+
+        // Agregar conteo de órdenes manualmente
+        if ($customerProfile) {
+            $customerProfile->orders_count = \App\Models\Order::where('customer_id', $ticket->customer_id)->count();
+        }
 
         return Inertia::render('support/tickets/show', [
             'ticket' => $ticket,
-            'admins' => $admins,
+            'customerOrders' => $customerOrders,
+            'customerProfile' => $customerProfile,
         ]);
     }
 
@@ -123,8 +125,9 @@ class SupportTicketController extends Controller
 
         $message->load('attachments');
 
-        if ($ticket->status === 'open') {
-            $ticket->update(['status' => 'in_progress']);
+        // Auto-tomar ticket si no está asignado
+        if (! $ticket->assigned_to) {
+            $ticket->take(auth()->user());
         }
 
         broadcast(new SupportMessageSent($message))->toOthers();
@@ -133,44 +136,35 @@ class SupportTicketController extends Controller
             ->with('success', 'Mensaje enviado exitosamente.');
     }
 
-    public function assign(Request $request, SupportTicket $ticket): RedirectResponse
+    public function takeTicket(SupportTicket $ticket): RedirectResponse
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-        ]);
-
-        $user = User::findOrFail($request->user_id);
-        $ticket->assign($user);
+        $user = auth()->user();
+        $ticket->take($user);
 
         broadcast(new TicketStatusChanged($ticket))->toOthers();
 
         return redirect()->back()
-            ->with('success', "Ticket asignado a {$user->name}.");
+            ->with('success', 'Has tomado este ticket.');
     }
 
     public function updateStatus(Request $request, SupportTicket $ticket): RedirectResponse
     {
         $request->validate([
-            'status' => 'required|in:open,in_progress,resolved,closed',
+            'status' => 'required|in:open,closed',
         ]);
 
-        $oldStatus = $ticket->status;
         $newStatus = $request->status;
 
-        if ($newStatus === 'resolved') {
-            $ticket->markAsResolved();
-        } elseif ($newStatus === 'closed') {
-            $ticket->markAsClosed();
+        if ($newStatus === 'closed') {
+            $ticket->close();
         } else {
-            $ticket->update(['status' => $newStatus]);
+            $ticket->reopen();
         }
 
         broadcast(new TicketStatusChanged($ticket))->toOthers();
 
         $statusLabels = [
             'open' => 'abierto',
-            'in_progress' => 'en progreso',
-            'resolved' => 'resuelto',
             'closed' => 'cerrado',
         ];
 

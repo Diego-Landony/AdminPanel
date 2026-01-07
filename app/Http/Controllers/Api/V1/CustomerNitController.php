@@ -34,7 +34,7 @@ class CustomerNitController extends Controller
      *
      *                     @OA\Property(property="id", type="integer", example=1),
      *                     @OA\Property(property="nit", type="string", example="123456789", description="Número de NIT"),
-     *                     @OA\Property(property="business_name", type="string", nullable=true, example="Empresa XYZ S.A."),
+     *                     @OA\Property(property="nit_name", type="string", nullable=true, example="Juan Pérez", description="Nombre asociado al NIT"),
      *                     @OA\Property(property="nit_type", type="string", enum={"personal","company","other"}, nullable=true, example="company"),
      *                     @OA\Property(property="is_default", type="boolean", example=true),
      *                     @OA\Property(property="created_at", type="string", format="date-time"),
@@ -78,7 +78,7 @@ class CustomerNitController extends Controller
      *
      *             @OA\Property(property="nit", type="string", maxLength=20, example="123456789", description="Número de NIT (máx. 20 caracteres)"),
      *             @OA\Property(property="nit_type", type="string", enum={"personal","company","other"}, nullable=true, example="personal", description="Tipo de NIT"),
-     *             @OA\Property(property="business_name", type="string", maxLength=255, nullable=true, example="Empresa XYZ S.A.", description="Nombre comercial o razón social"),
+     *             @OA\Property(property="nit_name", type="string", maxLength=255, nullable=true, example="Juan Pérez", description="Nombre asociado al NIT"),
      *             @OA\Property(property="is_default", type="boolean", nullable=true, example=false, description="Marcar como NIT predeterminado")
      *         )
      *     ),
@@ -93,7 +93,7 @@ class CustomerNitController extends Controller
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="nit", type="string", example="123456789"),
-     *                 @OA\Property(property="business_name", type="string", nullable=true),
+     *                 @OA\Property(property="nit_name", type="string", nullable=true),
      *                 @OA\Property(property="nit_type", type="string", nullable=true),
      *                 @OA\Property(property="is_default", type="boolean")
      *             )
@@ -195,7 +195,7 @@ class CustomerNitController extends Controller
      *
      *             @OA\Property(property="nit", type="string", example="987654321"),
      *             @OA\Property(property="nit_type", type="string", enum={"personal","company","other"}, nullable=true),
-     *             @OA\Property(property="business_name", type="string", nullable=true, example="Mi Empresa S.A."),
+     *             @OA\Property(property="nit_name", type="string", nullable=true, example="Juan Pérez"),
      *             @OA\Property(property="is_default", type="boolean", nullable=true)
      *         )
      *     ),

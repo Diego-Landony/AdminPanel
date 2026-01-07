@@ -2,15 +2,26 @@
 
 namespace App\Models\Menu;
 
+use App\Contracts\ActivityLoggable;
 use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
-class Category extends Model
+class Category extends Model implements ActivityLoggable
 {
     use HasFactory, LogsActivity;
+
+    public function getActivityLabelField(): string
+    {
+        return 'name';
+    }
+
+    public static function getActivityModelName(): string
+    {
+        return 'Categoría';
+    }
 
     protected $fillable = [
         'name',

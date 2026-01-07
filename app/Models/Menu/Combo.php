@@ -2,6 +2,7 @@
 
 namespace App\Models\Menu;
 
+use App\Contracts\ActivityLoggable;
 use App\Models\Concerns\HasBadges;
 use App\Models\Concerns\HasReportingCategory;
 use App\Models\Concerns\LogsActivity;
@@ -12,9 +13,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Combo extends Model
+class Combo extends Model implements ActivityLoggable
 {
     use HasBadges, HasFactory, HasReportingCategory, LogsActivity, SoftDeletes;
+
+    public function getActivityLabelField(): string
+    {
+        return 'name';
+    }
+
+    public static function getActivityModelName(): string
+    {
+        return 'Combo';
+    }
 
     protected $fillable = [
         'category_id',

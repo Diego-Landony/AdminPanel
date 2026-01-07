@@ -2,14 +2,39 @@
 
 namespace App\Models;
 
+use App\Contracts\ActivityLoggable;
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class LegalDocument extends Model
+class LegalDocument extends Model implements ActivityLoggable
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, LogsActivity, SoftDeletes;
+
+    public function getActivityLabelField(): string
+    {
+        return 'type';
+    }
+
+    public static function getActivityModelName(): string
+    {
+        return 'Documento legal';
+    }
+
+    /**
+     * Campos a ignorar en el logging de actividad.
+     * No mostrar contenido largo como JSON y HTML.
+     */
+    public function getActivityIgnoredFields(): array
+    {
+        return [
+            'updated_at',
+            'content_json',
+            'content_html',
+        ];
+    }
 
     protected $fillable = [
         'type',

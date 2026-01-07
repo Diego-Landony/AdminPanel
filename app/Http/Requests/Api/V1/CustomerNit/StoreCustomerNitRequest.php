@@ -23,7 +23,7 @@ class StoreCustomerNitRequest extends FormRequest
                     ->where('customer_id', auth()->id()),
             ],
             'nit_type' => ['nullable', 'string', Rule::in(['personal', 'company', 'other'])],
-            'business_name' => ['nullable', 'string', 'max:255'],
+            'nit_name' => ['nullable', 'string', 'max:255'],
             'is_default' => ['nullable', 'boolean'],
         ];
     }
@@ -35,7 +35,7 @@ class StoreCustomerNitRequest extends FormRequest
             'nit.max' => 'El NIT no debe exceder 20 caracteres',
             'nit.unique' => 'Este NIT ya está registrado en tu cuenta',
             'nit_type.in' => 'El tipo de NIT debe ser: personal, company o other',
-            'business_name.max' => 'El nombre comercial no debe exceder 255 caracteres',
+            'nit_name.max' => 'El nombre del NIT no debe exceder 255 caracteres',
         ];
     }
 }

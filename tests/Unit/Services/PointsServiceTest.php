@@ -3,6 +3,7 @@
 use App\Models\Customer;
 use App\Models\CustomerType;
 use App\Models\Order;
+use App\Models\PointsSetting;
 use App\Services\PointsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -10,6 +11,13 @@ uses(RefreshDatabase::class);
 
 describe('PointsService', function () {
     beforeEach(function () {
+        // Create default points settings for all tests
+        PointsSetting::create([
+            'quetzales_per_point' => 10,
+            'expiration_method' => 'total',
+            'expiration_months' => 6,
+            'rounding_threshold' => 0.70,
+        ]);
         $this->service = new PointsService;
     });
 
@@ -77,9 +85,9 @@ describe('PointsService', function () {
                 expect($points)->toBe(7);
             });
 
-            test('Q7 (0.7) rounds up to 1 point', function () {
+            test('Q7 (0.7) does NOT round up - must have at least 1 base point', function () {
                 $points = $this->service->calculatePointsToEarn(7.00);
-                expect($points)->toBe(1);
+                expect($points)->toBe(0);
             });
 
             test('Q6 (0.6) truncates to 0 points', function () {
@@ -250,55 +258,4 @@ describe('PointsService', function () {
         });
     });
 
-    describe('redeemPoints', function () {
-        test('redeems points for discount (1 point = Q0.10)', function () {
-            $customer = Customer::factory()->create(['points' => 100]);
-
-            $discount = $this->service->redeemPoints($customer, 50);
-
-            expect($discount)->toBe(5.00);
-            expect($customer->fresh()->points)->toBe(50);
-        });
-
-        test('redeems all points', function () {
-            $customer = Customer::factory()->create(['points' => 100]);
-
-            $discount = $this->service->redeemPoints($customer, 100);
-
-            expect($discount)->toBe(10.00);
-            expect($customer->fresh()->points)->toBe(0);
-        });
-
-        test('throws exception for zero points', function () {
-            $customer = Customer::factory()->create(['points' => 100]);
-
-            expect(fn () => $this->service->redeemPoints($customer, 0))
-                ->toThrow(\InvalidArgumentException::class, 'La cantidad de puntos debe ser mayor a cero');
-        });
-
-        test('throws exception for negative points', function () {
-            $customer = Customer::factory()->create(['points' => 100]);
-
-            expect(fn () => $this->service->redeemPoints($customer, -10))
-                ->toThrow(\InvalidArgumentException::class, 'La cantidad de puntos debe ser mayor a cero');
-        });
-
-        test('throws exception for insufficient points', function () {
-            $customer = Customer::factory()->create(['points' => 50]);
-
-            expect(fn () => $this->service->redeemPoints($customer, 100))
-                ->toThrow(\InvalidArgumentException::class, 'El cliente no tiene suficientes puntos');
-        });
-
-        test('updates points_updated_at timestamp', function () {
-            $customer = Customer::factory()->create([
-                'points' => 100,
-                'points_updated_at' => null,
-            ]);
-
-            $this->service->redeemPoints($customer, 10);
-
-            expect($customer->fresh()->points_updated_at)->not->toBeNull();
-        });
-    });
 });

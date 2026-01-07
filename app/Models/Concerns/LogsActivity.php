@@ -2,14 +2,25 @@
 
 namespace App\Models\Concerns;
 
+use App\Contracts\ActivityLoggable;
 use App\Observers\ActivityObserver;
 
 /**
  * Trait para habilitar logging automático de actividades en modelos
  *
+ * Los modelos que usen este trait DEBEN implementar la interface ActivityLoggable:
+ *
  * Uso:
- *   class Product extends Model {
+ *   class Product extends Model implements ActivityLoggable {
  *       use LogsActivity;
+ *
+ *       public function getActivityLabelField(): string {
+ *           return 'name';
+ *       }
+ *
+ *       public static function getActivityModelName(): string {
+ *           return 'Producto';
+ *       }
  *   }
  */
 trait LogsActivity
@@ -24,44 +35,39 @@ trait LogsActivity
 
     /**
      * Configuración de actividad para este modelo
-     * Override este método en tu modelo para personalizar
+     *
+     * @return array{label_field: string, model_name: string, ignored_fields: array<int, string>}
      */
     public function getActivityConfig(): array
     {
         return [
             'label_field' => $this->getActivityLabelField(),
-            'model_name' => class_basename($this),
+            'model_name' => static::getActivityModelName(),
             'ignored_fields' => $this->getActivityIgnoredFields(),
         ];
     }
 
     /**
-     * Campo usado para identificar el modelo en los logs
-     * Override en tu modelo si necesitas otro campo
+     * Obtiene el valor del label para este modelo
      */
-    protected function getActivityLabelField(): string
+    public function getActivityLabel(): string
     {
-        // Intenta común campos, en orden de preferencia
-        if (isset($this->attributes['name'])) {
-            return 'name';
+        $field = $this->getActivityLabelField();
+
+        if (! property_exists($this, 'attributes') || ! array_key_exists($field, $this->attributes)) {
+            return (string) ($this->id ?? 'Sin identificador');
         }
 
-        if (isset($this->attributes['title'])) {
-            return 'title';
-        }
-
-        if (isset($this->attributes['email'])) {
-            return 'email';
-        }
-
-        return 'id';
+        return (string) ($this->$field ?? $this->id ?? 'Sin identificador');
     }
 
     /**
      * Campos que deben ser ignorados en el logging
-     * Override en tu modelo para agregar más
+     * Override en tu modelo para agregar más campos específicos
+     *
+     * @return array<int, string>
      */
-    protected function getActivityIgnoredFields(): array
+    public function getActivityIgnoredFields(): array
     {
         return [
             'updated_at',
@@ -73,12 +79,11 @@ trait LogsActivity
     }
 
     /**
-     * Obtiene el valor del label para este modelo
+     * Nombre por defecto del modelo para activity logs
+     * Override OBLIGATORIO en cada modelo que implemente ActivityLoggable
      */
-    public function getActivityLabel(): string
+    public static function getActivityModelName(): string
     {
-        $field = $this->getActivityLabelField();
-
-        return $this->$field ?? $this->id ?? 'Sin identificador';
+        return class_basename(static::class);
     }
 }

@@ -319,6 +319,20 @@ class ComboController extends Controller
             ]);
         }
 
+        $count = count($validated['combos']);
+
+        // Log de reordenamiento manual
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id(),
+            'event_type' => 'reordered',
+            'target_model' => Combo::class,
+            'target_id' => null,
+            'description' => "Combos reordenados ({$count} elementos)",
+            'old_values' => null,
+            'new_values' => ['items_count' => $count],
+            'user_agent' => request()->userAgent(),
+        ]);
+
         return redirect()->back()
             ->with('success', 'Orden actualizado exitosamente.');
     }

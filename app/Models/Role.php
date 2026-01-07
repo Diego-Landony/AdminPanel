@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Contracts\ActivityLoggable;
 use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 /**
  * Modelo para los roles del sistema
  */
-class Role extends Model
+class Role extends Model implements ActivityLoggable
 {
     use LogsActivity;
 
@@ -53,5 +54,21 @@ class Role extends Model
     public function isSystemRole(): bool
     {
         return $this->is_system;
+    }
+
+    /**
+     * Campo usado para identificar el modelo en los logs de actividad
+     */
+    public function getActivityLabelField(): string
+    {
+        return 'name';
+    }
+
+    /**
+     * Nombre del modelo para los logs de actividad
+     */
+    public static function getActivityModelName(): string
+    {
+        return 'Rol';
     }
 }

@@ -175,6 +175,20 @@ class ProductVariantController extends Controller
                 ->update(['sort_order' => $variantData['sort_order']]);
         }
 
+        $count = count($validated['variants']);
+
+        // Log de reordenamiento manual
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id(),
+            'event_type' => 'reordered',
+            'target_model' => ProductVariant::class,
+            'target_id' => null,
+            'description' => "Variantes de producto reordenadas ({$count} elementos)",
+            'old_values' => null,
+            'new_values' => ['items_count' => $count],
+            'user_agent' => request()->userAgent(),
+        ]);
+
         return redirect()->back()
             ->with('success', 'Orden actualizado exitosamente.');
     }

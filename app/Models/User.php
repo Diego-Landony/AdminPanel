@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Contracts\ActivityLoggable;
 use App\Models\Concerns\LogsActivity;
 use App\Models\Concerns\TracksUserStatus;
 use App\Notifications\ResetPasswordNotification;
@@ -13,7 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Cache;
 
-class User extends Authenticatable
+class User extends Authenticatable implements ActivityLoggable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, LogsActivity, Notifiable, TracksUserStatus;
@@ -233,5 +234,21 @@ class User extends Authenticatable
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new ResetPasswordNotification($token));
+    }
+
+    /**
+     * Campo usado para identificar el modelo en los logs de actividad
+     */
+    public function getActivityLabelField(): string
+    {
+        return 'name';
+    }
+
+    /**
+     * Nombre del modelo para los logs de actividad
+     */
+    public static function getActivityModelName(): string
+    {
+        return 'Usuario';
     }
 }

@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Contracts\ActivityLoggable;
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CustomerNit extends Model
+class CustomerNit extends Model implements ActivityLoggable
 {
     /** @use HasFactory<\Database\Factories\CustomerNitFactory> */
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -20,7 +22,7 @@ class CustomerNit extends Model
         'customer_id',
         'nit',
         'nit_type',
-        'business_name',
+        'nit_name',
         'is_default',
     ];
 
@@ -42,6 +44,22 @@ class CustomerNit extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    /**
+     * Get the field to use as the activity label.
+     */
+    public function getActivityLabelField(): string
+    {
+        return 'nit_name';
+    }
+
+    /**
+     * Get the human-readable model name for activity logs.
+     */
+    public static function getActivityModelName(): string
+    {
+        return 'NIT de cliente';
     }
 
     /**

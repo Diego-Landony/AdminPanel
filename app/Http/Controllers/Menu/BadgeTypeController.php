@@ -92,6 +92,20 @@ class BadgeTypeController extends Controller
             BadgeType::where('id', $item['id'])->update(['sort_order' => $item['sort_order']]);
         }
 
+        $count = count($request->badge_types);
+
+        // Log de reordenamiento manual
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id(),
+            'event_type' => 'reordered',
+            'target_model' => BadgeType::class,
+            'target_id' => null,
+            'description' => "Tipos de badge reordenados ({$count} elementos)",
+            'old_values' => null,
+            'new_values' => ['items_count' => $count],
+            'user_agent' => request()->userAgent(),
+        ]);
+
         return redirect()->back()
             ->with('success', 'Orden actualizado exitosamente.');
     }

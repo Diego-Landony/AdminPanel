@@ -61,7 +61,7 @@ describe('store (POST /api/v1/nits)', function () {
             ->postJson('/api/v1/nits', [
                 'nit' => '1234567890',
                 'nit_type' => 'personal',
-                'business_name' => 'Juan Pérez',
+                'nit_name' => 'Juan Pérez',
             ]);
 
         $response->assertCreated()
@@ -70,7 +70,7 @@ describe('store (POST /api/v1/nits)', function () {
                     'id',
                     'nit',
                     'nit_type',
-                    'business_name',
+                    'nit_name',
                     'is_default',
                     'created_at',
                 ],
@@ -79,7 +79,7 @@ describe('store (POST /api/v1/nits)', function () {
 
         expect($response->json('data.nit'))->toBe('1234567890');
         expect($response->json('data.nit_type'))->toBe('personal');
-        expect($response->json('data.business_name'))->toBe('Juan Pérez');
+        expect($response->json('data.nit_name'))->toBe('Juan Pérez');
     });
 
     test('sets as default when is_default is true', function () {
@@ -191,7 +191,7 @@ describe('show (GET /api/v1/nits/{nit})', function () {
             'customer_id' => $customer->id,
             'nit' => '1234567890',
             'nit_type' => 'company',
-            'business_name' => 'Test Company',
+            'nit_name' => 'Test Company',
         ]);
 
         $response = actingAs($customer, 'sanctum')
@@ -203,7 +203,7 @@ describe('show (GET /api/v1/nits/{nit})', function () {
                     'id' => $nit->id,
                     'nit' => '1234567890',
                     'nit_type' => 'company',
-                    'business_name' => 'Test Company',
+                    'nit_name' => 'Test Company',
                 ],
             ]);
     });
@@ -241,7 +241,7 @@ describe('update (PUT /api/v1/nits/{nit})', function () {
             ->putJson("/api/v1/nits/{$nit->id}", [
                 'nit' => '9876543210',
                 'nit_type' => 'company',
-                'business_name' => 'Updated Company',
+                'nit_name' => 'Updated Company',
             ]);
 
         $response->assertOk()
@@ -249,7 +249,7 @@ describe('update (PUT /api/v1/nits/{nit})', function () {
                 'data' => [
                     'nit' => '9876543210',
                     'nit_type' => 'company',
-                    'business_name' => 'Updated Company',
+                    'nit_name' => 'Updated Company',
                 ],
                 'message' => 'NIT actualizado exitosamente',
             ]);
@@ -290,7 +290,7 @@ describe('update (PUT /api/v1/nits/{nit})', function () {
         $response = actingAs($customer, 'sanctum')
             ->putJson("/api/v1/nits/{$nit->id}", [
                 'nit' => '1234567890',
-                'business_name' => 'Updated Name',
+                'nit_name' => 'Updated Name',
             ]);
 
         $response->assertOk();

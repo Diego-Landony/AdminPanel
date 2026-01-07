@@ -11,7 +11,7 @@ class SupportTicketResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'subject' => $this->subject,
+            'reason' => $this->whenLoaded('reason', fn () => new SupportReasonResource($this->reason)),
             'status' => $this->status,
             'priority' => $this->priority,
             'unread_count' => $this->unread_count ?? 0,

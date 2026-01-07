@@ -18,6 +18,8 @@ export const ACTIVITY_CONFIG = {
         deleted: { label: 'Eliminado', color: 'red' },
         restored: { label: 'Restaurado', color: 'yellow' },
         force_deleted: { label: 'Eliminado permanentemente', color: 'red' },
+        reordered: { label: 'Reordenado', color: 'purple' },
+        badges_updated: { label: 'Badges actualizados', color: 'purple' },
 
         // Eventos de autenticación
         login: { label: 'Inicio de sesión', color: 'green' },
@@ -54,6 +56,66 @@ export const ACTIVITY_CONFIG = {
         restaurant_deleted: { label: 'Restaurante eliminado', color: 'red' },
         restaurant_restored: { label: 'Restaurante restaurado', color: 'yellow' },
         restaurant_force_deleted: { label: 'Restaurante eliminado permanentemente', color: 'red' },
+
+        badge_type_created: { label: 'Tipo de badge creado', color: 'green' },
+        badge_type_updated: { label: 'Tipo de badge actualizado', color: 'blue' },
+        badge_type_deleted: { label: 'Tipo de badge eliminado', color: 'red' },
+        badge_type_restored: { label: 'Tipo de badge restaurado', color: 'yellow' },
+        badge_type_force_deleted: { label: 'Tipo de badge eliminado permanentemente', color: 'red' },
+
+        product_variant_created: { label: 'Variante de producto creada', color: 'green' },
+        product_variant_updated: { label: 'Variante de producto actualizada', color: 'blue' },
+        product_variant_deleted: { label: 'Variante de producto eliminada', color: 'red' },
+        product_variant_restored: { label: 'Variante de producto restaurada', color: 'yellow' },
+        product_variant_force_deleted: { label: 'Variante de producto eliminada permanentemente', color: 'red' },
+
+        promotional_banner_created: { label: 'Banner creado', color: 'green' },
+        promotional_banner_updated: { label: 'Banner actualizado', color: 'blue' },
+        promotional_banner_deleted: { label: 'Banner eliminado', color: 'red' },
+        promotional_banner_restored: { label: 'Banner restaurado', color: 'yellow' },
+        promotional_banner_force_deleted: { label: 'Banner eliminado permanentemente', color: 'red' },
+
+        support_ticket_created: { label: 'Ticket de soporte creado', color: 'green' },
+        support_ticket_updated: { label: 'Ticket de soporte actualizado', color: 'blue' },
+        support_ticket_deleted: { label: 'Ticket de soporte eliminado', color: 'red' },
+        support_ticket_restored: { label: 'Ticket de soporte restaurado', color: 'yellow' },
+        support_ticket_force_deleted: { label: 'Ticket de soporte eliminado permanentemente', color: 'red' },
+
+        support_reason_created: { label: 'Razon de soporte creada', color: 'green' },
+        support_reason_updated: { label: 'Razon de soporte actualizada', color: 'blue' },
+        support_reason_deleted: { label: 'Razon de soporte eliminada', color: 'red' },
+        support_reason_restored: { label: 'Razon de soporte restaurada', color: 'yellow' },
+        support_reason_force_deleted: { label: 'Razon de soporte eliminada permanentemente', color: 'red' },
+
+        legal_document_created: { label: 'Documento legal creado', color: 'green' },
+        legal_document_updated: { label: 'Documento legal actualizado', color: 'blue' },
+        legal_document_deleted: { label: 'Documento legal eliminado', color: 'red' },
+        legal_document_restored: { label: 'Documento legal restaurado', color: 'yellow' },
+        legal_document_force_deleted: { label: 'Documento legal eliminado permanentemente', color: 'red' },
+
+        customer_address_created: { label: 'Direccion de cliente creada', color: 'green' },
+        customer_address_updated: { label: 'Direccion de cliente actualizada', color: 'blue' },
+        customer_address_deleted: { label: 'Direccion de cliente eliminada', color: 'red' },
+        customer_address_restored: { label: 'Direccion de cliente restaurada', color: 'yellow' },
+        customer_address_force_deleted: { label: 'Direccion de cliente eliminada permanentemente', color: 'red' },
+
+        customer_nit_created: { label: 'NIT de cliente creado', color: 'green' },
+        customer_nit_updated: { label: 'NIT de cliente actualizado', color: 'blue' },
+        customer_nit_deleted: { label: 'NIT de cliente eliminado', color: 'red' },
+        customer_nit_restored: { label: 'NIT de cliente restaurado', color: 'yellow' },
+        customer_nit_force_deleted: { label: 'NIT de cliente eliminado permanentemente', color: 'red' },
+
+        customer_device_created: { label: 'Dispositivo de cliente creado', color: 'green' },
+        customer_device_updated: { label: 'Dispositivo de cliente actualizado', color: 'blue' },
+        customer_device_deleted: { label: 'Dispositivo de cliente eliminado', color: 'red' },
+        customer_device_restored: { label: 'Dispositivo de cliente restaurado', color: 'yellow' },
+        customer_device_force_deleted: { label: 'Dispositivo de cliente eliminado permanentemente', color: 'red' },
+
+        points_setting_created: { label: 'Configuracion de puntos creada', color: 'green' },
+        points_setting_updated: { label: 'Configuracion de puntos actualizada', color: 'blue' },
+        points_setting_deleted: { label: 'Configuracion de puntos eliminada', color: 'red' },
+        points_setting_restored: { label: 'Configuracion de puntos restaurada', color: 'yellow' },
+        points_setting_force_deleted: { label: 'Configuracion de puntos eliminada permanentemente', color: 'red' },
 
         theme_changed: { label: 'Tema cambiado', color: 'blue' },
     } as Record<string, ActivityEventConfig>,

@@ -26,6 +26,7 @@
 4. [Restaurantes](#4-restaurantes)
 5. [Carrito](#5-carrito)
 6. [Ordenes](#6-ordenes)
+7. [Soporte (Tickets)](#7-soporte-tickets)
 
 ---
 
@@ -38,35 +39,14 @@ EXPLORAR MENU (Sin ubicacion)
 ├── Precios mostrados: PICKUP CAPITAL (precio de referencia)
 └── OBLIGATORIO mostrar disclaimer del API
 
-        ↓
-
-AGREGAR AL CARRITO
-├── Requiere iniciar sesion (login/registro)
-├── Se agrega con precio temporal (pickup capital)
-└── NO requiere seleccionar ubicacion todavia
-
-        ↓
-
-CHECKOUT
-├── PICKUP: Seleccionar restaurante → PUT /cart/restaurant
-│   └── zone = restaurant.price_location → Precios recalculados
-│
-└── DELIVERY: Seleccionar direccion → PUT /cart/delivery-address
-    └── zone = address.zone → Valida geofence → Asigna restaurante → Precios recalculados
-
-        ↓
-
-CREAR ORDEN
-├── REQUIERE EMAIL VERIFICADO
-├── Si email NO verificado → Error 403 EMAIL_NOT_VERIFIED
-└── POST /orders → Crear orden
+ 
 ```
 
 ### Widget de Disclaimer (OBLIGATORIO en pantallas de menu)
 
 El API devuelve `price_disclaimer` en la respuesta. Usar el valor de `data.price_disclaimer`.
 
-Ejemplo: "El precio puede variar segun area y tipo de servicio."
+Ejemplo: "Precio referencia, pickup, capital. Este podría variar según tipo de servicio y ubicación."
 
 ---
 
@@ -373,9 +353,10 @@ No requiere body.
 | data.can_use_password_login | true |
 
 **Validaciones:**
-- Minimo 6 caracteres
+- Minimo 8 caracteres
 - Al menos 1 letra
 - Al menos 1 numero
+- Al menos 1 simbolo especial (!@#$%^&*...)
 - No puede ser igual a la actual (solo para cambio)
 
 **Errores posibles:**
@@ -527,8 +508,8 @@ Retorna los detalles de un NIT especifico.
 |-------|------|-------------|
 | id | int | ID |
 | nit | string | Numero de NIT |
-| nit_type | string | "personal" o "empresa" |
-| business_name | string | Nombre del negocio (si aplica) |
+| nit_name | string | Nombre asociado al NIT |
+| nit_type | string | "personal", "company" o "other" |
 | is_default | boolean | Si es el NIT por defecto |
 
 ---
@@ -540,8 +521,8 @@ Retorna los detalles de un NIT especifico.
 | Campo | Tipo | Requerido |
 |-------|------|-----------|
 | nit | string | Si |
-| nit_type | string | Si ("personal", "empresa") |
-| business_name | string | No |
+| nit_type | string | No ("personal", "company", "other") |
+| nit_name | string | No |
 | is_default | boolean | No |
 
 ---
@@ -580,9 +561,14 @@ Retorna los detalles de un NIT especifico.
 ### 2.5 Puntos y Recompensas
 
 #### Sistema de Puntos
-- **Acumulacion:** 1 punto por cada Q10 gastados
-- **Redencion:** 1 punto = Q0.10 de descuento
-- **Expiracion:** 6 meses de inactividad
+
+- **Acumulacion:** Configurable en admin (por defecto: 1 punto por cada Q10 gastados)
+- **Canjeo:** Solo en tienda fisica (no disponible en la app)
+- **Expiracion:** Configurable en admin (por defecto: 6 meses de inactividad)
+  - Metodo Total: Todos los puntos expiran de golpe si hay inactividad
+  - Metodo FIFO: Solo expiran los puntos mas antiguos
+
+> **Nota:** La configuracion de puntos se gestiona desde el panel de administracion en Configuracion > Puntos.
 
 #### Endpoints
 
@@ -636,12 +622,13 @@ Retorna informacion sobre los puntos que estan proximos a expirar.
 > **IMPORTANTE - Disclaimer de Precios**
 >
 > El API devuelve `price_disclaimer` en la respuesta del menu.
-> **Flutter DEBE mostrar este disclaimer** junto a los precios.
+> **Flutter DEBE mostrar este disclaimer** junto a los precios si no se ha elegido tipo de servicio o si es modo invitado.
 >
 > El campo `price` muestra el **precio de PICKUP en CAPITAL** (precio base de referencia).
 >
 > **El precio final se calcula automaticamente cuando:**
 > - Selecciona restaurante para pickup → `PUT /cart/restaurant`
+
 > - Selecciona direccion para delivery → `PUT /cart/delivery-address`
 
 ---
@@ -1075,10 +1062,282 @@ Query params opcionales:
 
 ---
 
+## 7. Soporte (Tickets)
+
+Sistema de comunicacion entre clientes y Subway Guatemala para quejas, consultas y soporte.
+
+### 7.1 Listar Motivos de Soporte
+
+**GET** `/support/reasons`
+
+Retorna la lista de motivos disponibles que el cliente puede seleccionar al crear un ticket.
+
+**Response 200 - data.reasons[]:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| id | int | ID del motivo |
+| name | string | Nombre a mostrar ("Problema con mi pedido") |
+| slug | string | Identificador interno ("order_issue") |
+
+**Ejemplo de respuesta:**
+```json
+{
+  "data": {
+    "reasons": [
+      { "id": 1, "name": "Problema con mi pedido", "slug": "order_issue" },
+      { "id": 2, "name": "Problema con pago", "slug": "payment" },
+      { "id": 3, "name": "Mi cuenta", "slug": "account" },
+      { "id": 4, "name": "Sugerencia", "slug": "suggestion" },
+      { "id": 5, "name": "Otro", "slug": "other" }
+    ]
+  }
+}
+```
+
+**Flutter UI:** Mostrar como dropdown o lista de opciones al crear ticket.
+
+---
+
+### 7.2 Listar Tickets
+
+**GET** `/support/tickets`
+
+Retorna todos los tickets del cliente autenticado.
+
+**Response 200 - data.tickets[]:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| id | int | ID del ticket |
+| reason | object | Motivo del ticket (id, name, slug) |
+| status | string | "open" o "closed" |
+| priority | string | "low", "medium", "high" |
+| unread_count | int | Mensajes no leidos del admin |
+| latest_message | object | Ultimo mensaje |
+| assigned_to | object | Admin asignado (id, name) |
+| created_at | string | Fecha creacion (ISO 8601) |
+| updated_at | string | Fecha actualizacion |
+
+**Estructura de reason:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| id | int | ID del motivo |
+| name | string | Nombre del motivo |
+| slug | string | Identificador |
+
+**Estructura de latest_message:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| message | string | Contenido del mensaje |
+| created_at | string | Fecha (ISO 8601) |
+| is_from_admin | boolean | true si es del admin |
+
+---
+
+### 7.3 Crear Ticket
+
+**POST** `/support/tickets`
+
+Content-Type: `multipart/form-data`
+
+**Request:**
+
+| Campo | Tipo | Requerido | Descripcion |
+|-------|------|-----------|-------------|
+| reason_id | int | Si | ID del motivo (de /support/reasons) |
+| message | string | Si | Mensaje inicial (max 5000) |
+| attachments[] | file | No | Imagenes adjuntas (max 4) |
+
+**Validacion de attachments:**
+- Maximo 4 imagenes por mensaje
+- Maximo 5MB por imagen
+- Formatos: jpeg, png, gif, webp
+
+**Response 201:**
+
+| Campo | Descripcion |
+|-------|-------------|
+| message | "Ticket creado exitosamente." |
+| data.ticket | Ticket completo con mensajes |
+
+**Ejemplo:**
+```
+POST /support/tickets
+Content-Type: multipart/form-data
+
+reason_id: 1
+message: "No recibi mi sub completo, faltaba..."
+attachments[0]: [imagen.jpg]
+```
+
+**Errores:**
+
+| Codigo | Campo | Descripcion |
+|--------|-------|-------------|
+| 422 | reason_id | El motivo es obligatorio |
+| 422 | reason_id | El motivo seleccionado no es valido |
+
+---
+
+### 7.4 Ver Ticket
+
+**GET** `/support/tickets/{id}`
+
+Retorna el ticket con todos sus mensajes. Automaticamente marca como leidos los mensajes del admin.
+
+**Response 200 - data.ticket:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| id | int | ID del ticket |
+| reason | object | Motivo del ticket |
+| status | string | Estado actual |
+| priority | string | Prioridad |
+| messages | array | Todos los mensajes |
+| assigned_to | object | Admin asignado |
+| resolved_at | string | Fecha resolucion (si aplica) |
+| created_at | string | Fecha creacion |
+
+**Estructura de message:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| id | int | ID del mensaje |
+| message | string | Contenido (puede ser null si solo imagen) |
+| is_from_admin | boolean | true si es del admin |
+| is_read | boolean | Si fue leido |
+| sender | object | Quien envio (type, name) |
+| attachments | array | Imagenes adjuntas |
+| created_at | string | Fecha (ISO 8601) |
+
+**Estructura de attachment:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| id | int | ID |
+| url | string | URL de la imagen |
+| file_name | string | Nombre original |
+| mime_type | string | Tipo MIME |
+| file_size | int | Tamano en bytes |
+
+**Errores:**
+
+| Codigo | Descripcion |
+|--------|-------------|
+| 403 | No tienes acceso a este ticket |
+
+---
+
+### 7.5 Enviar Mensaje
+
+**POST** `/support/tickets/{id}/messages`
+
+Content-Type: `multipart/form-data`
+
+**Request:**
+
+| Campo | Tipo | Requerido | Descripcion |
+|-------|------|-----------|-------------|
+| message | string | Condicional | Texto (requerido si no hay attachments) |
+| attachments[] | file | Condicional | Imagenes (requerido si no hay message) |
+
+**Response 201:**
+
+| Campo | Descripcion |
+|-------|-------------|
+| message | "Mensaje enviado exitosamente." |
+| data.message | Mensaje creado |
+
+**Errores:**
+
+| Codigo | Descripcion |
+|--------|-------------|
+| 403 | No tienes acceso a este ticket |
+| 422 | No puedes enviar mensajes a un ticket cerrado |
+
+---
+
+### 7.6 Estados del Ticket
+
+| Estado | Descripcion | Puede enviar mensajes |
+|--------|-------------|----------------------|
+| open | Ticket abierto/activo | Si |
+| closed | Ticket cerrado | No |
+
+---
+
+### 7.7 Flujo de Soporte
+
+```
+OBTENER MOTIVOS
+├── GET /support/reasons
+└── Cachear lista de motivos
+        ↓
+CREAR TICKET
+├── Usuario selecciona motivo (dropdown)
+├── POST /support/tickets
+│   ├── reason_id (obligatorio)
+│   ├── message (obligatorio)
+│   └── attachments[] (opcional)
+        ↓
+VER TICKETS
+├── GET /support/tickets
+├── Listar todos mis tickets
+└── Ver unread_count para badge
+        ↓
+CONVERSACION
+├── GET /support/tickets/{id} → Ver mensajes
+├── POST /support/tickets/{id}/messages → Responder
+└── Repetir hasta resolucion
+        ↓
+TICKET CERRADO
+├── Status cambia a "closed"
+└── No se pueden enviar mas mensajes
+```
+
+---
+
+### 7.8 Tiempo Real (Opcional)
+
+El sistema soporta WebSockets via Laravel Reverb para actualizaciones en tiempo real.
+
+**Canal:** `private-support.ticket.{ticketId}`
+
+**Eventos:**
+- `message.sent` - Nuevo mensaje en el ticket
+- `ticket.status.changed` - Cambio de estado
+
+**Autenticacion WebSocket:**
+Flutter debe autenticarse con el mismo Bearer token via `/broadcasting/auth`.
+
+> Nota: La implementacion de WebSockets en Flutter es opcional. El sistema funciona perfectamente con polling o refresh manual.
+
+---
+
+### 7.8 UI Recomendada
+
+**Pantalla de Lista de Tickets:**
+- Lista de tickets ordenados por fecha
+- Badge con unread_count
+- Indicador de estado (abierto/cerrado)
+- Preview del ultimo mensaje
+
+**Pantalla de Chat:**
+- Mensajes tipo chat (cliente izquierda, admin derecha)
+- Input de texto con boton de adjuntar imagen
+- Vista previa de imagenes antes de enviar
+- Deshabilitar input si ticket cerrado
+
+---
+
 ## Historial de Cambios
 
 | Fecha | Cambio |
 |-------|--------|
+| 2026-01-07 | Agregada seccion 7: Soporte (Tickets) - sistema de comunicacion cliente-soporte |
 | 2026-01-07 | Reorganizada seccion Usuario (perfil, direcciones, NITs, dispositivos, puntos, favoritos) |
 | 2026-01-07 | Agregado GET /addresses/{id} |
 | 2026-01-07 | Agregado GET /nits/{id} |

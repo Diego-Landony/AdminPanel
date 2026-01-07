@@ -172,9 +172,23 @@ class CategoryController extends Controller
             'categories.*.sort_order' => 'required|integer',
         ]);
 
+        $count = count($request->categories);
+
         foreach ($request->categories as $category) {
             Category::where('id', $category['id'])->update(['sort_order' => $category['sort_order']]);
         }
+
+        // Log de reordenamiento manual
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id(),
+            'event_type' => 'reordered',
+            'target_model' => Category::class,
+            'target_id' => null,
+            'description' => "Categorías reordenadas ({$count} elementos)",
+            'old_values' => null,
+            'new_values' => ['items_count' => $count],
+            'user_agent' => request()->userAgent(),
+        ]);
 
         return redirect()->back()
             ->with('success', 'Orden actualizado exitosamente.');

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Contracts\ActivityLoggable;
 use App\Models\Concerns\LogsActivity;
 use App\Models\Concerns\TracksUserStatus;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -13,7 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class Customer extends Authenticatable implements MustVerifyEmail
+class Customer extends Authenticatable implements ActivityLoggable, MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\CustomerFactory> */
     use HasApiTokens, HasFactory, LogsActivity, Notifiable, SoftDeletes, TracksUserStatus;
@@ -263,5 +264,21 @@ class Customer extends Authenticatable implements MustVerifyEmail
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new \App\Notifications\ResetPasswordNotification($token));
+    }
+
+    /**
+     * Campo usado para identificar el modelo en los logs de actividad
+     */
+    public function getActivityLabelField(): string
+    {
+        return 'email';
+    }
+
+    /**
+     * Nombre del modelo para los logs de actividad
+     */
+    public static function getActivityModelName(): string
+    {
+        return 'Cliente';
     }
 }

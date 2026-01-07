@@ -2,196 +2,233 @@
 
 namespace App\Observers;
 
+use App\Contracts\ActivityLoggable;
+use App\Jobs\LogActivityJob;
 use App\Models\ActivityLog;
+use App\Support\ActivityLogging;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Observer genérico para registrar actividades de cualquier modelo
- * Se registra automáticamente via el trait LogsActivity
+ * Observer generico para registrar actividades de cualquier modelo.
+ * Se registra automaticamente via el trait LogsActivity.
  */
 class ActivityObserver
 {
     public function created(Model $model): void
     {
-        $this->logActivity('created', $model, null, $model->toArray());
+        $this->logActivity('created', $model, newValues: $model->getAttributes());
     }
 
     public function updated(Model $model): void
     {
-        $oldValues = $model->getOriginal();
-        $newValues = $model->getChanges();
+        $changes = $model->getChanges();
+        $original = $model->getOriginal();
 
-        // Ignorar si solo se actualizaron timestamps
-        if ($this->isOnlyTimestampUpdate($newValues, $model)) {
+        // Ignorar si solo cambiaron campos ignorados
+        if ($this->isOnlyIgnoredFieldsUpdate($changes, $model)) {
             return;
         }
 
-        $this->logActivity('updated', $model, $oldValues, $newValues);
+        $this->logActivity(
+            'updated',
+            $model,
+            oldValues: array_intersect_key($original, $changes),
+            newValues: $changes
+        );
     }
 
     public function deleted(Model $model): void
     {
-        $this->logActivity('deleted', $model, $model->toArray(), null);
+        $this->logActivity('deleted', $model, oldValues: $model->getAttributes());
     }
 
     public function restored(Model $model): void
     {
-        $this->logActivity('restored', $model, null, $model->toArray());
+        $this->logActivity('restored', $model, newValues: $model->getAttributes());
     }
 
     public function forceDeleted(Model $model): void
     {
-        $this->logActivity('force_deleted', $model, $model->toArray(), null);
+        $this->logActivity('force_deleted', $model, oldValues: $model->getAttributes());
     }
 
     /**
-     * Registra un evento de actividad
+     * Log an activity event.
      */
-    private function logActivity(string $eventType, Model $model, ?array $oldValues, ?array $newValues): void
-    {
-        try {
-            // Solo registrar si es una acción web de usuario autenticado
-            if (! $this->isWebUserAction()) {
-                return;
-            }
+    protected function logActivity(
+        string $eventType,
+        Model $model,
+        ?array $oldValues = null,
+        ?array $newValues = null
+    ): void {
+        // Check if logging is enabled via toggle
+        if (! ActivityLogging::isEnabled()) {
+            return;
+        }
 
-            $user = auth()->user();
-            $config = $this->getModelConfig($model);
+        // Only log web user actions
+        if (! $this->isWebUserAction()) {
+            return;
+        }
 
-            ActivityLog::create([
-                'user_id' => $user->id,
-                'event_type' => $eventType,
-                'target_model' => get_class($model),
-                'target_id' => $model->id,
-                'description' => $this->generateDescription($eventType, $model, $config, $oldValues, $newValues),
-                'old_values' => $oldValues,
-                'new_values' => $newValues,
-                'user_agent' => request()->userAgent(),
-            ]);
+        $ignoredFields = $this->getIgnoredFields($model);
+        $data = $this->prepareLogData($eventType, $model, $oldValues, $newValues, $ignoredFields);
 
-            Log::info("Activity logged: {$eventType} for {$config['model_name']} '{$model->getActivityLabel()}' by {$user->email}");
-        } catch (\Exception $e) {
-            Log::error('Error logging activity: '.$e->getMessage(), [
-                'event_type' => $eventType,
-                'model' => get_class($model),
-                'model_id' => $model->id ?? null,
-                'trace' => $e->getTraceAsString(),
-            ]);
+        if (ActivityLogging::isAsync()) {
+            LogActivityJob::dispatch($data);
+        } else {
+            $this->createLogSync($data);
         }
     }
 
     /**
-     * Verifica si es una acción de usuario en la web (no automatizada)
+     * Prepare log data array.
+     *
+     * @return array{user_id: int|null, event_type: string, target_model: string, target_id: int|string|null, description: string, old_values: array|null, new_values: array|null, user_agent: string|null}
      */
-    private function isWebUserAction(): bool
+    protected function prepareLogData(
+        string $eventType,
+        Model $model,
+        ?array $oldValues,
+        ?array $newValues,
+        array $ignoredFields
+    ): array {
+        return [
+            'user_id' => auth()->id(),
+            'event_type' => $eventType,
+            'target_model' => get_class($model),
+            'target_id' => $model->id,
+            'description' => $this->generateDescription($eventType, $model, $oldValues, $newValues, $ignoredFields),
+            'old_values' => $oldValues ? $this->filterValues($oldValues, $ignoredFields) : null,
+            'new_values' => $newValues ? $this->filterValues($newValues, $ignoredFields) : null,
+            'user_agent' => request()->userAgent(),
+        ];
+    }
+
+    /**
+     * Create activity log synchronously (for tests or specific cases).
+     */
+    protected function createLogSync(array $data): ?ActivityLog
     {
-        // Verificar usuario autenticado
+        try {
+            return ActivityLog::create($data);
+        } catch (QueryException $e) {
+            Log::error('Failed to create activity log', [
+                'error' => $e->getMessage(),
+                'sql_code' => $e->getCode(),
+                'data' => $data,
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
+     * Check if this is a web user action that should be logged.
+     */
+    protected function isWebUserAction(): bool
+    {
+        // Allow logging during tests if explicitly enabled
+        if (app()->runningInConsole() && ! app()->runningUnitTests()) {
+            return false;
+        }
+
         if (! auth()->check()) {
             return false;
         }
 
         $request = request();
 
-        // Verificar request HTTP
-        if (! $request) {
-            return false;
-        }
-
-        // Verificar user agent (navegador web)
         if (! $request->userAgent()) {
             return false;
         }
 
-        // Verificar que no es comando artisan
-        if (app()->runningInConsole()) {
-            return false;
-        }
-
-        // Verificar que es petición de cambio
-        if (! in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
-            return false;
-        }
-
-        return true;
+        return in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE']);
     }
 
     /**
-     * Verifica si solo se actualizaron timestamps
+     * Check if only ignored fields were updated.
      */
-    private function isOnlyTimestampUpdate(array $changes, Model $model): bool
+    protected function isOnlyIgnoredFieldsUpdate(array $changes, Model $model): bool
     {
-        $config = $this->getModelConfig($model);
-        $ignoredFields = $config['ignored_fields'];
+        $ignoredFields = $this->getIgnoredFields($model);
 
-        foreach ($changes as $field => $value) {
-            if (! in_array($field, $ignoredFields)) {
-                return false; // Hay cambios en otros campos
-            }
-        }
-
-        return true; // Solo cambios en campos ignorados
+        return empty(array_diff(array_keys($changes), $ignoredFields));
     }
 
     /**
-     * Obtiene la configuración del modelo
+     * Get ignored fields for a model.
+     *
+     * @return array<int, string>
      */
-    private function getModelConfig(Model $model): array
+    protected function getIgnoredFields(Model $model): array
     {
-        if (method_exists($model, 'getActivityConfig')) {
-            return $model->getActivityConfig();
+        if ($model instanceof ActivityLoggable) {
+            return $model->getActivityIgnoredFields();
         }
 
-        // Configuración por defecto
-        return [
-            'label_field' => 'name',
-            'model_name' => class_basename($model),
-            'ignored_fields' => ['updated_at'],
-        ];
+        // Default ignored fields
+        return ['updated_at', 'created_at', 'remember_token', 'password'];
     }
 
     /**
-     * Genera descripción detallada del evento
+     * Filter out ignored fields from values array.
+     *
+     * @param  array<string, mixed>  $values
+     * @param  array<int, string>  $ignoredFields
+     * @return array<string, mixed>
      */
-    private function generateDescription(
+    protected function filterValues(array $values, array $ignoredFields): array
+    {
+        return array_diff_key($values, array_flip($ignoredFields));
+    }
+
+    /**
+     * Generate human-readable description for the event.
+     */
+    protected function generateDescription(
         string $eventType,
         Model $model,
-        array $config,
         ?array $oldValues,
-        ?array $newValues
+        ?array $newValues,
+        array $ignoredFields
     ): string {
-        $modelName = config('activity.models.'.get_class($model).'.name', $config['model_name']);
-        $label = $model->getActivityLabel();
+        $modelName = $model instanceof ActivityLoggable
+            ? $model::getActivityModelName()
+            : class_basename($model);
 
-        $action = match ($eventType) {
-            'created' => 'creado',
-            'updated' => 'actualizado',
-            'deleted' => 'eliminado',
-            'restored' => 'restaurado',
-            'force_deleted' => 'eliminado permanentemente',
-            default => $eventType,
+        $label = $model instanceof ActivityLoggable
+            ? $model->getActivityLabel()
+            : ($model->name ?? $model->title ?? $model->id);
+
+        $base = match ($eventType) {
+            'created' => "{$modelName} '{$label}' creado",
+            'updated' => "{$modelName} '{$label}' actualizado",
+            'deleted' => "{$modelName} '{$label}' eliminado",
+            'restored' => "{$modelName} '{$label}' restaurado",
+            'force_deleted' => "{$modelName} '{$label}' eliminado permanentemente",
+            default => "{$modelName} '{$label}' - {$eventType}",
         };
 
-        $description = "{$modelName} '{$label}' {$action}";
-
-        // Agregar detalles de cambios para updates
-        if ($eventType === 'updated' && $newValues) {
-            $changes = $this->formatChanges($newValues, $oldValues ?? [], $config['ignored_fields']);
-            if (! empty($changes)) {
-                $description .= ' - '.implode(', ', $changes);
+        if ($eventType === 'updated' && $oldValues && $newValues) {
+            $changes = $this->formatChanges($oldValues, $newValues, $ignoredFields);
+            if ($changes) {
+                $base .= " - {$changes}";
             }
         }
 
-        return $description;
+        return $base;
     }
 
     /**
-     * Formatea los cambios de manera legible
+     * Format changes for display in description.
      */
-    private function formatChanges(array $newValues, array $oldValues, array $ignoredFields): array
+    protected function formatChanges(array $oldValues, array $newValues, array $ignoredFields): string
     {
+        $translations = config('activity.field_translations', []);
         $changes = [];
-        $fieldTranslations = config('activity.field_translations', []);
 
         foreach ($newValues as $field => $newValue) {
             if (in_array($field, $ignoredFields)) {
@@ -199,31 +236,37 @@ class ActivityObserver
             }
 
             $oldValue = $oldValues[$field] ?? null;
+            $fieldName = $translations[$field] ?? str_replace('_', ' ', $field);
 
-            // Traducir nombre de campo
-            $fieldName = $fieldTranslations[$field] ?? str_replace('_', ' ', $field);
+            $oldFormatted = $this->formatValue($oldValue);
+            $newFormatted = $this->formatValue($newValue);
 
-            // Formatear valores booleanos
-            if (is_bool($oldValue) || is_bool($newValue)) {
-                $oldValue = $oldValue ? 'Sí' : 'No';
-                $newValue = $newValue ? 'Sí' : 'No';
-            }
-
-            // Formatear valores null
-            $oldValue = $oldValue ?? '(vacío)';
-            $newValue = $newValue ?? '(vacío)';
-
-            // Truncar valores largos
-            if (is_string($oldValue) && strlen($oldValue) > 50) {
-                $oldValue = substr($oldValue, 0, 47).'...';
-            }
-            if (is_string($newValue) && strlen($newValue) > 50) {
-                $newValue = substr($newValue, 0, 47).'...';
-            }
-
-            $changes[] = "{$fieldName}: '{$oldValue}' → '{$newValue}'";
+            $changes[] = "{$fieldName}: '{$oldFormatted}' -> '{$newFormatted}'";
         }
 
-        return $changes;
+        // Limit to 3 changes to keep description readable
+        return implode(', ', array_slice($changes, 0, 3));
+    }
+
+    /**
+     * Format a single value for display.
+     */
+    protected function formatValue(mixed $value): string
+    {
+        if (is_null($value)) {
+            return '(vacio)';
+        }
+
+        if (is_bool($value)) {
+            return $value ? 'Si' : 'No';
+        }
+
+        if (is_array($value)) {
+            return json_encode($value);
+        }
+
+        $str = (string) $value;
+
+        return strlen($str) > 50 ? substr($str, 0, 47).'...' : $str;
     }
 }

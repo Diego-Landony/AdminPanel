@@ -35,7 +35,7 @@ class SupportTicketController extends Controller
         $customer = auth()->user();
 
         $tickets = SupportTicket::where('customer_id', $customer->id)
-            ->with(['latestMessage', 'assignedUser:id,name'])
+            ->with(['reason', 'latestMessage', 'assignedUser:id,name'])
             ->withCount(['messages as unread_count' => function ($q) {
                 $q->where('is_read', false)->where('sender_type', \App\Models\User::class);
             }])
@@ -59,17 +59,26 @@ class SupportTicketController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *
-     *         @OA\JsonContent(
-     *             required={"subject", "message"},
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
      *
-     *             @OA\Property(property="subject", type="string"),
-     *             @OA\Property(property="message", type="string")
+     *             @OA\Schema(
+     *                 required={"reason_id", "message"},
+     *
+     *                 @OA\Property(property="reason_id", type="integer", description="ID del motivo de soporte", example=1),
+     *                 @OA\Property(property="message", type="string", description="Mensaje inicial del ticket", example="Tengo un problema con mi pedido #123"),
+     *                 @OA\Property(property="attachments[]", type="array", @OA\Items(type="string", format="binary"), description="Imágenes adjuntas (máx 4)")
+     *             )
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=201,
      *         description="Ticket created successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error"
      *     )
      * )
      */
@@ -79,7 +88,7 @@ class SupportTicketController extends Controller
 
         $ticket = SupportTicket::create([
             'customer_id' => $customer->id,
-            'subject' => $request->subject,
+            'support_reason_id' => $request->reason_id,
             'status' => 'open',
             'priority' => 'medium',
         ]);
@@ -107,7 +116,7 @@ class SupportTicketController extends Controller
             }
         }
 
-        $ticket->load(['messages.attachments', 'assignedUser:id,name']);
+        $ticket->load(['reason', 'messages.attachments', 'assignedUser:id,name']);
 
         broadcast(new SupportMessageSent($message))->toOthers();
 
@@ -150,7 +159,7 @@ class SupportTicketController extends Controller
             ], 403);
         }
 
-        $ticket->load(['messages.attachments', 'assignedUser:id,name']);
+        $ticket->load(['reason', 'messages.attachments', 'assignedUser:id,name']);
 
         $ticket->messages()
             ->where('sender_type', \App\Models\User::class)
@@ -204,9 +213,9 @@ class SupportTicketController extends Controller
             ], 403);
         }
 
-        if (in_array($ticket->status, ['resolved', 'closed'])) {
+        if ($ticket->status === 'closed') {
             return response()->json([
-                'message' => 'No puedes enviar mensajes a un ticket cerrado o resuelto.',
+                'message' => 'No puedes enviar mensajes a un ticket cerrado.',
             ], 422);
         }
 

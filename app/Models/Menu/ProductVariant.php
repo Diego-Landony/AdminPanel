@@ -2,7 +2,9 @@
 
 namespace App\Models\Menu;
 
+use App\Contracts\ActivityLoggable;
 use App\Models\Concerns\HasReportingCategory;
+use App\Models\Concerns\LogsActivity;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,9 +19,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * Ejemplo: "Subway Pollo 15cm", "Subway Pollo 30cm"
  * Cada variante tiene 4 precios: pickup_capital, domicilio_capital, pickup_interior, domicilio_interior
  */
-class ProductVariant extends Model
+class ProductVariant extends Model implements ActivityLoggable
 {
-    use HasFactory, HasReportingCategory, SoftDeletes;
+    use HasFactory, HasReportingCategory, LogsActivity, SoftDeletes;
+
+    public function getActivityLabelField(): string
+    {
+        return 'name';
+    }
+
+    public static function getActivityModelName(): string
+    {
+        return 'Variante de producto';
+    }
 
     /**
      * Nombre de la tabla

@@ -148,6 +148,20 @@ class SectionController extends Controller
             Section::where('id', $section['id'])->update(['sort_order' => $section['sort_order']]);
         }
 
+        $count = count($request->sections);
+
+        // Log de reordenamiento manual
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id(),
+            'event_type' => 'reordered',
+            'target_model' => Section::class,
+            'target_id' => null,
+            'description' => "Secciones reordenadas ({$count} elementos)",
+            'old_values' => null,
+            'new_values' => ['items_count' => $count],
+            'user_agent' => request()->userAgent(),
+        ]);
+
         return redirect()->back()
             ->with('success', 'Orden actualizado exitosamente.');
     }

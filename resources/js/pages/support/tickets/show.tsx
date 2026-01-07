@@ -1,14 +1,14 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { showNotification } from '@/hooks/useNotifications';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { ArrowLeft, CheckCircle, Clock, Image, Inbox, Loader2, Paperclip, Send, User, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle, CreditCard, Hand, Inbox, Loader2, MapPin, Package, Paperclip, Send, User, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface Customer {
@@ -51,10 +51,16 @@ interface Message {
     created_at: string;
 }
 
+interface SupportReason {
+    id: number;
+    name: string;
+    slug: string;
+}
+
 interface SupportTicket {
     id: number;
-    subject: string;
-    status: 'open' | 'in_progress' | 'resolved' | 'closed';
+    reason: SupportReason | null;
+    status: 'open' | 'closed';
     priority: 'low' | 'medium' | 'high';
     customer: Customer;
     assigned_user: Admin | null;
@@ -63,15 +69,67 @@ interface SupportTicket {
     created_at: string;
 }
 
+interface CustomerOrder {
+    id: number;
+    order_number: string;
+    service_type: 'pickup' | 'delivery';
+    status: string;
+    total: string;
+    created_at: string;
+    restaurant: {
+        id: number;
+        name: string;
+    } | null;
+}
+
+interface CustomerAddress {
+    id: number;
+    label: string;
+    address_line: string;
+    is_default: boolean;
+}
+
+interface CustomerNit {
+    id: number;
+    nit: string;
+    nit_name: string;
+    is_default: boolean;
+}
+
+interface CustomerType {
+    id: number;
+    name: string;
+    color: string;
+}
+
+interface CustomerProfile {
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string | null;
+    subway_card: string | null;
+    birth_date: string | null;
+    gender: string | null;
+    points: number;
+    email_verified_at: string | null;
+    created_at: string;
+    last_activity_at: string | null;
+    last_purchase_at: string | null;
+    orders_count: number;
+    customer_type: CustomerType | null;
+    addresses: CustomerAddress[];
+    nits: CustomerNit[];
+}
+
 interface TicketShowProps {
     ticket: SupportTicket;
-    admins: Admin[];
+    customerOrders: CustomerOrder[];
+    customerProfile: CustomerProfile;
 }
 
 const STATUS_CONFIG = {
     open: { label: 'Abierto', color: 'bg-yellow-100 text-yellow-800', icon: Inbox },
-    in_progress: { label: 'En Progreso', color: 'bg-blue-100 text-blue-800', icon: Clock },
-    resolved: { label: 'Resuelto', color: 'bg-green-100 text-green-800', icon: CheckCircle },
     closed: { label: 'Cerrado', color: 'bg-gray-100 text-gray-800', icon: CheckCircle },
 };
 
@@ -81,11 +139,24 @@ const PRIORITY_CONFIG = {
     high: { label: 'Alta', color: 'bg-red-100 text-red-700' },
 };
 
-export default function TicketShow({ ticket, admins }: TicketShowProps) {
+const ORDER_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+    pending: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800' },
+    confirmed: { label: 'Confirmado', color: 'bg-blue-100 text-blue-800' },
+    preparing: { label: 'Preparando', color: 'bg-orange-100 text-orange-800' },
+    ready: { label: 'Listo', color: 'bg-green-100 text-green-800' },
+    out_for_delivery: { label: 'En camino', color: 'bg-purple-100 text-purple-800' },
+    delivered: { label: 'Entregado', color: 'bg-green-100 text-green-800' },
+    completed: { label: 'Completado', color: 'bg-gray-100 text-gray-800' },
+    cancelled: { label: 'Cancelado', color: 'bg-red-100 text-red-800' },
+    refunded: { label: 'Reembolsado', color: 'bg-red-100 text-red-800' },
+};
+
+export default function TicketShow({ ticket, customerOrders, customerProfile }: TicketShowProps) {
     const { auth } = usePage().props as { auth: { user: { id: number } } };
     const [message, setMessage] = useState('');
     const [attachments, setAttachments] = useState<File[]>([]);
     const [isSending, setIsSending] = useState(false);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -162,19 +233,20 @@ export default function TicketShow({ ticket, admins }: TicketShowProps) {
         );
     };
 
-    const handleAssign = (userId: string) => {
-        router.patch(
-            `/support/tickets/${ticket.id}/assign`,
-            { user_id: userId },
+    const handleTakeTicket = () => {
+        router.post(
+            `/support/tickets/${ticket.id}/take`,
+            {},
             {
                 preserveScroll: true,
-                onError: () => showNotification.error('Error al asignar'),
+                onError: () => showNotification.error('Error al tomar el ticket'),
             },
         );
     };
 
     const isFromAdmin = (msg: Message) => msg.sender_type.includes('User');
-    const isClosed = ticket.status === 'closed' || ticket.status === 'resolved';
+    const isClosed = ticket.status === 'closed';
+    const isMyTicket = ticket.assigned_user?.id === auth.user.id;
 
     return (
         <AppLayout>
@@ -192,7 +264,7 @@ export default function TicketShow({ ticket, admins }: TicketShowProps) {
                                 </Link>
                             </Button>
                             <div>
-                                <h2 className="font-semibold">{ticket.subject}</h2>
+                                <h2 className="font-semibold">{ticket.reason?.name || 'Sin motivo'}</h2>
                                 <p className="text-sm text-muted-foreground">Ticket #{ticket.id}</p>
                             </div>
                         </div>
@@ -302,7 +374,7 @@ export default function TicketShow({ ticket, admins }: TicketShowProps) {
                             </div>
                         </form>
                     ) : (
-                        <div className="border-t p-4 text-center text-sm text-muted-foreground">Este ticket está {ticket.status === 'resolved' ? 'resuelto' : 'cerrado'}</div>
+                        <div className="border-t p-4 text-center text-sm text-muted-foreground">Este ticket está cerrado</div>
                     )}
                 </div>
 
@@ -318,13 +390,17 @@ export default function TicketShow({ ticket, admins }: TicketShowProps) {
                                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
                                     <User className="h-5 w-5" />
                                 </div>
-                                <div>
+                                <div className="flex-1 min-w-0">
                                     <div className="font-medium">
                                         {ticket.customer.first_name} {ticket.customer.last_name}
                                     </div>
-                                    <div className="text-sm text-muted-foreground">{ticket.customer.email}</div>
+                                    <div className="text-sm text-muted-foreground truncate">{ticket.customer.email}</div>
                                 </div>
                             </div>
+                            <Button variant="outline" size="sm" className="w-full" onClick={() => setIsProfileOpen(true)}>
+                                <User className="mr-2 h-3 w-3" />
+                                Ver perfil completo
+                            </Button>
                         </CardContent>
                     </Card>
 
@@ -334,6 +410,25 @@ export default function TicketShow({ ticket, admins }: TicketShowProps) {
                             <CardTitle className="text-sm font-medium">Información del ticket</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                            {/* Tomado por */}
+                            <div>
+                                <label className="text-xs text-muted-foreground">Tomado por</label>
+                                {ticket.assigned_user ? (
+                                    <div className="mt-1 flex items-center gap-2 rounded-md border p-2">
+                                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
+                                            <User className="h-3 w-3 text-primary" />
+                                        </div>
+                                        <span className="text-sm font-medium">{ticket.assigned_user.name}</span>
+                                        {isMyTicket && <Badge variant="outline" className="ml-auto text-xs">Tú</Badge>}
+                                    </div>
+                                ) : (
+                                    <Button onClick={handleTakeTicket} variant="outline" className="mt-1 w-full" disabled={isClosed}>
+                                        <Hand className="mr-2 h-4 w-4" />
+                                        Tomar Ticket
+                                    </Button>
+                                )}
+                            </div>
+
                             <div>
                                 <label className="text-xs text-muted-foreground">Estado</label>
                                 <Select value={ticket.status} onValueChange={handleStatusChange}>
@@ -342,8 +437,6 @@ export default function TicketShow({ ticket, admins }: TicketShowProps) {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="open">Abierto</SelectItem>
-                                        <SelectItem value="in_progress">En Progreso</SelectItem>
-                                        <SelectItem value="resolved">Resuelto</SelectItem>
                                         <SelectItem value="closed">Cerrado</SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -351,7 +444,7 @@ export default function TicketShow({ ticket, admins }: TicketShowProps) {
 
                             <div>
                                 <label className="text-xs text-muted-foreground">Prioridad</label>
-                                <Select value={ticket.priority} onValueChange={handlePriorityChange}>
+                                <Select value={ticket.priority} onValueChange={handlePriorityChange} disabled={isClosed}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -363,22 +456,6 @@ export default function TicketShow({ ticket, admins }: TicketShowProps) {
                                 </Select>
                             </div>
 
-                            <div>
-                                <label className="text-xs text-muted-foreground">Asignado a</label>
-                                <Select value={ticket.assigned_user?.id.toString() || ''} onValueChange={handleAssign}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue placeholder="Sin asignar" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {admins.map((admin) => (
-                                            <SelectItem key={admin.id} value={admin.id.toString()}>
-                                                {admin.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
                             <div className="pt-2 border-t">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Creado</span>
@@ -386,15 +463,209 @@ export default function TicketShow({ ticket, admins }: TicketShowProps) {
                                 </div>
                                 {ticket.resolved_at && (
                                     <div className="flex justify-between text-sm mt-1">
-                                        <span className="text-muted-foreground">Resuelto</span>
+                                        <span className="text-muted-foreground">Cerrado</span>
                                         <span>{new Date(ticket.resolved_at).toLocaleDateString('es-GT')}</span>
                                     </div>
                                 )}
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Customer Orders */}
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                                <Package className="h-4 w-4" />
+                                Pedidos del cliente
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {customerOrders.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">Sin pedidos</p>
+                            ) : (
+                                <div className="space-y-2 max-h-64 overflow-y-auto">
+                                    {customerOrders.map((order) => (
+                                        <Link
+                                            key={order.id}
+                                            href={`/orders/${order.id}`}
+                                            className="block rounded-md border p-2 hover:bg-muted/50 transition-colors"
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium">#{order.order_number}</span>
+                                                <Badge className={ORDER_STATUS_CONFIG[order.status]?.color || 'bg-gray-100'}>
+                                                    {ORDER_STATUS_CONFIG[order.status]?.label || order.status}
+                                                </Badge>
+                                            </div>
+                                            <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+                                                <span>{order.restaurant?.name || 'Sin restaurante'}</span>
+                                                <span>Q{parseFloat(order.total).toFixed(2)}</span>
+                                            </div>
+                                            <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+                                                <span className="capitalize">{order.service_type}</span>
+                                                <span>{new Date(order.created_at).toLocaleDateString('es-GT')}</span>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
+
+            {/* Customer Profile Modal */}
+            <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Perfil del Cliente</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-6 pt-2">
+                        {/* Información Personal */}
+                        <div>
+                            <h4 className="text-sm font-medium text-muted-foreground mb-3">Información Personal</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs text-muted-foreground">Nombre</label>
+                                    <p className="font-medium">{customerProfile?.first_name || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <label className="text-xs text-muted-foreground">Apellido</label>
+                                    <p className="font-medium">{customerProfile?.last_name || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <label className="text-xs text-muted-foreground">Género</label>
+                                    <p className="font-medium">
+                                        {customerProfile?.gender === 'male' ? 'Masculino' :
+                                         customerProfile?.gender === 'female' ? 'Femenino' :
+                                         customerProfile?.gender === 'other' ? 'Otro' : 'No especificado'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label className="text-xs text-muted-foreground">Fecha de Nacimiento</label>
+                                    <p className="font-medium">
+                                        {customerProfile?.birth_date ? new Date(customerProfile.birth_date).toLocaleDateString('es-GT') : 'N/A'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Contacto */}
+                        <div className="border-t pt-4">
+                            <h4 className="text-sm font-medium text-muted-foreground mb-3">Contacto</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs text-muted-foreground">Email</label>
+                                    <p className="font-medium">{customerProfile?.email}</p>
+                                    <Badge variant={customerProfile?.email_verified_at ? 'default' : 'destructive'} className="text-xs mt-1">
+                                        {customerProfile?.email_verified_at ? 'Verificado' : 'No verificado'}
+                                    </Badge>
+                                </div>
+                                <div>
+                                    <label className="text-xs text-muted-foreground">Teléfono</label>
+                                    <p className="font-medium">{customerProfile?.phone || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* SubwayCard */}
+                        <div className="border-t pt-4">
+                            <h4 className="text-sm font-medium text-muted-foreground mb-3">SubwayCard</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs text-muted-foreground">Número de Tarjeta</label>
+                                    <p className="font-medium">{customerProfile?.subway_card || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <label className="text-xs text-muted-foreground">Puntos Acumulados</label>
+                                    <p className="font-medium text-primary">{customerProfile?.points || 0}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Tipo de Cliente */}
+                        <div className="border-t pt-4">
+                            <h4 className="text-sm font-medium text-muted-foreground mb-3">Tipo de Cliente</h4>
+                            <div className="flex items-center gap-3">
+                                {customerProfile?.customer_type ? (
+                                    <>
+                                        <Badge style={{ backgroundColor: customerProfile.customer_type.color }} className="text-white">
+                                            {customerProfile.customer_type.name}
+                                        </Badge>
+                                    </>
+                                ) : (
+                                    <span className="text-muted-foreground">Sin tipo asignado</span>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Actividad */}
+                        <div className="border-t pt-4">
+                            <h4 className="text-sm font-medium text-muted-foreground mb-3">Actividad</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs text-muted-foreground">Cliente desde</label>
+                                    <p className="font-medium">
+                                        {customerProfile?.created_at ? new Date(customerProfile.created_at).toLocaleDateString('es-GT') : 'N/A'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label className="text-xs text-muted-foreground">Último pedido</label>
+                                    <p className="font-medium">
+                                        {customerProfile?.last_purchase_at ? new Date(customerProfile.last_purchase_at).toLocaleDateString('es-GT') : 'Nunca'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Direcciones */}
+                        <div className="border-t pt-4">
+                            <h4 className="text-sm font-medium text-muted-foreground mb-3">
+                                Direcciones ({customerProfile?.addresses?.length || 0})
+                            </h4>
+                            {customerProfile?.addresses && customerProfile.addresses.length > 0 ? (
+                                <div className="space-y-2">
+                                    {customerProfile.addresses.map((address) => (
+                                        <div key={address.id} className="rounded-md border p-3">
+                                            <div className="flex items-center gap-2">
+                                                <MapPin className="h-4 w-4 text-muted-foreground" />
+                                                <span className="font-medium">{address.label}</span>
+                                                {address.is_default && <Badge variant="outline" className="text-xs">Default</Badge>}
+                                            </div>
+                                            <p className="text-sm text-muted-foreground mt-1 ml-6">{address.address_line}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">No hay direcciones guardadas</p>
+                            )}
+                        </div>
+
+                        {/* NITs */}
+                        <div className="border-t pt-4">
+                            <h4 className="text-sm font-medium text-muted-foreground mb-3">
+                                NITs ({customerProfile?.nits?.length || 0})
+                            </h4>
+                            {customerProfile?.nits && customerProfile.nits.length > 0 ? (
+                                <div className="space-y-2">
+                                    {customerProfile.nits.map((nit) => (
+                                        <div key={nit.id} className="rounded-md border p-3">
+                                            <div className="flex items-center gap-2">
+                                                <CreditCard className="h-4 w-4 text-muted-foreground" />
+                                                <span className="font-medium">{nit.nit}</span>
+                                                {nit.is_default && <Badge variant="outline" className="text-xs">Default</Badge>}
+                                            </div>
+                                            <p className="text-sm text-muted-foreground mt-1 ml-6">{nit.nit_name}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">No hay NITs guardados</p>
+                            )}
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

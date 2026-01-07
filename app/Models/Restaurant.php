@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Contracts\ActivityLoggable;
 use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Restaurant extends Model
+class Restaurant extends Model implements ActivityLoggable
 {
     use HasFactory, LogsActivity, SoftDeletes;
 
@@ -189,5 +190,21 @@ class Restaurant extends Model
             'lat' => (float) $this->latitude,
             'lng' => (float) $this->longitude,
         ];
+    }
+
+    /**
+     * Campo usado para identificar el modelo en los logs de actividad
+     */
+    public function getActivityLabelField(): string
+    {
+        return 'name';
+    }
+
+    /**
+     * Nombre del modelo para los logs de actividad
+     */
+    public static function getActivityModelName(): string
+    {
+        return 'Restaurante';
     }
 }

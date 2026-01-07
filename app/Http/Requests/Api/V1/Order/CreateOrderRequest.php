@@ -68,11 +68,6 @@ class CreateOrderRequest extends FormRequest
                 'string',
                 'max:500',
             ],
-            'points_to_redeem' => [
-                'nullable',
-                'integer',
-                'min:0',
-            ],
         ];
     }
 
@@ -96,8 +91,6 @@ class CreateOrderRequest extends FormRequest
             'nit_id.exists' => 'El NIT seleccionado no existe.',
             'notes.string' => 'Las notas deben ser texto.',
             'notes.max' => 'Las notas no pueden exceder 500 caracteres.',
-            'points_to_redeem.integer' => 'Los puntos a redimir deben ser un número entero.',
-            'points_to_redeem.min' => 'Los puntos a redimir deben ser al menos 0.',
         ];
     }
 
@@ -116,7 +109,6 @@ class CreateOrderRequest extends FormRequest
             'payment_method' => 'método de pago',
             'nit_id' => 'NIT',
             'notes' => 'notas',
-            'points_to_redeem' => 'puntos a redimir',
         ];
     }
 }

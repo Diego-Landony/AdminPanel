@@ -52,8 +52,8 @@ class AuthController extends Controller
      *             @OA\Property(property="first_name", type="string", example="Juan", description="Nombre del cliente"),
      *             @OA\Property(property="last_name", type="string", example="Pérez", description="Apellido del cliente"),
      *             @OA\Property(property="email", type="string", format="email", example="juan@example.com", description="Correo electrónico válido"),
-     *             @OA\Property(property="password", type="string", format="password", example="Pass123", description="Mínimo 6 caracteres, 1 letra, 1 número"),
-     *             @OA\Property(property="password_confirmation", type="string", format="password", example="Pass123", description="Debe coincidir con password"),
+     *             @OA\Property(property="password", type="string", format="password", example="Pass123!", description="Mínimo 8 caracteres, 1 letra, 1 número, 1 símbolo"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password", example="Pass123!", description="Debe coincidir con password"),
      *             @OA\Property(property="phone", type="string", example="+50212345678", description="Número de teléfono"),
      *             @OA\Property(property="birth_date", type="string", format="date", example="1990-05-15", description="Fecha de nacimiento"),
      *             @OA\Property(property="gender", type="string", enum={"male","female","other"}, example="male", description="Género"),
@@ -554,7 +554,7 @@ class AuthController extends Controller
      *             required={"email","password","password_confirmation","token"},
      *
      *             @OA\Property(property="email", type="string", format="email", example="juan@example.com"),
-     *             @OA\Property(property="password", type="string", format="password", example="NuevaPass123!", description="Mínimo 6 caracteres"),
+     *             @OA\Property(property="password", type="string", format="password", example="NuevaPass123!", description="Mínimo 8 caracteres, 1 letra, 1 número, 1 símbolo"),
      *             @OA\Property(property="password_confirmation", type="string", format="password", example="NuevaPass123!"),
      *             @OA\Property(property="token", type="string", example="abc123resettoken456", description="Token recibido en el email")
      *         )

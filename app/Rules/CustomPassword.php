@@ -6,8 +6,12 @@ use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
 /**
- * Regla de validación personalizada para contraseñas
- * Solo requiere un mínimo de 6 caracteres, sin restricciones adicionales
+ * Regla de validación personalizada para contraseñas de clientes
+ * Requisitos:
+ * - Mínimo 8 caracteres
+ * - Al menos 1 letra
+ * - Al menos 1 número
+ * - Al menos 1 símbolo especial
  */
 class CustomPassword implements ValidationRule
 {
@@ -18,8 +22,28 @@ class CustomPassword implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (strlen($value) < 6) {
-            $fail('La contraseña debe tener al menos 6 caracteres.');
+        if (strlen($value) < 8) {
+            $fail('La contraseña debe tener al menos 8 caracteres.');
+
+            return;
+        }
+
+        if (! preg_match('/[a-zA-Z]/', $value)) {
+            $fail('La contraseña debe contener al menos una letra.');
+
+            return;
+        }
+
+        if (! preg_match('/[0-9]/', $value)) {
+            $fail('La contraseña debe contener al menos un número.');
+
+            return;
+        }
+
+        if (! preg_match('/[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?~`]/', $value)) {
+            $fail('La contraseña debe contener al menos un símbolo especial (!@#$%^&*...).');
+
+            return;
         }
     }
 }

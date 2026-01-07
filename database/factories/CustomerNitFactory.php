@@ -21,7 +21,7 @@ class CustomerNitFactory extends Factory
             'customer_id' => Customer::factory(),
             'nit' => fake()->numerify('########-#'),
             'nit_type' => fake()->randomElement(['personal', 'company', 'other']),
-            'business_name' => fake()->optional(0.3)->company(),
+            'nit_name' => fake()->optional(0.3)->name(),
             'is_default' => false,
         ];
     }
@@ -33,7 +33,7 @@ class CustomerNitFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'nit_type' => 'personal',
-            'business_name' => null,
+            'nit_name' => fake()->name(),
         ]);
     }
 
@@ -44,7 +44,7 @@ class CustomerNitFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'nit_type' => 'company',
-            'business_name' => fake()->company(),
+            'nit_name' => fake()->company(),
         ]);
     }
 
@@ -55,7 +55,7 @@ class CustomerNitFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'nit_type' => 'other',
-            'business_name' => fake()->optional(0.5)->company(),
+            'nit_name' => fake()->optional(0.5)->name(),
         ]);
     }
 

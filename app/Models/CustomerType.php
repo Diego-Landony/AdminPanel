@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Contracts\ActivityLoggable;
 use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class CustomerType extends Model
+class CustomerType extends Model implements ActivityLoggable
 {
     use HasFactory, LogsActivity;
 
@@ -83,5 +84,21 @@ class CustomerType extends Model
             'multiplier' => (float) $nextTier->multiplier,
             'color' => $nextTier->color,
         ];
+    }
+
+    /**
+     * Campo usado para identificar el modelo en los logs de actividad
+     */
+    public function getActivityLabelField(): string
+    {
+        return 'name';
+    }
+
+    /**
+     * Nombre del modelo para los logs de actividad
+     */
+    public static function getActivityModelName(): string
+    {
+        return 'Tipo de Cliente';
     }
 }

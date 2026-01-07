@@ -196,8 +196,8 @@ namespace App\Http\Controllers;
  *
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="nit", type="string", example="12345678-9", description="Número de NIT"),
- *     @OA\Property(property="business_name", type="string", example="Juan Pérez", description="Nombre o razón social"),
- *     @OA\Property(property="nit_type", type="string", enum={"personal","business"}, example="personal", description="Tipo de NIT"),
+ *     @OA\Property(property="nit_name", type="string", example="Juan Pérez", description="Nombre asociado al NIT"),
+ *     @OA\Property(property="nit_type", type="string", enum={"personal","company","other"}, example="personal", description="Tipo de NIT"),
  *     @OA\Property(property="is_default", type="boolean", example=true, description="Si es el NIT predeterminado"),
  *     @OA\Property(property="created_at", type="string", format="date-time", example="2024-01-10T08:00:00Z"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", example="2024-01-20T15:45:00Z")

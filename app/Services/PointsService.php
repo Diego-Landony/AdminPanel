@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\Customer;
+use App\Models\CustomerPointsTransaction;
 use App\Models\CustomerType;
 use App\Models\Order;
+use App\Models\PointsSetting;
 
 /**
  * Servicio de Gestión de Puntos
@@ -12,15 +14,14 @@ use App\Models\Order;
  * Maneja todas las operaciones relacionadas con el sistema de puntos:
  * - Cálculo de puntos a ganar
  * - Acreditación de puntos al completar órdenes
- * - Canje de puntos por descuentos
  * - Actualización automática de tipo de cliente
  */
 class PointsService
 {
     /**
      * Calcula los puntos a ganar basado en el total de la orden
-     * Regla: 1 punto por cada Q10 gastados
-     * Redondeo: Si la parte decimal es >= 0.7, se redondea hacia arriba
+     * Regla: 1 punto por cada X quetzales gastados (configurable)
+     * Redondeo: Si la parte decimal es >= umbral configurado, se redondea hacia arriba
      *
      * @param  float  $total  Total de la orden en quetzales
      * @param  Customer|null  $customer  Cliente para aplicar multiplicador de tipo
@@ -28,13 +29,16 @@ class PointsService
      */
     public function calculatePointsToEarn(float $total, ?Customer $customer = null): int
     {
-        // Calcular puntos base con redondeo 0.7
-        $basePoints = $this->roundWithThreshold($total / 10);
+        $settings = PointsSetting::get();
+
+        // Calcular puntos base con redondeo configurable
+        $basePoints = $this->roundWithThreshold($total / $settings->quetzales_per_point);
 
         // Aplicar multiplicador de tipo de cliente si existe
         $multiplier = $this->getMultiplier($customer);
         if ($multiplier > 1.0) {
             $finalPoints = $basePoints * $multiplier;
+
             return $this->roundWithThreshold($finalPoints);
         }
 
@@ -42,16 +46,21 @@ class PointsService
     }
 
     /**
-     * Redondea un número con umbral de 0.7
-     * Si la parte decimal es >= 0.7, redondea hacia arriba
+     * Redondea un número con umbral configurable
+     * Si la parte decimal es >= umbral, redondea hacia arriba
+     * NOTA: Solo redondea si ya tienes al menos 1 punto base
+     * Ejemplo: Si quetzales_per_point=10, Q7 da 0 puntos, Q17 da 2 puntos (con umbral 0.7)
      */
     private function roundWithThreshold(float $value): int
     {
+        $settings = PointsSetting::get();
         $intPart = (int) floor($value);
         // Usar round para evitar problemas de precisión de punto flotante
         $decimalPart = round($value - $intPart, 2);
 
-        if ($decimalPart >= 0.7) {
+        // Solo aplicar redondeo si ya tienes al menos 1 punto base
+        // Esto evita que gastos menores al minimo den puntos por redondeo
+        if ($intPart >= 1 && $decimalPart >= $settings->rounding_threshold) {
             return $intPart + 1;
         }
 
@@ -63,11 +72,12 @@ class PointsService
      */
     private function getMultiplier(?Customer $customer): float
     {
-        if (!$customer || !$customer->customerType) {
+        if (! $customer || ! $customer->customerType) {
             return 1.0;
         }
 
         $multiplier = $customer->customerType->multiplier;
+
         return $multiplier > 0 ? $multiplier : 1.0;
     }
 
@@ -82,43 +92,25 @@ class PointsService
         $pointsToCredit = $this->calculatePointsToEarn($order->total, $customer);
 
         if ($pointsToCredit > 0) {
+            $settings = PointsSetting::get();
+
+            CustomerPointsTransaction::create([
+                'customer_id' => $customer->id,
+                'points' => $pointsToCredit,
+                'type' => 'earned',
+                'reference_type' => Order::class,
+                'reference_id' => $order->id,
+                'description' => "Puntos ganados en orden #{$order->order_number}",
+                'expires_at' => now()->addMonths($settings->expiration_months),
+            ]);
+
             $customer->points += $pointsToCredit;
             $customer->points_updated_at = now();
+            $customer->points_last_activity_at = now();
             $customer->save();
 
             $this->checkAndApplyUpgrade($customer);
         }
-    }
-
-    /**
-     * Canjea puntos del cliente por un descuento
-     * Regla: 1 punto = Q0.10 de descuento
-     *
-     * @param  Customer  $customer  Cliente que canjeará los puntos
-     * @param  int  $points  Cantidad de puntos a canjear
-     * @return float Monto del descuento en quetzales
-     *
-     * @throws \InvalidArgumentException Si el cliente no tiene suficientes puntos
-     */
-    public function redeemPoints(Customer $customer, int $points): float
-    {
-        if ($points <= 0) {
-            throw new \InvalidArgumentException('La cantidad de puntos debe ser mayor a cero');
-        }
-
-        if ($customer->points < $points) {
-            throw new \InvalidArgumentException('El cliente no tiene suficientes puntos');
-        }
-
-        $discount = $points * 0.10;
-
-        $customer->points -= $points;
-        $customer->points_updated_at = now();
-        $customer->save();
-
-        $this->checkAndApplyUpgrade($customer);
-
-        return $discount;
     }
 
     /**

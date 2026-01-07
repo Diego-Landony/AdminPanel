@@ -16,12 +16,7 @@ class PointsBalanceResource extends JsonResource
     {
         return [
             'points_balance' => $this->points ?? 0,
-            'points_updated_at' => $this->points_updated_at,
-            'points_value_in_currency' => ($this->points ?? 0) * 0.10,
-            'conversion_rate' => [
-                'points_per_quetzal_spent' => 10,
-                'points_value' => 0.10,
-            ],
+            'points_updated_at' => $this->points_updated_at?->toIso8601String(),
         ];
     }
 }

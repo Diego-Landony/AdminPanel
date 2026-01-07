@@ -296,7 +296,7 @@ class ProfileController extends Controller
      *             required={"password","password_confirmation"},
      *
      *             @OA\Property(property="current_password", type="string", format="password", example="OldPass123!", description="Contraseña actual. SOLO requerido si el usuario YA tiene contraseña. NO enviar si es primera vez creando contraseña."),
-     *             @OA\Property(property="password", type="string", format="password", example="NuevaPass123!", description="Nueva contraseña (mínimo 6 caracteres, al menos 1 letra y 1 número)"),
+     *             @OA\Property(property="password", type="string", format="password", example="NuevaPass123!", description="Nueva contraseña (mínimo 8 caracteres, 1 letra, 1 número, 1 símbolo)"),
      *             @OA\Property(property="password_confirmation", type="string", format="password", example="NuevaPass123!", description="Debe coincidir con password")
      *         )
      *     ),

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Customer;
 
+use App\Rules\CustomPassword;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateCustomerRequest extends FormRequest
@@ -26,7 +27,7 @@ class UpdateCustomerRequest extends FormRequest
         return [
             'full_name' => 'required|string|max:255',
             'email' => "required|string|lowercase|email|max:255|unique:customers,email,{$customerId}",
-            'password' => 'nullable|string|min:6|confirmed',
+            'password' => ['nullable', 'string', 'confirmed', new CustomPassword],
             'subway_card' => "required|string|max:255|unique:customers,subway_card,{$customerId}",
             'birth_date' => 'required|date|before:today',
             'gender' => 'nullable|string|max:50',
@@ -51,7 +52,6 @@ class UpdateCustomerRequest extends FormRequest
             'email.required' => 'El correo electrónico es obligatorio',
             'email.email' => 'El correo electrónico debe ser válido',
             'email.unique' => 'Este correo electrónico ya está registrado por otro cliente',
-            'password.min' => 'La contraseña debe tener al menos 6 caracteres',
             'password.confirmed' => 'Las contraseñas no coinciden',
             'subway_card.required' => 'La tarjeta Subway es obligatoria',
             'subway_card.unique' => 'Esta tarjeta Subway ya está registrada por otro cliente',

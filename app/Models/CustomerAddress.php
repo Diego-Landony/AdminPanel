@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Contracts\ActivityLoggable;
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CustomerAddress extends Model
+class CustomerAddress extends Model implements ActivityLoggable
 {
     /** @use HasFactory<\Database\Factories\CustomerAddressFactory> */
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -47,6 +49,22 @@ class CustomerAddress extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    /**
+     * Get the field to use as the activity label.
+     */
+    public function getActivityLabelField(): string
+    {
+        return 'label';
+    }
+
+    /**
+     * Get the human-readable model name for activity logs.
+     */
+    public static function getActivityModelName(): string
+    {
+        return 'Dirección de cliente';
     }
 
     /**

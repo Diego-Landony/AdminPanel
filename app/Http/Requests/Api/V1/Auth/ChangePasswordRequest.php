@@ -59,7 +59,6 @@ class ChangePasswordRequest extends FormRequest
             'password.required' => 'La nueva contraseña es requerida.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
             'password.different' => 'La nueva contraseña debe ser diferente a la actual.',
-            'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
         ];
     }
 

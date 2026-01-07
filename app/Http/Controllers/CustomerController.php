@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\CustomerType;
+use App\Rules\CustomPassword;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -207,7 +208,7 @@ class CustomerController extends Controller
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
                 'email' => 'required|email|max:255|unique:customers',
-                'password' => 'required|string|min:6|confirmed',
+                'password' => ['required', 'string', 'confirmed', new CustomPassword],
                 'subway_card' => 'nullable|string|max:255|unique:customers',
                 'birth_date' => 'required|date|before:today',
                 'gender' => 'nullable|string|max:50',
@@ -262,6 +263,51 @@ class CustomerController extends Controller
     /**
      * Muestra el formulario para editar un cliente
      */
+    public function show(Customer $customer): Response
+    {
+        $customer->load(['addresses', 'nits', 'customerType']);
+
+        $customerData = [
+            'id' => $customer->id,
+            'first_name' => $customer->first_name,
+            'last_name' => $customer->last_name,
+            'full_name' => $customer->full_name,
+            'email' => $customer->email,
+            'subway_card' => $customer->subway_card,
+            'birth_date' => $customer->birth_date ? $customer->birth_date->format('Y-m-d') : null,
+            'gender' => $customer->gender,
+            'customer_type_id' => $customer->customer_type_id,
+            'customer_type' => $customer->customerType,
+            'phone' => $customer->phone,
+            'addresses' => $customer->addresses->map(fn ($address) => [
+                'id' => $address->id,
+                'label' => $address->label,
+                'address_line' => $address->address_line,
+                'latitude' => $address->latitude,
+                'longitude' => $address->longitude,
+                'delivery_notes' => $address->delivery_notes,
+                'is_default' => $address->is_default,
+            ]),
+            'nits' => $customer->nits->map(fn ($nit) => [
+                'id' => $nit->id,
+                'nit' => $nit->nit,
+                'nit_type' => $nit->nit_type,
+                'nit_name' => $nit->nit_name,
+                'is_default' => $nit->is_default,
+            ]),
+            'points' => $customer->points ?? 0,
+            'email_verified_at' => $customer->email_verified_at?->toISOString(),
+            'created_at' => $customer->created_at?->toISOString(),
+            'updated_at' => $customer->updated_at?->toISOString(),
+            'last_activity_at' => $customer->last_activity_at?->toISOString(),
+            'last_purchase' => $customer->last_purchase_at?->toISOString(),
+        ];
+
+        return Inertia::render('customers/show', [
+            'customer' => $customerData,
+        ]);
+    }
+
     public function edit(Customer $customer): Response
     {
         $customer->load('addresses', 'nits');
@@ -297,7 +343,7 @@ class CustomerController extends Controller
                     'id' => $nit->id,
                     'nit' => $nit->nit,
                     'nit_type' => $nit->nit_type,
-                    'business_name' => $nit->business_name,
+                    'nit_name' => $nit->nit_name,
                     'is_default' => $nit->is_default,
                 ];
             }),
@@ -336,7 +382,7 @@ class CustomerController extends Controller
 
             // Solo validar contraseña si se proporciona
             if ($request->filled('password')) {
-                $rules['password'] = 'string|min:6|confirmed';
+                $rules['password'] = ['string', 'confirmed', new CustomPassword];
             }
 
             $request->validate($rules);

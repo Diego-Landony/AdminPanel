@@ -17,7 +17,7 @@ class CustomerNitResource extends JsonResource
         return [
             'id' => $this->id,
             'nit' => $this->nit,
-            'business_name' => $this->business_name,
+            'nit_name' => $this->nit_name,
             'nit_type' => $this->nit_type,
             'is_default' => (bool) $this->is_default,
             'created_at' => $this->created_at,

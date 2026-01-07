@@ -51,7 +51,6 @@ class RegisterRequest extends FormRequest
             'email.email' => 'El correo electrónico debe ser válido.',
             'email.unique' => 'Este correo ya está registrado.',
             'password.required' => 'La contraseña es requerida.',
-            'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
             'phone.required' => 'El teléfono es requerido.',
             'phone.size' => 'El teléfono debe tener exactamente 8 dígitos.',

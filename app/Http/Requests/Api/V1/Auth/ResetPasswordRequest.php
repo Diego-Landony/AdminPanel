@@ -42,7 +42,6 @@ class ResetPasswordRequest extends FormRequest
             'email.email' => 'El correo electrónico debe ser válido.',
             'password.required' => 'La contraseña es requerida.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
-            'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
         ];
     }
 }

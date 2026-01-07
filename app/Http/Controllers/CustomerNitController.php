@@ -17,7 +17,7 @@ class CustomerNitController extends Controller
         $request->validate([
             'nit' => 'required|string|max:20',
             'nit_type' => 'required|in:personal,company,other',
-            'business_name' => 'nullable|string|max:255',
+            'nit_name' => 'nullable|string|max:255',
             'is_default' => 'nullable|boolean',
         ]);
 
@@ -30,7 +30,7 @@ class CustomerNitController extends Controller
         $nit = $customer->nits()->create([
             'nit' => $request->nit,
             'nit_type' => $request->nit_type,
-            'business_name' => $request->business_name,
+            'nit_name' => $request->nit_name,
             'is_default' => false,
         ]);
 
@@ -53,7 +53,7 @@ class CustomerNitController extends Controller
         $request->validate([
             'nit' => 'required|string|max:20',
             'nit_type' => 'required|in:personal,company,other',
-            'business_name' => 'nullable|string|max:255',
+            'nit_name' => 'nullable|string|max:255',
             'is_default' => 'nullable|boolean',
         ]);
 
@@ -70,7 +70,7 @@ class CustomerNitController extends Controller
         $nit->update([
             'nit' => $request->nit,
             'nit_type' => $request->nit_type,
-            'business_name' => $request->business_name,
+            'nit_name' => $request->nit_name,
         ]);
 
         if ($request->boolean('is_default')) {

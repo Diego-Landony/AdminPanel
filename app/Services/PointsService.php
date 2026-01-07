@@ -49,12 +49,19 @@ class PointsService
      * Redondea un número con umbral configurable
      * Si la parte decimal es >= umbral, redondea hacia arriba
      * NOTA: Solo redondea si ya tienes al menos 1 punto base
+     * NOTA: Si umbral es 0, nunca redondea (siempre floor)
      * Ejemplo: Si quetzales_per_point=10, Q7 da 0 puntos, Q17 da 2 puntos (con umbral 0.7)
      */
     private function roundWithThreshold(float $value): int
     {
         $settings = PointsSetting::get();
         $intPart = (int) floor($value);
+
+        // Si umbral es 0, nunca redondear
+        if ($settings->rounding_threshold <= 0) {
+            return $intPart;
+        }
+
         // Usar round para evitar problemas de precisión de punto flotante
         $decimalPart = round($value - $intPart, 2);
 

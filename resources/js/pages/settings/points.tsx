@@ -93,25 +93,21 @@ export default function PointsSettingsPage({ settings }: PageProps) {
 
                                 <FormField
                                     label="Umbral de redondeo"
-                                    description={`Ej: Factura de Q${data.quetzales_per_point * 2 + data.rounding_threshold * data.quetzales_per_point} ÷ Q${data.quetzales_per_point} = ${(2 + data.rounding_threshold).toFixed(2).replace(/\.?0+$/, '')} → da 3 puntos.`}
+                                    description={`Ej: Q2${String(Math.round(data.rounding_threshold * 100)).charAt(0)} = 2.${String(Math.round(data.rounding_threshold * 100)).charAt(0)} → da ${data.rounding_threshold > 0 ? 3 : 2} puntos.`}
                                     error={errors.rounding_threshold}
                                 >
                                     <div className="flex items-center gap-2">
                                         <span className="text-muted-foreground">0.</span>
                                         <Input
-                                            type="number"
-                                            min={0}
-                                            max={99}
-                                            step={1}
-                                            value={data.rounding_threshold ? Math.round(data.rounding_threshold * 100) : ''}
+                                            type="text"
+                                            inputMode="numeric"
+                                            pattern="[0-9]*"
+                                            value={Math.round(data.rounding_threshold * 100)}
                                             onChange={(e) => {
-                                                const parsed = parseInt(e.target.value);
-                                                if (e.target.value === '' || isNaN(parsed)) {
-                                                    setData('rounding_threshold', 0);
-                                                } else {
-                                                    const val = Math.min(99, Math.max(0, parsed));
-                                                    setData('rounding_threshold', val / 100);
-                                                }
+                                                const value = e.target.value.replace(/\D/g, '');
+                                                const parsed = parseInt(value) || 0;
+                                                const val = Math.min(99, parsed);
+                                                setData('rounding_threshold', val / 100);
                                             }}
                                             className="w-20"
                                         />

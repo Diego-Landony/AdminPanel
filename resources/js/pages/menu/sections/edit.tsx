@@ -179,7 +179,7 @@ export default function SectionEdit({ section }: EditPageProps) {
             id: generateUniqueId(),
             name: '',
             is_extra: false,
-            price_modifier: '0',
+            price_modifier: '',
         };
         setLocalOptions([...localOptions, newOption]);
     };

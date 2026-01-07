@@ -327,6 +327,7 @@ class MenuController extends Controller
             'title' => $banner->title,
             'description' => $banner->description,
             'image_url' => $banner->getImageUrl(),
+            'orientation' => $banner->orientation,
             'display_seconds' => $banner->display_seconds,
             'link' => $banner->getLinkData(),
         ];

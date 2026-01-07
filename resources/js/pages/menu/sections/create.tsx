@@ -104,8 +104,8 @@ export default function SectionCreate() {
         description: '',
         is_required: false,
         allow_multiple: false,
-        min_selections: '1',
-        max_selections: '1',
+        min_selections: '',
+        max_selections: '',
         is_active: true,
         options: [] as SectionOption[],
     });
@@ -127,7 +127,7 @@ export default function SectionCreate() {
             id: generateUniqueId(),
             name: '',
             is_extra: false,
-            price_modifier: '0',
+            price_modifier: '',
         };
         const updatedOptions = [...localOptions, newOption];
         setLocalOptions(updatedOptions);

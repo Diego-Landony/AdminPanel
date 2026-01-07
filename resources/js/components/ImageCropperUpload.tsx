@@ -1,7 +1,7 @@
 import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
-import { ImageIcon, Crop as CropIcon, Trash2, Check, X } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { ImageIcon, Crop as CropIcon, Trash2, Check, X, Eye } from 'lucide-react';
+import { useCallback, useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { FormError } from '@/components/ui/form-error';
 import { LabelWithRequired } from '@/components/LabelWithRequired';
@@ -96,18 +96,13 @@ export function ImageCropperUpload({
     aspectLabel,
 }: ImageCropperUploadProps) {
     const [preview, setPreview] = useState<string | null>(currentImage || null);
-    const [originalImage, setOriginalImage] = useState<string | null>(null);
+    const [tempImage, setTempImage] = useState<string | null>(null);
     const [showCropper, setShowCropper] = useState(false);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
     const [crop, setCrop] = useState<Crop>();
     const [isProcessing, setIsProcessing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const imgRef = useRef<HTMLImageElement>(null);
-
-    useEffect(() => {
-        if (currentImage && !preview) {
-            setPreview(currentImage);
-        }
-    }, [currentImage, preview]);
 
     const onImageLoad = useCallback(
         (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -138,7 +133,7 @@ export function ImageCropperUpload({
         const reader = new FileReader();
         reader.onloadend = () => {
             const imageUrl = reader.result as string;
-            setOriginalImage(imageUrl);
+            setTempImage(imageUrl);
             setCrop(undefined);
             setShowCropper(true);
         };
@@ -163,7 +158,7 @@ export function ImageCropperUpload({
             setPreview(previewUrl);
             onImageChange(croppedFile);
             setShowCropper(false);
-            setOriginalImage(null);
+            setTempImage(null);
         } catch (e) {
             console.error('Error cropping image:', e);
             showNotification.error('Error al recortar la imagen');
@@ -174,7 +169,7 @@ export function ImageCropperUpload({
 
     const handleCropCancel = () => {
         setShowCropper(false);
-        setOriginalImage(null);
+        setTempImage(null);
     };
 
     const handleRemoveImage = () => {
@@ -192,6 +187,8 @@ export function ImageCropperUpload({
     const getAspectRatioLabel = () => {
         if (aspectLabel) return aspectLabel;
         if (aspectRatio === 16 / 9) return '16:9';
+        if (aspectRatio === 3 / 4) return '3:4';
+        if (aspectRatio === 4 / 3) return '4:3';
         if (aspectRatio === 9 / 16) return '9:16';
         if (aspectRatio === 1.91) return '1.91:1';
         return `${aspectRatio.toFixed(2)}:1`;
@@ -218,9 +215,8 @@ export function ImageCropperUpload({
                                 className={`${getPreviewHeight()} w-full rounded-lg border border-border object-cover`}
                             />
                             <div className="absolute inset-0 flex items-center justify-center gap-2 rounded-lg bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                                <Button type="button" variant="secondary" size="sm" onClick={handleClickUpload}>
-                                    <CropIcon className="mr-2 h-4 w-4" />
-                                    Cambiar
+                                <Button type="button" variant="secondary" size="sm" onClick={() => setShowPreviewModal(true)}>
+                                    <Eye className="h-4 w-4" />
                                 </Button>
                                 <Button type="button" variant="destructive" size="sm" onClick={handleRemoveImage}>
                                     <Trash2 className="h-4 w-4" />
@@ -247,6 +243,7 @@ export function ImageCropperUpload({
                 <FormError message={error} />
             </div>
 
+            {/* Modal de recorte */}
             <Dialog open={showCropper} onOpenChange={(open) => !open && handleCropCancel()}>
                 <DialogContent className="max-w-3xl">
                     <DialogHeader>
@@ -257,7 +254,7 @@ export function ImageCropperUpload({
                     </DialogHeader>
 
                     <div className="flex items-center justify-center rounded-lg bg-muted p-4">
-                        {originalImage && (
+                        {tempImage && (
                             <ReactCrop
                                 crop={crop}
                                 onChange={(_, percentCrop) => setCrop(percentCrop)}
@@ -266,7 +263,7 @@ export function ImageCropperUpload({
                             >
                                 <img
                                     ref={imgRef}
-                                    src={originalImage}
+                                    src={tempImage}
                                     alt="Crop"
                                     onLoad={onImageLoad}
                                     style={{ maxHeight: '500px', maxWidth: '100%' }}
@@ -298,6 +295,28 @@ export function ImageCropperUpload({
                             )}
                         </Button>
                     </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Modal de vista previa */}
+            <Dialog open={showPreviewModal} onOpenChange={setShowPreviewModal}>
+                <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Eye className="h-5 w-5" />
+                            Vista previa
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="flex items-center justify-center">
+                        {preview && (
+                            <img
+                                src={preview}
+                                alt="Preview"
+                                className="max-h-[70vh] w-auto rounded-lg"
+                            />
+                        )}
+                    </div>
                 </DialogContent>
             </Dialog>
         </div>

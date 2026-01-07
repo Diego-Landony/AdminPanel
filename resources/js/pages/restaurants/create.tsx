@@ -51,8 +51,8 @@ export default function RestaurantCreate() {
             saturday: { is_open: true, open: '08:00', close: '22:00' },
             sunday: { is_open: true, open: '08:00', close: '22:00' },
         },
-        minimum_order_amount: '0.00',
-        estimated_delivery_time: '30',
+        minimum_order_amount: '',
+        estimated_delivery_time: '',
     });
 
     const handleSubmit = (e: React.FormEvent) => {

@@ -138,6 +138,10 @@ Route::prefix('v1')->group(function () {
             Route::post('/{address}/set-default', [CustomerAddressController::class, 'setDefault'])->name('set-default');
         });
 
+        // Restaurant for delivery (requires address_id)
+        Route::get('/restaurants/for-delivery', [App\Http\Controllers\Api\V1\Menu\RestaurantController::class, 'forDelivery'])
+            ->name('api.v1.restaurants.for-delivery');
+
         // Customer NITs (Tax IDs)
         Route::prefix('nits')->name('api.v1.nits.')->group(function () {
             Route::get('/', [CustomerNitController::class, 'index'])->name('index');
@@ -302,6 +306,8 @@ Route::prefix('v1')->group(function () {
             ->name('index');
         Route::get('/nearby', [App\Http\Controllers\Api\V1\Menu\RestaurantController::class, 'nearby'])
             ->name('nearby');
+        Route::get('/for-pickup', [App\Http\Controllers\Api\V1\Menu\RestaurantController::class, 'forPickup'])
+            ->name('for-pickup');
         Route::get('/{restaurant}', [App\Http\Controllers\Api\V1\Menu\RestaurantController::class, 'show'])
             ->name('show');
         Route::get('/{restaurant}/reviews', [App\Http\Controllers\Api\V1\Menu\RestaurantController::class, 'reviews'])

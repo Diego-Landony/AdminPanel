@@ -15,6 +15,7 @@ import { PromotionItemEditor } from '@/components/promotions/PromotionItemEditor
 import { EditPageSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -511,7 +512,7 @@ export default function EditPercentagePromotion({ promotion, products, categorie
                         <FormSection
                             icon={Award}
                             title="Insignia"
-                            description="Selecciona una insignia para mostrar en los productos de esta promocion"
+                            description="Selecciona una insignia para mostrar en los productos de esta promoción"
                         >
                             <div className="space-y-4">
                                 <BadgeTypeSelector
@@ -519,19 +520,18 @@ export default function EditPercentagePromotion({ promotion, products, categorie
                                     onChange={(value) => setFormData({ ...formData, badge_type_id: value })}
                                     badgeTypes={badgeTypes}
                                     error={errors.badge_type_id}
+                                    showLabels={false}
                                 />
 
-                                <div className="flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
                                         id="show_badge_on_menu"
                                         checked={formData.show_badge_on_menu}
-                                        onChange={(e) => setFormData({ ...formData, show_badge_on_menu: e.target.checked })}
-                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                        onCheckedChange={(checked) => setFormData({ ...formData, show_badge_on_menu: checked as boolean })}
                                     />
-                                    <label htmlFor="show_badge_on_menu" className="text-sm">
-                                        Mostrar insignia en el menu
-                                    </label>
+                                    <Label htmlFor="show_badge_on_menu" className="cursor-pointer text-sm font-medium leading-none">
+                                        Mostrar insignia en el menú
+                                    </Label>
                                 </div>
                             </div>
                         </FormSection>

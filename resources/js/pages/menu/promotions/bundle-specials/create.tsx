@@ -12,6 +12,7 @@ import { ImageUpload } from '@/components/ImageUpload';
 import { CreateProductsSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -148,7 +149,7 @@ export default function BundleSpecialCreate({ products, badgeTypes }: CreateBund
             is_choice_group: false,
             product_id: null,
             variant_id: null,
-            quantity: 1,
+            quantity: '',
             sort_order: localItems.length + 1,
             options: [],
         };
@@ -339,31 +340,32 @@ export default function BundleSpecialCreate({ products, badgeTypes }: CreateBund
                 {/* Insignia/Badge */}
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="space-y-4">
-                            <h3 className="flex items-center gap-2 text-lg font-medium">
-                                <Award className="h-5 w-5" />
-                                Insignia
-                            </h3>
-                            <BadgeTypeSelector
-                                value={data.badge_type_id}
-                                onChange={(value) => setData('badge_type_id', value)}
-                                badgeTypes={badgeTypes}
-                                error={errors.badge_type_id}
-                            />
-
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    id="show_badge_on_menu"
-                                    checked={data.show_badge_on_menu}
-                                    onChange={(e) => setData('show_badge_on_menu', e.target.checked)}
-                                    className="h-4 w-4 rounded border-gray-300"
+                        <FormSection
+                            icon={Award}
+                            title="Insignia"
+                            description="Selecciona una insignia para mostrar en los productos de esta promoción"
+                        >
+                            <div className="space-y-4">
+                                <BadgeTypeSelector
+                                    value={data.badge_type_id}
+                                    onChange={(value) => setData('badge_type_id', value)}
+                                    badgeTypes={badgeTypes}
+                                    error={errors.badge_type_id}
+                                    showLabels={false}
                                 />
-                                <label htmlFor="show_badge_on_menu" className="text-sm">
-                                    Mostrar insignia en el menu
-                                </label>
+
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="show_badge_on_menu"
+                                        checked={data.show_badge_on_menu}
+                                        onCheckedChange={(checked) => setData('show_badge_on_menu', checked as boolean)}
+                                    />
+                                    <Label htmlFor="show_badge_on_menu" className="cursor-pointer text-sm font-medium leading-none">
+                                        Mostrar insignia en el menú
+                                    </Label>
+                                </div>
                             </div>
-                        </div>
+                        </FormSection>
                     </CardContent>
                 </Card>
 

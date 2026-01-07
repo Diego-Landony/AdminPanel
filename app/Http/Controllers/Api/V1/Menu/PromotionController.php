@@ -92,12 +92,12 @@ class PromotionController extends Controller
      *     path="/api/v1/menu/promotions/daily",
      *     tags={"Menu"},
      *     summary="Get daily special (Sub del Día)",
-     *     description="Returns active daily special promotion (Sub del Día). Without parameters, returns ALL items for the entire week. Use ?today=1 to filter and get only items valid for today's weekday. Note: Multiple subs can be valid for the same day (e.g., 'Italian B.M.T.' + 'Pechuga de Pollo' on Tuesday). Each item has a 'weekdays' array indicating which days it's available (1=Monday to 7=Sunday, ISO-8601 format).",
+     *     description="Returns active daily special promotion (Sub del Día). Without parameters, returns ALL items for the entire week. Use ?today=1 to filter items by: weekday, date range (valid_from/valid_until), and time range (time_from/time_until). Multiple subs can be valid for the same day. Each item has a 'weekdays' array (1=Monday to 7=Sunday, ISO-8601).",
      *
      *     @OA\Parameter(
      *         name="today",
      *         in="query",
-     *         description="Filter by today's weekday. If set to 1, returns only items where the current weekday is in their 'weekdays' array. Multiple items may be returned if more than one sub is available for today.",
+     *         description="Filter by current moment. If set to 1, returns only items valid RIGHT NOW based on: weekday, date range, and time range. Multiple items may be returned if more than one sub is available.",
      *         required=false,
      *
      *         @OA\Schema(type="integer", enum={0, 1}, default=0)
@@ -105,7 +105,7 @@ class PromotionController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Daily special retrieved successfully. The 'items' array inside 'promotion' contains all subs valid for the requested period. When using ?today=1, 'today' object is included with current weekday info.",
+     *         description="Daily special retrieved successfully. When using ?today=1, 'now' object is included with current datetime info.",
      *
      *         @OA\JsonContent(
      *
@@ -114,25 +114,36 @@ class PromotionController extends Controller
      *                     @OA\Property(property="id", type="integer", example=3),
      *                     @OA\Property(property="name", type="string", example="Sub del Día"),
      *                     @OA\Property(property="type", type="string", example="daily_special"),
-     *                     @OA\Property(property="items", type="array", description="Array of subs valid for the period. Multiple items can appear for the same day.",
+     *                     @OA\Property(property="items", type="array", description="Array of subs valid for the period.",
+     *
      *                         @OA\Items(type="object",
+     *
      *                             @OA\Property(property="id", type="integer", example=14),
-     *                             @OA\Property(property="weekdays", type="array", description="Days when this item is available (1=Mon, 7=Sun)",
+     *                             @OA\Property(property="weekdays", type="array", description="Days when available (1=Mon, 7=Sun)",
+     *
      *                                 @OA\Items(type="integer", example=2)
      *                             ),
+     *
+     *                             @OA\Property(property="valid_from", type="string", format="date", nullable=true, example="2024-01-01"),
+     *                             @OA\Property(property="valid_until", type="string", format="date", nullable=true, example="2024-12-31"),
+     *                             @OA\Property(property="time_from", type="string", nullable=true, example="11:00"),
+     *                             @OA\Property(property="time_until", type="string", nullable=true, example="15:00"),
      *                             @OA\Property(property="special_price_capital", type="string", example="22.00"),
      *                             @OA\Property(property="special_price_interior", type="string", example="24.00"),
      *                             @OA\Property(property="product", type="object",
      *                                 @OA\Property(property="id", type="integer", example=1),
      *                                 @OA\Property(property="name", type="string", example="Italian B.M.T."),
-     *                                 @OA\Property(property="image_url", type="string", nullable=true, example="https://example.com/storage/products/italian-bmt.jpg")
+     *                                 @OA\Property(property="image_url", type="string", nullable=true)
      *                             )
      *                         )
      *                     )
      *                 ),
-     *                 @OA\Property(property="today", type="object", nullable=true, description="Only present when ?today=1 is used",
-     *                     @OA\Property(property="weekday", type="integer", example=2, description="Current weekday (1=Monday to 7=Sunday)"),
-     *                     @OA\Property(property="weekday_name", type="string", example="Martes", description="Weekday name in Spanish")
+     *                 @OA\Property(property="now", type="object", nullable=true, description="Only present when ?today=1",
+     *                     @OA\Property(property="weekday", type="integer", example=2, description="Current weekday (1-7)"),
+     *                     @OA\Property(property="weekday_name", type="string", example="Martes"),
+     *                     @OA\Property(property="date", type="string", format="date", example="2024-01-15"),
+     *                     @OA\Property(property="time", type="string", example="12:30"),
+     *                     @OA\Property(property="datetime", type="string", format="date-time", example="2024-01-15T12:30:00-06:00")
      *                 )
      *             )
      *         )
@@ -152,7 +163,8 @@ class PromotionController extends Controller
     public function daily(Request $request): JsonResponse
     {
         $filterToday = $request->boolean('today');
-        $currentWeekday = (int) now()->dayOfWeekIso; // 1=Lunes, 7=Domingo
+        $now = now();
+        $currentWeekday = (int) $now->dayOfWeekIso; // 1=Lunes, 7=Domingo
 
         $promotion = Promotion::query()
             ->active()
@@ -170,15 +182,15 @@ class PromotionController extends Controller
             ], 404);
         }
 
-        // Si se solicita solo el de hoy, filtrar los items
+        // Si se solicita solo el de hoy, filtrar los items por:
+        // - weekdays (días de la semana)
+        // - valid_from/valid_until (rango de fechas)
+        // - time_from/time_until (rango de horas)
         if ($filterToday && $promotion->items) {
-            $todayItems = $promotion->items->filter(function ($item) use ($currentWeekday) {
-                // Si weekdays es null o vacío, el item es válido todos los días
-                if (empty($item->weekdays)) {
-                    return true;
-                }
-
-                return in_array($currentWeekday, $item->weekdays);
+            $todayItems = $promotion->items->filter(function ($item) use ($now) {
+                // Usar el método del modelo que valida TODO:
+                // weekdays, date_range, time_range, date_time_range, permanent
+                return $item->isValidToday($now);
             });
 
             // Reemplazar la colección de items con los filtrados
@@ -191,7 +203,7 @@ class PromotionController extends Controller
             ],
         ];
 
-        // Agregar información del día actual si se filtró
+        // Agregar información del momento actual si se filtró
         if ($filterToday) {
             $weekdayNames = [
                 1 => 'Lunes',
@@ -203,9 +215,12 @@ class PromotionController extends Controller
                 7 => 'Domingo',
             ];
 
-            $response['data']['today'] = [
+            $response['data']['now'] = [
                 'weekday' => $currentWeekday,
                 'weekday_name' => $weekdayNames[$currentWeekday],
+                'date' => $now->toDateString(),
+                'time' => $now->format('H:i'),
+                'datetime' => $now->toIso8601String(),
             ];
         }
 

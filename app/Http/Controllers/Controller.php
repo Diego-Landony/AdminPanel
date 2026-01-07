@@ -248,6 +248,7 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="title", type="string", example="Nuevo Menu de Verano"),
  *     @OA\Property(property="description", type="string", nullable=true, example="Prueba nuestros nuevos subs"),
  *     @OA\Property(property="image_url", type="string", example="https://admin.subwaycardgt.com/storage/banners/summer.jpg"),
+ *     @OA\Property(property="orientation", type="string", enum={"horizontal", "vertical"}, example="horizontal", description="Orientacion del banner. Aspect ratios: horizontal=16:9 (1280x720px), vertical=3:4 (1200x1600px)"),
  *     @OA\Property(property="display_seconds", type="integer", example=5, description="Segundos a mostrar en carrusel"),
  *     @OA\Property(property="link", type="object", nullable=true, description="Accion al tap",
  *         @OA\Property(property="type", type="string", example="product", description="product, combo, category, promotion, url"),

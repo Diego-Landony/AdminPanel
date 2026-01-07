@@ -23,6 +23,7 @@ interface BadgeTypeSelectorProps {
     error?: string;
     label?: string;
     description?: string;
+    showLabels?: boolean;
 }
 
 export function BadgeTypeSelector({
@@ -30,27 +31,28 @@ export function BadgeTypeSelector({
     onChange,
     badgeTypes,
     error,
-    label = 'Insignia de promocion',
-    description = 'Selecciona una insignia para mostrar en los productos de esta promocion',
+    label = 'Insignia de promoción',
+    description = 'Selecciona una insignia para mostrar en los productos de esta promoción',
+    showLabels = true,
 }: BadgeTypeSelectorProps) {
     const selectedBadge = badgeTypes.find((b) => b.id === value);
 
     return (
         <div className="space-y-2">
-            <Label>{label}</Label>
-            {description && (
+            {showLabels && <Label>{label}</Label>}
+            {showLabels && description && (
                 <p className="text-muted-foreground text-sm">{description}</p>
             )}
 
             <Select
-                value={value?.toString() || ''}
-                onValueChange={(val) => onChange(val ? parseInt(val, 10) : null)}
+                value={value?.toString() || 'none'}
+                onValueChange={(val) => onChange(val === 'none' ? null : parseInt(val, 10))}
             >
                 <SelectTrigger className="w-full">
                     <SelectValue placeholder="Sin insignia (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="">Sin insignia</SelectItem>
+                    <SelectItem value="none">Sin insignia</SelectItem>
                     {badgeTypes
                         .filter((b) => b.is_active)
                         .map((badge) => (

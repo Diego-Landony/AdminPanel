@@ -14,7 +14,7 @@
             "description": "Local Development Server"
         },
         {
-            "url": "http://localhost",
+            "url": "https://appmobile.subwaycardgt.com",
             "description": "Application Server"
         }
     ],
@@ -4033,13 +4033,13 @@
                     "Menu"
                 ],
                 "summary": "Get daily special (Sub del Día)",
-                "description": "Returns active daily special promotion (Sub del Día). Without parameters, returns ALL items for the entire week. Use ?today=1 to filter and get only items valid for today's weekday. Note: Multiple subs can be valid for the same day (e.g., 'Italian B.M.T.' + 'Pechuga de Pollo' on Tuesday). Each item has a 'weekdays' array indicating which days it's available (1=Monday to 7=Sunday, ISO-8601 format).",
+                "description": "Returns active daily special promotion (Sub del Día). Without parameters, returns ALL items for the entire week. Use ?today=1 to filter items by: weekday, date range (valid_from/valid_until), and time range (time_from/time_until). Multiple subs can be valid for the same day. Each item has a 'weekdays' array (1=Monday to 7=Sunday, ISO-8601).",
                 "operationId": "efb6cc4ff9cab714b76379c92b44fffd",
                 "parameters": [
                     {
                         "name": "today",
                         "in": "query",
-                        "description": "Filter by today's weekday. If set to 1, returns only items where the current weekday is in their 'weekdays' array. Multiple items may be returned if more than one sub is available for today.",
+                        "description": "Filter by current moment. If set to 1, returns only items valid RIGHT NOW based on: weekday, date range, and time range. Multiple items may be returned if more than one sub is available.",
                         "required": false,
                         "schema": {
                             "type": "integer",
@@ -4053,7 +4053,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Daily special retrieved successfully. The 'items' array inside 'promotion' contains all subs valid for the requested period. When using ?today=1, 'today' object is included with current weekday info.",
+                        "description": "Daily special retrieved successfully. When using ?today=1, 'now' object is included with current datetime info.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4076,7 +4076,7 @@
                                                             "example": "daily_special"
                                                         },
                                                         "items": {
-                                                            "description": "Array of subs valid for the period. Multiple items can appear for the same day.",
+                                                            "description": "Array of subs valid for the period.",
                                                             "type": "array",
                                                             "items": {
                                                                 "properties": {
@@ -4085,12 +4085,34 @@
                                                                         "example": 14
                                                                     },
                                                                     "weekdays": {
-                                                                        "description": "Days when this item is available (1=Mon, 7=Sun)",
+                                                                        "description": "Days when available (1=Mon, 7=Sun)",
                                                                         "type": "array",
                                                                         "items": {
                                                                             "type": "integer",
                                                                             "example": 2
                                                                         }
+                                                                    },
+                                                                    "valid_from": {
+                                                                        "type": "string",
+                                                                        "format": "date",
+                                                                        "example": "2024-01-01",
+                                                                        "nullable": true
+                                                                    },
+                                                                    "valid_until": {
+                                                                        "type": "string",
+                                                                        "format": "date",
+                                                                        "example": "2024-12-31",
+                                                                        "nullable": true
+                                                                    },
+                                                                    "time_from": {
+                                                                        "type": "string",
+                                                                        "example": "11:00",
+                                                                        "nullable": true
+                                                                    },
+                                                                    "time_until": {
+                                                                        "type": "string",
+                                                                        "example": "15:00",
+                                                                        "nullable": true
                                                                     },
                                                                     "special_price_capital": {
                                                                         "type": "string",
@@ -4112,7 +4134,6 @@
                                                                             },
                                                                             "image_url": {
                                                                                 "type": "string",
-                                                                                "example": "https://example.com/storage/products/italian-bmt.jpg",
                                                                                 "nullable": true
                                                                             }
                                                                         },
@@ -4125,18 +4146,31 @@
                                                     },
                                                     "type": "object"
                                                 },
-                                                "today": {
-                                                    "description": "Only present when ?today=1 is used",
+                                                "now": {
+                                                    "description": "Only present when ?today=1",
                                                     "properties": {
                                                         "weekday": {
-                                                            "description": "Current weekday (1=Monday to 7=Sunday)",
+                                                            "description": "Current weekday (1-7)",
                                                             "type": "integer",
                                                             "example": 2
                                                         },
                                                         "weekday_name": {
-                                                            "description": "Weekday name in Spanish",
                                                             "type": "string",
                                                             "example": "Martes"
+                                                        },
+                                                        "date": {
+                                                            "type": "string",
+                                                            "format": "date",
+                                                            "example": "2024-01-15"
+                                                        },
+                                                        "time": {
+                                                            "type": "string",
+                                                            "example": "12:30"
+                                                        },
+                                                        "datetime": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2024-01-15T12:30:00-06:00"
                                                         }
                                                     },
                                                     "type": "object",
@@ -4211,9 +4245,31 @@
                     "Restaurants"
                 ],
                 "summary": "Listar restaurantes activos",
-                "description": "Retorna lista de restaurantes activos con filtros opcionales para servicios de delivery y pickup.",
+                "description": "Retorna lista de restaurantes activos. Si se proporcionan coordenadas (lat, lng), los resultados se ordenan por distancia. Ideal para mostrar en mapa y listar ubicaciones.",
                 "operationId": "8e9b218c7a6e40f8ae2bd9c38da592af",
                 "parameters": [
+                    {
+                        "name": "lat",
+                        "in": "query",
+                        "description": "Latitud del usuario (opcional). Si se proporciona junto con lng, ordena por distancia.",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "example": 14.6349
+                        }
+                    },
+                    {
+                        "name": "lng",
+                        "in": "query",
+                        "description": "Longitud del usuario (opcional). Si se proporciona junto con lat, ordena por distancia.",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "example": -90.5069
+                        }
+                    },
                     {
                         "name": "delivery_active",
                         "in": "query",
@@ -4247,8 +4303,34 @@
                                                 "restaurants": {
                                                     "type": "array",
                                                     "items": {
-                                                        "$ref": "#/components/schemas/Restaurant"
+                                                        "allOf": [
+                                                            {
+                                                                "$ref": "#/components/schemas/Restaurant"
+                                                            },
+                                                            {
+                                                                "properties": {
+                                                                    "distance_km": {
+                                                                        "description": "Distancia en km (solo si se proporcionan coordenadas)",
+                                                                        "type": "number",
+                                                                        "format": "float",
+                                                                        "example": 2.45,
+                                                                        "nullable": true
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        ]
                                                     }
+                                                },
+                                                "total": {
+                                                    "description": "Total de restaurantes",
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "ordered_by_distance": {
+                                                    "description": "Indica si están ordenados por distancia",
+                                                    "type": "boolean",
+                                                    "example": true
                                                 }
                                             },
                                             "type": "object"
@@ -4433,6 +4515,248 @@
                                             "example": "El campo lat es requerido."
                                         },
                                         "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/restaurants/for-delivery": {
+            "get": {
+                "tags": [
+                    "Restaurants"
+                ],
+                "summary": "Obtener restaurante para delivery",
+                "description": "Retorna el restaurante que cubre la dirección guardada del cliente usando geocercas. Requiere autenticación y una dirección con coordenadas válidas.",
+                "operationId": "259899f96e5e4951555799907bb65876",
+                "parameters": [
+                    {
+                        "name": "address_id",
+                        "in": "query",
+                        "description": "ID de la dirección guardada del cliente",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Restaurante encontrado para delivery",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "restaurant": {
+                                                    "oneOf": [
+                                                        {
+                                                            "$ref": "#/components/schemas/Restaurant"
+                                                        }
+                                                    ],
+                                                    "nullable": true
+                                                },
+                                                "delivery_available": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "address": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "label": {
+                                                            "type": "string",
+                                                            "example": "Casa"
+                                                        },
+                                                        "address_line": {
+                                                            "type": "string",
+                                                            "example": "Zona 10, Guatemala"
+                                                        },
+                                                        "latitude": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 14.6349
+                                                        },
+                                                        "longitude": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": -90.5069
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "zone": {
+                                                    "description": "Zona de precios: capital o interior",
+                                                    "type": "string",
+                                                    "example": "capital"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Dirección no encontrada o sin cobertura",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "no_coverage"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No tenemos cobertura de delivery en esta dirección"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "restaurant": {
+                                                    "type": "null"
+                                                },
+                                                "delivery_available": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/restaurants/for-pickup": {
+            "get": {
+                "tags": [
+                    "Restaurants"
+                ],
+                "summary": "Listar restaurantes para pickup",
+                "description": "Retorna TODOS los restaurantes con pickup activo, ordenados por distancia desde la ubicación del cliente. No hay límite de radio.",
+                "operationId": "e2ad0b453337aed09189f612153ab8c9",
+                "parameters": [
+                    {
+                        "name": "lat",
+                        "in": "query",
+                        "description": "Latitud de la ubicación actual del cliente",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "example": 14.6349
+                        }
+                    },
+                    {
+                        "name": "lng",
+                        "in": "query",
+                        "description": "Longitud de la ubicación actual del cliente",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "example": -90.5069
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de restaurantes para pickup",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "restaurants": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "allOf": [
+                                                            {
+                                                                "$ref": "#/components/schemas/Restaurant"
+                                                            },
+                                                            {
+                                                                "properties": {
+                                                                    "distance_km": {
+                                                                        "description": "Distancia en kilómetros desde la ubicación del cliente",
+                                                                        "type": "number",
+                                                                        "format": "float",
+                                                                        "example": 2.45
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        ]
+                                                    }
+                                                },
+                                                "total_found": {
+                                                    "description": "Total de restaurantes con pickup disponible",
+                                                    "type": "integer",
+                                                    "example": 5
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Ubicación requerida",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "location_required"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Por favor activa tu ubicación para ver los restaurantes ordenados por distancia."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "restaurants": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total_found": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                }
+                                            },
                                             "type": "object"
                                         }
                                     },
@@ -7345,6 +7669,15 @@
                     "image_url": {
                         "type": "string",
                         "example": "https://admin.subwaycardgt.com/storage/banners/summer.jpg"
+                    },
+                    "orientation": {
+                        "description": "Orientacion del banner. Aspect ratios: horizontal=16:9 (1280x720px), vertical=3:4 (1200x1600px)",
+                        "type": "string",
+                        "enum": [
+                            "horizontal",
+                            "vertical"
+                        ],
+                        "example": "horizontal"
                     },
                     "display_seconds": {
                         "description": "Segundos a mostrar en carrusel",

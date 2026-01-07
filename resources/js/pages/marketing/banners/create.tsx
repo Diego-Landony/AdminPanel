@@ -31,10 +31,20 @@ interface CreatePageProps {
     linkOptions: LinkOptions;
 }
 
-// Aspect ratios estándar
-const ASPECT_RATIOS = {
-    horizontal: 16 / 9,  // 16:9 para banners horizontales (carrusel)
-    vertical: 9 / 16,    // 9:16 para stories verticales
+// Configuración de aspect ratios con dimensiones sugeridas
+const ORIENTATION_CONFIG = {
+    horizontal: {
+        ratio: 16 / 9,
+        label: '16:9',
+        dimensions: '1280 × 720 px',
+        description: 'Carrusel',
+    },
+    vertical: {
+        ratio: 3 / 4,
+        label: '3:4',
+        dimensions: '1200 × 1600 px',
+        description: 'Promociones',
+    },
 };
 
 export default function BannerCreate({ linkOptions }: CreatePageProps) {
@@ -69,7 +79,7 @@ export default function BannerCreate({ linkOptions }: CreatePageProps) {
         }
     };
 
-    const handleOrientationChange = (orientation: string) => {
+    const handleOrientationChange = (orientation: 'horizontal' | 'vertical') => {
         if (orientation !== data.orientation) {
             // Si cambia la orientación, limpiar la imagen porque el aspect ratio es diferente
             setData((prev) => ({
@@ -131,8 +141,9 @@ export default function BannerCreate({ linkOptions }: CreatePageProps) {
         }
     };
 
-    const currentAspectRatio = ASPECT_RATIOS[data.orientation as keyof typeof ASPECT_RATIOS];
-    const aspectLabel = data.orientation === 'horizontal' ? '16:9' : '9:16';
+    const currentConfig = ORIENTATION_CONFIG[data.orientation as keyof typeof ORIENTATION_CONFIG];
+    const currentAspectRatio = currentConfig.ratio;
+    const aspectLabel = currentConfig.label;
 
     return (
         <CreatePageLayout
@@ -189,7 +200,10 @@ export default function BannerCreate({ linkOptions }: CreatePageProps) {
                                         >
                                             <Monitor className="h-8 w-8" />
                                             <span className="text-sm font-medium">Horizontal</span>
-                                            <span className="text-xs text-muted-foreground">16:9 • Carrusel</span>
+                                            <span className="text-xs text-muted-foreground">
+                                                {ORIENTATION_CONFIG.horizontal.label} • {ORIENTATION_CONFIG.horizontal.description}
+                                            </span>
+                                            <span className="text-xs text-muted-foreground">{ORIENTATION_CONFIG.horizontal.dimensions}</span>
                                         </button>
                                         <button
                                             type="button"
@@ -200,7 +214,10 @@ export default function BannerCreate({ linkOptions }: CreatePageProps) {
                                         >
                                             <Smartphone className="h-8 w-8" />
                                             <span className="text-sm font-medium">Vertical</span>
-                                            <span className="text-xs text-muted-foreground">9:16 • Stories</span>
+                                            <span className="text-xs text-muted-foreground">
+                                                {ORIENTATION_CONFIG.vertical.label} • {ORIENTATION_CONFIG.vertical.description}
+                                            </span>
+                                            <span className="text-xs text-muted-foreground">{ORIENTATION_CONFIG.vertical.dimensions}</span>
                                         </button>
                                     </div>
                                 </FormField>

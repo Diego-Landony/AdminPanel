@@ -52,7 +52,7 @@ class PromotionalBannerController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('banners', 'public');
+            $data['image'] = $request->file('image')->store('marketing/banners', 'public');
         }
 
         // Set sort order
@@ -97,7 +97,7 @@ class PromotionalBannerController extends Controller
             if ($banner->image) {
                 Storage::disk('public')->delete($banner->image);
             }
-            $data['image'] = $request->file('image')->store('banners', 'public');
+            $data['image'] = $request->file('image')->store('marketing/banners', 'public');
         }
 
         // Clean weekdays if not weekdays validity type

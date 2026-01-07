@@ -117,10 +117,10 @@ return new class extends Migration
             $table->integer('sort_order')->default(0);
             $table->timestamps();
 
-            $table->index('bundle_item_id', 'idx_bundle_item');
-            $table->index('product_id', 'idx_product');
-            $table->index('variant_id', 'idx_variant');
-            $table->index('sort_order', 'idx_sort_order');
+            $table->index('bundle_item_id', 'idx_bpio_bundle_item');
+            $table->index('product_id', 'idx_bpio_product');
+            $table->index('variant_id', 'idx_bpio_variant');
+            $table->index('sort_order', 'idx_bpio_sort_order');
 
             $table->unique(['bundle_item_id', 'product_id', 'variant_id'], 'unique_bundle_option');
         });

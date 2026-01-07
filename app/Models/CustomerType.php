@@ -54,4 +54,34 @@ class CustomerType extends Model
             ->orderBy('points_required')
             ->first();
     }
+
+    /**
+     * Get information about the next tier for a customer.
+     *
+     * @return array{id: int, name: string, points_required: int, points_needed: int, multiplier: float, color: string|null}|null
+     */
+    public static function getNextTierInfo(Customer $customer): ?array
+    {
+        $currentPoints = $customer->points ?? 0;
+        $currentTier = $customer->customerType;
+
+        $nextTier = static::query()
+            ->where('is_active', true)
+            ->where('points_required', '>', $currentTier?->points_required ?? 0)
+            ->orderBy('points_required')
+            ->first();
+
+        if (! $nextTier) {
+            return null;
+        }
+
+        return [
+            'id' => $nextTier->id,
+            'name' => $nextTier->name,
+            'points_required' => $nextTier->points_required,
+            'points_needed' => max(0, $nextTier->points_required - $currentPoints),
+            'multiplier' => (float) $nextTier->multiplier,
+            'color' => $nextTier->color,
+        ];
+    }
 }

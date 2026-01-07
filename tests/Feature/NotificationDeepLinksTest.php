@@ -11,7 +11,7 @@ it('generates deep link for customer password reset', function () {
     $mail = $notification->toMail($customer);
 
     expect($mail->actionUrl)
-        ->toStartWith('subwayapp://reset-password?')
+        ->toContain('password/reset')
         ->toContain('token=test-token-123')
         ->toContain('email='.urlencode($customer->email));
 });

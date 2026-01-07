@@ -5,6 +5,7 @@ namespace App\Models\Menu;
 use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -17,6 +18,8 @@ class Promotion extends Model
         'name',
         'description',
         'image',
+        'badge_type_id',
+        'show_badge_on_menu',
         'type',
         'is_active',
         'special_bundle_price_capital',
@@ -31,6 +34,7 @@ class Promotion extends Model
     protected $casts = [
         'type' => 'string',
         'is_active' => 'boolean',
+        'show_badge_on_menu' => 'boolean',
         'special_bundle_price_capital' => 'decimal:2',
         'special_bundle_price_interior' => 'decimal:2',
         'weekdays' => 'array', // Array de enteros 1-7 (ISO-8601): 1=Lunes, 7=Domingo, null=todos los días
@@ -136,6 +140,14 @@ class Promotion extends Model
     public function bundleItems(): HasMany
     {
         return $this->hasMany(BundlePromotionItem::class, 'promotion_id')->orderBy('sort_order');
+    }
+
+    /**
+     * Relación: Una promoción puede tener un badge asociado (para mostrar en el menú)
+     */
+    public function badgeType(): BelongsTo
+    {
+        return $this->belongsTo(BadgeType::class);
     }
 
     /**

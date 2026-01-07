@@ -16,6 +16,7 @@ interface BadgeType {
     id: number;
     name: string;
     color: string;
+    text_color: string;
     is_active: boolean;
     sort_order: number;
 }
@@ -35,10 +36,18 @@ const PRESET_COLORS = [
     { name: 'Gris', value: '#6b7280' },
 ];
 
+const PRESET_TEXT_COLORS = [
+    { name: 'Blanco', value: '#ffffff' },
+    { name: 'Negro', value: '#000000' },
+    { name: 'Gris Oscuro', value: '#374151' },
+    { name: 'Gris Claro', value: '#9ca3af' },
+];
+
 export default function BadgeTypeEdit({ badgeType }: EditPageProps) {
     const { data, setData, put, processing, errors } = useForm({
         name: badgeType.name,
         color: badgeType.color,
+        text_color: badgeType.text_color,
         is_active: badgeType.is_active,
     });
 
@@ -89,8 +98,8 @@ export default function BadgeTypeEdit({ badgeType }: EditPageProps) {
                                 <Label className="mb-3 block text-base font-medium">Vista Previa</Label>
                                 <div className="flex items-center justify-center rounded-lg bg-muted/50 p-6">
                                     <span
-                                        className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium text-white shadow-sm"
-                                        style={{ backgroundColor: data.color }}
+                                        className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium shadow-sm"
+                                        style={{ backgroundColor: data.color, color: data.text_color }}
                                     >
                                         {data.name || 'Badge'}
                                     </span>
@@ -102,8 +111,8 @@ export default function BadgeTypeEdit({ badgeType }: EditPageProps) {
 
                 <Card>
                     <CardContent className="pt-6">
-                        <FormSection icon={Palette} title="Color" description="Selecciona un color predefinido o personaliza uno">
-                            <FormField label="Color" error={errors.color} required>
+                        <FormSection icon={Palette} title="Color de Fondo" description="Selecciona un color predefinido o personaliza uno">
+                            <FormField label="Color de Fondo" error={errors.color} required>
                                 <div className="space-y-3">
                                     <div className="flex flex-wrap gap-2">
                                         {PRESET_COLORS.map((preset) => (
@@ -132,6 +141,48 @@ export default function BadgeTypeEdit({ badgeType }: EditPageProps) {
                                             value={data.color}
                                             onChange={(e) => setData('color', e.target.value)}
                                             placeholder="#000000"
+                                            maxLength={30}
+                                            className="flex-1"
+                                        />
+                                    </div>
+                                </div>
+                            </FormField>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={Palette} title="Color de Texto" description="Selecciona el color del texto del badge">
+                            <FormField label="Color de Texto" error={errors.text_color} required>
+                                <div className="space-y-3">
+                                    <div className="flex flex-wrap gap-2">
+                                        {PRESET_TEXT_COLORS.map((preset) => (
+                                            <button
+                                                key={preset.value}
+                                                type="button"
+                                                onClick={() => setData('text_color', preset.value)}
+                                                title={preset.name}
+                                                className={`h-8 w-8 rounded-full border-2 transition-all ${
+                                                    data.text_color === preset.value ? 'scale-110 border-foreground ring-2 ring-primary ring-offset-2' : 'border-transparent hover:scale-105'
+                                                }`}
+                                                style={{ backgroundColor: preset.value }}
+                                            />
+                                        ))}
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Input
+                                            id="text_color"
+                                            type="color"
+                                            value={data.text_color}
+                                            onChange={(e) => setData('text_color', e.target.value)}
+                                            className="h-10 w-14 cursor-pointer p-1"
+                                        />
+                                        <Input
+                                            type="text"
+                                            value={data.text_color}
+                                            onChange={(e) => setData('text_color', e.target.value)}
+                                            placeholder="#ffffff"
                                             maxLength={30}
                                             className="flex-1"
                                         />

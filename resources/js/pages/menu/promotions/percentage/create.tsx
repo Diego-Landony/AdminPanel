@@ -1,10 +1,11 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { router, useForm } from '@inertiajs/react';
-import { Banknote, Image, Package, Plus, Store, Truck } from 'lucide-react';
+import { Award, Banknote, Image, Package, Plus, Store, Truck } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
+import { BadgeTypeSelector, type BadgeType } from '@/components/badge-type-selector';
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
 import { ImageUpload } from '@/components/ImageUpload';
@@ -66,6 +67,7 @@ interface CreatePromotionPageProps {
     products: Product[];
     categories: Category[];
     combos: Combo[];
+    badgeTypes: BadgeType[];
 }
 
 interface LocalPromotionItem {
@@ -77,7 +79,7 @@ interface LocalPromotionItem {
     discount_percentage: string;
 }
 
-export default function CreatePercentage({ products, categories, combos }: CreatePromotionPageProps) {
+export default function CreatePercentage({ products, categories, combos, badgeTypes }: CreatePromotionPageProps) {
     const { data, setData, processing, errors } = useForm({
         is_active: true,
         name: '',
@@ -90,6 +92,8 @@ export default function CreatePercentage({ products, categories, combos }: Creat
         valid_until: '',
         time_from: '',
         time_until: '',
+        badge_type_id: null as number | null,
+        show_badge_on_menu: true,
     });
 
     const [localItems, setLocalItems] = useState<LocalPromotionItem[]>([
@@ -286,6 +290,10 @@ export default function CreatePercentage({ products, categories, combos }: Creat
         formData.append('name', data.name);
         formData.append('description', data.description || '');
         formData.append('type', data.type);
+        if (data.badge_type_id) {
+            formData.append('badge_type_id', String(data.badge_type_id));
+        }
+        formData.append('show_badge_on_menu', data.show_badge_on_menu ? '1' : '0');
 
         // Agregar items
         expandedItems.forEach((item, index) => {
@@ -371,6 +379,31 @@ export default function CreatePercentage({ products, categories, combos }: Creat
                     onImageChange={(file) => setImage(file)}
                     error={errors.image}
                 />
+            </FormSection>
+
+            {/* INSIGNIA/BADGE */}
+            <FormSection icon={Award} title="Insignia" description="Selecciona una insignia para mostrar en los productos de esta promocion">
+                <div className="space-y-4">
+                    <BadgeTypeSelector
+                        value={data.badge_type_id}
+                        onChange={(value) => setData('badge_type_id', value)}
+                        badgeTypes={badgeTypes}
+                        error={errors.badge_type_id}
+                    />
+
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="show_badge_on_menu"
+                            checked={data.show_badge_on_menu}
+                            onChange={(e) => setData('show_badge_on_menu', e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <label htmlFor="show_badge_on_menu" className="text-sm">
+                            Mostrar insignia en el menu
+                        </label>
+                    </div>
+                </div>
             </FormSection>
 
             {hasInactiveProducts && (

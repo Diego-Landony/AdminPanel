@@ -1,11 +1,12 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { router } from '@inertiajs/react';
-import { Package, Plus, Store, Truck } from 'lucide-react';
+import { Award, Package, Plus, Store, Truck } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { route } from 'ziggy-js';
 
 import { NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
+import { BadgeTypeSelector, type BadgeType } from '@/components/badge-type-selector';
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
 import { ConfirmationDialog } from '@/components/promotions/ConfirmationDialog';
@@ -82,6 +83,8 @@ interface Promotion {
     description: string;
     type: string;
     is_active: boolean;
+    badge_type_id: number | null;
+    show_badge_on_menu: boolean;
     items: PromotionItem[];
 }
 
@@ -90,6 +93,7 @@ interface EditPromotionPageProps {
     products: Product[];
     categories: Category[];
     combos: Combo[];
+    badgeTypes: BadgeType[];
 }
 
 interface LocalTwoForOneItem {
@@ -200,7 +204,7 @@ function groupPromotionItems(items: PromotionItem[], products: Product[], combos
     return grouped;
 }
 
-export default function EditTwoForOnePromotion({ promotion, products, categories, combos }: EditPromotionPageProps) {
+export default function EditTwoForOnePromotion({ promotion, products, categories, combos, badgeTypes }: EditPromotionPageProps) {
     const firstItem = promotion.items[0];
 
     const [formData, setFormData] = useState({
@@ -214,6 +218,8 @@ export default function EditTwoForOnePromotion({ promotion, products, categories
         valid_until: firstItem?.valid_until || '',
         time_from: firstItem?.time_from || '',
         time_until: firstItem?.time_until || '',
+        badge_type_id: promotion.badge_type_id,
+        show_badge_on_menu: promotion.show_badge_on_menu ?? true,
     });
 
     const [localItems, setLocalItems] = useState<LocalTwoForOneItem[]>(() => groupPromotionItems(promotion.items, products, combos, categories));
@@ -439,6 +445,35 @@ export default function EditTwoForOnePromotion({ promotion, products, categories
                     </FormField>
                 </div>
             </FormSection>
+
+            {/* Insignia/Badge */}
+            <div className="rounded-lg border bg-card p-6">
+                <h3 className="mb-4 flex items-center gap-2 text-lg font-medium">
+                    <Award className="h-5 w-5" />
+                    Insignia
+                </h3>
+                <div className="space-y-4">
+                    <BadgeTypeSelector
+                        value={formData.badge_type_id}
+                        onChange={(value) => setFormData({ ...formData, badge_type_id: value })}
+                        badgeTypes={badgeTypes}
+                        error={errors.badge_type_id}
+                    />
+
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="show_badge_on_menu"
+                            checked={formData.show_badge_on_menu}
+                            onChange={(e) => setFormData({ ...formData, show_badge_on_menu: e.target.checked })}
+                            className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <label htmlFor="show_badge_on_menu" className="text-sm">
+                            Mostrar insignia en el menu
+                        </label>
+                    </div>
+                </div>
+            </div>
 
             {hasInactiveProducts && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">

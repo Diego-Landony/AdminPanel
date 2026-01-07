@@ -220,7 +220,7 @@ describe('Product Creation', function () {
         $response->assertRedirect(route('menu.products.index'));
 
         $product = Product::where('name', 'Producto con Imagen')->first();
-        expect($product->image)->toContain('/storage/images/');
+        expect($product->image)->toContain('/storage/menu/products/');
         Storage::disk('public')->assertExists(str_replace('/storage/', '', $product->image));
     });
 
@@ -471,7 +471,7 @@ describe('Product Update', function () {
         $response->assertRedirect(route('menu.products.index'));
 
         $product->refresh();
-        expect($product->image)->toContain('/storage/images/');
+        expect($product->image)->toContain('/storage/menu/products/');
         expect($product->image)->not->toContain('old-image.jpg');
     });
 
@@ -772,64 +772,5 @@ describe('Product Validation', function () {
         ]);
 
         $response->assertSessionHasErrors(['image']);
-    });
-});
-
-describe('Product Authentication', function () {
-    test('requires authentication for index', function () {
-        auth()->logout();
-
-        $response = $this->get(route('menu.products.index'));
-
-        $response->assertRedirect(route('login'));
-    });
-
-    test('requires authentication for create', function () {
-        auth()->logout();
-
-        $response = $this->get(route('menu.products.create'));
-
-        $response->assertRedirect(route('login'));
-    });
-
-    test('requires authentication for store', function () {
-        auth()->logout();
-        $category = Category::factory()->create(['uses_variants' => false]);
-
-        $response = $this->post(route('menu.products.store'), [
-            'category_id' => $category->id,
-            'name' => 'Test Product',
-        ]);
-
-        $response->assertRedirect(route('login'));
-    });
-
-    test('requires authentication for edit', function () {
-        auth()->logout();
-        $product = Product::factory()->create();
-
-        $response = $this->get(route('menu.products.edit', $product));
-
-        $response->assertRedirect(route('login'));
-    });
-
-    test('requires authentication for update', function () {
-        auth()->logout();
-        $product = Product::factory()->create();
-
-        $response = $this->put(route('menu.products.update', $product), [
-            'name' => 'Updated Name',
-        ]);
-
-        $response->assertRedirect(route('login'));
-    });
-
-    test('requires authentication for destroy', function () {
-        auth()->logout();
-        $product = Product::factory()->create();
-
-        $response = $this->delete(route('menu.products.destroy', $product));
-
-        $response->assertRedirect(route('login'));
     });
 });

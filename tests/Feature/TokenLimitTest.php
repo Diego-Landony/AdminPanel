@@ -83,12 +83,13 @@ test('register endpoint enforces token limit', function () {
         'first_name' => 'New',
         'last_name' => 'Customer',
         'email' => 'new@example.com',
-        'password' => 'Pass123',
-        'password_confirmation' => 'Pass123',
+        'password' => 'Pass123!@',
+        'password_confirmation' => 'Pass123!@',
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'male',
         'device_identifier' => 'test-device-register',
+        'terms_accepted' => true,
     ]);
 
     $response->assertCreated();
@@ -104,7 +105,7 @@ test('register endpoint enforces token limit', function () {
 
     $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'new@example.com',
-        'password' => 'Pass123',
+        'password' => 'Pass123!@',
         'device_identifier' => 'test-device-login',
     ]);
 

@@ -7,8 +7,10 @@ import {
     Activity,
     ArrowUpDown,
     Award,
+    FileText,
     Gift,
     HandPlatter,
+    Headset,
     Home,
     Image,
     Layers,
@@ -16,6 +18,7 @@ import {
     LucideIcon,
     MapPin,
     Megaphone,
+    MessageSquare,
     Package,
     Package2,
     Percent,
@@ -195,6 +198,30 @@ export const systemPages: PageConfig[] = [
         permission: 'roles.view',
     },
     {
+        name: 'support-terms',
+        title: 'Términos y Condiciones',
+        href: '/support/terms-and-conditions',
+        icon: FileText,
+        group: 'Soporte',
+        permission: 'support.legal.view',
+    },
+    {
+        name: 'support-privacy',
+        title: 'Política de Privacidad',
+        href: '/support/privacy-policy',
+        icon: Shield,
+        group: 'Soporte',
+        permission: 'support.legal.view',
+    },
+    {
+        name: 'support-tickets',
+        title: 'Chat de Soporte',
+        href: '/support/tickets',
+        icon: MessageSquare,
+        group: 'Soporte',
+        permission: 'support.tickets.view',
+    },
+    {
         name: 'settings',
         title: 'Configuración',
         href: '/settings/profile',
@@ -213,6 +240,7 @@ export const groupIcons: Record<string, LucideIcon> = {
     Menú: HandPlatter,
     Promociones: Percent,
     Marketing: Megaphone,
+    Soporte: Headset,
 };
 
 /**

@@ -315,8 +315,8 @@ describe('show', function () {
         $prices = $response->json('data.product.prices');
 
         expect((float) $prices['pickup_capital'])->toEqual(50.0);
-        expect((float) $prices['domicilio_capital'])->toEqual(55.0);
+        expect((float) $prices['delivery_capital'])->toEqual(55.0);
         expect((float) $prices['pickup_interior'])->toEqual(45.0);
-        expect((float) $prices['domicilio_interior'])->toEqual(48.0);
+        expect((float) $prices['delivery_interior'])->toEqual(48.0);
     });
 });

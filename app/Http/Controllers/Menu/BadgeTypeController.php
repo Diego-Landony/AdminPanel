@@ -37,6 +37,7 @@ class BadgeTypeController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:50',
             'color' => 'required|string|max:30',
+            'text_color' => 'required|string|max:30',
             'is_active' => 'boolean',
         ]);
 
@@ -61,6 +62,7 @@ class BadgeTypeController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:50',
             'color' => 'required|string|max:30',
+            'text_color' => 'required|string|max:30',
             'is_active' => 'boolean',
         ]);
 

@@ -32,37 +32,44 @@ class BadgeSeeder extends Seeder
         $badgeTypes = [
             [
                 'name' => 'Nuevo',
-                'color' => 'green',
+                'color' => '#22c55e',
+                'text_color' => '#ffffff',
                 'sort_order' => 1,
             ],
             [
                 'name' => 'Popular',
-                'color' => 'orange',
+                'color' => '#f97316',
+                'text_color' => '#ffffff',
                 'sort_order' => 2,
             ],
             [
                 'name' => 'Más Vendido',
-                'color' => 'red',
+                'color' => '#ef4444',
+                'text_color' => '#ffffff',
                 'sort_order' => 3,
             ],
             [
                 'name' => 'Recomendado',
-                'color' => 'blue',
+                'color' => '#3b82f6',
+                'text_color' => '#ffffff',
                 'sort_order' => 4,
             ],
             [
                 'name' => 'Edición Limitada',
-                'color' => 'purple',
+                'color' => '#8b5cf6',
+                'text_color' => '#ffffff',
                 'sort_order' => 5,
             ],
             [
                 'name' => 'Sin Gluten',
-                'color' => 'teal',
+                'color' => '#14b8a6',
+                'text_color' => '#ffffff',
                 'sort_order' => 6,
             ],
             [
                 'name' => 'Vegetariano',
-                'color' => 'emerald',
+                'color' => '#10b981',
+                'text_color' => '#ffffff',
                 'sort_order' => 7,
             ],
         ];
@@ -71,6 +78,7 @@ class BadgeSeeder extends Seeder
             BadgeType::create([
                 'name' => $badge['name'],
                 'color' => $badge['color'],
+                'text_color' => $badge['text_color'],
                 'is_active' => true,
                 'sort_order' => $badge['sort_order'],
             ]);

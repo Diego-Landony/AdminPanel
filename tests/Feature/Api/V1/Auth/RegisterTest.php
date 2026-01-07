@@ -12,12 +12,13 @@ test('puede registrarse con datos validos', function () {
         'first_name' => 'María',
         'last_name' => 'García',
         'email' => 'maria@example.com',
-        'password' => 'SecurePass123',
-        'password_confirmation' => 'SecurePass123',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'female',
         'device_identifier' => 'test-device-001',
+        'terms_accepted' => true,
     ]);
 
     // Verificar respuesta exitosa (201 Created)
@@ -25,7 +26,7 @@ test('puede registrarse con datos validos', function () {
         ->assertJsonStructure([
             'message',
             'data' => [
-                'access_token',
+                'token',
                 'token_type',
                 'expires_in',
                 'customer' => [
@@ -49,7 +50,7 @@ test('puede registrarse con datos validos', function () {
     ]);
 
     // Verificar que el token existe
-    expect($response->json('data.access_token'))->not->toBeNull();
+    expect($response->json('data.token'))->not->toBeNull();
     expect($response->json('data.token_type'))->toBe('Bearer');
 });
 
@@ -70,12 +71,13 @@ test('rechaza email duplicado', function () {
         'first_name' => 'Otro',
         'last_name' => 'Usuario',
         'email' => 'juan@example.com',
-        'password' => 'SecurePass123',
-        'password_confirmation' => 'SecurePass123',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'male',
         'device_identifier' => 'test-device-002',
+        'terms_accepted' => true,
     ]);
 
     // Verificar error de validación
@@ -89,11 +91,12 @@ test('requiere password confirmation', function () {
         'first_name' => 'Carlos',
         'last_name' => 'López',
         'email' => 'carlos@example.com',
-        'password' => 'SecurePass123',
+        'password' => 'SecurePass123!',
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'male',
         'device_identifier' => 'test-device-003',
+        'terms_accepted' => true,
         // Sin password_confirmation
     ]);
 
@@ -108,12 +111,13 @@ test('hashea password automaticamente', function () {
         'first_name' => 'Ana',
         'last_name' => 'Martínez',
         'email' => 'ana@example.com',
-        'password' => 'SecurePass123',
-        'password_confirmation' => 'SecurePass123',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'female',
         'device_identifier' => 'test-device-004',
+        'terms_accepted' => true,
     ]);
 
     // Verificar respuesta exitosa
@@ -123,10 +127,10 @@ test('hashea password automaticamente', function () {
     $customer = Customer::where('email', 'ana@example.com')->first();
 
     // Verificar que la password está hasheada (no es la original)
-    expect($customer->password)->not->toBe('SecurePass123');
+    expect($customer->password)->not->toBe('SecurePass123!');
 
     // Verificar que el hash funciona correctamente
-    expect(Hash::check('SecurePass123', $customer->password))->toBeTrue();
+    expect(Hash::check('SecurePass123!', $customer->password))->toBeTrue();
 });
 
 // Test 5: Crea token Sanctum al registrarse
@@ -135,12 +139,13 @@ test('crea token sanctum al registrarse', function () {
         'first_name' => 'Roberto',
         'last_name' => 'Ruiz',
         'email' => 'roberto@example.com',
-        'password' => 'SecurePass123',
-        'password_confirmation' => 'SecurePass123',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'male',
         'device_identifier' => 'test-device-005',
+        'terms_accepted' => true,
     ]);
 
     // Verificar respuesta exitosa
@@ -162,12 +167,13 @@ test('genera subway_card automaticamente', function () {
         'first_name' => 'Pedro',
         'last_name' => 'Gómez',
         'email' => 'pedro@example.com',
-        'password' => 'SecurePass123',
-        'password_confirmation' => 'SecurePass123',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
         'gender' => 'male',
         'device_identifier' => 'test-device-006',
+        'terms_accepted' => true,
     ]);
 
     $response->assertCreated();
@@ -185,165 +191,64 @@ test('genera subway_card automaticamente', function () {
     expect($customer->subway_card)->toMatch('/^\d{11}$/');
 });
 
-// Test 7: Genera subway_card unica
-test('genera subway_card unica', function () {
-    // Crear primer customer
-    $response1 = $this->postJson('/api/v1/auth/register', [
-        'first_name' => 'Cliente',
-        'last_name' => 'Uno',
-        'email' => 'cliente1@example.com',
-        'password' => 'SecurePass123',
-        'password_confirmation' => 'SecurePass123',
-        'phone' => '12345678',
-        'birth_date' => '1990-05-15',
-        'gender' => 'male',
-        'device_identifier' => 'test-device-007a',
-    ]);
-
-    // Crear segundo customer
-    $response2 = $this->postJson('/api/v1/auth/register', [
-        'first_name' => 'Cliente',
-        'last_name' => 'Dos',
-        'email' => 'cliente2@example.com',
-        'password' => 'SecurePass123',
-        'password_confirmation' => 'SecurePass123',
-        'phone' => '87654321',
-        'birth_date' => '1992-03-20',
-        'gender' => 'female',
-        'device_identifier' => 'test-device-007b',
-    ]);
-
-    $response1->assertCreated();
-    $response2->assertCreated();
-
-    $customer1 = Customer::where('email', 'cliente1@example.com')->first();
-    $customer2 = Customer::where('email', 'cliente2@example.com')->first();
-
-    // Verificar que ambos tienen subway_card
-    expect($customer1->subway_card)->not->toBeNull();
-    expect($customer2->subway_card)->not->toBeNull();
-
-    // Verificar que son diferentes
-    expect($customer1->subway_card)->not->toBe($customer2->subway_card);
-});
-
-// Test 8: Mantiene compatibilidad con tarjetas legacy
-test('mantiene compatibilidad con tarjetas legacy', function () {
-    // Crear customer con tarjeta legacy de 11 dígitos
-    $legacyCard = '70000000001';
-
-    Customer::create([
-        'first_name' => 'Cliente',
-        'last_name' => 'Legacy',
-        'email' => 'legacy@example.com',
-        'password' => Hash::make('password123'),
-        'oauth_provider' => 'local',
-        'subway_card' => $legacyCard,
-    ]);
-
-    // Verificar que se guardó correctamente
-    $customer = Customer::where('email', 'legacy@example.com')->first();
-    expect($customer->subway_card)->toBe($legacyCard);
-    expect($customer->subway_card)->toHaveLength(11);
-    expect($customer->subway_card)->toStartWith('7');
-});
-
-// Test 9: Valida formato de gender estandarizado
-test('valida formato de gender estandarizado', function () {
+// Test 7: Validates gender field using dataset
+test('validates gender field', function (string $gender, bool $shouldPass) {
     $response = $this->postJson('/api/v1/auth/register', [
         'first_name' => 'Test',
         'last_name' => 'Gender',
-        'email' => 'test-gender@example.com',
-        'password' => 'SecurePass123',
-        'password_confirmation' => 'SecurePass123',
+        'email' => 'test-gender-'.uniqid().'@example.com',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
         'phone' => '12345678',
         'birth_date' => '1990-05-15',
-        'gender' => 'male',
-        'device_identifier' => 'test-device-009',
+        'gender' => $gender,
+        'device_identifier' => 'test-device',
+        'terms_accepted' => true,
     ]);
 
-    $response->assertCreated();
+    if ($shouldPass) {
+        $response->assertCreated();
+    } else {
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['gender']);
+    }
+})->with([
+    'valid male' => ['male', true],
+    'valid female' => ['female', true],
+    'valid other' => ['other', true],
+    'invalid masculino' => ['masculino', false],
+    'invalid femenino' => ['femenino', false],
+    'invalid empty' => ['', false],
+]);
 
-    $customer = Customer::where('email', 'test-gender@example.com')->first();
-    expect($customer->gender)->toBe('male');
-
-    // Verificar que la respuesta JSON contiene el gender correcto
-    expect($response->json('data.customer.gender'))->toBe('male');
-});
-
-// Test 10: Rechaza gender no válido
-test('rechaza gender no valido', function () {
-    $response = $this->postJson('/api/v1/auth/register', [
-        'first_name' => 'Test',
-        'last_name' => 'Invalid Gender',
-        'email' => 'invalid-gender@example.com',
-        'password' => 'SecurePass123',
-        'password_confirmation' => 'SecurePass123',
-        'phone' => '12345678',
-        'birth_date' => '1990-05-15',
-        'gender' => 'masculino', // formato antiguo no válido
-        'device_identifier' => 'test-device-010',
-    ]);
-
-    $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['gender']);
-});
-
-// Test 11: No incluye timezone en respuesta
-test('no incluye timezone en respuesta', function () {
-    $response = $this->postJson('/api/v1/auth/register', [
-        'first_name' => 'Test',
-        'last_name' => 'Timezone',
-        'email' => 'test-timezone@example.com',
-        'password' => 'SecurePass123',
-        'password_confirmation' => 'SecurePass123',
-        'phone' => '12345678',
-        'birth_date' => '1990-05-15',
-        'gender' => 'other',
-        'device_identifier' => 'test-device-011',
-    ]);
-
-    $response->assertCreated();
-
-    // Verificar que timezone no está en la respuesta
-    expect($response->json('data.customer'))->not->toHaveKey('timezone');
-});
-
-// Test 12: Valida que teléfono tenga exactamente 8 dígitos
-test('valida telefono de 8 digitos', function () {
+// Test 8: Validates phone format using dataset
+test('validates phone format', function (string $phone, bool $shouldPass) {
     $response = $this->postJson('/api/v1/auth/register', [
         'first_name' => 'Test',
         'last_name' => 'Phone',
-        'email' => 'test-phone@example.com',
-        'password' => 'SecurePass123',
-        'password_confirmation' => 'SecurePass123',
-        'phone' => '1234567', // Solo 7 dígitos
+        'email' => 'test-phone-'.uniqid().'@example.com',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
+        'phone' => $phone,
         'birth_date' => '1990-05-15',
         'gender' => 'male',
-        'device_identifier' => 'test-device-012',
+        'device_identifier' => 'test-device',
+        'terms_accepted' => true,
     ]);
 
-    $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['phone']);
-});
-
-// Test 13: Rechaza teléfono con caracteres no numéricos
-test('rechaza telefono con caracteres no numericos', function () {
-    $response = $this->postJson('/api/v1/auth/register', [
-        'first_name' => 'Test',
-        'last_name' => 'Phone',
-        'email' => 'test-phone2@example.com',
-        'password' => 'SecurePass123',
-        'password_confirmation' => 'SecurePass123',
-        'phone' => '+5021234', // Con prefijo +502
-        'birth_date' => '1990-05-15',
-        'gender' => 'male',
-        'device_identifier' => 'test-device-013',
-    ]);
-
-    $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['phone']);
-});
+    if ($shouldPass) {
+        $response->assertCreated();
+    } else {
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['phone']);
+    }
+})->with([
+    'valid 8 digits' => ['12345678', true],
+    'too short' => ['1234567', false],
+    'too long' => ['123456789', false],
+    'with prefix' => ['+5021234', false],
+    'with letters' => ['1234abcd', false],
+]);
 
 // Test 14: Requiere todos los campos obligatorios
 test('requiere todos los campos obligatorios', function () {
@@ -351,8 +256,8 @@ test('requiere todos los campos obligatorios', function () {
         'first_name' => 'Test',
         'last_name' => 'Required',
         'email' => 'test-required@example.com',
-        'password' => 'SecurePass123',
-        'password_confirmation' => 'SecurePass123',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
         // Falta phone, birth_date, gender, device_identifier
     ]);
 

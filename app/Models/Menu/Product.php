@@ -5,6 +5,7 @@ namespace App\Models\Menu;
 use App\Models\Concerns\HasBadges;
 use App\Models\Concerns\HasReportingCategory;
 use App\Models\Concerns\LogsActivity;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -217,5 +218,90 @@ class Product extends Model
         }
 
         return $query;
+    }
+
+    /**
+     * Obtiene la promoción activa aplicable a este producto en este momento.
+     * Considera: fecha, hora, días de la semana, tipo de servicio.
+     *
+     * @param  string|null  $serviceType  'pickup', 'delivery' o null para cualquiera
+     */
+    public function getActivePromotion(?string $serviceType = null, ?Carbon $datetime = null): ?Promotion
+    {
+        $datetime = $datetime ?? now();
+        $currentDate = $datetime->toDateString();
+        $currentTime = $datetime->format('H:i:s');
+        $currentWeekday = $datetime->dayOfWeekIso; // 1=Lunes, 7=Domingo (ISO-8601)
+
+        $query = Promotion::query()
+            ->where('is_active', true)
+            // Buscar en promotion_items donde product_id = $this->id O category_id = $this->category_id
+            ->whereHas('items', function ($q) use ($serviceType) {
+                $q->where(function ($q2) {
+                    $q2->where('product_id', $this->id)
+                        ->orWhere('category_id', $this->category_id);
+                });
+
+                // Filtrar por service_type si se proporciona
+                if ($serviceType) {
+                    $q->where(function ($q2) use ($serviceType) {
+                        $q2->whereNull('service_type')
+                            ->orWhere('service_type', 'both')
+                            ->orWhere('service_type', $serviceType === 'pickup' ? 'pickup_only' : 'delivery_only');
+                    });
+                }
+            })
+            // Validar fechas: valid_from <= now
+            ->where(function ($q) use ($currentDate) {
+                $q->whereNull('valid_from')
+                    ->orWhereDate('valid_from', '<=', $currentDate);
+            })
+            // Validar fechas: now <= valid_until
+            ->where(function ($q) use ($currentDate) {
+                $q->whereNull('valid_until')
+                    ->orWhereDate('valid_until', '>=', $currentDate);
+            })
+            // Validar horas: time_from <= now
+            ->where(function ($q) use ($currentTime) {
+                $q->whereNull('time_from')
+                    ->orWhereTime('time_from', '<=', $currentTime);
+            })
+            // Validar horas: now <= time_until
+            ->where(function ($q) use ($currentTime) {
+                $q->whereNull('time_until')
+                    ->orWhereTime('time_until', '>=', $currentTime);
+            })
+            // Validar días: weekday actual está en array weekdays
+            ->where(function ($q) use ($currentWeekday) {
+                $q->whereNull('weekdays')
+                    ->orWhereJsonContains('weekdays', $currentWeekday);
+            })
+            // Ordenar por sort_order y retornar la primera
+            ->orderBy('sort_order')
+            // Cargar relaciones
+            ->with(['items']);
+
+        return $query->first();
+    }
+
+    /**
+     * Obtiene el PromotionItem correspondiente a este producto de una promoción
+     */
+    public function getPromotionItem(Promotion $promotion): ?PromotionItem
+    {
+        // Primero buscar por product_id específico
+        $item = $promotion->items()
+            ->where('product_id', $this->id)
+            ->first();
+
+        if ($item) {
+            return $item;
+        }
+
+        // Si no hay item específico, buscar por category_id
+        return $promotion->items()
+            ->where('category_id', $this->category_id)
+            ->whereNull('product_id')
+            ->first();
     }
 }

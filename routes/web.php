@@ -19,6 +19,8 @@ use App\Http\Controllers\Menu\SectionController;
 use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\RestaurantGeofencesController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\Support\LegalDocumentController;
+use App\Http\Controllers\Support\SupportTicketController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -420,6 +422,57 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('permission:marketing.banners.edit');
         Route::post('banners/{banner}/toggle', [PromotionalBannerController::class, 'toggleActive'])->name('banners.toggle')
             ->middleware('permission:marketing.banners.edit');
+    });
+
+    // Support
+    Route::prefix('support')->name('support.')->group(function () {
+        // Términos y Condiciones
+        Route::get('terms-and-conditions', [LegalDocumentController::class, 'termsIndex'])->name('terms.index')
+            ->middleware('permission:support.legal.view');
+        Route::get('terms-and-conditions/create', [LegalDocumentController::class, 'termsCreate'])->name('terms.create')
+            ->middleware('permission:support.legal.edit');
+        Route::post('terms-and-conditions', [LegalDocumentController::class, 'termsStore'])->name('terms.store')
+            ->middleware('permission:support.legal.edit');
+        Route::get('terms-and-conditions/{document}/edit', [LegalDocumentController::class, 'termsEdit'])->name('terms.edit')
+            ->middleware('permission:support.legal.edit');
+        Route::put('terms-and-conditions/{document}', [LegalDocumentController::class, 'termsUpdate'])->name('terms.update')
+            ->middleware('permission:support.legal.edit');
+        Route::delete('terms-and-conditions/{document}', [LegalDocumentController::class, 'termsDestroy'])->name('terms.destroy')
+            ->middleware('permission:support.legal.edit');
+        Route::post('terms-and-conditions/{document}/publish', [LegalDocumentController::class, 'termsPublish'])->name('terms.publish')
+            ->middleware('permission:support.legal.edit');
+
+        // Política de Privacidad
+        Route::get('privacy-policy', [LegalDocumentController::class, 'privacyIndex'])->name('privacy.index')
+            ->middleware('permission:support.legal.view');
+        Route::get('privacy-policy/create', [LegalDocumentController::class, 'privacyCreate'])->name('privacy.create')
+            ->middleware('permission:support.legal.edit');
+        Route::post('privacy-policy', [LegalDocumentController::class, 'privacyStore'])->name('privacy.store')
+            ->middleware('permission:support.legal.edit');
+        Route::get('privacy-policy/{document}/edit', [LegalDocumentController::class, 'privacyEdit'])->name('privacy.edit')
+            ->middleware('permission:support.legal.edit');
+        Route::put('privacy-policy/{document}', [LegalDocumentController::class, 'privacyUpdate'])->name('privacy.update')
+            ->middleware('permission:support.legal.edit');
+        Route::delete('privacy-policy/{document}', [LegalDocumentController::class, 'privacyDestroy'])->name('privacy.destroy')
+            ->middleware('permission:support.legal.edit');
+        Route::post('privacy-policy/{document}/publish', [LegalDocumentController::class, 'privacyPublish'])->name('privacy.publish')
+            ->middleware('permission:support.legal.edit');
+
+        // Tickets de Soporte
+        Route::get('tickets', [SupportTicketController::class, 'index'])->name('tickets.index')
+            ->middleware('permission:support.tickets.view');
+        Route::get('tickets/{ticket}', [SupportTicketController::class, 'show'])->name('tickets.show')
+            ->middleware('permission:support.tickets.view');
+        Route::post('tickets/{ticket}/messages', [SupportTicketController::class, 'sendMessage'])->name('tickets.messages.store')
+            ->middleware('permission:support.tickets.manage');
+        Route::patch('tickets/{ticket}/assign', [SupportTicketController::class, 'assign'])->name('tickets.assign')
+            ->middleware('permission:support.tickets.assign');
+        Route::patch('tickets/{ticket}/status', [SupportTicketController::class, 'updateStatus'])->name('tickets.status')
+            ->middleware('permission:support.tickets.manage');
+        Route::patch('tickets/{ticket}/priority', [SupportTicketController::class, 'updatePriority'])->name('tickets.priority')
+            ->middleware('permission:support.tickets.manage');
+        Route::delete('tickets/{ticket}', [SupportTicketController::class, 'destroy'])->name('tickets.destroy')
+            ->middleware('permission:support.tickets.manage');
     });
 });
 

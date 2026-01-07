@@ -20,6 +20,7 @@ class BadgeResource extends JsonResource
                 'id' => $this->badgeType->id,
                 'name' => $this->badgeType->name,
                 'color' => $this->badgeType->color,
+                'text_color' => $this->badgeType->text_color,
             ],
             'validity_type' => $this->validity_type,
             'is_valid_now' => $this->isValidNow(),

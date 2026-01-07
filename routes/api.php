@@ -221,6 +221,9 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/history', [App\Http\Controllers\Api\V1\PointsController::class, 'history'])
                 ->name('history');
+
+            Route::get('/expiring', [App\Http\Controllers\Api\V1\PointsController::class, 'expiring'])
+                ->name('expiring');
         });
 
         // Product views (recently viewed)
@@ -303,5 +306,33 @@ Route::prefix('v1')->group(function () {
             ->name('show');
         Route::get('/{restaurant}/reviews', [App\Http\Controllers\Api\V1\Menu\RestaurantController::class, 'reviews'])
             ->name('reviews');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Legal Documents (Public - No Authentication Required)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['throttle:60,1'])->prefix('legal')->name('api.v1.legal.')->group(function () {
+        Route::get('/terms', [App\Http\Controllers\Api\V1\Support\LegalDocumentController::class, 'terms'])
+            ->name('terms');
+        Route::get('/privacy', [App\Http\Controllers\Api\V1\Support\LegalDocumentController::class, 'privacy'])
+            ->name('privacy');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Support Tickets (Authentication Required)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['auth:sanctum', 'throttle:api'])->prefix('support')->name('api.v1.support.')->group(function () {
+        Route::get('/tickets', [App\Http\Controllers\Api\V1\Support\SupportTicketController::class, 'index'])
+            ->name('tickets.index');
+        Route::post('/tickets', [App\Http\Controllers\Api\V1\Support\SupportTicketController::class, 'store'])
+            ->name('tickets.store');
+        Route::get('/tickets/{ticket}', [App\Http\Controllers\Api\V1\Support\SupportTicketController::class, 'show'])
+            ->name('tickets.show');
+        Route::post('/tickets/{ticket}/messages', [App\Http\Controllers\Api\V1\Support\SupportTicketController::class, 'sendMessage'])
+            ->name('tickets.messages.store');
     });
 });

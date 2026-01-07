@@ -96,7 +96,7 @@ class ComboController extends Controller
         if ($request->hasFile('image')) {
             $image = $request->file('image');
             $filename = Str::uuid().'.'.$image->getClientOriginalExtension();
-            $path = $image->storeAs('images', $filename, 'public');
+            $path = $image->storeAs('menu/combos', $filename, 'public');
             $validated['image'] = '/storage/'.$path;
         } else {
             unset($validated['image']);
@@ -215,7 +215,7 @@ class ComboController extends Controller
 
             $image = $request->file('image');
             $filename = Str::uuid().'.'.$image->getClientOriginalExtension();
-            $path = $image->storeAs('images', $filename, 'public');
+            $path = $image->storeAs('menu/combos', $filename, 'public');
             $validated['image'] = '/storage/'.$path;
         } elseif ($removeImage) {
             // Remove image if requested

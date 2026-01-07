@@ -129,7 +129,20 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="updated_at", type="string", format="date-time", example="2024-01-20T15:45:00Z"),
  *     @OA\Property(property="has_password", type="boolean", example=true, description="True si el usuario puede iniciar sesión con contraseña (oauth_provider=local)"),
  *     @OA\Property(property="has_google_linked", type="boolean", example=false, description="True si el usuario tiene cuenta de Google vinculada"),
+ *     @OA\Property(property="has_apple_linked", type="boolean", example=false, description="True si el usuario tiene cuenta de Apple vinculada"),
  *     @OA\Property(property="customer_type", ref="#/components/schemas/CustomerType", nullable=true, description="Tipo de cliente basado en puntos de lealtad"),
+ *     @OA\Property(
+ *         property="next_tier_info",
+ *         type="object",
+ *         nullable=true,
+ *         description="Información del siguiente nivel de lealtad. Null si ya está en el nivel máximo (Platino).",
+ *         @OA\Property(property="id", type="integer", example=3, description="ID del siguiente nivel"),
+ *         @OA\Property(property="name", type="string", example="Plata", description="Nombre del siguiente nivel"),
+ *         @OA\Property(property="points_required", type="integer", example=500, description="Puntos totales requeridos para alcanzar el nivel"),
+ *         @OA\Property(property="points_needed", type="integer", example=350, description="Puntos adicionales que faltan para subir"),
+ *         @OA\Property(property="multiplier", type="number", format="float", example=1.25, description="Multiplicador de puntos del siguiente nivel"),
+ *         @OA\Property(property="color", type="string", example="#C0C0C0", description="Color representativo del siguiente nivel")
+ *     ),
  *     @OA\Property(property="addresses", type="array", nullable=true, description="Direcciones del cliente (cuando se carga la relación)", @OA\Items(ref="#/components/schemas/CustomerAddress")),
  *     @OA\Property(property="nits", type="array", nullable=true, description="NITs del cliente (cuando se carga la relación)", @OA\Items(ref="#/components/schemas/CustomerNit")),
  *     @OA\Property(property="devices", type="array", nullable=true, description="Dispositivos activos del cliente (cuando se carga la relación)", @OA\Items(ref="#/components/schemas/CustomerDevice")),
@@ -280,7 +293,44 @@ namespace App\Http\Controllers;
  *         type="array",
  *         description="Badges del producto (ej: Nuevo, Popular)",
  *
- *         @OA\Items(type="object")
+ *         @OA\Items(ref="#/components/schemas/Badge")
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="active_promotion",
+ *         type="object",
+ *         nullable=true,
+ *         description="Promoción activa aplicable a este producto. Usar para mostrar precios tachados estilo Amazon/Temu.",
+ *         @OA\Property(property="id", type="integer", example=5, description="ID de la promoción"),
+ *         @OA\Property(property="type", type="string", example="percentage_discount", description="Tipo: percentage_discount, two_for_one, daily_special, bundle_special"),
+ *         @OA\Property(property="name", type="string", example="Promo Verano 15%", description="Nombre de la promoción"),
+ *         @OA\Property(property="discount_percent", type="number", format="float", nullable=true, example=15.0, description="Porcentaje de descuento si aplica"),
+ *         @OA\Property(
+ *             property="special_prices",
+ *             type="object",
+ *             description="Precios especiales fijos si la promoción los define",
+ *             @OA\Property(property="capital", type="number", format="float", nullable=true, example=35.00),
+ *             @OA\Property(property="interior", type="number", format="float", nullable=true, example=38.00)
+ *         ),
+ *         @OA\Property(
+ *             property="discounted_prices",
+ *             type="object",
+ *             nullable=true,
+ *             description="Precios finales con descuento aplicado (para mostrar en UI)",
+ *             @OA\Property(property="pickup_capital", type="number", format="float", example=38.25),
+ *             @OA\Property(property="delivery_capital", type="number", format="float", example=42.50),
+ *             @OA\Property(property="pickup_interior", type="number", format="float", example=40.80),
+ *             @OA\Property(property="delivery_interior", type="number", format="float", example=45.05)
+ *         ),
+ *         @OA\Property(
+ *             property="badge",
+ *             type="object",
+ *             nullable=true,
+ *             description="Badge visual de la promoción para mostrar en el producto",
+ *             @OA\Property(property="name", type="string", example="15% OFF"),
+ *             @OA\Property(property="color", type="string", example="#ef4444", description="Color de fondo del badge"),
+ *             @OA\Property(property="text_color", type="string", example="#ffffff", description="Color del texto del badge")
+ *         )
  *     )
  * )
  *
@@ -309,6 +359,42 @@ namespace App\Http\Controllers;
  *         @OA\Property(property="domicilio_capital", type="number", format="float", example=40.00),
  *         @OA\Property(property="pickup_interior", type="number", format="float", example=38.00),
  *         @OA\Property(property="domicilio_interior", type="number", format="float", example=43.00)
+ *     ),
+ *     @OA\Property(
+ *         property="active_promotion",
+ *         type="object",
+ *         nullable=true,
+ *         description="Promoción activa aplicable a esta variante. Usar para mostrar precios tachados estilo Amazon/Temu.",
+ *         @OA\Property(property="id", type="integer", example=5, description="ID de la promoción"),
+ *         @OA\Property(property="type", type="string", example="percentage_discount", description="Tipo: percentage_discount, two_for_one, daily_special, bundle_special"),
+ *         @OA\Property(property="name", type="string", example="Promo Verano 15%", description="Nombre de la promoción"),
+ *         @OA\Property(property="discount_percent", type="number", format="float", nullable=true, example=15.0, description="Porcentaje de descuento si aplica"),
+ *         @OA\Property(
+ *             property="special_prices",
+ *             type="object",
+ *             description="Precios especiales fijos si la promoción los define",
+ *             @OA\Property(property="capital", type="number", format="float", nullable=true, example=35.00),
+ *             @OA\Property(property="interior", type="number", format="float", nullable=true, example=38.00)
+ *         ),
+ *         @OA\Property(
+ *             property="discounted_prices",
+ *             type="object",
+ *             nullable=true,
+ *             description="Precios finales con descuento aplicado (para mostrar en UI)",
+ *             @OA\Property(property="pickup_capital", type="number", format="float", example=38.25),
+ *             @OA\Property(property="delivery_capital", type="number", format="float", example=42.50),
+ *             @OA\Property(property="pickup_interior", type="number", format="float", example=40.80),
+ *             @OA\Property(property="delivery_interior", type="number", format="float", example=45.05)
+ *         ),
+ *         @OA\Property(
+ *             property="badge",
+ *             type="object",
+ *             nullable=true,
+ *             description="Badge visual de la promoción para mostrar en la variante",
+ *             @OA\Property(property="name", type="string", example="15% OFF"),
+ *             @OA\Property(property="color", type="string", example="#ef4444", description="Color de fondo del badge"),
+ *             @OA\Property(property="text_color", type="string", example="#ffffff", description="Color del texto del badge")
+ *         )
  *     )
  * )
  *
@@ -342,8 +428,28 @@ namespace App\Http\Controllers;
  *         type="array",
  *         description="Badges del combo",
  *
- *         @OA\Items(type="object")
+ *         @OA\Items(ref="#/components/schemas/Badge")
  *     )
+ * )
+ *
+ * @OA\Schema(
+ *     schema="Badge",
+ *     type="object",
+ *     title="Badge",
+ *     description="Badge de producto o combo",
+ *
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(
+ *         property="badge_type",
+ *         type="object",
+ *         description="Tipo de badge",
+ *         @OA\Property(property="id", type="integer", example=1),
+ *         @OA\Property(property="name", type="string", example="Nuevo"),
+ *         @OA\Property(property="color", type="string", example="#22c55e", description="Color de fondo del badge"),
+ *         @OA\Property(property="text_color", type="string", example="#ffffff", description="Color del texto del badge")
+ *     ),
+ *     @OA\Property(property="validity_type", type="string", example="permanent", description="permanent, date_range, weekdays"),
+ *     @OA\Property(property="is_valid_now", type="boolean", example=true, description="Si el badge está activo actualmente")
  * )
  *
  * @OA\Schema(

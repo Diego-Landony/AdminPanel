@@ -14,7 +14,7 @@
             "description": "Local Development Server"
         },
         {
-            "url": "https://appmobile.subwaycardgt.com",
+            "url": "http://localhost",
             "description": "Application Server"
         }
     ],
@@ -1277,6 +1277,10 @@
                                                             "items": {
                                                                 "type": "object"
                                                             }
+                                                        },
+                                                        "points_to_earn": {
+                                                            "description": "Puntos que el cliente ganara al completar esta orden",
+                                                            "type": "integer"
                                                         }
                                                     },
                                                     "type": "object"
@@ -4522,31 +4526,43 @@
                 "tags": [
                     "Orders"
                 ],
-                "summary": "Get order history",
-                "description": "Returns paginated list of customer's orders.",
+                "summary": "Historial de pedidos del cliente",
+                "description": "Retorna lista paginada de todos los pedidos del cliente, incluyendo puntos ganados y redimidos en cada pedido.\n     *\n     * **Información de Puntos por Pedido:**\n     * - `points.earned`: Puntos ganados al completar el pedido\n     * - `points.redeemed`: Puntos canjeados en el pedido (descuento aplicado)\n     *\n     * **Filtros disponibles:**\n     * - `status`: pending, confirmed, preparing, ready, out_for_delivery, delivered, completed, cancelled\n     * - `per_page`: Número de items por página (default: 15)",
                 "operationId": "00d3856d2d3d93124e0cc021d0cb5b79",
                 "parameters": [
                     {
                         "name": "per_page",
                         "in": "query",
-                        "description": "Items per page",
+                        "description": "Items por página (default: 15, max: 50)",
                         "schema": {
                             "type": "integer",
+                            "maximum": 50,
+                            "minimum": 1,
                             "example": 15
                         }
                     },
                     {
                         "name": "status",
                         "in": "query",
-                        "description": "Filter by status",
+                        "description": "Filtrar por estado",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "confirmed",
+                                "preparing",
+                                "ready",
+                                "out_for_delivery",
+                                "delivered",
+                                "completed",
+                                "cancelled"
+                            ]
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Orders retrieved successfully",
+                        "description": "Historial obtenido exitosamente",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4554,8 +4570,160 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 123
+                                                    },
+                                                    "order_number": {
+                                                        "type": "string",
+                                                        "example": "ORD-20251215-0001"
+                                                    },
+                                                    "restaurant": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Subway Pradera"
+                                                            },
+                                                            "address": {
+                                                                "type": "string",
+                                                                "example": "Pradera Concepción, Zona 14"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "service_type": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "pickup",
+                                                            "delivery"
+                                                        ],
+                                                        "example": "pickup"
+                                                    },
+                                                    "zone": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "capital",
+                                                            "interior"
+                                                        ],
+                                                        "example": "capital"
+                                                    },
+                                                    "items": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "summary": {
+                                                        "properties": {
+                                                            "subtotal": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 85
+                                                            },
+                                                            "discount_total": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 10
+                                                            },
+                                                            "delivery_fee": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 15
+                                                            },
+                                                            "tax": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 0
+                                                            },
+                                                            "total": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 90
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "completed"
+                                                    },
+                                                    "payment": {
+                                                        "properties": {
+                                                            "method": {
+                                                                "type": "string",
+                                                                "example": "cash"
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "paid"
+                                                            },
+                                                            "paid_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "points": {
+                                                        "description": "Puntos de lealtad relacionados con este pedido",
+                                                        "properties": {
+                                                            "earned": {
+                                                                "description": "Puntos ganados al completar el pedido",
+                                                                "type": "integer",
+                                                                "example": 9
+                                                            },
+                                                            "redeemed": {
+                                                                "description": "Puntos canjeados como descuento",
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "timestamps": {
+                                                        "properties": {
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-12-15T15:00:00Z"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "has_review": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    }
+                                                },
                                                 "type": "object"
                                             }
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 67
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -4564,7 +4732,7 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "No autenticado"
                     }
                 },
                 "security": [
@@ -4888,14 +5056,14 @@
                 "tags": [
                     "Orders"
                 ],
-                "summary": "Get order details",
-                "description": "Returns detailed information about a specific order.",
+                "summary": "Detalle completo de un pedido",
+                "description": "Retorna información detallada de un pedido específico, incluyendo items, promociones aplicadas, puntos ganados/redimidos y estado de pago.\n     *\n     * **Información de Puntos:**\n     * - `points.earned`: Puntos de lealtad ganados al completar este pedido\n     * - `points.redeemed`: Puntos canjeados como descuento en este pedido\n     *\n     * **Información de Promociones:**\n     * - `promotions`: Array con promociones aplicadas y sus descuentos",
                 "operationId": "38713af501dbd66af5a66bd568a49bc2",
                 "parameters": [
                     {
                         "name": "order",
                         "in": "path",
-                        "description": "Order ID",
+                        "description": "ID del pedido",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -4905,12 +5073,162 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Order retrieved successfully",
+                        "description": "Pedido obtenido exitosamente",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 123
+                                                },
+                                                "order_number": {
+                                                    "type": "string",
+                                                    "example": "ORD-20251215-0001"
+                                                },
+                                                "restaurant": {
+                                                    "type": "object"
+                                                },
+                                                "service_type": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "pickup",
+                                                        "delivery"
+                                                    ]
+                                                },
+                                                "zone": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "capital",
+                                                        "interior"
+                                                    ]
+                                                },
+                                                "delivery_address": {
+                                                    "description": "Solo para delivery",
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Italian BMT 15cm"
+                                                            },
+                                                            "quantity": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "unit_price": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 45
+                                                            },
+                                                            "subtotal": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 90
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "promotions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "2x1 en Subs"
+                                                            },
+                                                            "type": {
+                                                                "type": "string",
+                                                                "example": "two_for_one"
+                                                            },
+                                                            "discount": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 45
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "summary": {
+                                                    "properties": {
+                                                        "subtotal": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 90
+                                                        },
+                                                        "discount_total": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 45
+                                                        },
+                                                        "delivery_fee": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 0
+                                                        },
+                                                        "tax": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 0
+                                                        },
+                                                        "total": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 45
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "completed"
+                                                },
+                                                "payment": {
+                                                    "type": "object"
+                                                },
+                                                "points": {
+                                                    "description": "Puntos de lealtad de este pedido",
+                                                    "properties": {
+                                                        "earned": {
+                                                            "description": "Puntos ganados (1 punto por cada Q10)",
+                                                            "type": "integer",
+                                                            "example": 5
+                                                        },
+                                                        "redeemed": {
+                                                            "description": "Puntos canjeados como descuento",
+                                                            "type": "integer",
+                                                            "example": 0
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "timestamps": {
+                                                    "type": "object"
+                                                },
+                                                "notes": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "can_cancel": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "has_review": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
                                             "type": "object"
                                         }
                                     },
@@ -4920,13 +5238,13 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "No autenticado"
                     },
                     "403": {
-                        "description": "Forbidden - Order does not belong to customer"
+                        "description": "Prohibido - El pedido no pertenece al cliente"
                     },
                     "404": {
-                        "description": "Order not found"
+                        "description": "Pedido no encontrado"
                     }
                 },
                 "security": [
@@ -5465,7 +5783,7 @@
                     "Points"
                 ],
                 "summary": "Historial de transacciones de puntos",
-                "description": "Retorna el historial paginado de todas las transacciones de puntos del cliente (ganados, redimidos, expirados).",
+                "description": "Retorna el historial paginado de todas las transacciones de puntos del cliente.\n     *\n     * **Tipos de transacciones:**\n     * - `earned`: Puntos ganados por compras (reference_type = Order)\n     * - `redeemed`: Puntos canjeados en compras (reference_type = Order)\n     * - `expired`: Puntos expirados por 6 meses de inactividad\n     * - `bonus`: Puntos de bonificación (promociones especiales)\n     * - `adjustment`: Ajustes manuales por soporte\n     *\n     * **Vinculación con Pedidos:**\n     * - Cuando `reference_type` = 'App\\\\Models\\\\Order', el `reference_id` es el ID del pedido\n     * - Usa GET /orders/{reference_id} para ver el detalle del pedido relacionado",
                 "operationId": "2ffd2f36b62c2f0c01c0adda715b0be7",
                 "parameters": [
                     {
@@ -5476,6 +5794,22 @@
                         "schema": {
                             "type": "integer",
                             "example": 1
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filtrar por tipo de transacción",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "earned",
+                                "redeemed",
+                                "expired",
+                                "bonus",
+                                "adjustment"
+                            ]
                         }
                     }
                 ],
@@ -5495,9 +5829,9 @@
                                                         "example": 123
                                                     },
                                                     "points": {
-                                                        "description": "Puntos (positivo = ganados, negativo = redimidos)",
+                                                        "description": "Puntos (positivo = ganados, negativo = redimidos/expirados)",
                                                         "type": "integer",
-                                                        "example": 50
+                                                        "example": 9
                                                     },
                                                     "type": {
                                                         "type": "string",
@@ -5512,22 +5846,24 @@
                                                     },
                                                     "description": {
                                                         "type": "string",
-                                                        "example": "Puntos ganados en orden #ORD-2025-000123"
+                                                        "example": "Puntos ganados en orden #ORD-20251215-0001"
                                                     },
                                                     "reference_type": {
+                                                        "description": "Tipo de entidad relacionada",
                                                         "type": "string",
                                                         "example": "App\\\\Models\\\\Order",
                                                         "nullable": true
                                                     },
                                                     "reference_id": {
+                                                        "description": "ID de la entidad relacionada (ej: order_id)",
                                                         "type": "integer",
-                                                        "example": 456,
+                                                        "example": 123,
                                                         "nullable": true
                                                     },
                                                     "created_at": {
                                                         "type": "string",
                                                         "format": "date-time",
-                                                        "example": "2025-12-10T15:30:00Z"
+                                                        "example": "2025-12-15T15:30:00Z"
                                                     }
                                                 },
                                                 "type": "object"
@@ -5550,6 +5886,89 @@
                                                 "total": {
                                                     "type": "integer",
                                                     "example": 87
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/points/expiring": {
+            "get": {
+                "tags": [
+                    "Points"
+                ],
+                "summary": "Ver información de expiración de puntos",
+                "description": "Retorna información sobre cuándo expirarán los puntos del cliente.\n     *\n     * **Regla de expiración:**\n     * - Los puntos expiran después de 6 meses de inactividad\n     * - 'Actividad' se define como cualquier transacción de puntos (ganar o canjear)\n     * - Si el cliente tiene puntos y no ha tenido actividad en 6 meses, los puntos se expiran automáticamente\n     *\n     * **Campos importantes:**\n     * - `will_expire`: true si los puntos están en riesgo de expirar\n     * - `expires_at`: fecha cuando expirarán (6 meses después de última actividad)\n     * - `days_until_expiration`: días restantes antes de expiración\n     * - `warning_level`: 'critical' (≤7 días), 'warning' (≤30 días), 'safe' (>30 días)",
+                "operationId": "b88eef3915e0e54dc52697215d13ed80",
+                "responses": {
+                    "200": {
+                        "description": "Información de expiración obtenida exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "points_balance": {
+                                                    "description": "Puntos actuales que podrían expirar",
+                                                    "type": "integer",
+                                                    "example": 250
+                                                },
+                                                "will_expire": {
+                                                    "description": "True si los puntos expirarán eventualmente",
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "expires_at": {
+                                                    "description": "Fecha de expiración (null si no hay puntos)",
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2026-06-15T10:30:00Z",
+                                                    "nullable": true
+                                                },
+                                                "days_until_expiration": {
+                                                    "description": "Días hasta expiración (null si no aplica)",
+                                                    "type": "integer",
+                                                    "example": 45,
+                                                    "nullable": true
+                                                },
+                                                "last_activity_at": {
+                                                    "description": "Última actividad de puntos",
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-12-15T10:30:00Z",
+                                                    "nullable": true
+                                                },
+                                                "warning_level": {
+                                                    "description": "Nivel de urgencia",
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "critical",
+                                                        "warning",
+                                                        "safe",
+                                                        "none"
+                                                    ],
+                                                    "example": "warning"
+                                                },
+                                                "message": {
+                                                    "description": "Mensaje amigable para mostrar al usuario",
+                                                    "type": "string",
+                                                    "example": "Tus puntos expirarán en 45 días si no realizas una compra"
                                                 }
                                             },
                                             "type": "object"
@@ -6217,6 +6636,165 @@
                     }
                 }
             }
+        },
+        "/api/v1/legal/terms": {
+            "get": {
+                "tags": [
+                    "Legal"
+                ],
+                "summary": "Get published terms and conditions",
+                "operationId": "4b21bee0c7e3452311bff3327305ad1e",
+                "responses": {
+                    "200": {
+                        "description": "Terms and conditions retrieved successfully"
+                    }
+                }
+            }
+        },
+        "/api/v1/legal/privacy": {
+            "get": {
+                "tags": [
+                    "Legal"
+                ],
+                "summary": "Get published privacy policy",
+                "operationId": "29a3b997000ccdfebd3b0767dc3574ea",
+                "responses": {
+                    "200": {
+                        "description": "Privacy policy retrieved successfully"
+                    }
+                }
+            }
+        },
+        "/api/v1/support/tickets": {
+            "get": {
+                "tags": [
+                    "Support"
+                ],
+                "summary": "List customer's support tickets",
+                "operationId": "00700d17e09746a5de113c283d7faaf6",
+                "responses": {
+                    "200": {
+                        "description": "Tickets retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Support"
+                ],
+                "summary": "Create a new support ticket",
+                "operationId": "94e699b48554980d6280d34a8aa405f5",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "subject",
+                                    "message"
+                                ],
+                                "properties": {
+                                    "subject": {
+                                        "type": "string"
+                                    },
+                                    "message": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Ticket created successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/support/tickets/{id}": {
+            "get": {
+                "tags": [
+                    "Support"
+                ],
+                "summary": "Get a specific ticket with messages",
+                "operationId": "c1d10a28b6e68c4c0d934fb42d97fa97",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/support/tickets/{id}/messages": {
+            "post": {
+                "tags": [
+                    "Support"
+                ],
+                "summary": "Send a message to a ticket",
+                "operationId": "ff31fe65022dba0bd99be68a24ce891a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "message": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Message sent successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -6407,6 +6985,11 @@
                         "type": "boolean",
                         "example": false
                     },
+                    "has_apple_linked": {
+                        "description": "True si el usuario tiene cuenta de Apple vinculada",
+                        "type": "boolean",
+                        "example": false
+                    },
                     "customer_type": {
                         "oneOf": [
                             {
@@ -6415,6 +6998,44 @@
                         ],
                         "nullable": true,
                         "description": "Tipo de cliente basado en puntos de lealtad"
+                    },
+                    "next_tier_info": {
+                        "description": "Información del siguiente nivel de lealtad. Null si ya está en el nivel máximo (Platino).",
+                        "properties": {
+                            "id": {
+                                "description": "ID del siguiente nivel",
+                                "type": "integer",
+                                "example": 3
+                            },
+                            "name": {
+                                "description": "Nombre del siguiente nivel",
+                                "type": "string",
+                                "example": "Plata"
+                            },
+                            "points_required": {
+                                "description": "Puntos totales requeridos para alcanzar el nivel",
+                                "type": "integer",
+                                "example": 500
+                            },
+                            "points_needed": {
+                                "description": "Puntos adicionales que faltan para subir",
+                                "type": "integer",
+                                "example": 350
+                            },
+                            "multiplier": {
+                                "description": "Multiplicador de puntos del siguiente nivel",
+                                "type": "number",
+                                "format": "float",
+                                "example": 1.25
+                            },
+                            "color": {
+                                "description": "Color representativo del siguiente nivel",
+                                "type": "string",
+                                "example": "#C0C0C0"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
                     },
                     "addresses": {
                         "description": "Direcciones del cliente (cuando se carga la relación)",
@@ -6826,8 +7447,103 @@
                         "description": "Badges del producto (ej: Nuevo, Popular)",
                         "type": "array",
                         "items": {
-                            "type": "object"
+                            "$ref": "#/components/schemas/Badge"
                         }
+                    },
+                    "active_promotion": {
+                        "description": "Promoción activa aplicable a este producto. Usar para mostrar precios tachados estilo Amazon/Temu.",
+                        "properties": {
+                            "id": {
+                                "description": "ID de la promoción",
+                                "type": "integer",
+                                "example": 5
+                            },
+                            "type": {
+                                "description": "Tipo: percentage_discount, two_for_one, daily_special, bundle_special",
+                                "type": "string",
+                                "example": "percentage_discount"
+                            },
+                            "name": {
+                                "description": "Nombre de la promoción",
+                                "type": "string",
+                                "example": "Promo Verano 15%"
+                            },
+                            "discount_percent": {
+                                "description": "Porcentaje de descuento si aplica",
+                                "type": "number",
+                                "format": "float",
+                                "example": 15,
+                                "nullable": true
+                            },
+                            "special_prices": {
+                                "description": "Precios especiales fijos si la promoción los define",
+                                "properties": {
+                                    "capital": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 35,
+                                        "nullable": true
+                                    },
+                                    "interior": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 38,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "discounted_prices": {
+                                "description": "Precios finales con descuento aplicado (para mostrar en UI)",
+                                "properties": {
+                                    "pickup_capital": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 38.25
+                                    },
+                                    "delivery_capital": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 42.5
+                                    },
+                                    "pickup_interior": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 40.8
+                                    },
+                                    "delivery_interior": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 45.05
+                                    }
+                                },
+                                "type": "object",
+                                "nullable": true
+                            },
+                            "badge": {
+                                "description": "Badge visual de la promoción para mostrar en el producto",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "15% OFF"
+                                    },
+                                    "color": {
+                                        "description": "Color de fondo del badge",
+                                        "type": "string",
+                                        "example": "#ef4444"
+                                    },
+                                    "text_color": {
+                                        "description": "Color del texto del badge",
+                                        "type": "string",
+                                        "example": "#ffffff"
+                                    }
+                                },
+                                "type": "object",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -6915,6 +7631,101 @@
                         },
                         "type": "object",
                         "nullable": true
+                    },
+                    "active_promotion": {
+                        "description": "Promoción activa aplicable a esta variante. Usar para mostrar precios tachados estilo Amazon/Temu.",
+                        "properties": {
+                            "id": {
+                                "description": "ID de la promoción",
+                                "type": "integer",
+                                "example": 5
+                            },
+                            "type": {
+                                "description": "Tipo: percentage_discount, two_for_one, daily_special, bundle_special",
+                                "type": "string",
+                                "example": "percentage_discount"
+                            },
+                            "name": {
+                                "description": "Nombre de la promoción",
+                                "type": "string",
+                                "example": "Promo Verano 15%"
+                            },
+                            "discount_percent": {
+                                "description": "Porcentaje de descuento si aplica",
+                                "type": "number",
+                                "format": "float",
+                                "example": 15,
+                                "nullable": true
+                            },
+                            "special_prices": {
+                                "description": "Precios especiales fijos si la promoción los define",
+                                "properties": {
+                                    "capital": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 35,
+                                        "nullable": true
+                                    },
+                                    "interior": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 38,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "discounted_prices": {
+                                "description": "Precios finales con descuento aplicado (para mostrar en UI)",
+                                "properties": {
+                                    "pickup_capital": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 38.25
+                                    },
+                                    "delivery_capital": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 42.5
+                                    },
+                                    "pickup_interior": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 40.8
+                                    },
+                                    "delivery_interior": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 45.05
+                                    }
+                                },
+                                "type": "object",
+                                "nullable": true
+                            },
+                            "badge": {
+                                "description": "Badge visual de la promoción para mostrar en la variante",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "15% OFF"
+                                    },
+                                    "color": {
+                                        "description": "Color de fondo del badge",
+                                        "type": "string",
+                                        "example": "#ef4444"
+                                    },
+                                    "text_color": {
+                                        "description": "Color del texto del badge",
+                                        "type": "string",
+                                        "example": "#ffffff"
+                                    }
+                                },
+                                "type": "object",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -6983,8 +7794,53 @@
                         "description": "Badges del combo",
                         "type": "array",
                         "items": {
-                            "type": "object"
+                            "$ref": "#/components/schemas/Badge"
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "Badge": {
+                "title": "Badge",
+                "description": "Badge de producto o combo",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "badge_type": {
+                        "description": "Tipo de badge",
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Nuevo"
+                            },
+                            "color": {
+                                "description": "Color de fondo del badge",
+                                "type": "string",
+                                "example": "#22c55e"
+                            },
+                            "text_color": {
+                                "description": "Color del texto del badge",
+                                "type": "string",
+                                "example": "#ffffff"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "validity_type": {
+                        "description": "permanent, date_range, weekdays",
+                        "type": "string",
+                        "example": "permanent"
+                    },
+                    "is_valid_now": {
+                        "description": "Si el badge está activo actualmente",
+                        "type": "boolean",
+                        "example": true
                     }
                 },
                 "type": "object"
@@ -7269,6 +8125,14 @@
         {
             "name": "Rewards",
             "description": "Rewards"
+        },
+        {
+            "name": "Legal",
+            "description": "Legal"
+        },
+        {
+            "name": "Support",
+            "description": "Support"
         }
     ]
 }

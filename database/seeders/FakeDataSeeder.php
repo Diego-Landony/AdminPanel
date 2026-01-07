@@ -2,10 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Customer;
-use App\Models\CustomerAddress;
 use App\Models\Restaurant;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class FakeDataSeeder extends Seeder
@@ -15,137 +12,10 @@ class FakeDataSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->command->info('🚀 Creando 10 usuarios fake...');
-        $this->createUsers();
-
-        $this->command->info('👥 Creando 30 clientes fake con diferentes tipos...');
-        $this->createCustomers();
-
         $this->command->info('🏪 Creando 30 restaurantes Subway fake...');
         $this->createRestaurants();
 
         $this->command->info('✅ Datos fake creados exitosamente!');
-    }
-
-    /**
-     * Crear 10 usuarios fake
-     */
-    private function createUsers(): void
-    {
-        // Nombres guatemaltecos realistas
-        $guatemalanNames = [
-            ['name' => 'Carlos Enrique Morales García', 'email' => 'carlos.morales@gmail.com'],
-            ['name' => 'María José Hernández López', 'email' => 'maria.hernandez@yahoo.com'],
-            ['name' => 'José Antonio Pérez Rodríguez', 'email' => 'jose.perez@hotmail.com'],
-            ['name' => 'Ana Lucía Ramírez Santos', 'email' => 'ana.ramirez@gmail.com'],
-            ['name' => 'Luis Fernando García Martínez', 'email' => 'luis.garcia@outlook.com'],
-            ['name' => 'Claudia Patricia Flores Díaz', 'email' => 'claudia.flores@gmail.com'],
-            ['name' => 'Roberto Carlos Méndez Ruiz', 'email' => 'roberto.mendez@yahoo.com'],
-            ['name' => 'Silvia Elena Torres Vásquez', 'email' => 'silvia.torres@gmail.com'],
-            ['name' => 'Marco Antonio López Gómez', 'email' => 'marco.lopez@hotmail.com'],
-            ['name' => 'Patricia Isabel Cruz Castillo', 'email' => 'patricia.cruz@gmail.com'],
-        ];
-
-        foreach ($guatemalanNames as $userData) {
-            User::factory()
-                ->state([
-                    'name' => $userData['name'],
-                    'email' => $userData['email'],
-                ])
-                ->create();
-        }
-    }
-
-    /**
-     * Crear 30 clientes fake distribuidos por tipos
-     */
-    private function createCustomers(): void
-    {
-        // Obtener los tipos de cliente desde la base de datos
-        $customerTypes = \App\Models\CustomerType::pluck('id', 'name')->toArray();
-
-        // Nombres guatemaltecos realistas para clientes
-        $guatemalanCustomers = [
-            // Regular (10 clientes con 0-49 puntos)
-            ['first_name' => 'Juan Carlos', 'last_name' => 'Cifuentes Méndez', 'email' => 'juan.cifuentes@gmail.com', 'type_name' => 'Regular', 'points' => 15],
-            ['first_name' => 'Sofía Alejandra', 'last_name' => 'Morales Díaz', 'email' => 'sofia.morales@yahoo.com', 'type_name' => 'Regular', 'points' => 22],
-            ['first_name' => 'Pedro Luis', 'last_name' => 'González Ramírez', 'email' => 'pedro.gonzalez@hotmail.com', 'type_name' => 'Regular', 'points' => 8],
-            ['first_name' => 'Carmen Rosa', 'last_name' => 'Pérez López', 'email' => 'carmen.perez@gmail.com', 'type_name' => 'Regular', 'points' => 35],
-            ['first_name' => 'Diego Armando', 'last_name' => 'Castillo Flores', 'email' => 'diego.castillo@outlook.com', 'type_name' => 'Regular', 'points' => 18],
-            ['first_name' => 'Gabriela Fernanda', 'last_name' => 'Herrera Santos', 'email' => 'gabriela.herrera@gmail.com', 'type_name' => 'Regular', 'points' => 42],
-            ['first_name' => 'Miguel Ángel', 'last_name' => 'Rodríguez García', 'email' => 'miguel.rodriguez@yahoo.com', 'type_name' => 'Regular', 'points' => 12],
-            ['first_name' => 'Valentina Isabella', 'last_name' => 'Ortiz Martínez', 'email' => 'valentina.ortiz@gmail.com', 'type_name' => 'Regular', 'points' => 28],
-            ['first_name' => 'Fernando José', 'last_name' => 'Vásquez Ruiz', 'email' => 'fernando.vasquez@hotmail.com', 'type_name' => 'Regular', 'points' => 38],
-            ['first_name' => 'Andrea Carolina', 'last_name' => 'Méndez Torres', 'email' => 'andrea.mendez@gmail.com', 'type_name' => 'Regular', 'points' => 45],
-
-            // Bronce (8 clientes con 50-124 puntos)
-            ['first_name' => 'Ricardo Daniel', 'last_name' => 'López Cruz', 'email' => 'ricardo.lopez@gmail.com', 'type_name' => 'Bronce', 'points' => 65],
-            ['first_name' => 'Mónica Patricia', 'last_name' => 'García Sánchez', 'email' => 'monica.garcia@yahoo.com', 'type_name' => 'Bronce', 'points' => 78],
-            ['first_name' => 'Javier Enrique', 'last_name' => 'Ramírez Gómez', 'email' => 'javier.ramirez@hotmail.com', 'type_name' => 'Bronce', 'points' => 92],
-            ['first_name' => 'Lucía Fernanda', 'last_name' => 'Díaz Morales', 'email' => 'lucia.diaz@gmail.com', 'type_name' => 'Bronce', 'points' => 58],
-            ['first_name' => 'Alejandro Manuel', 'last_name' => 'Flores Pérez', 'email' => 'alejandro.flores@outlook.com', 'type_name' => 'Bronce', 'points' => 105],
-            ['first_name' => 'Diana Sofía', 'last_name' => 'Santos Hernández', 'email' => 'diana.santos@gmail.com', 'type_name' => 'Bronce', 'points' => 82],
-            ['first_name' => 'Jorge Luis', 'last_name' => 'Martínez Castillo', 'email' => 'jorge.martinez@yahoo.com', 'type_name' => 'Bronce', 'points' => 115],
-            ['first_name' => 'Isabella María', 'last_name' => 'Rodríguez López', 'email' => 'isabella.rodriguez@gmail.com', 'type_name' => 'Bronce', 'points' => 95],
-
-            // Plata (6 clientes con 125-324 puntos)
-            ['first_name' => 'Eduardo Antonio', 'last_name' => 'García Ruiz', 'email' => 'eduardo.garcia@gmail.com', 'type_name' => 'Plata', 'points' => 185],
-            ['first_name' => 'Daniela Alejandra', 'last_name' => 'Pérez Torres', 'email' => 'daniela.perez@yahoo.com', 'type_name' => 'Plata', 'points' => 225],
-            ['first_name' => 'Gustavo Adolfo', 'last_name' => 'Méndez Díaz', 'email' => 'gustavo.mendez@hotmail.com', 'type_name' => 'Plata', 'points' => 265],
-            ['first_name' => 'Carolina Isabel', 'last_name' => 'Flores Morales', 'email' => 'carolina.flores@gmail.com', 'type_name' => 'Plata', 'points' => 198],
-            ['first_name' => 'Rodrigo Sebastián', 'last_name' => 'López García', 'email' => 'rodrigo.lopez@outlook.com', 'type_name' => 'Plata', 'points' => 285],
-            ['first_name' => 'Natalia Valeria', 'last_name' => 'Ramírez Santos', 'email' => 'natalia.ramirez@gmail.com', 'type_name' => 'Plata', 'points' => 245],
-
-            // Oro (4 clientes con 325-999 puntos)
-            ['first_name' => 'Alberto Francisco', 'last_name' => 'Martínez López', 'email' => 'alberto.martinez@gmail.com', 'type_name' => 'Oro', 'points' => 485],
-            ['first_name' => 'Paola Andrea', 'last_name' => 'García Pérez', 'email' => 'paola.garcia@yahoo.com', 'type_name' => 'Oro', 'points' => 625],
-            ['first_name' => 'Sergio Alejandro', 'last_name' => 'Díaz Rodríguez', 'email' => 'sergio.diaz@hotmail.com', 'type_name' => 'Oro', 'points' => 765],
-            ['first_name' => 'Mariana José', 'last_name' => 'Flores Hernández', 'email' => 'mariana.flores@gmail.com', 'type_name' => 'Oro', 'points' => 545],
-
-            // Platino (2 clientes con 1000+ puntos)
-            ['first_name' => 'Francisco Javier', 'last_name' => 'López Martínez', 'email' => 'francisco.lopez@gmail.com', 'type_name' => 'Platino', 'points' => 1450],
-            ['first_name' => 'Victoria Eugenia', 'last_name' => 'García Ruiz', 'email' => 'victoria.garcia@yahoo.com', 'type_name' => 'Platino', 'points' => 2150],
-        ];
-
-        foreach ($guatemalanCustomers as $customerData) {
-            // Generar tarjeta Subway única (10 dígitos)
-            $subwayCard = str_pad(rand(1000000000, 9999999999), 10, '0', STR_PAD_LEFT);
-
-            $customer = Customer::factory()
-                ->state([
-                    'first_name' => $customerData['first_name'],
-                    'last_name' => $customerData['last_name'],
-                    'email' => $customerData['email'],
-                    'customer_type_id' => $customerTypes[$customerData['type_name']],
-                    'points' => $customerData['points'],
-                    'subway_card' => $subwayCard,
-                    'phone' => '+502 '.rand(3000, 5999).' '.rand(1000, 9999),
-                    'gender' => rand(0, 1) ? 'masculino' : 'femenino',
-                    'last_purchase_at' => now()->subDays(rand(1, 60)),
-                ])
-                ->create();
-
-            // Crear 1-3 direcciones para cada cliente
-            $numberOfAddresses = rand(1, 3);
-            for ($i = 0; $i < $numberOfAddresses; $i++) {
-                CustomerAddress::factory()
-                    ->state([
-                        'customer_id' => $customer->id,
-                        'is_default' => $i === 0, // La primera es la predeterminada
-                    ])
-                    ->create();
-            }
-
-            // Crear 1-3 dispositivos para cada cliente
-            $deviceCount = rand(1, 3);
-            for ($i = 0; $i < $deviceCount; $i++) {
-                \App\Models\CustomerDevice::factory()
-                    ->active()
-                    ->create([
-                        'customer_id' => $customer->id,
-                    ]);
-            }
-        }
     }
 
     /**
@@ -196,61 +66,12 @@ class FakeDataSeeder extends Seeder
                     'phone' => '+502 '.rand(2200, 2599).' '.rand(1000, 9999),
                     'email' => strtolower(str_replace(' ', '.', $location['name'])).'@subway.com.gt',
                     'is_active' => true,
-                    'delivery_active' => rand(0, 10) > 2, // 80% tienen delivery
+                    'delivery_active' => rand(0, 10) > 2,
                     'pickup_active' => true,
                     'minimum_order_amount' => rand(50, 100),
                     'estimated_delivery_time' => rand(25, 45),
                 ])
                 ->create();
         }
-    }
-
-    /**
-     * Obtener nombre guatemalteco aleatorio
-     */
-    private function getRandomGuatemalaName(): string
-    {
-        $names = [
-            'Carlos Enrique Morales',
-            'María José Hernández',
-            'José Antonio Pérez',
-            'Ana Lucía Ramírez',
-            'Luis Fernando García',
-            'Claudia Patricia Flores',
-            'Roberto Carlos Méndez',
-            'Silvia Elena Torres',
-            'Marco Antonio López',
-            'Patricia Isabel Cruz',
-        ];
-
-        return $names[array_rand($names)];
-    }
-
-    /**
-     * Obtener coordenadas aleatorias de Guatemala City y alrededores
-     */
-    private function getRandomGuatemalaCoordinates(): array
-    {
-        // Coordenadas de diferentes zonas de Guatemala
-        $zones = [
-            ['lat' => 14.6349, 'lng' => -90.5069], // Centro Guatemala City
-            ['lat' => 14.6095, 'lng' => -90.5289], // Zona 10
-            ['lat' => 14.5927, 'lng' => -90.5131], // Zona 14
-            ['lat' => 14.6123, 'lng' => -90.4892], // Zona 15
-            ['lat' => 14.6234, 'lng' => -90.4721], // Zona 16
-            ['lat' => 14.5260, 'lng' => -90.5866], // Villa Nueva
-            ['lat' => 14.6333, 'lng' => -90.6144], // Mixco
-            ['lat' => 14.5608, 'lng' => -90.7344], // Antigua Guatemala
-            ['lat' => 14.3003, 'lng' => -90.7827], // Escuintla
-            ['lat' => 14.6611, 'lng' => -90.8200], // Chimaltenango
-        ];
-
-        $baseCoords = $zones[array_rand($zones)];
-
-        // Agregar pequeña variación aleatoria (±0.01 grados ≈ ±1km)
-        return [
-            'lat' => $baseCoords['lat'] + (rand(-100, 100) / 10000),
-            'lng' => $baseCoords['lng'] + (rand(-100, 100) / 10000),
-        ];
     }
 }

@@ -86,7 +86,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['product_id']);
-            $table->index(['sku']);
+            // sku already has unique constraint which acts as an index
             $table->index(['is_active']);
         });
 
@@ -116,7 +116,7 @@ return new class extends Migration
             $table->integer('sort_order')->default(0);
             $table->timestamps();
 
-            $table->index(['section_id'], 'idx_section');
+            $table->index(['section_id'], 'idx_so_section');
         });
 
         // ==================== PRODUCT_SECTIONS (Pivot) ====================
@@ -128,8 +128,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['product_id', 'section_id'], 'unique_product_section');
-            $table->index(['product_id'], 'idx_product');
-            $table->index(['section_id'], 'idx_section');
+            $table->index(['product_id'], 'idx_ps_product');
+            $table->index(['section_id'], 'idx_ps_section');
         });
     }
 

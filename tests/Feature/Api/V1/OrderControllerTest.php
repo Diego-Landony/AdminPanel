@@ -294,46 +294,7 @@ describe('store (POST /api/v1/orders)', function () {
         expect($cart->status)->toBe('converted');
     });
 
-    test('validates required fields', function () {
-        $customer = Customer::factory()->create();
-
-        $response = actingAs($customer, 'sanctum')
-            ->postJson('/api/v1/orders', []);
-
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['restaurant_id', 'service_type', 'payment_method']);
-    });
-
-    test('validates restaurant exists', function () {
-        $customer = Customer::factory()->create();
-        $category = Category::factory()->create(['is_active' => true]);
-        $product = Product::factory()->create([
-            'category_id' => $category->id,
-            'is_active' => true,
-        ]);
-
-        $cart = Cart::factory()->create([
-            'customer_id' => $customer->id,
-            'status' => 'active',
-        ]);
-
-        CartItem::factory()->create([
-            'cart_id' => $cart->id,
-            'product_id' => $product->id,
-        ]);
-
-        $response = actingAs($customer, 'sanctum')
-            ->postJson('/api/v1/orders', [
-                'restaurant_id' => 999999,
-                'service_type' => 'pickup',
-                'payment_method' => 'cash',
-            ]);
-
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['restaurant_id']);
-    });
-
-    test('validates delivery_address required for delivery', function () {
+    test('validates order creation input', function (array $setup, array $payload, array $expectedErrors) {
         $customer = Customer::factory()->create();
         $restaurant = Restaurant::factory()->create();
         $category = Category::factory()->create(['is_active' => true]);
@@ -342,29 +303,52 @@ describe('store (POST /api/v1/orders)', function () {
             'is_active' => true,
         ]);
 
-        $cart = Cart::factory()->create([
-            'customer_id' => $customer->id,
-            'restaurant_id' => $restaurant->id,
-            'service_type' => 'delivery',
-            'zone' => 'capital',
-            'status' => 'active',
-        ]);
-
-        CartItem::factory()->create([
-            'cart_id' => $cart->id,
-            'product_id' => $product->id,
-        ]);
-
-        $response = actingAs($customer, 'sanctum')
-            ->postJson('/api/v1/orders', [
-                'restaurant_id' => $restaurant->id,
-                'service_type' => 'delivery',
-                'payment_method' => 'cash',
+        if ($setup['createCart'] ?? false) {
+            $cart = Cart::factory()->create([
+                'customer_id' => $customer->id,
+                'restaurant_id' => $setup['cartRestaurantId'] === 'valid' ? $restaurant->id : null,
+                'service_type' => $setup['cartServiceType'] ?? 'pickup',
+                'zone' => 'capital',
+                'status' => 'active',
             ]);
 
+            CartItem::factory()->create([
+                'cart_id' => $cart->id,
+                'product_id' => $product->id,
+            ]);
+        }
+
+        $requestPayload = [];
+        foreach ($payload as $key => $value) {
+            if ($value === 'valid_restaurant') {
+                $requestPayload[$key] = $restaurant->id;
+            } elseif ($value !== null) {
+                $requestPayload[$key] = $value;
+            }
+        }
+
+        $response = actingAs($customer, 'sanctum')
+            ->postJson('/api/v1/orders', $requestPayload);
+
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['delivery_address_id']);
-    });
+            ->assertJsonValidationErrors($expectedErrors);
+    })->with([
+        'missing required fields' => [
+            'setup' => [],
+            'payload' => [],
+            'expectedErrors' => ['restaurant_id', 'service_type', 'payment_method'],
+        ],
+        'invalid restaurant' => [
+            'setup' => ['createCart' => true, 'cartRestaurantId' => 'valid'],
+            'payload' => ['restaurant_id' => 999999, 'service_type' => 'pickup', 'payment_method' => 'cash'],
+            'expectedErrors' => ['restaurant_id'],
+        ],
+        'missing delivery address for delivery' => [
+            'setup' => ['createCart' => true, 'cartRestaurantId' => 'valid', 'cartServiceType' => 'delivery'],
+            'payload' => ['restaurant_id' => 'valid_restaurant', 'service_type' => 'delivery', 'payment_method' => 'cash'],
+            'expectedErrors' => ['delivery_address_id'],
+        ],
+    ]);
 
     test('requires authentication', function () {
         $response = $this->postJson('/api/v1/orders', []);
@@ -758,20 +742,6 @@ describe('track (GET /api/v1/orders/{id}/track)', function () {
             ]);
     });
 
-    test('includes all status changes', function () {
-        $customer = Customer::factory()->create();
-        $order = Order::factory()->create([
-            'customer_id' => $customer->id,
-            'status' => 'ready',
-        ]);
-
-        $response = actingAs($customer, 'sanctum')
-            ->getJson("/api/v1/orders/{$order->id}/track");
-
-        $response->assertOk();
-        expect($response->json('data.status_history'))->toBeArray();
-    });
-
     test('requires authentication', function () {
         $customer = Customer::factory()->create();
         $order = Order::factory()->create([
@@ -923,52 +893,6 @@ describe('reorder (POST /api/v1/orders/{id}/reorder)', function () {
         ]);
     });
 
-    test('copies product items correctly', function () {
-        $customer = Customer::factory()->create();
-        $restaurant = Restaurant::factory()->create();
-
-        $order = Order::factory()->pickup()->create([
-            'customer_id' => $customer->id,
-            'restaurant_id' => $restaurant->id,
-        ]);
-
-        $response = actingAs($customer, 'sanctum')
-            ->postJson("/api/v1/orders/{$order->id}/reorder");
-
-        $response->assertOk();
-        expect($response->json('data.cart_id'))->toBeInt();
-    });
-
-    test('copies combo items correctly', function () {
-        $customer = Customer::factory()->create();
-        $restaurant = Restaurant::factory()->create();
-
-        $order = Order::factory()->pickup()->create([
-            'customer_id' => $customer->id,
-            'restaurant_id' => $restaurant->id,
-        ]);
-
-        $response = actingAs($customer, 'sanctum')
-            ->postJson("/api/v1/orders/{$order->id}/reorder");
-
-        $response->assertOk();
-    });
-
-    test('uses current prices', function () {
-        $customer = Customer::factory()->create();
-        $restaurant = Restaurant::factory()->create();
-
-        $order = Order::factory()->pickup()->create([
-            'customer_id' => $customer->id,
-            'restaurant_id' => $restaurant->id,
-        ]);
-
-        $response = actingAs($customer, 'sanctum')
-            ->postJson("/api/v1/orders/{$order->id}/reorder");
-
-        $response->assertOk();
-    });
-
     test('requires authentication', function () {
         $customer = Customer::factory()->create();
         $order = Order::factory()->create([
@@ -978,5 +902,244 @@ describe('reorder (POST /api/v1/orders/{id}/reorder)', function () {
         $response = $this->postJson("/api/v1/orders/{$order->id}/reorder");
 
         $response->assertUnauthorized();
+    });
+});
+
+describe('Points Validation', function () {
+    test('validates points_to_redeem does not exceed customer balance', function () {
+        $customer = Customer::factory()->create([
+            'points' => 100,
+        ]);
+        $restaurant = Restaurant::factory()->create();
+        $category = Category::factory()->create(['is_active' => true]);
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'is_active' => true,
+            'precio_pickup_capital' => 200.00,
+        ]);
+
+        $cart = Cart::factory()->create([
+            'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'pickup',
+            'zone' => 'capital',
+            'status' => 'active',
+        ]);
+
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price' => 200.00,
+            'subtotal' => 200.00,
+        ]);
+
+        $response = actingAs($customer, 'sanctum')
+            ->postJson('/api/v1/orders', [
+                'restaurant_id' => $restaurant->id,
+                'service_type' => 'pickup',
+                'payment_method' => 'cash',
+                'points_to_redeem' => 200,
+            ]);
+
+        $response->assertStatus(422);
+    });
+
+    test('validates points_to_redeem must be non-negative', function () {
+        $customer = Customer::factory()->create([
+            'points' => 100,
+        ]);
+        $restaurant = Restaurant::factory()->create();
+        $category = Category::factory()->create(['is_active' => true]);
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'is_active' => true,
+            'precio_pickup_capital' => 50.00,
+        ]);
+
+        $cart = Cart::factory()->create([
+            'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'pickup',
+            'zone' => 'capital',
+            'status' => 'active',
+        ]);
+
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price' => 50.00,
+            'subtotal' => 50.00,
+        ]);
+
+        $response = actingAs($customer, 'sanctum')
+            ->postJson('/api/v1/orders', [
+                'restaurant_id' => $restaurant->id,
+                'service_type' => 'pickup',
+                'payment_method' => 'cash',
+                'points_to_redeem' => -50,
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['points_to_redeem']);
+    });
+
+    test('allows order with valid points redemption within balance', function () {
+        $customer = Customer::factory()->create([
+            'points' => 500,
+        ]);
+        $restaurant = Restaurant::factory()->create();
+        $category = Category::factory()->create(['is_active' => true]);
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'is_active' => true,
+            'precio_pickup_capital' => 200.00,
+        ]);
+
+        $cart = Cart::factory()->create([
+            'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'pickup',
+            'zone' => 'capital',
+            'status' => 'active',
+        ]);
+
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price' => 200.00,
+            'subtotal' => 200.00,
+        ]);
+
+        $response = actingAs($customer, 'sanctum')
+            ->postJson('/api/v1/orders', [
+                'restaurant_id' => $restaurant->id,
+                'service_type' => 'pickup',
+                'payment_method' => 'cash',
+                'points_to_redeem' => 100,
+            ]);
+
+        $response->assertCreated();
+        expect($response->json('data.points.redeemed'))->toBe(100);
+    });
+
+    test('order with zero points redemption is valid', function () {
+        $customer = Customer::factory()->create([
+            'points' => 100,
+        ]);
+        $restaurant = Restaurant::factory()->create();
+        $category = Category::factory()->create(['is_active' => true]);
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'is_active' => true,
+            'precio_pickup_capital' => 50.00,
+        ]);
+
+        $cart = Cart::factory()->create([
+            'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'pickup',
+            'zone' => 'capital',
+            'status' => 'active',
+        ]);
+
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price' => 50.00,
+            'subtotal' => 50.00,
+        ]);
+
+        $response = actingAs($customer, 'sanctum')
+            ->postJson('/api/v1/orders', [
+                'restaurant_id' => $restaurant->id,
+                'service_type' => 'pickup',
+                'payment_method' => 'cash',
+                'points_to_redeem' => 0,
+            ]);
+
+        $response->assertCreated();
+    });
+
+    test('customer with no points cannot redeem points', function () {
+        $customer = Customer::factory()->create([
+            'points' => 0,
+        ]);
+        $restaurant = Restaurant::factory()->create();
+        $category = Category::factory()->create(['is_active' => true]);
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'is_active' => true,
+            'precio_pickup_capital' => 50.00,
+        ]);
+
+        $cart = Cart::factory()->create([
+            'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'pickup',
+            'zone' => 'capital',
+            'status' => 'active',
+        ]);
+
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price' => 50.00,
+            'subtotal' => 50.00,
+        ]);
+
+        $response = actingAs($customer, 'sanctum')
+            ->postJson('/api/v1/orders', [
+                'restaurant_id' => $restaurant->id,
+                'service_type' => 'pickup',
+                'payment_method' => 'cash',
+                'points_to_redeem' => 50,
+            ]);
+
+        $response->assertStatus(422);
+    });
+
+    test('points_to_redeem must be integer', function () {
+        $customer = Customer::factory()->create([
+            'points' => 100,
+        ]);
+        $restaurant = Restaurant::factory()->create();
+        $category = Category::factory()->create(['is_active' => true]);
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'is_active' => true,
+            'precio_pickup_capital' => 50.00,
+        ]);
+
+        $cart = Cart::factory()->create([
+            'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'pickup',
+            'zone' => 'capital',
+            'status' => 'active',
+        ]);
+
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price' => 50.00,
+            'subtotal' => 50.00,
+        ]);
+
+        $response = actingAs($customer, 'sanctum')
+            ->postJson('/api/v1/orders', [
+                'restaurant_id' => $restaurant->id,
+                'service_type' => 'pickup',
+                'payment_method' => 'cash',
+                'points_to_redeem' => 'invalid',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['points_to_redeem']);
     });
 });

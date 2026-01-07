@@ -13,6 +13,7 @@ class BadgeType extends Model
     protected $fillable = [
         'name',
         'color',
+        'text_color',
         'is_active',
         'sort_order',
     ];

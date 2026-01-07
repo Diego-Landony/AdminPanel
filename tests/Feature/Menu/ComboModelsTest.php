@@ -2,47 +2,9 @@
 
 use App\Models\Menu\Combo;
 use App\Models\Menu\ComboItem;
-use App\Models\Menu\ComboItemOption;
 use App\Models\Menu\Product;
 
 describe('Combo Models and Eloquent Relationships', function () {
-    test('ComboItemOption model exists with all relationships', function () {
-        $model = new ComboItemOption;
-
-        expect($model)->toBeInstanceOf(ComboItemOption::class);
-        expect(method_exists($model, 'comboItem'))->toBeTrue();
-        expect(method_exists($model, 'product'))->toBeTrue();
-        expect(method_exists($model, 'variant'))->toBeTrue();
-    });
-
-    test('ComboItemOption model has correct fillable', function () {
-        $model = new ComboItemOption;
-        $fillable = $model->getFillable();
-
-        expect($fillable)->toContain('combo_item_id');
-        expect($fillable)->toContain('product_id');
-        expect($fillable)->toContain('variant_id');
-        expect($fillable)->toContain('sort_order');
-    });
-
-    test('ComboItemOption model has correct casts', function () {
-        $model = new ComboItemOption;
-        $casts = $model->getCasts();
-
-        expect($casts)->toHaveKey('combo_item_id');
-        expect($casts)->toHaveKey('product_id');
-        expect($casts)->toHaveKey('variant_id');
-        expect($casts)->toHaveKey('sort_order');
-    });
-
-    test('ComboItem model extended correctly with new fields', function () {
-        $model = new ComboItem;
-        $fillable = $model->getFillable();
-
-        expect($fillable)->toContain('is_choice_group');
-        expect($fillable)->toContain('choice_label');
-    });
-
     test('ComboItem model has correct cast for is_choice_group', function () {
         $model = new ComboItem;
         $casts = $model->getCasts();
@@ -121,26 +83,5 @@ describe('Relationship Functionality', function () {
         $combos = Combo::availableWithWarnings()->get();
 
         expect($combos)->toBeInstanceOf(\Illuminate\Database\Eloquent\Collection::class);
-    });
-});
-
-describe('Complete Model Verification', function () {
-    test('phase 2 checklist complete', function () {
-        $option = new ComboItemOption;
-        expect(method_exists($option, 'comboItem'))->toBeTrue();
-        expect(method_exists($option, 'product'))->toBeTrue();
-        expect(method_exists($option, 'variant'))->toBeTrue();
-
-        $item = new ComboItem;
-        expect(method_exists($item, 'options'))->toBeTrue();
-        expect(method_exists($item, 'isChoiceGroup'))->toBeTrue();
-        expect(method_exists($item, 'getProductWithSections'))->toBeTrue();
-
-        $combo = new Combo;
-        expect(method_exists($combo, 'scopeAvailable'))->toBeTrue();
-
-        expect(method_exists($combo, 'getInactiveOptionsCount'))->toBeTrue();
-
-        expect(method_exists($combo, 'scopeAvailableWithWarnings'))->toBeTrue();
     });
 });

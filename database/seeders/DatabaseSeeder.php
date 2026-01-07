@@ -69,35 +69,6 @@ class DatabaseSeeder extends Seeder
         // No es necesario crearlo aquí para evitar duplicados
         $this->command->info('ℹ️  Usuario admin@admin.com se crea automáticamente en la migración inicial');
 
-        // 7. Crear algunos usuarios de prueba (opcional)
-        if (app()->environment('local')) {
-            $this->command->info('🧪 Creando usuarios de prueba...');
-
-            // Usuario de prueba 1
-            User::firstOrCreate(
-                ['email' => 'user1@test.com'],
-                [
-                    'name' => 'Usuario Prueba 1',
-                    'password' => Hash::make('password'),
-                    'email_verified_at' => now(),
-                    'timezone' => 'America/Guatemala',
-                ]
-            );
-
-            // Usuario de prueba 2
-            User::firstOrCreate(
-                ['email' => 'user2@test.com'],
-                [
-                    'name' => 'Usuario Prueba 2',
-                    'password' => Hash::make('password'),
-                    'email_verified_at' => now(),
-                    'timezone' => 'America/Guatemala',
-                ]
-            );
-
-            $this->command->info('   ✅ 2 usuarios de prueba creados (user1@test.com, user2@test.com)');
-        }
-
         $this->command->line('');
         $this->command->info('🎉 Configuración del sistema completada exitosamente:');
         $this->command->line("   📄 Páginas detectadas: {$permissionsResult['total_pages']}");
@@ -105,11 +76,6 @@ class DatabaseSeeder extends Seeder
         $this->command->line('   🛡️  Rol: admin (acceso completo)');
         $this->command->line('   👤 Usuario: admin@admin.com (contraseña: admin)');
         $this->command->line('   👤 Usuario: admin@test.com (contraseña: admintest)');
-
-        if (app()->environment('local')) {
-            $this->command->line('   🧪 Usuarios de prueba: user1@test.com, user2@test.com (contraseña: password)');
-        }
-
         $this->command->line('');
         $this->command->info('🔐 Credenciales de acceso:');
         $this->command->line('   Email: admin@admin.com');

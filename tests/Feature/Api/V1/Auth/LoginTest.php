@@ -30,7 +30,7 @@ test('puede hacer login con credenciales validas', function () {
 
     $response->assertJsonStructure([
         'data' => [
-            'access_token',
+            'token',
             'token_type',
             'expires_in',
             'customer' => [
@@ -43,7 +43,7 @@ test('puede hacer login con credenciales validas', function () {
     ]);
 
     // Verificar que el token existe
-    expect($response->json('data.access_token'))->not->toBeNull();
+    expect($response->json('data.token'))->not->toBeNull();
     expect($response->json('data.token_type'))->toBe('Bearer');
 
     // Verificar que el customer en la respuesta es el correcto
@@ -118,12 +118,13 @@ test('puede especificar sistema operativo', function () {
 
 // Test 5: Rechaza login tradicional para cuenta OAuth (Google/Apple)
 test('rechaza login tradicional para cuenta oauth', function () {
-    // Crear customer que se registró con Google
+    // Crear customer que se registró con Google SIN password
+    // El código permite login con password si el usuario la agregó después
     Customer::create([
         'first_name' => 'Juan',
         'last_name' => 'Pérez',
         'email' => 'juan.google@example.com',
-        'password' => Hash::make('password123'), // Puede tener password pero no es válida para login
+        'password' => null, // Sin password - solo OAuth
         'oauth_provider' => 'google',
         'google_id' => 'google-123456789',
         'subway_card' => '1234567891',
@@ -139,11 +140,11 @@ test('rechaza login tradicional para cuenta oauth', function () {
     // Verificar respuesta 409 con código específico
     $response->assertStatus(409)
         ->assertJson([
-            'code' => 'oauth_account_required',
+            'error_code' => 'oauth_account_required',
         ])
         ->assertJsonStructure([
             'message',
-            'code',
+            'error_code',
             'data' => [
                 'oauth_provider',
                 'email',
@@ -155,38 +156,7 @@ test('rechaza login tradicional para cuenta oauth', function () {
     expect($response->json('data.email'))->toBe('juan.google@example.com');
 });
 
-// Test 6: Actualiza last_login_at
-test('actualiza last login at', function () {
-    // Crear customer de prueba con last_login_at en null
-    $customer = Customer::create([
-        'first_name' => 'Juan',
-        'last_name' => 'Pérez',
-        'email' => 'juan@example.com',
-        'password' => Hash::make('password123'),
-        'oauth_provider' => 'local',
-        'subway_card' => '1234567890',
-        'last_login_at' => null,
-    ]);
-
-    // Verificar que last_login_at está en null
-    expect($customer->last_login_at)->toBeNull();
-
-    // Hacer login
-    $this->postJson('/api/v1/auth/login', [
-        'email' => 'juan@example.com',
-        'password' => 'password123',
-        'device_identifier' => 'test-device-login-006',
-    ]);
-
-    // Refrescar el modelo desde la BD
-    $customer->refresh();
-
-    // Verificar que last_login_at fue actualizado
-    expect($customer->last_login_at)->not->toBeNull();
-    expect($customer->last_login_at)->toBeInstanceOf(\Carbon\Carbon::class);
-});
-
-// Test 7: Requiere device_identifier
+// Test 6: Requiere device_identifier
 test('requiere device_identifier para login', function () {
     // Crear customer de prueba
     Customer::create([

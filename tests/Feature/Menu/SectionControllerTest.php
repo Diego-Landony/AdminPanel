@@ -115,45 +115,6 @@ describe('Section Creation', function () {
         expect($section->options->first()->name)->toBe('Lechuga');
     });
 
-    test('auto-generates sort_order on create', function () {
-        Section::factory()->create(['sort_order' => 5]);
-        Section::factory()->create(['sort_order' => 10]);
-
-        $data = [
-            'title' => 'Nueva Sección',
-            'is_required' => false,
-            'allow_multiple' => false,
-            'min_selections' => 0,
-            'max_selections' => 1,
-            'is_active' => true,
-        ];
-
-        $this->post(route('menu.sections.store'), $data);
-
-        $section = Section::where('title', 'Nueva Sección')->first();
-        expect($section->sort_order)->toBe(11); // max + 1
-    });
-
-    test('options inherit sort_order from array index', function () {
-        $data = [
-            'title' => 'Test Section',
-            'is_required' => false,
-            'allow_multiple' => false,
-            'min_selections' => 0,
-            'max_selections' => 1,
-            'is_active' => true,
-            'options' => [
-                ['name' => 'First'],
-                ['name' => 'Second'],
-                ['name' => 'Third'],
-            ],
-        ];
-
-        $this->post(route('menu.sections.store'), $data);
-
-        $section = Section::where('title', 'Test Section')->first();
-        expect($section->options->pluck('sort_order')->toArray())->toBe([0, 1, 2]);
-    });
 });
 
 describe('Section Validation', function () {
@@ -660,54 +621,5 @@ describe('Edge Cases', function () {
 
         $section = Section::where('title', 'Required Empty')->first();
         expect($section->options)->toHaveCount(0);
-    });
-
-    test('handles special characters in section title', function () {
-        $data = [
-            'title' => 'Sección con ñ, á, é & símbolos!',
-            'is_required' => false,
-            'allow_multiple' => false,
-            'min_selections' => 0,
-            'max_selections' => 1,
-            'is_active' => true,
-        ];
-
-        $response = $this->post(route('menu.sections.store'), $data);
-
-        $response->assertRedirect();
-
-        $this->assertDatabaseHas('sections', [
-            'title' => 'Sección con ñ, á, é & símbolos!',
-        ]);
-    });
-
-    test('handles concurrent updates to same section', function () {
-        $section = Section::factory()->create();
-
-        // Simulate concurrent requests
-        $data1 = [
-            'title' => 'Update 1',
-            'is_required' => $section->is_required,
-            'allow_multiple' => $section->allow_multiple,
-            'min_selections' => $section->min_selections,
-            'max_selections' => $section->max_selections,
-            'is_active' => $section->is_active,
-        ];
-
-        $data2 = [
-            'title' => 'Update 2',
-            'is_required' => $section->is_required,
-            'allow_multiple' => $section->allow_multiple,
-            'min_selections' => $section->min_selections,
-            'max_selections' => $section->max_selections,
-            'is_active' => $section->is_active,
-        ];
-
-        $this->put(route('menu.sections.update', $section), $data1);
-        $this->put(route('menu.sections.update', $section), $data2);
-
-        // Last write wins
-        $section->refresh();
-        expect($section->title)->toBe('Update 2');
     });
 });

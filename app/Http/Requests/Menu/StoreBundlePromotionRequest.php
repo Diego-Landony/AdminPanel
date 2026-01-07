@@ -20,6 +20,8 @@ class StoreBundlePromotionRequest extends FormRequest
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
             'is_active' => ['boolean'],
             'type' => ['required', 'string', 'in:bundle_special'],
+            'badge_type_id' => ['nullable', 'exists:badge_types,id'],
+            'show_badge_on_menu' => ['boolean'],
 
             // Precios especiales (solo 2: capital e interior)
             'special_bundle_price_capital' => ['required', 'numeric', 'gt:0', 'max:9999.99'],

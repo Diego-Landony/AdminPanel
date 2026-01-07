@@ -14,9 +14,12 @@ class FavoriteResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // Convert full class name to short name (e.g., App\Models\Menu\Product -> Product)
+        $shortType = class_basename($this->favorable_type);
+
         return [
             'id' => $this->id,
-            'favorable_type' => $this->favorable_type,
+            'favorable_type' => $shortType,
             'favorable_id' => $this->favorable_id,
             'favorable' => $this->when($this->relationLoaded('favorable'), function () {
                 return [

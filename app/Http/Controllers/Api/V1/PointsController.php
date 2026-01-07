@@ -64,7 +64,18 @@ class PointsController extends Controller
      *     path="/api/v1/points/history",
      *     tags={"Points"},
      *     summary="Historial de transacciones de puntos",
-     *     description="Retorna el historial paginado de todas las transacciones de puntos del cliente (ganados, redimidos, expirados).",
+     *     description="Retorna el historial paginado de todas las transacciones de puntos del cliente.
+     *
+     * **Tipos de transacciones:**
+     * - `earned`: Puntos ganados por compras (reference_type = Order)
+     * - `redeemed`: Puntos canjeados en compras (reference_type = Order)
+     * - `expired`: Puntos expirados por 6 meses de inactividad
+     * - `bonus`: Puntos de bonificación (promociones especiales)
+     * - `adjustment`: Ajustes manuales por soporte
+     *
+     * **Vinculación con Pedidos:**
+     * - Cuando `reference_type` = 'App\\Models\\Order', el `reference_id` es el ID del pedido
+     * - Usa GET /orders/{reference_id} para ver el detalle del pedido relacionado",
      *     security={{"sanctum": {}}},
      *
      *     @OA\Parameter(
@@ -74,6 +85,15 @@ class PointsController extends Controller
      *         required=false,
      *
      *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *
+     *     @OA\Parameter(
+     *         name="type",
+     *         in="query",
+     *         description="Filtrar por tipo de transacción",
+     *         required=false,
+     *
+     *         @OA\Schema(type="string", enum={"earned","redeemed","expired","bonus","adjustment"})
      *     ),
      *
      *     @OA\Response(
@@ -87,12 +107,12 @@ class PointsController extends Controller
      *                 @OA\Items(
      *
      *                     @OA\Property(property="id", type="integer", example=123),
-     *                     @OA\Property(property="points", type="integer", example=50, description="Puntos (positivo = ganados, negativo = redimidos)"),
+     *                     @OA\Property(property="points", type="integer", example=9, description="Puntos (positivo = ganados, negativo = redimidos/expirados)"),
      *                     @OA\Property(property="type", type="string", enum={"earned","redeemed","expired","bonus","adjustment"}, example="earned"),
-     *                     @OA\Property(property="description", type="string", example="Puntos ganados en orden #ORD-2025-000123"),
-     *                     @OA\Property(property="reference_type", type="string", nullable=true, example="App\\Models\\Order"),
-     *                     @OA\Property(property="reference_id", type="integer", nullable=true, example=456),
-     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-12-10T15:30:00Z")
+     *                     @OA\Property(property="description", type="string", example="Puntos ganados en orden #ORD-20251215-0001"),
+     *                     @OA\Property(property="reference_type", type="string", nullable=true, example="App\\Models\\Order", description="Tipo de entidad relacionada"),
+     *                     @OA\Property(property="reference_id", type="integer", nullable=true, example=123, description="ID de la entidad relacionada (ej: order_id)"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-12-15T15:30:00Z")
      *                 )
      *             ),
      *             @OA\Property(property="meta", type="object",
@@ -111,9 +131,15 @@ class PointsController extends Controller
     {
         $customer = $request->user();
 
-        $transactions = CustomerPointsTransaction::query()
-            ->where('customer_id', $customer->id)
-            ->orderBy('created_at', 'desc')
+        $query = CustomerPointsTransaction::query()
+            ->where('customer_id', $customer->id);
+
+        // Filtrar por tipo si se proporciona
+        if ($request->has('type') && in_array($request->type, ['earned', 'redeemed', 'expired', 'bonus', 'adjustment'])) {
+            $query->where('type', $request->type);
+        }
+
+        $transactions = $query->orderBy('created_at', 'desc')
             ->paginate(20);
 
         return response()->json([
@@ -127,6 +153,114 @@ class PointsController extends Controller
         ]);
     }
 
-    // Note: redeem() and rewards() methods were removed
-    // Points redemption only happens in-store, not in the app
+    /**
+     * Get points expiration information
+     *
+     * @OA\Get(
+     *     path="/api/v1/points/expiring",
+     *     tags={"Points"},
+     *     summary="Ver información de expiración de puntos",
+     *     description="Retorna información sobre cuándo expirarán los puntos del cliente.
+     *
+     * **Regla de expiración:**
+     * - Los puntos expiran después de 6 meses de inactividad
+     * - 'Actividad' se define como cualquier transacción de puntos (ganar o canjear)
+     * - Si el cliente tiene puntos y no ha tenido actividad en 6 meses, los puntos se expiran automáticamente
+     *
+     * **Campos importantes:**
+     * - `will_expire`: true si los puntos están en riesgo de expirar
+     * - `expires_at`: fecha cuando expirarán (6 meses después de última actividad)
+     * - `days_until_expiration`: días restantes antes de expiración
+     * - `warning_level`: 'critical' (≤7 días), 'warning' (≤30 días), 'safe' (>30 días)",
+     *     security={{"sanctum": {}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Información de expiración obtenida exitosamente",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="points_balance", type="integer", example=250, description="Puntos actuales que podrían expirar"),
+     *                 @OA\Property(property="will_expire", type="boolean", example=true, description="True si los puntos expirarán eventualmente"),
+     *                 @OA\Property(property="expires_at", type="string", format="date-time", nullable=true, example="2026-06-15T10:30:00Z", description="Fecha de expiración (null si no hay puntos)"),
+     *                 @OA\Property(property="days_until_expiration", type="integer", nullable=true, example=45, description="Días hasta expiración (null si no aplica)"),
+     *                 @OA\Property(property="last_activity_at", type="string", format="date-time", nullable=true, example="2025-12-15T10:30:00Z", description="Última actividad de puntos"),
+     *                 @OA\Property(property="warning_level", type="string", enum={"critical","warning","safe","none"}, example="warning", description="Nivel de urgencia"),
+     *                 @OA\Property(property="message", type="string", example="Tus puntos expirarán en 45 días si no realizas una compra", description="Mensaje amigable para mostrar al usuario")
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="No autenticado")
+     * )
+     */
+    public function expiring(Request $request): JsonResponse
+    {
+        $customer = $request->user();
+        $points = $customer->points ?? 0;
+
+        // Si no tiene puntos, no hay nada que expire
+        if ($points <= 0) {
+            return response()->json([
+                'data' => [
+                    'points_balance' => 0,
+                    'will_expire' => false,
+                    'expires_at' => null,
+                    'days_until_expiration' => null,
+                    'last_activity_at' => $customer->points_last_activity_at,
+                    'warning_level' => 'none',
+                    'message' => 'No tienes puntos acumulados actualmente.',
+                ],
+            ]);
+        }
+
+        // Calcular fecha de expiración (6 meses después de última actividad)
+        $lastActivity = $customer->points_last_activity_at ?? $customer->created_at;
+        $expiresAt = $lastActivity->copy()->addMonths(6);
+        $now = now();
+
+        // Si ya pasó la fecha de expiración, el job los expirará pronto
+        if ($now->gte($expiresAt)) {
+            return response()->json([
+                'data' => [
+                    'points_balance' => $points,
+                    'will_expire' => true,
+                    'expires_at' => $expiresAt->toIso8601String(),
+                    'days_until_expiration' => 0,
+                    'last_activity_at' => $lastActivity->toIso8601String(),
+                    'warning_level' => 'critical',
+                    'message' => '¡Tus puntos expirarán muy pronto! Realiza una compra para conservarlos.',
+                ],
+            ]);
+        }
+
+        $daysUntilExpiration = $now->diffInDays($expiresAt);
+
+        // Determinar nivel de advertencia
+        $warningLevel = match (true) {
+            $daysUntilExpiration <= 7 => 'critical',
+            $daysUntilExpiration <= 30 => 'warning',
+            default => 'safe',
+        };
+
+        // Mensaje amigable
+        $message = match ($warningLevel) {
+            'critical' => "¡Atención! Tus {$points} puntos expirarán en {$daysUntilExpiration} días. Realiza una compra para conservarlos.",
+            'warning' => "Tus {$points} puntos expirarán en {$daysUntilExpiration} días si no realizas una compra.",
+            default => "Tus puntos están seguros. Expirarán en {$daysUntilExpiration} días sin actividad.",
+        };
+
+        return response()->json([
+            'data' => [
+                'points_balance' => $points,
+                'will_expire' => true,
+                'expires_at' => $expiresAt->toIso8601String(),
+                'days_until_expiration' => $daysUntilExpiration,
+                'last_activity_at' => $lastActivity->toIso8601String(),
+                'warning_level' => $warningLevel,
+                'message' => $message,
+            ],
+        ]);
+    }
 }

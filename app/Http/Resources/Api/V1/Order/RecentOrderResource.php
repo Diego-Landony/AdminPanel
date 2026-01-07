@@ -24,7 +24,7 @@ class RecentOrderResource extends JsonResource
                 'quantity' => $item->quantity,
                 'is_available' => $isAvailable,
             ];
-        });
+        })->values();
 
         $canReorder = $itemsData->every(fn ($item) => $item['is_available']);
 

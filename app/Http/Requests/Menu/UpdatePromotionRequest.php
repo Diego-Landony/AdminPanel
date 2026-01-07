@@ -24,6 +24,8 @@ class UpdatePromotionRequest extends FormRequest
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
             'type' => 'required|in:two_for_one,percentage_discount,daily_special',
             'is_active' => 'boolean',
+            'badge_type_id' => 'nullable|exists:badge_types,id',
+            'show_badge_on_menu' => 'boolean',
 
             // Items de promoción
             'items' => 'required|array|min:1',

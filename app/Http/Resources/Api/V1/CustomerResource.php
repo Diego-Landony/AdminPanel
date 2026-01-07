@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Models\CustomerType;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -45,6 +46,7 @@ class CustomerResource extends JsonResource
 
             // Relationships
             'customer_type' => CustomerTypeResource::make($this->whenLoaded('customerType')),
+            'next_tier_info' => CustomerType::getNextTierInfo($this->resource),
             'addresses' => CustomerAddressResource::collection($this->whenLoaded('addresses')),
             'nits' => CustomerNitResource::collection($this->whenLoaded('nits')),
             'devices' => CustomerDeviceResource::collection($this->whenLoaded('activeDevices')),

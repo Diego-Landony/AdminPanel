@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\V1\Auth;
 
+use App\Rules\CustomPassword;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
 use Illuminate\Validation\Validator;
 
 class ChangePasswordRequest extends FormRequest
@@ -35,7 +35,7 @@ class ChangePasswordRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'string', 'confirmed', new CustomPassword],
         ];
 
         // Solo requerir current_password si el usuario tiene contraseña (cuenta local)

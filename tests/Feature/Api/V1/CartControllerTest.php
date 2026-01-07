@@ -530,7 +530,7 @@ describe('updateServiceType (PUT /api/v1/cart/service-type)', function () {
         expect($updatedItem['subtotal'])->toEqual(120.00);
     });
 
-    test('validates service_type values', function () {
+    test('validates service configuration', function (array $data, string $expectedError) {
         $customer = Customer::factory()->create();
 
         Cart::factory()->create([
@@ -538,31 +538,14 @@ describe('updateServiceType (PUT /api/v1/cart/service-type)', function () {
         ]);
 
         $response = actingAs($customer, 'sanctum')
-            ->putJson('/api/v1/cart/service-type', [
-                'service_type' => 'invalid',
-                'zone' => 'capital',
-            ]);
+            ->putJson('/api/v1/cart/service-type', $data);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['service_type']);
-    });
-
-    test('validates zone values', function () {
-        $customer = Customer::factory()->create();
-
-        Cart::factory()->create([
-            'customer_id' => $customer->id,
-        ]);
-
-        $response = actingAs($customer, 'sanctum')
-            ->putJson('/api/v1/cart/service-type', [
-                'service_type' => 'pickup',
-                'zone' => 'invalid',
-            ]);
-
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['zone']);
-    });
+            ->assertJsonValidationErrors([$expectedError]);
+    })->with([
+        'invalid service_type' => [['service_type' => 'invalid', 'zone' => 'capital'], 'service_type'],
+        'invalid zone' => [['service_type' => 'pickup', 'zone' => 'invalid'], 'zone'],
+    ]);
 
     test('requires authentication', function () {
         $response = $this->putJson('/api/v1/cart/service-type', [

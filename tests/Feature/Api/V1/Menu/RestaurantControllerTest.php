@@ -46,6 +46,7 @@ describe('index', function () {
         Restaurant::factory()->count(2)->create([
             'is_active' => true,
             'delivery_active' => true,
+            'geofence_kml' => '<kml>test</kml>',
         ]);
         Restaurant::factory()->create([
             'is_active' => true,
@@ -72,6 +73,31 @@ describe('index', function () {
 
         $response->assertOk();
         expect($response->json('data.restaurants'))->toHaveCount(2);
+    });
+
+    test('filters by both delivery and pickup active', function () {
+        Restaurant::factory()->create([
+            'is_active' => true,
+            'delivery_active' => true,
+            'pickup_active' => true,
+            'geofence_kml' => '<kml>test</kml>',
+        ]);
+        Restaurant::factory()->create([
+            'is_active' => true,
+            'delivery_active' => true,
+            'pickup_active' => false,
+            'geofence_kml' => '<kml>test</kml>',
+        ]);
+        Restaurant::factory()->create([
+            'is_active' => true,
+            'delivery_active' => false,
+            'pickup_active' => true,
+        ]);
+
+        $response = $this->getJson('/api/v1/restaurants?delivery_active=1&pickup_active=1');
+
+        $response->assertOk();
+        expect($response->json('data.restaurants'))->toHaveCount(1);
     });
 
     test('orders restaurants by name', function () {
@@ -244,6 +270,7 @@ describe('nearby', function () {
             'name' => 'Delivery Restaurant',
             'is_active' => true,
             'delivery_active' => true,
+            'geofence_kml' => '<kml>test</kml>',
             'latitude' => 14.640,
             'longitude' => -90.510,
         ]);
@@ -319,14 +346,18 @@ describe('nearby', function () {
         $response = $this->getJson('/api/v1/restaurants/nearby?lng=-90.5069');
 
         $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['lat']);
+            ->assertJson([
+                'error' => 'location_required',
+            ]);
     });
 
     test('requires longitude parameter', function () {
         $response = $this->getJson('/api/v1/restaurants/nearby?lat=14.6349');
 
         $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['lng']);
+            ->assertJson([
+                'error' => 'location_required',
+            ]);
     });
 
     test('validates latitude range', function () {

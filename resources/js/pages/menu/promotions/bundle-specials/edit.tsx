@@ -3,6 +3,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
+import { BadgeTypeSelector, type BadgeType } from '@/components/badge-type-selector';
 import { ComboItemCard } from '@/components/combos/ComboItemCard';
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
@@ -19,7 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { WeekdaySelector } from '@/components/WeekdaySelector';
 import { CURRENCY, FORM_SECTIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 import { generateUniqueItemId, prepareComboDataForSubmit, validateMinimumComboStructure } from '@/utils/comboHelpers';
-import { AlertCircle, Banknote, Calendar, Gift, Image, Package, Plus } from 'lucide-react';
+import { AlertCircle, Award, Banknote, Calendar, Gift, Image, Package, Plus } from 'lucide-react';
 
 interface ProductVariant {
     id: number;
@@ -92,11 +93,14 @@ interface Combinado {
     time_until: string | null;
     weekdays: number[] | null;
     bundle_items: BundlePromotionItem[];
+    badge_type_id: number | null;
+    show_badge_on_menu: boolean;
 }
 
 interface EditBundleSpecialPageProps {
     combinado: Combinado;
     products: Product[];
+    badgeTypes: BadgeType[];
 }
 
 interface LocalBundleItem {
@@ -115,7 +119,7 @@ interface LocalBundleItem {
     }[];
 }
 
-export default function BundleSpecialEdit({ combinado, products }: EditBundleSpecialPageProps) {
+export default function BundleSpecialEdit({ combinado, products, badgeTypes }: EditBundleSpecialPageProps) {
     // Map server data to local format
     const initialItems: LocalBundleItem[] = combinado.bundle_items.map((item) => ({
         id: `item-${item.id}`,
@@ -157,6 +161,8 @@ export default function BundleSpecialEdit({ combinado, products }: EditBundleSpe
         time_from: combinado.time_from || '',
         time_until: combinado.time_until || '',
         weekdays: combinado.weekdays || [],
+        badge_type_id: combinado.badge_type_id,
+        show_badge_on_menu: combinado.show_badge_on_menu ?? true,
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -248,6 +254,12 @@ export default function BundleSpecialEdit({ combinado, products }: EditBundleSpe
                 formDataObj.append(`weekdays[${index}]`, String(day));
             });
         }
+
+        // Agregar badge type
+        if (formData.badge_type_id) {
+            formDataObj.append('badge_type_id', String(formData.badge_type_id));
+        }
+        formDataObj.append('show_badge_on_menu', formData.show_badge_on_menu ? '1' : '0');
 
         // Agregar items
         preparedItems.forEach((item, itemIndex) => {
@@ -421,6 +433,37 @@ export default function BundleSpecialEdit({ combinado, products }: EditBundleSpe
                                 error={errors.image}
                             />
                         </FormSection>
+                    </CardContent>
+                </Card>
+
+                {/* Insignia/Badge */}
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="space-y-4">
+                            <h3 className="flex items-center gap-2 text-lg font-medium">
+                                <Award className="h-5 w-5" />
+                                Insignia
+                            </h3>
+                            <BadgeTypeSelector
+                                value={formData.badge_type_id}
+                                onChange={(value) => setFormData({ ...formData, badge_type_id: value })}
+                                badgeTypes={badgeTypes}
+                                error={errors.badge_type_id}
+                            />
+
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    id="show_badge_on_menu"
+                                    checked={formData.show_badge_on_menu}
+                                    onChange={(e) => setFormData({ ...formData, show_badge_on_menu: e.target.checked })}
+                                    className="h-4 w-4 rounded border-gray-300"
+                                />
+                                <label htmlFor="show_badge_on_menu" className="text-sm">
+                                    Mostrar insignia en el menu
+                                </label>
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
 

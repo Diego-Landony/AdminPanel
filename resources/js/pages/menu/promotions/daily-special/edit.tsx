@@ -1,10 +1,11 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { router } from '@inertiajs/react';
-import { Calendar, Plus, Store, Trash2, Truck } from 'lucide-react';
+import { Award, Calendar, Plus, Store, Trash2, Truck } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { CURRENCY, NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
+import { BadgeTypeSelector, type BadgeType } from '@/components/badge-type-selector';
 import { ProductOrComboSelector } from '@/components/ProductOrComboSelector';
 import { ConfirmationDialog } from '@/components/promotions/ConfirmationDialog';
 import { VariantSelector } from '@/components/promotions/VariantSelector';
@@ -70,6 +71,8 @@ interface Promotion {
     description: string;
     type: string;
     is_active: boolean;
+    badge_type_id: number | null;
+    show_badge_on_menu: boolean;
     items: PromotionItem[];
 }
 
@@ -99,6 +102,7 @@ interface EditPromotionPageProps {
     products: Product[];
     categories: Category[];
     combos: Combo[];
+    badgeTypes: BadgeType[];
 }
 
 interface LocalItem {
@@ -117,12 +121,14 @@ interface LocalItem {
     time_until: string;
 }
 
-export default function EditPromotion({ promotion, products, combos }: EditPromotionPageProps) {
+export default function EditPromotion({ promotion, products, combos, badgeTypes }: EditPromotionPageProps) {
     const [formData, setFormData] = useState({
         is_active: promotion.is_active,
         name: promotion.name,
         description: promotion.description || '',
         type: promotion.type,
+        badge_type_id: promotion.badge_type_id,
+        show_badge_on_menu: promotion.show_badge_on_menu ?? true,
     });
 
     const [localItems, setLocalItems] = useState<LocalItem[]>(
@@ -350,6 +356,39 @@ export default function EditPromotion({ promotion, products, combos }: EditPromo
                                     rows={2}
                                 />
                             </FormField>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+
+                {/* INSIGNIA/BADGE */}
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection
+                            title="Insignia"
+                            icon={Award}
+                            description="Selecciona una insignia para mostrar en los productos de esta promocion"
+                        >
+                            <div className="space-y-4">
+                                <BadgeTypeSelector
+                                    value={formData.badge_type_id}
+                                    onChange={(value) => setFormData({ ...formData, badge_type_id: value })}
+                                    badgeTypes={badgeTypes}
+                                    error={errors.badge_type_id}
+                                />
+
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="show_badge_on_menu"
+                                        checked={formData.show_badge_on_menu}
+                                        onChange={(e) => setFormData({ ...formData, show_badge_on_menu: e.target.checked })}
+                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                    />
+                                    <label htmlFor="show_badge_on_menu" className="text-sm">
+                                        Mostrar insignia en el menu
+                                    </label>
+                                </div>
+                            </div>
                         </FormSection>
                     </CardContent>
                 </Card>

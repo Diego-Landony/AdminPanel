@@ -1,10 +1,11 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { router, useForm } from '@inertiajs/react';
-import { Calendar, Plus, Store, Trash2, Truck } from 'lucide-react';
+import { Award, Calendar, Plus, Store, Trash2, Truck } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { CURRENCY, NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
+import { BadgeTypeSelector, type BadgeType } from '@/components/badge-type-selector';
 import { ProductOrComboSelector } from '@/components/ProductOrComboSelector';
 import { ConfirmationDialog } from '@/components/promotions/ConfirmationDialog';
 import { VariantSelector } from '@/components/promotions/VariantSelector';
@@ -67,6 +68,7 @@ interface CreatePromotionPageProps {
     products: Product[];
     categories: Category[];
     combos: Combo[];
+    badgeTypes: BadgeType[];
 }
 
 interface DailySpecialItem {
@@ -101,13 +103,15 @@ interface SubmitDailySpecialItem {
     time_until: string;
 }
 
-export default function CreatePromotion({ products, combos }: CreatePromotionPageProps) {
+export default function CreatePromotion({ products, combos, badgeTypes }: CreatePromotionPageProps) {
     const { data, setData, processing, errors } = useForm({
         is_active: true,
         name: '',
         description: '',
         type: 'daily_special' as const,
         items: [] as Array<Omit<DailySpecialItem, 'id'>>,
+        badge_type_id: null as number | null,
+        show_badge_on_menu: true,
     });
 
     // Cast errors to allow dynamic indexing
@@ -319,6 +323,8 @@ export default function CreatePromotion({ products, combos }: CreatePromotionPag
             description: data.description,
             type: data.type,
             items: expandedItems,
+            badge_type_id: data.badge_type_id,
+            show_badge_on_menu: data.show_badge_on_menu,
         };
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -359,6 +365,31 @@ export default function CreatePromotion({ products, combos }: CreatePromotionPag
                         rows={2}
                     />
                 </FormField>
+            </FormSection>
+
+            {/* INSIGNIA/BADGE */}
+            <FormSection title="Insignia" icon={Award}>
+                <div className="space-y-4">
+                    <BadgeTypeSelector
+                        value={data.badge_type_id}
+                        onChange={(value) => setData('badge_type_id', value)}
+                        badgeTypes={badgeTypes}
+                        error={errors.badge_type_id}
+                    />
+
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="show_badge_on_menu"
+                            checked={data.show_badge_on_menu}
+                            onChange={(e) => setData('show_badge_on_menu', e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <label htmlFor="show_badge_on_menu" className="text-sm">
+                            Mostrar insignia en el menu
+                        </label>
+                    </div>
+                </div>
             </FormSection>
 
             {/* PRODUCTOS */}

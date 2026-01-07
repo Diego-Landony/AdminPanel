@@ -41,6 +41,7 @@ class MenuOrderController extends Controller
                                 'id' => $b->badgeType->id,
                                 'name' => $b->badgeType->name,
                                 'color' => $b->badgeType->color,
+                                'text_color' => $b->badgeType->text_color,
                             ],
                         ]),
                     ])
@@ -65,6 +66,7 @@ class MenuOrderController extends Controller
                                 'id' => $b->badgeType->id,
                                 'name' => $b->badgeType->name,
                                 'color' => $b->badgeType->color,
+                                'text_color' => $b->badgeType->text_color,
                             ],
                         ]),
                     ]);
@@ -76,7 +78,7 @@ class MenuOrderController extends Controller
             ];
         })->values();
 
-        $badgeTypes = BadgeType::active()->ordered()->get(['id', 'name', 'color']);
+        $badgeTypes = BadgeType::active()->ordered()->get(['id', 'name', 'color', 'text_color']);
 
         return Inertia::render('menu/order/index', [
             'menuStructure' => $menuStructure,

@@ -1,10 +1,11 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { router, useForm } from '@inertiajs/react';
-import { Package, Plus, Store, Truck } from 'lucide-react';
+import { Award, Package, Plus, Store, Truck } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
+import { BadgeTypeSelector, type BadgeType } from '@/components/badge-type-selector';
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
 import { ConfirmationDialog } from '@/components/promotions/ConfirmationDialog';
@@ -65,6 +66,7 @@ interface CreatePromotionPageProps {
     products: Product[];
     categories: Category[];
     combos: Combo[];
+    badgeTypes: BadgeType[];
 }
 
 interface LocalTwoForOneItem {
@@ -76,7 +78,7 @@ interface LocalTwoForOneItem {
     discount_percentage: string;
 }
 
-export default function CreateTwoForOnePromotion({ products, categories, combos }: CreatePromotionPageProps) {
+export default function CreateTwoForOnePromotion({ products, categories, combos, badgeTypes }: CreatePromotionPageProps) {
     const { data, setData, processing, errors } = useForm({
         is_active: true,
         name: '',
@@ -89,6 +91,8 @@ export default function CreateTwoForOnePromotion({ products, categories, combos 
         valid_until: '',
         time_from: '',
         time_until: '',
+        badge_type_id: null as number | null,
+        show_badge_on_menu: true,
     });
 
     const [localItems, setLocalItems] = useState<LocalTwoForOneItem[]>([
@@ -275,6 +279,8 @@ export default function CreateTwoForOnePromotion({ products, categories, combos 
             name: data.name,
             description: data.description,
             type: data.type,
+            badge_type_id: data.badge_type_id,
+            show_badge_on_menu: data.show_badge_on_menu,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             items: expandedItems as any,
         });
@@ -333,6 +339,35 @@ export default function CreateTwoForOnePromotion({ products, categories, combos 
                     </FormField>
                 </div>
             </FormSection>
+
+            {/* Insignia/Badge */}
+            <div className="rounded-lg border bg-card p-6">
+                <h3 className="mb-4 flex items-center gap-2 text-lg font-medium">
+                    <Award className="h-5 w-5" />
+                    Insignia
+                </h3>
+                <div className="space-y-4">
+                    <BadgeTypeSelector
+                        value={data.badge_type_id}
+                        onChange={(value) => setData('badge_type_id', value)}
+                        badgeTypes={badgeTypes}
+                        error={errors.badge_type_id}
+                    />
+
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="show_badge_on_menu"
+                            checked={data.show_badge_on_menu}
+                            onChange={(e) => setData('show_badge_on_menu', e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <label htmlFor="show_badge_on_menu" className="text-sm">
+                            Mostrar insignia en el menu
+                        </label>
+                    </div>
+                </div>
+            </div>
 
             {hasInactiveProducts && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">

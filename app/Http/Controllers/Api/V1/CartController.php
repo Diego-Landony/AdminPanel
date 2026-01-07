@@ -14,6 +14,7 @@ use App\Models\CustomerAddress;
 use App\Models\Restaurant;
 use App\Services\CartService;
 use App\Services\DeliveryValidationService;
+use App\Services\PointsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -21,7 +22,8 @@ class CartController extends Controller
 {
     public function __construct(
         protected CartService $cartService,
-        protected DeliveryValidationService $deliveryValidation
+        protected DeliveryValidationService $deliveryValidation,
+        protected PointsService $pointsService
     ) {}
 
     /**
@@ -68,7 +70,8 @@ class CartController extends Controller
      *                     @OA\Property(property="subtotal", type="string"),
      *                     @OA\Property(property="total_discount", type="string"),
      *                     @OA\Property(property="total", type="string"),
-     *                     @OA\Property(property="promotions_applied", type="array", @OA\Items(type="object"))
+     *                     @OA\Property(property="promotions_applied", type="array", @OA\Items(type="object")),
+     *                     @OA\Property(property="points_to_earn", type="integer", description="Puntos que el cliente ganara al completar esta orden")
      *                 ),
      *                 @OA\Property(property="can_checkout", type="boolean")
      *             )
@@ -86,6 +89,9 @@ class CartController extends Controller
 
         $summary = $this->cartService->getCartSummary($cart);
         $validation = $this->cartService->validateCart($cart);
+
+        // Calcular puntos a ganar
+        $pointsToEarn = $this->pointsService->calculatePointsToEarn($summary['total'], $customer);
 
         // Agregar información de descuentos a cada item
         $itemDiscounts = $summary['item_discounts'] ?? [];
@@ -114,6 +120,7 @@ class CartController extends Controller
                     'promotions_applied' => $summary['promotions_applied'],
                     'total_discount' => number_format($summary['discounts'], 2, '.', ''),
                     'total' => number_format($summary['total'], 2, '.', ''),
+                    'points_to_earn' => $pointsToEarn,
                 ],
                 'can_checkout' => $validation['valid'] && ! $cart->isEmpty(),
                 'validation_messages' => $validation['messages'],

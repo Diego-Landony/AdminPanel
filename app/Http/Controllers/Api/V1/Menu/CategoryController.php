@@ -93,7 +93,7 @@ class CategoryController extends Controller
                             'variants' => function ($q) {
                                 $q->active()->ordered();
                             },
-                            'badges',
+                            'activeBadges',
                         ]);
                 },
             ])

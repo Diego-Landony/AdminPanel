@@ -7,6 +7,7 @@ use App\Http\Requests\Menu\StoreBundlePromotionRequest;
 use App\Http\Requests\Menu\StorePromotionRequest;
 use App\Http\Requests\Menu\UpdateBundlePromotionRequest;
 use App\Http\Requests\Menu\UpdatePromotionRequest;
+use App\Models\Menu\BadgeType;
 use App\Models\Menu\Category;
 use App\Models\Menu\Combo;
 use App\Models\Menu\Product;
@@ -177,7 +178,7 @@ class PromotionController extends Controller
 
         // Manejar la imagen si se subió
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('promotions', 'public');
+            $validated['image'] = $request->file('image')->store('menu/promotions', 'public');
         }
 
         $promotion = null;
@@ -270,6 +271,9 @@ class PromotionController extends Controller
                 ->with(['items.product:id,name', 'category:id,name'])
                 ->ordered()
                 ->get(['id', 'name', 'category_id', 'precio_pickup_capital', 'precio_domicilio_capital', 'precio_pickup_interior', 'precio_domicilio_interior', 'is_active']),
+            'badgeTypes' => BadgeType::where('is_active', true)
+                ->orderBy('sort_order')
+                ->get(['id', 'name', 'color', 'text_color', 'is_active']),
         ]);
     }
 
@@ -289,7 +293,7 @@ class PromotionController extends Controller
             if ($promotion->image) {
                 \Storage::disk('public')->delete($promotion->image);
             }
-            $validated['image'] = $request->file('image')->store('promotions', 'public');
+            $validated['image'] = $request->file('image')->store('menu/promotions', 'public');
         }
 
         DB::transaction(function () use ($validated, $items, $promotion) {
@@ -482,6 +486,9 @@ class PromotionController extends Controller
                 ->with(['items.product:id,name', 'category:id,name'])
                 ->ordered()
                 ->get(['id', 'name', 'category_id', 'precio_pickup_capital', 'precio_domicilio_capital', 'precio_pickup_interior', 'precio_domicilio_interior', 'is_active']),
+            'badgeTypes' => BadgeType::where('is_active', true)
+                ->orderBy('sort_order')
+                ->get(['id', 'name', 'color', 'text_color', 'is_active']),
         ]);
     }
 
@@ -514,6 +521,9 @@ class PromotionController extends Controller
                 ->with(['items.product:id,name', 'category:id,name'])
                 ->ordered()
                 ->get(['id', 'name', 'category_id', 'precio_pickup_capital', 'precio_domicilio_capital', 'precio_pickup_interior', 'precio_domicilio_interior', 'is_active']),
+            'badgeTypes' => BadgeType::where('is_active', true)
+                ->orderBy('sort_order')
+                ->get(['id', 'name', 'color', 'text_color', 'is_active']),
         ]);
     }
 
@@ -546,6 +556,9 @@ class PromotionController extends Controller
                 ->with(['items.product:id,name', 'category:id,name'])
                 ->ordered()
                 ->get(['id', 'name', 'category_id', 'precio_pickup_capital', 'precio_domicilio_capital', 'precio_pickup_interior', 'precio_domicilio_interior', 'is_active']),
+            'badgeTypes' => BadgeType::where('is_active', true)
+                ->orderBy('sort_order')
+                ->get(['id', 'name', 'color', 'text_color', 'is_active']),
         ]);
     }
 
@@ -609,6 +622,9 @@ class PromotionController extends Controller
                 ])
                 ->orderBy('name')
                 ->get(['id', 'name', 'category_id', 'has_variants', 'is_active']),
+            'badgeTypes' => BadgeType::where('is_active', true)
+                ->orderBy('sort_order')
+                ->get(['id', 'name', 'color', 'text_color', 'is_active']),
         ]);
     }
 
@@ -641,6 +657,9 @@ class PromotionController extends Controller
                 ])
                 ->orderBy('name')
                 ->get(['id', 'name', 'category_id', 'has_variants', 'is_active']),
+            'badgeTypes' => BadgeType::where('is_active', true)
+                ->orderBy('sort_order')
+                ->get(['id', 'name', 'color', 'text_color', 'is_active']),
         ]);
     }
 
@@ -656,7 +675,7 @@ class PromotionController extends Controller
 
         // Manejar la imagen si se subió
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('promotions', 'public');
+            $validated['image'] = $request->file('image')->store('menu/promotions', 'public');
         }
 
         $promotion = null;
@@ -717,7 +736,7 @@ class PromotionController extends Controller
             if ($promotion->image) {
                 \Storage::disk('public')->delete($promotion->image);
             }
-            $validated['image'] = $request->file('image')->store('promotions', 'public');
+            $validated['image'] = $request->file('image')->store('menu/promotions', 'public');
         }
 
         DB::transaction(function () use ($validated, $items, $promotion) {

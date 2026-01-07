@@ -52,7 +52,7 @@ class CategoryController extends Controller
             $image = $request->file('image');
             $extension = $image->getClientOriginalExtension() ?: $image->guessExtension() ?: 'jpg';
             $filename = Str::uuid().'.'.$extension;
-            $path = $image->storeAs('categories', $filename, 'public');
+            $path = $image->storeAs('menu/categories', $filename, 'public');
 
             if ($path) {
                 $validated['image'] = '/storage/'.$path;
@@ -107,7 +107,7 @@ class CategoryController extends Controller
             $image = $request->file('image');
             $extension = $image->getClientOriginalExtension() ?: $image->guessExtension() ?: 'jpg';
             $filename = Str::uuid().'.'.$extension;
-            $path = $image->storeAs('categories', $filename, 'public');
+            $path = $image->storeAs('menu/categories', $filename, 'public');
 
             if ($path) {
                 $validated['image'] = '/storage/'.$path;

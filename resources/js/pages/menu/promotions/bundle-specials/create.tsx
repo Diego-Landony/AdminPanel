@@ -4,6 +4,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
+import { BadgeTypeSelector, type BadgeType } from '@/components/badge-type-selector';
 import { ComboItemCard } from '@/components/combos/ComboItemCard';
 import { CreatePageLayout } from '@/components/create-page-layout';
 import { FormSection } from '@/components/form-section';
@@ -20,7 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { WeekdaySelector } from '@/components/WeekdaySelector';
 import { CURRENCY, FORM_SECTIONS, NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 import { generateUniqueItemId, prepareComboDataForSubmit, validateMinimumComboStructure } from '@/utils/comboHelpers';
-import { Banknote, Calendar, Gift, Image, Package, Plus } from 'lucide-react';
+import { Award, Banknote, Calendar, Gift, Image, Package, Plus } from 'lucide-react';
 
 interface ProductVariant {
     id: number;
@@ -62,6 +63,7 @@ interface ComboItem {
 
 interface CreateBundleSpecialPageProps {
     products: Product[];
+    badgeTypes: BadgeType[];
 }
 
 interface BundleSpecialFormData {
@@ -77,9 +79,11 @@ interface BundleSpecialFormData {
     time_until: string;
     weekdays: number[];
     items: ComboItem[];
+    badge_type_id: number | null;
+    show_badge_on_menu: boolean;
 }
 
-export default function BundleSpecialCreate({ products }: CreateBundleSpecialPageProps) {
+export default function BundleSpecialCreate({ products, badgeTypes }: CreateBundleSpecialPageProps) {
     const [processing, setProcessing] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -96,6 +100,8 @@ export default function BundleSpecialCreate({ products }: CreateBundleSpecialPag
         time_until: '',
         weekdays: [],
         items: [],
+        badge_type_id: null,
+        show_badge_on_menu: true,
     });
 
     const [image, setImage] = useState<File | null>(null);
@@ -219,6 +225,12 @@ export default function BundleSpecialCreate({ products }: CreateBundleSpecialPag
             });
         }
 
+        // Agregar badge type
+        if (data.badge_type_id) {
+            formData.append('badge_type_id', String(data.badge_type_id));
+        }
+        formData.append('show_badge_on_menu', data.show_badge_on_menu ? '1' : '0');
+
         // Agregar items como JSON
         preparedItems.forEach((item, itemIndex) => {
             formData.append(`items[${itemIndex}][is_choice_group]`, item.is_choice_group ? '1' : '0');
@@ -321,6 +333,37 @@ export default function BundleSpecialCreate({ products }: CreateBundleSpecialPag
                                 error={errors.image}
                             />
                         </FormSection>
+                    </CardContent>
+                </Card>
+
+                {/* Insignia/Badge */}
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="space-y-4">
+                            <h3 className="flex items-center gap-2 text-lg font-medium">
+                                <Award className="h-5 w-5" />
+                                Insignia
+                            </h3>
+                            <BadgeTypeSelector
+                                value={data.badge_type_id}
+                                onChange={(value) => setData('badge_type_id', value)}
+                                badgeTypes={badgeTypes}
+                                error={errors.badge_type_id}
+                            />
+
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    id="show_badge_on_menu"
+                                    checked={data.show_badge_on_menu}
+                                    onChange={(e) => setData('show_badge_on_menu', e.target.checked)}
+                                    className="h-4 w-4 rounded border-gray-300"
+                                />
+                                <label htmlFor="show_badge_on_menu" className="text-sm">
+                                    Mostrar insignia en el menu
+                                </label>
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
 

@@ -137,8 +137,13 @@ class FavoriteController extends Controller
         $favorableType = $request->input('favorable_type');
         $favorableId = $request->integer('favorable_id');
 
+        // Convert type string to model class
+        $modelClass = $favorableType === 'product'
+            ? \App\Models\Menu\Product::class
+            : \App\Models\Menu\Combo::class;
+
         $existing = $customer->favorites()
-            ->where('favorable_type', $favorableType)
+            ->where('favorable_type', $modelClass)
             ->where('favorable_id', $favorableId)
             ->first();
 
@@ -150,7 +155,7 @@ class FavoriteController extends Controller
         }
 
         $favorite = $customer->favorites()->create([
-            'favorable_type' => $favorableType,
+            'favorable_type' => $modelClass,
             'favorable_id' => $favorableId,
         ]);
 
@@ -214,8 +219,13 @@ class FavoriteController extends Controller
             abort(422, 'Tipo de favorito inválido');
         }
 
+        // Convert type string to model class
+        $modelClass = $type === 'product'
+            ? \App\Models\Menu\Product::class
+            : \App\Models\Menu\Combo::class;
+
         $favorite = $customer->favorites()
-            ->where('favorable_type', $type)
+            ->where('favorable_type', $modelClass)
             ->where('favorable_id', $id)
             ->first();
 

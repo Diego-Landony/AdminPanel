@@ -41,6 +41,7 @@ describe('index (GET /api/v1/restaurants)', function () {
             'name' => 'With Delivery',
             'is_active' => true,
             'delivery_active' => true,
+            'geofence_kml' => '<kml>test</kml>', // Required for deliveryActive scope
         ]);
 
         Restaurant::factory()->create([
@@ -166,14 +167,14 @@ describe('nearby (GET /api/v1/restaurants/nearby)', function () {
         $response = $this->getJson('/api/v1/restaurants/nearby?lng=-90.5069');
 
         $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['lat']);
+            ->assertJsonPath('error', 'location_required');
     });
 
     test('requires longitude parameter', function () {
         $response = $this->getJson('/api/v1/restaurants/nearby?lat=14.6349');
 
         $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['lng']);
+            ->assertJsonPath('error', 'location_required');
     });
 
     test('validates latitude range', function () {
@@ -210,6 +211,7 @@ describe('nearby (GET /api/v1/restaurants/nearby)', function () {
             'delivery_active' => true,
             'latitude' => 14.6350,
             'longitude' => -90.5070,
+            'geofence_kml' => '<kml>test</kml>', // Required for deliveryActive scope
         ]);
 
         Restaurant::factory()->create([

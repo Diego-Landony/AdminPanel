@@ -26,7 +26,7 @@ class ComboItemResource extends JsonResource
                 return [
                     'id' => $this->product->id,
                     'name' => $this->product->name,
-                    'image_url' => $this->product->image_url,
+                    'image_url' => $this->product->getImageUrl(),
                 ];
             }),
             'variant' => $this->when($this->relationLoaded('variant') && $this->variant !== null, function () {

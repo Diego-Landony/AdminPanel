@@ -222,37 +222,87 @@ class OrderController extends Controller
      * @OA\Get(
      *     path="/api/v1/orders",
      *     tags={"Orders"},
-     *     summary="Get order history",
-     *     description="Returns paginated list of customer's orders.",
+     *     summary="Historial de pedidos del cliente",
+     *     description="Retorna lista paginada de todos los pedidos del cliente, incluyendo puntos ganados y redimidos en cada pedido.
+     *
+     * **Información de Puntos por Pedido:**
+     * - `points.earned`: Puntos ganados al completar el pedido
+     * - `points.redeemed`: Puntos canjeados en el pedido (descuento aplicado)
+     *
+     * **Filtros disponibles:**
+     * - `status`: pending, confirmed, preparing, ready, out_for_delivery, delivered, completed, cancelled
+     * - `per_page`: Número de items por página (default: 15)",
      *     security={{"sanctum":{}}},
      *
      *     @OA\Parameter(
      *         name="per_page",
      *         in="query",
-     *         description="Items per page",
+     *         description="Items por página (default: 15, max: 50)",
      *
-     *         @OA\Schema(type="integer", example=15)
+     *         @OA\Schema(type="integer", example=15, minimum=1, maximum=50)
      *     ),
      *
      *     @OA\Parameter(
      *         name="status",
      *         in="query",
-     *         description="Filter by status",
+     *         description="Filtrar por estado",
      *
-     *         @OA\Schema(type="string")
+     *         @OA\Schema(type="string", enum={"pending","confirmed","preparing","ready","out_for_delivery","delivered","completed","cancelled"})
      *     ),
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Orders retrieved successfully",
+     *         description="Historial obtenido exitosamente",
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *             @OA\Property(property="data", type="array",
+     *
+     *                 @OA\Items(type="object",
+     *
+     *                     @OA\Property(property="id", type="integer", example=123),
+     *                     @OA\Property(property="order_number", type="string", example="ORD-20251215-0001"),
+     *                     @OA\Property(property="restaurant", type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Subway Pradera"),
+     *                         @OA\Property(property="address", type="string", example="Pradera Concepción, Zona 14")
+     *                     ),
+     *                     @OA\Property(property="service_type", type="string", enum={"pickup","delivery"}, example="pickup"),
+     *                     @OA\Property(property="zone", type="string", enum={"capital","interior"}, example="capital"),
+     *                     @OA\Property(property="items", type="array", @OA\Items(type="object")),
+     *                     @OA\Property(property="summary", type="object",
+     *                         @OA\Property(property="subtotal", type="number", format="float", example=85.00),
+     *                         @OA\Property(property="discount_total", type="number", format="float", example=10.00),
+     *                         @OA\Property(property="delivery_fee", type="number", format="float", example=15.00),
+     *                         @OA\Property(property="tax", type="number", format="float", example=0.00),
+     *                         @OA\Property(property="total", type="number", format="float", example=90.00)
+     *                     ),
+     *                     @OA\Property(property="status", type="string", example="completed"),
+     *                     @OA\Property(property="payment", type="object",
+     *                         @OA\Property(property="method", type="string", example="cash"),
+     *                         @OA\Property(property="status", type="string", example="paid"),
+     *                         @OA\Property(property="paid_at", type="string", format="date-time", nullable=true)
+     *                     ),
+     *                     @OA\Property(property="points", type="object", description="Puntos de lealtad relacionados con este pedido",
+     *                         @OA\Property(property="earned", type="integer", example=9, description="Puntos ganados al completar el pedido"),
+     *                         @OA\Property(property="redeemed", type="integer", example=0, description="Puntos canjeados como descuento")
+     *                     ),
+     *                     @OA\Property(property="timestamps", type="object",
+     *                         @OA\Property(property="created_at", type="string", format="date-time", example="2025-12-15T15:00:00Z")
+     *                     ),
+     *                     @OA\Property(property="has_review", type="boolean", example=false)
+     *                 )
+     *             ),
+     *             @OA\Property(property="meta", type="object",
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="last_page", type="integer", example=5),
+     *                 @OA\Property(property="per_page", type="integer", example=15),
+     *                 @OA\Property(property="total", type="integer", example=67)
+     *             )
      *         )
      *     ),
      *
-     *     @OA\Response(response=401, description="Unauthenticated")
+     *     @OA\Response(response=401, description="No autenticado")
      * )
      */
     public function index(): JsonResponse
@@ -328,14 +378,21 @@ class OrderController extends Controller
      * @OA\Get(
      *     path="/api/v1/orders/{order}",
      *     tags={"Orders"},
-     *     summary="Get order details",
-     *     description="Returns detailed information about a specific order.",
+     *     summary="Detalle completo de un pedido",
+     *     description="Retorna información detallada de un pedido específico, incluyendo items, promociones aplicadas, puntos ganados/redimidos y estado de pago.
+     *
+     * **Información de Puntos:**
+     * - `points.earned`: Puntos de lealtad ganados al completar este pedido
+     * - `points.redeemed`: Puntos canjeados como descuento en este pedido
+     *
+     * **Información de Promociones:**
+     * - `promotions`: Array con promociones aplicadas y sus descuentos",
      *     security={{"sanctum":{}}},
      *
      *     @OA\Parameter(
      *         name="order",
      *         in="path",
-     *         description="Order ID",
+     *         description="ID del pedido",
      *         required=true,
      *
      *         @OA\Schema(type="integer", example=1)
@@ -343,17 +400,53 @@ class OrderController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Order retrieved successfully",
+     *         description="Pedido obtenido exitosamente",
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="data", type="object")
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=123),
+     *                 @OA\Property(property="order_number", type="string", example="ORD-20251215-0001"),
+     *                 @OA\Property(property="restaurant", type="object"),
+     *                 @OA\Property(property="service_type", type="string", enum={"pickup","delivery"}),
+     *                 @OA\Property(property="zone", type="string", enum={"capital","interior"}),
+     *                 @OA\Property(property="delivery_address", type="object", nullable=true, description="Solo para delivery"),
+     *                 @OA\Property(property="items", type="array", @OA\Items(type="object",
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="name", type="string", example="Italian BMT 15cm"),
+     *                     @OA\Property(property="quantity", type="integer", example=2),
+     *                     @OA\Property(property="unit_price", type="number", format="float", example=45.00),
+     *                     @OA\Property(property="subtotal", type="number", format="float", example=90.00)
+     *                 )),
+     *                 @OA\Property(property="promotions", type="array", @OA\Items(type="object",
+     *                     @OA\Property(property="name", type="string", example="2x1 en Subs"),
+     *                     @OA\Property(property="type", type="string", example="two_for_one"),
+     *                     @OA\Property(property="discount", type="number", format="float", example=45.00)
+     *                 )),
+     *                 @OA\Property(property="summary", type="object",
+     *                     @OA\Property(property="subtotal", type="number", format="float", example=90.00),
+     *                     @OA\Property(property="discount_total", type="number", format="float", example=45.00),
+     *                     @OA\Property(property="delivery_fee", type="number", format="float", example=0.00),
+     *                     @OA\Property(property="tax", type="number", format="float", example=0.00),
+     *                     @OA\Property(property="total", type="number", format="float", example=45.00)
+     *                 ),
+     *                 @OA\Property(property="status", type="string", example="completed"),
+     *                 @OA\Property(property="payment", type="object"),
+     *                 @OA\Property(property="points", type="object", description="Puntos de lealtad de este pedido",
+     *                     @OA\Property(property="earned", type="integer", example=5, description="Puntos ganados (1 punto por cada Q10)"),
+     *                     @OA\Property(property="redeemed", type="integer", example=0, description="Puntos canjeados como descuento")
+     *                 ),
+     *                 @OA\Property(property="timestamps", type="object"),
+     *                 @OA\Property(property="notes", type="string", nullable=true),
+     *                 @OA\Property(property="can_cancel", type="boolean", example=false),
+     *                 @OA\Property(property="has_review", type="boolean", example=true)
+     *             )
      *         )
      *     ),
      *
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Forbidden - Order does not belong to customer"),
-     *     @OA\Response(response=404, description="Order not found")
+     *     @OA\Response(response=401, description="No autenticado"),
+     *     @OA\Response(response=403, description="Prohibido - El pedido no pertenece al cliente"),
+     *     @OA\Response(response=404, description="Pedido no encontrado")
      * )
      */
     public function show(Order $order): JsonResponse

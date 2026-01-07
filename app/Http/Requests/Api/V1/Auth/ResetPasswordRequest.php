@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Api\V1\Auth;
 
+use App\Rules\CustomPassword;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules;
 
 class ResetPasswordRequest extends FormRequest
 {
@@ -25,7 +25,7 @@ class ResetPasswordRequest extends FormRequest
         return [
             'token' => ['required', 'string'],
             'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'confirmed', new CustomPassword],
         ];
     }
 

@@ -1,0 +1,247 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1\Support;
+
+use App\Events\SupportMessageSent;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\Support\CreateSupportTicketRequest;
+use App\Http\Requests\Api\V1\Support\SendMessageRequest;
+use App\Http\Resources\Api\V1\Support\SupportMessageResource;
+use App\Http\Resources\Api\V1\Support\SupportTicketResource;
+use App\Models\Customer;
+use App\Models\SupportMessage;
+use App\Models\SupportMessageAttachment;
+use App\Models\SupportTicket;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
+
+class SupportTicketController extends Controller
+{
+    /**
+     * @OA\Get(
+     *     path="/api/v1/support/tickets",
+     *     tags={"Support"},
+     *     summary="List customer's support tickets",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Tickets retrieved successfully"
+     *     )
+     * )
+     */
+    public function index(): JsonResponse
+    {
+        $customer = auth()->user();
+
+        $tickets = SupportTicket::where('customer_id', $customer->id)
+            ->with(['latestMessage', 'assignedUser:id,name'])
+            ->withCount(['messages as unread_count' => function ($q) {
+                $q->where('is_read', false)->where('sender_type', \App\Models\User::class);
+            }])
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'data' => [
+                'tickets' => SupportTicketResource::collection($tickets),
+            ],
+        ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/v1/support/tickets",
+     *     tags={"Support"},
+     *     summary="Create a new support ticket",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(
+     *             required={"subject", "message"},
+     *
+     *             @OA\Property(property="subject", type="string"),
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Ticket created successfully"
+     *     )
+     * )
+     */
+    public function store(CreateSupportTicketRequest $request): JsonResponse
+    {
+        $customer = auth()->user();
+
+        $ticket = SupportTicket::create([
+            'customer_id' => $customer->id,
+            'subject' => $request->subject,
+            'status' => 'open',
+            'priority' => 'medium',
+        ]);
+
+        $message = SupportMessage::create([
+            'support_ticket_id' => $ticket->id,
+            'sender_type' => Customer::class,
+            'sender_id' => $customer->id,
+            'message' => $request->message,
+            'is_read' => false,
+        ]);
+
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $filename = "ticket_{$ticket->id}_".Str::uuid().'.'.$file->getClientOriginalExtension();
+                $path = $file->storeAs('support', $filename, 'public');
+
+                SupportMessageAttachment::create([
+                    'support_message_id' => $message->id,
+                    'file_path' => $path,
+                    'file_name' => $file->getClientOriginalName(),
+                    'mime_type' => $file->getMimeType(),
+                    'file_size' => $file->getSize(),
+                ]);
+            }
+        }
+
+        $ticket->load(['messages.attachments', 'assignedUser:id,name']);
+
+        broadcast(new SupportMessageSent($message))->toOthers();
+
+        return response()->json([
+            'message' => 'Ticket creado exitosamente.',
+            'data' => [
+                'ticket' => new SupportTicketResource($ticket),
+            ],
+        ], 201);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/support/tickets/{id}",
+     *     tags={"Support"},
+     *     summary="Get a specific ticket with messages",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *
+     *         @OA\Schema(type="integer")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Ticket retrieved successfully"
+     *     )
+     * )
+     */
+    public function show(SupportTicket $ticket): JsonResponse
+    {
+        $customer = auth()->user();
+
+        if ($ticket->customer_id !== $customer->id) {
+            return response()->json([
+                'message' => 'No tienes acceso a este ticket.',
+            ], 403);
+        }
+
+        $ticket->load(['messages.attachments', 'assignedUser:id,name']);
+
+        $ticket->messages()
+            ->where('sender_type', \App\Models\User::class)
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+
+        return response()->json([
+            'data' => [
+                'ticket' => new SupportTicketResource($ticket),
+            ],
+        ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/v1/support/tickets/{id}/messages",
+     *     tags={"Support"},
+     *     summary="Send a message to a ticket",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *
+     *         @OA\Schema(type="integer")
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Message sent successfully"
+     *     )
+     * )
+     */
+    public function sendMessage(SendMessageRequest $request, SupportTicket $ticket): JsonResponse
+    {
+        $customer = auth()->user();
+
+        if ($ticket->customer_id !== $customer->id) {
+            return response()->json([
+                'message' => 'No tienes acceso a este ticket.',
+            ], 403);
+        }
+
+        if (in_array($ticket->status, ['resolved', 'closed'])) {
+            return response()->json([
+                'message' => 'No puedes enviar mensajes a un ticket cerrado o resuelto.',
+            ], 422);
+        }
+
+        $message = SupportMessage::create([
+            'support_ticket_id' => $ticket->id,
+            'sender_type' => Customer::class,
+            'sender_id' => $customer->id,
+            'message' => $request->message,
+            'is_read' => false,
+        ]);
+
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $filename = "ticket_{$ticket->id}_".Str::uuid().'.'.$file->getClientOriginalExtension();
+                $path = $file->storeAs('support', $filename, 'public');
+
+                SupportMessageAttachment::create([
+                    'support_message_id' => $message->id,
+                    'file_path' => $path,
+                    'file_name' => $file->getClientOriginalName(),
+                    'mime_type' => $file->getMimeType(),
+                    'file_size' => $file->getSize(),
+                ]);
+            }
+        }
+
+        $message->load('attachments');
+
+        broadcast(new SupportMessageSent($message))->toOthers();
+
+        return response()->json([
+            'message' => 'Mensaje enviado exitosamente.',
+            'data' => [
+                'message' => new SupportMessageResource($message),
+            ],
+        ], 201);
+    }
+}

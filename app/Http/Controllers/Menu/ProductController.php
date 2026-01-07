@@ -129,7 +129,7 @@ class ProductController extends Controller
 
             $extension = $image->getClientOriginalExtension() ?: $image->guessExtension() ?: 'jpg';
             $filename = Str::uuid().'.'.$extension;
-            $path = $image->storeAs('images', $filename, 'public');
+            $path = $image->storeAs('menu/products', $filename, 'public');
 
             \Log::info('Stored path: '.($path ?: 'FAILED'));
 
@@ -257,7 +257,7 @@ class ProductController extends Controller
 
             $extension = $image->getClientOriginalExtension() ?: $image->guessExtension() ?: 'jpg';
             $filename = Str::uuid().'.'.$extension;
-            $path = $image->storeAs('images', $filename, 'public');
+            $path = $image->storeAs('menu/products', $filename, 'public');
 
             \Log::info('Stored path: '.($path ?: 'FAILED'));
 

@@ -282,8 +282,8 @@ describe('show', function () {
         $prices = $response->json('data.combo.prices');
 
         expect((float) $prices['pickup_capital'])->toEqual(100.0);
-        expect((float) $prices['domicilio_capital'])->toEqual(110.0);
+        expect((float) $prices['delivery_capital'])->toEqual(110.0);
         expect((float) $prices['pickup_interior'])->toEqual(95.0);
-        expect((float) $prices['domicilio_interior'])->toEqual(105.0);
+        expect((float) $prices['delivery_interior'])->toEqual(105.0);
     });
 });

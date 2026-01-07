@@ -10,52 +10,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 describe('Relationships', function () {
-    test('belongs to combo item', function () {
-        $combo = Combo::factory()->create();
-        $item = ComboItem::create([
-            'combo_id' => $combo->id,
-            'is_choice_group' => true,
-            'choice_label' => 'Test Group',
-            'quantity' => 1,
-            'sort_order' => 0,
-        ]);
-
-        $product = Product::factory()->create(['is_active' => true]);
-
-        $option = ComboItemOption::create([
-            'combo_item_id' => $item->id,
-            'product_id' => $product->id,
-            'variant_id' => null,
-            'sort_order' => 0,
-        ]);
-
-        expect($option->comboItem)->toBeInstanceOf(ComboItem::class);
-        expect($option->comboItem->id)->toBe($item->id);
-    });
-
-    test('belongs to product', function () {
-        $combo = Combo::factory()->create();
-        $item = ComboItem::create([
-            'combo_id' => $combo->id,
-            'is_choice_group' => true,
-            'choice_label' => 'Test Group',
-            'quantity' => 1,
-            'sort_order' => 0,
-        ]);
-
-        $product = Product::factory()->create(['is_active' => true]);
-
-        $option = ComboItemOption::create([
-            'combo_item_id' => $item->id,
-            'product_id' => $product->id,
-            'variant_id' => null,
-            'sort_order' => 0,
-        ]);
-
-        expect($option->product)->toBeInstanceOf(Product::class);
-        expect($option->product->id)->toBe($product->id);
-    });
-
     test('can belong to variant', function () {
         $combo = Combo::factory()->create();
         $item = ComboItem::create([

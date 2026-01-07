@@ -74,6 +74,10 @@ class MenuController extends Controller
         if ($request->boolean('lite')) {
             return $this->indexLite();
         }
+        // NOTE: Variants now show active_promotion which calls getActivePromotion().
+        // This method needs access to product.category for promotion lookup.
+        // For N+1 optimization, consider caching active promotions or using a
+        // dedicated PromotionService that bulk-loads promotions for all variants.
         $categories = Category::query()
             ->active()
             ->ordered()
@@ -83,8 +87,9 @@ class MenuController extends Controller
                     $query->active()
                         ->ordered()
                         ->with([
+                            'category', // Needed for variant promotion lookup
                             'variants' => function ($q) {
-                                $q->active()->ordered();
+                                $q->active()->ordered()->with('product.category');
                             },
                             'sections' => function ($q) {
                                 $q->orderByPivot('sort_order')->orderBy('sections.sort_order')->with('options');
@@ -225,11 +230,13 @@ class MenuController extends Controller
             ->get(['id', 'name', 'color', 'sort_order']);
 
         // Get products that have at least one active badge
+        // NOTE: Variants need product.category for active_promotion lookup
         $products = Product::query()
             ->active()
             ->whereHas('activeBadges')
             ->with([
-                'variants' => fn ($q) => $q->active()->ordered(),
+                'category', // Needed for variant promotion lookup
+                'variants' => fn ($q) => $q->active()->ordered()->with('product.category'),
                 'activeBadges.badgeType',
             ])
             ->ordered()

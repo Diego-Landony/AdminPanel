@@ -15,6 +15,7 @@ interface BadgeType {
     id: number;
     name: string;
     color: string;
+    text_color: string;
     is_active: boolean;
     sort_order: number;
     product_badges_count: number;
@@ -112,8 +113,8 @@ export default function BadgeTypesIndex({ badgeTypes, stats }: BadgeTypesPagePro
             width: 'w-32',
             render: (badge: BadgeType) => (
                 <span
-                    className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium text-white"
-                    style={{ backgroundColor: badge.color }}
+                    className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                    style={{ backgroundColor: badge.color, color: badge.text_color }}
                 >
                     {badge.name}
                 </span>
@@ -191,14 +192,15 @@ export default function BadgeTypesIndex({ badgeTypes, stats }: BadgeTypesPagePro
                     label: 'Vista previa',
                     value: (
                         <span
-                            className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium text-white"
-                            style={{ backgroundColor: badge.color }}
+                            className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                            style={{ backgroundColor: badge.color, color: badge.text_color }}
                         >
                             {badge.name}
                         </span>
                     ),
                 },
-                { label: 'Color', value: badge.color },
+                { label: 'Color fondo', value: badge.color },
+                { label: 'Color texto', value: badge.text_color },
             ]}
         />
     );

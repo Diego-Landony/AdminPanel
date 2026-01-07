@@ -93,7 +93,7 @@ export default function PointsSettingsPage({ settings }: PageProps) {
 
                                 <FormField
                                     label="Umbral de redondeo"
-                                    description={`Ej: Factura de Q${data.quetzales_per_point * 2 + Math.round(data.rounding_threshold * 10)} ÷ Q${data.quetzales_per_point} = ${(2 + data.rounding_threshold).toFixed(1)} → como 0.${Math.round(data.rounding_threshold * 100)} >= 0.${Math.round(data.rounding_threshold * 100)}, da ${Math.ceil(2 + data.rounding_threshold)} puntos.`}
+                                    description={`Ej: Factura de Q${data.quetzales_per_point * 2 + data.rounding_threshold * data.quetzales_per_point} ÷ Q${data.quetzales_per_point} = ${(2 + data.rounding_threshold).toFixed(2).replace(/\.?0+$/, '')} → da 3 puntos.`}
                                     error={errors.rounding_threshold}
                                 >
                                     <div className="flex items-center gap-2">
@@ -103,10 +103,15 @@ export default function PointsSettingsPage({ settings }: PageProps) {
                                             min={0}
                                             max={99}
                                             step={1}
-                                            value={Math.round(data.rounding_threshold * 100)}
+                                            value={data.rounding_threshold ? Math.round(data.rounding_threshold * 100) : ''}
                                             onChange={(e) => {
-                                                const val = Math.min(99, Math.max(0, parseInt(e.target.value) || 0));
-                                                setData('rounding_threshold', val / 100);
+                                                const parsed = parseInt(e.target.value);
+                                                if (e.target.value === '' || isNaN(parsed)) {
+                                                    setData('rounding_threshold', 0);
+                                                } else {
+                                                    const val = Math.min(99, Math.max(0, parsed));
+                                                    setData('rounding_threshold', val / 100);
+                                                }
                                             }}
                                             className="w-20"
                                         />

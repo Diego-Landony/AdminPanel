@@ -1,145 +1,72 @@
 # Guia de API para Flutter - Subway Guatemala Loyalty App
 
 **Base URL:** `https://admin.subwaycardgt.com/api/v1`
+
 **Documentacion completa en:** https://admin.subwaycardgt.com/docs
 
 **Autenticacion:** Bearer Token (Sanctum)
-```dart
-headers: {
-  'Authorization': 'Bearer $token',
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-}
-```
+- Header: `Authorization: Bearer $token`
+- Content-Type: `application/json`
+- Accept: `application/json`
 
 ---
 
 ## Indice
 
 1. [Autenticacion](#1-autenticacion)
-2. [Perfil de Usuario](#2-perfil-de-usuario)
-3. [Direcciones](#3-direcciones)
-4. [NITs (Facturacion)](#4-nits-facturacion)
-5. [Dispositivos (FCM)](#5-dispositivos-fcm)
-6. [Menu](#6-menu)
-7. [Restaurantes](#7-restaurantes)
-8. [Carrito](#8-carrito)
-9. [Ordenes](#9-ordenes)
-10. [Puntos y Recompensas](#10-puntos-y-recompensas)
-11. [Favoritos](#11-favoritos)
+2. [Usuario](#2-usuario)
+   - [Perfil](#21-perfil)
+   - [Direcciones](#22-direcciones)
+   - [NITs (Facturacion)](#23-nits-facturacion)
+   - [Dispositivos (FCM)](#24-dispositivos-fcm)
+   - [Puntos y Recompensas](#25-puntos-y-recompensas)
+   - [Favoritos](#26-favoritos)
+   - [Historial de Pedidos](#27-historial-de-pedidos)
+3. [Menu](#3-menu)
+4. [Restaurantes](#4-restaurantes)
+5. [Carrito](#5-carrito)
+6. [Ordenes](#6-ordenes)
 
 ---
 
 ## Flujo General de la App
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    EXPLORAR MENU (Sin ubicacion)                    │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ✅ Usuario puede ver menu SIN iniciar sesion                       │
-│  ✅ Usuario puede ver menu SIN seleccionar ubicacion                │
-│  ✅ Precios mostrados: PICKUP CAPITAL (precio de referencia)        │
-│                                                                     │
-│  ⚠️ OBLIGATORIO mostrar disclaimer del API:                         │
-│     "*El precio puede variar segun area y tipo de servicio."        │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-                                  ↓
-                    Usuario decide agregar al carrito
-                                  ↓
-┌─────────────────────────────────────────────────────────────────────┐
-│                    AGREGAR AL CARRITO                               │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ✅ Requiere iniciar sesion (login/registro)                        │
-│  ✅ Se agrega con precio temporal (pickup capital)                  │
-│  ❌ NO requiere seleccionar ubicacion todavia                       │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-                                  ↓
-                    Usuario va al checkout
-                                  ↓
-┌─────────────────────────────────────────────────────────────────────┐
-│                         CHECKOUT                                    │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  Usuario elige tipo de servicio:                                    │
-│                                                                     │
-│  ┌─────────────────────┐    ┌─────────────────────┐                 │
-│  │      PICKUP         │    │      DELIVERY       │                 │
-│  ├─────────────────────┤    ├─────────────────────┤                 │
-│  │                     │    │                     │                 │
-│  │ Seleccionar         │    │ Seleccionar         │                 │
-│  │ restaurante         │    │ direccion guardada  │                 │
-│  │ de la lista         │    │ (o crear nueva)     │                 │
-│  │                     │    │                     │                 │
-│  │ PUT /cart/restaurant│    │ PUT /cart/          │                 │
-│  │                     │    │   delivery-address  │                 │
-│  │        ↓            │    │        ↓            │                 │
-│  │ zone = restaurant.  │    │ zone = address.zone │                 │
-│  │   price_location    │    │                     │                 │
-│  │                     │    │        ↓            │                 │
-│  │        ↓            │    │ Valida geofence     │                 │
-│  │ Precios             │    │ Asigna restaurante  │                 │
-│  │ recalculados        │    │ Precios recalculados│                 │
-│  └─────────────────────┘    └─────────────────────┘                 │
-│                                                                     │
-│  ✅ Precios en carrito ahora son EXACTOS (sin disclaimer)           │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-                                  ↓
-┌─────────────────────────────────────────────────────────────────────┐
-│                    CREAR ORDEN                                      │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ⚠️ REQUIERE EMAIL VERIFICADO                                       │
-│                                                                     │
-│  Si email NO verificado → Error 403 EMAIL_NOT_VERIFIED              │
-│  Flutter debe mostrar pantalla para verificar email                 │
-│                                                                     │
-│  POST /orders → Crear orden                                         │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+EXPLORAR MENU (Sin ubicacion)
+├── Usuario puede ver menu SIN iniciar sesion
+├── Usuario puede ver menu SIN seleccionar ubicacion
+├── Precios mostrados: PICKUP CAPITAL (precio de referencia)
+└── OBLIGATORIO mostrar disclaimer del API
+
+        ↓
+
+AGREGAR AL CARRITO
+├── Requiere iniciar sesion (login/registro)
+├── Se agrega con precio temporal (pickup capital)
+└── NO requiere seleccionar ubicacion todavia
+
+        ↓
+
+CHECKOUT
+├── PICKUP: Seleccionar restaurante → PUT /cart/restaurant
+│   └── zone = restaurant.price_location → Precios recalculados
+│
+└── DELIVERY: Seleccionar direccion → PUT /cart/delivery-address
+    └── zone = address.zone → Valida geofence → Asigna restaurante → Precios recalculados
+
+        ↓
+
+CREAR ORDEN
+├── REQUIERE EMAIL VERIFICADO
+├── Si email NO verificado → Error 403 EMAIL_NOT_VERIFIED
+└── POST /orders → Crear orden
 ```
 
 ### Widget de Disclaimer (OBLIGATORIO en pantallas de menu)
 
-El API devuelve `price_disclaimer` en la respuesta. Usarlo asi:
+El API devuelve `price_disclaimer` en la respuesta. Usar el valor de `data.price_disclaimer`.
 
-```dart
-// El disclaimer viene del API en data.price_disclaimer
-// Ejemplo: "El precio puede variar segun area y tipo de servicio."
-
-Widget buildPriceDisclaimer(String disclaimer) {
-  return Container(
-    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    margin: EdgeInsets.only(bottom: 16),
-    decoration: BoxDecoration(
-      color: Colors.amber[50],
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: Colors.amber[200]!),
-    ),
-    child: Row(
-      children: [
-        Icon(Icons.info_outline, size: 18, color: Colors.amber[800]),
-        SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            disclaimer,  // <-- Usar el valor del API
-            style: TextStyle(fontSize: 12, color: Colors.amber[900]),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-// Uso:
-final menuResponse = await getMenu();
-final disclaimer = menuResponse['data']['price_disclaimer'];
-buildPriceDisclaimer(disclaimer);
-```
+Ejemplo: "El precio puede variar segun area y tipo de servicio."
 
 ---
 
@@ -149,77 +76,33 @@ buildPriceDisclaimer(disclaimer);
 
 **POST** `/auth/register`
 
-> **⚠️ TERMINOS Y CONDICIONES (OBLIGATORIO)**
->
-> El campo `terms_accepted` es **requerido**.
-> Flutter debe mostrar un checkbox que el usuario debe marcar antes de registrarse.
->
-> ```dart
-> // Widget de checkbox (ejemplo)
-> CheckboxListTile(
->   title: RichText(
->     text: TextSpan(
->       text: 'Acepto los ',
->       style: TextStyle(color: Colors.black),
->       children: [
->         TextSpan(
->           text: 'Terminos y Condiciones',
->           style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
->           recognizer: TapGestureRecognizer()..onTap = () => launchUrl(termsUrl),
->         ),
->       ],
->     ),
->   ),
->   value: termsAccepted,
->   onChanged: (value) => setState(() => termsAccepted = value ?? false),
-> )
-> ```
->
-> Si `terms_accepted` es `false` o no se envia, el API retorna error 422:
-> ```json
-> { "errors": { "terms_accepted": ["Debes aceptar los terminos y condiciones."] } }
-> ```
+> **TERMINOS Y CONDICIONES (OBLIGATORIO)**
+> El campo `terms_accepted` es **requerido**. Flutter debe mostrar un checkbox.
+> Si es `false` o no se envia, retorna error 422.
 
-```dart
-// Request
-{
-  "first_name": "Juan",
-  "last_name": "Perez",
-  "email": "juan@example.com",
-  "password": "Pass123",
-  "password_confirmation": "Pass123",
-  "phone": "12345678",
-  "birth_date": "1990-05-15",
-  "gender": "male",
-  "device_identifier": "550e8400-e29b-41d4-a716-446655440000",
-  "terms_accepted": true  // REQUERIDO - Aceptacion de terminos y condiciones
-}
+**Request:**
 
-// Response 201
-{
-  "message": "Registro exitoso. Por favor verifica tu email.",
-  "data": {
-    "token": "1|abc123xyz...",
-    "token_type": "Bearer",
-    "customer": { ... }
-  }
-}
-```
+| Campo | Tipo | Requerido | Descripcion |
+|-------|------|-----------|-------------|
+| first_name | string | Si | Nombre |
+| last_name | string | Si | Apellido |
+| email | string | Si | Email |
+| password | string | Si | Contrasena |
+| password_confirmation | string | Si | Confirmacion |
+| phone | string | Si | Telefono |
+| birth_date | string | Si | Fecha nacimiento (YYYY-MM-DD) |
+| gender | string | Si | "male", "female", "other" |
+| device_identifier | string | Si | UUID del dispositivo |
+| terms_accepted | boolean | Si | Aceptacion de T&C |
 
-```dart
-Future<AuthResponse> register(RegisterData data) async {
-  final response = await http.post(
-    Uri.parse('$baseUrl/auth/register'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode(data.toJson()),
-  );
+**Response 201:**
 
-  if (response.statusCode == 201) {
-    return AuthResponse.fromJson(jsonDecode(response.body));
-  }
-  throw ApiException.fromResponse(response);
-}
-```
+| Campo | Descripcion |
+|-------|-------------|
+| message | "Registro exitoso. Por favor verifica tu email." |
+| data.token | Token de autenticacion |
+| data.token_type | "Bearer" |
+| data.customer | Datos del cliente |
 
 ---
 
@@ -227,73 +110,42 @@ Future<AuthResponse> register(RegisterData data) async {
 
 **POST** `/auth/login`
 
-```dart
-// Request
-{
-  "email": "juan@example.com",
-  "password": "SecurePass123!",
-  "device_identifier": "550e8400-e29b-41d4-a716-446655440000"
-}
+**Request:**
 
-// Response 200 - Exito
-{
-  "message": "Inicio de sesion exitoso.",
-  "data": {
-    "token": "2|xyz456abc...",
-    "customer": { ... }
-  }
-}
+| Campo | Tipo | Requerido |
+|-------|------|-----------|
+| email | string | Si |
+| password | string | Si |
+| device_identifier | string | Si |
 
-// Response 409 - Cuenta OAuth (redirigir a Google)
-{
-  "error_code": "oauth_account_required",
-  "data": {
-    "oauth_provider": "google",
-    "email": "juan@example.com"
-  }
-}
+**Response 200 - Exito:**
 
-// Response 409 - Cuenta eliminada (ofrecer reactivacion)
-{
-  "error_code": "account_deleted_recoverable",
-  "data": {
-    "days_until_permanent_deletion": 15,
-    "points": 150,
-    "can_reactivate": true
-  }
-}
-```
+| Campo | Descripcion |
+|-------|-------------|
+| message | "Inicio de sesion exitoso." |
+| data.token | Token de autenticacion |
+| data.customer | Datos del cliente |
 
-```dart
-Future<AuthResponse> login(String email, String password, String deviceId) async {
-  final response = await http.post(
-    Uri.parse('$baseUrl/auth/login'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({
-      'email': email,
-      'password': password,
-      'device_identifier': deviceId,
-    }),
-  );
+**Response 409 - Cuenta OAuth:**
 
-  final data = jsonDecode(response.body);
+| Campo | Descripcion |
+|-------|-------------|
+| error_code | "oauth_account_required" |
+| data.oauth_provider | "google" |
+| data.email | Email de la cuenta |
 
-  if (response.statusCode == 200) {
-    return AuthResponse.fromJson(data);
-  }
+**Accion:** Redirigir a Google Sign-In
 
-  if (response.statusCode == 409) {
-    if (data['error_code'] == 'oauth_account_required') {
-      throw OAuthRequiredException(data['data']['oauth_provider']);
-    }
-    if (data['error_code'] == 'account_deleted_recoverable') {
-      throw AccountDeletedException(data['data']);
-    }
-  }
+**Response 409 - Cuenta eliminada:**
 
-  throw ApiException.fromResponse(response);
-}
-```
+| Campo | Descripcion |
+|-------|-------------|
+| error_code | "account_deleted_recoverable" |
+| data.days_until_permanent_deletion | Dias restantes |
+| data.points | Puntos pendientes |
+| data.can_reactivate | true |
+
+**Accion:** Ofrecer reactivacion
 
 ---
 
@@ -301,32 +153,21 @@ Future<AuthResponse> login(String email, String password, String deviceId) async
 
 **Flujo Mobile con Deep Link:**
 
-```dart
-// Paso 1: Abrir navegador
-final url = '$baseUrl/auth/oauth/google/redirect?action=login&platform=mobile&device_id=$deviceId';
-await launchUrl(Uri.parse(url));
+1. Abrir navegador: `$baseUrl/auth/oauth/google/redirect?action=login&platform=mobile&device_id=$deviceId`
+2. Escuchar deep link: `subwayapp://oauth/callback?token=...&customer_id=...&is_new_customer=...`
 
-// Paso 2: Escuchar deep link
-// subwayapp://oauth/callback?token=5|oauth123...&customer_id=42&is_new_customer=1
-```
-
-**Configuracion Android (AndroidManifest.xml):**
-```xml
-<intent-filter>
-  <action android:name="android.intent.action.VIEW" />
-  <category android:name="android.intent.category.DEFAULT" />
-  <category android:name="android.intent.category.BROWSABLE" />
-  <data android:scheme="subwayapp" android:host="oauth" />
-</intent-filter>
-```
+**Configuracion Android:**
+- scheme: `subwayapp`
+- host: `oauth`
 
 ---
 
 ### 1.4 Logout
 
-**POST** `/auth/logout` - Cerrar sesion actual
-
-**POST** `/auth/logout-all` - Cerrar todas las sesiones
+| Endpoint | Descripcion |
+|----------|-------------|
+| POST `/auth/logout` | Cerrar sesion actual |
+| POST `/auth/logout-all` | Cerrar todas las sesiones |
 
 ---
 
@@ -334,1104 +175,637 @@ await launchUrl(Uri.parse(url));
 
 **POST** `/auth/refresh`
 
-```dart
-// Response 200
-{
-  "data": {
-    "token": "3|newtoken123...",
-    "customer": { ... }
-  }
-}
-```
+**Response 200:**
+
+| Campo | Descripcion |
+|-------|-------------|
+| data.token | Nuevo token |
+| data.customer | Datos del cliente |
 
 ---
 
 ### 1.6 Recuperar Contrasena
 
 **POST** `/auth/forgot-password`
-```dart
-{ "email": "juan@example.com" }
-```
+
+| Campo | Tipo | Requerido |
+|-------|------|-----------|
+| email | string | Si |
 
 **POST** `/auth/reset-password`
-```dart
-{
-  "email": "juan@example.com",
-  "password": "NuevaPass123!",
-  "password_confirmation": "NuevaPass123!",
-  "token": "abc123resettoken456"
-}
-```
+
+| Campo | Tipo | Requerido |
+|-------|------|-----------|
+| email | string | Si |
+| password | string | Si |
+| password_confirmation | string | Si |
+| token | string | Si |
 
 ---
 
-### 1.7 Reactivar Cuenta Eliminada
+### 1.7 Verificacion de Email
+
+> **IMPORTANTE:** Las ordenes requieren email verificado. Si el usuario intenta crear una orden sin email verificado, recibira error 403 con `error_code: "EMAIL_NOT_VERIFIED"`.
+
+**GET** `/auth/email/verify/{id}/{hash}`
+
+Verifica el email del usuario. Este endpoint es accedido via el link enviado por email.
+
+| Parametro | Tipo | Descripcion |
+|-----------|------|-------------|
+| id | int | ID del usuario |
+| hash | string | Hash de verificacion |
+
+**POST** `/auth/email/resend`
+
+Reenvia el email de verificacion al usuario autenticado.
+
+**Response 200:**
+
+| Campo | Descripcion |
+|-------|-------------|
+| message | "Email de verificacion enviado." |
+
+**Errores posibles:**
+
+| Codigo | Descripcion |
+|--------|-------------|
+| 429 | Rate limit - esperar antes de reenviar |
+
+---
+
+### 1.8 Reactivar Cuenta Eliminada
 
 **POST** `/auth/reactivate`
 
-```dart
-// Request (cuenta local)
-{
-  "email": "juan@example.com",
-  "password": "SecurePass123!",
-  "device_identifier": "..."
-}
+**Request (cuenta local):**
 
-// Request (cuenta OAuth - sin password)
-{
-  "email": "juan@example.com",
-  "device_identifier": "..."
-}
-```
+| Campo | Tipo | Requerido |
+|-------|------|-----------|
+| email | string | Si |
+| password | string | Si |
+| device_identifier | string | Si |
+
+**Request (cuenta OAuth):**
+
+| Campo | Tipo | Requerido |
+|-------|------|-----------|
+| email | string | Si |
+| device_identifier | string | Si |
 
 ---
 
-## 2. Perfil de Usuario
+## 2. Usuario
 
-### 2.1 Obtener Perfil
+Esta seccion agrupa todos los endpoints relacionados con los datos del usuario: perfil, direcciones, NITs, dispositivos, puntos, favoritos e historial de pedidos.
+
+---
+
+### 2.1 Perfil
+
+#### 2.1.1 Obtener Perfil
 
 **GET** `/profile`
 
-```dart
-// Response 200
-{
-  "data": {
-    "customer": {
-      "id": 1,
-      "first_name": "Juan",
-      "last_name": "Perez",
-      "email": "juan@example.com",
-      "phone": "+50212345678",
-      "points": 500,
-      "oauth_provider": "local",
-      "customer_type": { "name": "Bronce" },
-      "addresses": [...],
-      "nits": [...]
-    }
-  }
-}
-```
+**Response 200 - data.customer:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| id | int | ID del cliente |
+| first_name | string | Nombre |
+| last_name | string | Apellido |
+| email | string | Email |
+| phone | string | Telefono |
+| points | int | Puntos acumulados |
+| oauth_provider | string | "local" o "google" |
+| has_password | boolean | Puede usar email+contrasena |
+| has_google_linked | boolean | Puede usar Google Sign-In |
+| customer_type | object | Tipo de cliente |
+| addresses | array | Direcciones guardadas |
+| nits | array | NITs para facturacion |
 
 ---
 
-### 2.2 Actualizar Perfil
+#### 2.1.2 Actualizar Perfil
 
 **PUT** `/profile`
 
-> **Todos los campos son opcionales** - enviar solo los que se quieren actualizar.
-> Si se cambia el email, la cuenta queda como NO verificada y debe verificar el nuevo email.
+> Todos los campos son opcionales. Si se cambia el email, la cuenta queda como NO verificada.
 
-```dart
-// Request - todos los campos son opcionales
-{
-  "first_name": "Juan",
-  "last_name": "Perez",
-  "email": "nuevo@email.com",        // Si cambia, marca email como NO verificado
-  "phone": "+50212345678",
-  "birth_date": "1990-05-15",
-  "gender": "male",                  // "male", "female", "other"
-  "email_offers_enabled": true
-}
+**Request (todos opcionales):**
 
-// Response 200
-{
-  "message": "Perfil actualizado exitosamente.",
-  "data": {
-    "customer": {
-      "id": 1,
-      "first_name": "Juan",
-      "last_name": "Perez",
-      "email": "nuevo@email.com",
-      "email_verified": false,       // false si cambio email
-      "phone": "+50212345678",
-      "birth_date": "1990-05-15",
-      "gender": "male",
-      "email_offers_enabled": true,
-      "points": 500,
-      "oauth_provider": "local"
-    }
-  }
-}
-```
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| first_name | string | Nombre |
+| last_name | string | Apellido |
+| email | string | Si cambia, marca como NO verificado |
+| phone | string | Telefono |
+| birth_date | string | Fecha nacimiento (YYYY-MM-DD) |
+| gender | string | "male", "female", "other" |
+| email_offers_enabled | boolean | Recibir ofertas por email |
 
-**Implementacion Flutter:**
-```dart
-class ProfileRemoteDataSource {
-  /// Actualizar perfil (campos opcionales)
-  Future<CustomerModel> updateProfile({
-    String? firstName,
-    String? lastName,
-    String? email,
-    String? phone,
-    String? birthDate,
-    String? gender,
-    bool? emailOffersEnabled,
-  }) async {
-    final body = <String, dynamic>{};
-    if (firstName != null) body['first_name'] = firstName;
-    if (lastName != null) body['last_name'] = lastName;
-    if (email != null) body['email'] = email;
-    if (phone != null) body['phone'] = phone;
-    if (birthDate != null) body['birth_date'] = birthDate;
-    if (gender != null) body['gender'] = gender;
-    if (emailOffersEnabled != null) body['email_offers_enabled'] = emailOffersEnabled;
+**Response 200:**
 
-    final response = await dio.put('/profile', data: body);
-    return CustomerModel.fromJson(response.data['data']['customer']);
-  }
-}
-```
-
-> **⚠️ IMPORTANTE:** Si el usuario cambia su email, mostrar mensaje indicando que debe verificar el nuevo correo.
+| Campo | Descripcion |
+|-------|-------------|
+| message | "Perfil actualizado exitosamente." |
+| data.customer | Datos actualizados |
+| data.customer.email_verified | false si cambio email |
 
 ---
 
-### 2.3 Eliminar Cuenta
+#### 2.1.3 Eliminar Cuenta
 
 **DELETE** `/profile`
 
-```dart
-// No requiere body - solo llamar al endpoint autenticado
-// Response 200
-{
-  "message": "Cuenta eliminada exitosamente.",
-  "data": {
-    "can_reactivate_until": "2025-12-27T10:30:00Z",
-    "days_to_reactivate": 30
-  }
-}
-```
+No requiere body.
 
-> **Nota:** La cuenta se puede recuperar dentro de 30 dias usando `POST /auth/reactivate`
+**Response 200:**
+
+| Campo | Descripcion |
+|-------|-------------|
+| message | "Cuenta eliminada exitosamente." |
+| data.can_reactivate_until | Fecha limite para reactivar |
+| data.days_to_reactivate | 30 dias |
+
+> La cuenta se puede recuperar dentro de 30 dias usando `POST /auth/reactivate`
 
 ---
 
-### 2.4 Avatar
+#### 2.1.4 Avatar
 
-**POST** `/profile/avatar`
-```dart
-{ "avatar": "https://example.com/avatar.jpg" }
-```
-
-**DELETE** `/profile/avatar`
+| Endpoint | Descripcion |
+|----------|-------------|
+| POST `/profile/avatar` | Subir avatar (body: `{ "avatar": "url" }`) |
+| DELETE `/profile/avatar` | Eliminar avatar |
 
 ---
 
-### 2.5 Cambiar/Crear Contrasena
+#### 2.1.5 Cambiar/Crear Contrasena
 
 **PUT** `/profile/password`
 
-> **Endpoint unificado** para cambiar contrasena (cuenta local) o crear primera contrasena (cuenta OAuth).
-> El servidor detecta automaticamente que hacer segun el tipo de cuenta.
+> Endpoint unificado para cambiar contrasena (cuenta local) o crear primera contrasena (cuenta OAuth).
 
-```dart
-// Cuenta LOCAL (cambiar contrasena existente)
-// Requiere: current_password, password, password_confirmation
-{
-  "current_password": "OldPass123!",
-  "password": "NuevaPass123!",
-  "password_confirmation": "NuevaPass123!"
-}
+**Request (cuenta LOCAL):**
 
-// Cuenta OAUTH (crear primera contrasena)
-// Requiere: password, password_confirmation (NO enviar current_password)
-{
-  "password": "NuevaPass123!",
-  "password_confirmation": "NuevaPass123!"
-}
+| Campo | Tipo | Requerido |
+|-------|------|-----------|
+| current_password | string | Si |
+| password | string | Si |
+| password_confirmation | string | Si |
 
-// Response 200 (ambos casos)
-{
-  "message": "Contrasena actualizada exitosamente.",
-  "data": {
-    "password_created": false,        // true si era OAuth creando primera contrasena
-    "can_use_password_login": true    // siempre true despues de esta operacion
-  }
-}
-```
+**Request (cuenta OAUTH):**
 
-**Implementacion Flutter:**
-```dart
-class ProfileRemoteDataSource {
-  /// Cambiar contrasena (cuenta local - oauth_provider='local')
-  Future<void> changePassword({
-    required String currentPassword,
-    required String newPassword,
-    required String newPasswordConfirmation,
-  }) async {
-    await dio.put('/profile/password', data: {
-      'current_password': currentPassword,
-      'password': newPassword,
-      'password_confirmation': newPasswordConfirmation,
-    });
-  }
+| Campo | Tipo | Requerido |
+|-------|------|-----------|
+| password | string | Si |
+| password_confirmation | string | Si |
 
-  /// Crear contrasena (cuenta OAuth sin contrasena)
-  /// Despues de esto, el usuario puede usar email+contrasena O Google
-  Future<void> createPassword({
-    required String password,
-    required String passwordConfirmation,
-  }) async {
-    await dio.put('/profile/password', data: {
-      'password': password,
-      'password_confirmation': passwordConfirmation,
-    });
-  }
-}
-```
+> NO enviar `current_password` para cuentas OAuth
 
-**Validaciones de contrasena:**
+**Response 200:**
+
+| Campo | Descripcion |
+|-------|-------------|
+| message | "Contrasena actualizada exitosamente." |
+| data.password_created | true si era OAuth creando primera contrasena |
+| data.can_use_password_login | true |
+
+**Validaciones:**
 - Minimo 6 caracteres
 - Al menos 1 letra
 - Al menos 1 numero
-- No puede ser igual a la contrasena actual (solo para cambio)
+- No puede ser igual a la actual (solo para cambio)
 
 **Errores posibles:**
-| Codigo | Mensaje |
-|--------|---------|
-| 422 | `current_password` - La contrasena actual es incorrecta |
-| 422 | `password` - Las contrasenas no coinciden |
-| 422 | `password` - La nueva contrasena debe ser diferente a la actual |
+
+| Codigo | Campo | Mensaje |
+|--------|-------|---------|
+| 422 | current_password | La contrasena actual es incorrecta |
+| 422 | password | Las contrasenas no coinciden |
+| 422 | password | La nueva contrasena debe ser diferente a la actual |
 
 ---
 
-### 2.6 Sistema de Vinculacion de Cuentas (OAuth Linking)
+#### 2.1.6 Sistema de Vinculacion de Cuentas (OAuth Linking)
 
-> **⚠️ IMPORTANTE: El sistema maneja automaticamente la vinculacion de cuentas.**
+> El sistema maneja automaticamente la vinculacion de cuentas.
 
 **Escenario 1: Usuario local hace login con Google**
-```
-Usuario tiene: email=juan@gmail.com, oauth_provider='local', password='xxx'
-Usuario hace: Login con Google (mismo email)
-Resultado:
-  - Se vincula google_id a la cuenta
-  - oauth_provider SIGUE siendo 'local'
-  - Usuario puede usar AMBOS: contrasena O Google
-```
+- Resultado: Se vincula google_id, oauth_provider SIGUE siendo 'local', puede usar AMBOS metodos
 
 **Escenario 2: Usuario Google crea contrasena**
-```
-Usuario tiene: email=juan@gmail.com, oauth_provider='google', google_id='xxx'
-Usuario hace: PUT /profile/password (crear contrasena)
-Resultado:
-  - Se guarda la contrasena
-  - oauth_provider cambia a 'local'
-  - Usuario puede usar AMBOS: contrasena O Google
-```
+- Resultado: Se guarda contrasena, oauth_provider cambia a 'local', puede usar AMBOS metodos
 
 **Escenario 3: Usuario intenta login local con cuenta OAuth**
-```
-Usuario tiene: oauth_provider='google' (nunca creo contrasena)
-Usuario intenta: POST /auth/login con email+password
-Resultado:
-  - Error 409 con error_code='oauth_account_required'
-  - Flutter debe redirigir al flujo OAuth de Google
-```
+- Resultado: Error 409 con error_code='oauth_account_required'
+- Accion: Redirigir al flujo OAuth de Google
 
-**Como mostrar opciones de login en Flutter:**
-```dart
-Widget buildLoginOptions(Customer customer) {
-  final bool canUsePassword = customer.oauthProvider == 'local';
-  final bool hasGoogle = customer.hasGoogleLinked;
+**Campo oauth_provider:**
 
-  return Column(
-    children: [
-      if (canUsePassword)
-        ElevatedButton(
-          onPressed: () => showPasswordLogin(),
-          child: Text('Iniciar con Email'),
-        ),
-      if (hasGoogle || customer.oauthProvider == 'google')
-        ElevatedButton(
-          onPressed: () => loginWithGoogle(),
-          child: Text('Iniciar con Google'),
-        ),
-    ],
-  );
-}
-```
-
-**Campo `oauth_provider` en respuesta del perfil:**
 | Valor | Significado |
 |-------|-------------|
-| `local` | Puede usar email+contrasena (y puede tener Google vinculado tambien) |
-| `google` | Solo puede usar Google (hasta que cree contrasena) |
-
-**Campos de estado de autenticacion en perfil:**
-```dart
-{
-  "oauth_provider": "local",       // "local" o "google"
-  "has_password": true,            // true = puede usar email+contrasena
-  "has_google_linked": true        // true = puede usar Google Sign-In
-}
-```
-
-**Logica Flutter para mostrar opciones:**
-```dart
-class CustomerModel {
-  final String oauthProvider;
-  final bool hasPassword;
-  final bool hasGoogleLinked;
-
-  // Puede cambiar contrasena?
-  bool get canChangePassword => hasPassword;
-
-  // Puede crear contrasena? (solo OAuth sin contrasena)
-  bool get canCreatePassword => !hasPassword;
-
-  // Metodos de login disponibles
-  List<String> get availableLoginMethods {
-    final methods = <String>[];
-    if (hasPassword) methods.add('email');
-    if (hasGoogleLinked || oauthProvider == 'google') methods.add('google');
-    return methods;
-  }
-}
-```
+| local | Puede usar email+contrasena (y puede tener Google vinculado) |
+| google | Solo puede usar Google (hasta que cree contrasena) |
 
 ---
 
-## 3. Direcciones
+### 2.2 Direcciones
 
-### 3.1 Listar
+#### 2.2.1 Listar
 
 **GET** `/addresses`
 
-```dart
-// Response 200
-{
-  "data": [
-    {
-      "id": 1,
-      "label": "Casa",
-      "address_line": "10 Calle 5-20 Zona 10",
-      "latitude": 14.6017,
-      "longitude": -90.5250,
-      "zone": "capital",
-      "is_default": true
-    }
-  ]
-}
-```
+**Response 200 - data[]:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| id | int | ID |
+| label | string | Etiqueta (Casa, Trabajo, etc.) |
+| address_line | string | Direccion completa |
+| latitude | float | Latitud |
+| longitude | float | Longitud |
+| zone | string | "capital" o "interior" |
+| is_default | boolean | Si es la direccion por defecto |
 
 ---
 
-### 3.2 Crear
+#### 2.2.2 Ver Direccion
+
+**GET** `/addresses/{id}`
+
+Retorna los detalles de una direccion especifica.
+
+**Response 200 - data:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| id | int | ID |
+| label | string | Etiqueta |
+| address_line | string | Direccion completa |
+| latitude | float | Latitud |
+| longitude | float | Longitud |
+| zone | string | "capital" o "interior" |
+| delivery_notes | string | Notas de entrega |
+| is_default | boolean | Si es la direccion por defecto |
+
+---
+
+#### 2.2.3 Crear
 
 **POST** `/addresses`
 
-```dart
-{
-  "label": "Casa",
-  "address_line": "10 Calle 5-20 Zona 10",
-  "latitude": 14.6017,
-  "longitude": -90.5250,
-  "delivery_notes": "Casa amarilla",
-  "is_default": false
-}
-```
+| Campo | Tipo | Requerido |
+|-------|------|-----------|
+| label | string | Si |
+| address_line | string | Si |
+| latitude | float | Si |
+| longitude | float | Si |
+| delivery_notes | string | No |
+| is_default | boolean | No |
 
 ---
 
-### 3.3 Actualizar
+#### 2.2.4 Otros Endpoints
 
-**PUT** `/addresses/{id}`
-
----
-
-### 3.4 Eliminar
-
-**DELETE** `/addresses/{id}`
+| Endpoint | Descripcion |
+|----------|-------------|
+| PUT `/addresses/{id}` | Actualizar |
+| DELETE `/addresses/{id}` | Eliminar |
+| POST `/addresses/{id}/set-default` | Establecer como default |
 
 ---
 
-### 3.5 Set Default
-
-**POST** `/addresses/{id}/set-default`
-
----
-
-### 3.6 Validar Ubicacion (Geofence)
+#### 2.2.5 Validar Ubicacion (Geofence)
 
 **POST** `/addresses/validate`
 
-```dart
-// Request
-{
-  "latitude": 14.6017,
-  "longitude": -90.5250
-}
+| Campo | Tipo | Requerido |
+|-------|------|-----------|
+| latitude | float | Si |
+| longitude | float | Si |
 
-// Response 200 - Valida
-{
-  "data": {
-    "is_valid": true,
-    "delivery_available": true,
-    "restaurant": {
-      "id": 5,
-      "name": "Subway Pradera Zona 10"
-    },
-    "zone": "capital"
-  }
-}
+**Response 200 - Valida:**
 
-// Response 200 - Fuera de zona
-{
-  "data": {
-    "is_valid": false,
-    "delivery_available": false,
-    "nearest_pickup_locations": [
-      { "id": 3, "name": "Subway Oakland", "distance_km": 2.5 }
-    ]
-  }
-}
-```
+| Campo | Descripcion |
+|-------|-------------|
+| data.is_valid | true |
+| data.delivery_available | true |
+| data.restaurant | Restaurante asignado |
+| data.zone | "capital" o "interior" |
+
+**Response 200 - Fuera de zona:**
+
+| Campo | Descripcion |
+|-------|-------------|
+| data.is_valid | false |
+| data.delivery_available | false |
+| data.nearest_pickup_locations | Array de restaurantes cercanos |
 
 ---
 
-## 4. NITs (Facturacion)
+### 2.3 NITs (Facturacion)
 
-### 4.1 CRUD
+#### 2.3.1 Listar
 
-**GET** `/nits` - Listar
+**GET** `/nits`
 
-**POST** `/nits` - Crear
-```dart
-{
-  "nit": "123456789",
-  "nit_type": "personal",
-  "business_name": "Empresa XYZ S.A.",
-  "is_default": false
-}
-```
-
-**PUT** `/nits/{id}` - Actualizar
-
-**DELETE** `/nits/{id}` - Eliminar
-
-**POST** `/nits/{id}/set-default` - Set default
+Retorna todos los NITs del usuario.
 
 ---
 
-## 5. Dispositivos (FCM)
+#### 2.3.2 Ver NIT
 
-### 5.1 Registrar Dispositivo para Push
+**GET** `/nits/{id}`
+
+Retorna los detalles de un NIT especifico.
+
+**Response 200 - data:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| id | int | ID |
+| nit | string | Numero de NIT |
+| nit_type | string | "personal" o "empresa" |
+| business_name | string | Nombre del negocio (si aplica) |
+| is_default | boolean | Si es el NIT por defecto |
+
+---
+
+#### 2.3.3 Crear
+
+**POST** `/nits`
+
+| Campo | Tipo | Requerido |
+|-------|------|-----------|
+| nit | string | Si |
+| nit_type | string | Si ("personal", "empresa") |
+| business_name | string | No |
+| is_default | boolean | No |
+
+---
+
+#### 2.3.4 Otros Endpoints
+
+| Endpoint | Descripcion |
+|----------|-------------|
+| PUT `/nits/{id}` | Actualizar |
+| DELETE `/nits/{id}` | Eliminar |
+| POST `/nits/{id}/set-default` | Establecer como default |
+
+---
+
+### 2.4 Dispositivos (FCM)
+
+#### 2.4.1 Registrar Dispositivo
 
 **POST** `/devices/register`
 
-```dart
-{
-  "fcm_token": "fKw8h4Xj...",
-  "device_identifier": "550e8400-e29b-41d4-a716-446655440000",
-  "device_name": "iPhone 14 Pro de Juan"
-}
-```
+| Campo | Tipo | Requerido |
+|-------|------|-----------|
+| fcm_token | string | Si |
+| device_identifier | string | Si |
+| device_name | string | No |
+
+#### 2.4.2 Otros Endpoints
+
+| Endpoint | Descripcion |
+|----------|-------------|
+| GET `/devices` | Listar |
+| DELETE `/devices/{id}` | Desactivar |
 
 ---
 
-### 5.2 Listar/Desactivar
+### 2.5 Puntos y Recompensas
 
-**GET** `/devices`
+#### Sistema de Puntos
+- **Acumulacion:** 1 punto por cada Q10 gastados
+- **Redencion:** 1 punto = Q0.10 de descuento
+- **Expiracion:** 6 meses de inactividad
 
-**DELETE** `/devices/{id}`
+#### Endpoints
+
+| Endpoint | Descripcion |
+|----------|-------------|
+| GET `/points/balance` | Balance de puntos |
+| GET `/points/history` | Historial de puntos |
+| GET `/points/expiring` | Puntos proximos a expirar |
+| GET `/rewards` | Catalogo de recompensas |
+
+#### GET /points/expiring
+
+Retorna informacion sobre los puntos que estan proximos a expirar.
+
+**Response 200:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| data.points_expiring | int | Cantidad de puntos por expirar |
+| data.expiration_date | string | Fecha de expiracion (ISO 8601) |
+| data.days_until_expiration | int | Dias restantes |
+
+**Tipos de transaccion:** `earned`, `redeemed`, `expired`, `bonus`, `adjustment`
 
 ---
 
-## 6. Menu
+### 2.6 Favoritos
 
-> **⚠️ IMPORTANTE - Disclaimer de Precios**
+| Endpoint | Descripcion |
+|----------|-------------|
+| GET `/favorites` | Listar favoritos |
+| POST `/favorites` | Agregar (body: favorable_type, favorable_id) |
+| DELETE `/favorites/{type}/{id}` | Eliminar (ej: /favorites/product/42) |
+
+**favorable_type:** `product` o `combo`
+
+---
+
+### 2.7 Historial de Pedidos
+
+| Endpoint | Descripcion |
+|----------|-------------|
+| GET `/orders` | Historial completo (params: per_page, status) |
+| GET `/orders/active` | Ordenes activas |
+| GET `/me/recent-orders` | Ultimas 5 ordenes |
+
+---
+
+## 3. Menu
+
+> **IMPORTANTE - Disclaimer de Precios**
 >
 > El API devuelve `price_disclaimer` en la respuesta del menu.
 > **Flutter DEBE mostrar este disclaimer** junto a los precios.
 >
 > El campo `price` muestra el **precio de PICKUP en CAPITAL** (precio base de referencia).
-> Este NO es el precio de delivery ni el precio en interior.
 >
-> **El precio final se calcula automaticamente cuando el usuario:**
-> - Selecciona un restaurante para pickup → `PUT /cart/restaurant`
-> - Selecciona una direccion para delivery → `PUT /cart/delivery-address`
->
-> **Uso del disclaimer del API:**
-> ```dart
-> // El API devuelve: data.price_disclaimer
-> // Valor: "El precio puede variar segun area y tipo de servicio."
->
-> Widget buildMenuWithDisclaimer(MenuResponse menu) {
->   return Column(
->     children: [
->       // Banner de disclaimer (usar valor del API)
->       Container(
->         padding: EdgeInsets.all(8),
->         color: Colors.amber[50],
->         child: Row(
->           children: [
->             Icon(Icons.info_outline, size: 16, color: Colors.amber[800]),
->             SizedBox(width: 8),
->             Expanded(
->               child: Text(
->                 menu.priceDisclaimer,  // <-- Usar valor del API
->                 style: TextStyle(fontSize: 11, color: Colors.amber[900]),
->               ),
->             ),
->           ],
->         ),
->       ),
->       // Lista de productos...
->     ],
->   );
-> }
-> ```
+> **El precio final se calcula automaticamente cuando:**
+> - Selecciona restaurante para pickup → `PUT /cart/restaurant`
+> - Selecciona direccion para delivery → `PUT /cart/delivery-address`
 
-### 6.1 Menu Completo
+---
+
+### 3.1 Menu Completo
 
 **GET** `/menu`
 
-```dart
-// Response 200 (~112KB)
-{
-  "data": {
-    "price_disclaimer": "El precio puede variar segun area y tipo de servicio.",
-    "categories": [
-      {
-        "id": 1,
-        "name": "Subs 15cm",
-        "description": "Los clasicos subs de Subway",
-        "image_url": "https://admin.subwaycardgt.com/storage/categories/subs.jpg",
-        "uses_variants": true,
-        "variant_definitions": ["15cm", "30cm"],
-        "is_combo_category": false,
-        "sort_order": 1,
-        "products": [
-          {
-            "id": 1,
-            "name": "Italian BMT",
-            "price": 45.00,  // <-- Precio referencia (pickup_capital)
-            "prices": {
-              "pickup_capital": 45.00,
-              "delivery_capital": 50.00,
-              "pickup_interior": 48.00,
-              "delivery_interior": 53.00
-            },
-            "badges": [
-              {
-                "id": 1,
-                "badge_type": {
-                  "name": "nuevo",
-                  "color": "#f97316"
-                },
-                "validity_type": "permanent",
-                "is_valid_now": true
-              }
-            ],
-            "variants": [...],
-            "sections": [...]
-          }
-        ]
-      }
-    ],
-    "combos": [...]
-  }
-}
-```
+**Response 200 (~112KB) - data:**
 
-### 6.1.1 Sistema de Badges
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| price_disclaimer | string | Disclaimer para mostrar en UI |
+| categories | array | Categorias con productos |
+| combos | array | Combos disponibles |
 
-Los productos y combos pueden tener **badges** (etiquetas visuales):
+**Estructura de Categoria:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| id | int | ID |
+| name | string | Nombre |
+| description | string | Descripcion |
+| image_url | string | URL de imagen |
+| uses_variants | boolean | Si usa variantes |
+| variant_definitions | array | ["15cm", "30cm"] |
+| is_combo_category | boolean | Si es categoria de combos |
+| sort_order | int | Orden |
+| products | array | Productos |
+
+**Estructura de Producto:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| id | int | ID |
+| name | string | Nombre |
+| price | float | Precio referencia (pickup_capital) |
+| prices | object | Todos los precios por zona/servicio |
+| badges | array | Badges activos |
+| variants | array | Variantes disponibles |
+| sections | array | Secciones de personalizacion |
+
+**Estructura de prices:**
+
+| Campo | Descripcion |
+|-------|-------------|
+| pickup_capital | Precio pickup zona capital |
+| delivery_capital | Precio delivery zona capital |
+| pickup_interior | Precio pickup zona interior |
+| delivery_interior | Precio delivery zona interior |
+
+---
+
+### 3.1.1 Sistema de Badges
 
 | Badge | Color | Uso |
 |-------|-------|-----|
 | nuevo | #f97316 (naranja) | Producto recien agregado |
-
-```dart
-// Widget para mostrar badges
-Widget buildBadges(List<Badge> badges) {
-  return Wrap(
-    spacing: 4,
-    children: badges.map((badge) => Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: Color(int.parse(badge.badgeType.color.replaceFirst('#', '0xFF'))),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        badge.badgeType.name.toUpperCase(),
-        style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-      ),
-    )).toList(),
-  );
-}
-
-// Uso en ProductCard
-Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    if (product.badges.isNotEmpty) buildBadges(product.badges),
-    Text(product.name),
-    Text('Q${product.price}'),
-  ],
-)
-```
 
 **Tipos de validez:**
 - `permanent` - Siempre visible
 - `date_range` - Visible entre fechas especificas
 - `weekdays` - Visible solo ciertos dias de la semana
 
-> Solo se retornan badges **activos y validos** en el momento de la consulta.
+> Solo se retornan badges **activos y validos**.
 
 ---
 
-### 6.2 Menu Lite (RECOMENDADO para carga inicial)
+### 3.2 Menu Lite (RECOMENDADO)
 
 **GET** `/menu?lite=1`
 
-```dart
-// Response 200 (~2KB - 50x mas rapido)
-{
-  "data": {
-    "categories": [
-      {
-        "id": 1,
-        "name": "Sandwiches",
-        "image_url": "...",
-        "products_count": 15
-      }
-    ],
-    "combos_summary": {
-      "count": 8,
-      "price_range": { "min": 45.00, "max": 95.00 }
-    }
-  }
-}
-```
+Response ~2KB (50x mas rapido). Retorna solo categorias con id, name, image_url, products_count.
 
 **Flujo Recomendado:**
-```
-1. GET /menu?lite=1           → Carga rapida de navegacion
+1. `GET /menu?lite=1` → Carga rapida
 2. Usuario toca categoria
-3. GET /menu/categories/{id}  → Productos de esa categoria
-4. POST /cart/items           → Agregar al carrito
-```
+3. `GET /menu/categories/{id}` → Productos
+4. `POST /cart/items` → Agregar al carrito
 
 ---
 
-### 6.3 Categoria con Productos
+### 3.3 Otros Endpoints de Menu
 
-**GET** `/menu/categories/{id}`
-
----
-
-### 6.4 Producto Detalle
-
-**GET** `/menu/products/{id}`
-
-```dart
-{
-  "data": {
-    "product": {
-      "id": 1,
-      "name": "Italian BMT",
-      "price": 45.00,
-      "prices": {
-        "pickup_capital": 45.00,
-        "delivery_capital": 50.00,
-        "pickup_interior": 48.00,
-        "delivery_interior": 53.00
-      },
-      "badges": [
-        {
-          "id": 1,
-          "badge_type": { "name": "nuevo", "color": "#f97316" },
-          "validity_type": "permanent",
-          "is_valid_now": true
-        }
-      ],
-      "variants": [
-        { "id": 1, "name": "15cm", "price": 35.00 },
-        { "id": 2, "name": "30cm", "price": 55.00 }
-      ],
-      "sections": [
-        {
-          "id": 1,
-          "name": "Pan",
-          "min_selections": 1,
-          "max_selections": 1,
-          "options": [
-            { "id": 1, "name": "Italiano" },
-            { "id": 2, "name": "Honey Oat" }
-          ]
-        }
-      ]
-    }
-  }
-}
-```
+| Endpoint | Descripcion |
+|----------|-------------|
+| GET `/menu/categories/{id}` | Categoria con productos |
+| GET `/menu/products/{id}` | Producto detalle |
+| GET `/menu/combos` | Todos los combos |
+| GET `/menu/combos/{id}` | Combo detalle |
+| GET `/menu/promotions` | Todas las promociones activas |
+| GET `/menu/promotions/daily` | Sub del Dia |
+| GET `/menu/promotions/daily?today=1` | Solo subs de hoy |
+| GET `/menu/promotions/combinados` | Bundle Specials |
 
 ---
 
-### 6.5 Combos
-
-**GET** `/menu/combos`
-
-**GET** `/menu/combos/{id}`
-
----
-
-### 6.6 Promociones
-
-**GET** `/menu/promotions` - Todas las promociones activas
-
-**GET** `/menu/promotions/daily` - Sub del Dia
-
-**GET** `/menu/promotions/daily?today=1` - Solo subs de hoy
-
-**GET** `/menu/promotions/combinados` - Bundle Specials
-
----
-
-### 6.7 Featured (Para Home Screen)
+### 3.4 Featured (Para Home Screen)
 
 **GET** `/menu/featured`
 
-Retorna productos y combos que tienen badges activos, junto con los tipos de badges disponibles. Ideal para construir carruseles en el Home Screen.
+Query params: `limit` (default: 10, max: 50)
 
-Query params:
-- `limit` (default: 10, max: 50) - Limite de productos/combos a retornar
+Retorna productos/combos con badges activos y tipos de badges disponibles.
 
-```dart
-// Response 200
-{
-  "data": {
-    "badge_types": [
-      { "id": 1, "name": "Nuevo", "color": "green", "sort_order": 1 },
-      { "id": 2, "name": "Popular", "color": "orange", "sort_order": 2 },
-      { "id": 3, "name": "Mas Vendido", "color": "red", "sort_order": 3 }
-    ],
-    "products": [
-      {
-        "id": 1,
-        "name": "Italian BMT",
-        "price": 45.00,
-        "image_url": "...",
-        "badges": [
-          { "id": 1, "badge_type": { "name": "Popular", "color": "orange" } }
-        ]
-      }
-    ],
-    "combos": [...]
-  }
-}
-```
-
-**Uso en Flutter - Carruseles por Badge Type:**
-
-```dart
-class FeaturedResponse {
-  final List<BadgeType> badgeTypes;
-  final List<Product> products;
-  final List<Combo> combos;
-}
-
-// Agrupar productos por badge_type_id
-Map<int, List<Product>> groupProductsByBadge(FeaturedResponse data) {
-  final Map<int, List<Product>> groups = {};
-
-  for (final badgeType in data.badgeTypes) {
-    groups[badgeType.id] = data.products
-      .where((p) => p.badges.any((b) => b.badgeTypeId == badgeType.id))
-      .toList();
-  }
-
-  return groups;
-}
-
-// Widget para Home Screen
-Widget buildHomeCarousels(FeaturedResponse data) {
-  final groupedProducts = groupProductsByBadge(data);
-
-  return Column(
-    children: data.badgeTypes.map((badgeType) {
-      final products = groupedProducts[badgeType.id] ?? [];
-      if (products.isEmpty) return SizedBox.shrink();
-
-      return CarouselSection(
-        title: badgeType.name,           // "Popular", "Mas Vendido"
-        titleColor: Color(badgeType.color), // orange, red
-        products: products,
-      );
-    }).toList(),
-  );
-}
-```
-
-**Beneficios:**
-- Admin agrega/elimina badges → carruseles se actualizan automaticamente
-- No hay IDs hardcodeados - todo es dinamico
-- El orden de carruseles = `sort_order` del badge_type
-
----
-
-### 6.8 Banners Promocionales (Para Home Screen)
-
-**GET** `/menu/banners`
-
-Retorna banners promocionales activos separados por orientacion. Una sola llamada trae todos los banners organizados.
-
-**⚠️ IMPORTANTE - Aspect Ratios Pre-definidos:**
-
-Las imagenes ya vienen recortadas desde el Admin Panel con los aspect ratios correctos:
-
-| Orientacion | Aspect Ratio | Dimensiones Referencia | Uso |
-|-------------|--------------|------------------------|-----|
-| `horizontal` | **16:9** | 1920×1080px | Carrusel principal del Home |
-| `vertical` | **9:16** | 1080×1920px | Stories estilo Instagram |
-
-**Flutter NO debe:**
-- ❌ Recortar las imagenes
-- ❌ Aplicar transformaciones de aspect ratio
-- ❌ Modificar las proporciones
-
-**Flutter DEBE:**
-- ✅ Usar `BoxFit.cover` o `BoxFit.contain` para mostrar
-- ✅ Crear containers con el aspect ratio correcto (16:9 o 9:16)
-- ✅ Las imagenes se ajustaran perfectamente
-
-```dart
-// Response 200
-{
-  "data": {
-    "horizontal": [
-      {
-        "id": 1,
-        "title": "Nuevo Menu de Verano",
-        "description": "Prueba nuestros nuevos subs refrescantes",
-        "image_url": "https://admin.subwaycardgt.com/storage/banners/summer.jpg",
-        "display_seconds": 5,
-        "link": {
-          "type": "product",
-          "id": 42
-        }
-      },
-      {
-        "id": 2,
-        "title": "15% de Descuento",
-        "description": null,
-        "image_url": "https://admin.subwaycardgt.com/storage/banners/promo15.jpg",
-        "display_seconds": 5,
-        "link": {
-          "type": "url",
-          "url": "https://example.com/promo"
-        }
-      }
-    ],
-    "vertical": [
-      {
-        "id": 3,
-        "title": "SubwayCard",
-        "description": "Acumula puntos en cada compra",
-        "image_url": "https://admin.subwaycardgt.com/storage/banners/loyalty.jpg",
-        "display_seconds": 5,
-        "link": null
-      }
-    ]
-  }
-}
-```
-
-**Estructura de Response:**
+**Response:**
 
 | Campo | Descripcion |
 |-------|-------------|
-| `horizontal` | Banners para el carrusel principal del Home |
-| `vertical` | Banners para stories, popups u otros espacios verticales |
+| badge_types | Tipos de badges con id, name, color, sort_order |
+| products | Productos con badges activos |
+| combos | Combos con badges activos |
 
-**Tipos de Link:**
-
-| Tipo | Descripcion | Accion en Flutter |
-|------|-------------|-------------------|
-| `product` | Producto | Navegar a ProductDetailScreen(id) |
-| `combo` | Combo | Navegar a ComboDetailScreen(id) |
-| `category` | Categoria | Navegar a CategoryScreen(id) |
-| `promotion` | Promocion | Navegar a PromotionDetailScreen(id) |
-| `url` | URL externa | Abrir en navegador con launchUrl() |
-| `null` | Sin accion | No hacer nada al tap |
-
-**Uso en Flutter - Home Screen:**
-
-```dart
-class HomeScreen extends StatefulWidget {
-  @override
-  _HomeScreenState createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  List<Banner> horizontalBanners = [];
-  List<Banner> verticalBanners = [];
-
-  @override
-  void initState() {
-    super.initState();
-    loadBanners();
-  }
-
-  Future<void> loadBanners() async {
-    final response = await http.get(Uri.parse('$baseUrl/menu/banners'));
-    final data = jsonDecode(response.body)['data'];
-
-    setState(() {
-      horizontalBanners = (data['horizontal'] as List)
-          .map((b) => Banner.fromJson(b)).toList();
-      verticalBanners = (data['vertical'] as List)
-          .map((b) => Banner.fromJson(b)).toList();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Carrusel horizontal principal
-        if (horizontalBanners.isNotEmpty)
-          BannerCarousel(banners: horizontalBanners),
-
-        // Resto del Home...
-        // Los banners verticales se pueden usar en otro lugar
-        // (stories, popups, sidebar, etc.)
-      ],
-    );
-  }
-}
-```
-
-**Widget del Carrusel:**
-
-```dart
-class BannerCarousel extends StatelessWidget {
-  final List<Banner> banners;
-
-  const BannerCarousel({required this.banners});
-
-  @override
-  Widget build(BuildContext context) {
-    return CarouselSlider.builder(
-      itemCount: banners.length,
-      options: CarouselOptions(
-        autoPlay: true,
-        autoPlayInterval: Duration(seconds: banners.first.displaySeconds),
-        viewportFraction: 0.95,
-        aspectRatio: 16 / 9,
-      ),
-      itemBuilder: (context, index, _) {
-        final banner = banners[index];
-        return GestureDetector(
-          onTap: () => _handleTap(context, banner),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: CachedNetworkImage(
-              imageUrl: banner.imageUrl,
-              fit: BoxFit.cover,
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _handleTap(BuildContext context, Banner banner) {
-    if (banner.link == null) return;
-
-    switch (banner.link!.type) {
-      case 'product':
-        Navigator.push(context, ProductDetailScreen(id: banner.link!.id));
-        break;
-      case 'combo':
-        Navigator.push(context, ComboDetailScreen(id: banner.link!.id));
-        break;
-      case 'category':
-        Navigator.push(context, CategoryScreen(id: banner.link!.id));
-        break;
-      case 'url':
-        launchUrl(Uri.parse(banner.link!.url!));
-        break;
-    }
-  }
-}
-```
-
-**Widget para Stories Verticales (9:16):**
-
-```dart
-class VerticalStoriesViewer extends StatelessWidget {
-  final List<Banner> stories;
-
-  const VerticalStoriesViewer({required this.stories});
-
-  @override
-  Widget build(BuildContext context) {
-    return PageView.builder(
-      itemCount: stories.length,
-      itemBuilder: (context, index) {
-        final story = stories[index];
-        return AspectRatio(
-          aspectRatio: 9 / 16,  // IMPORTANTE: Usar 9:16 para verticales
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              CachedNetworkImage(
-                imageUrl: story.imageUrl,
-                fit: BoxFit.cover,  // La imagen ya viene en 9:16
-              ),
-              // Overlay con titulo si existe
-              if (story.title != null)
-                Positioned(
-                  bottom: 60,
-                  left: 16,
-                  right: 16,
-                  child: Text(
-                    story.title!,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      shadows: [Shadow(blurRadius: 10)],
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-```
-
-**Resumen de Aspect Ratios:**
-
-```dart
-// Constantes recomendadas
-const double kHorizontalBannerAspectRatio = 16 / 9;  // 1.777...
-const double kVerticalStoryAspectRatio = 9 / 16;     // 0.5625
-
-// Uso en widgets
-AspectRatio(
-  aspectRatio: kHorizontalBannerAspectRatio,
-  child: Image.network(banner.imageUrl, fit: BoxFit.cover),
-)
-```
-
-**Caracteristicas:**
-- Una sola llamada al API trae ambos tipos de banners
-- **Imagenes pre-recortadas** desde Admin Panel (no requiere procesamiento en Flutter)
-- Validez temporal: permanente, por fechas, o por dias de la semana
-- Tiempo de display configurable por banner (1-30 segundos)
-- Links opcionales a productos, combos, categorias, o URLs externas
+**Uso:** Agrupar por badge_type_id para crear carruseles dinamicos.
 
 ---
 
-## 7. Restaurantes
+### 3.5 Banners Promocionales
 
-### 7.1 Listar
+**GET** `/menu/banners`
+
+**Aspect Ratios Pre-definidos:**
+
+| Orientacion | Aspect Ratio | Dimensiones | Uso |
+|-------------|--------------|-------------|-----|
+| horizontal | 16:9 | 1920x1080px | Carrusel principal |
+| vertical | 9:16 | 1080x1920px | Stories |
+
+> Las imagenes ya vienen recortadas desde Admin Panel. Flutter NO debe recortar ni modificar proporciones.
+
+**Response:**
+
+| Campo | Descripcion |
+|-------|-------------|
+| horizontal | Banners 16:9 para carrusel principal |
+| vertical | Banners 9:16 para stories |
+
+**Estructura de Banner:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| id | int | ID |
+| title | string | Titulo (opcional) |
+| description | string | Descripcion (opcional) |
+| image_url | string | URL de imagen |
+| display_seconds | int | Tiempo de display (1-30) |
+| link | object | Link de navegacion (opcional) |
+
+**Tipos de Link:**
+
+| Tipo | Accion |
+|------|--------|
+| product | Navegar a ProductDetailScreen(id) |
+| combo | Navegar a ComboDetailScreen(id) |
+| category | Navegar a CategoryScreen(id) |
+| promotion | Navegar a PromotionDetailScreen(id) |
+| url | Abrir en navegador |
+| null | Sin accion |
+
+---
+
+## 4. Restaurantes
+
+### 4.1 Listar
 
 **GET** `/restaurants`
 
@@ -1441,602 +815,228 @@ Query params opcionales:
 
 ---
 
-### 7.2 Detalle
+### 4.2 Detalle
 
 **GET** `/restaurants/{id}`
 
-```dart
-{
-  "data": {
-    "restaurant": {
-      "id": 1,
-      "name": "Subway Pradera",
-      "address": "Pradera Concepcion, Zona 14",
-      "latitude": 14.6349,
-      "longitude": -90.5069,
-      "is_open_now": true,
-      "today_schedule": { ... }
-    }
-  }
-}
-```
+| Campo | Descripcion |
+|-------|-------------|
+| id | ID |
+| name | Nombre |
+| address | Direccion |
+| latitude | Latitud |
+| longitude | Longitud |
+| is_open_now | Si esta abierto |
+| today_schedule | Horario de hoy |
 
 ---
 
-### 7.3 Restaurantes Cercanos
+### 4.3 Restaurantes Cercanos
 
-**GET** `/restaurants/nearby?lat=14.6349&lng=-90.5069`
+**GET** `/restaurants/nearby?lat=...&lng=...`
 
-Query params:
-- `lat` (requerido)
-- `lng` (requerido)
-- `radius_km` (default: 10, max: 50)
-
-```dart
-{
-  "data": {
-    "restaurants": [
-      { "id": 1, "name": "Subway Pradera", "distance_km": 2.45 }
-    ],
-    "total_found": 3
-  }
-}
-```
+| Param | Tipo | Requerido | Default |
+|-------|------|-----------|---------|
+| lat | float | Si | - |
+| lng | float | Si | - |
+| radius_km | int | No | 10 (max: 50) |
 
 ---
 
-### 7.4 Resenas de Restaurante
+### 4.4 Resenas
 
 **GET** `/restaurants/{id}/reviews`
 
 ---
 
-## 8. Carrito
+## 5. Carrito
 
-### 8.1 Obtener Carrito
+### 5.1 Obtener Carrito
 
 **GET** `/cart`
 
-```dart
-{
-  "data": {
-    "id": 1,
-    "restaurant": { "id": 1, "name": "Subway Pradera" },
-    "service_type": "pickup",
-    "zone": "capital",
-    "items": [
-      {
-        "id": 1,
-        "product": { "id": 1, "name": "Italian BMT" },
-        "variant": { "id": 1, "name": "15cm" },
-        "quantity": 2,
-        "unit_price": 70.00,
-        "subtotal": 140.00,
-        // Campos para mostrar precio tachado
-        "discount_amount": 70.00,       // Descuento aplicado a este item
-        "final_price": 70.00,           // Precio despues del descuento
-        "is_daily_special": false,      // Si aplica Sub del Dia
-        "applied_promotion": {          // Promocion aplicada (null si ninguna)
-          "id": 1,
-          "name": "2x1 en Subs",
-          "type": "two_for_one",
-          "value": "2x1"
-        }
-      },
-      {
-        "id": 2,
-        "product": { "id": 1, "name": "Italian BMT" },
-        "variant": { "id": 1, "name": "15cm" },
-        "quantity": 1,
-        "unit_price": 70.00,
-        "subtotal": 70.00,
-        "discount_amount": 0.00,        // Sin descuento
-        "final_price": 70.00,
-        "is_daily_special": false,
-        "applied_promotion": null
-      }
-    ],
-    "summary": {
-      "subtotal": "210.00",
-      "promotions_applied": [
-        {
-          "promotion_id": 1,
-          "promotion_name": "2x1 en Subs",
-          "promotion_type": "two_for_one",
-          "discount_amount": 70.00
-        }
-      ],
-      "total_discount": "70.00",
-      "total": "140.00"
-    },
-    "can_checkout": true,
-    "validation_messages": []
-  }
-}
-```
+**Response - data:**
 
-**Uso en Flutter para mostrar precio tachado:**
+| Campo | Descripcion |
+|-------|-------------|
+| id | ID del carrito |
+| restaurant | Restaurante asignado |
+| service_type | "pickup" o "delivery" |
+| zone | "capital" o "interior" |
+| items | Items en el carrito |
+| summary | Resumen de precios |
+| can_checkout | Si puede hacer checkout |
+| validation_messages | Mensajes de validacion |
 
-```dart
-Widget buildCartItem(CartItem item) {
-  final hasDiscount = item.discountAmount > 0;
+**Estructura de Item:**
 
-  return Row(
-    children: [
-      if (hasDiscount) ...[
-        // Precio original tachado
-        Text(
-          'Q${item.subtotal.toStringAsFixed(2)}',
-          style: TextStyle(
-            decoration: TextDecoration.lineThrough,
-            color: Colors.grey,
-          ),
-        ),
-        SizedBox(width: 8),
-      ],
-      // Precio final
-      Text(
-        'Q${item.finalPrice.toStringAsFixed(2)}',
-        style: TextStyle(
-          color: hasDiscount ? Colors.green : Colors.black,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      if (item.appliedPromotion != null)
-        Badge(label: item.appliedPromotion.value),
-      if (item.isDailySpecial)
-        Badge(label: 'SUB DEL DIA', color: Colors.orange),
-    ],
-  );
-}
-```
+| Campo | Descripcion |
+|-------|-------------|
+| id | ID del item |
+| product | Producto |
+| variant | Variante seleccionada |
+| quantity | Cantidad |
+| unit_price | Precio unitario |
+| subtotal | Subtotal |
+| discount_amount | Descuento aplicado |
+| final_price | Precio despues del descuento |
+| is_daily_special | Si aplica Sub del Dia |
+| applied_promotion | Promocion aplicada (null si ninguna) |
+
+**Para mostrar precio tachado:**
+- Si `discount_amount > 0`: mostrar `subtotal` tachado y `final_price` como precio actual
+- Si `applied_promotion != null`: mostrar badge con nombre de promocion
 
 ---
 
-### 8.2 Agregar Item
+### 5.2 Agregar Item
 
 **POST** `/cart/items`
 
-```dart
-// Producto
-{
-  "product_id": 1,
-  "variant_id": 5,
-  "quantity": 2,
-  "selected_options": [
-    { "section_id": 1, "option_id": 3 }
-  ],
-  "notes": "Sin cebolla"
-}
+**Para Producto:**
 
-// Combo
-{
-  "combo_id": 1,
-  "quantity": 1,
-  "combo_selections": [
-    { "combo_item_id": 1, "product_id": 5, "variant_id": 2 }
-  ]
-}
-```
+| Campo | Tipo | Requerido |
+|-------|------|-----------|
+| product_id | int | Si |
+| variant_id | int | No |
+| quantity | int | Si |
+| selected_options | array | No |
+| notes | string | No |
+
+**Para Combo:**
+
+| Campo | Tipo | Requerido |
+|-------|------|-----------|
+| combo_id | int | Si |
+| quantity | int | Si |
+| combo_selections | array | Si |
 
 ---
 
-### 8.3 Actualizar Item
+### 5.3 Otros Endpoints
 
-**PUT** `/cart/items/{id}`
-
-```dart
-{
-  "quantity": 3,
-  "notes": "Extra queso"
-}
-```
-
----
-
-### 8.4 Eliminar Item
-
-**DELETE** `/cart/items/{id}`
+| Endpoint | Descripcion |
+|----------|-------------|
+| PUT `/cart/items/{id}` | Actualizar item (quantity, notes) |
+| DELETE `/cart/items/{id}` | Eliminar item |
+| DELETE `/cart` | Vaciar carrito |
+| PUT `/cart/restaurant` | Cambiar restaurante |
+| PUT `/cart/service-type` | Cambiar tipo de servicio |
+| POST `/cart/validate` | Validar carrito |
 
 ---
 
-### 8.5 Vaciar Carrito
-
-**DELETE** `/cart`
-
----
-
-### 8.6 Cambiar Restaurante
-
-**PUT** `/cart/restaurant`
-
-```dart
-{ "restaurant_id": 2 }
-```
-
----
-
-### 8.7 Cambiar Tipo de Servicio
-
-**PUT** `/cart/service-type`
-
-```dart
-{
-  "service_type": "delivery",
-  "zone": "capital"
-}
-```
-
-> Los precios se recalculan automaticamente
-
----
-
-### 8.8 Asignar Direccion de Entrega
+### 5.4 Asignar Direccion de Entrega
 
 **PUT** `/cart/delivery-address`
 
-```dart
-// Request
-{ "delivery_address_id": 1 }
+| Campo | Tipo | Requerido |
+|-------|------|-----------|
+| delivery_address_id | int | Si |
 
-// Response 200 - Exito
-{
-  "data": {
-    "delivery_address": { ... },
-    "assigned_restaurant": { "id": 1, "name": "Subway Pradera" },
-    "zone": "capital",
-    "prices_updated": true
-  }
-}
+**Response 200 - Exito:**
 
-// Response 422 - Fuera de zona
-{
-  "error_code": "ADDRESS_OUTSIDE_DELIVERY_ZONE",
-  "data": {
-    "nearest_pickup_locations": [
-      { "id": 2, "name": "Subway Miraflores", "distance_km": 2.5 }
-    ]
-  }
-}
-```
+| Campo | Descripcion |
+|-------|-------------|
+| delivery_address | Direccion asignada |
+| assigned_restaurant | Restaurante asignado |
+| zone | "capital" o "interior" |
+| prices_updated | true |
+
+**Response 422 - Fuera de zona:**
+
+| Campo | Descripcion |
+|-------|-------------|
+| error_code | "ADDRESS_OUTSIDE_DELIVERY_ZONE" |
+| nearest_pickup_locations | Restaurantes cercanos para pickup |
 
 ---
 
-### 8.9 Validar Carrito
+## 6. Ordenes
 
-**POST** `/cart/validate`
-
-```dart
-{
-  "data": {
-    "is_valid": true,
-    "errors": []
-  }
-}
-```
-
----
-
-## 9. Ordenes
-
-### 9.1 Crear Orden
+### 6.1 Crear Orden
 
 **POST** `/orders`
 
-> **⚠️ REQUIERE EMAIL VERIFICADO**
->
-> Este endpoint requiere que el usuario tenga su email verificado.
-> Si el email no esta verificado, retorna error 403.
->
-> ```dart
-> // Error 403 - Email no verificado
-> {
->   "message": "Debes verificar tu correo electronico para realizar esta accion.",
->   "error_code": "EMAIL_NOT_VERIFIED",
->   "data": {
->     "email": "usuario@email.com",
->     "resend_verification_url": "/api/v1/auth/email/resend"
->   }
-> }
-> ```
->
-> **Flutter debe:**
-> 1. Detectar `error_code == 'EMAIL_NOT_VERIFIED'`
-> 2. Mostrar modal/pantalla pidiendo verificar email
-> 3. Ofrecer boton para reenviar email de verificacion (`POST /auth/email/resend`)
+> **REQUIERE EMAIL VERIFICADO**
+> Si el email no esta verificado, retorna error 403 con `error_code: "EMAIL_NOT_VERIFIED"`.
+> Flutter debe mostrar pantalla para verificar email y ofrecer reenvio (`POST /auth/email/resend`).
 
-```dart
-// Pickup
-{
-  "restaurant_id": 1,
-  "service_type": "pickup",
-  "scheduled_pickup_time": "2025-12-15T15:30:00Z",
-  "payment_method": "cash",
-  "nit_id": 1,
-  "notes": "Sin cebolla"
-}
+**Request (Pickup):**
 
-// Delivery
-{
-  "service_type": "delivery",
-  "delivery_address_id": 1,
-  "payment_method": "card"
-}
+| Campo | Tipo | Requerido |
+|-------|------|-----------|
+| restaurant_id | int | Si |
+| service_type | string | Si ("pickup") |
+| scheduled_pickup_time | string | No (ISO 8601) |
+| payment_method | string | Si |
+| nit_id | int | No |
+| notes | string | No |
 
-// Response 201
-{
-  "data": {
-    "id": 1,
-    "order_number": "ORD-20251215-0001",
-    "status": "pending",
-    "summary": {
-      "subtotal": 125.00,
-      "total": 140.00
-    }
-  }
-}
-```
+**Request (Delivery):**
+
+| Campo | Tipo | Requerido |
+|-------|------|-----------|
+| service_type | string | Si ("delivery") |
+| delivery_address_id | int | Si |
+| payment_method | string | Si |
+| nit_id | int | No |
+| notes | string | No |
 
 **payment_method:** `cash`, `card`, `online`
 
-> **NOTA:** El pago se procesa en POS, no en la app.
+> El pago se procesa en POS, no en la app.
 
 ---
 
-### 9.2 Historial de Ordenes
+### 6.2 Endpoints de Orden
 
-**GET** `/orders`
-
-Query params:
-- `per_page` (default: 15)
-- `status` (filtro opcional)
-
----
-
-### 9.3 Ordenes Activas
-
-**GET** `/orders/active`
+| Endpoint | Descripcion |
+|----------|-------------|
+| GET `/orders/{id}` | Detalle de orden |
+| GET `/orders/{id}/track` | Tracking de orden |
+| POST `/orders/{id}/cancel` | Cancelar (solo pending/confirmed) |
+| POST `/orders/{id}/reorder` | Reordenar |
+| POST `/orders/{id}/review` | Calificar (solo completed/delivered) |
 
 ---
 
-### 9.4 Detalle de Orden
+### 6.3 Flujo de Estados
 
-**GET** `/orders/{id}`
+**Pickup:** `pending` → `confirmed` → `preparing` → `ready` → `completed`
 
----
-
-### 9.5 Tracking de Orden
-
-**GET** `/orders/{id}/track`
-
-```dart
-{
-  "data": {
-    "order_number": "ORD-20251215-0001",
-    "current_status": "preparing",
-    "estimated_ready_at": "2025-12-15T15:30:00Z",
-    "status_history": [
-      {
-        "status": "preparing",
-        "previous_status": "confirmed",
-        "timestamp": "2025-12-15T15:10:00Z"
-      }
-    ]
-  }
-}
-```
-
-**Flujo de Estados:**
-- **Pickup:** `pending` → `confirmed` → `preparing` → `ready` → `completed`
-- **Delivery:** `pending` → `confirmed` → `preparing` → `ready` → `out_for_delivery` → `delivered` → `completed`
-
----
-
-### 9.6 Cancelar Orden
-
-**POST** `/orders/{id}/cancel`
-
-```dart
-{ "reason": "Cambie de opinion" }
-```
-
-> Solo desde estados `pending` o `confirmed`
-
----
-
-### 9.7 Reordenar
-
-**POST** `/orders/{id}/reorder`
-
-```dart
-// Response 200
-{
-  "data": {
-    "cart_id": 5,
-    "items_count": 3
-  }
-}
-```
-
----
-
-### 9.8 Calificar Orden
-
-**POST** `/orders/{id}/review`
-
-```dart
-{
-  "overall_rating": 5,
-  "quality_rating": 4,
-  "speed_rating": 5,
-  "service_rating": 4,
-  "comment": "Muy buena comida!"
-}
-```
-
-> Solo ordenes `completed` o `delivered`
-
----
-
-### 9.9 Ordenes Recientes
-
-**GET** `/me/recent-orders`
-
-Retorna ultimas 5 ordenes completadas con `can_reorder`.
-
----
-
-## 10. Puntos y Recompensas
-
-### Sistema de Puntos
-- **Acumulacion:** 1 punto por cada Q10 gastados
-- **Redencion:** 1 punto = Q0.10 de descuento
-- **Expiracion:** 6 meses de inactividad
-
----
-
-### 10.1 Balance de Puntos
-
-**GET** `/points/balance`
-
-```dart
-{
-  "data": {
-    "points_balance": 250,
-    "points_value_in_currency": 25.00,
-    "conversion_rate": {
-      "points_per_quetzal_spent": 10,
-      "points_value": 0.10
-    }
-  }
-}
-```
-
----
-
-### 10.2 Historial de Puntos
-
-**GET** `/points/history`
-
-```dart
-{
-  "data": [
-    {
-      "id": 123,
-      "points": 50,
-      "type": "earned",
-      "description": "Puntos ganados en orden #ORD-2025-000123"
-    }
-  ]
-}
-```
-
-**Tipos:** `earned`, `redeemed`, `expired`, `bonus`, `adjustment`
-
----
-
-### 10.3 Catalogo de Recompensas
-
-**GET** `/rewards`
-
-```dart
-{
-  "data": {
-    "products": [...],
-    "variants": [
-      {
-        "id": 1,
-        "product_name": "Sub del Dia",
-        "variant_name": "15cm",
-        "points_cost": 450
-      }
-    ],
-    "combos": [...],
-    "total_count": 8
-  }
-}
-```
-
----
-
-## 11. Favoritos
-
-### 11.1 Listar
-
-**GET** `/favorites`
-
-```dart
-{
-  "data": [
-    {
-      "id": 1,
-      "favorable_type": "product",
-      "favorable_id": 42,
-      "favorable": {
-        "id": 42,
-        "name": "Italian BMT",
-        "price": 45.00
-      }
-    }
-  ]
-}
-```
-
----
-
-### 11.2 Agregar
-
-**POST** `/favorites`
-
-```dart
-{
-  "favorable_type": "product",  // o "combo"
-  "favorable_id": 42
-}
-```
-
----
-
-### 11.3 Eliminar
-
-**DELETE** `/favorites/{type}/{id}`
-
-Ejemplo: `DELETE /favorites/product/42`
+**Delivery:** `pending` → `confirmed` → `preparing` → `ready` → `out_for_delivery` → `delivered` → `completed`
 
 ---
 
 ## Manejo de Errores
 
-### Codigos HTTP
-
 | Codigo | Significado | Accion |
 |--------|-------------|--------|
 | 401 | No autenticado | Redirigir a login |
-| 403 | Sin permisos | Mostrar error |
+| 403 | Sin permisos / Email no verificado | Ver campo `error_code` |
 | 409 | Conflicto (OAuth/cuenta eliminada) | Ver campo `error_code` |
 | 422 | Error de validacion | Mostrar errores |
 | 429 | Rate limit | Esperar y reintentar |
 
-### Clase de Errores Flutter
+---
 
-```dart
-class ApiException implements Exception {
-  final int statusCode;
-  final String message;
-  final Map<String, dynamic>? errors;
+## Sistema de Precios y Zonas
 
-  ApiException({required this.statusCode, required this.message, this.errors});
+| Tipo de Servicio | Zona | Campo |
+|------------------|------|-------|
+| Pickup | Capital | precio_pickup_capital |
+| Pickup | Interior | precio_pickup_interior |
+| Delivery | Capital | precio_domicilio_capital |
+| Delivery | Interior | precio_domicilio_interior |
 
-  factory ApiException.fromResponse(http.Response response) {
-    final data = jsonDecode(response.body);
-    return ApiException(
-      statusCode: response.statusCode,
-      message: data['message'] ?? 'Error desconocido',
-      errors: data['errors'],
-    );
-  }
-}
-```
+**Para Pickup:**
+- Zona determinada por `restaurant.price_location`
+- `PUT /cart/restaurant` → service_type='pickup', zone=restaurant.price_location, precios recalculados
+
+**Para Delivery:**
+- Zona determinada por `address.zone`
+- `PUT /cart/delivery-address` → valida geofence, asigna restaurante, service_type='delivery', zone=address.zone, precios recalculados
 
 ---
 
@@ -2044,163 +1044,34 @@ class ApiException implements Exception {
 
 ### Flujo de Registro/Login
 
-```
-1. POST /auth/register  o  POST /auth/login
+1. POST /auth/register o POST /auth/login
 2. Guardar token en secure storage
 3. POST /devices/register (FCM token)
 4. GET /profile
-```
-
----
-
-## Sistema de Precios y Zonas
-
-### Como Funciona
-
-El sistema maneja 4 tipos de precios:
-
-| Tipo de Servicio | Zona | Campo |
-|------------------|------|-------|
-| Pickup | Capital | `precio_pickup_capital` |
-| Pickup | Interior | `precio_pickup_interior` |
-| Delivery | Capital | `precio_domicilio_capital` |
-| Delivery | Interior | `precio_domicilio_interior` |
-
-### Determinacion Automatica de Zona
-
-**Para Pickup:**
-- La zona se determina por `restaurant.price_location`
-- Al llamar `PUT /cart/restaurant`, el sistema automaticamente:
-  1. Establece `service_type = 'pickup'`
-  2. Establece `zone = restaurant.price_location`
-  3. Recalcula precios de todos los items
-
-**Para Delivery:**
-- La zona se determina por la direccion del usuario (`address.zone`)
-- La direccion ya tiene zona guardada (se calcula al crearla via geofencing)
-- Al llamar `PUT /cart/delivery-address`, el sistema automaticamente:
-  1. Valida cobertura via geofence
-  2. Asigna restaurante cercano
-  3. Establece `service_type = 'delivery'`
-  4. Establece `zone = address.zone`
-  5. Recalcula precios de todos los items
-
----
 
 ### Flujo de Pedido (Pickup)
 
-```
-1. GET /menu?lite=1                    → Carga rapida de categorias
-2. GET /menu/categories/{id}           → Productos de una categoria
-3. POST /cart/items                    → Agregar al carrito (precio temporal)
-4. GET /restaurants?pickup_active=true → Lista de restaurantes
-5. PUT /cart/restaurant                → Seleccionar restaurante
-   ↳ Automaticamente:
-     - service_type = 'pickup'
-     - zone = restaurant.price_location
-     - Precios recalculados
-6. GET /cart                           → Ver carrito con precios correctos
-7. POST /cart/validate                 → Validar disponibilidad
-8. POST /orders                        → Crear orden
-9. GET /orders/{id}/track              → Seguimiento (polling)
-```
-
-```dart
-// Ejemplo Flutter: Seleccionar restaurante
-Future<void> selectRestaurantForPickup(int restaurantId) async {
-  final response = await http.put(
-    Uri.parse('$baseUrl/cart/restaurant'),
-    headers: authHeaders,
-    body: jsonEncode({'restaurant_id': restaurantId}),
-  );
-
-  final data = jsonDecode(response.body)['data'];
-  // data.zone = 'capital' o 'interior' (automatico)
-  // data.service_type = 'pickup' (automatico)
-  // data.prices_updated = true
-
-  // Refrescar carrito para ver precios actualizados
-  await refreshCart();
-}
-```
-
----
+1. GET /menu?lite=1 → Carga rapida
+2. GET /menu/categories/{id} → Productos
+3. POST /cart/items → Agregar (precio temporal)
+4. GET /restaurants?pickup_active=true → Lista restaurantes
+5. PUT /cart/restaurant → Seleccionar (precios recalculados)
+6. GET /cart → Ver precios correctos
+7. POST /cart/validate → Validar
+8. POST /orders → Crear orden
+9. GET /orders/{id}/track → Seguimiento
 
 ### Flujo de Pedido (Delivery)
 
-```
 1. GET /menu?lite=1
-2. POST /cart/items                    → Agregar al carrito (precio temporal)
-3. GET /addresses                      → Direcciones guardadas del usuario
-   ↳ Cada direccion ya tiene zone = 'capital' o 'interior'
-4. PUT /cart/delivery-address          → Seleccionar direccion
-   ↳ Automaticamente:
-     - Valida geofence
-     - Asigna restaurante cercano
-     - service_type = 'delivery'
-     - zone = address.zone
-     - Precios recalculados
-5. (Si error 422) Mostrar pickup locations cercanos
-6. GET /cart                           → Ver carrito con precios correctos
+2. POST /cart/items → Agregar (precio temporal)
+3. GET /addresses → Direcciones guardadas
+4. PUT /cart/delivery-address → Seleccionar (precios recalculados)
+5. Si error 422 → Mostrar pickup locations cercanos
+6. GET /cart → Ver precios correctos
 7. POST /cart/validate
 8. POST /orders
 9. GET /orders/{id}/track
-```
-
-```dart
-// Ejemplo Flutter: Seleccionar direccion para delivery
-Future<void> selectAddressForDelivery(int addressId) async {
-  final response = await http.put(
-    Uri.parse('$baseUrl/cart/delivery-address'),
-    headers: authHeaders,
-    body: jsonEncode({'delivery_address_id': addressId}),
-  );
-
-  if (response.statusCode == 422) {
-    // Fuera de zona de cobertura
-    final data = jsonDecode(response.body);
-    if (data['error_code'] == 'ADDRESS_OUTSIDE_DELIVERY_ZONE') {
-      // Mostrar restaurantes cercanos para pickup
-      final nearbyPickups = data['data']['nearest_pickup_locations'];
-      showPickupSuggestions(nearbyPickups);
-      return;
-    }
-  }
-
-  final data = jsonDecode(response.body)['data'];
-  // data.zone = 'capital' o 'interior' (de la direccion)
-  // data.assigned_restaurant = restaurante asignado
-  // data.prices_updated = true
-
-  await refreshCart();
-}
-```
-
----
-
-### Mostrar Precios en Menu (Antes de Seleccionar Ubicacion)
-
-Antes de que el usuario seleccione restaurante/direccion, mostrar precio de referencia con disclaimer del API:
-
-```dart
-// Widget para precio en catalogo/menu
-// Usar el disclaimer que viene del API: data.price_disclaimer
-Widget buildMenuPrice(Product product, String disclaimer) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text('Q${product.price.toStringAsFixed(2)}',
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-      Text(
-        '*$disclaimer',  // <-- Usar valor del API
-        style: TextStyle(fontSize: 9, color: Colors.grey[600], fontStyle: FontStyle.italic),
-      ),
-    ],
-  );
-}
-```
-
-**Despues de seleccionar restaurante/direccion**, los precios en el carrito son exactos y ya NO necesitan disclaimer.
 
 ---
 
@@ -2208,27 +1079,20 @@ Widget buildMenuPrice(Product product, String disclaimer) {
 
 | Fecha | Cambio |
 |-------|--------|
-| 2026-01-05 | Agregado campos `has_password`, `has_google_linked` al perfil para facilitar manejo de autenticacion en Flutter |
-| 2026-01-05 | Documentado sistema de vinculacion de cuentas OAuth (seccion 2.6) |
-| 2026-01-05 | Expandida documentacion de PUT /profile con todos los campos y ejemplos Flutter |
-| 2026-01-05 | Expandida documentacion de PUT /profile/password con ejemplos detallados para cambiar/crear contrasena |
-| 2026-01-05 | Banners ahora vienen pre-recortados con aspect ratios estandar (16:9 horizontal, 9:16 vertical) |
-| 2026-01-05 | GET /menu/banners ahora devuelve `horizontal` y `vertical` separados en una sola llamada |
-| 2026-01-05 | Agregado `description` e `image_url` a categorias en GET /menu y GET /menu/categories |
-| 2025-12-23 | Agregado GET /menu/banners - Banners promocionales para Home Screen con links y validez temporal |
-| 2025-12-23 | Agregado GET /menu/featured - Endpoint para Home Screen con productos/combos por badges (carruseles dinamicos) |
-| 2025-12-23 | POST /auth/register ahora requiere `terms_accepted: true` (checkbox de T&C) |
-| 2025-12-23 | POST /orders ahora requiere email verificado (error 403 EMAIL_NOT_VERIFIED) |
-| 2025-12-23 | GET /menu ahora devuelve `price_disclaimer` para mostrar en UI |
-| 2025-12-23 | Agregado seccion "Flujo General de la App" con diagrama completo |
-| 2025-12-22 | PUT /cart/restaurant ahora auto-determina zone segun restaurant.price_location |
-| 2025-12-22 | Agregado seccion "Sistema de Precios y Zonas" con flujos detallados |
-| 2025-12-22 | Agregado campos de descuento por item: discount_amount, final_price, is_daily_special, applied_promotion |
-| 2025-12-22 | Estandarizado campos: price, delivery_capital, delivery_interior, error_code |
-| 2025-12-22 | Estandarizado `token` en lugar de `access_token` |
-| 2025-12-22 | Documentacion completa para Flutter |
-| 2025-12-22 | Agregado endpoint `/menu?lite=1` |
-| 2025-12-22 | Integradas promociones automaticas al carrito |
-| 2025-12-22 | Campo `price` en productos/variantes/combos |
-| 2025-12-22 | Eliminado delivery_fee (siempre 0) |
-| 2025-12-22 | Eliminado metodo applyPromoCode (no implementado) |
+| 2026-01-07 | Reorganizada seccion Usuario (perfil, direcciones, NITs, dispositivos, puntos, favoritos) |
+| 2026-01-07 | Agregado GET /addresses/{id} |
+| 2026-01-07 | Agregado GET /nits/{id} |
+| 2026-01-07 | Agregado GET /points/expiring |
+| 2026-01-07 | Agregado POST /auth/email/resend |
+| 2026-01-07 | Agregado GET /auth/email/verify/{id}/{hash} |
+| 2026-01-05 | Agregado has_password, has_google_linked al perfil |
+| 2026-01-05 | Documentado sistema de vinculacion OAuth |
+| 2026-01-05 | Banners pre-recortados (16:9 horizontal, 9:16 vertical) |
+| 2025-12-23 | Agregado GET /menu/banners |
+| 2025-12-23 | Agregado GET /menu/featured |
+| 2025-12-23 | POST /auth/register requiere terms_accepted |
+| 2025-12-23 | POST /orders requiere email verificado |
+| 2025-12-23 | GET /menu devuelve price_disclaimer |
+| 2025-12-22 | Sistema de Precios y Zonas |
+| 2025-12-22 | Campos de descuento por item en carrito |
+| 2025-12-22 | Endpoint /menu?lite=1 |

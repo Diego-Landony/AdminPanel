@@ -154,8 +154,8 @@ export function ComboFormFields({
                                 currentImage={imagePreview}
                                 onImageChange={(file) => onImageChange(file, null)}
                                 error={errors.image}
-                                aspectRatio={1}
-                                aspectLabel="1:1"
+                                aspectRatio={4 / 3}
+                                aspectLabel="4:3"
                             />
                         </div>
                     </FormSection>

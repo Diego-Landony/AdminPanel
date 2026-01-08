@@ -259,14 +259,17 @@ class ProductVariant extends Model implements ActivityLoggable
                     ->orWhereHas('items', fn ($q2) => $q2->where('product_id', $this->product_id))
                     ->orWhereHas('items', fn ($q2) => $q2->where('category_id', $categoryId));
             })
-            // Cargar relaciones necesarias
-            ->with(['items' => function ($q) use ($categoryId) {
-                $q->where(function ($q2) use ($categoryId) {
-                    $q2->where('variant_id', $this->id)
-                        ->orWhere('product_id', $this->product_id)
-                        ->orWhere('category_id', $categoryId);
-                });
-            }])
+            // Cargar relaciones necesarias (incluir badgeType para mostrar el badge en el menú)
+            ->with([
+                'badgeType',
+                'items' => function ($q) use ($categoryId) {
+                    $q->where(function ($q2) use ($categoryId) {
+                        $q2->where('variant_id', $this->id)
+                            ->orWhere('product_id', $this->product_id)
+                            ->orWhere('category_id', $categoryId);
+                    });
+                },
+            ])
             ->orderBy('sort_order')
             ->get();
 

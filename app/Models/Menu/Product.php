@@ -285,8 +285,8 @@ class Product extends Model implements ActivityLoggable
             })
             // Ordenar por sort_order y retornar la primera
             ->orderBy('sort_order')
-            // Cargar relaciones
-            ->with(['items']);
+            // Cargar relaciones (incluir badgeType para mostrar el badge en el menú)
+            ->with(['items', 'badgeType']);
 
         return $query->first();
     }

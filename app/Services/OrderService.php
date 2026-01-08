@@ -133,7 +133,6 @@ class OrderService
                 'estimated_ready_at' => now()->addMinutes(30),
                 'scheduled_pickup_time' => $data['scheduled_pickup_time'] ?? null,
                 'points_earned' => $pointsToEarn,
-                'points_redeemed' => 0,
                 'nit_id' => $data['nit_id'] ?? null,
                 'nit_snapshot' => $nitSnapshot,
                 'notes' => $data['notes'] ?? null,
@@ -143,17 +142,24 @@ class OrderService
                 $productSnapshot = null;
                 if ($cartItem->isProduct()) {
                     $productSnapshot = [
+                        'product_id' => $cartItem->product_id,
                         'name' => $cartItem->product->name,
                         'description' => $cartItem->product->description,
+                        'category_id' => $cartItem->product->category_id,
                         'category' => $cartItem->product->category?->name,
+                        'variant_id' => $cartItem->variant_id,
                         'variant' => $cartItem->variant?->name,
                     ];
                 } elseif ($cartItem->isCombo()) {
                     $productSnapshot = [
+                        'combo_id' => $cartItem->combo_id,
                         'name' => $cartItem->combo->name,
                         'description' => $cartItem->combo->description,
                         'items' => $cartItem->combo->items?->map(fn ($item) => [
+                            'product_id' => $item->product_id,
                             'product_name' => $item->product?->name,
+                            'variant_id' => $item->variant_id,
+                            'variant_name' => $item->variant?->name,
                             'quantity' => $item->quantity,
                         ])->toArray(),
                     ];
@@ -366,8 +372,7 @@ class OrderService
     private function validateStatusTransition(string $current, string $new): bool
     {
         $validTransitions = [
-            Order::STATUS_PENDING => [Order::STATUS_CONFIRMED, Order::STATUS_CANCELLED],
-            Order::STATUS_CONFIRMED => [Order::STATUS_PREPARING, Order::STATUS_CANCELLED],
+            Order::STATUS_PENDING => [Order::STATUS_PREPARING, Order::STATUS_CANCELLED],
             Order::STATUS_PREPARING => [Order::STATUS_READY],
             Order::STATUS_READY => [Order::STATUS_OUT_FOR_DELIVERY, Order::STATUS_COMPLETED],
             Order::STATUS_OUT_FOR_DELIVERY => [Order::STATUS_DELIVERED],

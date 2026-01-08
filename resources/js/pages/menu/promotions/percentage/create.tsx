@@ -87,7 +87,6 @@ export default function CreatePercentage({ products, categories, combos, badgeTy
         description: '',
         type: 'percentage_discount' as const,
         items: [] as LocalPromotionItem[],
-        service_type: 'both' as 'both' | 'delivery_only' | 'pickup_only',
         validity_type: 'permanent' as 'permanent' | 'date_range' | 'time_range' | 'date_time_range',
         valid_from: '',
         valid_until: '',
@@ -245,7 +244,6 @@ export default function CreatePercentage({ products, categories, combos, badgeTy
             variant_id: number | null;
             category_id: number;
             discount_percentage: string;
-            service_type: 'both' | 'delivery_only' | 'pickup_only';
             validity_type: 'permanent' | 'date_range' | 'time_range' | 'date_time_range';
             valid_from: string;
             valid_until: string;
@@ -256,7 +254,6 @@ export default function CreatePercentage({ products, categories, combos, badgeTy
 
         const expandedItems: SubmitItem[] = localItems.flatMap<SubmitItem>((item) => {
             const globalConfig = {
-                service_type: data.service_type,
                 validity_type: data.validity_type,
                 valid_from: data.valid_from,
                 valid_until: data.valid_until,
@@ -302,7 +299,6 @@ export default function CreatePercentage({ products, categories, combos, badgeTy
             if (item.variant_id) formData.append(`items[${index}][variant_id]`, String(item.variant_id));
             formData.append(`items[${index}][category_id]`, String(item.category_id));
             formData.append(`items[${index}][discount_percentage]`, item.discount_percentage);
-            formData.append(`items[${index}][service_type]`, item.service_type);
             formData.append(`items[${index}][validity_type]`, item.validity_type);
             if (item.valid_from) formData.append(`items[${index}][valid_from]`, item.valid_from);
             if (item.valid_until) formData.append(`items[${index}][valid_until]`, item.valid_until);
@@ -416,35 +412,6 @@ export default function CreatePercentage({ products, categories, combos, badgeTy
 
             <FormSection icon={Store} title="Configuración Global">
                 <div className="space-y-4">
-                    <FormField label="Tipo de servicio" required error={errors.service_type}>
-                        <Select value={data.service_type} onValueChange={(value) => setData('service_type', value as typeof data.service_type)}>
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="both">
-                                    <div className="flex items-center gap-2">
-                                        <Truck className="h-4 w-4" />
-                                        <Store className="h-4 w-4" />
-                                        <span>Delivery y Pickup</span>
-                                    </div>
-                                </SelectItem>
-                                <SelectItem value="delivery_only">
-                                    <div className="flex items-center gap-2">
-                                        <Truck className="h-4 w-4" />
-                                        <span>Solo Delivery</span>
-                                    </div>
-                                </SelectItem>
-                                <SelectItem value="pickup_only">
-                                    <div className="flex items-center gap-2">
-                                        <Store className="h-4 w-4" />
-                                        <span>Solo Pickup</span>
-                                    </div>
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </FormField>
-
                     <FormField label="Vigencia" required error={errors.validity_type}>
                         <Select value={data.validity_type} onValueChange={(value) => setData('validity_type', value as typeof data.validity_type)}>
                             <SelectTrigger>

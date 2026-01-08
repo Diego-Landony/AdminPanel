@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Api\V1\Cart;
 
+use App\Models\Menu\Combo;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class AddCartItemRequest extends FormRequest
 {
@@ -45,8 +47,89 @@ class AddCartItemRequest extends FormRequest
             'selected_options.*.section_id' => ['required', 'integer'],
             'selected_options.*.option_id' => ['required', 'integer'],
             'combo_selections' => ['nullable', 'array'],
+            'combo_selections.*.combo_item_id' => ['required_with:combo_selections', 'integer'],
+            'combo_selections.*.selections' => ['required_with:combo_selections', 'array'],
+            'combo_selections.*.selections.*.option_id' => ['required', 'integer'],
+            'combo_selections.*.selections.*.selected_options' => ['nullable', 'array'],
             'notes' => ['nullable', 'string', 'max:500'],
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            $this->validateComboSelections($validator);
+        });
+    }
+
+    /**
+     * Validate combo selections match the combo structure.
+     */
+    protected function validateComboSelections(Validator $validator): void
+    {
+        $comboId = $this->input('combo_id');
+
+        if (! $comboId) {
+            return;
+        }
+
+        $combo = Combo::with(['items.options'])->find($comboId);
+
+        if (! $combo) {
+            return; // La regla exists ya maneja esto
+        }
+
+        $comboSelections = $this->input('combo_selections', []);
+        $selectionsMap = collect($comboSelections)->keyBy('combo_item_id');
+
+        foreach ($combo->items as $item) {
+            if (! $item->is_choice_group) {
+                // Items fijos no requieren selección
+                continue;
+            }
+
+            $itemSelection = $selectionsMap->get($item->id);
+
+            // Validar que exista selección para este grupo
+            if (! $itemSelection) {
+                $validator->errors()->add(
+                    'combo_selections',
+                    "Falta selección para '{$item->choice_label}'. Debe elegir {$item->quantity} opción(es)."
+                );
+
+                continue;
+            }
+
+            $selections = $itemSelection['selections'] ?? [];
+            $expectedQuantity = $item->quantity ?? 1;
+
+            // Validar cantidad de selecciones
+            if (count($selections) !== $expectedQuantity) {
+                $validator->errors()->add(
+                    'combo_selections',
+                    "'{$item->choice_label}' requiere exactamente {$expectedQuantity} selección(es), pero se enviaron ".count($selections).'.'
+                );
+
+                continue;
+            }
+
+            // Validar que las opciones seleccionadas existan en el combo
+            $validOptionIds = $item->options->pluck('id')->toArray();
+
+            foreach ($selections as $index => $selection) {
+                $optionId = $selection['option_id'] ?? null;
+
+                if (! $optionId || ! in_array($optionId, $validOptionIds)) {
+                    $validator->errors()->add(
+                        'combo_selections',
+                        "La opción seleccionada para '{$item->choice_label}' (selección #".($index + 1).') no es válida.'
+                    );
+                }
+            }
+        }
     }
 
     /**

@@ -25,9 +25,11 @@ class UpdateBundlePromotionRequest extends FormRequest
             'badge_type_id' => ['nullable', 'exists:badge_types,id'],
             'show_badge_on_menu' => ['boolean'],
 
-            // Precios especiales (solo 2: capital e interior)
-            'special_bundle_price_capital' => ['required', 'numeric', 'min:0', 'max:9999.99'],
-            'special_bundle_price_interior' => ['required', 'numeric', 'min:0', 'max:9999.99'],
+            // Precios especiales (4 precios: pickup/delivery x capital/interior)
+            'special_bundle_price_pickup_capital' => ['required', 'numeric', 'min:0', 'max:9999.99'],
+            'special_bundle_price_delivery_capital' => ['required', 'numeric', 'min:0', 'max:9999.99'],
+            'special_bundle_price_pickup_interior' => ['required', 'numeric', 'min:0', 'max:9999.99'],
+            'special_bundle_price_delivery_interior' => ['required', 'numeric', 'min:0', 'max:9999.99'],
 
             // Tipo de vigencia
             'validity_type' => ['required', 'string', 'in:permanent,date_range,time_range,date_time_range'],
@@ -74,10 +76,14 @@ class UpdateBundlePromotionRequest extends FormRequest
             'image.max' => 'La imagen no debe pesar más de 5MB.',
 
             // Precios
-            'special_bundle_price_capital.required' => 'El precio para zona capital es obligatorio.',
-            'special_bundle_price_capital.min' => 'El precio debe ser mayor o igual a 0.',
-            'special_bundle_price_interior.required' => 'El precio para zona interior es obligatorio.',
-            'special_bundle_price_interior.min' => 'El precio debe ser mayor o igual a 0.',
+            'special_bundle_price_pickup_capital.required' => 'El precio pickup capital es obligatorio.',
+            'special_bundle_price_pickup_capital.min' => 'El precio pickup capital debe ser mayor o igual a 0.',
+            'special_bundle_price_delivery_capital.required' => 'El precio delivery capital es obligatorio.',
+            'special_bundle_price_delivery_capital.min' => 'El precio delivery capital debe ser mayor o igual a 0.',
+            'special_bundle_price_pickup_interior.required' => 'El precio pickup interior es obligatorio.',
+            'special_bundle_price_pickup_interior.min' => 'El precio pickup interior debe ser mayor o igual a 0.',
+            'special_bundle_price_delivery_interior.required' => 'El precio delivery interior es obligatorio.',
+            'special_bundle_price_delivery_interior.min' => 'El precio delivery interior debe ser mayor o igual a 0.',
 
             // Vigencia
             'valid_from.date' => 'La fecha de inicio debe ser una fecha válida.',

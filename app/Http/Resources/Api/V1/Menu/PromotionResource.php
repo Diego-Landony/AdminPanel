@@ -20,10 +20,12 @@ class PromotionResource extends JsonResource
             'description' => $this->description,
             'image_url' => $this->image_url,
             'type' => $this->type,
-            'prices' => [
-                'bundle_capital' => $this->special_bundle_price_capital ? (float) $this->special_bundle_price_capital : null,
-                'bundle_interior' => $this->special_bundle_price_interior ? (float) $this->special_bundle_price_interior : null,
-            ],
+            'prices' => $this->when($this->type === 'bundle_special', fn () => [
+                'pickup_capital' => $this->special_bundle_price_pickup_capital ? (float) $this->special_bundle_price_pickup_capital : null,
+                'delivery_capital' => $this->special_bundle_price_delivery_capital ? (float) $this->special_bundle_price_delivery_capital : null,
+                'pickup_interior' => $this->special_bundle_price_pickup_interior ? (float) $this->special_bundle_price_pickup_interior : null,
+                'delivery_interior' => $this->special_bundle_price_delivery_interior ? (float) $this->special_bundle_price_delivery_interior : null,
+            ]),
             'valid_from' => $this->valid_from,
             'valid_until' => $this->valid_until,
             'time_from' => $this->time_from,

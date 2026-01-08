@@ -12,15 +12,15 @@ describe('Password Update', function () {
             ->from('/settings/password')
             ->put('/settings/password', [
                 'current_password' => 'password',
-                'password' => 'new-password',
-                'password_confirmation' => 'new-password',
+                'password' => 'NewPass1!',
+                'password_confirmation' => 'NewPass1!',
             ]);
 
         $response
             ->assertSessionHasNoErrors()
             ->assertRedirect('/settings/password');
 
-        expect(Hash::check('new-password', $user->refresh()->password))->toBeTrue();
+        expect(Hash::check('NewPass1!', $user->refresh()->password))->toBeTrue();
     });
 });
 
@@ -33,8 +33,8 @@ describe('Password Update Validation', function () {
             ->from('/settings/password')
             ->put('/settings/password', [
                 'current_password' => 'wrong-password',
-                'password' => 'new-password',
-                'password_confirmation' => 'new-password',
+                'password' => 'NewPass1!',
+                'password_confirmation' => 'NewPass1!',
             ]);
 
         $response

@@ -204,6 +204,7 @@ export default function PercentageIndex({ promotions, stats, filters }: Promotio
                 isDeleting={deletingPromotion !== null}
                 entityName={selectedPromotion?.name || ''}
                 entityType="Promoción de Porcentaje"
+                customMessage={`¿Estás seguro de que quieres archivar la promoción "${selectedPromotion?.name || ''}"? La promoción será desactivada y archivada, pero seguirá almacenada para reportería.`}
             />
         </AppLayout>
     );

@@ -9,8 +9,8 @@ describe('Valid Data', function () {
         $data = [
             'name' => 'John Doe',
             'email' => 'john@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
         ];
 
         $request = new StoreUserRequest;
@@ -24,8 +24,8 @@ describe('Required Fields', function () {
     test('store user request fails without name', function () {
         $data = [
             'email' => 'john@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
         ];
 
         $request = new StoreUserRequest;
@@ -39,8 +39,8 @@ describe('Required Fields', function () {
     test('store user request fails without email', function () {
         $data = [
             'name' => 'John Doe',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
         ];
 
         $request = new StoreUserRequest;
@@ -71,8 +71,8 @@ describe('Email Validation', function () {
         $data = [
             'name' => 'John Doe',
             'email' => 'invalid-email',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
         ];
 
         $request = new StoreUserRequest;
@@ -89,8 +89,8 @@ describe('Email Validation', function () {
         $data = [
             'name' => 'John Doe',
             'email' => 'existing@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
         ];
 
         $request = new StoreUserRequest;
@@ -107,8 +107,8 @@ describe('Password Validation', function () {
         $data = [
             'name' => 'John Doe',
             'email' => 'john@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'different123',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Different1!',
         ];
 
         $request = new StoreUserRequest;
@@ -140,8 +140,8 @@ describe('String Length Validation', function () {
         $data = [
             'name' => str_repeat('a', 256),
             'email' => 'john@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
         ];
 
         $request = new StoreUserRequest;

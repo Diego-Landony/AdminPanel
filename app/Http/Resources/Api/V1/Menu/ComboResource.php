@@ -27,8 +27,6 @@ class ComboResource extends JsonResource
                 'pickup_interior' => (float) $this->precio_pickup_interior,
                 'delivery_interior' => (float) $this->precio_domicilio_interior,
             ],
-            'is_redeemable' => (bool) $this->is_redeemable,
-            'points_cost' => $this->points_cost,
             'is_available' => $this->isAvailable(),
             'category_id' => $this->category_id,
             'sort_order' => $this->sort_order,

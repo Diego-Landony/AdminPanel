@@ -72,7 +72,6 @@ interface PromotionItem {
     variant_id: number | null;
     category_id: number | null;
     discount_percentage: string | null;
-    service_type: 'both' | 'delivery_only' | 'pickup_only' | null;
     validity_type: 'permanent' | 'date_range' | 'time_range' | 'date_time_range' | null;
     valid_from: string | null;
     valid_until: string | null;
@@ -220,7 +219,6 @@ export default function EditPercentagePromotion({ promotion, products, categorie
         name: promotion.name,
         description: promotion.description || '',
         type: promotion.type,
-        service_type: (firstItem?.service_type || 'both') as 'both' | 'delivery_only' | 'pickup_only',
         validity_type: (firstItem?.validity_type || 'permanent') as 'permanent' | 'date_range' | 'time_range' | 'date_time_range',
         valid_from: firstItem?.valid_from || '',
         valid_until: firstItem?.valid_until || '',
@@ -355,7 +353,6 @@ export default function EditPercentagePromotion({ promotion, products, categorie
 
         const expandedItems = localItems.flatMap((item) => {
             const globalConfig = {
-                service_type: formData.service_type,
                 validity_type: formData.validity_type,
                 valid_from: formData.valid_from,
                 valid_until: formData.valid_until,
@@ -402,7 +399,6 @@ export default function EditPercentagePromotion({ promotion, products, categorie
             if (item.variant_id) formDataObj.append(`items[${index}][variant_id]`, String(item.variant_id));
             formDataObj.append(`items[${index}][category_id]`, String(item.category_id));
             formDataObj.append(`items[${index}][discount_percentage]`, item.discount_percentage);
-            formDataObj.append(`items[${index}][service_type]`, item.service_type);
             formDataObj.append(`items[${index}][validity_type]`, item.validity_type);
             if (item.valid_from) formDataObj.append(`items[${index}][valid_from]`, item.valid_from);
             if (item.valid_until) formDataObj.append(`items[${index}][valid_until]`, item.valid_until);
@@ -548,40 +544,8 @@ export default function EditPercentagePromotion({ promotion, products, categorie
 
                 <Card>
                     <CardContent className="pt-6">
-                        <FormSection icon={Store} title="Configuración Global" description="Configura el tipo de servicio y disponibilidad">
+                        <FormSection icon={Store} title="Configuración Global" description="Configura la disponibilidad">
                 <div className="space-y-4">
-                    <FormField label="Tipo de servicio" required error={errors.service_type}>
-                        <Select
-                            value={formData.service_type}
-                            onValueChange={(value) => setFormData({ ...formData, service_type: value as typeof formData.service_type })}
-                        >
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="both">
-                                    <div className="flex items-center gap-2">
-                                        <Truck className="h-4 w-4" />
-                                        <Store className="h-4 w-4" />
-                                        <span>Delivery y Pickup</span>
-                                    </div>
-                                </SelectItem>
-                                <SelectItem value="delivery_only">
-                                    <div className="flex items-center gap-2">
-                                        <Truck className="h-4 w-4" />
-                                        <span>Solo Delivery</span>
-                                    </div>
-                                </SelectItem>
-                                <SelectItem value="pickup_only">
-                                    <div className="flex items-center gap-2">
-                                        <Store className="h-4 w-4" />
-                                        <span>Solo Pickup</span>
-                                    </div>
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </FormField>
-
                     <FormField label="Vigencia" required error={errors.validity_type}>
                         <Select
                             value={formData.validity_type}

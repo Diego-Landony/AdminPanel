@@ -52,7 +52,6 @@ class Order extends Model
         'ready_at',
         'delivered_at',
         'points_earned',
-        'points_redeemed',
         'nit_id',
         'nit_snapshot',
         'notes',
@@ -78,7 +77,6 @@ class Order extends Model
             'tax' => 'decimal:2',
             'total' => 'decimal:2',
             'points_earned' => 'integer',
-            'points_redeemed' => 'integer',
             'scheduled_for' => 'datetime',
             'scheduled_pickup_time' => 'datetime',
             'delivery_person_rating' => 'integer',
@@ -147,10 +145,7 @@ class Order extends Model
 
     public function canBeCancelled(): bool
     {
-        return in_array($this->status, [
-            self::STATUS_PENDING,
-            self::STATUS_CONFIRMED,
-        ]);
+        return $this->status === self::STATUS_PENDING;
     }
 
     public function isPending(): bool

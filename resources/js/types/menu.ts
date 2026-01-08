@@ -46,8 +46,6 @@ export interface Product {
     is_active: boolean;
     is_customizable?: boolean;
     has_variants: boolean;
-    is_redeemable: boolean;
-    points_cost: number | null;
     precio_pickup_capital: number | null;
     precio_domicilio_capital: number | null;
     precio_pickup_interior: number | null;
@@ -85,8 +83,6 @@ export interface ProductVariant {
     sku: string;
     name: string;
     size: string;
-    is_redeemable: boolean;
-    points_cost: number | null;
     precio_pickup_capital: number;
     precio_domicilio_capital: number;
     precio_pickup_interior: number;
@@ -113,8 +109,6 @@ export interface VariantFormData {
     precio_domicilio_capital: string;
     precio_pickup_interior: string;
     precio_domicilio_interior: string;
-    is_redeemable: boolean;
-    points_cost: string;
 }
 
 // ============================================
@@ -158,8 +152,6 @@ export interface Combo {
     description: string | null;
     image: string | null;
     category_id: number | null;
-    is_redeemable: boolean;
-    points_cost: number | null;
     precio_pickup_capital: number;
     precio_domicilio_capital: number;
     precio_pickup_interior: number;
@@ -286,7 +278,6 @@ export interface BadgeConfig {
 // ============================================
 
 export type PromotionType = 'percentage_discount' | 'two_for_one' | 'daily_special' | 'bundle_special';
-export type ServiceType = 'both' | 'delivery_only' | 'pickup_only';
 export type PromotionValidityType = 'permanent' | 'date_range' | 'time_range' | 'date_time_range' | 'weekdays';
 
 export interface Promotion {
@@ -296,7 +287,6 @@ export interface Promotion {
     type: PromotionType;
     scope_type?: 'product' | 'combo' | 'bundle';
     applies_to?: 'product' | 'combo';
-    service_type: ServiceType;
     validity_type: PromotionValidityType;
     is_permanent: boolean;
     valid_from: string | null;
@@ -309,11 +299,16 @@ export interface Promotion {
     is_active: boolean;
     sort_order: number;
     items_count?: number;
-    // Campos específicos según tipo
-    special_price_capital?: number | null;
-    special_price_interior?: number | null;
-    special_bundle_price_capital?: number | null;
-    special_bundle_price_interior?: number | null;
+    // Campos específicos según tipo (4 precios independientes)
+    special_price_pickup_capital?: number | null;
+    special_price_delivery_capital?: number | null;
+    special_price_pickup_interior?: number | null;
+    special_price_delivery_interior?: number | null;
+    // Bundle special: 4 precios independientes
+    special_bundle_price_pickup_capital?: number | null;
+    special_bundle_price_delivery_capital?: number | null;
+    special_bundle_price_pickup_interior?: number | null;
+    special_bundle_price_delivery_interior?: number | null;
     discount_percentage?: number | null;
     created_at?: string;
     updated_at?: string;
@@ -329,16 +324,25 @@ export interface PromotionItem {
     product_id: number | null;
     variant_id: number | null;
     category_id: number;
-    special_price_capital?: number | null;
-    special_price_interior?: number | null;
+    // 4 precios independientes
+    special_price_pickup_capital?: number | null;
+    special_price_delivery_capital?: number | null;
+    special_price_pickup_interior?: number | null;
+    special_price_delivery_interior?: number | null;
     discount_percentage?: number | null;
-    service_type: ServiceType;
     validity_type: PromotionValidityType;
     valid_from: string | null;
     valid_until: string | null;
     time_from: string | null;
     time_until: string | null;
     weekdays: number[] | null;
+    // Precios estandarizados (consistente con ProductResource)
+    discounted_prices?: {
+        pickup_capital: number | null;
+        delivery_capital: number | null;
+        pickup_interior: number | null;
+        delivery_interior: number | null;
+    } | null;
     created_at?: string;
     updated_at?: string;
     // Relations

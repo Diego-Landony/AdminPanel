@@ -1,9 +1,8 @@
 import { PriceFields } from '@/components/PriceFields';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { AlertCircle, ChevronDown, ChevronRight, Gift } from 'lucide-react';
+import { AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface VariantData {
@@ -14,8 +13,6 @@ interface VariantData {
     precio_domicilio_capital: string;
     precio_pickup_interior: string;
     precio_domicilio_interior: string;
-    is_redeemable: boolean;
-    points_cost: string;
 }
 
 interface ExistingVariant {
@@ -26,8 +23,6 @@ interface ExistingVariant {
     precio_domicilio_capital: string | number;
     precio_pickup_interior: string | number;
     precio_domicilio_interior: string | number;
-    is_redeemable?: boolean;
-    points_cost?: string | number | null;
 }
 
 interface VariantsFromCategoryProps {
@@ -69,8 +64,6 @@ export function VariantsFromCategory({ categoryVariants, existingVariants = [], 
                     precio_domicilio_capital: String(existing.precio_domicilio_capital || ''),
                     precio_pickup_interior: String(existing.precio_pickup_interior || ''),
                     precio_domicilio_interior: String(existing.precio_domicilio_interior || ''),
-                    is_redeemable: existing.is_redeemable ?? false,
-                    points_cost: String(existing.points_cost || ''),
                 };
             }
 
@@ -81,8 +74,6 @@ export function VariantsFromCategory({ categoryVariants, existingVariants = [], 
                 precio_domicilio_capital: '',
                 precio_pickup_interior: '',
                 precio_domicilio_interior: '',
-                is_redeemable: false,
-                points_cost: '',
             };
         });
 
@@ -181,46 +172,6 @@ export function VariantsFromCategory({ categoryVariants, existingVariants = [], 
                                     interiorDomicilio: errors[`variants.${index}.precio_domicilio_interior`],
                                 }}
                             />
-
-                            {/* Redemption section per variant */}
-                            <div className="space-y-4 rounded-lg border border-dashed border-muted-foreground/30 p-4">
-                                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                    <Gift className="h-4 w-4" />
-                                    Redención por Puntos
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <Label htmlFor={`redeemable-${index}`} className="cursor-pointer text-sm">
-                                        Canjeable con puntos
-                                    </Label>
-                                    <Switch
-                                        id={`redeemable-${index}`}
-                                        checked={variant.is_redeemable}
-                                        onCheckedChange={(checked) => updateVariant(index, 'is_redeemable', checked as boolean)}
-                                    />
-                                </div>
-                                {variant.is_redeemable && (
-                                    <div className="space-y-2">
-                                        <Label htmlFor={`points-${index}`} className="text-sm">
-                                            Valor en puntos <span className="text-destructive">*</span>
-                                        </Label>
-                                        <Input
-                                            id={`points-${index}`}
-                                            type="text"
-                                            inputMode="numeric"
-                                            pattern="[0-9]*"
-                                            value={variant.points_cost}
-                                            onChange={(e) => {
-                                                const value = e.target.value.replace(/[^0-9]/g, '');
-                                                updateVariant(index, 'points_cost', value);
-                                            }}
-                                            className="max-w-[200px]"
-                                        />
-                                        {errors[`variants.${index}.points_cost`] && (
-                                            <p className="text-sm text-destructive">{errors[`variants.${index}.points_cost`]}</p>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
                         </div>
                     )}
                 </div>

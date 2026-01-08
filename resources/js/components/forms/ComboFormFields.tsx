@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertCircle, Banknote, Package, Package2, Plus, Gift } from 'lucide-react';
+import { AlertCircle, Banknote, Package, Package2, Plus } from 'lucide-react';
 
 import type { Category, Product, FormErrors, LocalComboItem } from '@/types/menu';
 import type { ComboFormData, InactiveProductInfo } from '@/hooks/useComboForm';
@@ -155,41 +155,6 @@ export function ComboFormFields({
                                 onImageChange={onImageChange}
                                 error={errors.image}
                             />
-                        </div>
-                    </FormSection>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardContent className="pt-6">
-                    <FormSection icon={Gift} title="Redención por Puntos">
-                        <div className="space-y-6">
-                            <div className="flex items-center justify-between rounded-lg border p-4">
-                                <Label htmlFor="is_redeemable" className="cursor-pointer text-sm font-medium">
-                                    Canjeable con puntos
-                                </Label>
-                                <Switch
-                                    id="is_redeemable"
-                                    checked={formData.is_redeemable}
-                                    onCheckedChange={(checked) => onInputChange('is_redeemable', checked as boolean)}
-                                />
-                            </div>
-
-                            {formData.is_redeemable && (
-                                <FormField label="Valor en puntos" error={errors.points_cost} required>
-                                    <Input
-                                        id="points_cost"
-                                        type="text"
-                                        inputMode="numeric"
-                                        pattern="[0-9]*"
-                                        value={formData.points_cost}
-                                        onChange={(e) => {
-                                            const value = e.target.value.replace(/[^0-9]/g, '');
-                                            onInputChange('points_cost', value);
-                                        }}
-                                    />
-                                </FormField>
-                            )}
                         </div>
                     </FormSection>
                 </CardContent>

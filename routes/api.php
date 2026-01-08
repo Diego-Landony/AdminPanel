@@ -69,12 +69,6 @@ Route::prefix('v1')->group(function () {
             Route::get('/google/callback', [OAuthController::class, 'googleCallback'])
                 ->name('api.v1.auth.oauth.google.callback');
 
-            // Apple Sign In
-            Route::get('/apple/redirect', [OAuthController::class, 'appleRedirect'])
-                ->name('api.v1.auth.oauth.apple.redirect');
-
-            Route::get('/apple/callback', [OAuthController::class, 'appleCallback'])
-                ->name('api.v1.auth.oauth.apple.callback');
         });
     });
 
@@ -104,12 +98,6 @@ Route::prefix('v1')->group(function () {
 
             Route::delete('/', [ProfileController::class, 'destroy'])
                 ->name('destroy');
-
-            Route::post('/avatar', [ProfileController::class, 'updateAvatar'])
-                ->name('update-avatar');
-
-            Route::delete('/avatar', [ProfileController::class, 'deleteAvatar'])
-                ->name('delete-avatar');
 
             Route::put('/password', [ProfileController::class, 'updatePassword'])
                 ->name('update-password');
@@ -230,25 +218,8 @@ Route::prefix('v1')->group(function () {
                 ->name('expiring');
         });
 
-        // Product views (recently viewed)
-        Route::post('/products/{product}/view', [App\Http\Controllers\Api\V1\ProductViewController::class, 'recordProductView'])
-            ->name('api.v1.products.view');
-        Route::post('/combos/{combo}/view', [App\Http\Controllers\Api\V1\ProductViewController::class, 'recordComboView'])
-            ->name('api.v1.combos.view');
-        Route::get('/me/recently-viewed', [App\Http\Controllers\Api\V1\ProductViewController::class, 'getRecentlyViewed'])
-            ->name('api.v1.me.recently-viewed');
         Route::get('/me/recent-orders', [App\Http\Controllers\Api\V1\OrderController::class, 'recentOrders'])
             ->name('api.v1.me.recent-orders');
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | Rewards Catalog (Public - No Authentication Required)
-    |--------------------------------------------------------------------------
-    */
-    Route::middleware(['throttle:60,1'])->group(function () {
-        Route::get('/rewards', [App\Http\Controllers\Api\V1\RewardsController::class, 'index'])
-            ->name('api.v1.rewards.index');
     });
 
     /*

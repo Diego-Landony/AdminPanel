@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Menu;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Menu\StoreProductRequest;
 use App\Http\Requests\Menu\UpdateProductRequest;
+use App\Models\ActivityLog;
 use App\Models\Menu\Category;
 use App\Models\Menu\Product;
 use App\Models\Menu\ProductVariant;
 use App\Models\Menu\Section;
+use App\Support\ActivityLogging;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -236,6 +238,10 @@ class ProductController extends Controller
         $removeImage = $validated['remove_image'] ?? false;
         unset($validated['sections'], $validated['variants'], $validated['remove_image']);
 
+        // Capturar valores originales para log consolidado
+        $originalProduct = $product->getAttributes();
+        $originalVariants = $product->variants->keyBy('id')->map(fn ($v) => $v->getAttributes())->toArray();
+
         // Handle image upload
         \Log::info('=== DEBUG IMAGE UPLOAD (update) ===');
         \Log::info('hasFile image: '.($request->hasFile('image') ? 'true' : 'false'));
@@ -284,38 +290,74 @@ class ProductController extends Controller
             unset($validated['image']);
         }
 
-        DB::transaction(function () use ($validated, $sectionIds, $variants, $product) {
-            // Si no usa variantes, limpiar el campo variants y actualizar precios del producto
-            if (! ($validated['has_variants'] ?? false)) {
-                $validated['precio_pickup_capital'] = $validated['precio_pickup_capital'] ?? null;
-                $validated['precio_domicilio_capital'] = $validated['precio_domicilio_capital'] ?? null;
-                $validated['precio_pickup_interior'] = $validated['precio_pickup_interior'] ?? null;
-                $validated['precio_domicilio_interior'] = $validated['precio_domicilio_interior'] ?? null;
+        // Variables para rastrear cambios
+        $variantChanges = [];
+        $newVariants = [];
 
-                // Eliminar referencias en combo_item_options antes de eliminar variantes
-                $variantIds = $product->variants()->pluck('id');
-                if ($variantIds->isNotEmpty()) {
-                    \App\Models\Menu\ComboItemOption::whereIn('variant_id', $variantIds)->delete();
-                }
+        // Deshabilitar logging automático para crear un log consolidado
+        ActivityLogging::withoutLogging(function () use ($validated, $sectionIds, $variants, $product, &$variantChanges, &$newVariants, $originalVariants) {
+            DB::transaction(function () use ($validated, $sectionIds, $variants, $product, &$variantChanges, &$newVariants, $originalVariants) {
+                // Si no usa variantes, limpiar el campo variants y actualizar precios del producto
+                if (! ($validated['has_variants'] ?? false)) {
+                    $validated['precio_pickup_capital'] = $validated['precio_pickup_capital'] ?? null;
+                    $validated['precio_domicilio_capital'] = $validated['precio_domicilio_capital'] ?? null;
+                    $validated['precio_pickup_interior'] = $validated['precio_pickup_interior'] ?? null;
+                    $validated['precio_domicilio_interior'] = $validated['precio_domicilio_interior'] ?? null;
 
-                // Eliminar variantes existentes
-                $product->variants()->delete();
-            } else {
-                // Si usa variantes, limpiar los precios del producto
-                $validated['precio_pickup_capital'] = null;
-                $validated['precio_domicilio_capital'] = null;
-                $validated['precio_pickup_interior'] = null;
-                $validated['precio_domicilio_interior'] = null;
+                    // Eliminar referencias en combo_item_options antes de eliminar variantes
+                    $variantIds = $product->variants()->pluck('id');
+                    if ($variantIds->isNotEmpty()) {
+                        \App\Models\Menu\ComboItemOption::whereIn('variant_id', $variantIds)->delete();
+                    }
 
-                // Manejar variantes: actualizar existentes y crear nuevas
-                $existingVariantIds = [];
+                    // Eliminar variantes existentes
+                    $product->variants()->delete();
+                } else {
+                    // Si usa variantes, limpiar los precios del producto
+                    $validated['precio_pickup_capital'] = null;
+                    $validated['precio_domicilio_capital'] = null;
+                    $validated['precio_pickup_interior'] = null;
+                    $validated['precio_domicilio_interior'] = null;
 
-                foreach ($variants as $index => $variantData) {
-                    if (isset($variantData['id']) && $variantData['id']) {
-                        // Actualizar variante existente
-                        $variant = ProductVariant::find($variantData['id']);
-                        if ($variant && $variant->product_id === $product->id) {
-                            $variant->update([
+                    // Manejar variantes: actualizar existentes y crear nuevas
+                    $existingVariantIds = [];
+
+                    foreach ($variants as $index => $variantData) {
+                        if (isset($variantData['id']) && $variantData['id']) {
+                            // Actualizar variante existente
+                            $variant = ProductVariant::find($variantData['id']);
+                            if ($variant && $variant->product_id === $product->id) {
+                                $oldVariant = $originalVariants[$variant->id] ?? [];
+                                $variant->update([
+                                    'name' => $variantData['name'],
+                                    'size' => $variantData['name'],
+                                    'precio_pickup_capital' => $variantData['precio_pickup_capital'],
+                                    'precio_domicilio_capital' => $variantData['precio_domicilio_capital'],
+                                    'precio_pickup_interior' => $variantData['precio_pickup_interior'],
+                                    'precio_domicilio_interior' => $variantData['precio_domicilio_interior'],
+                                    'is_redeemable' => $variantData['is_redeemable'] ?? false,
+                                    'points_cost' => ! empty($variantData['points_cost']) ? $variantData['points_cost'] : null,
+                                    'is_active' => true,
+                                    'sort_order' => $index + 1,
+                                ]);
+
+                                // Rastrear cambios de variante
+                                $changes = $variant->getChanges();
+                                unset($changes['updated_at']);
+                                if (! empty($changes)) {
+                                    $variantChanges[$variant->name] = [
+                                        'old' => array_intersect_key($oldVariant, $changes),
+                                        'new' => $changes,
+                                    ];
+                                }
+
+                                $existingVariantIds[] = $variant->id;
+                            }
+                        } else {
+                            // Crear nueva variante
+                            $variant = ProductVariant::create([
+                                'product_id' => $product->id,
+                                'sku' => 'PROD-'.$product->id.'-'.uniqid(),
                                 'name' => $variantData['name'],
                                 'size' => $variantData['name'],
                                 'precio_pickup_capital' => $variantData['precio_pickup_capital'],
@@ -327,51 +369,132 @@ class ProductController extends Controller
                                 'is_active' => true,
                                 'sort_order' => $index + 1,
                             ]);
+                            $newVariants[] = $variant->name;
                             $existingVariantIds[] = $variant->id;
                         }
-                    } else {
-                        // Crear nueva variante
-                        $variant = ProductVariant::create([
-                            'product_id' => $product->id,
-                            'sku' => 'PROD-'.$product->id.'-'.uniqid(),
-                            'name' => $variantData['name'],
-                            'size' => $variantData['name'],
-                            'precio_pickup_capital' => $variantData['precio_pickup_capital'],
-                            'precio_domicilio_capital' => $variantData['precio_domicilio_capital'],
-                            'precio_pickup_interior' => $variantData['precio_pickup_interior'],
-                            'precio_domicilio_interior' => $variantData['precio_domicilio_interior'],
-                            'is_redeemable' => $variantData['is_redeemable'] ?? false,
-                            'points_cost' => ! empty($variantData['points_cost']) ? $variantData['points_cost'] : null,
-                            'is_active' => true,
-                            'sort_order' => $index + 1,
-                        ]);
-                        $existingVariantIds[] = $variant->id;
                     }
+
+                    // Desactivar variantes que ya no están en la lista (no eliminar para conservar historial)
+                    $product->variants()->whereNotIn('id', $existingVariantIds)->update(['is_active' => false]);
+
+                    // Si tiene variantes, limpiar redención a nivel producto
+                    $validated['is_redeemable'] = false;
+                    $validated['points_cost'] = null;
                 }
 
-                // Desactivar variantes que ya no están en la lista (no eliminar para conservar historial)
-                $product->variants()->whereNotIn('id', $existingVariantIds)->update(['is_active' => false]);
+                $product->update($validated);
 
-                // Si tiene variantes, limpiar redención a nivel producto
-                $validated['is_redeemable'] = false;
-                $validated['points_cost'] = null;
-            }
-
-            $product->update($validated);
-
-            // Sync sections
-            if (isset($sectionIds)) {
-                $syncData = [];
-                foreach ($sectionIds as $index => $sectionId) {
-                    $syncData[$sectionId] = ['sort_order' => $index];
+                // Sync sections
+                if (isset($sectionIds)) {
+                    $syncData = [];
+                    foreach ($sectionIds as $index => $sectionId) {
+                        $syncData[$sectionId] = ['sort_order' => $index];
+                    }
+                    $product->sections()->sync($syncData);
                 }
-                $product->sections()->sync($syncData);
-            }
+            });
         });
+
+        // Crear log consolidado
+        $this->createConsolidatedLog($product, $originalProduct, $variantChanges, $newVariants);
 
         return redirect()
             ->route('menu.products.index')
             ->with('success', 'Producto actualizado exitosamente.');
+    }
+
+    /**
+     * Crear log consolidado de cambios de producto y variantes
+     */
+    private function createConsolidatedLog(
+        Product $product,
+        array $originalProduct,
+        array $variantChanges,
+        array $newVariants
+    ): void {
+        $product->refresh();
+        $productChanges = $product->getChanges();
+        unset($productChanges['updated_at']);
+
+        // Si no hay cambios, no crear log
+        if (empty($productChanges) && empty($variantChanges) && empty($newVariants)) {
+            return;
+        }
+
+        $translations = config('activity.field_translations', []);
+        $changes = [];
+
+        // Cambios del producto
+        foreach ($productChanges as $field => $newValue) {
+            $oldValue = $originalProduct[$field] ?? null;
+            $fieldName = $translations[$field] ?? str_replace('_', ' ', $field);
+            $changes[] = "{$fieldName}: '{$this->formatLogValue($oldValue)}' -> '{$this->formatLogValue($newValue)}'";
+        }
+
+        // Cambios de variantes existentes
+        foreach ($variantChanges as $variantName => $data) {
+            foreach ($data['new'] as $field => $newValue) {
+                $oldValue = $data['old'][$field] ?? null;
+                $fieldName = $translations[$field] ?? str_replace('_', ' ', $field);
+                $changes[] = "Variante '{$variantName}' - {$fieldName}: '{$this->formatLogValue($oldValue)}' -> '{$this->formatLogValue($newValue)}'";
+            }
+        }
+
+        // Variantes nuevas
+        foreach ($newVariants as $variantName) {
+            $changes[] = "Nueva variante '{$variantName}' creada";
+        }
+
+        // Limitar a 5 cambios para legibilidad
+        $displayChanges = array_slice($changes, 0, 5);
+        if (count($changes) > 5) {
+            $displayChanges[] = '... y '.(count($changes) - 5).' cambio(s) más';
+        }
+
+        $description = "Producto '{$product->name}' actualizado";
+        if (! empty($displayChanges)) {
+            $description .= ' - '.implode(', ', $displayChanges);
+        }
+
+        ActivityLog::create([
+            'user_id' => auth()->id(),
+            'event_type' => 'updated',
+            'target_model' => Product::class,
+            'target_id' => $product->id,
+            'description' => $description,
+            'old_values' => [
+                'product' => array_intersect_key($originalProduct, $productChanges),
+                'variants' => collect($variantChanges)->map(fn ($c) => $c['old'])->toArray(),
+            ],
+            'new_values' => [
+                'product' => $productChanges,
+                'variants' => collect($variantChanges)->map(fn ($c) => $c['new'])->toArray(),
+                'new_variants' => $newVariants,
+            ],
+            'user_agent' => request()->userAgent(),
+        ]);
+    }
+
+    /**
+     * Formatear valor para el log
+     */
+    private function formatLogValue(mixed $value): string
+    {
+        if (is_null($value)) {
+            return '(vacío)';
+        }
+
+        if (is_bool($value)) {
+            return $value ? 'Sí' : 'No';
+        }
+
+        if (is_array($value)) {
+            return json_encode($value);
+        }
+
+        $str = (string) $value;
+
+        return strlen($str) > 50 ? substr($str, 0, 47).'...' : $str;
     }
 
     /**

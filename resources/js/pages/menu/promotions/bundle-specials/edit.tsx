@@ -86,8 +86,10 @@ interface Combinado {
     description: string | null;
     image_url: string | null;
     is_active: boolean;
-    special_bundle_price_capital: number | null;
-    special_bundle_price_interior: number | null;
+    special_bundle_price_pickup_capital: number | null;
+    special_bundle_price_delivery_capital: number | null;
+    special_bundle_price_pickup_interior: number | null;
+    special_bundle_price_delivery_interior: number | null;
     valid_from: string | null;
     valid_until: string | null;
     time_from: string | null;
@@ -154,8 +156,10 @@ export default function BundleSpecialEdit({ combinado, products, badgeTypes }: E
         name: combinado.name,
         description: combinado.description || '',
         is_active: combinado.is_active,
-        special_bundle_price_capital: String(combinado.special_bundle_price_capital || ''),
-        special_bundle_price_interior: String(combinado.special_bundle_price_interior || ''),
+        special_bundle_price_pickup_capital: String(combinado.special_bundle_price_pickup_capital || ''),
+        special_bundle_price_delivery_capital: String(combinado.special_bundle_price_delivery_capital || ''),
+        special_bundle_price_pickup_interior: String(combinado.special_bundle_price_pickup_interior || ''),
+        special_bundle_price_delivery_interior: String(combinado.special_bundle_price_delivery_interior || ''),
         validity_type: getInitialValidityType(),
         valid_from: combinado.valid_from || '',
         valid_until: combinado.valid_until || '',
@@ -241,8 +245,10 @@ export default function BundleSpecialEdit({ combinado, products, badgeTypes }: E
         formDataObj.append('name', formData.name);
         formDataObj.append('description', formData.description || '');
         formDataObj.append('is_active', formData.is_active ? '1' : '0');
-        formDataObj.append('special_bundle_price_capital', formData.special_bundle_price_capital);
-        formDataObj.append('special_bundle_price_interior', formData.special_bundle_price_interior);
+        formDataObj.append('special_bundle_price_pickup_capital', formData.special_bundle_price_pickup_capital);
+        formDataObj.append('special_bundle_price_delivery_capital', formData.special_bundle_price_delivery_capital);
+        formDataObj.append('special_bundle_price_pickup_interior', formData.special_bundle_price_pickup_interior);
+        formDataObj.append('special_bundle_price_delivery_interior', formData.special_bundle_price_delivery_interior);
         formDataObj.append('validity_type', formData.validity_type);
         if (formData.valid_from) formDataObj.append('valid_from', formData.valid_from);
         if (formData.valid_until) formDataObj.append('valid_until', formData.valid_until);
@@ -472,38 +478,82 @@ export default function BundleSpecialEdit({ combinado, products, badgeTypes }: E
                 <Card>
                     <CardContent className="pt-6">
                         <FormSection icon={Banknote} title={FORM_SECTIONS.specialPrices.title} description={FORM_SECTIONS.specialPrices.description}>
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <FormField label="Precio Capital" error={errors.special_bundle_price_capital} required>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
-                                        <Input
-                                            id="special_bundle_price_capital"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={formData.special_bundle_price_capital}
-                                            onChange={(e) => setFormData({ ...formData, special_bundle_price_capital: e.target.value })}
-                                            placeholder={PLACEHOLDERS.price}
-                                            className="pl-8"
-                                        />
-                                    </div>
-                                </FormField>
+                            <div className="space-y-6">
+                                {/* Capital */}
+                                <div className="space-y-3">
+                                    <h4 className="text-sm font-medium text-muted-foreground">Zona Capital</h4>
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <FormField label="Pickup Capital" error={errors.special_bundle_price_pickup_capital} required>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
+                                                <Input
+                                                    id="special_bundle_price_pickup_capital"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={formData.special_bundle_price_pickup_capital}
+                                                    onChange={(e) => setFormData({ ...formData, special_bundle_price_pickup_capital: e.target.value })}
+                                                    placeholder={PLACEHOLDERS.price}
+                                                    className="pl-8"
+                                                />
+                                            </div>
+                                        </FormField>
 
-                                <FormField label="Precio Interior" error={errors.special_bundle_price_interior} required>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
-                                        <Input
-                                            id="special_bundle_price_interior"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={formData.special_bundle_price_interior}
-                                            onChange={(e) => setFormData({ ...formData, special_bundle_price_interior: e.target.value })}
-                                            placeholder={PLACEHOLDERS.price}
-                                            className="pl-8"
-                                        />
+                                        <FormField label="Delivery Capital" error={errors.special_bundle_price_delivery_capital} required>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
+                                                <Input
+                                                    id="special_bundle_price_delivery_capital"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={formData.special_bundle_price_delivery_capital}
+                                                    onChange={(e) => setFormData({ ...formData, special_bundle_price_delivery_capital: e.target.value })}
+                                                    placeholder={PLACEHOLDERS.price}
+                                                    className="pl-8"
+                                                />
+                                            </div>
+                                        </FormField>
                                     </div>
-                                </FormField>
+                                </div>
+
+                                {/* Interior */}
+                                <div className="space-y-3">
+                                    <h4 className="text-sm font-medium text-muted-foreground">Zona Interior</h4>
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <FormField label="Pickup Interior" error={errors.special_bundle_price_pickup_interior} required>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
+                                                <Input
+                                                    id="special_bundle_price_pickup_interior"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={formData.special_bundle_price_pickup_interior}
+                                                    onChange={(e) => setFormData({ ...formData, special_bundle_price_pickup_interior: e.target.value })}
+                                                    placeholder={PLACEHOLDERS.price}
+                                                    className="pl-8"
+                                                />
+                                            </div>
+                                        </FormField>
+
+                                        <FormField label="Delivery Interior" error={errors.special_bundle_price_delivery_interior} required>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
+                                                <Input
+                                                    id="special_bundle_price_delivery_interior"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={formData.special_bundle_price_delivery_interior}
+                                                    onChange={(e) => setFormData({ ...formData, special_bundle_price_delivery_interior: e.target.value })}
+                                                    placeholder={PLACEHOLDERS.price}
+                                                    className="pl-8"
+                                                />
+                                            </div>
+                                        </FormField>
+                                    </div>
+                                </div>
                             </div>
                         </FormSection>
                     </CardContent>

@@ -38,7 +38,7 @@ class FavoriteController extends Controller
      *                         @OA\Property(property="name", type="string", example="Italian BMT"),
      *                         @OA\Property(property="description", type="string", nullable=true, example="Pepperoni, salami y jamón"),
      *                         @OA\Property(property="price", type="number", format="float", nullable=true, example=45.00),
-     *                         @OA\Property(property="image", type="string", nullable=true, example="/storage/products/italian-bmt.jpg")
+     *                         @OA\Property(property="image_url", type="string", nullable=true, example="/storage/products/italian-bmt.jpg")
      *                     ),
      *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-12-10T15:30:00Z")
      *                 )

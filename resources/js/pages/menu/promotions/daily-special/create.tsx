@@ -75,9 +75,10 @@ interface DailySpecialItem {
     product_id: string;
     variant_id: number | null;
     item_type: 'product' | 'combo' | null;
-    special_price_capital: string;
-    special_price_interior: string;
-    service_type: 'both' | 'delivery_only' | 'pickup_only';
+    special_price_pickup_capital: string;
+    special_price_delivery_capital: string;
+    special_price_pickup_interior: string;
+    special_price_delivery_interior: string;
     weekdays: number[];
     has_schedule: boolean;
     valid_from: string;
@@ -90,9 +91,10 @@ interface SubmitDailySpecialItem {
     product_id: string;
     variant_id: number | null;
     category_id: number;
-    special_price_capital: number;
-    special_price_interior: number;
-    service_type: 'both' | 'delivery_only' | 'pickup_only';
+    special_price_pickup_capital: number;
+    special_price_delivery_capital: number;
+    special_price_pickup_interior: number;
+    special_price_delivery_interior: number;
     weekdays: number[];
     validity_type: string;
     valid_from: string;
@@ -120,9 +122,10 @@ export default function CreatePromotion({ products, combos }: CreatePromotionPag
             product_id: '',
             variant_id: null,
             item_type: null,
-            special_price_capital: '',
-            special_price_interior: '',
-            service_type: 'both',
+            special_price_pickup_capital: '',
+            special_price_delivery_capital: '',
+            special_price_pickup_interior: '',
+            special_price_delivery_interior: '',
             weekdays: [],
             has_schedule: false,
             valid_from: '',
@@ -165,9 +168,10 @@ export default function CreatePromotion({ products, combos }: CreatePromotionPag
             product_id: '',
             variant_id: null,
             item_type: null,
-            special_price_capital: '',
-            special_price_interior: '',
-            service_type: 'both',
+            special_price_pickup_capital: '',
+            special_price_delivery_capital: '',
+            special_price_pickup_interior: '',
+            special_price_delivery_interior: '',
             weekdays: [],
             has_schedule: false,
             valid_from: '',
@@ -198,7 +202,9 @@ export default function CreatePromotion({ products, combos }: CreatePromotionPag
         const currentItem = localItems[index];
 
         if (field === 'product_id' && value !== currentItem.product_id) {
-            const hasData = currentItem.variant_id || currentItem.special_price_capital || currentItem.special_price_interior;
+            const hasData = currentItem.variant_id ||
+                currentItem.special_price_pickup_capital || currentItem.special_price_delivery_capital ||
+                currentItem.special_price_pickup_interior || currentItem.special_price_delivery_interior;
 
             if (hasData) {
                 setConfirmDialog({
@@ -211,8 +217,10 @@ export default function CreatePromotion({ products, combos }: CreatePromotionPag
                             ...updated[index],
                             product_id: value as string,
                             variant_id: null,
-                            special_price_capital: '',
-                            special_price_interior: '',
+                            special_price_pickup_capital: '',
+                            special_price_delivery_capital: '',
+                            special_price_pickup_interior: '',
+                            special_price_delivery_interior: '',
                         };
                         setLocalItems(updated);
                         setData('items', updated as unknown as DailySpecialItem[]);
@@ -232,7 +240,9 @@ export default function CreatePromotion({ products, combos }: CreatePromotionPag
 
     const updateProductOrCombo = (index: number, id: number | null, type: 'product' | 'combo') => {
         const currentItem = localItems[index];
-        const hasData = currentItem.variant_id || currentItem.special_price_capital || currentItem.special_price_interior;
+        const hasData = currentItem.variant_id ||
+            currentItem.special_price_pickup_capital || currentItem.special_price_delivery_capital ||
+            currentItem.special_price_pickup_interior || currentItem.special_price_delivery_interior;
 
         if (hasData && (String(id) !== currentItem.product_id || type !== currentItem.item_type)) {
             setConfirmDialog({
@@ -246,8 +256,10 @@ export default function CreatePromotion({ products, combos }: CreatePromotionPag
                         product_id: id ? String(id) : '',
                         item_type: type,
                         variant_id: type === 'combo' ? null : updated[index].variant_id,
-                        special_price_capital: '',
-                        special_price_interior: '',
+                        special_price_pickup_capital: '',
+                        special_price_delivery_capital: '',
+                        special_price_pickup_interior: '',
+                        special_price_delivery_interior: '',
                     };
                     setLocalItems(updated);
                     setData('items', updated as unknown as DailySpecialItem[]);
@@ -303,9 +315,10 @@ export default function CreatePromotion({ products, combos }: CreatePromotionPag
                 variant_id: item.variant_id,
                 category_id,
                 validity_type,
-                special_price_capital: parseFloat(item.special_price_capital) || 0,
-                special_price_interior: parseFloat(item.special_price_interior) || 0,
-                service_type: item.service_type,
+                special_price_pickup_capital: parseFloat(item.special_price_pickup_capital) || 0,
+                special_price_delivery_capital: parseFloat(item.special_price_delivery_capital) || 0,
+                special_price_pickup_interior: parseFloat(item.special_price_pickup_interior) || 0,
+                special_price_delivery_interior: parseFloat(item.special_price_delivery_interior) || 0,
                 weekdays: item.weekdays,
                 valid_from: item.valid_from,
                 valid_until: item.valid_until,
@@ -412,71 +425,77 @@ export default function CreatePromotion({ products, combos }: CreatePromotionPag
                                     />
                                 )}
 
-                            {/* Precios */}
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <FormField label="Precio Capital" error={dynamicErrors[`items.${index}.special_price_capital`]} required>
-                                    <div className="relative">
-                                        <span className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={item.special_price_capital}
-                                            onChange={(e) => updateItem(index, 'special_price_capital', e.target.value)}
-                                            className="pl-7"
-                                            placeholder={PLACEHOLDERS.price}
-                                        />
-                                    </div>
-                                </FormField>
+                            {/* Precios - Capital */}
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium text-muted-foreground">Precios Capital</p>
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <FormField label="Pickup Capital" error={dynamicErrors[`items.${index}.special_price_pickup_capital`]} required>
+                                        <div className="relative">
+                                            <Store className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={item.special_price_pickup_capital}
+                                                onChange={(e) => updateItem(index, 'special_price_pickup_capital', e.target.value)}
+                                                className="pl-9"
+                                                placeholder={PLACEHOLDERS.price}
+                                            />
+                                        </div>
+                                    </FormField>
 
-                                <FormField label="Precio Interior" error={dynamicErrors[`items.${index}.special_price_interior`]} required>
-                                    <div className="relative">
-                                        <span className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={item.special_price_interior}
-                                            onChange={(e) => updateItem(index, 'special_price_interior', e.target.value)}
-                                            className="pl-7"
-                                            placeholder={PLACEHOLDERS.price}
-                                        />
-                                    </div>
-                                </FormField>
+                                    <FormField label="Delivery Capital" error={dynamicErrors[`items.${index}.special_price_delivery_capital`]} required>
+                                        <div className="relative">
+                                            <Truck className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={item.special_price_delivery_capital}
+                                                onChange={(e) => updateItem(index, 'special_price_delivery_capital', e.target.value)}
+                                                className="pl-9"
+                                                placeholder={PLACEHOLDERS.price}
+                                            />
+                                        </div>
+                                    </FormField>
+                                </div>
                             </div>
 
-                            {/* Tipo de Servicio */}
-                            <FormField label="Tipo de servicio" error={dynamicErrors[`items.${index}.service_type`]} required>
-                                <Select
-                                    value={item.service_type}
-                                    onValueChange={(value: 'both' | 'delivery_only' | 'pickup_only') => updateItem(index, 'service_type', value)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="both">
-                                            <div className="flex items-center gap-2">
-                                                <Store className="h-4 w-4" />
-                                                <Truck className="h-4 w-4" />
-                                                <span>Delivery y Pickup</span>
-                                            </div>
-                                        </SelectItem>
-                                        <SelectItem value="delivery_only">
-                                            <div className="flex items-center gap-2">
-                                                <Truck className="h-4 w-4" />
-                                                <span>Solo Delivery</span>
-                                            </div>
-                                        </SelectItem>
-                                        <SelectItem value="pickup_only">
-                                            <div className="flex items-center gap-2">
-                                                <Store className="h-4 w-4" />
-                                                <span>Solo Pickup</span>
-                                            </div>
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </FormField>
+                            {/* Precios - Interior */}
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium text-muted-foreground">Precios Interior</p>
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <FormField label="Pickup Interior" error={dynamicErrors[`items.${index}.special_price_pickup_interior`]} required>
+                                        <div className="relative">
+                                            <Store className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={item.special_price_pickup_interior}
+                                                onChange={(e) => updateItem(index, 'special_price_pickup_interior', e.target.value)}
+                                                className="pl-9"
+                                                placeholder={PLACEHOLDERS.price}
+                                            />
+                                        </div>
+                                    </FormField>
+
+                                    <FormField label="Delivery Interior" error={dynamicErrors[`items.${index}.special_price_delivery_interior`]} required>
+                                        <div className="relative">
+                                            <Truck className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={item.special_price_delivery_interior}
+                                                onChange={(e) => updateItem(index, 'special_price_delivery_interior', e.target.value)}
+                                                className="pl-9"
+                                                placeholder={PLACEHOLDERS.price}
+                                            />
+                                        </div>
+                                    </FormField>
+                                </div>
+                            </div>
 
                             {/* VIGENCIA */}
                             <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">

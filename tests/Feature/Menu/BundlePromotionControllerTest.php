@@ -19,8 +19,10 @@ describe('Bundle Creation', function () {
             'description' => 'Oferta especial de navidad',
             'is_active' => true,
             'type' => 'bundle_special',
-            'special_bundle_price_capital' => 45.00,
-            'special_bundle_price_interior' => 48.00,
+            'special_bundle_price_pickup_capital' => 45.00,
+            'special_bundle_price_delivery_capital' => 48.00,
+            'special_bundle_price_pickup_interior' => 48.00,
+            'special_bundle_price_delivery_interior' => 51.00,
             'validity_type' => 'date_range',
             'valid_from' => now()->addDays(5)->format('Y-m-d'),
             'valid_until' => now()->addDays(30)->format('Y-m-d'),
@@ -55,7 +57,7 @@ describe('Bundle Creation', function () {
         expect($promotion)->not->toBeNull();
         expect($promotion->type)->toBe('bundle_special');
         expect($promotion->bundleItems()->count())->toBe(2);
-        expect((float) $promotion->special_bundle_price_capital)->toBe(45.00);
+        expect((float) $promotion->special_bundle_price_pickup_capital)->toBe(45.00);
     });
 
     test('can create bundle with choice groups', function () {
@@ -67,8 +69,10 @@ describe('Bundle Creation', function () {
             'name' => 'Combinado con Elección',
             'description' => 'Elige tu producto favorito',
             'is_active' => true,
-            'special_bundle_price_capital' => 35.00,
-            'special_bundle_price_interior' => 38.00,
+            'special_bundle_price_pickup_capital' => 35.00,
+            'special_bundle_price_delivery_capital' => 38.00,
+            'special_bundle_price_pickup_interior' => 38.00,
+            'special_bundle_price_delivery_interior' => 41.00,
             'validity_type' => 'permanent',
             'items' => [
                 [
@@ -109,8 +113,10 @@ describe('Bundle Creation', function () {
         $data = [
             'name' => 'Combinado con Variantes',
             'is_active' => true,
-            'special_bundle_price_capital' => 40.00,
-            'special_bundle_price_interior' => 43.00,
+            'special_bundle_price_pickup_capital' => 40.00,
+            'special_bundle_price_delivery_capital' => 43.00,
+            'special_bundle_price_pickup_interior' => 43.00,
+            'special_bundle_price_delivery_interior' => 46.00,
             'validity_type' => 'permanent',
             'items' => [
                 [
@@ -151,8 +157,10 @@ describe('Validity Validation', function () {
         $baseData = [
             'name' => 'Test Bundle',
             'is_active' => true,
-            'special_bundle_price_capital' => 45.00,
-            'special_bundle_price_interior' => 48.00,
+            'special_bundle_price_pickup_capital' => 45.00,
+            'special_bundle_price_delivery_capital' => 48.00,
+            'special_bundle_price_pickup_interior' => 48.00,
+            'special_bundle_price_delivery_interior' => 51.00,
             'items' => [
                 ['is_choice_group' => false, 'product_id' => $product->id, 'quantity' => 1, 'sort_order' => 1],
                 ['is_choice_group' => false, 'product_id' => $product->id, 'quantity' => 1, 'sort_order' => 2],
@@ -179,8 +187,10 @@ describe('Validity Validation', function () {
         $data = [
             'name' => 'Combinado Weekdays Válidos',
             'is_active' => true,
-            'special_bundle_price_capital' => 45.00,
-            'special_bundle_price_interior' => 48.00,
+            'special_bundle_price_pickup_capital' => 45.00,
+            'special_bundle_price_delivery_capital' => 48.00,
+            'special_bundle_price_pickup_interior' => 48.00,
+            'special_bundle_price_delivery_interior' => 51.00,
             'validity_type' => 'permanent',
             'weekdays' => [1, 2, 3, 4, 5],
             'items' => [
@@ -204,8 +214,10 @@ describe('Validity Validation', function () {
         $data = [
             'name' => 'Combinado Solo Fechas',
             'is_active' => true,
-            'special_bundle_price_capital' => 45.00,
-            'special_bundle_price_interior' => 48.00,
+            'special_bundle_price_pickup_capital' => 45.00,
+            'special_bundle_price_delivery_capital' => 48.00,
+            'special_bundle_price_pickup_interior' => 48.00,
+            'special_bundle_price_delivery_interior' => 51.00,
             'validity_type' => 'date_range',
             'valid_from' => $validFrom,
             'valid_until' => $validUntil,
@@ -229,8 +241,10 @@ describe('Validity Validation', function () {
         $data = [
             'name' => 'Combinado Solo Horarios',
             'is_active' => true,
-            'special_bundle_price_capital' => 45.00,
-            'special_bundle_price_interior' => 48.00,
+            'special_bundle_price_pickup_capital' => 45.00,
+            'special_bundle_price_delivery_capital' => 48.00,
+            'special_bundle_price_pickup_interior' => 48.00,
+            'special_bundle_price_delivery_interior' => 51.00,
             'validity_type' => 'time_range',
             'time_from' => '11:00',
             'time_until' => '14:00',
@@ -254,8 +268,10 @@ describe('Validity Validation', function () {
         $data = [
             'name' => 'Combinado Siempre Válido',
             'is_active' => true,
-            'special_bundle_price_capital' => 45.00,
-            'special_bundle_price_interior' => 48.00,
+            'special_bundle_price_pickup_capital' => 45.00,
+            'special_bundle_price_delivery_capital' => 48.00,
+            'special_bundle_price_pickup_interior' => 48.00,
+            'special_bundle_price_delivery_interior' => 51.00,
             'validity_type' => 'permanent',
             'items' => [
                 ['is_choice_group' => false, 'product_id' => $product->id, 'quantity' => 1, 'sort_order' => 1],
@@ -278,8 +294,10 @@ describe('Validity Validation', function () {
         $data = [
             'name' => 'Combinado Solo Días',
             'is_active' => true,
-            'special_bundle_price_capital' => 45.00,
-            'special_bundle_price_interior' => 48.00,
+            'special_bundle_price_pickup_capital' => 45.00,
+            'special_bundle_price_delivery_capital' => 48.00,
+            'special_bundle_price_pickup_interior' => 48.00,
+            'special_bundle_price_delivery_interior' => 51.00,
             'validity_type' => 'permanent',
             'weekdays' => [6, 7],
             'items' => [
@@ -313,8 +331,10 @@ describe('Bundle Updates', function () {
         $updateData = [
             'name' => 'Combinado Actualizado',
             'is_active' => true,
-            'special_bundle_price_capital' => 50.00,
-            'special_bundle_price_interior' => 53.00,
+            'special_bundle_price_pickup_capital' => 50.00,
+            'special_bundle_price_delivery_capital' => 53.00,
+            'special_bundle_price_pickup_interior' => 53.00,
+            'special_bundle_price_delivery_interior' => 56.00,
             'validity_type' => 'permanent',
             'items' => [
                 ['is_choice_group' => false, 'product_id' => $newProduct->id, 'quantity' => 1, 'sort_order' => 1],
@@ -344,8 +364,10 @@ describe('Bundle Updates', function () {
         $updateData = [
             'name' => $promotion->name,
             'is_active' => true,
-            'special_bundle_price_capital' => 45.00,
-            'special_bundle_price_interior' => 48.00,
+            'special_bundle_price_pickup_capital' => 45.00,
+            'special_bundle_price_delivery_capital' => 48.00,
+            'special_bundle_price_pickup_interior' => 48.00,
+            'special_bundle_price_delivery_interior' => 51.00,
             'validity_type' => 'date_time_range',
             'valid_from' => $validFrom,
             'valid_until' => $validUntil,
@@ -429,8 +451,10 @@ describe('Item Validation', function () {
             fn ($product) => [
                 'name' => 'Combinado Precio Negativo',
                 'is_active' => true,
-                'special_bundle_price_capital' => -10.00,
-                'special_bundle_price_interior' => 48.00,
+                'special_bundle_price_pickup_capital' => -10.00,
+                'special_bundle_price_delivery_capital' => 48.00,
+                'special_bundle_price_pickup_interior' => 48.00,
+                'special_bundle_price_delivery_interior' => 51.00,
                 'items' => [
                     ['is_choice_group' => false, 'product_id' => $product->id, 'quantity' => 1, 'sort_order' => 1],
                     ['is_choice_group' => false, 'product_id' => $product->id, 'quantity' => 1, 'sort_order' => 2],
@@ -441,8 +465,10 @@ describe('Item Validation', function () {
             fn ($product) => [
                 'name' => 'Combinado Precio Cero',
                 'is_active' => true,
-                'special_bundle_price_capital' => 45.00,
-                'special_bundle_price_interior' => 0,
+                'special_bundle_price_pickup_capital' => 45.00,
+                'special_bundle_price_delivery_capital' => 48.00,
+                'special_bundle_price_pickup_interior' => 0,
+                'special_bundle_price_delivery_interior' => 51.00,
                 'items' => [
                     ['is_choice_group' => false, 'product_id' => $product->id, 'quantity' => 1, 'sort_order' => 1],
                     ['is_choice_group' => false, 'product_id' => $product->id, 'quantity' => 1, 'sort_order' => 2],

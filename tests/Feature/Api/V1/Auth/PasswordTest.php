@@ -55,8 +55,8 @@ test('puede cambiar password con token valido', function () {
     $response = $this->postJson('/api/v1/auth/reset-password', [
         'email' => 'juan@example.com',
         'token' => $token,
-        'password' => 'NewPass123',
-        'password_confirmation' => 'NewPass123',
+        'password' => 'NewPass1!',
+        'password_confirmation' => 'NewPass1!',
     ]);
 
     // Verificar respuesta exitosa
@@ -69,7 +69,7 @@ test('puede cambiar password con token valido', function () {
     $customer->refresh();
 
     // Verificar que la nueva password funciona
-    expect(Hash::check('NewPass123', $customer->password))->toBeTrue();
+    expect(Hash::check('NewPass1!', $customer->password))->toBeTrue();
 
     // Verificar que la vieja password no funciona
     expect(Hash::check('OldPass123', $customer->password))->toBeFalse();
@@ -91,8 +91,8 @@ test('rechaza token expirado', function () {
     $response = $this->postJson('/api/v1/auth/reset-password', [
         'email' => 'juan@example.com',
         'token' => 'token-invalido-o-expirado',
-        'password' => 'NewPass123',
-        'password_confirmation' => 'NewPass123',
+        'password' => 'NewPass1!',
+        'password_confirmation' => 'NewPass1!',
     ]);
 
     // Verificar error de validación
@@ -119,8 +119,8 @@ test('puede cambiar password estando autenticado', function () {
     $response = $this->withHeader('Authorization', 'Bearer '.$token)
         ->putJson('/api/v1/profile/password', [
             'current_password' => 'CurrPass123',
-            'password' => 'NewPass456',
-            'password_confirmation' => 'NewPass456',
+            'password' => 'NewPass2!',
+            'password_confirmation' => 'NewPass2!',
         ]);
 
     // Verificar respuesta exitosa
@@ -133,7 +133,7 @@ test('puede cambiar password estando autenticado', function () {
     $customer->refresh();
 
     // Verificar que la nueva password funciona
-    expect(Hash::check('NewPass456', $customer->password))->toBeTrue();
+    expect(Hash::check('NewPass2!', $customer->password))->toBeTrue();
 
     // Verificar que la vieja password no funciona
     expect(Hash::check('CurrPass123', $customer->password))->toBeFalse();
@@ -158,8 +158,8 @@ test('requiere password actual correcto', function () {
     $response = $this->withHeader('Authorization', 'Bearer '.$token)
         ->putJson('/api/v1/profile/password', [
             'current_password' => 'WrongPass123',
-            'password' => 'NewPass456',
-            'password_confirmation' => 'NewPass456',
+            'password' => 'NewPass2!',
+            'password_confirmation' => 'NewPass2!',
         ]);
 
     // Verificar error de validación

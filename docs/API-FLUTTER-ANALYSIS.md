@@ -565,8 +565,8 @@ Retorna los detalles de un NIT especifico.
 - **Acumulacion:** Configurable en admin (por defecto: 1 punto por cada Q10 gastados)
 - **Canjeo:** Solo en tienda fisica (no disponible en la app)
 - **Expiracion:** Configurable en admin (por defecto: 6 meses de inactividad)
-  - Metodo Total: Todos los puntos expiran de golpe si hay inactividad
-  - Metodo FIFO: Solo expiran los puntos mas antiguos
+  - Metodo `total`: Todos los puntos expiran de golpe si hay inactividad
+  - Metodo `fifo`: Solo expiran los puntos mas antiguos primero
 
 > **Nota:** La configuracion de puntos se gestiona desde el panel de administracion en Configuracion > Puntos.
 
@@ -579,19 +579,106 @@ Retorna los detalles de un NIT especifico.
 | GET `/points/expiring` | Puntos proximos a expirar |
 | GET `/rewards` | Catalogo de recompensas |
 
-#### GET /points/expiring
+---
 
-Retorna informacion sobre los puntos que estan proximos a expirar.
+#### GET /points/balance
+
+Retorna el balance actual de puntos del cliente y las tasas de conversion.
 
 **Response 200:**
 
 | Campo | Tipo | Descripcion |
 |-------|------|-------------|
-| data.points_expiring | int | Cantidad de puntos por expirar |
-| data.expiration_date | string | Fecha de expiracion (ISO 8601) |
-| data.days_until_expiration | int | Dias restantes |
+| data.points_balance | int | Puntos totales disponibles |
+| data.points_updated_at | string | Ultima actualizacion (ISO 8601) |
+| data.points_value_in_currency | float | Valor en Quetzales (Q) |
+| data.conversion_rate | object | Tasas de conversion |
+| data.conversion_rate.quetzales_per_point | int | Quetzales necesarios para ganar 1 punto |
+| data.conversion_rate.point_value | float | Valor en Q de cada punto |
 
-**Tipos de transaccion:** `earned`, `redeemed`, `expired`, `bonus`, `adjustment`
+**Ejemplo de respuesta:**
+```json
+{
+  "data": {
+    "points_balance": 250,
+    "points_updated_at": "2026-01-07T14:26:33-06:00",
+    "points_value_in_currency": 25.00,
+    "conversion_rate": {
+      "quetzales_per_point": 10,
+      "point_value": 0.10
+    }
+  }
+}
+```
+
+---
+
+#### GET /points/expiring
+
+Retorna informacion sobre los puntos que estan proximos a expirar, incluyendo el metodo de expiracion configurado.
+
+**Response 200:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| data.points_balance | int | Puntos actuales que podrian expirar |
+| data.expiration_method | string | Metodo configurado: "total" o "fifo" |
+| data.expiration_months | int | Meses de inactividad configurados |
+| data.will_expire | boolean | True si los puntos expiraran eventualmente |
+| data.expires_at | string | Fecha de expiracion (ISO 8601, null si no hay puntos) |
+| data.days_until_expiration | int | Dias restantes (null si no aplica) |
+| data.last_activity_at | string | Ultima actividad de puntos (ISO 8601) |
+| data.warning_level | string | "critical" (<=7 dias), "warning" (<=30 dias), "safe" (>30 dias), "none" |
+| data.message | string | Mensaje amigable para mostrar al usuario |
+
+**Ejemplo de respuesta (metodo total):**
+```json
+{
+  "data": {
+    "points_balance": 250,
+    "expiration_method": "total",
+    "expiration_months": 6,
+    "will_expire": true,
+    "expires_at": "2026-06-15T10:30:00Z",
+    "days_until_expiration": 45,
+    "last_activity_at": "2025-12-15T10:30:00Z",
+    "warning_level": "warning",
+    "message": "En 45 dias todos tus puntos expiraran si no realizas una compra."
+  }
+}
+```
+
+**Ejemplo de respuesta (metodo fifo):**
+```json
+{
+  "data": {
+    "points_balance": 250,
+    "expiration_method": "fifo",
+    "expiration_months": 6,
+    "will_expire": true,
+    "expires_at": "2026-06-15T10:30:00Z",
+    "days_until_expiration": 45,
+    "last_activity_at": "2025-12-15T10:30:00Z",
+    "warning_level": "warning",
+    "message": "En 45 dias tus puntos mas antiguos expiraran si no realizas una compra."
+  }
+}
+```
+
+---
+
+#### GET /points/history
+
+Retorna el historial paginado de transacciones de puntos.
+
+**Query params:**
+
+| Param | Tipo | Descripcion |
+|-------|------|-------------|
+| page | int | Numero de pagina |
+| type | string | Filtrar por tipo de transaccion |
+
+**Tipos de transaccion:** `earned`, `redeemed`, `expired`, `adjusted`
 
 ---
 
@@ -1337,6 +1424,9 @@ Flutter debe autenticarse con el mismo Bearer token via `/broadcasting/auth`.
 
 | Fecha | Cambio |
 |-------|--------|
+| 2026-01-07 | Corregido GET /points/expiring: ahora incluye expiration_method y expiration_months |
+| 2026-01-07 | Corregido GET /points/balance: ahora incluye points_value_in_currency y conversion_rate |
+| 2026-01-07 | Documentado GET /points/history con query params y tipos de transaccion correctos |
 | 2026-01-07 | Agregada seccion 7: Soporte (Tickets) - sistema de comunicacion cliente-soporte |
 | 2026-01-07 | Reorganizada seccion Usuario (perfil, direcciones, NITs, dispositivos, puntos, favoritos) |
 | 2026-01-07 | Agregado GET /addresses/{id} |

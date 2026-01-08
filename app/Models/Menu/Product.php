@@ -51,8 +51,6 @@ class Product extends Model implements ActivityLoggable
         'precio_domicilio_capital',
         'precio_pickup_interior',
         'precio_domicilio_interior',
-        'is_redeemable',
-        'points_cost',
         'sort_order',
     ];
 
@@ -69,8 +67,6 @@ class Product extends Model implements ActivityLoggable
         'precio_domicilio_capital' => 'decimal:2',
         'precio_pickup_interior' => 'decimal:2',
         'precio_domicilio_interior' => 'decimal:2',
-        'is_redeemable' => 'boolean',
-        'points_cost' => 'integer',
         'sort_order' => 'integer',
     ];
 

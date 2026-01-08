@@ -31,10 +31,6 @@ class ProductVariantFactory extends Factory
             'precio_pickup_interior' => $basePrice - $this->faker->randomFloat(2, 3, 10),
             'precio_domicilio_interior' => $basePrice + $this->faker->randomFloat(2, 2, 8),
 
-            // Redención por puntos
-            'is_redeemable' => false,
-            'points_cost' => null,
-
             'is_daily_special' => false,
             'daily_special_days' => null,
             'daily_special_precio_pickup_capital' => null,

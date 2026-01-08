@@ -12,7 +12,7 @@ import { PLACEHOLDERS } from '@/constants/ui-constants';
 import { formatWeekdaysShort } from '@/constants/weekdays';
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrency, formatDate } from '@/utils/format';
-import { Calendar, CheckCircle, Clock, DollarSign, Store, Tag, Truck } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Store, Tag, Truck } from 'lucide-react';
 
 interface Promotion {
     id: number;
@@ -20,8 +20,10 @@ interface Promotion {
     description: string | null;
     type: 'daily_special';
     scope_type: 'product';
-    special_price_capital: number | null;
-    special_price_interior: number | null;
+    special_price_pickup_capital: number | null;
+    special_price_delivery_capital: number | null;
+    special_price_pickup_interior: number | null;
+    special_price_delivery_interior: number | null;
     applies_to: 'product';
     service_type: 'both' | 'delivery_only' | 'pickup_only';
     validity_type: 'permanent' | 'date_range' | 'time_range' | 'date_time_range' | 'weekdays';
@@ -98,21 +100,50 @@ const PromotionMobileCard: React.FC<{
 
     const dataFields = [];
 
-    if (promotion.special_price_capital !== null || promotion.special_price_interior !== null) {
+    const hasCapitalPrices = promotion.special_price_pickup_capital !== null || promotion.special_price_delivery_capital !== null;
+    const hasInteriorPrices = promotion.special_price_pickup_interior !== null || promotion.special_price_delivery_interior !== null;
+
+    if (hasCapitalPrices || hasInteriorPrices) {
         dataFields.push({
             label: 'Precios Especiales',
             value: (
-                <div className="space-y-1 text-xs">
-                    {promotion.special_price_capital !== null && (
-                        <div className="flex items-center gap-1">
-                            <DollarSign className="h-3 w-3 text-muted-foreground" />
-                            <span>Capital: {formatCurrency(promotion.special_price_capital)}</span>
+                <div className="space-y-2 text-xs">
+                    {hasCapitalPrices && (
+                        <div className="space-y-1">
+                            <div className="font-medium text-muted-foreground">Capital</div>
+                            <div className="flex flex-col gap-0.5">
+                                {promotion.special_price_pickup_capital !== null && (
+                                    <div className="flex items-center gap-1">
+                                        <Store className="h-3 w-3 text-muted-foreground" />
+                                        <span>{formatCurrency(promotion.special_price_pickup_capital)}</span>
+                                    </div>
+                                )}
+                                {promotion.special_price_delivery_capital !== null && (
+                                    <div className="flex items-center gap-1">
+                                        <Truck className="h-3 w-3 text-muted-foreground" />
+                                        <span>{formatCurrency(promotion.special_price_delivery_capital)}</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
-                    {promotion.special_price_interior !== null && (
-                        <div className="flex items-center gap-1">
-                            <DollarSign className="h-3 w-3 text-muted-foreground" />
-                            <span>Interior: {formatCurrency(promotion.special_price_interior)}</span>
+                    {hasInteriorPrices && (
+                        <div className="space-y-1">
+                            <div className="font-medium text-muted-foreground">Interior</div>
+                            <div className="flex flex-col gap-0.5">
+                                {promotion.special_price_pickup_interior !== null && (
+                                    <div className="flex items-center gap-1">
+                                        <Store className="h-3 w-3 text-muted-foreground" />
+                                        <span>{formatCurrency(promotion.special_price_pickup_interior)}</span>
+                                    </div>
+                                )}
+                                {promotion.special_price_delivery_interior !== null && (
+                                    <div className="flex items-center gap-1">
+                                        <Truck className="h-3 w-3 text-muted-foreground" />
+                                        <span>{formatCurrency(promotion.special_price_delivery_interior)}</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -187,7 +218,7 @@ const PromotionMobileCard: React.FC<{
                 onDelete: () => onDelete(promotion),
                 isDeleting,
                 editTooltip: 'Editar promoción',
-                deleteTooltip: 'Eliminar promoción',
+                deleteTooltip: 'Archivar promoción',
             }}
         />
     );
@@ -264,7 +295,7 @@ export default function DailySpecialIndex({ promotions, stats, filters }: Promot
                     onDelete={() => openDeleteDialog(promotion)}
                     isDeleting={deletingPromotion === promotion.id}
                     editTooltip="Editar promoción"
-                    deleteTooltip="Eliminar promoción"
+                    deleteTooltip="Archivar promoción"
                 />
             ),
         },
@@ -322,6 +353,7 @@ export default function DailySpecialIndex({ promotions, stats, filters }: Promot
                 isDeleting={deletingPromotion !== null}
                 entityName={selectedPromotion?.name || ''}
                 entityType="Sub del Día"
+                customMessage={`¿Estás seguro de que quieres archivar la promoción "${selectedPromotion?.name || ''}"? La promoción será desactivada y archivada, pero seguirá almacenada para reportería.`}
             />
         </AppLayout>
     );

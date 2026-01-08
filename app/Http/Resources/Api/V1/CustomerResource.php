@@ -22,7 +22,6 @@ class CustomerResource extends JsonResource
             'full_name' => $this->full_name,
             'email' => $this->email,
             'email_verified_at' => $this->email_verified_at,
-            'avatar' => $this->avatar,
             'oauth_provider' => $this->oauth_provider,
             'subway_card' => $this->subway_card,
             'birth_date' => $this->birth_date?->format('Y-m-d'),

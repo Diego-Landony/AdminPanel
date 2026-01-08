@@ -99,8 +99,10 @@ class PromotionController extends Controller
 
             if ($firstItem) {
                 $promotion->scope_type = 'product';
-                $promotion->special_price_capital = $firstItem->special_price_capital;
-                $promotion->special_price_interior = $firstItem->special_price_interior;
+                $promotion->special_price_pickup_capital = $firstItem->special_price_pickup_capital;
+                $promotion->special_price_delivery_capital = $firstItem->special_price_delivery_capital;
+                $promotion->special_price_pickup_interior = $firstItem->special_price_pickup_interior;
+                $promotion->special_price_delivery_interior = $firstItem->special_price_delivery_interior;
                 $promotion->applies_to = 'product';
                 $promotion->service_type = $firstItem->service_type ?? 'both';
                 $promotion->validity_type = $firstItem->validity_type ?? 'permanent';
@@ -193,9 +195,11 @@ class PromotionController extends Controller
                         'product_id' => $item['product_id'] ?? null,
                         'variant_id' => $item['variant_id'] ?? null,
                         'category_id' => $item['category_id'] ?? null,
-                        // Campos para Sub del Día
-                        'special_price_capital' => $item['special_price_capital'] ?? null,
-                        'special_price_interior' => $item['special_price_interior'] ?? null,
+                        // Campos para Sub del Día (4 precios independientes)
+                        'special_price_pickup_capital' => $item['special_price_pickup_capital'] ?? null,
+                        'special_price_delivery_capital' => $item['special_price_delivery_capital'] ?? null,
+                        'special_price_pickup_interior' => $item['special_price_pickup_interior'] ?? null,
+                        'special_price_delivery_interior' => $item['special_price_delivery_interior'] ?? null,
                         // Campo para Percentage Discount
                         'discount_percentage' => $item['discount_percentage'] ?? null,
                         // Campos comunes
@@ -308,9 +312,11 @@ class PromotionController extends Controller
                         'product_id' => $item['product_id'] ?? null,
                         'variant_id' => $item['variant_id'] ?? null,
                         'category_id' => $item['category_id'] ?? null,
-                        // Campos para Sub del Día
-                        'special_price_capital' => $item['special_price_capital'] ?? null,
-                        'special_price_interior' => $item['special_price_interior'] ?? null,
+                        // Campos para Sub del Día (4 precios independientes)
+                        'special_price_pickup_capital' => $item['special_price_pickup_capital'] ?? null,
+                        'special_price_delivery_capital' => $item['special_price_delivery_capital'] ?? null,
+                        'special_price_pickup_interior' => $item['special_price_pickup_interior'] ?? null,
+                        'special_price_delivery_interior' => $item['special_price_delivery_interior'] ?? null,
                         // Campo para Percentage Discount
                         'discount_percentage' => $item['discount_percentage'] ?? null,
                         // Campos comunes
@@ -334,7 +340,7 @@ class PromotionController extends Controller
     }
 
     /**
-     * Elimina una promoción
+     * Archiva una promoción (soft delete)
      */
     public function destroy(Promotion $promotion): RedirectResponse
     {
@@ -342,11 +348,13 @@ class PromotionController extends Controller
             $routeName = $this->getPromotionIndexRoute($promotion->type);
             $promotion->delete();
 
+            $entityName = $promotion->type === 'bundle_special' ? 'Combinado' : 'Promoción';
+
             return redirect()->route($routeName)
-                ->with('success', 'Promoción eliminada exitosamente.');
+                ->with('success', "{$entityName} archivado exitosamente.");
         } catch (\Exception $e) {
             return back()
-                ->withErrors(['error' => 'Error al eliminar la promoción: '.$e->getMessage()]);
+                ->withErrors(['error' => 'Error al archivar: '.$e->getMessage()]);
         }
     }
 

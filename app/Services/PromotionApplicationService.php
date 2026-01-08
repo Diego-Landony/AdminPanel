@@ -158,13 +158,11 @@ class PromotionApplicationService
                 }
             }
         } elseif ($promotion->type === 'bundle_special') {
-            if ($promotion->special_bundle_price_capital || $promotion->special_bundle_price_interior) {
-                $normalPrice = $items->sum('subtotal');
-                $bundlePrice = $cart->zone === 'capital'
-                    ? $promotion->special_bundle_price_capital
-                    : $promotion->special_bundle_price_interior;
+            $bundlePrice = $this->getBundlePriceForCart($promotion, $cart);
 
-                if ($bundlePrice && $bundlePrice < $normalPrice) {
+            if ($bundlePrice) {
+                $normalPrice = $items->sum('subtotal');
+                if ($bundlePrice < $normalPrice) {
                     $discount = $normalPrice - $bundlePrice;
                 }
             }
@@ -175,10 +173,13 @@ class PromotionApplicationService
 
     /**
      * Busca promoción activa para una variante
+     *
+     * Filtra por vigencia: weekdays (ISO-8601: 1=Lunes, 7=Domingo), fechas y horarios.
+     * El backend maneja toda la lógica de vigencia para simplificar el trabajo de Flutter.
      */
     protected function findActivePromotionForVariant($variant, Carbon $datetime): ?Promotion
     {
-        $dayOfWeek = $datetime->dayOfWeek;
+        $dayOfWeekIso = $datetime->dayOfWeekIso; // ISO-8601: 1=Lunes, 7=Domingo
         $currentDate = $datetime->toDateString();
         $currentTime = $datetime->format('H:i:s');
 
@@ -191,9 +192,9 @@ class PromotionApplicationService
                         $q2->whereIn('category_id', $categoryIds);
                     });
             })
-            ->where(function ($q) use ($dayOfWeek) {
+            ->where(function ($q) use ($dayOfWeekIso) {
                 $q->whereNull('weekdays')
-                    ->orWhereJsonContains('weekdays', $dayOfWeek);
+                    ->orWhereJsonContains('weekdays', $dayOfWeekIso);
             })
             ->where(function ($q) use ($currentDate) {
                 $q->whereNull('valid_from')
@@ -217,10 +218,13 @@ class PromotionApplicationService
 
     /**
      * Busca promoción activa para un producto sin variantes
+     *
+     * Filtra por vigencia: weekdays (ISO-8601: 1=Lunes, 7=Domingo), fechas y horarios.
+     * El backend maneja toda la lógica de vigencia para simplificar el trabajo de Flutter.
      */
     protected function findActivePromotionForProduct($product, int $categoryId, Carbon $datetime): ?Promotion
     {
-        $dayOfWeek = $datetime->dayOfWeek;
+        $dayOfWeekIso = $datetime->dayOfWeekIso; // ISO-8601: 1=Lunes, 7=Domingo
         $currentDate = $datetime->toDateString();
         $currentTime = $datetime->format('H:i:s');
 
@@ -231,9 +235,9 @@ class PromotionApplicationService
                         ->orWhere('category_id', $categoryId);
                 });
             })
-            ->where(function ($q) use ($dayOfWeek) {
+            ->where(function ($q) use ($dayOfWeekIso) {
                 $q->whereNull('weekdays')
-                    ->orWhereJsonContains('weekdays', $dayOfWeek);
+                    ->orWhereJsonContains('weekdays', $dayOfWeekIso);
             })
             ->where(function ($q) use ($currentDate) {
                 $q->whereNull('valid_from')
@@ -418,9 +422,7 @@ class PromotionApplicationService
                     }
                 }
             } elseif ($promotion->type === 'bundle_special') {
-                $bundlePrice = $cart->zone === 'capital'
-                    ? $promotion->special_bundle_price_capital
-                    : $promotion->special_bundle_price_interior;
+                $bundlePrice = $this->getBundlePriceForCart($promotion, $cart);
 
                 if ($bundlePrice) {
                     $normalTotal = $promoItems->sum('subtotal');
@@ -446,5 +448,16 @@ class PromotionApplicationService
         }
 
         return $itemDiscounts;
+    }
+
+    /**
+     * Obtiene el precio del bundle según zona y tipo de servicio del carrito
+     */
+    protected function getBundlePriceForCart(Promotion $promotion, Cart $cart): ?float
+    {
+        $zone = $cart->zone ?? 'capital';
+        $serviceType = $cart->service_type ?? 'pickup';
+
+        return $promotion->getPriceForZoneCombinado($zone, $serviceType);
     }
 }

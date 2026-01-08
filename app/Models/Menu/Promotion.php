@@ -33,8 +33,10 @@ class Promotion extends Model implements ActivityLoggable
         'show_badge_on_menu',
         'type',
         'is_active',
-        'special_bundle_price_capital',
-        'special_bundle_price_interior',
+        'special_bundle_price_pickup_capital',
+        'special_bundle_price_delivery_capital',
+        'special_bundle_price_pickup_interior',
+        'special_bundle_price_delivery_interior',
         'valid_from',
         'valid_until',
         'time_from',
@@ -46,8 +48,10 @@ class Promotion extends Model implements ActivityLoggable
         'type' => 'string',
         'is_active' => 'boolean',
         'show_badge_on_menu' => 'boolean',
-        'special_bundle_price_capital' => 'decimal:2',
-        'special_bundle_price_interior' => 'decimal:2',
+        'special_bundle_price_pickup_capital' => 'decimal:2',
+        'special_bundle_price_delivery_capital' => 'decimal:2',
+        'special_bundle_price_pickup_interior' => 'decimal:2',
+        'special_bundle_price_delivery_interior' => 'decimal:2',
         'weekdays' => 'array', // Array de enteros 1-7 (ISO-8601): 1=Lunes, 7=Domingo, null=todos los días
     ];
 
@@ -420,20 +424,41 @@ class Promotion extends Model implements ActivityLoggable
     }
 
     /**
-     * Obtiene el precio del Combinado para una zona específica
+     * Obtiene el precio del Combinado para una zona y tipo de servicio específicos
      * Solo aplica para bundle_special
+     *
+     * @param  string  $zone  'capital' o 'interior'
+     * @param  string  $serviceType  'pickup' o 'delivery'
      */
-    public function getPriceForZoneCombinado(string $zone): ?float
+    public function getPriceForZoneCombinado(string $zone, string $serviceType = 'pickup'): ?float
     {
         if (! $this->isCombinado()) {
             return null;
         }
 
-        return match ($zone) {
-            'capital' => $this->special_bundle_price_capital ? (float) $this->special_bundle_price_capital : null,
-            'interior' => $this->special_bundle_price_interior ? (float) $this->special_bundle_price_interior : null,
-            default => null,
-        };
+        $field = "special_bundle_price_{$serviceType}_{$zone}";
+
+        return $this->$field ? (float) $this->$field : null;
+    }
+
+    /**
+     * Obtiene todos los precios del Combinado en formato estandarizado
+     * Solo aplica para bundle_special
+     *
+     * @return array{pickup_capital: float|null, delivery_capital: float|null, pickup_interior: float|null, delivery_interior: float|null}|null
+     */
+    public function getAllPricesCombinado(): ?array
+    {
+        if (! $this->isCombinado()) {
+            return null;
+        }
+
+        return [
+            'pickup_capital' => $this->special_bundle_price_pickup_capital ? (float) $this->special_bundle_price_pickup_capital : null,
+            'delivery_capital' => $this->special_bundle_price_delivery_capital ? (float) $this->special_bundle_price_delivery_capital : null,
+            'pickup_interior' => $this->special_bundle_price_pickup_interior ? (float) $this->special_bundle_price_pickup_interior : null,
+            'delivery_interior' => $this->special_bundle_price_delivery_interior ? (float) $this->special_bundle_price_delivery_interior : null,
+        ];
     }
 
     /**

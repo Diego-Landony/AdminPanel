@@ -271,7 +271,7 @@ export default function BundleSpecialsIndex({ combinados, stats }: CombinadosPag
                     onDelete={() => openDeleteDialog(combinado)}
                     isDeleting={deletingCombinado === combinado.id}
                     editTooltip="Editar combinado"
-                    deleteTooltip="Eliminar combinado"
+                    deleteTooltip="Archivar combinado"
                 />
             ),
         },
@@ -314,7 +314,7 @@ export default function BundleSpecialsIndex({ combinados, stats }: CombinadosPag
                 onDelete: () => openDeleteDialog(combinado),
                 isDeleting: deletingCombinado === combinado.id,
                 editTooltip: 'Editar combinado',
-                deleteTooltip: 'Eliminar combinado',
+                deleteTooltip: 'Archivar combinado',
             }}
         />
     );
@@ -365,6 +365,7 @@ export default function BundleSpecialsIndex({ combinados, stats }: CombinadosPag
                 isDeleting={deletingCombinado !== null}
                 entityName={selectedCombinado?.name || ''}
                 entityType="combinado"
+                customMessage={`¿Estás seguro de que quieres archivar el combinado "${selectedCombinado?.name || ''}"? El combinado será desactivado y archivado, pero seguirá almacenado para reportería.`}
             />
         </AppLayout>
     );

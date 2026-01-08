@@ -21,10 +21,11 @@ class PromotionItem extends Model
         'product_id',
         'variant_id',
         'category_id',
-        'special_price_capital',
-        'special_price_interior',
+        'special_price_pickup_capital',
+        'special_price_delivery_capital',
+        'special_price_pickup_interior',
+        'special_price_delivery_interior',
         'discount_percentage',
-        'service_type',
         'validity_type',
         'valid_from',
         'valid_until',
@@ -38,8 +39,10 @@ class PromotionItem extends Model
         'product_id' => 'integer',
         'variant_id' => 'integer',
         'category_id' => 'integer',
-        'special_price_capital' => 'decimal:2',
-        'special_price_interior' => 'decimal:2',
+        'special_price_pickup_capital' => 'decimal:2',
+        'special_price_delivery_capital' => 'decimal:2',
+        'special_price_pickup_interior' => 'decimal:2',
+        'special_price_delivery_interior' => 'decimal:2',
         'discount_percentage' => 'decimal:2',
         'weekdays' => 'array',
     ];
@@ -166,93 +169,93 @@ class PromotionItem extends Model
     }
 
     /**
-     * Verifica si este item aplica al tipo de servicio especificado
-     */
-    public function appliesToServiceType(string $serviceType): bool
-    {
-        if (! $this->service_type) {
-            return true; // Si no hay restricción, aplica a todos
-        }
-
-        return match ($this->service_type) {
-            'both' => true,
-            'delivery_only' => $serviceType === 'delivery',
-            'pickup_only' => $serviceType === 'pickup',
-            default => false,
-        };
-    }
-
-    /**
-     * Verifica si este item es válido para la fecha/hora actual
+     * Verifica si este item es válido para la fecha/hora actual.
+     *
+     * Soporta las siguientes combinaciones de vigencia:
+     * 1. Permanente (sin restricciones)
+     * 2. Solo días de la semana (ej: todos los Martes siempre)
+     * 3. Días + rango de fechas (ej: Martes del 1 al 31 de Enero)
+     * 4. Días + rango de horarios (ej: Martes de 11:00 a 15:00)
+     * 5. Días + fechas + horarios (ej: Martes de 11:00 a 15:00, del 1 al 31 de Enero)
+     * 6. Solo rango de fechas (sin días específicos)
+     * 7. Solo rango de horarios (sin días específicos)
+     * 8. Fechas + horarios (sin días específicos)
+     *
+     * weekdays SIEMPRE se evalúa si está definido, independiente del validity_type.
      */
     public function isValidToday(?\Carbon\Carbon $datetime = null): bool
     {
         $datetime = $datetime ?? now();
 
-        // Si no hay validity_type definido, usar 'weekdays' como default
-        if (! $this->validity_type) {
+        // PASO 1: Verificar weekdays (si está definido, SIEMPRE debe cumplirse)
+        if ($this->weekdays && ! empty($this->weekdays)) {
+            $currentWeekday = (int) $datetime->format('N'); // 1=Lunes, 7=Domingo
+            if (! in_array($currentWeekday, $this->weekdays)) {
+                return false; // No es un día válido
+            }
+        }
+
+        // PASO 2: Verificar restricciones adicionales según validity_type
+        // Si no hay validity_type, solo weekdays importaba (ya verificado arriba)
+        if (! $this->validity_type || $this->validity_type === 'permanent' || $this->validity_type === 'weekdays') {
             return true;
         }
 
-        switch ($this->validity_type) {
-            case 'permanent':
-                return true;
-
-            case 'weekdays':
-                // Si no hay días definidos, no es válido
-                if (! $this->weekdays || empty($this->weekdays)) {
-                    return false;
-                }
-                // Obtener día de la semana (1 = Lunes, 7 = Domingo)
-                $currentWeekday = (int) $datetime->format('N');
-
-                return in_array($currentWeekday, $this->weekdays);
-
-            case 'date_range':
-                if (! $this->valid_from || ! $this->valid_until) {
-                    return false;
-                }
-
-                return $datetime->between($this->valid_from, $this->valid_until);
-
-            case 'time_range':
-                if (! $this->time_from || ! $this->time_until) {
-                    return false;
-                }
-                $currentTime = $datetime->format('H:i:s');
-
-                return $currentTime >= $this->time_from && $currentTime <= $this->time_until;
-
-            case 'date_time_range':
-                if (! $this->valid_from || ! $this->valid_until || ! $this->time_from || ! $this->time_until) {
-                    return false;
-                }
-                $dateValid = $datetime->between($this->valid_from, $this->valid_until);
-                $timeValid = $datetime->format('H:i:s') >= $this->time_from
-                          && $datetime->format('H:i:s') <= $this->time_until;
-
-                return $dateValid && $timeValid;
-
-            default:
+        // PASO 3: Verificar rango de fechas (si aplica)
+        $dateValid = true;
+        if (in_array($this->validity_type, ['date_range', 'date_time_range'])) {
+            if (! $this->valid_from || ! $this->valid_until) {
                 return false;
+            }
+            $dateValid = $datetime->between($this->valid_from, $this->valid_until);
         }
+
+        // PASO 4: Verificar rango de horarios (si aplica)
+        $timeValid = true;
+        if (in_array($this->validity_type, ['time_range', 'date_time_range'])) {
+            if (! $this->time_from || ! $this->time_until) {
+                return false;
+            }
+            $currentTime = $datetime->format('H:i:s');
+            $timeValid = $currentTime >= $this->time_from && $currentTime <= $this->time_until;
+        }
+
+        return $dateValid && $timeValid;
     }
 
     /**
-     * Obtiene el precio especial para una zona específica
+     * Obtiene el precio especial para una combinación de servicio y zona.
+     *
+     * @param  string  $serviceType  'pickup' o 'delivery'
+     * @param  string  $zone  'capital' o 'interior'
      */
-    public function getSpecialPriceForZone(string $zone): ?float
+    public function getSpecialPrice(string $serviceType, string $zone): ?float
     {
-        return $zone === 'capital'
-            ? $this->special_price_capital
-            : $this->special_price_interior;
+        $column = "special_price_{$serviceType}_{$zone}";
+
+        return $this->{$column};
+    }
+
+    /**
+     * Obtiene todos los precios especiales como array estandarizado.
+     *
+     * @return array<string, float|null>
+     */
+    public function getSpecialPrices(): array
+    {
+        return [
+            'pickup_capital' => $this->special_price_pickup_capital ? (float) $this->special_price_pickup_capital : null,
+            'delivery_capital' => $this->special_price_delivery_capital ? (float) $this->special_price_delivery_capital : null,
+            'pickup_interior' => $this->special_price_pickup_interior ? (float) $this->special_price_pickup_interior : null,
+            'delivery_interior' => $this->special_price_delivery_interior ? (float) $this->special_price_delivery_interior : null,
+        ];
     }
 
     /**
      * Verifica si este item puede aplicarse ahora mismo
      * Combina verificaciones de: entidad activa, fecha/hora válida y tipo de servicio
      */
-    public function canApplyNow(?string $serviceType = null, ?\Carbon\Carbon $datetime = null): bool
+    public function canApplyNow(?\Carbon\Carbon $datetime = null): bool
     {
         // 1. Verificar que el producto/combo esté activo
         if (! $this->isApplicable()) {
@@ -261,11 +264,6 @@ class PromotionItem extends Model
 
         // 2. Verificar validez de fecha/hora
         if (! $this->isValidToday($datetime)) {
-            return false;
-        }
-
-        // 3. Verificar tipo de servicio (si se proporciona)
-        if ($serviceType && ! $this->appliesToServiceType($serviceType)) {
             return false;
         }
 

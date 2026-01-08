@@ -13,13 +13,9 @@ class OrderStatusChangedNotification extends Notification implements ShouldQueue
     use Queueable;
 
     private const STATUS_MESSAGES = [
-        'confirmed' => [
-            'title' => 'Orden Confirmada',
-            'body' => 'Tu orden #{order} ha sido confirmada y pronto comenzará a prepararse.',
-        ],
         'preparing' => [
-            'title' => 'Preparando tu Orden',
-            'body' => '¡Tu orden #{order} está siendo preparada!',
+            'title' => '¡Orden Confirmada!',
+            'body' => 'Tu orden #{order} ha sido aceptada y está siendo preparada.',
         ],
         'ready' => [
             'title' => '¡Orden Lista!',

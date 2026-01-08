@@ -117,7 +117,7 @@ describe('ActivityObserver', function () {
             'birth_date' => '1990-05-15',
         ];
 
-        $this->post('/customers', $customerData);
+        $this->withHeader('User-Agent', 'TestBrowser/1.0')->post('/customers', $customerData);
 
         expect(ActivityLog::where('event_type', 'created')
             ->where('target_model', Customer::class)
@@ -180,7 +180,7 @@ describe('ActivityObserver', function () {
             'birth_date' => '1990-05-15',
         ];
 
-        $this->post('/customers', $customerData);
+        $this->withHeader('User-Agent', 'TestBrowser/1.0')->post('/customers', $customerData);
 
         expect(ActivityLog::where('target_model', Customer::class)
             ->where('description', 'like', '%No Log%')
@@ -202,7 +202,7 @@ describe('ActivityObserver', function () {
             'birth_date' => '1990-05-15',
         ];
 
-        $this->post('/customers', $customerData);
+        $this->withHeader('User-Agent', 'TestBrowser/1.0')->post('/customers', $customerData);
 
         $log = ActivityLog::where('target_model', Customer::class)
             ->where('event_type', 'created')
@@ -255,7 +255,7 @@ describe('Ignored Fields', function () {
             'birth_date' => '1990-05-15',
         ];
 
-        $this->post('/customers', $customerData);
+        $this->withHeader('User-Agent', 'TestBrowser/1.0')->post('/customers', $customerData);
 
         $log = ActivityLog::where('target_model', Customer::class)
             ->where('event_type', 'created')
@@ -313,7 +313,7 @@ describe('Ignored Fields', function () {
             'birth_date' => '1990-05-15',
         ];
 
-        $this->post('/customers', $customerData);
+        $this->withHeader('User-Agent', 'TestBrowser/1.0')->post('/customers', $customerData);
 
         $log = ActivityLog::where('target_model', Customer::class)
             ->where('event_type', 'created')

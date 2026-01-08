@@ -27,8 +27,6 @@ class ProductVariantResource extends JsonResource
                 'pickup_interior' => (float) $this->precio_pickup_interior,
                 'delivery_interior' => (float) $this->precio_domicilio_interior,
             ],
-            'is_redeemable' => (bool) $this->is_redeemable,
-            'points_cost' => $this->points_cost,
             'is_daily_special' => $this->is_daily_special,
             'daily_special_days' => $this->daily_special_days,
             'daily_special_prices' => [
@@ -50,8 +48,10 @@ class ProductVariantResource extends JsonResource
                     'name' => $promotion->name,
                     'discount_percent' => $promotionItem?->discount_percentage,
                     'special_prices' => [
-                        'capital' => $promotionItem?->special_price_capital ? (float) $promotionItem->special_price_capital : null,
-                        'interior' => $promotionItem?->special_price_interior ? (float) $promotionItem->special_price_interior : null,
+                        'pickup_capital' => $promotionItem?->special_price_pickup_capital ? (float) $promotionItem->special_price_pickup_capital : null,
+                        'delivery_capital' => $promotionItem?->special_price_delivery_capital ? (float) $promotionItem->special_price_delivery_capital : null,
+                        'pickup_interior' => $promotionItem?->special_price_pickup_interior ? (float) $promotionItem->special_price_pickup_interior : null,
+                        'delivery_interior' => $promotionItem?->special_price_delivery_interior ? (float) $promotionItem->special_price_delivery_interior : null,
                     ],
                     'discounted_prices' => $this->calculateDiscountedPrices($promotionItem),
                     'badge' => $promotion->badgeType ? [
@@ -75,13 +75,14 @@ class ProductVariantResource extends JsonResource
             return null;
         }
 
-        // If special fixed price is set, use it
-        if ($item->special_price_capital || $item->special_price_interior) {
+        // If special fixed prices are set, use them directly (4 independent prices)
+        if ($item->special_price_pickup_capital || $item->special_price_delivery_capital ||
+            $item->special_price_pickup_interior || $item->special_price_delivery_interior) {
             return [
-                'pickup_capital' => $item->special_price_capital ? (float) $item->special_price_capital : null,
-                'delivery_capital' => $item->special_price_capital ? (float) $item->special_price_capital : null,
-                'pickup_interior' => $item->special_price_interior ? (float) $item->special_price_interior : null,
-                'delivery_interior' => $item->special_price_interior ? (float) $item->special_price_interior : null,
+                'pickup_capital' => $item->special_price_pickup_capital ? (float) $item->special_price_pickup_capital : null,
+                'delivery_capital' => $item->special_price_delivery_capital ? (float) $item->special_price_delivery_capital : null,
+                'pickup_interior' => $item->special_price_pickup_interior ? (float) $item->special_price_pickup_interior : null,
+                'delivery_interior' => $item->special_price_delivery_interior ? (float) $item->special_price_delivery_interior : null,
             ];
         }
 

@@ -55,8 +55,12 @@ class DeviceService
 
     /**
      * Mark devices as inactive if not used in specified days
+     *
+     * Lifecycle:
+     * - 0-365 days (1 year): Active, receives push notifications
+     * - 365-548 days (1-1.5 years): Inactive, no push notifications
      */
-    public function deactivateInactiveDevices(int $inactiveDays = 90): int
+    public function deactivateInactiveDevices(int $inactiveDays = 365): int
     {
         $threshold = now()->subDays($inactiveDays);
 
@@ -67,8 +71,11 @@ class DeviceService
 
     /**
      * Soft delete devices inactive for extended period
+     *
+     * Lifecycle:
+     * - 548+ days (1.5 years): Soft deleted
      */
-    public function cleanupOldDevices(int $inactiveDays = 180): int
+    public function cleanupOldDevices(int $inactiveDays = 548): int
     {
         $threshold = now()->subDays($inactiveDays);
 

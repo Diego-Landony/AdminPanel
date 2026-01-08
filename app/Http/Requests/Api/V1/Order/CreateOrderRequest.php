@@ -56,7 +56,7 @@ class CreateOrderRequest extends FormRequest
             'payment_method' => [
                 'required',
                 'string',
-                Rule::in(['cash', 'card', 'online']),
+                Rule::in(['cash', 'card']),
             ],
             'nit_id' => [
                 'nullable',
@@ -87,7 +87,7 @@ class CreateOrderRequest extends FormRequest
             'delivery_address_id.exists' => 'La dirección seleccionada no existe o no te pertenece.',
             'scheduled_pickup_time.date' => 'La hora de recogida debe ser una fecha válida.',
             'payment_method.required' => 'El método de pago es requerido.',
-            'payment_method.in' => 'El método de pago debe ser cash, card u online.',
+            'payment_method.in' => 'El método de pago debe ser cash o card.',
             'nit_id.exists' => 'El NIT seleccionado no existe.',
             'notes.string' => 'Las notas deben ser texto.',
             'notes.max' => 'Las notas no pueden exceder 500 caracteres.',

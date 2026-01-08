@@ -71,8 +71,10 @@ interface BundleSpecialFormData {
     name: string;
     description: string;
     is_active: boolean;
-    special_bundle_price_capital: string;
-    special_bundle_price_interior: string;
+    special_bundle_price_pickup_capital: string;
+    special_bundle_price_delivery_capital: string;
+    special_bundle_price_pickup_interior: string;
+    special_bundle_price_delivery_interior: string;
     validity_type: 'permanent' | 'date_range' | 'time_range' | 'date_time_range';
     valid_from: string;
     valid_until: string;
@@ -92,8 +94,10 @@ export default function BundleSpecialCreate({ products, badgeTypes }: CreateBund
         name: '',
         description: '',
         is_active: true,
-        special_bundle_price_capital: '',
-        special_bundle_price_interior: '',
+        special_bundle_price_pickup_capital: '',
+        special_bundle_price_delivery_capital: '',
+        special_bundle_price_pickup_interior: '',
+        special_bundle_price_delivery_interior: '',
         validity_type: 'permanent',
         valid_from: '',
         valid_until: '',
@@ -211,8 +215,10 @@ export default function BundleSpecialCreate({ products, badgeTypes }: CreateBund
         formData.append('name', data.name);
         formData.append('description', data.description || '');
         formData.append('is_active', data.is_active ? '1' : '0');
-        formData.append('special_bundle_price_capital', data.special_bundle_price_capital);
-        formData.append('special_bundle_price_interior', data.special_bundle_price_interior);
+        formData.append('special_bundle_price_pickup_capital', data.special_bundle_price_pickup_capital);
+        formData.append('special_bundle_price_delivery_capital', data.special_bundle_price_delivery_capital);
+        formData.append('special_bundle_price_pickup_interior', data.special_bundle_price_pickup_interior);
+        formData.append('special_bundle_price_delivery_interior', data.special_bundle_price_delivery_interior);
         formData.append('validity_type', data.validity_type);
         if (data.valid_from) formData.append('valid_from', data.valid_from);
         if (data.valid_until) formData.append('valid_until', data.valid_until);
@@ -381,38 +387,82 @@ export default function BundleSpecialCreate({ products, badgeTypes }: CreateBund
                 <Card>
                     <CardContent className="pt-6">
                         <FormSection icon={Banknote} title={FORM_SECTIONS.specialPrices.title} description={FORM_SECTIONS.specialPrices.description}>
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <FormField label="Precio Capital" error={errors.special_bundle_price_capital} required>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
-                                        <Input
-                                            id="special_bundle_price_capital"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={data.special_bundle_price_capital}
-                                            onChange={(e) => setData('special_bundle_price_capital', e.target.value)}
-                                            placeholder={PLACEHOLDERS.price}
-                                            className="pl-8"
-                                        />
-                                    </div>
-                                </FormField>
+                            <div className="space-y-6">
+                                {/* Capital */}
+                                <div className="space-y-3">
+                                    <h4 className="text-sm font-medium text-muted-foreground">Zona Capital</h4>
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <FormField label="Pickup Capital" error={errors.special_bundle_price_pickup_capital} required>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
+                                                <Input
+                                                    id="special_bundle_price_pickup_capital"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={data.special_bundle_price_pickup_capital}
+                                                    onChange={(e) => setData('special_bundle_price_pickup_capital', e.target.value)}
+                                                    placeholder={PLACEHOLDERS.price}
+                                                    className="pl-8"
+                                                />
+                                            </div>
+                                        </FormField>
 
-                                <FormField label="Precio Interior" error={errors.special_bundle_price_interior} required>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
-                                        <Input
-                                            id="special_bundle_price_interior"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={data.special_bundle_price_interior}
-                                            onChange={(e) => setData('special_bundle_price_interior', e.target.value)}
-                                            placeholder={PLACEHOLDERS.price}
-                                            className="pl-8"
-                                        />
+                                        <FormField label="Delivery Capital" error={errors.special_bundle_price_delivery_capital} required>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
+                                                <Input
+                                                    id="special_bundle_price_delivery_capital"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={data.special_bundle_price_delivery_capital}
+                                                    onChange={(e) => setData('special_bundle_price_delivery_capital', e.target.value)}
+                                                    placeholder={PLACEHOLDERS.price}
+                                                    className="pl-8"
+                                                />
+                                            </div>
+                                        </FormField>
                                     </div>
-                                </FormField>
+                                </div>
+
+                                {/* Interior */}
+                                <div className="space-y-3">
+                                    <h4 className="text-sm font-medium text-muted-foreground">Zona Interior</h4>
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <FormField label="Pickup Interior" error={errors.special_bundle_price_pickup_interior} required>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
+                                                <Input
+                                                    id="special_bundle_price_pickup_interior"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={data.special_bundle_price_pickup_interior}
+                                                    onChange={(e) => setData('special_bundle_price_pickup_interior', e.target.value)}
+                                                    placeholder={PLACEHOLDERS.price}
+                                                    className="pl-8"
+                                                />
+                                            </div>
+                                        </FormField>
+
+                                        <FormField label="Delivery Interior" error={errors.special_bundle_price_delivery_interior} required>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
+                                                <Input
+                                                    id="special_bundle_price_delivery_interior"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={data.special_bundle_price_delivery_interior}
+                                                    onChange={(e) => setData('special_bundle_price_delivery_interior', e.target.value)}
+                                                    placeholder={PLACEHOLDERS.price}
+                                                    className="pl-8"
+                                                />
+                                            </div>
+                                        </FormField>
+                                    </div>
+                                </div>
                             </div>
                         </FormSection>
                     </CardContent>

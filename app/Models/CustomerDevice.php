@@ -146,25 +146,29 @@ class CustomerDevice extends Model implements ActivityLoggable
     }
 
     /**
-     * Scope para dispositivos que deben marcarse como inactivos (30+ días sin uso)
+     * Scope para dispositivos que deben marcarse como inactivos (365+ días sin uso)
+     *
+     * Lifecycle: 0-365 días (1 año) = Activo, recibe push notifications
      */
     public function scopeShouldBeInactive($query)
     {
         return $query->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('last_used_at')
-                    ->orWhere('last_used_at', '<=', now()->subDays(30));
+                    ->orWhere('last_used_at', '<=', now()->subDays(365));
             });
     }
 
     /**
-     * Scope para dispositivos que deben eliminarse (360+ días sin uso)
+     * Scope para dispositivos que deben eliminarse (548+ días sin uso)
+     *
+     * Lifecycle: 548+ días (1.5 años) = Soft deleted
      */
     public function scopeShouldBeDeleted($query)
     {
         return $query->where(function ($q) {
             $q->whereNull('last_used_at')
-                ->orWhere('last_used_at', '<=', now()->subDays(360));
+                ->orWhere('last_used_at', '<=', now()->subDays(548));
         });
     }
 }

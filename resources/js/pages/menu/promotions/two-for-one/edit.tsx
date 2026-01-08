@@ -1,6 +1,6 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { router } from '@inertiajs/react';
-import { Award, Package, Plus, Store, Truck } from 'lucide-react';
+import { Award, Package, Plus, Store } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { route } from 'ziggy-js';
 
@@ -70,7 +70,6 @@ interface PromotionItem {
     product_id: number | null;
     variant_id: number | null;
     category_id: number | null;
-    service_type: 'both' | 'delivery_only' | 'pickup_only' | null;
     validity_type: 'permanent' | 'date_range' | 'time_range' | 'date_time_range' | null;
     valid_from: string | null;
     valid_until: string | null;
@@ -213,7 +212,6 @@ export default function EditTwoForOnePromotion({ promotion, products, categories
         name: promotion.name,
         description: promotion.description || '',
         type: promotion.type,
-        service_type: (firstItem?.service_type || 'both') as 'both' | 'delivery_only' | 'pickup_only',
         validity_type: (firstItem?.validity_type || 'permanent') as 'permanent' | 'date_range' | 'time_range' | 'date_time_range',
         valid_from: firstItem?.valid_from || '',
         valid_until: firstItem?.valid_until || '',
@@ -340,7 +338,6 @@ export default function EditTwoForOnePromotion({ promotion, products, categories
 
         const expandedItems = localItems.flatMap((item) => {
             const globalConfig = {
-                service_type: formData.service_type,
                 validity_type: formData.validity_type,
                 valid_from: formData.valid_from,
                 valid_until: formData.valid_until,
@@ -487,38 +484,6 @@ export default function EditTwoForOnePromotion({ promotion, products, categories
 
             <FormSection icon={Store} title="Configuración Global">
                 <div className="space-y-4">
-                    <FormField label="Tipo de servicio" required error={errors.service_type}>
-                        <Select
-                            value={formData.service_type}
-                            onValueChange={(value) => setFormData({ ...formData, service_type: value as typeof formData.service_type })}
-                        >
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="both">
-                                    <div className="flex items-center gap-2">
-                                        <Truck className="h-4 w-4" />
-                                        <Store className="h-4 w-4" />
-                                        <span>Delivery y Pickup</span>
-                                    </div>
-                                </SelectItem>
-                                <SelectItem value="delivery_only">
-                                    <div className="flex items-center gap-2">
-                                        <Truck className="h-4 w-4" />
-                                        <span>Solo Delivery</span>
-                                    </div>
-                                </SelectItem>
-                                <SelectItem value="pickup_only">
-                                    <div className="flex items-center gap-2">
-                                        <Store className="h-4 w-4" />
-                                        <span>Solo Pickup</span>
-                                    </div>
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </FormField>
-
                     <FormField label="Vigencia" required error={errors.validity_type}>
                         <Select
                             value={formData.validity_type}

@@ -46,21 +46,14 @@ class StorePromotionRequest extends FormRequest
             ],
             'items.*.category_id' => 'required|exists:categories,id',
 
-            // Para Sub del Día - Campos a nivel de item
-            'items.*.special_price_capital' => 'required_if:type,daily_special|nullable|numeric|min:0',
-            'items.*.special_price_interior' => 'required_if:type,daily_special|nullable|numeric|min:0',
+            // Para Sub del Día - Campos a nivel de item (4 precios independientes)
+            'items.*.special_price_pickup_capital' => 'required_if:type,daily_special|nullable|numeric|min:0',
+            'items.*.special_price_delivery_capital' => 'required_if:type,daily_special|nullable|numeric|min:0',
+            'items.*.special_price_pickup_interior' => 'required_if:type,daily_special|nullable|numeric|min:0',
+            'items.*.special_price_delivery_interior' => 'required_if:type,daily_special|nullable|numeric|min:0',
 
             // Para Percentage - Campos a nivel de item
             'items.*.discount_percentage' => 'required_if:type,percentage_discount|nullable|numeric|min:1|max:100',
-
-            // Para 2x1, Sub del Día y Percentage - service_type
-            'items.*.service_type' => [
-                'required_if:type,daily_special',
-                'required_if:type,two_for_one',
-                'required_if:type,percentage_discount',
-                'nullable',
-                'in:both,delivery_only,pickup_only',
-            ],
 
             // Vigencia temporal (2x1, Sub del Día y Percentage)
             'items.*.validity_type' => [
@@ -225,9 +218,10 @@ class StorePromotionRequest extends FormRequest
 
             // Sub del Día y Percentage - Items
             'items.*.product_id.required_if' => 'El producto es obligatorio.',
-            'items.*.special_price_capital.required_if' => 'El precio especial para Capital es obligatorio.',
-            'items.*.special_price_interior.required_if' => 'El precio especial para Interior es obligatorio.',
-            'items.*.service_type.required_if' => 'El tipo de servicio es obligatorio.',
+            'items.*.special_price_pickup_capital.required_if' => 'El precio pickup Capital es obligatorio.',
+            'items.*.special_price_delivery_capital.required_if' => 'El precio delivery Capital es obligatorio.',
+            'items.*.special_price_pickup_interior.required_if' => 'El precio pickup Interior es obligatorio.',
+            'items.*.special_price_delivery_interior.required_if' => 'El precio delivery Interior es obligatorio.',
             'items.*.weekdays.required_if' => 'Debes seleccionar al menos un día de la semana.',
             'items.*.weekdays.min' => 'Debes seleccionar al menos un día de la semana.',
             'items.*.valid_from.date' => 'La fecha de inicio no es válida.',

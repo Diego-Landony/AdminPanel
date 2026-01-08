@@ -111,8 +111,7 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="full_name", type="string", example="Juan Pérez", description="Computed full name"),
  *     @OA\Property(property="email", type="string", format="email", example="juan@example.com"),
  *     @OA\Property(property="email_verified_at", type="string", format="date-time", nullable=true, example="2024-01-15T10:30:00Z"),
- *     @OA\Property(property="avatar", type="string", nullable=true, example="https://example.com/avatar.jpg"),
- *     @OA\Property(property="oauth_provider", type="string", enum={"local","google"}, example="local"),
+ *     @OA\Property(property="oauth_provider", type="string", enum={"local","google","apple"}, nullable=true, example="local", description="Proveedor OAuth si aplica. null para registro local con email/password"),
  *     @OA\Property(property="subway_card", type="string", example="802056895224", description="Unique loyalty card number (10-12 digits)"),
  *     @OA\Property(property="birth_date", type="string", format="date", nullable=true, example="1990-05-15"),
  *     @OA\Property(property="gender", type="string", enum={"male","female","other"}, nullable=true, example="male"),
@@ -155,20 +154,16 @@ namespace App\Http\Controllers;
  *     schema="CustomerDevice",
  *     type="object",
  *     title="CustomerDevice",
- *     description="Customer device registered for push notifications",
+ *     description="Dispositivo del cliente registrado para notificaciones push",
  *
  *     @OA\Property(property="id", type="integer", example=1),
- *     @OA\Property(property="customer_id", type="integer", example=1),
- *     @OA\Property(property="sanctum_token_id", type="integer", nullable=true, example=5),
- *     @OA\Property(property="fcm_token", type="string", nullable=true, example="fKw8h4Xj..."),
- *     @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000"),
- *     @OA\Property(property="device_name", type="string", nullable=true, example="iPhone 14 Pro de Juan"),
- *     @OA\Property(property="last_used_at", type="string", format="date-time", nullable=true, example="2024-01-20T15:45:00Z"),
- *     @OA\Property(property="is_active", type="boolean", example=true),
- *     @OA\Property(property="login_count", type="integer", example=15),
- *     @OA\Property(property="is_current_device", type="boolean", example=true, description="True if this device is associated with current token"),
- *     @OA\Property(property="created_at", type="string", format="date-time", example="2024-01-10T08:00:00Z"),
- *     @OA\Property(property="updated_at", type="string", format="date-time", example="2024-01-20T15:45:00Z")
+ *     @OA\Property(property="device_identifier", type="string", example="550e8400-e29b-41d4-a716-446655440000", description="UUID único del dispositivo"),
+ *     @OA\Property(property="device_name", type="string", nullable=true, example="iPhone 14 Pro de Juan", description="Nombre del dispositivo"),
+ *     @OA\Property(property="last_used_at", type="string", format="date-time", nullable=true, example="2024-01-20T15:45:00Z", description="Última vez que se usó el dispositivo"),
+ *     @OA\Property(property="is_active", type="boolean", example=true, description="Si el dispositivo está activo"),
+ *     @OA\Property(property="login_count", type="integer", example=15, description="Número de veces que se ha iniciado sesión"),
+ *     @OA\Property(property="is_current_device", type="boolean", example=true, description="True si es el dispositivo actual de esta sesión"),
+ *     @OA\Property(property="created_at", type="string", format="date-time", example="2024-01-10T08:00:00Z")
  * )
  *
  * @OA\Schema(
@@ -207,12 +202,12 @@ namespace App\Http\Controllers;
  *     schema="PriceZones",
  *     type="object",
  *     title="Price Zones",
- *     description="Sistema de precios con 4 zonas: pickup capital, domicilio capital, pickup interior, domicilio interior",
+ *     description="Sistema de precios con 4 zonas: pickup capital, delivery capital, pickup interior, delivery interior",
  *
  *     @OA\Property(property="pickup_capital", type="number", format="float", example=45.00, description="Precio para pickup en Ciudad de Guatemala"),
- *     @OA\Property(property="domicilio_capital", type="number", format="float", example=50.00, description="Precio para domicilio en Ciudad de Guatemala"),
+ *     @OA\Property(property="delivery_capital", type="number", format="float", example=50.00, description="Precio para delivery en Ciudad de Guatemala"),
  *     @OA\Property(property="pickup_interior", type="number", format="float", example=48.00, description="Precio para pickup en el interior"),
- *     @OA\Property(property="domicilio_interior", type="number", format="float", example=53.00, description="Precio para domicilio en el interior")
+ *     @OA\Property(property="delivery_interior", type="number", format="float", example=53.00, description="Precio para delivery en el interior")
  * )
  *
  * @OA\Schema(
@@ -269,10 +264,9 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="image_url", type="string", nullable=true, example="https://admin.subwaycardgt.com/storage/products/italian-bmt.jpg"),
  *     @OA\Property(property="category_id", type="integer", example=1),
  *     @OA\Property(property="has_variants", type="boolean", example=true, description="Si el producto tiene variantes de tamaño"),
- *     @OA\Property(property="precio", type="number", format="float", example=45.00, description="Precio de referencia (pickup_capital) para mostrar en UI"),
+ *     @OA\Property(property="price", type="number", format="float", example=45.00, description="Precio de referencia (pickup_capital) para mostrar en UI"),
  *     @OA\Property(property="prices", ref="#/components/schemas/PriceZones", description="Precios por zona (4 zonas)"),
- *     @OA\Property(property="is_redeemable", type="boolean", example=false, description="Si se puede canjear con puntos"),
- *     @OA\Property(property="points_cost", type="integer", nullable=true, example=500, description="Costo en puntos si is_redeemable=true"),
+ *     @OA\Property(property="sort_order", type="integer", example=1, description="Orden de visualización"),
  *     @OA\Property(
  *         property="variants",
  *         type="array",
@@ -309,9 +303,12 @@ namespace App\Http\Controllers;
  *         @OA\Property(
  *             property="special_prices",
  *             type="object",
- *             description="Precios especiales fijos si la promoción los define",
- *             @OA\Property(property="capital", type="number", format="float", nullable=true, example=35.00),
- *             @OA\Property(property="interior", type="number", format="float", nullable=true, example=38.00)
+ *             nullable=true,
+ *             description="Precios especiales fijos si la promoción los define (4 zonas)",
+ *             @OA\Property(property="pickup_capital", type="number", format="float", nullable=true, example=35.00),
+ *             @OA\Property(property="delivery_capital", type="number", format="float", nullable=true, example=40.00),
+ *             @OA\Property(property="pickup_interior", type="number", format="float", nullable=true, example=38.00),
+ *             @OA\Property(property="delivery_interior", type="number", format="float", nullable=true, example=43.00)
  *         ),
  *         @OA\Property(
  *             property="discounted_prices",
@@ -345,21 +342,19 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="sku", type="string", example="ITL-15CM"),
  *     @OA\Property(property="name", type="string", example="15 cm"),
  *     @OA\Property(property="size", type="string", nullable=true, example="15cm"),
- *     @OA\Property(property="precio", type="number", format="float", example=35.00, description="Precio de referencia (pickup_capital) para mostrar en UI"),
+ *     @OA\Property(property="price", type="number", format="float", example=35.00, description="Precio de referencia (pickup_capital) para mostrar en UI"),
  *     @OA\Property(property="prices", ref="#/components/schemas/PriceZones"),
- *     @OA\Property(property="is_redeemable", type="boolean", example=false),
- *     @OA\Property(property="points_cost", type="integer", nullable=true, example=300),
  *     @OA\Property(property="is_daily_special", type="boolean", example=false, description="Si es Sub del Día"),
  *     @OA\Property(property="daily_special_days", type="array", nullable=true, @OA\Items(type="integer"), example={1,3,5}, description="Días de la semana (1=Lunes, 7=Domingo)"),
  *     @OA\Property(
  *         property="daily_special_prices",
  *         type="object",
  *         nullable=true,
- *         description="Precios especiales para Sub del Día",
+ *         description="Precios especiales para Sub del Día (4 zonas)",
  *         @OA\Property(property="pickup_capital", type="number", format="float", example=35.00),
- *         @OA\Property(property="domicilio_capital", type="number", format="float", example=40.00),
+ *         @OA\Property(property="delivery_capital", type="number", format="float", example=40.00),
  *         @OA\Property(property="pickup_interior", type="number", format="float", example=38.00),
- *         @OA\Property(property="domicilio_interior", type="number", format="float", example=43.00)
+ *         @OA\Property(property="delivery_interior", type="number", format="float", example=43.00)
  *     ),
  *     @OA\Property(
  *         property="active_promotion",
@@ -373,9 +368,12 @@ namespace App\Http\Controllers;
  *         @OA\Property(
  *             property="special_prices",
  *             type="object",
- *             description="Precios especiales fijos si la promoción los define",
- *             @OA\Property(property="capital", type="number", format="float", nullable=true, example=35.00),
- *             @OA\Property(property="interior", type="number", format="float", nullable=true, example=38.00)
+ *             nullable=true,
+ *             description="Precios especiales fijos si la promoción los define (4 zonas)",
+ *             @OA\Property(property="pickup_capital", type="number", format="float", nullable=true, example=35.00),
+ *             @OA\Property(property="delivery_capital", type="number", format="float", nullable=true, example=40.00),
+ *             @OA\Property(property="pickup_interior", type="number", format="float", nullable=true, example=38.00),
+ *             @OA\Property(property="delivery_interior", type="number", format="float", nullable=true, example=43.00)
  *         ),
  *         @OA\Property(
  *             property="discounted_prices",
@@ -409,10 +407,8 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="name", type="string", example="Combo Clásico"),
  *     @OA\Property(property="description", type="string", nullable=true, example="Sub de 15cm + papas + bebida"),
  *     @OA\Property(property="image_url", type="string", nullable=true, example="https://admin.subwaycardgt.com/storage/combos/combo-clasico.jpg"),
- *     @OA\Property(property="precio", type="number", format="float", example=75.00, description="Precio de referencia (pickup_capital) para mostrar en UI"),
+ *     @OA\Property(property="price", type="number", format="float", example=75.00, description="Precio de referencia (pickup_capital) para mostrar en UI"),
  *     @OA\Property(property="prices", ref="#/components/schemas/PriceZones"),
- *     @OA\Property(property="is_redeemable", type="boolean", example=false),
- *     @OA\Property(property="points_cost", type="integer", nullable=true, example=1000),
  *     @OA\Property(property="is_available", type="boolean", example=true, description="Si el combo está disponible actualmente"),
  *     @OA\Property(property="category_id", type="integer", example=2),
  *     @OA\Property(property="sort_order", type="integer", example=1),
@@ -463,13 +459,16 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="name", type="string", example="Sub del Día - Lunes"),
  *     @OA\Property(property="description", type="string", nullable=true, example="Italian BMT 15cm a precio especial"),
  *     @OA\Property(property="image_url", type="string", nullable=true, example="https://admin.subwaycardgt.com/storage/promotions/combo-2x1.jpg", description="URL de la imagen de la promoción"),
- *     @OA\Property(property="type", type="string", example="daily_special", description="Tipo: daily_special o bundle"),
+ *     @OA\Property(property="type", type="string", enum={"daily_special","two_for_one","percentage_discount","bundle_special"}, example="daily_special", description="Tipo de promoción"),
  *     @OA\Property(
  *         property="prices",
  *         type="object",
- *         description="Precios para promociones tipo bundle",
- *         @OA\Property(property="bundle_capital", type="number", format="float", nullable=true, example=85.00),
- *         @OA\Property(property="bundle_interior", type="number", format="float", nullable=true, example=90.00)
+ *         nullable=true,
+ *         description="Precios para promociones tipo bundle_special (4 zonas)",
+ *         @OA\Property(property="pickup_capital", type="number", format="float", nullable=true, example=85.00),
+ *         @OA\Property(property="delivery_capital", type="number", format="float", nullable=true, example=90.00),
+ *         @OA\Property(property="pickup_interior", type="number", format="float", nullable=true, example=88.00),
+ *         @OA\Property(property="delivery_interior", type="number", format="float", nullable=true, example=93.00)
  *     ),
  *     @OA\Property(property="valid_from", type="string", format="date", nullable=true, example="2025-01-01"),
  *     @OA\Property(property="valid_until", type="string", format="date", nullable=true, example="2025-12-31"),
@@ -508,17 +507,30 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="latitude", type="number", format="float", nullable=true, example=14.6349),
  *     @OA\Property(property="longitude", type="number", format="float", nullable=true, example=-90.5069),
  *     @OA\Property(property="is_active", type="boolean", example=true),
- *     @OA\Property(property="delivery_active", type="boolean", example=true, description="Si tiene servicio de domicilio activo"),
+ *     @OA\Property(property="zone", type="string", enum={"capital","interior"}, example="capital", description="Zona de precios del restaurante"),
+ *     @OA\Property(property="delivery_active", type="boolean", example=true, description="Si tiene servicio de delivery activo"),
  *     @OA\Property(property="pickup_active", type="boolean", example=true, description="Si tiene servicio de pickup activo"),
- *     @OA\Property(property="schedule", type="object", nullable=true, description="Horario semanal del restaurante"),
+ *     @OA\Property(
+ *         property="schedule",
+ *         type="object",
+ *         nullable=true,
+ *         description="Horario semanal del restaurante por día",
+ *         @OA\Property(property="monday", type="object", @OA\Property(property="is_open", type="boolean"), @OA\Property(property="open", type="string", nullable=true, example="10:00"), @OA\Property(property="close", type="string", nullable=true, example="21:00")),
+ *         @OA\Property(property="tuesday", type="object", @OA\Property(property="is_open", type="boolean"), @OA\Property(property="open", type="string", nullable=true), @OA\Property(property="close", type="string", nullable=true)),
+ *         @OA\Property(property="wednesday", type="object", @OA\Property(property="is_open", type="boolean"), @OA\Property(property="open", type="string", nullable=true), @OA\Property(property="close", type="string", nullable=true)),
+ *         @OA\Property(property="thursday", type="object", @OA\Property(property="is_open", type="boolean"), @OA\Property(property="open", type="string", nullable=true), @OA\Property(property="close", type="string", nullable=true)),
+ *         @OA\Property(property="friday", type="object", @OA\Property(property="is_open", type="boolean"), @OA\Property(property="open", type="string", nullable=true), @OA\Property(property="close", type="string", nullable=true)),
+ *         @OA\Property(property="saturday", type="object", @OA\Property(property="is_open", type="boolean"), @OA\Property(property="open", type="string", nullable=true), @OA\Property(property="close", type="string", nullable=true)),
+ *         @OA\Property(property="sunday", type="object", @OA\Property(property="is_open", type="boolean"), @OA\Property(property="open", type="string", nullable=true), @OA\Property(property="close", type="string", nullable=true))
+ *     ),
  *     @OA\Property(property="estimated_delivery_time", type="integer", nullable=true, example=30, description="Tiempo estimado de entrega en minutos"),
  *     @OA\Property(property="estimated_pickup_time", type="integer", nullable=true, example=15, description="Tiempo estimado de pickup en minutos"),
  *     @OA\Property(property="minimum_order_amount", type="number", format="float", nullable=true, example=50.00, description="Monto mínimo de orden"),
  *     @OA\Property(property="has_geofence", type="boolean", example=true, description="Si tiene geofence configurado para delivery"),
  *     @OA\Property(property="is_open_now", type="boolean", example=true, description="Si está abierto en este momento"),
- *     @OA\Property(property="today_schedule", type="object", nullable=true, description="Horario de hoy"),
- *     @OA\Property(property="status_text", type="string", example="Abierto", description="Texto del estado actual"),
- *     @OA\Property(property="distance_km", type="number", format="float", nullable=true, example=2.45, description="Distancia en km (solo en búsqueda nearby)")
+ *     @OA\Property(property="today_schedule", type="string", nullable=true, example="10:00 - 21:00", description="Horario de hoy formateado como texto legible"),
+ *     @OA\Property(property="status_text", type="string", example="Delivery + Pickup", description="Texto de servicios disponibles"),
+ *     @OA\Property(property="distance_km", type="number", format="float", nullable=true, example=2.45, description="Distancia en km (solo cuando se envían coordenadas)")
  * )
  */
 abstract class Controller

@@ -71,8 +71,8 @@ describe('Customer Creation', function () {
             'first_name' => 'Nuevo',
             'last_name' => 'Cliente',
             'email' => 'nuevo@test.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
             'subway_card' => '1234567890',
             'birth_date' => '1990-05-15',
             'gender' => 'masculino',
@@ -94,8 +94,8 @@ describe('Customer Creation', function () {
         ]);
 
         $customer = Customer::where('email', 'nuevo@test.com')->first();
-        expect($customer->password)->not->toBe('password123');
-        expect(\Hash::check('password123', $customer->password))->toBeTrue();
+        expect($customer->password)->not->toBe('Password1!');
+        expect(\Hash::check('Password1!', $customer->password))->toBeTrue();
     });
 
     test('validates customer data', function (array $data, array $expectedErrors) {
@@ -111,8 +111,8 @@ describe('Customer Creation', function () {
                 'first_name' => 'Nuevo',
                 'last_name' => 'Cliente',
                 'email' => Customer::factory()->create(['email' => 'existing@test.com'])->email,
-                'password' => 'password123',
-                'password_confirmation' => 'password123',
+                'password' => 'Password1!',
+                'password_confirmation' => 'Password1!',
                 'subway_card' => '1234567890',
                 'birth_date' => '1990-05-15',
             ],
@@ -123,8 +123,8 @@ describe('Customer Creation', function () {
                 'first_name' => 'Nuevo',
                 'last_name' => 'Cliente',
                 'email' => 'nuevo@test.com',
-                'password' => 'password123',
-                'password_confirmation' => 'password123',
+                'password' => 'Password1!',
+                'password_confirmation' => 'Password1!',
                 'subway_card' => Customer::factory()->create(['subway_card' => '1234567890'])->subway_card,
                 'birth_date' => '1990-05-15',
             ],
@@ -190,8 +190,8 @@ describe('Customer Updates', function () {
             'email' => $customer->email,
             'subway_card' => $customer->subway_card,
             'birth_date' => $customer->birth_date->format('Y-m-d'),
-            'password' => 'newpassword123',
-            'password_confirmation' => 'newpassword123',
+            'password' => 'NewPass1!',
+            'password_confirmation' => 'NewPass1!',
         ];
 
         $response = $this->put("/customers/{$customer->id}", $updateData);
@@ -201,7 +201,7 @@ describe('Customer Updates', function () {
 
         $customer->refresh();
         expect($customer->password)->not->toBe($originalPassword);
-        expect(\Hash::check('newpassword123', $customer->password))->toBeTrue();
+        expect(\Hash::check('NewPass1!', $customer->password))->toBeTrue();
     });
 
     test('resets email verification when email is changed', function () {

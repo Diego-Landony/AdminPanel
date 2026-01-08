@@ -51,19 +51,11 @@ class UpdateProductRequest extends FormRequest
             'is_active' => 'boolean',
             'has_variants' => 'boolean',
 
-            // Campos de canje por puntos
-            'is_redeemable' => 'boolean',
-            'points_cost' => 'nullable|integer|min:1',
-
             // Precios del producto (requeridos si has_variants = false)
             'precio_pickup_capital' => 'required_if:has_variants,false|nullable|numeric|min:0',
             'precio_domicilio_capital' => 'required_if:has_variants,false|nullable|numeric|min:0',
             'precio_pickup_interior' => 'required_if:has_variants,false|nullable|numeric|min:0',
             'precio_domicilio_interior' => 'required_if:has_variants,false|nullable|numeric|min:0',
-
-            // Redención por puntos (solo para productos SIN variantes)
-            'is_redeemable' => 'boolean',
-            'points_cost' => 'nullable|integer|min:1',
 
             // Variantes (requeridas si has_variants = true)
             'variants' => [
@@ -95,8 +87,6 @@ class UpdateProductRequest extends FormRequest
             'variants.*.precio_domicilio_capital' => 'required_if:has_variants,true|numeric|min:0',
             'variants.*.precio_pickup_interior' => 'required_if:has_variants,true|numeric|min:0',
             'variants.*.precio_domicilio_interior' => 'required_if:has_variants,true|numeric|min:0',
-            'variants.*.is_redeemable' => 'boolean',
-            'variants.*.points_cost' => 'nullable|integer|min:1',
 
             // Secciones de personalización
             'sections' => 'nullable|array',

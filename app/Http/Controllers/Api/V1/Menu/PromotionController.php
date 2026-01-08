@@ -128,8 +128,16 @@ class PromotionController extends Controller
      *                             @OA\Property(property="valid_until", type="string", format="date", nullable=true, example="2024-12-31"),
      *                             @OA\Property(property="time_from", type="string", nullable=true, example="11:00"),
      *                             @OA\Property(property="time_until", type="string", nullable=true, example="15:00"),
-     *                             @OA\Property(property="special_price_capital", type="string", example="22.00"),
-     *                             @OA\Property(property="special_price_interior", type="string", example="24.00"),
+     *                             @OA\Property(property="special_price_pickup_capital", type="number", format="float", nullable=true, example=22.00),
+     *                             @OA\Property(property="special_price_delivery_capital", type="number", format="float", nullable=true, example=22.00),
+     *                             @OA\Property(property="special_price_pickup_interior", type="number", format="float", nullable=true, example=24.00),
+     *                             @OA\Property(property="special_price_delivery_interior", type="number", format="float", nullable=true, example=24.00),
+     *                             @OA\Property(property="discounted_prices", type="object", nullable=true,
+     *                                 @OA\Property(property="pickup_capital", type="number", format="float", nullable=true, example=22.00),
+     *                                 @OA\Property(property="delivery_capital", type="number", format="float", nullable=true, example=22.00),
+     *                                 @OA\Property(property="pickup_interior", type="number", format="float", nullable=true, example=24.00),
+     *                                 @OA\Property(property="delivery_interior", type="number", format="float", nullable=true, example=24.00)
+     *                             ),
      *                             @OA\Property(property="product", type="object",
      *                                 @OA\Property(property="id", type="integer", example=1),
      *                                 @OA\Property(property="name", type="string", example="Italian B.M.T."),
@@ -138,7 +146,7 @@ class PromotionController extends Controller
      *                         )
      *                     )
      *                 ),
-     *                 @OA\Property(property="now", type="object", nullable=true, description="Only present when ?today=1",
+     *                 @OA\Property(property="today", type="object", nullable=true, description="Only present when ?today=1",
      *                     @OA\Property(property="weekday", type="integer", example=2, description="Current weekday (1-7)"),
      *                     @OA\Property(property="weekday_name", type="string", example="Martes"),
      *                     @OA\Property(property="date", type="string", format="date", example="2024-01-15"),
@@ -215,7 +223,7 @@ class PromotionController extends Controller
                 7 => 'Domingo',
             ];
 
-            $response['data']['now'] = [
+            $response['data']['today'] = [
                 'weekday' => $currentWeekday,
                 'weekday_name' => $weekdayNames[$currentWeekday],
                 'date' => $now->toDateString(),
@@ -233,8 +241,8 @@ class PromotionController extends Controller
      * @OA\Get(
      *     path="/api/v1/menu/promotions/combinados",
      *     tags={"Menu"},
-     *     summary="Get bundle specials",
-     *     description="Returns active bundle special promotions valid now (Combinados).",
+     *     summary="Get bundle specials (Combinados)",
+     *     description="Returns active bundle special promotions valid now (Combinados). Filters by: is_active, valid_from/valid_until dates, time_from/time_until hours, and weekdays. Only returns promotions with all required items available.",
      *
      *     @OA\Response(
      *         response=200,
@@ -243,9 +251,46 @@ class PromotionController extends Controller
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="promotions", type="array",
+     *                 @OA\Property(property="promotions", type="array", description="List of active bundle specials",
      *
-     *                     @OA\Items(ref="#/components/schemas/Promotion")
+     *                     @OA\Items(type="object",
+     *
+     *                         @OA\Property(property="id", type="integer", example=5),
+     *                         @OA\Property(property="name", type="string", example="Combo Familiar"),
+     *                         @OA\Property(property="description", type="string", nullable=true, example="2 subs + 2 bebidas + papas"),
+     *                         @OA\Property(property="image_url", type="string", nullable=true),
+     *                         @OA\Property(property="type", type="string", example="bundle_special"),
+     *                         @OA\Property(property="prices", type="object", description="Prices by zone and service type",
+     *                             @OA\Property(property="pickup_capital", type="number", format="float", nullable=true, example=85.00),
+     *                             @OA\Property(property="delivery_capital", type="number", format="float", nullable=true, example=90.00),
+     *                             @OA\Property(property="pickup_interior", type="number", format="float", nullable=true, example=90.00),
+     *                             @OA\Property(property="delivery_interior", type="number", format="float", nullable=true, example=95.00)
+     *                         ),
+     *                         @OA\Property(property="valid_from", type="string", format="date", nullable=true, example="2024-01-01"),
+     *                         @OA\Property(property="valid_until", type="string", format="date", nullable=true, example="2024-12-31"),
+     *                         @OA\Property(property="time_from", type="string", nullable=true, example="11:00"),
+     *                         @OA\Property(property="time_until", type="string", nullable=true, example="22:00"),
+     *                         @OA\Property(property="weekdays", type="array", nullable=true, description="Days when available (1=Mon, 7=Sun). Null means all days.",
+     *
+     *                             @OA\Items(type="integer", example=1)
+     *                         ),
+     *
+     *                         @OA\Property(property="bundle_items", type="array", description="Items included in the bundle",
+     *
+     *                             @OA\Items(type="object",
+     *
+     *                                 @OA\Property(property="id", type="integer", example=1),
+     *                                 @OA\Property(property="name", type="string", example="Sub 15cm"),
+     *                                 @OA\Property(property="is_choice_group", type="boolean", example=true),
+     *                                 @OA\Property(property="quantity", type="integer", example=2),
+     *                                 @OA\Property(property="product", type="object", nullable=true),
+     *                                 @OA\Property(property="options", type="array", description="Available choices if is_choice_group=true",
+     *
+     *                                     @OA\Items(type="object")
+     *                                 )
+     *                             )
+     *                         )
+     *                     )
      *                 )
      *             )
      *         )

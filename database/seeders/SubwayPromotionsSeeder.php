@@ -181,8 +181,10 @@ class SubwayPromotionsSeeder extends Seeder
                         'product_id' => $product->id,
                         'variant_id' => $firstVariant->id,
                         'category_id' => $product->category_id,  // ✅ REQUERIDO
-                        'special_price_capital' => $precioSubDelDia,
-                        'special_price_interior' => $precioSubDelDia + 2,
+                        'special_price_pickup_capital' => $precioSubDelDia,
+                        'special_price_delivery_capital' => $precioSubDelDia + 5,
+                        'special_price_pickup_interior' => $precioSubDelDia + 2,
+                        'special_price_delivery_interior' => $precioSubDelDia + 7,
                         'service_type' => 'both',
                         'validity_type' => 'weekdays',
                         'weekdays' => $subData['days'],
@@ -408,8 +410,10 @@ class SubwayPromotionsSeeder extends Seeder
             'name' => 'verano chilero',
             'description' => 'Elige tu ensalada favorita + Pepsi lata a precio especial',
             'type' => 'bundle_special',
-            'special_bundle_price_capital' => 35.00,
-            'special_bundle_price_interior' => 37.00,
+            'special_bundle_price_pickup_capital' => 35.00,
+            'special_bundle_price_delivery_capital' => 38.00,
+            'special_bundle_price_pickup_interior' => 37.00,
+            'special_bundle_price_delivery_interior' => 40.00,
             'is_active' => true,
             'sort_order' => 7,
         ]);
@@ -454,6 +458,6 @@ class SubwayPromotionsSeeder extends Seeder
             ]);
         }
 
-        $this->command->line("      ✅ {$promotion->name} - Bundle Special creado (Q35 capital / Q37 interior)");
+        $this->command->line("      ✅ {$promotion->name} - Bundle Special creado (Pickup: Q35/Q37, Delivery: Q38/Q40)");
     }
 }

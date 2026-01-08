@@ -23,6 +23,7 @@ class RestaurantResource extends JsonResource
             'latitude' => $this->latitude ? (float) $this->latitude : null,
             'longitude' => $this->longitude ? (float) $this->longitude : null,
             'is_active' => $this->is_active,
+            'zone' => $this->price_location,
             'delivery_active' => $this->delivery_active,
             'pickup_active' => $this->pickup_active,
             'schedule' => $this->schedule,

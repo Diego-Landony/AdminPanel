@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Menu\Combo;
 use App\Models\Menu\Product;
 use App\Models\Menu\ProductVariant;
+use App\Models\Menu\Promotion;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +19,8 @@ class OrderItem extends Model
         'product_id',
         'variant_id',
         'combo_id',
+        'promotion_id',
+        'promotion_snapshot',
         'product_snapshot',
         'quantity',
         'unit_price',
@@ -32,6 +35,7 @@ class OrderItem extends Model
     {
         return [
             'product_snapshot' => 'array',
+            'promotion_snapshot' => 'array',
             'selected_options' => 'array',
             'combo_selections' => 'array',
             'unit_price' => 'decimal:2',
@@ -59,6 +63,11 @@ class OrderItem extends Model
     public function combo(): BelongsTo
     {
         return $this->belongsTo(Combo::class);
+    }
+
+    public function promotion(): BelongsTo
+    {
+        return $this->belongsTo(Promotion::class)->withTrashed();
     }
 
     public function isProduct(): bool

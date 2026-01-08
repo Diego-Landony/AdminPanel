@@ -32,7 +32,6 @@ class Customer extends Authenticatable implements ActivityLoggable, MustVerifyEm
         'terms_accepted_at',
         'password',
         'google_id',
-        'avatar',
         'oauth_provider',
         'subway_card',
         'birth_date',

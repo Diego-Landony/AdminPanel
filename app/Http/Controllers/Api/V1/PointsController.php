@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Points\PointsBalanceResource;
 use App\Http\Resources\Api\V1\Points\PointsTransactionResource;
 use App\Models\CustomerPointsTransaction;
+use App\Models\PointsSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -162,14 +163,19 @@ class PointsController extends Controller
      *     summary="Ver información de expiración de puntos",
      *     description="Retorna información sobre cuándo expirarán los puntos del cliente.
      *
+     * **Métodos de expiración:**
+     * - `total`: Todos los puntos expiran de golpe si hay X meses sin actividad
+     * - `fifo`: Solo expiran los puntos más antiguos primero
+     *
      * **Regla de expiración:**
-     * - Los puntos expiran después de 6 meses de inactividad
+     * - Los puntos expiran después de X meses de inactividad (configurable en admin)
      * - 'Actividad' se define como cualquier transacción de puntos (ganar o canjear)
-     * - Si el cliente tiene puntos y no ha tenido actividad en 6 meses, los puntos se expiran automáticamente
      *
      * **Campos importantes:**
+     * - `expiration_method`: método de expiración configurado (total o fifo)
+     * - `expiration_months`: meses de inactividad configurados
      * - `will_expire`: true si los puntos están en riesgo de expirar
-     * - `expires_at`: fecha cuando expirarán (6 meses después de última actividad)
+     * - `expires_at`: fecha cuando expirarán
      * - `days_until_expiration`: días restantes antes de expiración
      * - `warning_level`: 'critical' (≤7 días), 'warning' (≤30 días), 'safe' (>30 días)",
      *     security={{"sanctum": {}}},
@@ -182,6 +188,8 @@ class PointsController extends Controller
      *
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="points_balance", type="integer", example=250, description="Puntos actuales que podrían expirar"),
+     *                 @OA\Property(property="expiration_method", type="string", enum={"total","fifo"}, example="total", description="Método de expiración configurado"),
+     *                 @OA\Property(property="expiration_months", type="integer", example=6, description="Meses de inactividad antes de expirar"),
      *                 @OA\Property(property="will_expire", type="boolean", example=true, description="True si los puntos expirarán eventualmente"),
      *                 @OA\Property(property="expires_at", type="string", format="date-time", nullable=true, example="2026-06-15T10:30:00Z", description="Fecha de expiración (null si no hay puntos)"),
      *                 @OA\Property(property="days_until_expiration", type="integer", nullable=true, example=45, description="Días hasta expiración (null si no aplica)"),
@@ -199,25 +207,28 @@ class PointsController extends Controller
     {
         $customer = $request->user();
         $points = $customer->points ?? 0;
+        $settings = PointsSetting::get();
 
         // Si no tiene puntos, no hay nada que expire
         if ($points <= 0) {
             return response()->json([
                 'data' => [
                     'points_balance' => 0,
+                    'expiration_method' => $settings->expiration_method,
+                    'expiration_months' => $settings->expiration_months,
                     'will_expire' => false,
                     'expires_at' => null,
                     'days_until_expiration' => null,
-                    'last_activity_at' => $customer->points_last_activity_at,
+                    'last_activity_at' => $customer->points_last_activity_at?->toIso8601String(),
                     'warning_level' => 'none',
                     'message' => 'No tienes puntos acumulados actualmente.',
                 ],
             ]);
         }
 
-        // Calcular fecha de expiración (6 meses después de última actividad)
+        // Calcular fecha de expiración usando meses configurados
         $lastActivity = $customer->points_last_activity_at ?? $customer->created_at;
-        $expiresAt = $lastActivity->copy()->addMonths(6);
+        $expiresAt = $lastActivity->copy()->addMonths($settings->expiration_months);
         $now = now();
 
         // Si ya pasó la fecha de expiración, el job los expirará pronto
@@ -225,6 +236,8 @@ class PointsController extends Controller
             return response()->json([
                 'data' => [
                     'points_balance' => $points,
+                    'expiration_method' => $settings->expiration_method,
+                    'expiration_months' => $settings->expiration_months,
                     'will_expire' => true,
                     'expires_at' => $expiresAt->toIso8601String(),
                     'days_until_expiration' => 0,
@@ -244,16 +257,22 @@ class PointsController extends Controller
             default => 'safe',
         };
 
-        // Mensaje amigable
+        // Mensaje amigable según método de expiración
+        $methodDescription = $settings->expiration_method === 'total'
+            ? 'todos tus puntos expirarán'
+            : 'tus puntos más antiguos expirarán';
+
         $message = match ($warningLevel) {
-            'critical' => "¡Atención! Tus {$points} puntos expirarán en {$daysUntilExpiration} días. Realiza una compra para conservarlos.",
-            'warning' => "Tus {$points} puntos expirarán en {$daysUntilExpiration} días si no realizas una compra.",
+            'critical' => "¡Atención! En {$daysUntilExpiration} días {$methodDescription}. Realiza una compra para conservarlos.",
+            'warning' => "En {$daysUntilExpiration} días {$methodDescription} si no realizas una compra.",
             default => "Tus puntos están seguros. Expirarán en {$daysUntilExpiration} días sin actividad.",
         };
 
         return response()->json([
             'data' => [
                 'points_balance' => $points,
+                'expiration_method' => $settings->expiration_method,
+                'expiration_months' => $settings->expiration_months,
                 'will_expire' => true,
                 'expires_at' => $expiresAt->toIso8601String(),
                 'days_until_expiration' => $daysUntilExpiration,

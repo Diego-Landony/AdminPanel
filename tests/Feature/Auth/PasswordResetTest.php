@@ -60,8 +60,8 @@ describe('Password Reset Execution', function () {
             $response = $this->post('/reset-password', [
                 'token' => $notification->token,
                 'email' => $user->email,
-                'password' => 'password',
-                'password_confirmation' => 'password',
+                'password' => 'Password1!',
+                'password_confirmation' => 'Password1!',
             ]);
 
             $response
@@ -80,8 +80,8 @@ describe('Password Reset Validation', function () {
         $response = $this->post('/reset-password', [
             'token' => 'invalid-token-12345',
             'email' => $user->email,
-            'password' => 'newpassword',
-            'password_confirmation' => 'newpassword',
+            'password' => 'NewPass1!',
+            'password_confirmation' => 'NewPass1!',
         ]);
 
         $response->assertSessionHasErrors(['email']);
@@ -98,8 +98,8 @@ describe('Password Reset Validation', function () {
             $response = $this->post('/reset-password', [
                 'token' => $notification->token,
                 'email' => $user->email,
-                'password' => 'newpassword',
-                'password_confirmation' => 'differentpassword',
+                'password' => 'NewPass1!',
+                'password_confirmation' => 'DifferentPass1!',
             ]);
 
             $response->assertSessionHasErrors(['password']);
@@ -120,8 +120,8 @@ describe('Password Reset Validation', function () {
             $response = $this->post('/reset-password', [
                 'token' => $notification->token,
                 'email' => $otherUser->email,
-                'password' => 'newpassword',
-                'password_confirmation' => 'newpassword',
+                'password' => 'NewPass1!',
+                'password_confirmation' => 'NewPass1!',
             ]);
 
             $response->assertSessionHasErrors(['email']);

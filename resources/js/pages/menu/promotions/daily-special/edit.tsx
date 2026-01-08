@@ -49,9 +49,10 @@ interface PromotionItem {
     product_id: number | null;
     category_id: number | null;
     variant_id: number | null;
-    special_price_capital: number | null;
-    special_price_interior: number | null;
-    service_type: 'both' | 'delivery_only' | 'pickup_only' | null;
+    special_price_pickup_capital: number | null;
+    special_price_delivery_capital: number | null;
+    special_price_pickup_interior: number | null;
+    special_price_delivery_interior: number | null;
     validity_type: 'permanent' | 'date_range' | 'time_range' | 'date_time_range' | 'weekdays' | null;
     valid_from: string | null;
     valid_until: string | null;
@@ -107,9 +108,10 @@ interface LocalItem {
     product_id: string;
     item_type: 'product' | 'combo' | null;
     variant_id: number | null;
-    special_price_capital: string;
-    special_price_interior: string;
-    service_type: 'both' | 'delivery_only' | 'pickup_only';
+    special_price_pickup_capital: string;
+    special_price_delivery_capital: string;
+    special_price_pickup_interior: string;
+    special_price_delivery_interior: string;
     weekdays: number[];
     has_schedule: boolean;
     valid_from: string;
@@ -139,9 +141,10 @@ export default function EditPromotion({ promotion, products, combos }: EditPromo
                 product_id: item.product_id ? String(item.product_id) : '',
                 item_type: isCombo ? 'combo' : 'product',
                 variant_id: item.variant_id,
-                special_price_capital: String(item.special_price_capital || ''),
-                special_price_interior: String(item.special_price_interior || ''),
-                service_type: item.service_type || 'both',
+                special_price_pickup_capital: String(item.special_price_pickup_capital || ''),
+                special_price_delivery_capital: String(item.special_price_delivery_capital || ''),
+                special_price_pickup_interior: String(item.special_price_pickup_interior || ''),
+                special_price_delivery_interior: String(item.special_price_delivery_interior || ''),
                 weekdays: item.weekdays || [],
                 has_schedule: hasDates || hasTimes,
                 valid_from: item.valid_from || '',
@@ -188,9 +191,10 @@ export default function EditPromotion({ promotion, products, combos }: EditPromo
             product_id: '',
             item_type: null,
             variant_id: null,
-            special_price_capital: '',
-            special_price_interior: '',
-            service_type: 'both',
+            special_price_pickup_capital: '',
+            special_price_delivery_capital: '',
+            special_price_pickup_interior: '',
+            special_price_delivery_interior: '',
             weekdays: [],
             has_schedule: false,
             valid_from: '',
@@ -215,7 +219,9 @@ export default function EditPromotion({ promotion, products, combos }: EditPromo
 
     const updateProductOrCombo = (index: number, value: number | null, type: 'product' | 'combo') => {
         const currentItem = localItems[index];
-        const hasData = currentItem.variant_id || currentItem.special_price_capital || currentItem.special_price_interior;
+        const hasData = currentItem.variant_id ||
+            currentItem.special_price_pickup_capital || currentItem.special_price_delivery_capital ||
+            currentItem.special_price_pickup_interior || currentItem.special_price_delivery_interior;
 
         const performUpdate = () => {
             const updated = [...localItems];
@@ -224,8 +230,10 @@ export default function EditPromotion({ promotion, products, combos }: EditPromo
                 product_id: value ? String(value) : '',
                 item_type: type,
                 variant_id: null,
-                special_price_capital: '',
-                special_price_interior: '',
+                special_price_pickup_capital: '',
+                special_price_delivery_capital: '',
+                special_price_pickup_interior: '',
+                special_price_delivery_interior: '',
             };
             setLocalItems(updated);
         };
@@ -282,8 +290,10 @@ export default function EditPromotion({ promotion, products, combos }: EditPromo
                 ...item,
                 category_id: entity?.category_id || 0,
                 validity_type,
-                special_price_capital: parseFloat(item.special_price_capital) || 0,
-                special_price_interior: parseFloat(item.special_price_interior) || 0,
+                special_price_pickup_capital: parseFloat(item.special_price_pickup_capital) || 0,
+                special_price_delivery_capital: parseFloat(item.special_price_delivery_capital) || 0,
+                special_price_pickup_interior: parseFloat(item.special_price_pickup_interior) || 0,
+                special_price_delivery_interior: parseFloat(item.special_price_delivery_interior) || 0,
             };
         });
 
@@ -413,71 +423,77 @@ export default function EditPromotion({ promotion, products, combos }: EditPromo
                                     />
                                 )}
 
-                            {/* Precios */}
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <FormField label="Precio Capital" error={errors[`items.${index}.special_price_capital`]} required>
-                                    <div className="relative">
-                                        <span className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={item.special_price_capital}
-                                            onChange={(e) => updateItem(index, 'special_price_capital', e.target.value)}
-                                            className="pl-7"
-                                            placeholder={PLACEHOLDERS.price}
-                                        />
-                                    </div>
-                                </FormField>
+                            {/* Precios - Capital */}
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium text-muted-foreground">Precios Capital</p>
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <FormField label="Pickup Capital" error={errors[`items.${index}.special_price_pickup_capital`]} required>
+                                        <div className="relative">
+                                            <Store className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={item.special_price_pickup_capital}
+                                                onChange={(e) => updateItem(index, 'special_price_pickup_capital', e.target.value)}
+                                                className="pl-9"
+                                                placeholder={PLACEHOLDERS.price}
+                                            />
+                                        </div>
+                                    </FormField>
 
-                                <FormField label="Precio Interior" error={errors[`items.${index}.special_price_interior`]} required>
-                                    <div className="relative">
-                                        <span className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">{CURRENCY.symbol}</span>
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={item.special_price_interior}
-                                            onChange={(e) => updateItem(index, 'special_price_interior', e.target.value)}
-                                            className="pl-7"
-                                            placeholder={PLACEHOLDERS.price}
-                                        />
-                                    </div>
-                                </FormField>
+                                    <FormField label="Delivery Capital" error={errors[`items.${index}.special_price_delivery_capital`]} required>
+                                        <div className="relative">
+                                            <Truck className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={item.special_price_delivery_capital}
+                                                onChange={(e) => updateItem(index, 'special_price_delivery_capital', e.target.value)}
+                                                className="pl-9"
+                                                placeholder={PLACEHOLDERS.price}
+                                            />
+                                        </div>
+                                    </FormField>
+                                </div>
                             </div>
 
-                            {/* Tipo de Servicio */}
-                            <FormField label="Tipo de servicio" error={errors[`items.${index}.service_type`]} required>
-                                <Select
-                                    value={item.service_type}
-                                    onValueChange={(value: 'both' | 'delivery_only' | 'pickup_only') => updateItem(index, 'service_type', value)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="both">
-                                            <div className="flex items-center gap-2">
-                                                <Store className="h-4 w-4" />
-                                                <Truck className="h-4 w-4" />
-                                                <span>Delivery y Pickup</span>
-                                            </div>
-                                        </SelectItem>
-                                        <SelectItem value="delivery_only">
-                                            <div className="flex items-center gap-2">
-                                                <Truck className="h-4 w-4" />
-                                                <span>Solo Delivery</span>
-                                            </div>
-                                        </SelectItem>
-                                        <SelectItem value="pickup_only">
-                                            <div className="flex items-center gap-2">
-                                                <Store className="h-4 w-4" />
-                                                <span>Solo Pickup</span>
-                                            </div>
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </FormField>
+                            {/* Precios - Interior */}
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium text-muted-foreground">Precios Interior</p>
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <FormField label="Pickup Interior" error={errors[`items.${index}.special_price_pickup_interior`]} required>
+                                        <div className="relative">
+                                            <Store className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={item.special_price_pickup_interior}
+                                                onChange={(e) => updateItem(index, 'special_price_pickup_interior', e.target.value)}
+                                                className="pl-9"
+                                                placeholder={PLACEHOLDERS.price}
+                                            />
+                                        </div>
+                                    </FormField>
+
+                                    <FormField label="Delivery Interior" error={errors[`items.${index}.special_price_delivery_interior`]} required>
+                                        <div className="relative">
+                                            <Truck className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={item.special_price_delivery_interior}
+                                                onChange={(e) => updateItem(index, 'special_price_delivery_interior', e.target.value)}
+                                                className="pl-9"
+                                                placeholder={PLACEHOLDERS.price}
+                                            />
+                                        </div>
+                                    </FormField>
+                                </div>
+                            </div>
 
                             {/* VIGENCIA */}
                             <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">

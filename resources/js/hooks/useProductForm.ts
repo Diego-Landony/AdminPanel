@@ -24,8 +24,6 @@ export interface ProductFormData {
     description: string;
     is_active: boolean;
     has_variants: boolean;
-    is_redeemable: boolean;
-    points_cost: string;
     precio_pickup_capital: string;
     precio_domicilio_capital: string;
     precio_pickup_interior: string;
@@ -71,8 +69,6 @@ const getInitialFormData = (product?: Product): ProductFormData => {
             description: '',
             is_active: true,
             has_variants: false,
-            is_redeemable: false,
-            points_cost: '',
             precio_pickup_capital: '',
             precio_domicilio_capital: '',
             precio_pickup_interior: '',
@@ -89,8 +85,6 @@ const getInitialFormData = (product?: Product): ProductFormData => {
         precio_domicilio_capital: String(v.precio_domicilio_capital || ''),
         precio_pickup_interior: String(v.precio_pickup_interior || ''),
         precio_domicilio_interior: String(v.precio_domicilio_interior || ''),
-        is_redeemable: v.is_redeemable || false,
-        points_cost: String(v.points_cost || ''),
     }));
 
     return {
@@ -99,8 +93,6 @@ const getInitialFormData = (product?: Product): ProductFormData => {
         description: product.description || '',
         is_active: product.is_active,
         has_variants: product.has_variants,
-        is_redeemable: product.is_redeemable || false,
-        points_cost: product.points_cost?.toString() || '',
         precio_pickup_capital: product.precio_pickup_capital?.toString() || '',
         precio_domicilio_capital: product.precio_domicilio_capital?.toString() || '',
         precio_pickup_interior: product.precio_pickup_interior?.toString() || '',
@@ -174,17 +166,6 @@ export function useProductForm({
             case 'category_id':
                 if (typeof value === 'string' && (!value || value.trim() === '')) {
                     return 'La categoría es requerida';
-                }
-                return null;
-            case 'points_cost':
-                if (typeof value === 'string' && value !== '') {
-                    const numValue = parseInt(value);
-                    if (isNaN(numValue)) {
-                        return 'Debe ser un número entero válido';
-                    }
-                    if (numValue < 0) {
-                        return 'El costo en puntos debe ser mayor o igual a 0';
-                    }
                 }
                 return null;
             case 'precio_pickup_capital':
@@ -314,8 +295,6 @@ export function useProductForm({
             data.append('description', formData.description || '');
             data.append('is_active', formData.is_active ? '1' : '0');
             data.append('has_variants', formData.has_variants ? '1' : '0');
-            data.append('is_redeemable', formData.is_redeemable ? '1' : '0');
-            data.append('points_cost', formData.points_cost || '');
             data.append('precio_pickup_capital', formData.precio_pickup_capital || '');
             data.append('precio_domicilio_capital', formData.precio_domicilio_capital || '');
             data.append('precio_pickup_interior', formData.precio_pickup_interior || '');
@@ -344,8 +323,6 @@ export function useProductForm({
                 data.append(`variants[${index}][precio_domicilio_capital]`, variant.precio_domicilio_capital);
                 data.append(`variants[${index}][precio_pickup_interior]`, variant.precio_pickup_interior);
                 data.append(`variants[${index}][precio_domicilio_interior]`, variant.precio_domicilio_interior);
-                data.append(`variants[${index}][is_redeemable]`, variant.is_redeemable ? '1' : '0');
-                data.append(`variants[${index}][points_cost]`, variant.points_cost || '');
             });
 
             const url = isEdit ? `/menu/products/${product!.id}` : route('menu.products.store');

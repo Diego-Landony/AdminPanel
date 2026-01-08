@@ -173,7 +173,8 @@ class DeviceController extends Controller
      *     ),
      *
      *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Forbidden - device belongs to another customer")
+     *     @OA\Response(response=403, description="Forbidden - device belongs to another customer"),
+     *     @OA\Response(response=404, description="Device not found")
      * )
      */
     public function destroy(Request $request, CustomerDevice $device): JsonResponse

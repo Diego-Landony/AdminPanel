@@ -218,6 +218,7 @@ export default function TwoForOneIndex({ promotions, stats, filters }: Promotion
                 isDeleting={deletingPromotion !== null}
                 entityName={selectedPromotion?.name || ''}
                 entityType="Promoción 2x1"
+                customMessage={`¿Estás seguro de que quieres archivar la promoción "${selectedPromotion?.name || ''}"? La promoción será desactivada y archivada, pero seguirá almacenada para reportería.`}
             />
         </AppLayout>
     );

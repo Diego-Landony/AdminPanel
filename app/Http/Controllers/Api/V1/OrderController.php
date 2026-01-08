@@ -85,7 +85,7 @@ class OrderController extends Controller
      *             @OA\Property(
      *                 property="payment_method",
      *                 type="string",
-     *                 enum={"cash", "card", "online"},
+     *                 enum={"cash", "card"},
      *                 description="Payment method",
      *                 example="cash"
      *             ),

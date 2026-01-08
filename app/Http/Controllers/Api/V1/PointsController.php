@@ -39,7 +39,7 @@ class PointsController extends Controller
      *                 @OA\Property(property="points_updated_at", type="string", format="date-time", example="2025-12-10T15:30:00Z"),
      *                 @OA\Property(property="points_value_in_currency", type="number", format="float", example=25.00, description="Valor en Quetzales (Q)"),
      *                 @OA\Property(property="conversion_rate", type="object",
-     *                     @OA\Property(property="points_per_quetzal_spent", type="integer", example=10, description="Puntos ganados por cada Q1 gastado"),
+     *                     @OA\Property(property="quetzales_per_point", type="integer", example=10, description="Cuántos quetzales equivale a 1 punto al canjear"),
      *                     @OA\Property(property="points_value", type="number", format="float", example=0.10, description="Valor en Q de cada punto")
      *                 )
      *             )

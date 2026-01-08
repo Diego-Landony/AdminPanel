@@ -9,7 +9,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CategoryCombobox } from '@/components/CategoryCombobox';
 import { ComboItemCard } from '@/components/combos/ComboItemCard';
 import { FormSection } from '@/components/form-section';
-import { ImageUpload } from '@/components/ImageUpload';
+import { ImageCropperUpload } from '@/components/ImageCropperUpload';
 import { PriceFields } from '@/components/PriceFields';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -149,11 +149,13 @@ export function ComboFormFields({
                                 />
                             </FormField>
 
-                            <ImageUpload
+                            <ImageCropperUpload
                                 label="Imagen del Combo"
                                 currentImage={imagePreview}
-                                onImageChange={onImageChange}
+                                onImageChange={(file) => onImageChange(file, null)}
                                 error={errors.image}
+                                aspectRatio={1}
+                                aspectLabel="1:1"
                             />
                         </div>
                     </FormSection>

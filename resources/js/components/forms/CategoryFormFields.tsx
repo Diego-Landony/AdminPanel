@@ -4,7 +4,7 @@
  */
 
 import { FormSection } from '@/components/form-section';
-import { ImageUpload } from '@/components/ImageUpload';
+import { ImageCropperUpload } from '@/components/ImageCropperUpload';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
@@ -88,11 +88,13 @@ export function CategoryFormFields({
                                 />
                             </FormField>
 
-                            <ImageUpload
+                            <ImageCropperUpload
                                 label="Imagen"
                                 currentImage={imagePreview}
-                                onImageChange={onImageChange}
+                                onImageChange={(file) => onImageChange(file, null)}
                                 error={errors.image}
+                                aspectRatio={16 / 9}
+                                aspectLabel="16:9"
                             />
                         </div>
                     </FormSection>

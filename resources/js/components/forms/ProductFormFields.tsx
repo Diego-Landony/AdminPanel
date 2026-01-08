@@ -5,7 +5,7 @@
 
 import { CategoryCombobox } from '@/components/CategoryCombobox';
 import { FormSection } from '@/components/form-section';
-import { ImageUpload } from '@/components/ImageUpload';
+import { ImageCropperUpload } from '@/components/ImageCropperUpload';
 import { PriceFields } from '@/components/PriceFields';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -96,11 +96,13 @@ export function ProductFormFields({
                                 />
                             </FormField>
 
-                            <ImageUpload
+                            <ImageCropperUpload
                                 label="Imagen"
                                 currentImage={imagePreview}
-                                onImageChange={onImageChange}
+                                onImageChange={(file) => onImageChange(file, null)}
                                 error={errors.image}
+                                aspectRatio={1}
+                                aspectLabel="1:1"
                             />
                         </div>
                     </FormSection>

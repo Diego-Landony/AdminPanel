@@ -1,4 +1,4 @@
-import { Label } from '@/components/ui/label';
+import { FormField } from '@/components/ui/form-field';
 import {
     Select,
     SelectContent,
@@ -6,7 +6,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Award } from 'lucide-react';
 
 export interface BadgeType {
     id: number;
@@ -21,45 +20,31 @@ interface BadgeTypeSelectorProps {
     onChange: (value: number | null) => void;
     badgeTypes: BadgeType[];
     error?: string;
-    label?: string;
-    description?: string;
-    showLabels?: boolean;
 }
 
-export function BadgeTypeSelector({
-    value,
-    onChange,
-    badgeTypes,
-    error,
-    label = 'Insignia de promoción',
-    description = 'Selecciona una insignia para mostrar en los productos de esta promoción',
-    showLabels = true,
-}: BadgeTypeSelectorProps) {
+export function BadgeTypeSelector({ value, onChange, badgeTypes, error }: BadgeTypeSelectorProps) {
     const selectedBadge = badgeTypes.find((b) => b.id === value);
+    const activeBadges = badgeTypes.filter((b) => b.is_active);
 
     return (
-        <div className="space-y-2">
-            {showLabels && <Label>{label}</Label>}
-            {showLabels && description && (
-                <p className="text-muted-foreground text-sm">{description}</p>
-            )}
-
-            <Select
-                value={value?.toString() || 'none'}
-                onValueChange={(val) => onChange(val === 'none' ? null : parseInt(val, 10))}
-            >
-                <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Sin insignia (opcional)" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="none">Sin insignia</SelectItem>
-                    {badgeTypes
-                        .filter((b) => b.is_active)
-                        .map((badge) => (
+        <FormField label="Insignia" error={error} description="Se mostrará en los productos con esta promoción">
+            <div className="flex items-center gap-3">
+                <Select
+                    value={value?.toString() || 'none'}
+                    onValueChange={(val) => onChange(val === 'none' ? null : parseInt(val, 10))}
+                >
+                    <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="Sin insignia" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="none">
+                            <span className="text-muted-foreground">Sin insignia</span>
+                        </SelectItem>
+                        {activeBadges.map((badge) => (
                             <SelectItem key={badge.id} value={badge.id.toString()}>
                                 <div className="flex items-center gap-2">
                                     <span
-                                        className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                                        className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
                                         style={{
                                             backgroundColor: badge.color,
                                             color: badge.text_color,
@@ -70,28 +55,21 @@ export function BadgeTypeSelector({
                                 </div>
                             </SelectItem>
                         ))}
-                </SelectContent>
-            </Select>
+                    </SelectContent>
+                </Select>
 
-            {selectedBadge && (
-                <div className="bg-muted/30 mt-3 rounded-lg border p-3">
-                    <div className="flex items-center gap-2">
-                        <Award className="text-muted-foreground h-4 w-4" />
-                        <span className="text-muted-foreground text-sm">Vista previa:</span>
-                        <span
-                            className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                            style={{
-                                backgroundColor: selectedBadge.color,
-                                color: selectedBadge.text_color,
-                            }}
-                        >
-                            {selectedBadge.name}
-                        </span>
-                    </div>
-                </div>
-            )}
-
-            {error && <p className="text-destructive text-sm">{error}</p>}
-        </div>
+                {selectedBadge && (
+                    <span
+                        className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                        style={{
+                            backgroundColor: selectedBadge.color,
+                            color: selectedBadge.text_color,
+                        }}
+                    >
+                        {selectedBadge.name}
+                    </span>
+                )}
+            </div>
+        </FormField>
     );
 }

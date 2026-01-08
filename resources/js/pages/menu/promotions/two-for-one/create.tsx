@@ -1,6 +1,6 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { router, useForm } from '@inertiajs/react';
-import { Award, Package, Plus, Store } from 'lucide-react';
+import { Package, Plus, Store } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
@@ -12,7 +12,6 @@ import { ConfirmationDialog } from '@/components/promotions/ConfirmationDialog';
 import { PromotionItemEditor } from '@/components/promotions/PromotionItemEditor';
 import { CreatePageSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -92,7 +91,6 @@ export default function CreateTwoForOnePromotion({ products, categories, combos,
         time_from: '',
         time_until: '',
         badge_type_id: null as number | null,
-        show_badge_on_menu: true,
     });
 
     const [localItems, setLocalItems] = useState<LocalTwoForOneItem[]>([
@@ -272,16 +270,20 @@ export default function CreateTwoForOnePromotion({ products, categories, combos,
             return [...productItems, ...comboItems];
         });
 
-        router.post(route('menu.promotions.store'), {
+        const submitData: Record<string, unknown> = {
             is_active: data.is_active,
             name: data.name,
             description: data.description,
             type: data.type,
-            badge_type_id: data.badge_type_id,
-            show_badge_on_menu: data.show_badge_on_menu,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            items: expandedItems as any,
-        });
+            items: expandedItems,
+        };
+
+        if (data.badge_type_id) {
+            submitData.badge_type_id = data.badge_type_id;
+            submitData.show_badge_on_menu = true;
+        }
+
+        router.post(route('menu.promotions.store'), submitData);
     };
 
     const getItemError = (index: number, field: string) => {
@@ -335,38 +337,15 @@ export default function CreateTwoForOnePromotion({ products, categories, combos,
                             rows={3}
                         />
                     </FormField>
+
+                    <BadgeTypeSelector
+                        value={data.badge_type_id}
+                        onChange={(value) => setData('badge_type_id', value)}
+                        badgeTypes={badgeTypes}
+                        error={errors.badge_type_id}
+                    />
                 </div>
             </FormSection>
-
-            {/* Insignia/Badge */}
-            <div className="rounded-lg border bg-card p-6">
-                <FormSection
-                    icon={Award}
-                    title="Insignia"
-                    description="Selecciona una insignia para mostrar en los productos de esta promoción"
-                >
-                    <div className="space-y-4">
-                        <BadgeTypeSelector
-                            value={data.badge_type_id}
-                            onChange={(value) => setData('badge_type_id', value)}
-                            badgeTypes={badgeTypes}
-                            error={errors.badge_type_id}
-                            showLabels={false}
-                        />
-
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="show_badge_on_menu"
-                                checked={data.show_badge_on_menu}
-                                onCheckedChange={(checked) => setData('show_badge_on_menu', checked as boolean)}
-                            />
-                            <Label htmlFor="show_badge_on_menu" className="cursor-pointer text-sm font-medium leading-none">
-                                Mostrar insignia en el menú
-                            </Label>
-                        </div>
-                    </div>
-                </FormSection>
-            </div>
 
             {hasInactiveProducts && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">

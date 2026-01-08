@@ -1,6 +1,6 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { router } from '@inertiajs/react';
-import { Award, Banknote, Image, Package, Plus, Store, Truck } from 'lucide-react';
+import { Banknote, Image, Package, Plus, Store } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { route } from 'ziggy-js';
 
@@ -15,7 +15,6 @@ import { PromotionItemEditor } from '@/components/promotions/PromotionItemEditor
 import { EditPageSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -225,7 +224,6 @@ export default function EditPercentagePromotion({ promotion, products, categorie
         time_from: firstItem?.time_from || '',
         time_until: firstItem?.time_until || '',
         badge_type_id: promotion.badge_type_id,
-        show_badge_on_menu: promotion.show_badge_on_menu ?? true,
     });
 
     const [localItems, setLocalItems] = useState<LocalPromotionItem[]>(() => groupPromotionItems(promotion.items, products, combos, categories));
@@ -390,8 +388,8 @@ export default function EditPercentagePromotion({ promotion, products, categorie
         formDataObj.append('type', formData.type);
         if (formData.badge_type_id) {
             formDataObj.append('badge_type_id', String(formData.badge_type_id));
+            formDataObj.append('show_badge_on_menu', '1');
         }
-        formDataObj.append('show_badge_on_menu', formData.show_badge_on_menu ? '1' : '0');
 
         // Agregar items
         expandedItems.forEach((item, index) => {
@@ -484,6 +482,13 @@ export default function EditPercentagePromotion({ promotion, products, categorie
                                         rows={3}
                                     />
                                 </FormField>
+
+                                <BadgeTypeSelector
+                                    value={formData.badge_type_id}
+                                    onChange={(value) => setFormData({ ...formData, badge_type_id: value })}
+                                    badgeTypes={badgeTypes}
+                                    error={errors.badge_type_id}
+                                />
                             </div>
                         </FormSection>
                     </CardContent>
@@ -498,38 +503,6 @@ export default function EditPercentagePromotion({ promotion, products, categorie
                                 onImageChange={(file) => setImage(file)}
                                 error={errors.image}
                             />
-                        </FormSection>
-                    </CardContent>
-                </Card>
-
-                {/* INSIGNIA/BADGE */}
-                <Card>
-                    <CardContent className="pt-6">
-                        <FormSection
-                            icon={Award}
-                            title="Insignia"
-                            description="Selecciona una insignia para mostrar en los productos de esta promoción"
-                        >
-                            <div className="space-y-4">
-                                <BadgeTypeSelector
-                                    value={formData.badge_type_id}
-                                    onChange={(value) => setFormData({ ...formData, badge_type_id: value })}
-                                    badgeTypes={badgeTypes}
-                                    error={errors.badge_type_id}
-                                    showLabels={false}
-                                />
-
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="show_badge_on_menu"
-                                        checked={formData.show_badge_on_menu}
-                                        onCheckedChange={(checked) => setFormData({ ...formData, show_badge_on_menu: checked as boolean })}
-                                    />
-                                    <Label htmlFor="show_badge_on_menu" className="cursor-pointer text-sm font-medium leading-none">
-                                        Mostrar insignia en el menú
-                                    </Label>
-                                </div>
-                            </div>
                         </FormSection>
                     </CardContent>
                 </Card>

@@ -12,7 +12,6 @@ import { ImageUpload } from '@/components/ImageUpload';
 import { CreateProductsSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,7 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { WeekdaySelector } from '@/components/WeekdaySelector';
 import { CURRENCY, FORM_SECTIONS, NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 import { generateUniqueItemId, prepareComboDataForSubmit, validateMinimumComboStructure } from '@/utils/comboHelpers';
-import { Award, Banknote, Calendar, Gift, Image, Package, Plus } from 'lucide-react';
+import { Banknote, Calendar, Gift, Image, Package, Plus } from 'lucide-react';
 
 interface ProductVariant {
     id: number;
@@ -83,7 +82,6 @@ interface BundleSpecialFormData {
     weekdays: number[];
     items: ComboItem[];
     badge_type_id: number | null;
-    show_badge_on_menu: boolean;
 }
 
 export default function BundleSpecialCreate({ products, badgeTypes }: CreateBundleSpecialPageProps) {
@@ -106,7 +104,6 @@ export default function BundleSpecialCreate({ products, badgeTypes }: CreateBund
         weekdays: [],
         items: [],
         badge_type_id: null,
-        show_badge_on_menu: true,
     });
 
     const [image, setImage] = useState<File | null>(null);
@@ -235,8 +232,8 @@ export default function BundleSpecialCreate({ products, badgeTypes }: CreateBund
         // Agregar badge type
         if (data.badge_type_id) {
             formData.append('badge_type_id', String(data.badge_type_id));
+            formData.append('show_badge_on_menu', '1');
         }
-        formData.append('show_badge_on_menu', data.show_badge_on_menu ? '1' : '0');
 
         // Agregar items como JSON
         preparedItems.forEach((item, itemIndex) => {
@@ -326,6 +323,13 @@ export default function BundleSpecialCreate({ products, badgeTypes }: CreateBund
                                         rows={2}
                                     />
                                 </FormField>
+
+                                <BadgeTypeSelector
+                                    value={data.badge_type_id}
+                                    onChange={(value) => setData('badge_type_id', value)}
+                                    badgeTypes={badgeTypes}
+                                    error={errors.badge_type_id}
+                                />
                             </div>
                         </FormSection>
                     </CardContent>
@@ -339,38 +343,6 @@ export default function BundleSpecialCreate({ products, badgeTypes }: CreateBund
                                 onImageChange={(file) => setImage(file)}
                                 error={errors.image}
                             />
-                        </FormSection>
-                    </CardContent>
-                </Card>
-
-                {/* Insignia/Badge */}
-                <Card>
-                    <CardContent className="pt-6">
-                        <FormSection
-                            icon={Award}
-                            title="Insignia"
-                            description="Selecciona una insignia para mostrar en los productos de esta promoción"
-                        >
-                            <div className="space-y-4">
-                                <BadgeTypeSelector
-                                    value={data.badge_type_id}
-                                    onChange={(value) => setData('badge_type_id', value)}
-                                    badgeTypes={badgeTypes}
-                                    error={errors.badge_type_id}
-                                    showLabels={false}
-                                />
-
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="show_badge_on_menu"
-                                        checked={data.show_badge_on_menu}
-                                        onCheckedChange={(checked) => setData('show_badge_on_menu', checked as boolean)}
-                                    />
-                                    <Label htmlFor="show_badge_on_menu" className="cursor-pointer text-sm font-medium leading-none">
-                                        Mostrar insignia en el menú
-                                    </Label>
-                                </div>
-                            </div>
                         </FormSection>
                     </CardContent>
                 </Card>

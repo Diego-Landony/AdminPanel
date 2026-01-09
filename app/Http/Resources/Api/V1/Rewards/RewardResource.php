@@ -22,6 +22,7 @@ class RewardResource extends JsonResource
             'id' => $item->id,
             'type' => $type,
             'name' => $item->name,
+            'description' => $item->description,
             'image_url' => $item->getImageUrl(),
             'points_cost' => $item->points_cost,
         ];

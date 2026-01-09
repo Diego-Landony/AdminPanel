@@ -189,6 +189,7 @@ export function ImageCropperUpload({
         if (aspectRatio === 16 / 9) return '16:9';
         if (aspectRatio === 3 / 4) return '3:4';
         if (aspectRatio === 4 / 3) return '4:3';
+        if (aspectRatio === 5 / 3) return '5:3';
         if (aspectRatio === 9 / 16) return '9:16';
         if (aspectRatio === 1.91) return '1.91:1';
         return `${aspectRatio.toFixed(2)}:1`;

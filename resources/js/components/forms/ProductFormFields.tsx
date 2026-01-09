@@ -101,8 +101,8 @@ export function ProductFormFields({
                                 currentImage={imagePreview}
                                 onImageChange={(file) => onImageChange(file, null)}
                                 error={errors.image}
-                                aspectRatio={4 / 3}
-                                aspectLabel="4:3"
+                                aspectRatio={5 / 3}
+                                aspectLabel="5:3"
                             />
                         </div>
                     </FormSection>

@@ -37,6 +37,8 @@ class Combo extends Model implements ActivityLoggable
         'precio_pickup_interior',
         'precio_domicilio_interior',
         'is_active',
+        'is_redeemable',
+        'points_cost',
         'sort_order',
     ];
 
@@ -49,6 +51,8 @@ class Combo extends Model implements ActivityLoggable
             'precio_pickup_interior' => 'decimal:2',
             'precio_domicilio_interior' => 'decimal:2',
             'is_active' => 'boolean',
+            'is_redeemable' => 'boolean',
+            'points_cost' => 'integer',
             'sort_order' => 'integer',
         ];
     }
@@ -198,6 +202,35 @@ class Combo extends Model implements ActivityLoggable
         };
 
         return (float) $this->$field;
+    }
+
+    /**
+     * Obtiene la URL completa de la imagen del combo
+     * Maneja correctamente las rutas que ya contienen /storage/
+     */
+    public function getImageUrl(): ?string
+    {
+        if (! $this->image) {
+            return null;
+        }
+
+        // Si la imagen ya es una URL completa, devolverla tal cual
+        if (str_starts_with($this->image, 'http://') || str_starts_with($this->image, 'https://')) {
+            return $this->image;
+        }
+
+        // Si ya tiene /storage/ al inicio, construir URL sin duplicar
+        if (str_starts_with($this->image, '/storage/')) {
+            return $this->image;
+        }
+
+        // Si tiene storage/ sin slash inicial
+        if (str_starts_with($this->image, 'storage/')) {
+            return '/'.$this->image;
+        }
+
+        // Caso normal: usar Storage::url()
+        return \Illuminate\Support\Facades\Storage::url($this->image);
     }
 
     /**

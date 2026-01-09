@@ -46,6 +46,8 @@ class Product extends Model implements ActivityLoggable
         'description',
         'image',
         'is_active',
+        'is_redeemable',
+        'points_cost',
         'has_variants',
         'precio_pickup_capital',
         'precio_domicilio_capital',
@@ -62,6 +64,8 @@ class Product extends Model implements ActivityLoggable
     protected $casts = [
         'category_id' => 'integer',
         'is_active' => 'boolean',
+        'is_redeemable' => 'boolean',
+        'points_cost' => 'integer',
         'has_variants' => 'boolean',
         'precio_pickup_capital' => 'decimal:2',
         'precio_domicilio_capital' => 'decimal:2',

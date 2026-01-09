@@ -61,6 +61,8 @@ class ProductVariant extends Model implements ActivityLoggable
         'daily_special_precio_pickup_interior',
         'daily_special_precio_domicilio_interior',
         'is_active',
+        'is_redeemable',
+        'points_cost',
         'sort_order',
     ];
 
@@ -82,6 +84,8 @@ class ProductVariant extends Model implements ActivityLoggable
         'daily_special_precio_pickup_interior' => 'decimal:2',
         'daily_special_precio_domicilio_interior' => 'decimal:2',
         'is_active' => 'boolean',
+        'is_redeemable' => 'boolean',
+        'points_cost' => 'integer',
         'sort_order' => 'integer',
     ];
 

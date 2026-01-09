@@ -12,7 +12,8 @@ import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Banknote, Calendar, Package, Star } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Banknote, Calendar, Gift, Package, Star } from 'lucide-react';
 
 interface Product {
     id: number;
@@ -36,6 +37,8 @@ interface ProductVariant {
     daily_special_precio_pickup_interior: number | null;
     daily_special_precio_domicilio_interior: number | null;
     is_active: boolean;
+    is_redeemable: boolean;
+    points_cost: number | null;
 }
 
 interface EditVariantPageProps {
@@ -61,6 +64,10 @@ interface FormData {
     daily_special_precio_pickup_interior: string | number;
     daily_special_precio_domicilio_interior: string | number;
 
+    // Recompensas
+    is_redeemable: boolean;
+    points_cost: string | number;
+
     // Estado
     is_active: boolean;
 }
@@ -77,6 +84,8 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
         daily_special_precio_domicilio_capital: variant.daily_special_precio_domicilio_capital || '',
         daily_special_precio_pickup_interior: variant.daily_special_precio_pickup_interior || '',
         daily_special_precio_domicilio_interior: variant.daily_special_precio_domicilio_interior || '',
+        is_redeemable: variant.is_redeemable || false,
+        points_cost: variant.points_cost || '',
         is_active: variant.is_active,
     });
 
@@ -151,6 +160,12 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                     ? typeof formData.daily_special_precio_domicilio_interior === 'string'
                         ? parseFloat(formData.daily_special_precio_domicilio_interior)
                         : formData.daily_special_precio_domicilio_interior
+                    : null,
+            points_cost:
+                formData.is_redeemable && formData.points_cost !== ''
+                    ? typeof formData.points_cost === 'string'
+                        ? parseInt(formData.points_cost, 10)
+                        : formData.points_cost
                     : null,
         };
 
@@ -353,6 +368,41 @@ export default function VariantEdit({ product, variant, daysOfWeek }: EditVarian
                                 </div>
                             </div>
                         </>
+                    )}
+                </div>
+            </FormSection>
+
+            {/* Recompensas */}
+            <FormSection icon={Gift} title="Recompensas" description="Configura si esta variante puede canjearse por puntos">
+                <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            id="is_redeemable"
+                            checked={formData.is_redeemable}
+                            onCheckedChange={(checked) => handleInputChange('is_redeemable', checked as boolean)}
+                        />
+                        <Label htmlFor="is_redeemable" className="text-sm leading-none font-medium">
+                            Canjeable por puntos
+                        </Label>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        Activa esta opcion si los clientes pueden canjear esta variante usando sus puntos acumulados
+                    </p>
+
+                    {formData.is_redeemable && (
+                        <FormField label="Costo en puntos" error={errors.points_cost} required>
+                            <Input
+                                type="number"
+                                min="1"
+                                step="1"
+                                value={formData.points_cost}
+                                onChange={(e) => handleInputChange('points_cost', e.target.value)}
+                                placeholder="Ej: 100"
+                            />
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Cantidad de puntos necesarios para canjear esta variante
+                            </p>
+                        </FormField>
                     )}
                 </div>
             </FormSection>

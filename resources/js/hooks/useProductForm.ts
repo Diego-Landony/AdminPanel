@@ -28,6 +28,8 @@ export interface ProductFormData {
     precio_domicilio_capital: string;
     precio_pickup_interior: string;
     precio_domicilio_interior: string;
+    is_redeemable: boolean;
+    points_cost: string;
     variants: VariantFormData[];
 }
 
@@ -73,6 +75,8 @@ const getInitialFormData = (product?: Product): ProductFormData => {
             precio_domicilio_capital: '',
             precio_pickup_interior: '',
             precio_domicilio_interior: '',
+            is_redeemable: false,
+            points_cost: '',
             variants: [],
         };
     }
@@ -97,6 +101,8 @@ const getInitialFormData = (product?: Product): ProductFormData => {
         precio_domicilio_capital: product.precio_domicilio_capital?.toString() || '',
         precio_pickup_interior: product.precio_pickup_interior?.toString() || '',
         precio_domicilio_interior: product.precio_domicilio_interior?.toString() || '',
+        is_redeemable: product.is_redeemable ?? false,
+        points_cost: product.points_cost?.toString() || '',
         variants: initialVariants,
     };
 };
@@ -179,6 +185,17 @@ export function useProductForm({
                     }
                     if (numValue < 0) {
                         return 'El precio debe ser mayor o igual a 0';
+                    }
+                }
+                return null;
+            case 'points_cost':
+                if (typeof value === 'string' && value !== '') {
+                    const numValue = parseInt(value, 10);
+                    if (isNaN(numValue)) {
+                        return 'Debe ser un número entero válido';
+                    }
+                    if (numValue < 1) {
+                        return 'El costo en puntos debe ser al menos 1';
                     }
                 }
                 return null;
@@ -299,6 +316,10 @@ export function useProductForm({
             data.append('precio_domicilio_capital', formData.precio_domicilio_capital || '');
             data.append('precio_pickup_interior', formData.precio_pickup_interior || '');
             data.append('precio_domicilio_interior', formData.precio_domicilio_interior || '');
+            data.append('is_redeemable', formData.is_redeemable ? '1' : '0');
+            if (formData.is_redeemable && formData.points_cost) {
+                data.append('points_cost', formData.points_cost);
+            }
 
             // Imagen - IMPORTANTE: agregar el archivo directamente al FormData
             if (currentImageFile) {

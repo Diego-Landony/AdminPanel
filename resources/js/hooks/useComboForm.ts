@@ -25,6 +25,8 @@ export interface ComboFormData {
     name: string;
     description: string;
     is_active: boolean;
+    is_redeemable: boolean;
+    points_cost: string;
     precio_pickup_capital: string;
     precio_domicilio_capital: string;
     precio_pickup_interior: string;
@@ -91,6 +93,8 @@ const getInitialFormData = (combo?: Combo): ComboFormData => {
             name: '',
             description: '',
             is_active: true,
+            is_redeemable: false,
+            points_cost: '',
             precio_pickup_capital: '',
             precio_domicilio_capital: '',
             precio_pickup_interior: '',
@@ -103,6 +107,8 @@ const getInitialFormData = (combo?: Combo): ComboFormData => {
         name: combo.name,
         description: combo.description || '',
         is_active: combo.is_active,
+        is_redeemable: combo.is_redeemable ?? false,
+        points_cost: combo.points_cost ? String(combo.points_cost) : '',
         precio_pickup_capital: String(combo.precio_pickup_capital),
         precio_domicilio_capital: String(combo.precio_domicilio_capital),
         precio_pickup_interior: String(combo.precio_pickup_interior),
@@ -224,6 +230,17 @@ export function useComboForm({
                     }
                     if (numValue < 0) {
                         return 'El precio debe ser mayor o igual a 0';
+                    }
+                }
+                return null;
+            case 'points_cost':
+                if (typeof value === 'string' && value !== '') {
+                    const numValue = parseInt(value, 10);
+                    if (isNaN(numValue)) {
+                        return 'Debe ser un número válido';
+                    }
+                    if (numValue < 1) {
+                        return 'El costo en puntos debe ser mayor a 0';
                     }
                 }
                 return null;
@@ -358,6 +375,10 @@ export function useComboForm({
             data.append('name', formData.name);
             data.append('description', formData.description);
             data.append('is_active', formData.is_active ? '1' : '0');
+            data.append('is_redeemable', formData.is_redeemable ? '1' : '0');
+            if (formData.is_redeemable && formData.points_cost) {
+                data.append('points_cost', formData.points_cost);
+            }
             data.append('precio_pickup_capital', formData.precio_pickup_capital);
             data.append('precio_domicilio_capital', formData.precio_domicilio_capital);
             data.append('precio_pickup_interior', formData.precio_pickup_interior);

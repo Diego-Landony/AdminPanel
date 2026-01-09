@@ -50,6 +50,8 @@ export interface Product {
     precio_domicilio_capital: number | null;
     precio_pickup_interior: number | null;
     precio_domicilio_interior: number | null;
+    is_redeemable: boolean;
+    points_cost: number | null;
     sort_order: number;
     created_at?: string;
     updated_at?: string;
@@ -157,6 +159,8 @@ export interface Combo {
     precio_pickup_interior: number;
     precio_domicilio_interior: number;
     is_active: boolean;
+    is_redeemable: boolean;
+    points_cost: number | null;
     sort_order: number;
     items_count?: number;
     choice_groups_count?: number;
@@ -201,6 +205,8 @@ export interface ComboFormData {
     name: string;
     description: string;
     is_active: boolean;
+    is_redeemable: boolean;
+    points_cost: string;
     precio_pickup_capital: string;
     precio_domicilio_capital: string;
     precio_pickup_interior: string;

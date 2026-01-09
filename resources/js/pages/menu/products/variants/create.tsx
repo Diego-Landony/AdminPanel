@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { ENTITY_ICONS } from '@/constants/section-icons';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
-import { Banknote, Layers } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Banknote, Gift, Layers } from 'lucide-react';
 
 interface Category {
     id: number;
@@ -44,6 +45,8 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
         interior_delivery_price: '',
         is_active: true,
         sort_order: '',
+        is_redeemable: false,
+        points_cost: '',
     });
 
     /**
@@ -195,6 +198,41 @@ export default function VariantCreate({ product, categories }: CreateVariantPage
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground">Precio para entrega a domicilio (interior del país)</p>
                     </FormField>
+                </div>
+            </FormSection>
+
+            <FormSection icon={Gift} title="Recompensas" description="Configura si esta variante puede canjearse por puntos">
+                <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            id="is_redeemable"
+                            checked={data.is_redeemable}
+                            onCheckedChange={(checked) => setData('is_redeemable', checked as boolean)}
+                        />
+                        <Label htmlFor="is_redeemable" className="text-sm leading-none font-medium">
+                            Canjeable por puntos
+                        </Label>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        Activa esta opcion si los clientes pueden canjear esta variante usando sus puntos acumulados
+                    </p>
+
+                    {data.is_redeemable && (
+                        <FormField label="Costo en puntos" error={errors.points_cost} required>
+                            <Input
+                                id="points_cost"
+                                type="number"
+                                min="1"
+                                step="1"
+                                value={data.points_cost}
+                                onChange={(e) => setData('points_cost', e.target.value)}
+                                placeholder="Ej: 100"
+                            />
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Cantidad de puntos necesarios para canjear esta variante
+                            </p>
+                        </FormField>
+                    )}
                 </div>
             </FormSection>
 

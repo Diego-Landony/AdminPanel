@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { VariantsFromCategory } from '@/components/VariantsFromCategory';
-import { Banknote, ListChecks, Package } from 'lucide-react';
+import { Banknote, Gift, ListChecks, Package } from 'lucide-react';
 
 import type { Category, Section, ProductVariant, VariantFormData, FormErrors } from '@/types/menu';
 import type { ProductFormData } from '@/hooks/useProductForm';
@@ -140,6 +140,45 @@ export function ProductFormFields({
                                 }}
                             />
                         )}
+                    </FormSection>
+                </CardContent>
+            </Card>
+
+            {/* Recompensas */}
+            <Card>
+                <CardContent className="pt-6">
+                    <FormSection icon={Gift} title="Recompensas">
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                    <Label htmlFor="is_redeemable" className="cursor-pointer text-sm font-medium">
+                                        Canjeable por puntos
+                                    </Label>
+                                    <p className="text-xs text-muted-foreground">
+                                        Permitir que los clientes canjeen este producto usando sus puntos de recompensa
+                                    </p>
+                                </div>
+                                <Switch
+                                    id="is_redeemable"
+                                    checked={formData.is_redeemable}
+                                    onCheckedChange={(checked) => onInputChange('is_redeemable', checked as boolean)}
+                                />
+                            </div>
+
+                            {formData.is_redeemable && (
+                                <FormField label="Costo en puntos" error={errors.points_cost} required>
+                                    <Input
+                                        id="points_cost"
+                                        type="number"
+                                        min="1"
+                                        step="1"
+                                        value={formData.points_cost}
+                                        onChange={(e) => onInputChange('points_cost', e.target.value)}
+                                        placeholder="Ej: 100"
+                                    />
+                                </FormField>
+                            )}
+                        </div>
                     </FormSection>
                 </CardContent>
             </Card>

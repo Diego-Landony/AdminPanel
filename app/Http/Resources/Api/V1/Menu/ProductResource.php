@@ -37,6 +37,10 @@ class ProductResource extends JsonResource
 
             'sort_order' => $this->sort_order,
 
+            // Redemption by points (solo para productos sin variantes)
+            'is_redeemable' => $this->when(! $hasVariants, (bool) $this->is_redeemable),
+            'points_cost' => $this->when(! $hasVariants && $this->is_redeemable, $this->points_cost),
+
             // Relationships
             'variants' => ProductVariantResource::collection($this->whenLoaded('variants')),
             'sections' => SectionResource::collection($this->whenLoaded('sections')),

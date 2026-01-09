@@ -298,6 +298,53 @@ Solo funciona si no han pasado mas de 30 dias desde la eliminacion.
 
 # 2. Sistema de Precios
 
+### Campos de Redencion por Puntos
+
+Productos y variantes pueden ser canjeables por puntos:
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| `is_redeemable` | boolean | Si el producto/variante es canjeable por puntos |
+| `points_cost` | integer | Costo en puntos (solo si `is_redeemable: true`) |
+
+**Para productos SIN variantes:**
+```json
+{
+  "id": 5,
+  "name": "Cookie",
+  "has_variants": false,
+  "is_redeemable": true,
+  "points_cost": 50
+}
+```
+
+**Para productos CON variantes:** Cada variante tiene sus propios valores de redencion.
+```json
+{
+  "id": 10,
+  "name": "Sub Italian BMT",
+  "has_variants": true,
+  "variants": [
+    {
+      "id": 25,
+      "name": "15cm",
+      "is_redeemable": true,
+      "points_cost": 100
+    },
+    {
+      "id": 26,
+      "name": "30cm",
+      "is_redeemable": true,
+      "points_cost": 150
+    }
+  ]
+}
+```
+
+**Nota:** Los productos con variantes NO tienen `is_redeemable` ni `points_cost` a nivel de producto - estos campos solo aparecen en cada variante.
+
+---
+
 ### Los 4 Campos de Precio
 
 Cada producto y combo tiene 4 precios diferentes:

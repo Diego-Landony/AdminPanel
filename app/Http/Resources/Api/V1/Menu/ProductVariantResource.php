@@ -37,6 +37,10 @@ class ProductVariantResource extends JsonResource
             ],
             'sort_order' => $this->sort_order,
 
+            // Redemption by points
+            'is_redeemable' => (bool) $this->is_redeemable,
+            'points_cost' => $this->when($this->is_redeemable, $this->points_cost),
+
             // Active promotion (for displaying discounted prices like Amazon/Temu)
             'active_promotion' => $this->when($this->getActivePromotion(), function () {
                 $promotion = $this->getActivePromotion();

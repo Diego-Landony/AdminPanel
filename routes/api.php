@@ -218,10 +218,6 @@ Route::prefix('v1')->group(function () {
                 ->name('expiring');
         });
 
-        // Rewards catalog (redeemable items - redemption happens in-store)
-        Route::get('/rewards', [App\Http\Controllers\Api\V1\RewardsController::class, 'index'])
-            ->name('api.v1.rewards.index');
-
         Route::get('/me/recent-orders', [App\Http\Controllers\Api\V1\OrderController::class, 'recentOrders'])
             ->name('api.v1.me.recent-orders');
     });
@@ -269,6 +265,10 @@ Route::prefix('v1')->group(function () {
             ->name('promotions.daily');
         Route::get('/promotions/combinados', [App\Http\Controllers\Api\V1\Menu\PromotionController::class, 'combinados'])
             ->name('promotions.combinados');
+
+        // Rewards catalog (redeemable items - redemption happens in-store)
+        Route::get('/rewards', [App\Http\Controllers\Api\V1\RewardsController::class, 'index'])
+            ->name('rewards.index');
     });
 
     /*

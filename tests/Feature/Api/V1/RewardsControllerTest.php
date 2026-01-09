@@ -1,23 +1,19 @@
 <?php
 
-use App\Models\Customer;
 use App\Models\Menu\Category;
 use App\Models\Menu\Combo;
 use App\Models\Menu\Product;
 use App\Models\Menu\ProductVariant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-use function Pest\Laravel\actingAs;
-
 uses(RefreshDatabase::class);
 
-describe('rewards (GET /api/v1/rewards)', function () {
+describe('rewards (GET /api/v1/menu/rewards)', function () {
     test('returns redeemable products', function () {
-        $customer = Customer::factory()->create();
         $category = Category::factory()->create();
 
         // Producto canjeable
-        $redeemableProduct = Product::factory()->create([
+        Product::factory()->create([
             'category_id' => $category->id,
             'name' => 'Cookie de Chocolate',
             'is_active' => true,
@@ -32,8 +28,7 @@ describe('rewards (GET /api/v1/rewards)', function () {
             'is_redeemable' => false,
         ]);
 
-        $response = actingAs($customer, 'sanctum')
-            ->getJson('/api/v1/rewards');
+        $response = $this->getJson('/api/v1/menu/rewards');
 
         $response->assertOk()
             ->assertJsonStructure([
@@ -55,11 +50,10 @@ describe('rewards (GET /api/v1/rewards)', function () {
     });
 
     test('returns redeemable combos', function () {
-        $customer = Customer::factory()->create();
         $category = Category::factory()->create();
 
         // Combo canjeable
-        $redeemableCombo = Combo::factory()->create([
+        Combo::factory()->create([
             'category_id' => $category->id,
             'name' => 'Combo Navideño',
             'is_active' => true,
@@ -74,8 +68,7 @@ describe('rewards (GET /api/v1/rewards)', function () {
             'is_redeemable' => false,
         ]);
 
-        $response = actingAs($customer, 'sanctum')
-            ->getJson('/api/v1/rewards');
+        $response = $this->getJson('/api/v1/menu/rewards');
 
         $response->assertOk();
 
@@ -86,7 +79,6 @@ describe('rewards (GET /api/v1/rewards)', function () {
     });
 
     test('returns products with redeemable variants', function () {
-        $customer = Customer::factory()->create();
         $category = Category::factory()->create(['uses_variants' => true]);
 
         // Producto con variantes canjeables
@@ -114,8 +106,7 @@ describe('rewards (GET /api/v1/rewards)', function () {
             'points_cost' => 250,
         ]);
 
-        $response = actingAs($customer, 'sanctum')
-            ->getJson('/api/v1/rewards');
+        $response = $this->getJson('/api/v1/menu/rewards');
 
         $response->assertOk();
 
@@ -131,7 +122,6 @@ describe('rewards (GET /api/v1/rewards)', function () {
     });
 
     test('does not return inactive products', function () {
-        $customer = Customer::factory()->create();
         $category = Category::factory()->create();
 
         // Producto canjeable pero inactivo
@@ -142,18 +132,14 @@ describe('rewards (GET /api/v1/rewards)', function () {
             'points_cost' => 50,
         ]);
 
-        $response = actingAs($customer, 'sanctum')
-            ->getJson('/api/v1/rewards');
+        $response = $this->getJson('/api/v1/menu/rewards');
 
         $response->assertOk();
         expect($response->json('data'))->toHaveCount(0);
     });
 
     test('returns empty array when no redeemable items exist', function () {
-        $customer = Customer::factory()->create();
-
-        $response = actingAs($customer, 'sanctum')
-            ->getJson('/api/v1/rewards');
+        $response = $this->getJson('/api/v1/menu/rewards');
 
         $response->assertOk()
             ->assertJson([
@@ -161,9 +147,20 @@ describe('rewards (GET /api/v1/rewards)', function () {
             ]);
     });
 
-    test('requires authentication', function () {
-        $response = $this->getJson('/api/v1/rewards');
+    test('works without authentication (public endpoint)', function () {
+        $category = Category::factory()->create();
 
-        $response->assertUnauthorized();
+        Product::factory()->create([
+            'category_id' => $category->id,
+            'is_active' => true,
+            'is_redeemable' => true,
+            'points_cost' => 100,
+        ]);
+
+        // Sin autenticación
+        $response = $this->getJson('/api/v1/menu/rewards');
+
+        $response->assertOk();
+        expect($response->json('data'))->toHaveCount(1);
     });
 });

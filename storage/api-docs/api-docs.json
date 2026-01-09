@@ -14,7 +14,7 @@
             "description": "Local Development Server"
         },
         {
-            "url": "https://appmobile.subwaycardgt.com",
+            "url": "http://localhost",
             "description": "Application Server"
         }
     ],
@@ -6725,6 +6725,87 @@
                 ]
             }
         },
+        "/api/v1/rewards": {
+            "get": {
+                "tags": [
+                    "Rewards"
+                ],
+                "summary": "Obtener catálogo de recompensas canjeables",
+                "description": "Retorna la lista de productos y combos que pueden ser canjeados por puntos en tienda física.\n     *\n     * **Importante:**\n     * - El canje solo se realiza en tienda física, no en la app\n     * - Cada item incluye su nombre, imagen y costo en puntos\n     * - Los productos con variantes canjeables incluyen sus variantes",
+                "operationId": "e43af63bec0bd63488798eea37684e04",
+                "responses": {
+                    "200": {
+                        "description": "Catálogo de recompensas obtenido exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "type": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "product",
+                                                            "combo"
+                                                        ],
+                                                        "example": "product"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Subway Pollo Teriyaki"
+                                                    },
+                                                    "image": {
+                                                        "type": "string",
+                                                        "example": "/storage/products/pollo-teriyaki.jpg",
+                                                        "nullable": true
+                                                    },
+                                                    "points_cost": {
+                                                        "description": "Costo en puntos (null si tiene variantes)",
+                                                        "type": "integer",
+                                                        "example": 150,
+                                                        "nullable": true
+                                                    },
+                                                    "variants": {
+                                                        "description": "Variantes canjeables del producto",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "name": {
+                                                                    "type": "string",
+                                                                    "example": "15cm"
+                                                                },
+                                                                "points_cost": {
+                                                                    "type": "integer",
+                                                                    "example": 150
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/legal/terms": {
             "get": {
                 "tags": [
@@ -8513,6 +8594,10 @@
         {
             "name": "Menu - Restaurants",
             "description": "Menu - Restaurants"
+        },
+        {
+            "name": "Rewards",
+            "description": "Rewards"
         },
         {
             "name": "Legal",

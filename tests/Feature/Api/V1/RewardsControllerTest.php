@@ -37,7 +37,7 @@ describe('rewards (GET /api/v1/menu/rewards)', function () {
                         'id',
                         'type',
                         'name',
-                        'image',
+                        'image_url',
                         'points_cost',
                     ],
                 ],

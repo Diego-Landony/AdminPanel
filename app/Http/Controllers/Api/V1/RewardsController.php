@@ -14,12 +14,13 @@ class RewardsController extends Controller
      * Get list of redeemable products and combos
      *
      * @OA\Get(
-     *     path="/api/v1/rewards",
-     *     tags={"Rewards"},
+     *     path="/api/v1/menu/rewards",
+     *     tags={"Menu"},
      *     summary="Obtener catálogo de recompensas canjeables",
      *     description="Retorna la lista de productos y combos que pueden ser canjeados por puntos en tienda física.
      *
      * **Importante:**
+     * - Endpoint público (no requiere autenticación)
      * - El canje solo se realiza en tienda física, no en la app
      * - Cada item incluye su nombre, imagen y costo en puntos
      * - Los productos con variantes canjeables incluyen sus variantes",
@@ -37,7 +38,7 @@ class RewardsController extends Controller
      *                     @OA\Property(property="id", type="integer", example=1),
      *                     @OA\Property(property="type", type="string", enum={"product","combo"}, example="product"),
      *                     @OA\Property(property="name", type="string", example="Subway Pollo Teriyaki"),
-     *                     @OA\Property(property="image", type="string", nullable=true, example="/storage/products/pollo-teriyaki.jpg"),
+     *                     @OA\Property(property="image_url", type="string", nullable=true, example="/storage/products/pollo-teriyaki.jpg"),
      *                     @OA\Property(property="points_cost", type="integer", nullable=true, example=150, description="Costo en puntos (null si tiene variantes)"),
      *                     @OA\Property(property="variants", type="array", nullable=true, description="Variantes canjeables del producto",
      *

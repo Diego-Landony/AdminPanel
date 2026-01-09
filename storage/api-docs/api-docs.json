@@ -14,7 +14,7 @@
             "description": "Local Development Server"
         },
         {
-            "url": "http://localhost",
+            "url": "https://appmobile.subwaycardgt.com",
             "description": "Application Server"
         }
     ],
@@ -6725,14 +6725,14 @@
                 ]
             }
         },
-        "/api/v1/rewards": {
+        "/api/v1/menu/rewards": {
             "get": {
                 "tags": [
-                    "Rewards"
+                    "Menu"
                 ],
                 "summary": "Obtener catálogo de recompensas canjeables",
-                "description": "Retorna la lista de productos y combos que pueden ser canjeados por puntos en tienda física.\n     *\n     * **Importante:**\n     * - El canje solo se realiza en tienda física, no en la app\n     * - Cada item incluye su nombre, imagen y costo en puntos\n     * - Los productos con variantes canjeables incluyen sus variantes",
-                "operationId": "e43af63bec0bd63488798eea37684e04",
+                "description": "Retorna la lista de productos y combos que pueden ser canjeados por puntos en tienda física.\n     *\n     * **Importante:**\n     * - Endpoint público (no requiere autenticación)\n     * - El canje solo se realiza en tienda física, no en la app\n     * - Cada item incluye su nombre, imagen y costo en puntos\n     * - Los productos con variantes canjeables incluyen sus variantes",
+                "operationId": "706ede8f684c5db0de3caee582906e0a",
                 "responses": {
                     "200": {
                         "description": "Catálogo de recompensas obtenido exitosamente",
@@ -6760,7 +6760,7 @@
                                                         "type": "string",
                                                         "example": "Subway Pollo Teriyaki"
                                                     },
-                                                    "image": {
+                                                    "image_url": {
                                                         "type": "string",
                                                         "example": "/storage/products/pollo-teriyaki.jpg",
                                                         "nullable": true
@@ -8594,10 +8594,6 @@
         {
             "name": "Menu - Restaurants",
             "description": "Menu - Restaurants"
-        },
-        {
-            "name": "Rewards",
-            "description": "Rewards"
         },
         {
             "name": "Legal",

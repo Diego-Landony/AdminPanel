@@ -111,6 +111,8 @@ export interface VariantFormData {
     precio_domicilio_capital: string;
     precio_pickup_interior: string;
     precio_domicilio_interior: string;
+    is_redeemable: boolean;
+    points_cost: string;
 }
 
 // ============================================

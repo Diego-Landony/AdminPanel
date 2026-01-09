@@ -1,8 +1,10 @@
+import { FormField } from '@/components/ui/form-field';
 import { PriceFields } from '@/components/PriceFields';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import { AlertCircle, ChevronDown, ChevronRight, Gift } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface VariantData {
@@ -13,6 +15,8 @@ interface VariantData {
     precio_domicilio_capital: string;
     precio_pickup_interior: string;
     precio_domicilio_interior: string;
+    is_redeemable: boolean;
+    points_cost: string;
 }
 
 interface ExistingVariant {
@@ -23,6 +27,8 @@ interface ExistingVariant {
     precio_domicilio_capital: string | number;
     precio_pickup_interior: string | number;
     precio_domicilio_interior: string | number;
+    is_redeemable?: boolean;
+    points_cost?: string | number | null;
 }
 
 interface VariantsFromCategoryProps {
@@ -64,6 +70,8 @@ export function VariantsFromCategory({ categoryVariants, existingVariants = [], 
                     precio_domicilio_capital: String(existing.precio_domicilio_capital || ''),
                     precio_pickup_interior: String(existing.precio_pickup_interior || ''),
                     precio_domicilio_interior: String(existing.precio_domicilio_interior || ''),
+                    is_redeemable: existing.is_redeemable ?? false,
+                    points_cost: String(existing.points_cost || ''),
                 };
             }
 
@@ -74,6 +82,8 @@ export function VariantsFromCategory({ categoryVariants, existingVariants = [], 
                 precio_domicilio_capital: '',
                 precio_pickup_interior: '',
                 precio_domicilio_interior: '',
+                is_redeemable: false,
+                points_cost: '',
             };
         });
 
@@ -172,6 +182,36 @@ export function VariantsFromCategory({ categoryVariants, existingVariants = [], 
                                     interiorDomicilio: errors[`variants.${index}.precio_domicilio_interior`],
                                 }}
                             />
+
+                            {/* Redención por puntos */}
+                            <div className="rounded-lg border border-dashed border-muted-foreground/25 p-4 space-y-4">
+                                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                    <Gift className="h-4 w-4" />
+                                    Recompensas
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <Label htmlFor={`variant-redeemable-${index}`} className="cursor-pointer text-sm font-medium">
+                                        Canjeable por puntos
+                                    </Label>
+                                    <Switch
+                                        id={`variant-redeemable-${index}`}
+                                        checked={variant.is_redeemable}
+                                        onCheckedChange={(checked) => updateVariant(index, 'is_redeemable', checked as boolean)}
+                                    />
+                                </div>
+                                {variant.is_redeemable && (
+                                    <FormField label="Costo en puntos" error={errors[`variants.${index}.points_cost`]} required>
+                                        <Input
+                                            id={`variant-points-${index}`}
+                                            type="number"
+                                            min="1"
+                                            step="1"
+                                            value={variant.points_cost}
+                                            onChange={(e) => updateVariant(index, 'points_cost', e.target.value)}
+                                        />
+                                    </FormField>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>

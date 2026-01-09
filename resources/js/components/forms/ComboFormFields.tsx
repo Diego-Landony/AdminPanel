@@ -190,14 +190,9 @@ export function ComboFormFields({
                     <FormSection icon={Gift} title="Recompensas">
                         <div className="space-y-6">
                             <div className="flex items-center justify-between rounded-lg border p-4">
-                                <div className="space-y-0.5">
-                                    <Label htmlFor="is_redeemable" className="cursor-pointer text-sm font-medium">
-                                        Canjeable por puntos
-                                    </Label>
-                                    <p className="text-xs text-muted-foreground">
-                                        Permite que los clientes canjeen este combo usando puntos de recompensa
-                                    </p>
-                                </div>
+                                <Label htmlFor="is_redeemable" className="cursor-pointer text-sm font-medium">
+                                    Canjeable por puntos
+                                </Label>
                                 <Switch
                                     id="is_redeemable"
                                     checked={formData.is_redeemable}
@@ -212,7 +207,6 @@ export function ComboFormFields({
                                         type="number"
                                         min="1"
                                         step="1"
-                                        placeholder="Ej: 500"
                                         value={formData.points_cost}
                                         onChange={(e) => onInputChange('points_cost', e.target.value)}
                                     />

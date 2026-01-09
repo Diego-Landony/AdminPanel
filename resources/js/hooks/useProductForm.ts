@@ -89,6 +89,8 @@ const getInitialFormData = (product?: Product): ProductFormData => {
         precio_domicilio_capital: String(v.precio_domicilio_capital || ''),
         precio_pickup_interior: String(v.precio_pickup_interior || ''),
         precio_domicilio_interior: String(v.precio_domicilio_interior || ''),
+        is_redeemable: v.is_redeemable ?? false,
+        points_cost: String(v.points_cost || ''),
     }));
 
     return {
@@ -344,6 +346,10 @@ export function useProductForm({
                 data.append(`variants[${index}][precio_domicilio_capital]`, variant.precio_domicilio_capital);
                 data.append(`variants[${index}][precio_pickup_interior]`, variant.precio_pickup_interior);
                 data.append(`variants[${index}][precio_domicilio_interior]`, variant.precio_domicilio_interior);
+                data.append(`variants[${index}][is_redeemable]`, variant.is_redeemable ? '1' : '0');
+                if (variant.is_redeemable && variant.points_cost) {
+                    data.append(`variants[${index}][points_cost]`, variant.points_cost);
+                }
             });
 
             const url = isEdit ? `/menu/products/${product!.id}` : route('menu.products.store');

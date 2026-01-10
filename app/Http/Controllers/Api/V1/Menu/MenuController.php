@@ -113,10 +113,22 @@ class MenuController extends Controller
             ])
             ->get();
 
+        // Get the combos category for Flutter to know where to position combos section
+        $combosCategory = Category::query()
+            ->where('is_combo_category', true)
+            ->active()
+            ->first(['id', 'name', 'image', 'sort_order']);
+
         return response()->json([
             'data' => [
                 'price_disclaimer' => 'El precio puede variar segun area y tipo de servicio.',
                 'categories' => CategoryResource::collection($categories),
+                'combos_category' => $combosCategory ? [
+                    'id' => $combosCategory->id,
+                    'name' => $combosCategory->name,
+                    'image_url' => $combosCategory->getImageUrl(),
+                    'sort_order' => $combosCategory->sort_order,
+                ] : null,
                 'combos' => ComboResource::collection($combos),
             ],
         ]);
@@ -140,6 +152,12 @@ class MenuController extends Controller
             ->selectRaw('COUNT(*) as count, MIN(precio_pickup_capital) as min_price, MAX(precio_pickup_capital) as max_price')
             ->first();
 
+        // Get the combos category for Flutter to know where to position combos section
+        $combosCategory = Category::query()
+            ->where('is_combo_category', true)
+            ->active()
+            ->first(['id', 'name', 'image', 'sort_order']);
+
         return response()->json([
             'data' => [
                 'price_disclaimer' => 'El precio puede variar segun area y tipo de servicio.',
@@ -150,6 +168,12 @@ class MenuController extends Controller
                     'products_count' => $cat->products_count,
                     'sort_order' => $cat->sort_order,
                 ]),
+                'combos_category' => $combosCategory ? [
+                    'id' => $combosCategory->id,
+                    'name' => $combosCategory->name,
+                    'image_url' => $combosCategory->getImageUrl(),
+                    'sort_order' => $combosCategory->sort_order,
+                ] : null,
                 'combos_summary' => [
                     'count' => (int) $combosData->count,
                     'price_range' => [

@@ -35,6 +35,21 @@ class MenuController extends Controller
      * - Selecciona un restaurante para pickup (PUT /cart/restaurant)
      * - Selecciona una direccion para delivery (PUT /cart/delivery-address)
      *
+     * **📋 IMPORTANTE - Ordenamiento del Menú:**
+     * Flutter debe combinar `categories` y `combos` usando el campo `sort_order` para mostrar
+     * el menú en el orden configurado por el administrador.
+     *
+     * 1. `categories[]` - Solo incluye categorías normales (is_combo_category = false)
+     * 2. `combos_category` - Categoría especial para combos con su `sort_order`
+     * 3. `combos[]` - Lista de combos que van en esa sección
+     *
+     * Flutter debe:
+     * - Combinar ambos arrays usando `sort_order`
+     * - Ordenar todo de menor a mayor
+     * - Permitir orden mixto (ej: Productos, Combos, Productos)
+     * - Ordenar productos dentro de cada categoría por `product.sort_order`
+     * - Ordenar combos dentro de la sección por `combo.sort_order`
+     *
      * For promotions/offers, use GET /api/v1/menu/promotions.",
      *
      *     @OA\Parameter(
@@ -54,12 +69,19 @@ class MenuController extends Controller
      *
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="price_disclaimer", type="string", example="El precio puede variar segun area y tipo de servicio.", description="Disclaimer obligatorio a mostrar en UI junto a los precios"),
-     *                 @OA\Property(property="categories", type="array", description="Product categories with their products",
+     *                 @OA\Property(property="categories", type="array", description="Product categories (excludes combo category). Order by sort_order.",
      *
      *                     @OA\Items(ref="#/components/schemas/Category")
      *                 ),
      *
-     *                 @OA\Property(property="combos", type="array", description="Permanent menu combos (not promotional)",
+     *                 @OA\Property(property="combos_category", type="object", description="Special category for combos section with sort_order to position it among other categories",
+     *                     @OA\Property(property="id", type="integer", example=10),
+     *                     @OA\Property(property="name", type="string", example="Combos"),
+     *                     @OA\Property(property="image_url", type="string", example="/storage/categories/combos.jpg", nullable=true),
+     *                     @OA\Property(property="sort_order", type="integer", example=2, description="Position in menu - mix with categories sort_order")
+     *                 ),
+     *
+     *                 @OA\Property(property="combos", type="array", description="Permanent menu combos (not promotional). Order by sort_order within combos section.",
      *
      *                     @OA\Items(ref="#/components/schemas/Combo")
      *                 )

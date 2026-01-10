@@ -23,7 +23,12 @@ class RewardsController extends Controller
      * - Endpoint público (no requiere autenticación)
      * - El canje solo se realiza en tienda física, no en la app
      * - Cada item incluye su nombre, imagen y costo en puntos
-     * - Los productos con variantes canjeables incluyen sus variantes",
+     * - Los productos con variantes canjeables incluyen sus variantes
+     *
+     * **Ordenamiento:**
+     * - Primer criterio: cantidad de puntos necesarios (de menor a mayor)
+     * - Segundo criterio: orden alfabético por nombre
+     * - Productos con variantes usan el menor costo de sus variantes para el primer criterio",
      *
      *     @OA\Response(
      *         response=200,
@@ -86,11 +91,36 @@ class RewardsController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        // Combinar y ordenar por nombre
+        // Combinar y ordenar por puntos necesarios (de menor a mayor), luego alfabéticamente
         $rewards = collect()
             ->concat($products->map(fn ($p) => ['item' => $p, 'type' => 'product']))
             ->concat($combos->map(fn ($c) => ['item' => $c, 'type' => 'combo']))
-            ->sortBy(fn ($r) => $r['item']->name)
+            ->sort(function ($a, $b) {
+                $itemA = $a['item'];
+                $itemB = $b['item'];
+
+                // Calcular puntos para A
+                if ($a['type'] === 'product' && $itemA->variants->isNotEmpty()) {
+                    $pointsA = $itemA->variants->min('points_cost') ?? PHP_INT_MAX;
+                } else {
+                    $pointsA = $itemA->points_cost ?? PHP_INT_MAX;
+                }
+
+                // Calcular puntos para B
+                if ($b['type'] === 'product' && $itemB->variants->isNotEmpty()) {
+                    $pointsB = $itemB->variants->min('points_cost') ?? PHP_INT_MAX;
+                } else {
+                    $pointsB = $itemB->points_cost ?? PHP_INT_MAX;
+                }
+
+                // Primer criterio: comparar puntos
+                if ($pointsA !== $pointsB) {
+                    return $pointsA <=> $pointsB;
+                }
+
+                // Segundo criterio: comparar nombres alfabéticamente
+                return strcasecmp($itemA->name, $itemB->name);
+            })
             ->values();
 
         return response()->json([

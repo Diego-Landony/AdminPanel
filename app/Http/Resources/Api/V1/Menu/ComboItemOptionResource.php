@@ -19,7 +19,9 @@ class ComboItemOptionResource extends JsonResource
             'product_id' => $this->product_id,
             'variant_id' => $this->variant_id,
             'product_name' => $this->product?->name,
+            'description' => $this->product?->description,
             'variant_name' => $this->variant?->name,
+            'image_url' => $this->product?->getImageUrl(),
             'sort_order' => $this->sort_order,
         ];
     }

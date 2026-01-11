@@ -165,6 +165,27 @@ class OrderService
                     ];
                 }
 
+                // Capturar información de promoción aplicada (si existe)
+                $promotionId = null;
+                $promotionSnapshot = null;
+
+                if (isset($summary['item_discounts'][$cartItem->id]['applied_promotion'])) {
+                    $appliedPromo = $summary['item_discounts'][$cartItem->id]['applied_promotion'];
+                    $itemDiscount = $summary['item_discounts'][$cartItem->id];
+
+                    $promotionId = $appliedPromo['id'];
+                    $promotionSnapshot = [
+                        'id' => $appliedPromo['id'],
+                        'name' => $appliedPromo['name'],
+                        'type' => $appliedPromo['type'],
+                        'value' => $appliedPromo['value'],
+                        'discount_amount' => $itemDiscount['discount_amount'],
+                        'original_price' => $itemDiscount['original_price'],
+                        'final_price' => $itemDiscount['final_price'],
+                        'is_daily_special' => $itemDiscount['is_daily_special'] ?? false,
+                    ];
+                }
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $cartItem->product_id,
@@ -178,6 +199,8 @@ class OrderService
                     'selected_options' => $cartItem->selected_options,
                     'combo_selections' => $cartItem->combo_selections,
                     'notes' => $cartItem->notes,
+                    'promotion_id' => $promotionId,
+                    'promotion_snapshot' => $promotionSnapshot,
                 ]);
             }
 

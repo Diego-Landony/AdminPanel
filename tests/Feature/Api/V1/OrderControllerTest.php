@@ -8,6 +8,8 @@ use App\Models\Menu\Category;
 use App\Models\Menu\Combo;
 use App\Models\Menu\ComboItem;
 use App\Models\Menu\Product;
+use App\Models\Menu\Promotion;
+use App\Models\Menu\PromotionItem;
 use App\Models\Order;
 use App\Models\Restaurant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -1141,5 +1143,174 @@ describe('Points Validation', function () {
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['points_to_redeem']);
+    });
+});
+
+describe('Promotion Tracking', function () {
+    test('saves promotion data to order items when promotion is applied', function () {
+        $customer = Customer::factory()->create();
+        $restaurant = Restaurant::factory()->create();
+        $category = Category::factory()->create(['is_active' => true]);
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'is_active' => true,
+            'precio_pickup_capital' => 100.00,
+        ]);
+
+        // Crear promoción de descuento porcentual
+        $promotion = Promotion::create([
+            'name' => '20% de descuento',
+            'type' => 'percentage_discount',
+            'is_active' => true,
+        ]);
+
+        PromotionItem::create([
+            'promotion_id' => $promotion->id,
+            'product_id' => $product->id,
+            'category_id' => $category->id,
+            'discount_percentage' => 20,
+        ]);
+
+        $cart = Cart::factory()->create([
+            'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'pickup',
+            'zone' => 'capital',
+            'status' => 'active',
+        ]);
+
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price' => 100.00,
+            'subtotal' => 100.00,
+        ]);
+
+        $response = actingAs($customer, 'sanctum')
+            ->postJson('/api/v1/orders', [
+                'restaurant_id' => $restaurant->id,
+                'service_type' => 'pickup',
+                'payment_method' => 'cash',
+            ]);
+
+        $response->assertCreated();
+
+        $order = Order::latest()->first();
+        $orderItem = $order->items->first();
+
+        // Verificar que el promotion_id fue guardado
+        expect($orderItem->promotion_id)->toBe($promotion->id);
+
+        // Verificar que el promotion_snapshot contiene la información correcta
+        expect($orderItem->promotion_snapshot)->not->toBeNull();
+        expect($orderItem->promotion_snapshot['id'])->toBe($promotion->id);
+        expect($orderItem->promotion_snapshot['name'])->toBe('20% de descuento');
+        expect($orderItem->promotion_snapshot['type'])->toBe('percentage_discount');
+        expect($orderItem->promotion_snapshot['value'])->toBe('20.00%');
+        expect($orderItem->promotion_snapshot['discount_amount'])->toEqual(20.0);
+        expect($orderItem->promotion_snapshot['original_price'])->toEqual(100.0);
+        expect($orderItem->promotion_snapshot['final_price'])->toEqual(80.0);
+    });
+
+    test('order items without promotion have null promotion_id and promotion_snapshot', function () {
+        $customer = Customer::factory()->create();
+        $restaurant = Restaurant::factory()->create();
+        $category = Category::factory()->create(['is_active' => true]);
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'is_active' => true,
+            'precio_pickup_capital' => 100.00,
+        ]);
+
+        $cart = Cart::factory()->create([
+            'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'pickup',
+            'zone' => 'capital',
+            'status' => 'active',
+        ]);
+
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price' => 100.00,
+            'subtotal' => 100.00,
+        ]);
+
+        $response = actingAs($customer, 'sanctum')
+            ->postJson('/api/v1/orders', [
+                'restaurant_id' => $restaurant->id,
+                'service_type' => 'pickup',
+                'payment_method' => 'cash',
+            ]);
+
+        $response->assertCreated();
+
+        $order = Order::latest()->first();
+        $orderItem = $order->items->first();
+
+        // Verificar que no hay promoción aplicada
+        expect($orderItem->promotion_id)->toBeNull();
+        expect($orderItem->promotion_snapshot)->toBeNull();
+    });
+
+    test('tracks 2x1 promotion in order items', function () {
+        $customer = Customer::factory()->create();
+        $restaurant = Restaurant::factory()->create();
+        $category = Category::factory()->create(['is_active' => true]);
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'is_active' => true,
+            'precio_pickup_capital' => 50.00,
+        ]);
+
+        // Crear promoción tipo 2x1
+        $promotion = Promotion::create([
+            'name' => '2x1 en Subs',
+            'type' => 'two_for_one',
+            'is_active' => true,
+        ]);
+
+        PromotionItem::create([
+            'promotion_id' => $promotion->id,
+            'product_id' => $product->id,
+            'category_id' => $category->id,
+        ]);
+
+        $cart = Cart::factory()->create([
+            'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'pickup',
+            'zone' => 'capital',
+            'status' => 'active',
+        ]);
+
+        // Agregar 2 del mismo producto para activar 2x1
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 2,
+            'unit_price' => 50.00,
+            'subtotal' => 100.00,
+        ]);
+
+        $response = actingAs($customer, 'sanctum')
+            ->postJson('/api/v1/orders', [
+                'restaurant_id' => $restaurant->id,
+                'service_type' => 'pickup',
+                'payment_method' => 'cash',
+            ]);
+
+        $response->assertCreated();
+
+        $order = Order::latest()->first();
+        $orderItem = $order->items->first();
+
+        // Verificar que la promoción 2x1 fue guardada
+        expect($orderItem->promotion_id)->toBe($promotion->id);
+        expect($orderItem->promotion_snapshot['type'])->toBe('two_for_one');
+        expect($orderItem->promotion_snapshot['value'])->toBe('2x1');
     });
 });

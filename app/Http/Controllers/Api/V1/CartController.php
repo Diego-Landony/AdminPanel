@@ -44,8 +44,21 @@ class CartController extends Controller
      *
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="restaurant", type="object", nullable=true, description="Restaurante asignado (pickup o delivery)",
+     *                     @OA\Property(property="id", type="integer", example=2),
+     *                     @OA\Property(property="name", type="string", example="Subway Pradera"),
+     *                     @OA\Property(property="address", type="string", example="6ta Avenida 5-10, Zona 9"),
+     *                     @OA\Property(property="price_location", type="string", enum={"capital", "interior"})
+     *                 ),
+     *                 @OA\Property(property="delivery_address", type="object", nullable=true, description="Direccion de entrega (solo para delivery)",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="label", type="string", example="Casa"),
+     *                     @OA\Property(property="street_address", type="string", example="5ta Avenida 10-50, Zona 14"),
+     *                     @OA\Property(property="city", type="string", example="Guatemala"),
+     *                     @OA\Property(property="department", type="string", example="Guatemala")
+     *                 ),
      *                 @OA\Property(property="service_type", type="string", enum={"pickup", "delivery"}),
-     *                 @OA\Property(property="zone", type="string", enum={"capital", "interior"}),
+     *                 @OA\Property(property="zone", type="string", enum={"capital", "interior"}, description="Determinada automaticamente del restaurante o direccion"),
      *                 @OA\Property(property="items", type="array",
      *
      *                     @OA\Items(type="object",
@@ -85,7 +98,7 @@ class CartController extends Controller
     {
         $customer = auth()->user();
         $cart = $this->cartService->getOrCreateCart($customer);
-        $cart->load(['restaurant', 'items.product', 'items.variant', 'items.combo']);
+        $cart->load(['restaurant', 'deliveryAddress', 'items.product', 'items.variant', 'items.combo']);
 
         $summary = $this->cartService->getCartSummary($cart);
         $validation = $this->cartService->validateCart($cart);
@@ -111,7 +124,19 @@ class CartController extends Controller
         return response()->json([
             'data' => [
                 'id' => $cart->id,
-                'restaurant' => $cart->restaurant,
+                'restaurant' => $cart->restaurant ? [
+                    'id' => $cart->restaurant->id,
+                    'name' => $cart->restaurant->name,
+                    'address' => $cart->restaurant->address,
+                    'price_location' => $cart->restaurant->price_location,
+                ] : null,
+                'delivery_address' => $cart->deliveryAddress ? [
+                    'id' => $cart->deliveryAddress->id,
+                    'label' => $cart->deliveryAddress->label,
+                    'street_address' => $cart->deliveryAddress->street_address,
+                    'city' => $cart->deliveryAddress->city,
+                    'department' => $cart->deliveryAddress->department,
+                ] : null,
                 'service_type' => $cart->service_type,
                 'zone' => $cart->zone,
                 'items' => CartItemResource::collection($itemsWithDiscounts),

@@ -144,21 +144,45 @@ class CartController extends Controller
      *         required=true,
      *
      *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="product_id", type="integer", example=1),
-     *             @OA\Property(property="combo_id", type="integer", example=null),
-     *             @OA\Property(property="variant_id", type="integer", example=5),
-     *             @OA\Property(property="quantity", type="integer", example=2),
-     *             @OA\Property(property="selected_options", type="array",
-     *
-     *                 @OA\Items(
-     *
-     *                     @OA\Property(property="section_id", type="integer", example=1),
-     *                     @OA\Property(property="option_id", type="integer", example=3)
+     *             oneOf={
+     *                 @OA\Schema(
+     *                     title="Agregar Producto",
+     *                     required={"product_id", "quantity"},
+     *                     @OA\Property(property="product_id", type="integer", example=1, description="ID del producto"),
+     *                     @OA\Property(property="variant_id", type="integer", example=5, nullable=true, description="ID de la variante (requerido si el producto tiene variantes)"),
+     *                     @OA\Property(property="quantity", type="integer", example=2, minimum=1, maximum=10),
+     *                     @OA\Property(property="selected_options", type="array", description="Opciones seleccionadas del producto (vegetales, salsas, etc.)",
+     *                         @OA\Items(type="object",
+     *                             @OA\Property(property="section_id", type="integer", example=1),
+     *                             @OA\Property(property="option_id", type="integer", example=3)
+     *                         )
+     *                     ),
+     *                     @OA\Property(property="notes", type="string", example="Sin cebolla", maxLength=500)
+     *                 ),
+     *                 @OA\Schema(
+     *                     title="Agregar Combo",
+     *                     required={"combo_id", "quantity"},
+     *                     @OA\Property(property="combo_id", type="integer", example=1, description="ID del combo"),
+     *                     @OA\Property(property="quantity", type="integer", example=1, minimum=1, maximum=10),
+     *                     @OA\Property(property="combo_selections", type="array", description="Selecciones para grupos de eleccion del combo",
+     *                         @OA\Items(type="object",
+     *                             @OA\Property(property="combo_item_id", type="integer", example=5, description="ID del combo_item que es choice_group"),
+     *                             @OA\Property(property="selections", type="array",
+     *                                 @OA\Items(type="object",
+     *                                     @OA\Property(property="option_id", type="integer", example=10, description="ID de la opcion seleccionada (combo_item_option)"),
+     *                                     @OA\Property(property="selected_options", type="array", nullable=true, description="Opciones del producto (vegetales, etc.)",
+     *                                         @OA\Items(type="object",
+     *                                             @OA\Property(property="section_id", type="integer"),
+     *                                             @OA\Property(property="option_id", type="integer")
+     *                                         )
+     *                                     )
+     *                                 )
+     *                             )
+     *                         )
+     *                     ),
+     *                     @OA\Property(property="notes", type="string", example="Sin cebolla en el sub", maxLength=500)
      *                 )
-     *             ),
-     *             @OA\Property(property="combo_selections", type="array", @OA\Items(type="object")),
-     *             @OA\Property(property="notes", type="string", example="Sin cebolla")
+     *             }
      *         )
      *     ),
      *

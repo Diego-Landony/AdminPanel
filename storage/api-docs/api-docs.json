@@ -14,7 +14,7 @@
             "description": "Local Development Server"
         },
         {
-            "url": "http://localhost",
+            "url": "https://appmobile.subwaycardgt.com",
             "description": "Application Server"
         }
     ],

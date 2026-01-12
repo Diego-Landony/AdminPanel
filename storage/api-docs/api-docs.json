@@ -1796,7 +1796,7 @@
                     "Cart"
                 ],
                 "summary": "Update service type",
-                "description": "Changes the service type (pickup/delivery) and zone (capital/interior).",
+                "description": "Changes the service type (pickup/delivery). Zone is determined automatically: for pickup uses restaurant.price_location, for delivery uses address validation. Requires restaurant to be set for pickup, or delivery address to be set for delivery.",
                 "operationId": "01e2a4cbf410f45dc86a4c8ca41b035b",
                 "requestBody": {
                     "required": true,
@@ -1805,20 +1805,13 @@
                             "schema": {
                                 "properties": {
                                     "service_type": {
+                                        "description": "Tipo de servicio. Para pickup requiere restaurante seleccionado, para delivery requiere dirección de entrega.",
                                         "type": "string",
                                         "enum": [
                                             "pickup",
                                             "delivery"
                                         ],
-                                        "example": "delivery"
-                                    },
-                                    "zone": {
-                                        "type": "string",
-                                        "enum": [
-                                            "capital",
-                                            "interior"
-                                        ],
-                                        "example": "capital"
+                                        "example": "pickup"
                                     }
                                 },
                                 "type": "object"
@@ -1834,6 +1827,55 @@
                                 "schema": {
                                     "properties": {
                                         "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "restaurant": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "service_type": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "pickup",
+                                                        "delivery"
+                                                    ]
+                                                },
+                                                "zone": {
+                                                    "description": "Determinada automaticamente",
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "capital",
+                                                        "interior"
+                                                    ]
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "summary": {
+                                                    "properties": {
+                                                        "subtotal": {
+                                                            "type": "string"
+                                                        },
+                                                        "total": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
                                             "type": "object"
                                         }
                                     },
@@ -1846,7 +1888,68 @@
                         "description": "Unauthenticated"
                     },
                     "422": {
-                        "description": "Validation error"
+                        "description": "Validation error or missing requirements",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "title": "Restaurant Required",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Debe seleccionar un restaurante primero para pickup."
+                                                },
+                                                "error_code": {
+                                                    "type": "string",
+                                                    "example": "RESTAURANT_REQUIRED"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "title": "Delivery Address Required",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Debe seleccionar una dirección de entrega primero para delivery."
+                                                },
+                                                "error_code": {
+                                                    "type": "string",
+                                                    "example": "DELIVERY_ADDRESS_REQUIRED"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "title": "Address Outside Delivery Zone",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "La dirección está fuera de la zona de entrega"
+                                                },
+                                                "error_code": {
+                                                    "type": "string",
+                                                    "example": "ADDRESS_OUTSIDE_DELIVERY_ZONE"
+                                                },
+                                                "data": {
+                                                    "properties": {
+                                                        "nearest_pickup_locations": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [

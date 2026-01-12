@@ -203,7 +203,7 @@ class PriceCalculatorService
             return false;
         }
 
-        $dayOfWeek = $date->dayOfWeek; // 0=Domingo, 1=Lunes, ..., 6=Sábado
+        $dayOfWeek = $date->dayOfWeekIso; // ISO-8601: 1=Lunes, ..., 7=Domingo
 
         return in_array($dayOfWeek, $variant->daily_special_days);
     }
@@ -228,7 +228,7 @@ class PriceCalculatorService
      */
     protected function findActivePromotionForVariant(ProductVariant $variant, Carbon $datetime): ?Promotion
     {
-        $dayOfWeek = $datetime->dayOfWeek;
+        $dayOfWeek = $datetime->dayOfWeekIso; // ISO-8601: 1=Lunes, ..., 7=Domingo
         $currentDate = $datetime->toDateString();
         $currentTime = $datetime->format('H:i:s');
 
@@ -273,7 +273,7 @@ class PriceCalculatorService
      */
     protected function findActivePromotionForProduct(Product $product, int $categoryId, Carbon $datetime): ?Promotion
     {
-        $dayOfWeek = $datetime->dayOfWeek;
+        $dayOfWeek = $datetime->dayOfWeekIso; // ISO-8601: 1=Lunes, ..., 7=Domingo
         $currentDate = $datetime->toDateString();
         $currentTime = $datetime->format('H:i:s');
 

@@ -323,7 +323,7 @@ class PromotionApplicationService
         }
 
         $datetime = now();
-        $dayOfWeek = $datetime->dayOfWeek;
+        $dayOfWeek = $datetime->dayOfWeekIso; // ISO-8601: 1=Lunes, ..., 7=Domingo
 
         // Primero, identificar todas las promociones aplicables
         $promotionsMap = [];

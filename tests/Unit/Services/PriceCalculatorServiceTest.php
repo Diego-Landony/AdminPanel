@@ -98,7 +98,7 @@ describe('Price Calculation', function () {
 describe('Special Handling', function () {
     test('detects daily special correctly', function () {
         // Create daily special variant for today
-        $today = Carbon::now()->dayOfWeek;
+        $today = Carbon::now()->dayOfWeekIso; // ISO-8601: 1=Lunes, ..., 7=Domingo
         $this->variant->update([
             'is_daily_special' => true,
             'daily_special_days' => [$today],
@@ -119,7 +119,7 @@ describe('Special Handling', function () {
     });
 
     test('does not apply promotions to daily special', function () {
-        $today = Carbon::now()->dayOfWeek;
+        $today = Carbon::now()->dayOfWeekIso; // ISO-8601: 1=Lunes, ..., 7=Domingo
         $this->variant->update([
             'is_daily_special' => true,
             'daily_special_days' => [$today],

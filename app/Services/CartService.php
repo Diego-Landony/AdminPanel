@@ -54,6 +54,9 @@ class CartService
     /**
      * Agrega un item al carrito
      *
+     * Si ya existe un item idéntico (mismo producto/combo, variante y opciones),
+     * se incrementa la cantidad en lugar de crear un nuevo item.
+     *
      * @param  array  $data  Debe contener: product_id OR combo_id, variant_id (opcional),
      *                       quantity, selected_options (opcional), combo_selections (opcional), notes (opcional)
      */
@@ -61,12 +64,16 @@ class CartService
     {
         $quantity = $data['quantity'] ?? 1;
         $unitPrice = 0;
+        $selectedOptions = $data['selected_options'] ?? null;
+        $comboSelections = $data['combo_selections'] ?? null;
+        $notes = $data['notes'] ?? null;
+
         $itemData = [
             'cart_id' => $cart->id,
             'quantity' => $quantity,
-            'selected_options' => $data['selected_options'] ?? null,
-            'combo_selections' => $data['combo_selections'] ?? null,
-            'notes' => $data['notes'] ?? null,
+            'selected_options' => $selectedOptions,
+            'combo_selections' => $comboSelections,
+            'notes' => $notes,
         ];
 
         if (isset($data['combo_id'])) {
@@ -79,6 +86,9 @@ class CartService
             $unitPrice = $this->getPriceForCombo($combo, $cart->zone, $cart->service_type);
 
             $itemData['combo_id'] = $combo->id;
+
+            // Buscar item idéntico existente
+            $existingItem = $this->findIdenticalItem($cart, null, null, $combo->id, $selectedOptions, $comboSelections);
         } elseif (isset($data['product_id'])) {
             $product = Product::with('category')->findOrFail($data['product_id']);
 
@@ -91,14 +101,111 @@ class CartService
 
             $itemData['product_id'] = $product->id;
             $itemData['variant_id'] = $variantId;
+
+            // Buscar item idéntico existente
+            $existingItem = $this->findIdenticalItem($cart, $product->id, $variantId, null, $selectedOptions, $comboSelections);
         } else {
             throw new \InvalidArgumentException('Se requiere product_id o combo_id');
+        }
+
+        // Si existe un item idéntico, incrementar cantidad y combinar notas
+        if (isset($existingItem) && $existingItem) {
+            $newQuantity = $existingItem->quantity + $quantity;
+            $combinedNotes = $this->combineNotes($existingItem->notes, $notes);
+
+            $existingItem->update([
+                'quantity' => $newQuantity,
+                'subtotal' => $unitPrice * $newQuantity,
+                'notes' => $combinedNotes,
+            ]);
+
+            return $existingItem->fresh(['product', 'variant', 'combo']);
         }
 
         $itemData['unit_price'] = $unitPrice;
         $itemData['subtotal'] = $unitPrice * $quantity;
 
         return CartItem::create($itemData);
+    }
+
+    /**
+     * Busca un item idéntico en el carrito
+     * Compara: product_id, variant_id, combo_id, selected_options, combo_selections
+     */
+    protected function findIdenticalItem(
+        Cart $cart,
+        ?int $productId,
+        ?int $variantId,
+        ?int $comboId,
+        ?array $selectedOptions,
+        ?array $comboSelections
+    ): ?CartItem {
+        $query = $cart->items()
+            ->where('product_id', $productId)
+            ->where('variant_id', $variantId)
+            ->where('combo_id', $comboId);
+
+        // Obtener candidatos y comparar opciones en PHP
+        $candidates = $query->get();
+
+        foreach ($candidates as $item) {
+            if ($this->optionsAreIdentical($item->selected_options, $selectedOptions) &&
+                $this->optionsAreIdentical($item->combo_selections, $comboSelections)) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Compara dos arrays de opciones para determinar si son idénticas
+     */
+    protected function optionsAreIdentical(?array $options1, ?array $options2): bool
+    {
+        // Normalizar nulls y arrays vacíos
+        $opt1 = empty($options1) ? [] : $options1;
+        $opt2 = empty($options2) ? [] : $options2;
+
+        // Comparar como JSON para una comparación profunda
+        return json_encode($this->sortOptionsArray($opt1)) === json_encode($this->sortOptionsArray($opt2));
+    }
+
+    /**
+     * Ordena un array de opciones para comparación consistente
+     */
+    protected function sortOptionsArray(array $options): array
+    {
+        // Ordenar el array principal
+        usort($options, function ($a, $b) {
+            $keyA = ($a['section_id'] ?? 0).'-'.($a['option_id'] ?? 0);
+            $keyB = ($b['section_id'] ?? 0).'-'.($b['option_id'] ?? 0);
+
+            return strcmp($keyA, $keyB);
+        });
+
+        return $options;
+    }
+
+    /**
+     * Combina las notas de dos items, evitando duplicados
+     */
+    protected function combineNotes(?string $existingNotes, ?string $newNotes): ?string
+    {
+        if (empty($newNotes)) {
+            return $existingNotes;
+        }
+
+        if (empty($existingNotes)) {
+            return $newNotes;
+        }
+
+        // Evitar duplicar la misma nota
+        if (str_contains($existingNotes, $newNotes)) {
+            return $existingNotes;
+        }
+
+        return trim($existingNotes).' | '.trim($newNotes);
     }
 
     /**

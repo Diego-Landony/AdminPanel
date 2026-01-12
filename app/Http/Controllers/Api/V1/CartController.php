@@ -33,7 +33,7 @@ class CartController extends Controller
      *     path="/api/v1/cart",
      *     tags={"Cart"},
      *     summary="Get current cart",
-     *     description="Returns the current cart with items, totals and summary. Each item includes discount information for displaying strikethrough prices.",
+     *     description="Returns the current cart with items, totals and summary. Each item includes discount information for displaying strikethrough prices. For 'Sub del Día' items, discount_amount = (normal_price - special_price) * quantity, allowing Flutter to show the original price crossed out and the special price.",
      *     security={{"sanctum":{}}},
      *
      *     @OA\Response(
@@ -175,7 +175,7 @@ class CartController extends Controller
      *     path="/api/v1/cart/items",
      *     tags={"Cart"},
      *     summary="Add item to cart",
-     *     description="Adds a product or combo to the cart with options and quantity.",
+     *     description="Adds a product or combo to the cart with options and quantity. If an identical item already exists (same product/combo, variant, and options), the quantity is incremented instead of creating a duplicate. Notes are combined with ' | ' separator.",
      *     security={{"sanctum":{}}},
      *
      *     @OA\RequestBody(

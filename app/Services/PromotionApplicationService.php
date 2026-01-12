@@ -349,7 +349,31 @@ class PromotionApplicationService
                     if (in_array($dayOfWeek, $variant->daily_special_days)) {
                         $itemDiscounts[$item->id]['is_daily_special'] = true;
 
-                        // El precio ya está calculado con el precio especial
+                        // Calcular el descuento: precio normal - precio especial
+                        $cart = $item->cart;
+                        $zone = $cart->zone ?? 'capital';
+                        $serviceType = $cart->service_type ?? 'pickup';
+                        $priceField = $this->getPriceField($zone, $serviceType);
+                        $dailySpecialPriceField = 'daily_special_'.$priceField;
+
+                        $normalPrice = (float) ($variant->{$priceField} ?? 0);
+                        $specialPrice = (float) ($variant->{$dailySpecialPriceField} ?? $normalPrice);
+
+                        if ($specialPrice < $normalPrice) {
+                            $discountPerUnit = $normalPrice - $specialPrice;
+                            $totalDiscount = $discountPerUnit * $item->quantity;
+
+                            $itemDiscounts[$item->id]['discount_amount'] = round($totalDiscount, 2);
+                            $itemDiscounts[$item->id]['original_price'] = round($normalPrice * $item->quantity, 2);
+                            $itemDiscounts[$item->id]['final_price'] = round($specialPrice * $item->quantity, 2);
+                            $itemDiscounts[$item->id]['applied_promotion'] = [
+                                'id' => 0,
+                                'name' => 'Sub del Día',
+                                'type' => 'daily_special',
+                                'value' => 'Q'.number_format($specialPrice, 2),
+                            ];
+                        }
+
                         continue; // Sub del día no acumula con otras promociones
                     }
                 }
@@ -461,5 +485,19 @@ class PromotionApplicationService
         $serviceType = $cart->service_type ?? 'pickup';
 
         return $promotion->getPriceForZoneCombinado($zone, $serviceType);
+    }
+
+    /**
+     * Obtiene el nombre del campo de precio según zona y tipo de servicio
+     */
+    protected function getPriceField(string $zone, string $serviceType): string
+    {
+        return match ([$zone, $serviceType]) {
+            ['capital', 'pickup'] => 'precio_pickup_capital',
+            ['capital', 'delivery'] => 'precio_domicilio_capital',
+            ['interior', 'pickup'] => 'precio_pickup_interior',
+            ['interior', 'delivery'] => 'precio_domicilio_interior',
+            default => 'precio_pickup_capital',
+        };
     }
 }

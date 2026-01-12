@@ -1213,6 +1213,38 @@
                                                                 },
                                                                 "type": "object",
                                                                 "nullable": true
+                                                            },
+                                                            "selected_options": {
+                                                                "description": "Opciones seleccionadas del producto con nombres",
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "section_id": {
+                                                                            "type": "integer",
+                                                                            "example": 1
+                                                                        },
+                                                                        "section_name": {
+                                                                            "description": "Nombre de la seccion",
+                                                                            "type": "string",
+                                                                            "example": "Pan"
+                                                                        },
+                                                                        "option_id": {
+                                                                            "type": "integer",
+                                                                            "example": 2
+                                                                        },
+                                                                        "option_name": {
+                                                                            "description": "Nombre de la opcion",
+                                                                            "type": "string",
+                                                                            "example": "Pan integral"
+                                                                        },
+                                                                        "price": {
+                                                                            "type": "number",
+                                                                            "format": "float",
+                                                                            "example": 0
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
                                                             }
                                                         },
                                                         "type": "object"

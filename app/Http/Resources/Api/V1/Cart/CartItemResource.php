@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources\Api\V1\Cart;
 
+use App\Models\Menu\Section;
+use App\Models\Menu\SectionOption;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -51,14 +53,7 @@ class CartItemResource extends JsonResource
             'final_price' => $this->discount_info['final_price'] ?? (float) $this->subtotal,
             'is_daily_special' => $this->discount_info['is_daily_special'] ?? false,
             'applied_promotion' => $this->discount_info['applied_promotion'] ?? null,
-            'selected_options' => $this->selected_options ? collect($this->selected_options)->map(function ($option) {
-                return [
-                    'section_id' => $option['section_id'] ?? null,
-                    'option_id' => $option['option_id'] ?? null,
-                    'name' => $option['name'] ?? null,
-                    'price' => isset($option['price']) ? (float) $option['price'] : 0,
-                ];
-            })->toArray() : [],
+            'selected_options' => $this->formatSelectedOptions(),
             'combo_selections' => $this->combo_selections,
             'options_total' => $this->when(method_exists($this->resource, 'getOptionsTotal'), function () {
                 return (float) $this->getOptionsTotal();
@@ -68,5 +63,47 @@ class CartItemResource extends JsonResource
             }),
             'notes' => $this->notes,
         ];
+    }
+
+    /**
+     * Format selected options with section and option names.
+     * Uses batch loading for scalability.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function formatSelectedOptions(): array
+    {
+        if (! $this->selected_options) {
+            return [];
+        }
+
+        $options = collect($this->selected_options);
+
+        // Colectar todos los IDs únicos para batch loading
+        $sectionIds = $options->pluck('section_id')->filter()->unique()->values()->toArray();
+        $optionIds = $options->pluck('option_id')->filter()->unique()->values()->toArray();
+
+        // Batch load secciones y opciones (2 queries en lugar de N)
+        $sections = ! empty($sectionIds)
+            ? Section::whereIn('id', $sectionIds)->pluck('title', 'id')
+            : collect();
+
+        $sectionOptions = ! empty($optionIds)
+            ? SectionOption::whereIn('id', $optionIds)->pluck('name', 'id')
+            : collect();
+
+        // Mapear con los nombres
+        return $options->map(function ($option) use ($sections, $sectionOptions) {
+            $sectionId = $option['section_id'] ?? null;
+            $optionId = $option['option_id'] ?? null;
+
+            return [
+                'section_id' => $sectionId,
+                'section_name' => $sectionId ? ($sections[$sectionId] ?? null) : null,
+                'option_id' => $optionId,
+                'option_name' => $option['name'] ?? ($optionId ? ($sectionOptions[$optionId] ?? null) : null),
+                'price' => isset($option['price']) ? (float) $option['price'] : 0,
+            ];
+        })->toArray();
     }
 }

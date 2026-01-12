@@ -77,6 +77,17 @@ class CartController extends Controller
      *                             @OA\Property(property="name", type="string"),
      *                             @OA\Property(property="type", type="string", enum={"two_for_one", "percentage_discount", "bundle_special"}),
      *                             @OA\Property(property="value", type="string", example="2x1")
+     *                         ),
+     *                         @OA\Property(property="selected_options", type="array", description="Opciones seleccionadas del producto con nombres",
+     *
+     *                             @OA\Items(type="object",
+     *
+     *                                 @OA\Property(property="section_id", type="integer", example=1),
+     *                                 @OA\Property(property="section_name", type="string", example="Pan", description="Nombre de la seccion"),
+     *                                 @OA\Property(property="option_id", type="integer", example=2),
+     *                                 @OA\Property(property="option_name", type="string", example="Pan integral", description="Nombre de la opcion"),
+     *                                 @OA\Property(property="price", type="number", format="float", example=0)
+     *                             )
      *                         )
      *                     )
      *                 ),

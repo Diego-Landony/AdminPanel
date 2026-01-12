@@ -53,9 +53,8 @@ class CartController extends Controller
      *                 @OA\Property(property="delivery_address", type="object", nullable=true, description="Direccion de entrega (solo para delivery)",
      *                     @OA\Property(property="id", type="integer", example=1),
      *                     @OA\Property(property="label", type="string", example="Casa"),
-     *                     @OA\Property(property="street_address", type="string", example="5ta Avenida 10-50, Zona 14"),
-     *                     @OA\Property(property="city", type="string", example="Guatemala"),
-     *                     @OA\Property(property="department", type="string", example="Guatemala")
+     *                     @OA\Property(property="address_line", type="string", example="5ta Avenida 10-50, Zona 14, Guatemala"),
+     *                     @OA\Property(property="zone", type="string", enum={"capital", "interior"}, example="capital")
      *                 ),
      *                 @OA\Property(property="service_type", type="string", enum={"pickup", "delivery"}),
      *                 @OA\Property(property="zone", type="string", enum={"capital", "interior"}, description="Determinada automaticamente del restaurante o direccion"),
@@ -133,9 +132,8 @@ class CartController extends Controller
                 'delivery_address' => $cart->deliveryAddress ? [
                     'id' => $cart->deliveryAddress->id,
                     'label' => $cart->deliveryAddress->label,
-                    'street_address' => $cart->deliveryAddress->street_address,
-                    'city' => $cart->deliveryAddress->city,
-                    'department' => $cart->deliveryAddress->department,
+                    'address_line' => $cart->deliveryAddress->address_line,
+                    'zone' => $cart->deliveryAddress->zone,
                 ] : null,
                 'service_type' => $cart->service_type,
                 'zone' => $cart->zone,

@@ -188,8 +188,10 @@ class PromotionApplicationService
                 $q->whereHas('items', fn ($q2) => $q2->where('variant_id', $variant->id))
                     ->orWhereHas('items', fn ($q2) => $q2->where('product_id', $variant->product_id))
                     ->orWhereHas('items', function ($q2) use ($variant) {
-                        $categoryIds = $variant->product->categories()->pluck('categories.id');
-                        $q2->whereIn('category_id', $categoryIds);
+                        $categoryId = $variant->product->category_id;
+                        if ($categoryId) {
+                            $q2->where('category_id', $categoryId);
+                        }
                     });
             })
             ->where(function ($q) use ($dayOfWeekIso) {
@@ -277,7 +279,7 @@ class PromotionApplicationService
                 ->where(function ($q) use ($item) {
                     $q->where('variant_id', $item->variant_id)
                         ->orWhere('product_id', $item->product_id)
-                        ->orWhereIn('category_id', $item->product->categories()->pluck('categories.id'));
+                        ->orWhere('category_id', $item->product->category_id);
                 })
                 ->first();
         }

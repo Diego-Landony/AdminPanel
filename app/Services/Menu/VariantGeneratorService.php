@@ -21,21 +21,16 @@ class VariantGeneratorService
     {
         $createdCount = 0;
 
-        // Obtener todas las categorías del producto que usen variantes
-        $categoriesWithVariants = $product->categories()
-            ->where('uses_variants', true)
-            ->whereNotNull('variant_definitions')
-            ->get();
+        // Obtener la categoría del producto si usa variantes
+        $category = $product->category;
 
-        // Si el producto no tiene categorías con variantes, no hacer nada
-        if ($categoriesWithVariants->isEmpty()) {
+        // Si el producto no tiene categoría o no usa variantes, no hacer nada
+        if (! $category || ! $category->uses_variants || empty($category->variant_definitions)) {
             return 0;
         }
 
-        // Recolectar todas las variantes únicas de todas las categorías
-        $variantDefinitions = $categoriesWithVariants
-            ->pluck('variant_definitions')
-            ->flatten()
+        // Obtener las definiciones de variantes de la categoría
+        $variantDefinitions = collect($category->variant_definitions)
             ->unique()
             ->values();
 

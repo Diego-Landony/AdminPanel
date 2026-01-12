@@ -193,7 +193,43 @@ class CartController extends Controller
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="item", type="object"),
+     *                 @OA\Property(property="item", type="object",
+     *                     @OA\Property(property="id", type="integer", example=19),
+     *                     @OA\Property(property="type", type="string", enum={"product", "combo"}, example="product"),
+     *                     @OA\Property(property="product", type="object", nullable=true,
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Italian B.M.T."),
+     *                         @OA\Property(property="image_url", type="string", example="/storage/menu/products/example.webp"),
+     *                         @OA\Property(property="variant", type="object", nullable=true,
+     *                             @OA\Property(property="id", type="integer", example=1),
+     *                             @OA\Property(property="name", type="string", example="15cm")
+     *                         )
+     *                     ),
+     *                     @OA\Property(property="combo", type="object", nullable=true,
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Combo Duo"),
+     *                         @OA\Property(property="image_url", type="string", example="/storage/menu/combos/example.webp")
+     *                     ),
+     *                     @OA\Property(property="quantity", type="integer", example=1),
+     *                     @OA\Property(property="unit_price", type="number", format="float", example=40),
+     *                     @OA\Property(property="subtotal", type="number", format="float", example=40),
+     *                     @OA\Property(property="discount_amount", type="number", format="float", example=0),
+     *                     @OA\Property(property="final_price", type="number", format="float", example=40),
+     *                     @OA\Property(property="is_daily_special", type="boolean", example=false),
+     *                     @OA\Property(property="applied_promotion", type="object", nullable=true),
+     *                     @OA\Property(property="selected_options", type="array",
+     *                         @OA\Items(type="object",
+     *                             @OA\Property(property="section_id", type="integer"),
+     *                             @OA\Property(property="option_id", type="integer"),
+     *                             @OA\Property(property="name", type="string", nullable=true),
+     *                             @OA\Property(property="price", type="number", format="float")
+     *                         )
+     *                     ),
+     *                     @OA\Property(property="combo_selections", type="array", nullable=true, @OA\Items(type="object")),
+     *                     @OA\Property(property="options_total", type="number", format="float", example=0),
+     *                     @OA\Property(property="line_total", type="number", format="float", example=40),
+     *                     @OA\Property(property="notes", type="string", nullable=true)
+     *                 ),
      *                 @OA\Property(property="message", type="string", example="Item agregado al carrito")
      *             )
      *         )

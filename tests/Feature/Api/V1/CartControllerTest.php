@@ -471,11 +471,62 @@ describe('clear (DELETE /api/v1/cart)', function () {
 });
 
 describe('updateServiceType (PUT /api/v1/cart/service-type)', function () {
-    test('changes service type and zone', function () {
+    test('changes service type to pickup using restaurant zone', function () {
+        $customer = Customer::factory()->create();
+
+        $restaurant = Restaurant::factory()->create([
+            'is_active' => true,
+            'price_location' => 'interior',
+        ]);
+
+        Cart::factory()->create([
+            'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'delivery',
+            'zone' => 'capital',
+        ]);
+
+        $response = actingAs($customer, 'sanctum')
+            ->putJson('/api/v1/cart/service-type', [
+                'service_type' => 'pickup',
+            ]);
+
+        $response->assertOk();
+        expect($response->json('data.service_type'))->toBe('pickup');
+        // Zone is determined automatically from restaurant.price_location
+        expect($response->json('data.zone'))->toBe('interior');
+    });
+
+    test('requires restaurant for pickup', function () {
         $customer = Customer::factory()->create();
 
         Cart::factory()->create([
             'customer_id' => $customer->id,
+            'restaurant_id' => null,
+            'service_type' => 'delivery',
+            'zone' => 'capital',
+        ]);
+
+        $response = actingAs($customer, 'sanctum')
+            ->putJson('/api/v1/cart/service-type', [
+                'service_type' => 'pickup',
+            ]);
+
+        $response->assertStatus(422);
+        expect($response->json('error_code'))->toBe('RESTAURANT_REQUIRED');
+    });
+
+    test('requires delivery address for delivery', function () {
+        $customer = Customer::factory()->create();
+
+        $restaurant = Restaurant::factory()->create([
+            'is_active' => true,
+        ]);
+
+        Cart::factory()->create([
+            'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
+            'delivery_address_id' => null,
             'service_type' => 'pickup',
             'zone' => 'capital',
         ]);
@@ -483,15 +534,13 @@ describe('updateServiceType (PUT /api/v1/cart/service-type)', function () {
         $response = actingAs($customer, 'sanctum')
             ->putJson('/api/v1/cart/service-type', [
                 'service_type' => 'delivery',
-                'zone' => 'interior',
             ]);
 
-        $response->assertOk();
-        expect($response->json('data.service_type'))->toBe('delivery');
-        expect($response->json('data.zone'))->toBe('interior');
+        $response->assertStatus(422);
+        expect($response->json('error_code'))->toBe('DELIVERY_ADDRESS_REQUIRED');
     });
 
-    test('recalculates all item prices', function () {
+    test('recalculates all item prices when changing to pickup', function () {
         $customer = Customer::factory()->create();
         $category = Category::factory()->create(['is_active' => true]);
         $product = Product::factory()->create([
@@ -503,9 +552,15 @@ describe('updateServiceType (PUT /api/v1/cart/service-type)', function () {
             'precio_domicilio_interior' => 60.00,
         ]);
 
+        $restaurant = Restaurant::factory()->create([
+            'is_active' => true,
+            'price_location' => 'interior',
+        ]);
+
         $cart = Cart::factory()->create([
             'customer_id' => $customer->id,
-            'service_type' => 'pickup',
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'delivery',
             'zone' => 'capital',
         ]);
 
@@ -513,44 +568,47 @@ describe('updateServiceType (PUT /api/v1/cart/service-type)', function () {
             'cart_id' => $cart->id,
             'product_id' => $product->id,
             'quantity' => 2,
-            'unit_price' => 50.00,
-            'subtotal' => 100.00,
+            'unit_price' => 55.00,
+            'subtotal' => 110.00,
         ]);
 
         $response = actingAs($customer, 'sanctum')
             ->putJson('/api/v1/cart/service-type', [
-                'service_type' => 'delivery',
-                'zone' => 'interior',
+                'service_type' => 'pickup',
             ]);
 
         $response->assertOk();
         $updatedItem = $response->json('data.items')[0] ?? null;
         expect($updatedItem)->not->toBeNull();
-        expect($updatedItem['unit_price'])->toEqual(60.00);
-        expect($updatedItem['subtotal'])->toEqual(120.00);
+        // Price should be precio_pickup_interior = 45.00
+        expect($updatedItem['unit_price'])->toEqual(45.00);
+        expect($updatedItem['subtotal'])->toEqual(90.00);
     });
 
-    test('validates service configuration', function (array $data, string $expectedError) {
+    test('validates service_type is required', function () {
         $customer = Customer::factory()->create();
+
+        $restaurant = Restaurant::factory()->create([
+            'is_active' => true,
+        ]);
 
         Cart::factory()->create([
             'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
         ]);
 
         $response = actingAs($customer, 'sanctum')
-            ->putJson('/api/v1/cart/service-type', $data);
+            ->putJson('/api/v1/cart/service-type', [
+                'service_type' => 'invalid',
+            ]);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors([$expectedError]);
-    })->with([
-        'invalid service_type' => [['service_type' => 'invalid', 'zone' => 'capital'], 'service_type'],
-        'invalid zone' => [['service_type' => 'pickup', 'zone' => 'invalid'], 'zone'],
-    ]);
+            ->assertJsonValidationErrors(['service_type']);
+    });
 
     test('requires authentication', function () {
         $response = $this->putJson('/api/v1/cart/service-type', [
-            'service_type' => 'delivery',
-            'zone' => 'capital',
+            'service_type' => 'pickup',
         ]);
 
         $response->assertUnauthorized();

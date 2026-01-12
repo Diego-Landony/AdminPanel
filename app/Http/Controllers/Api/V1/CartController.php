@@ -44,12 +44,14 @@ class CartController extends Controller
      *
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="restaurant_id", type="integer", nullable=true, example=2, description="ID del restaurante para mapeo directo"),
      *                 @OA\Property(property="restaurant", type="object", nullable=true, description="Restaurante asignado (pickup o delivery)",
      *                     @OA\Property(property="id", type="integer", example=2),
      *                     @OA\Property(property="name", type="string", example="Subway Pradera"),
      *                     @OA\Property(property="address", type="string", example="6ta Avenida 5-10, Zona 9"),
      *                     @OA\Property(property="price_location", type="string", enum={"capital", "interior"})
      *                 ),
+     *                 @OA\Property(property="delivery_address_id", type="integer", nullable=true, example=1, description="ID de la direccion de entrega para mapeo directo"),
      *                 @OA\Property(property="delivery_address", type="object", nullable=true, description="Direccion de entrega (solo para delivery)",
      *                     @OA\Property(property="id", type="integer", example=1),
      *                     @OA\Property(property="label", type="string", example="Casa"),
@@ -123,12 +125,14 @@ class CartController extends Controller
         return response()->json([
             'data' => [
                 'id' => $cart->id,
+                'restaurant_id' => $cart->restaurant_id,
                 'restaurant' => $cart->restaurant ? [
                     'id' => $cart->restaurant->id,
                     'name' => $cart->restaurant->name,
                     'address' => $cart->restaurant->address,
                     'price_location' => $cart->restaurant->price_location,
                 ] : null,
+                'delivery_address_id' => $cart->delivery_address_id,
                 'delivery_address' => $cart->deliveryAddress ? [
                     'id' => $cart->deliveryAddress->id,
                     'label' => $cart->deliveryAddress->label,

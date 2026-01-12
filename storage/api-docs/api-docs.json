@@ -14,7 +14,7 @@
             "description": "Local Development Server"
         },
         {
-            "url": "https://appmobile.subwaycardgt.com",
+            "url": "http://localhost",
             "description": "Application Server"
         }
     ],
@@ -1070,6 +1070,71 @@
                                                     "type": "integer",
                                                     "example": 1
                                                 },
+                                                "restaurant_id": {
+                                                    "description": "ID del restaurante para mapeo directo",
+                                                    "type": "integer",
+                                                    "example": 2,
+                                                    "nullable": true
+                                                },
+                                                "restaurant": {
+                                                    "description": "Restaurante asignado (pickup o delivery)",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Subway Pradera"
+                                                        },
+                                                        "address": {
+                                                            "type": "string",
+                                                            "example": "6ta Avenida 5-10, Zona 9"
+                                                        },
+                                                        "price_location": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "capital",
+                                                                "interior"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "delivery_address_id": {
+                                                    "description": "ID de la direccion de entrega para mapeo directo",
+                                                    "type": "integer",
+                                                    "example": 1,
+                                                    "nullable": true
+                                                },
+                                                "delivery_address": {
+                                                    "description": "Direccion de entrega (solo para delivery)",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "label": {
+                                                            "type": "string",
+                                                            "example": "Casa"
+                                                        },
+                                                        "address_line": {
+                                                            "type": "string",
+                                                            "example": "5ta Avenida 10-50, Zona 14, Guatemala"
+                                                        },
+                                                        "zone": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "capital",
+                                                                "interior"
+                                                            ],
+                                                            "example": "capital"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
                                                 "service_type": {
                                                     "type": "string",
                                                     "enum": [
@@ -1078,6 +1143,7 @@
                                                     ]
                                                 },
                                                 "zone": {
+                                                    "description": "Determinada automaticamente del restaurante o direccion",
                                                     "type": "string",
                                                     "enum": [
                                                         "capital",

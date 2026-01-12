@@ -27,7 +27,7 @@ class CartItemResource extends JsonResource
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
-                    'image_url' => $product->image,
+                    'image_url' => $product->getImageUrl(),
                     'variant' => $variant ? [
                         'id' => $variant->id,
                         'name' => $variant->name,
@@ -40,7 +40,7 @@ class CartItemResource extends JsonResource
                 return [
                     'id' => $combo->id,
                     'name' => $combo->name,
-                    'image_url' => $combo->image,
+                    'image_url' => $combo->getImageUrl(),
                 ];
             }),
             'quantity' => $this->quantity,

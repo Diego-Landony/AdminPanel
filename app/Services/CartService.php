@@ -104,37 +104,65 @@ class CartService
     /**
      * Actualiza un item del carrito
      *
-     * @param  array  $data  Puede contener: quantity, selected_options, notes
+     * @param  array  $data  Puede contener: variant_id, quantity, selected_options, combo_selections, notes
      */
     public function updateItem(CartItem $item, array $data): CartItem
     {
         $cart = $item->cart;
+        $priceNeedsUpdate = false;
 
+        // Cambio de variante (solo para productos, no combos)
+        if (array_key_exists('variant_id', $data) && $item->isProduct()) {
+            $newVariantId = $data['variant_id'];
+
+            // Validar que la variante pertenece al producto
+            if ($newVariantId !== null) {
+                $variant = ProductVariant::where('id', $newVariantId)
+                    ->where('product_id', $item->product_id)
+                    ->first();
+
+                if (! $variant) {
+                    throw new \InvalidArgumentException('La variante no pertenece a este producto');
+                }
+            }
+
+            $item->variant_id = $newVariantId;
+            $priceNeedsUpdate = true;
+        }
+
+        // Cambio de cantidad
         if (isset($data['quantity'])) {
-            $quantity = $data['quantity'];
+            $item->quantity = $data['quantity'];
+            $priceNeedsUpdate = true;
+        }
 
+        // Recalcular precio si es necesario
+        if ($priceNeedsUpdate) {
             if ($item->isCombo()) {
                 $unitPrice = $this->getPriceForCombo($item->combo, $cart->zone, $cart->service_type);
             } else {
                 $unitPrice = $this->getPriceForProduct($item->product, $item->variant_id, $cart->zone, $cart->service_type);
             }
 
-            $item->quantity = $quantity;
             $item->unit_price = $unitPrice;
-            $item->subtotal = $unitPrice * $quantity;
+            $item->subtotal = $unitPrice * $item->quantity;
         }
 
         if (isset($data['selected_options'])) {
             $item->selected_options = $data['selected_options'];
         }
 
-        if (isset($data['notes'])) {
+        if (isset($data['combo_selections'])) {
+            $item->combo_selections = $data['combo_selections'];
+        }
+
+        if (array_key_exists('notes', $data)) {
             $item->notes = $data['notes'];
         }
 
         $item->save();
 
-        return $item->fresh();
+        return $item->fresh(['product', 'variant', 'combo']);
     }
 
     /**

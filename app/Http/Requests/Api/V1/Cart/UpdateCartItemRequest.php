@@ -22,6 +22,7 @@ class UpdateCartItemRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'variant_id' => ['sometimes', 'nullable', 'integer', 'exists:product_variants,id'],
             'quantity' => ['sometimes', 'integer', 'min:1', 'max:10'],
             'selected_options' => ['sometimes', 'array'],
             'selected_options.*.section_id' => ['required', 'integer'],
@@ -39,6 +40,8 @@ class UpdateCartItemRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'variant_id.integer' => 'El ID de la variante debe ser un número entero.',
+            'variant_id.exists' => 'La variante seleccionada no existe.',
             'quantity.integer' => 'La cantidad debe ser un número entero.',
             'quantity.min' => 'La cantidad debe ser al menos 1.',
             'quantity.max' => 'La cantidad no puede exceder 10 unidades.',
@@ -61,6 +64,7 @@ class UpdateCartItemRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'variant_id' => 'variante',
             'quantity' => 'cantidad',
             'selected_options' => 'opciones seleccionadas',
             'combo_selections' => 'selecciones del combo',

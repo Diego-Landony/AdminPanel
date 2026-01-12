@@ -44,11 +44,14 @@ class CreateOrderRequest extends FormRequest
                 'date',
                 function ($attribute, $value, $fail) {
                     if ($this->service_type === 'pickup' && $value) {
+                        $restaurant = \App\Models\Restaurant::find($this->restaurant_id);
+                        $estimatedMinutes = $restaurant?->estimated_pickup_time ?? 30;
+
                         $scheduledTime = \Carbon\Carbon::parse($value);
-                        $minimumTime = now()->addMinutes(30);
+                        $minimumTime = now()->addMinutes($estimatedMinutes);
 
                         if ($scheduledTime->lt($minimumTime)) {
-                            $fail('La hora de recogida debe ser al menos 30 minutos desde ahora.');
+                            $fail("La hora de recogida debe ser al menos {$estimatedMinutes} minutos desde ahora.");
                         }
                     }
                 },

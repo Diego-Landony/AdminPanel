@@ -52,12 +52,27 @@ class OrderService
 
         $serviceType = $data['service_type'] ?? $cart->service_type;
 
-        if ($serviceType === 'pickup' && isset($data['scheduled_pickup_time'])) {
-            $scheduledTime = \Carbon\Carbon::parse($data['scheduled_pickup_time']);
-            $minimumTime = now()->addMinutes(30);
+        // Obtener tiempos estimados del restaurante
+        $restaurant = \App\Models\Restaurant::find($data['restaurant_id'] ?? $cart->restaurant_id);
+        $estimatedPickupMinutes = $restaurant?->estimated_pickup_time ?? 30;
+        $estimatedDeliveryMinutes = $restaurant?->estimated_delivery_time ?? 45;
 
-            if ($scheduledTime->lt($minimumTime)) {
-                throw new \InvalidArgumentException('La hora de recogida debe ser al menos 30 minutos desde ahora.');
+        // Determinar tiempo estimado según tipo de servicio
+        $estimatedMinutes = $serviceType === 'pickup' ? $estimatedPickupMinutes : $estimatedDeliveryMinutes;
+
+        if ($serviceType === 'pickup') {
+            $minimumPickupTime = now()->addMinutes($estimatedPickupMinutes);
+
+            if (isset($data['scheduled_pickup_time'])) {
+                $scheduledTime = \Carbon\Carbon::parse($data['scheduled_pickup_time']);
+
+                // Auto-recalcular si la hora programada ya pasó o es muy pronto
+                if ($scheduledTime->lt($minimumPickupTime)) {
+                    $data['scheduled_pickup_time'] = $minimumPickupTime->toIso8601String();
+                }
+            } else {
+                // Si no se especificó hora, usar la hora mínima como default
+                $data['scheduled_pickup_time'] = $minimumPickupTime->toIso8601String();
             }
         }
 
@@ -87,7 +102,7 @@ class OrderService
             }
         }
 
-        return DB::transaction(function () use ($cart, $data) {
+        return DB::transaction(function () use ($cart, $data, $estimatedMinutes) {
             $customer = $cart->customer;
 
             $deliveryAddressSnapshot = null;
@@ -130,7 +145,7 @@ class OrderService
                 'status' => Order::STATUS_PENDING,
                 'payment_method' => $data['payment_method'],
                 'payment_status' => 'pending',
-                'estimated_ready_at' => now()->addMinutes(30),
+                'estimated_ready_at' => now()->addMinutes($estimatedMinutes),
                 'scheduled_pickup_time' => $data['scheduled_pickup_time'] ?? null,
                 'points_earned' => $pointsToEarn,
                 'nit_id' => $data['nit_id'] ?? null,

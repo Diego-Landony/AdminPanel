@@ -145,33 +145,45 @@ class CartController extends Controller
      *
      *         @OA\JsonContent(
      *             oneOf={
+     *
      *                 @OA\Schema(
      *                     title="Agregar Producto",
      *                     required={"product_id", "quantity"},
+     *
      *                     @OA\Property(property="product_id", type="integer", example=1, description="ID del producto"),
      *                     @OA\Property(property="variant_id", type="integer", example=5, nullable=true, description="ID de la variante (requerido si el producto tiene variantes)"),
      *                     @OA\Property(property="quantity", type="integer", example=2, minimum=1, maximum=10),
      *                     @OA\Property(property="selected_options", type="array", description="Opciones seleccionadas del producto (vegetales, salsas, etc.)",
+     *
      *                         @OA\Items(type="object",
+     *
      *                             @OA\Property(property="section_id", type="integer", example=1),
      *                             @OA\Property(property="option_id", type="integer", example=3)
      *                         )
      *                     ),
      *                     @OA\Property(property="notes", type="string", example="Sin cebolla", maxLength=500)
      *                 ),
+     *
      *                 @OA\Schema(
      *                     title="Agregar Combo",
      *                     required={"combo_id", "quantity"},
+     *
      *                     @OA\Property(property="combo_id", type="integer", example=1, description="ID del combo"),
      *                     @OA\Property(property="quantity", type="integer", example=1, minimum=1, maximum=10),
      *                     @OA\Property(property="combo_selections", type="array", description="Selecciones para grupos de eleccion del combo",
+     *
      *                         @OA\Items(type="object",
+     *
      *                             @OA\Property(property="combo_item_id", type="integer", example=5, description="ID del combo_item que es choice_group"),
      *                             @OA\Property(property="selections", type="array",
+     *
      *                                 @OA\Items(type="object",
+     *
      *                                     @OA\Property(property="option_id", type="integer", example=10, description="ID de la opcion seleccionada (combo_item_option)"),
      *                                     @OA\Property(property="selected_options", type="array", nullable=true, description="Opciones del producto (vegetales, etc.)",
+     *
      *                                         @OA\Items(type="object",
+     *
      *                                             @OA\Property(property="section_id", type="integer"),
      *                                             @OA\Property(property="option_id", type="integer")
      *                                         )
@@ -218,7 +230,9 @@ class CartController extends Controller
      *                     @OA\Property(property="is_daily_special", type="boolean", example=false),
      *                     @OA\Property(property="applied_promotion", type="object", nullable=true),
      *                     @OA\Property(property="selected_options", type="array",
+     *
      *                         @OA\Items(type="object",
+     *
      *                             @OA\Property(property="section_id", type="integer"),
      *                             @OA\Property(property="option_id", type="integer"),
      *                             @OA\Property(property="name", type="string", nullable=true),
@@ -506,13 +520,13 @@ class CartController extends Controller
     }
 
     /**
-     * Update cart service type and zone.
+     * Update cart service type.
      *
      * @OA\Put(
      *     path="/api/v1/cart/service-type",
      *     tags={"Cart"},
      *     summary="Update service type",
-     *     description="Changes the service type (pickup/delivery) and zone (capital/interior).",
+     *     description="Changes the service type (pickup/delivery). Zone is determined automatically: for pickup uses restaurant.price_location, for delivery uses address validation. Requires restaurant to be set for pickup, or delivery address to be set for delivery.",
      *     security={{"sanctum":{}}},
      *
      *     @OA\RequestBody(
@@ -520,8 +534,7 @@ class CartController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="service_type", type="string", enum={"pickup", "delivery"}, example="delivery"),
-     *             @OA\Property(property="zone", type="string", enum={"capital", "interior"}, example="capital")
+     *             @OA\Property(property="service_type", type="string", enum={"pickup", "delivery"}, example="pickup", description="Tipo de servicio. Para pickup requiere restaurante seleccionado, para delivery requiere dirección de entrega.")
      *         )
      *     ),
      *
@@ -531,21 +544,110 @@ class CartController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="data", type="object")
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="restaurant", type="object",
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="name", type="string")
+     *                 ),
+     *                 @OA\Property(property="service_type", type="string", enum={"pickup", "delivery"}),
+     *                 @OA\Property(property="zone", type="string", enum={"capital", "interior"}, description="Determinada automaticamente"),
+     *                 @OA\Property(property="items", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="summary", type="object",
+     *                     @OA\Property(property="subtotal", type="string"),
+     *                     @OA\Property(property="total", type="string")
+     *                 )
+     *             )
      *         )
      *     ),
      *
      *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=422, description="Validation error")
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error or missing requirements",
+     *
+     *         @OA\JsonContent(
+     *             oneOf={
+     *
+     *                 @OA\Schema(
+     *                     title="Restaurant Required",
+     *
+     *                     @OA\Property(property="message", type="string", example="Debe seleccionar un restaurante primero para pickup."),
+     *                     @OA\Property(property="error_code", type="string", example="RESTAURANT_REQUIRED")
+     *                 ),
+     *
+     *                 @OA\Schema(
+     *                     title="Delivery Address Required",
+     *
+     *                     @OA\Property(property="message", type="string", example="Debe seleccionar una dirección de entrega primero para delivery."),
+     *                     @OA\Property(property="error_code", type="string", example="DELIVERY_ADDRESS_REQUIRED")
+     *                 ),
+     *
+     *                 @OA\Schema(
+     *                     title="Address Outside Delivery Zone",
+     *
+     *                     @OA\Property(property="message", type="string", example="La dirección está fuera de la zona de entrega"),
+     *                     @OA\Property(property="error_code", type="string", example="ADDRESS_OUTSIDE_DELIVERY_ZONE"),
+     *                     @OA\Property(property="data", type="object",
+     *                         @OA\Property(property="nearest_pickup_locations", type="array", @OA\Items(type="object"))
+     *                     )
+     *                 )
+     *             }
+     *         )
+     *     )
      * )
      */
     public function updateServiceType(UpdateCartServiceTypeRequest $request): JsonResponse
     {
         $customer = auth()->user();
         $validated = $request->validated();
+        $serviceType = $validated['service_type'];
 
         $cart = $this->cartService->getOrCreateCart($customer);
-        $cart = $this->cartService->updateServiceType($cart, $validated['service_type'], $validated['zone']);
+
+        // Determinar zona automáticamente basado en el tipo de servicio
+        if ($serviceType === 'pickup') {
+            // Para pickup: zona del restaurante seleccionado
+            if (! $cart->restaurant_id) {
+                return response()->json([
+                    'message' => 'Debe seleccionar un restaurante primero para pickup.',
+                    'error_code' => 'RESTAURANT_REQUIRED',
+                ], 422);
+            }
+
+            $cart->load('restaurant');
+            $zone = $cart->restaurant->price_location ?? 'capital';
+        } else {
+            // Para delivery: zona de la dirección de entrega
+            if (! $cart->delivery_address_id) {
+                return response()->json([
+                    'message' => 'Debe seleccionar una dirección de entrega primero para delivery.',
+                    'error_code' => 'DELIVERY_ADDRESS_REQUIRED',
+                ], 422);
+            }
+
+            $cart->load('deliveryAddress');
+
+            // Re-validar la dirección para obtener zona y restaurante asignado
+            $result = $this->deliveryValidation->validateDeliveryAddress($cart->deliveryAddress);
+
+            if (! $result->isValid) {
+                return response()->json([
+                    'message' => $result->errorMessage,
+                    'error_code' => 'ADDRESS_OUTSIDE_DELIVERY_ZONE',
+                    'data' => [
+                        'nearest_pickup_locations' => $result->nearbyPickupRestaurants,
+                    ],
+                ], 422);
+            }
+
+            $zone = $result->zone;
+
+            // Actualizar el restaurante asignado para delivery
+            $cart->update(['restaurant_id' => $result->restaurant->id]);
+        }
+
+        $cart = $this->cartService->updateServiceType($cart, $serviceType, $zone);
         $cart->load(['restaurant', 'items.product', 'items.variant', 'items.combo']);
 
         $summary = $this->cartService->getCartSummary($cart);

@@ -24,7 +24,6 @@ class UpdateCartServiceTypeRequest extends FormRequest
     {
         return [
             'service_type' => ['required', Rule::in(['pickup', 'delivery'])],
-            'zone' => ['required', Rule::in(['capital', 'interior'])],
         ];
     }
 
@@ -38,8 +37,6 @@ class UpdateCartServiceTypeRequest extends FormRequest
         return [
             'service_type.required' => 'El tipo de servicio es requerido.',
             'service_type.in' => 'El tipo de servicio debe ser: pickup o delivery.',
-            'zone.required' => 'La zona es requerida.',
-            'zone.in' => 'La zona debe ser: capital o interior.',
         ];
     }
 
@@ -52,7 +49,6 @@ class UpdateCartServiceTypeRequest extends FormRequest
     {
         return [
             'service_type' => 'tipo de servicio',
-            'zone' => 'zona',
         ];
     }
 }

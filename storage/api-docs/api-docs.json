@@ -1251,51 +1251,126 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "properties": {
-                                    "product_id": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
-                                    "combo_id": {
-                                        "type": "integer",
-                                        "example": null
-                                    },
-                                    "variant_id": {
-                                        "type": "integer",
-                                        "example": 5
-                                    },
-                                    "quantity": {
-                                        "type": "integer",
-                                        "example": 2
-                                    },
-                                    "selected_options": {
-                                        "type": "array",
-                                        "items": {
-                                            "properties": {
-                                                "section_id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "option_id": {
-                                                    "type": "integer",
-                                                    "example": 3
+                                "oneOf": [
+                                    {
+                                        "title": "Agregar Producto",
+                                        "required": [
+                                            "product_id",
+                                            "quantity"
+                                        ],
+                                        "properties": {
+                                            "product_id": {
+                                                "description": "ID del producto",
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "variant_id": {
+                                                "description": "ID de la variante (requerido si el producto tiene variantes)",
+                                                "type": "integer",
+                                                "example": 5,
+                                                "nullable": true
+                                            },
+                                            "quantity": {
+                                                "type": "integer",
+                                                "maximum": 10,
+                                                "minimum": 1,
+                                                "example": 2
+                                            },
+                                            "selected_options": {
+                                                "description": "Opciones seleccionadas del producto (vegetales, salsas, etc.)",
+                                                "type": "array",
+                                                "items": {
+                                                    "properties": {
+                                                        "section_id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "option_id": {
+                                                            "type": "integer",
+                                                            "example": 3
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
-                                            "type": "object"
-                                        }
+                                            "notes": {
+                                                "type": "string",
+                                                "maxLength": 500,
+                                                "example": "Sin cebolla"
+                                            }
+                                        },
+                                        "type": "object"
                                     },
-                                    "combo_selections": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "notes": {
-                                        "type": "string",
-                                        "example": "Sin cebolla"
+                                    {
+                                        "title": "Agregar Combo",
+                                        "required": [
+                                            "combo_id",
+                                            "quantity"
+                                        ],
+                                        "properties": {
+                                            "combo_id": {
+                                                "description": "ID del combo",
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "quantity": {
+                                                "type": "integer",
+                                                "maximum": 10,
+                                                "minimum": 1,
+                                                "example": 1
+                                            },
+                                            "combo_selections": {
+                                                "description": "Selecciones para grupos de eleccion del combo",
+                                                "type": "array",
+                                                "items": {
+                                                    "properties": {
+                                                        "combo_item_id": {
+                                                            "description": "ID del combo_item que es choice_group",
+                                                            "type": "integer",
+                                                            "example": 5
+                                                        },
+                                                        "selections": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "option_id": {
+                                                                        "description": "ID de la opcion seleccionada (combo_item_option)",
+                                                                        "type": "integer",
+                                                                        "example": 10
+                                                                    },
+                                                                    "selected_options": {
+                                                                        "description": "Opciones del producto (vegetales, etc.)",
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "properties": {
+                                                                                "section_id": {
+                                                                                    "type": "integer"
+                                                                                },
+                                                                                "option_id": {
+                                                                                    "type": "integer"
+                                                                                }
+                                                                            },
+                                                                            "type": "object"
+                                                                        },
+                                                                        "nullable": true
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "notes": {
+                                                "type": "string",
+                                                "maxLength": 500,
+                                                "example": "Sin cebolla en el sub"
+                                            }
+                                        },
+                                        "type": "object"
                                     }
-                                },
-                                "type": "object"
+                                ]
                             }
                         }
                     }
@@ -1310,6 +1385,145 @@
                                         "data": {
                                             "properties": {
                                                 "item": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 19
+                                                        },
+                                                        "type": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "product",
+                                                                "combo"
+                                                            ],
+                                                            "example": "product"
+                                                        },
+                                                        "product": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "name": {
+                                                                    "type": "string",
+                                                                    "example": "Italian B.M.T."
+                                                                },
+                                                                "image_url": {
+                                                                    "type": "string",
+                                                                    "example": "/storage/menu/products/example.webp"
+                                                                },
+                                                                "variant": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer",
+                                                                            "example": 1
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string",
+                                                                            "example": "15cm"
+                                                                        }
+                                                                    },
+                                                                    "type": "object",
+                                                                    "nullable": true
+                                                                }
+                                                            },
+                                                            "type": "object",
+                                                            "nullable": true
+                                                        },
+                                                        "combo": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "name": {
+                                                                    "type": "string",
+                                                                    "example": "Combo Duo"
+                                                                },
+                                                                "image_url": {
+                                                                    "type": "string",
+                                                                    "example": "/storage/menu/combos/example.webp"
+                                                                }
+                                                            },
+                                                            "type": "object",
+                                                            "nullable": true
+                                                        },
+                                                        "quantity": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "unit_price": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 40
+                                                        },
+                                                        "subtotal": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 40
+                                                        },
+                                                        "discount_amount": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 0
+                                                        },
+                                                        "final_price": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 40
+                                                        },
+                                                        "is_daily_special": {
+                                                            "type": "boolean",
+                                                            "example": false
+                                                        },
+                                                        "applied_promotion": {
+                                                            "type": "object",
+                                                            "nullable": true
+                                                        },
+                                                        "selected_options": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "section_id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "option_id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "nullable": true
+                                                                    },
+                                                                    "price": {
+                                                                        "type": "number",
+                                                                        "format": "float"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "combo_selections": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object"
+                                                            },
+                                                            "nullable": true
+                                                        },
+                                                        "options_total": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 0
+                                                        },
+                                                        "line_total": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 40
+                                                        },
+                                                        "notes": {
+                                                            "type": "string",
+                                                            "nullable": true
+                                                        }
+                                                    },
                                                     "type": "object"
                                                 },
                                                 "message": {
@@ -3574,7 +3788,7 @@
                     "Menu"
                 ],
                 "summary": "Get complete menu",
-                "description": "Returns complete menu with categories, products and permanent combos.\n     *\n     * **⚠️ IMPORTANTE - Disclaimer de Precios:**\n     * El campo `price` muestra el precio de PICKUP en CAPITAL (precio base de referencia).\n     * Este NO es el precio de delivery ni el precio en interior.\n     * Puede variar segun area (capital/interior) y tipo de servicio (pickup/delivery).\n     *\n     * El precio final se calcula automaticamente cuando el usuario:\n     * - Selecciona un restaurante para pickup (PUT /cart/restaurant)\n     * - Selecciona una direccion para delivery (PUT /cart/delivery-address)\n     *\n     * For promotions/offers, use GET /api/v1/menu/promotions.",
+                "description": "Returns complete menu with categories, products and permanent combos.\n     *\n     * **⚠️ IMPORTANTE - Disclaimer de Precios:**\n     * El campo `price` muestra el precio de PICKUP en CAPITAL (precio base de referencia).\n     * Este NO es el precio de delivery ni el precio en interior.\n     * Puede variar segun area (capital/interior) y tipo de servicio (pickup/delivery).\n     *\n     * El precio final se calcula automaticamente cuando el usuario:\n     * - Selecciona un restaurante para pickup (PUT /cart/restaurant)\n     * - Selecciona una direccion para delivery (PUT /cart/delivery-address)\n     *\n     * **📋 IMPORTANTE - Ordenamiento del Menú:**\n     * Flutter debe combinar `categories` y `combos` usando el campo `sort_order` para mostrar\n     * el menú en el orden configurado por el administrador.\n     *\n     * 1. `categories[]` - Solo incluye categorías normales (is_combo_category = false)\n     * 2. `combos_category` - Categoría especial para combos con su `sort_order`\n     * 3. `combos[]` - Lista de combos que van en esa sección\n     *\n     * Flutter debe:\n     * - Combinar ambos arrays usando `sort_order`\n     * - Ordenar todo de menor a mayor\n     * - Permitir orden mixto (ej: Productos, Combos, Productos)\n     * - Ordenar productos dentro de cada categoría por `product.sort_order`\n     * - Ordenar combos dentro de la sección por `combo.sort_order`\n     *\n     * For promotions/offers, use GET /api/v1/menu/promotions.",
                 "operationId": "fa6c34f6134451c1793d68fdbf350ec6",
                 "parameters": [
                     {
@@ -3603,14 +3817,38 @@
                                                     "example": "El precio puede variar segun area y tipo de servicio."
                                                 },
                                                 "categories": {
-                                                    "description": "Product categories with their products",
+                                                    "description": "Product categories (excludes combo category). Order by sort_order.",
                                                     "type": "array",
                                                     "items": {
                                                         "$ref": "#/components/schemas/Category"
                                                     }
                                                 },
+                                                "combos_category": {
+                                                    "description": "Special category for combos section with sort_order to position it among other categories",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 10
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Combos"
+                                                        },
+                                                        "image_url": {
+                                                            "type": "string",
+                                                            "example": "/storage/categories/combos.jpg",
+                                                            "nullable": true
+                                                        },
+                                                        "sort_order": {
+                                                            "description": "Position in menu - mix with categories sort_order",
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
                                                 "combos": {
-                                                    "description": "Permanent menu combos (not promotional)",
+                                                    "description": "Permanent menu combos (not promotional). Order by sort_order within combos section.",
                                                     "type": "array",
                                                     "items": {
                                                         "$ref": "#/components/schemas/Combo"
@@ -6731,7 +6969,7 @@
                     "Menu"
                 ],
                 "summary": "Obtener catálogo de recompensas canjeables",
-                "description": "Retorna la lista de productos y combos que pueden ser canjeados por puntos en tienda física.\n     *\n     * **Importante:**\n     * - Endpoint público (no requiere autenticación)\n     * - El canje solo se realiza en tienda física, no en la app\n     * - Cada item incluye su nombre, imagen y costo en puntos\n     * - Los productos con variantes canjeables incluyen sus variantes",
+                "description": "Retorna la lista de productos y combos que pueden ser canjeados por puntos en tienda física.\n     *\n     * **Importante:**\n     * - Endpoint público (no requiere autenticación)\n     * - El canje solo se realiza en tienda física, no en la app\n     * - Cada item incluye su nombre, imagen y costo en puntos\n     * - Los productos con variantes canjeables incluyen sus variantes\n     *\n     * **Ordenamiento:**\n     * - Primer criterio: cantidad de puntos necesarios (de menor a mayor)\n     * - Segundo criterio: orden alfabético por nombre\n     * - Productos con variantes usan el menor costo de sus variantes para el primer criterio",
                 "operationId": "706ede8f684c5db0de3caee582906e0a",
                 "responses": {
                     "200": {

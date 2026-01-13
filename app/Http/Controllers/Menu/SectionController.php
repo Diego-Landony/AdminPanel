@@ -93,19 +93,36 @@ class SectionController extends Controller
 
         $section->update($validated);
 
-        // Actualizar opciones: eliminar todas y recrear
-        $section->options()->delete();
+        // Actualizar opciones: preservar IDs existentes para no romper carritos
+        $existingOptionIds = $section->options()->pluck('id')->toArray();
+        $updatedOptionIds = [];
 
         if (! empty($options)) {
             foreach ($options as $index => $option) {
-                $section->options()->create([
-                    'name' => $option['name'],
-                    'is_extra' => $option['is_extra'] ?? false,
-                    'price_modifier' => $option['price_modifier'] ?? 0,
-                    'sort_order' => $index,
-                ]);
+                if (! empty($option['id']) && in_array($option['id'], $existingOptionIds)) {
+                    // Actualizar opción existente
+                    $section->options()->where('id', $option['id'])->update([
+                        'name' => $option['name'],
+                        'is_extra' => $option['is_extra'] ?? false,
+                        'price_modifier' => $option['price_modifier'] ?? 0,
+                        'sort_order' => $index,
+                    ]);
+                    $updatedOptionIds[] = $option['id'];
+                } else {
+                    // Crear nueva opción
+                    $newOption = $section->options()->create([
+                        'name' => $option['name'],
+                        'is_extra' => $option['is_extra'] ?? false,
+                        'price_modifier' => $option['price_modifier'] ?? 0,
+                        'sort_order' => $index,
+                    ]);
+                    $updatedOptionIds[] = $newOption->id;
+                }
             }
         }
+
+        // Eliminar solo las opciones que fueron removidas
+        $section->options()->whereNotIn('id', $updatedOptionIds)->delete();
 
         return redirect()->route('menu.sections.index')
             ->with('success', 'Sección actualizada exitosamente.');

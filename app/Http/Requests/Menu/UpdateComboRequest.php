@@ -53,6 +53,7 @@ class UpdateComboRequest extends FormRequest
 
             // Items del combo (mínimo 2, sin máximo)
             'items' => ['required', 'array', 'min:2'],
+            'items.*.id' => ['nullable', 'integer', 'exists:combo_items,id'],
             'items.*.is_choice_group' => ['boolean'],
             'items.*.choice_label' => ['nullable', 'string', 'max:255'],
             'items.*.product_id' => ['nullable', 'integer', 'exists:products,id'],
@@ -62,6 +63,7 @@ class UpdateComboRequest extends FormRequest
 
             // Opciones para grupos de elección
             'items.*.options' => ['nullable', 'array'],
+            'items.*.options.*.id' => ['nullable', 'integer', 'exists:combo_item_options,id'],
             'items.*.options.*.product_id' => ['required', 'integer', 'exists:products,id'],
             'items.*.options.*.variant_id' => ['nullable', 'integer', 'exists:product_variants,id'],
             'items.*.options.*.sort_order' => ['nullable', 'integer', 'min:0'],

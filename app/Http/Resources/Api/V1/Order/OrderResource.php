@@ -17,7 +17,7 @@ class OrderResource extends JsonResource
         return [
             'id' => $this->id,
             'order_number' => $this->order_number,
-            'restaurant' => $this->when($this->relationLoaded('restaurant'), fn () => [
+            'restaurant' => $this->when($this->relationLoaded('restaurant') && $this->restaurant, fn () => [
                 'id' => $this->restaurant->id,
                 'name' => $this->restaurant->name,
                 'address' => $this->restaurant->address,

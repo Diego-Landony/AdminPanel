@@ -28,7 +28,10 @@ class CartItemResource extends JsonResource
         $optionsTotalWithQuantity = $optionsTotal * $this->quantity;
 
         // Obtener precio correcto según zona/servicio del carrito
-        $correctUnitPrice = $this->getCorrectUnitPrice();
+        $priceInfo = $this->getCorrectUnitPriceWithValidation();
+        $correctUnitPrice = $priceInfo['price'];
+        $priceValid = $priceInfo['valid'];
+        $priceWarning = $priceInfo['warning'];
 
         // subtotal usa el precio correcto de zona/servicio + extras
         $subtotalWithExtras = ($correctUnitPrice * $this->quantity) + $optionsTotalWithQuantity;
@@ -81,36 +84,75 @@ class CartItemResource extends JsonResource
             'selected_options' => $this->formatSelectedOptions($this->selected_options),
             'combo_selections' => $this->combo_selections,
             'notes' => $this->notes,
+            // Validación de precio - permite al frontend mostrar advertencias
+            'price_valid' => $priceValid,
+            'price_warning' => $this->when(! $priceValid, $priceWarning),
         ];
     }
 
     /**
      * Obtiene el precio unitario correcto según zona y tipo de servicio del carrito.
-     * Esto asegura consistencia cuando el usuario cambia de pickup a delivery o viceversa.
+     * Retorna información de validación para que el frontend pueda mostrar advertencias.
+     *
+     * @return array{price: float, valid: bool, warning: string|null}
      */
-    protected function getCorrectUnitPrice(): float
+    protected function getCorrectUnitPriceWithValidation(): array
     {
         $cart = $this->relationLoaded('cart') ? $this->cart : null;
         $zone = $cart->zone ?? 'capital';
         $serviceType = $cart->service_type ?? 'pickup';
         $priceField = $this->getPriceField($zone, $serviceType);
 
+        $zoneName = $zone === 'capital' ? 'Capital' : 'Interior';
+        $serviceName = $serviceType === 'pickup' ? 'pickup' : 'delivery';
+
         // Para productos con variante
         if ($this->variant_id && $this->relationLoaded('variant') && $this->variant) {
-            return (float) ($this->variant->{$priceField} ?? $this->unit_price);
+            $price = $this->variant->{$priceField};
+            if ($price === null || $price <= 0) {
+                return [
+                    'price' => (float) $this->unit_price,
+                    'valid' => false,
+                    'warning' => "Esta variante no tiene precio configurado para {$serviceName} en {$zoneName}",
+                ];
+            }
+
+            return ['price' => (float) $price, 'valid' => true, 'warning' => null];
         }
 
         // Para productos sin variante
         if ($this->product_id && $this->relationLoaded('product') && $this->product) {
-            return (float) ($this->product->{$priceField} ?? $this->unit_price);
+            $price = $this->product->{$priceField};
+            if ($price === null || $price <= 0) {
+                return [
+                    'price' => (float) $this->unit_price,
+                    'valid' => false,
+                    'warning' => "Este producto no tiene precio configurado para {$serviceName} en {$zoneName}",
+                ];
+            }
+
+            return ['price' => (float) $price, 'valid' => true, 'warning' => null];
         }
 
         // Para combos
         if ($this->combo_id && $this->relationLoaded('combo') && $this->combo) {
-            return (float) ($this->combo->{$priceField} ?? $this->unit_price);
+            $price = $this->combo->{$priceField};
+            if ($price === null || $price <= 0) {
+                return [
+                    'price' => (float) $this->unit_price,
+                    'valid' => false,
+                    'warning' => "Este combo no tiene precio configurado para {$serviceName} en {$zoneName}",
+                ];
+            }
+
+            return ['price' => (float) $price, 'valid' => true, 'warning' => null];
         }
 
         // Fallback al precio almacenado
-        return (float) $this->unit_price;
+        return [
+            'price' => (float) $this->unit_price,
+            'valid' => $this->unit_price > 0,
+            'warning' => $this->unit_price <= 0 ? 'Este item no tiene precio válido' : null,
+        ];
     }
 }

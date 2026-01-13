@@ -234,6 +234,8 @@ export default function SectionEdit({ section }: EditPageProps) {
             min_selections: typeof formData.min_selections === 'string' ? parseInt(formData.min_selections) : formData.min_selections,
             max_selections: typeof formData.max_selections === 'string' ? parseInt(formData.max_selections) : formData.max_selections,
             options: localOptions.map((option) => ({
+                // Incluir ID solo si es numérico (opción existente)
+                ...(typeof option.id === 'number' ? { id: option.id } : {}),
                 name: option.name,
                 is_extra: option.is_extra,
                 // Si no es extra, el precio debe ser 0

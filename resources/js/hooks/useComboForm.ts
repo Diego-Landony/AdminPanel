@@ -391,8 +391,14 @@ export function useComboForm({
                 data.append('remove_image', '1');
             }
 
-            // Items
+            // Items - Incluir IDs para preservar integridad referencial
             preparedItems.forEach((item, index) => {
+                // Extraer ID numérico si existe (formato: item-123)
+                const itemId = item.id?.toString().match(/^item-(\d+)$/)?.[1];
+                if (itemId) {
+                    data.append(`items[${index}][id]`, itemId);
+                }
+
                 data.append(`items[${index}][is_choice_group]`, item.is_choice_group ? '1' : '0');
                 data.append(`items[${index}][quantity]`, String(item.quantity));
                 data.append(`items[${index}][sort_order]`, String(item.sort_order));
@@ -409,6 +415,12 @@ export function useComboForm({
 
                 if (item.options && item.options.length > 0) {
                     item.options.forEach((option, optIndex) => {
+                        // Extraer ID numérico de opción si existe (formato: option-123)
+                        const optionId = option.id?.toString().match(/^option-(\d+)$/)?.[1];
+                        if (optionId) {
+                            data.append(`items[${index}][options][${optIndex}][id]`, optionId);
+                        }
+
                         data.append(`items[${index}][options][${optIndex}][product_id]`, String(option.product_id));
                         data.append(`items[${index}][options][${optIndex}][sort_order]`, String(option.sort_order));
                         if (option.variant_id) {

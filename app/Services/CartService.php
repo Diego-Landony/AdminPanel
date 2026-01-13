@@ -11,6 +11,7 @@ use App\Models\Menu\Product;
 use App\Models\Menu\ProductVariant;
 use App\Models\Restaurant;
 use App\Traits\HasPriceZones;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Servicio de Gestión de Carrito
@@ -331,30 +332,33 @@ class CartService
     /**
      * Actualiza el tipo de servicio y zona del carrito
      * Recalcula los precios de todos los items
+     * Usa transacción para evitar race conditions
      */
     public function updateServiceType(Cart $cart, string $serviceType, string $zone): Cart
     {
-        $cart->update([
-            'service_type' => $serviceType,
-            'zone' => $zone,
-        ]);
+        return DB::transaction(function () use ($cart, $serviceType, $zone) {
+            $cart->update([
+                'service_type' => $serviceType,
+                'zone' => $zone,
+            ]);
 
-        $cart = $cart->fresh();
+            $cart = $cart->fresh(['items.product', 'items.combo', 'items.variant']);
 
-        foreach ($cart->items as $item) {
-            if ($item->isCombo()) {
-                $unitPrice = $this->getPriceForCombo($item->combo, $zone, $serviceType);
-            } else {
-                $unitPrice = $this->getPriceForProduct($item->product, $item->variant_id, $zone, $serviceType);
+            foreach ($cart->items as $item) {
+                if ($item->isCombo()) {
+                    $unitPrice = $this->getPriceForCombo($item->combo, $zone, $serviceType);
+                } else {
+                    $unitPrice = $this->getPriceForProduct($item->product, $item->variant_id, $zone, $serviceType);
+                }
+
+                $item->update([
+                    'unit_price' => $unitPrice,
+                    'subtotal' => $unitPrice * $item->quantity,
+                ]);
             }
 
-            $item->update([
-                'unit_price' => $unitPrice,
-                'subtotal' => $unitPrice * $item->quantity,
-            ]);
-        }
-
-        return $cart->fresh();
+            return $cart->fresh();
+        });
     }
 
     /**

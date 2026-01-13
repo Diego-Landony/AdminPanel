@@ -266,8 +266,14 @@ export default function BundleSpecialEdit({ combinado, products, badgeTypes }: E
             formDataObj.append('show_badge_on_menu', '1');
         }
 
-        // Agregar items
+        // Agregar items - Incluir IDs para preservar integridad referencial
         preparedItems.forEach((item, itemIndex) => {
+            // Extraer ID numérico si existe (formato: item-123)
+            const itemId = item.id?.toString().match(/^item-(\d+)$/)?.[1];
+            if (itemId) {
+                formDataObj.append(`items[${itemIndex}][id]`, itemId);
+            }
+
             formDataObj.append(`items[${itemIndex}][is_choice_group]`, item.is_choice_group ? '1' : '0');
             formDataObj.append(`items[${itemIndex}][quantity]`, String(item.quantity));
             formDataObj.append(`items[${itemIndex}][sort_order]`, String(item.sort_order));
@@ -277,6 +283,12 @@ export default function BundleSpecialEdit({ combinado, products, badgeTypes }: E
 
             if (item.options) {
                 item.options.forEach((option, optIndex) => {
+                    // Extraer ID numérico de opción si existe (formato: option-123)
+                    const optionId = option.id?.toString().match(/^option-(\d+)$/)?.[1];
+                    if (optionId) {
+                        formDataObj.append(`items[${itemIndex}][options][${optIndex}][id]`, optionId);
+                    }
+
                     formDataObj.append(`items[${itemIndex}][options][${optIndex}][product_id]`, String(option.product_id));
                     if (option.variant_id) formDataObj.append(`items[${itemIndex}][options][${optIndex}][variant_id]`, String(option.variant_id));
                     formDataObj.append(`items[${itemIndex}][options][${optIndex}][sort_order]`, String(option.sort_order));

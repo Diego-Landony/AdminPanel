@@ -131,6 +131,38 @@ class CreateOrderRequest extends FormRequest
                 'string',
                 'max:500',
             ],
+            'points_to_redeem' => [
+                'nullable',
+                'integer',
+                'min:0',
+                function ($attribute, $value, $fail) {
+                    if (! $value || $value <= 0) {
+                        return;
+                    }
+
+                    $customer = auth()->user();
+                    if (! $customer) {
+                        $fail('Usuario no autenticado.');
+
+                        return;
+                    }
+
+                    // Verificar que el cliente tenga suficientes puntos
+                    if ($value > $customer->points) {
+                        $fail("No tienes suficientes puntos. Disponibles: {$customer->points}");
+
+                        return;
+                    }
+
+                    // Verificar mínimo de puntos para redimir (configurable, por defecto 100)
+                    $minPoints = config('loyalty.min_points_to_redeem', 100);
+                    if ($value < $minPoints) {
+                        $fail("Debes redimir al menos {$minPoints} puntos.");
+
+                        return;
+                    }
+                },
+            ],
         ];
     }
 
@@ -155,6 +187,8 @@ class CreateOrderRequest extends FormRequest
             'nit_id.exists' => 'El NIT seleccionado no existe.',
             'notes.string' => 'Las notas deben ser texto.',
             'notes.max' => 'Las notas no pueden exceder 500 caracteres.',
+            'points_to_redeem.integer' => 'Los puntos a redimir deben ser un número entero.',
+            'points_to_redeem.min' => 'Los puntos a redimir no pueden ser negativos.',
         ];
     }
 

@@ -29,6 +29,7 @@ class UpdatePromotionRequest extends FormRequest
 
             // Items de promoción
             'items' => 'required|array|min:1',
+            'items.*.id' => 'nullable|integer|exists:promotion_items,id',
             'items.*.product_id' => 'nullable|exists:products,id',
             'items.*.variant_id' => [
                 'nullable',

@@ -231,33 +231,66 @@ class ComboController extends Controller
         DB::transaction(function () use ($validated, $items, $combo) {
             $combo->update($validated);
 
-            $combo->items()->delete();
+            // Preservar IDs existentes para no romper carritos/órdenes
+            $existingItemIds = $combo->items()->pluck('id')->toArray();
+            $updatedItemIds = [];
 
             if (! empty($items)) {
                 foreach ($items as $item) {
                     $isChoiceGroup = $item['is_choice_group'] ?? false;
-
-                    $comboItem = $combo->items()->create([
+                    $itemData = [
                         'product_id' => $isChoiceGroup ? null : ($item['product_id'] ?? null),
                         'variant_id' => $isChoiceGroup ? null : ($item['variant_id'] ?? null),
                         'quantity' => $item['quantity'],
                         'sort_order' => $item['sort_order'] ?? 0,
                         'is_choice_group' => $isChoiceGroup,
                         'choice_label' => $isChoiceGroup ? ($item['choice_label'] ?? null) : null,
-                    ]);
+                    ];
 
-                    // Si es un grupo de elección, crear las opciones
-                    if ($isChoiceGroup && ! empty($item['options'])) {
-                        foreach ($item['options'] as $option) {
-                            $comboItem->options()->create([
-                                'product_id' => $option['product_id'],
-                                'variant_id' => $option['variant_id'] ?? null,
-                                'sort_order' => $option['sort_order'] ?? 0,
-                            ]);
+                    if (! empty($item['id']) && in_array($item['id'], $existingItemIds)) {
+                        // Actualizar item existente
+                        $combo->items()->where('id', $item['id'])->update($itemData);
+                        $comboItem = $combo->items()->find($item['id']);
+                        $updatedItemIds[] = $item['id'];
+                    } else {
+                        // Crear nuevo item
+                        $comboItem = $combo->items()->create($itemData);
+                        $updatedItemIds[] = $comboItem->id;
+                    }
+
+                    // Manejar opciones del grupo de elección
+                    if ($isChoiceGroup && $comboItem) {
+                        $existingOptionIds = $comboItem->options()->pluck('id')->toArray();
+                        $updatedOptionIds = [];
+
+                        if (! empty($item['options'])) {
+                            foreach ($item['options'] as $option) {
+                                $optionData = [
+                                    'product_id' => $option['product_id'],
+                                    'variant_id' => $option['variant_id'] ?? null,
+                                    'sort_order' => $option['sort_order'] ?? 0,
+                                ];
+
+                                if (! empty($option['id']) && in_array($option['id'], $existingOptionIds)) {
+                                    // Actualizar opción existente
+                                    $comboItem->options()->where('id', $option['id'])->update($optionData);
+                                    $updatedOptionIds[] = $option['id'];
+                                } else {
+                                    // Crear nueva opción
+                                    $newOption = $comboItem->options()->create($optionData);
+                                    $updatedOptionIds[] = $newOption->id;
+                                }
+                            }
                         }
+
+                        // Eliminar solo opciones removidas
+                        $comboItem->options()->whereNotIn('id', $updatedOptionIds)->delete();
                     }
                 }
             }
+
+            // Eliminar solo items removidos
+            $combo->items()->whereNotIn('id', $updatedItemIds)->delete();
         });
 
         if ($request->expectsJson()) {

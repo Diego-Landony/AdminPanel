@@ -22,6 +22,7 @@ class UpdateSectionRequest extends FormRequest
             'max_selections' => 'required|integer|min:1',
             'is_active' => 'boolean',
             'options' => 'nullable|array',
+            'options.*.id' => 'nullable|integer|exists:section_options,id',
             'options.*.name' => 'required|string|max:100',
             'options.*.is_extra' => 'boolean',
             'options.*.price_modifier' => 'nullable|numeric|min:0',

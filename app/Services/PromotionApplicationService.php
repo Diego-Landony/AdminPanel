@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Cart;
 use App\Models\Menu\Promotion;
+use App\Traits\HasPriceZones;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -18,6 +19,8 @@ use Illuminate\Support\Collection;
  */
 class PromotionApplicationService
 {
+    use HasPriceZones;
+
     /**
      * Aplica automáticamente todas las promociones elegibles al carrito
      *
@@ -311,6 +314,13 @@ class PromotionApplicationService
     /**
      * Calcula descuentos detallados por cada item del carrito
      *
+     * IMPORTANTE: Los descuentos se aplican SOLO al precio base del producto.
+     * Los extras (opciones adicionales) SIEMPRE se cobran al 100%.
+     *
+     * - original_price = (precio_base * cantidad) + (extras * cantidad)
+     * - discount_amount = descuento calculado sobre precio base
+     * - final_price = (precio_base_con_descuento * cantidad) + (extras * cantidad)
+     *
      * @return array Array indexado por item_id con información de descuento
      */
     public function calculateItemDiscounts(Cart $cart): array
@@ -329,11 +339,15 @@ class PromotionApplicationService
         $promotionsMap = [];
 
         foreach ($items as $item) {
-            // Inicializar con valores por defecto
+            // Calcular total de extras (se obtiene desde DB usando getOptionsTotal)
+            $extrasTotal = $item->getOptionsTotal() * $item->quantity;
+            $basePrice = (float) $item->subtotal; // precio_base * cantidad
+
+            // Inicializar con valores por defecto (incluyendo extras)
             $itemDiscounts[$item->id] = [
                 'discount_amount' => 0.0,
-                'original_price' => (float) $item->subtotal,
-                'final_price' => (float) $item->subtotal,
+                'original_price' => round($basePrice + $extrasTotal, 2),
+                'final_price' => round($basePrice + $extrasTotal, 2),
                 'is_daily_special' => false,
                 'applied_promotion' => null,
             ];
@@ -349,28 +363,38 @@ class PromotionApplicationService
                     if (in_array($dayOfWeek, $variant->daily_special_days)) {
                         $itemDiscounts[$item->id]['is_daily_special'] = true;
 
-                        // Calcular el descuento: precio normal - precio especial
-                        $cart = $item->cart;
-                        $zone = $cart->zone ?? 'capital';
-                        $serviceType = $cart->service_type ?? 'pickup';
+                        // Calcular el descuento: precio normal - precio especial (solo sobre base)
+                        $cartModel = $item->cart;
+                        $zone = $cartModel->zone ?? 'capital';
+                        $serviceType = $cartModel->service_type ?? 'pickup';
                         $priceField = $this->getPriceField($zone, $serviceType);
                         $dailySpecialPriceField = 'daily_special_'.$priceField;
 
-                        $normalPrice = (float) ($variant->{$priceField} ?? 0);
-                        $specialPrice = (float) ($variant->{$dailySpecialPriceField} ?? $normalPrice);
+                        $normalPricePerUnit = (float) ($variant->{$priceField} ?? 0);
+                        $specialPricePerUnit = (float) ($variant->{$dailySpecialPriceField} ?? $normalPricePerUnit);
 
-                        if ($specialPrice < $normalPrice) {
-                            $discountPerUnit = $normalPrice - $specialPrice;
+                        if ($specialPricePerUnit < $normalPricePerUnit) {
+                            $discountPerUnit = $normalPricePerUnit - $specialPricePerUnit;
                             $totalDiscount = $discountPerUnit * $item->quantity;
 
+                            // Buscar el ID real de la promoción Sub del Día
+                            $dailySpecialPromo = Promotion::where('type', 'daily_special')
+                                ->where('is_active', true)
+                                ->first();
+
+                            // original_price = precio_base_normal + extras
+                            // final_price = precio_base_especial + extras
                             $itemDiscounts[$item->id]['discount_amount'] = round($totalDiscount, 2);
-                            $itemDiscounts[$item->id]['original_price'] = round($normalPrice * $item->quantity, 2);
-                            $itemDiscounts[$item->id]['final_price'] = round($specialPrice * $item->quantity, 2);
+                            $itemDiscounts[$item->id]['original_price'] = round(($normalPricePerUnit * $item->quantity) + $extrasTotal, 2);
+                            $itemDiscounts[$item->id]['final_price'] = round(($specialPricePerUnit * $item->quantity) + $extrasTotal, 2);
+                            // Calcular porcentaje de descuento para mostrar
+                            $discountPercent = round((($normalPricePerUnit - $specialPricePerUnit) / $normalPricePerUnit) * 100);
                             $itemDiscounts[$item->id]['applied_promotion'] = [
-                                'id' => 0,
+                                'id' => $dailySpecialPromo?->id,
                                 'name' => 'Sub del Día',
+                                'name_display' => "Sub del Día -{$discountPercent}%",
                                 'type' => 'daily_special',
-                                'value' => 'Q'.number_format($specialPrice, 2),
+                                'value' => 'Q'.number_format($specialPricePerUnit, 2),
                             ];
                         }
 
@@ -411,12 +435,19 @@ class PromotionApplicationService
                 foreach ($promoItems as $item) {
                     $promotionItem = $this->getPromotionItemForCartItem($item, $promotion);
                     if ($promotionItem && $promotionItem->discount_percentage) {
-                        $discount = $item->subtotal * ($promotionItem->discount_percentage / 100);
+                        $extrasTotal = $item->getOptionsTotal() * $item->quantity;
+                        $basePrice = (float) $item->subtotal;
+
+                        // Descuento solo sobre precio base
+                        $discount = $basePrice * ($promotionItem->discount_percentage / 100);
+
                         $itemDiscounts[$item->id]['discount_amount'] = round($discount, 2);
-                        $itemDiscounts[$item->id]['final_price'] = round($item->subtotal - $discount, 2);
+                        $itemDiscounts[$item->id]['original_price'] = round($basePrice + $extrasTotal, 2);
+                        $itemDiscounts[$item->id]['final_price'] = round(($basePrice - $discount) + $extrasTotal, 2);
                         $itemDiscounts[$item->id]['applied_promotion'] = [
                             'id' => $promotion->id,
                             'name' => $promotion->name,
+                            'name_display' => "{$promotion->name} -{$promotionItem->discount_percentage}%",
                             'type' => $promotion->type,
                             'value' => $promotionItem->discount_percentage.'%',
                         ];
@@ -431,19 +462,29 @@ class PromotionApplicationService
                     $freeCount = 0;
 
                     foreach ($sorted as $item) {
+                        $extrasTotal = $item->getOptionsTotal() * $item->quantity;
+                        $basePrice = (float) $item->subtotal;
+
                         if ($freeCount < $freeItems) {
                             $quantityToDiscount = min($item->quantity, $freeItems - $freeCount);
+                            // El descuento es solo el precio base de las unidades gratis
                             $discount = $item->unit_price * $quantityToDiscount;
                             $freeCount += $quantityToDiscount;
 
                             $itemDiscounts[$item->id]['discount_amount'] = round($discount, 2);
-                            $itemDiscounts[$item->id]['final_price'] = round($item->subtotal - $discount, 2);
+                            $itemDiscounts[$item->id]['original_price'] = round($basePrice + $extrasTotal, 2);
+                            $itemDiscounts[$item->id]['final_price'] = round(($basePrice - $discount) + $extrasTotal, 2);
                             $itemDiscounts[$item->id]['applied_promotion'] = [
                                 'id' => $promotion->id,
                                 'name' => $promotion->name,
+                                'name_display' => "{$promotion->name} 2x1",
                                 'type' => $promotion->type,
                                 'value' => '2x1',
                             ];
+                        } else {
+                            // Items sin descuento pero actualizar original_price y final_price con extras
+                            $itemDiscounts[$item->id]['original_price'] = round($basePrice + $extrasTotal, 2);
+                            $itemDiscounts[$item->id]['final_price'] = round($basePrice + $extrasTotal, 2);
                         }
                     }
                 }
@@ -456,14 +497,20 @@ class PromotionApplicationService
                         $totalDiscount = $normalTotal - $bundlePrice;
                         // Distribuir el descuento proporcionalmente
                         foreach ($promoItems as $item) {
-                            $proportion = $item->subtotal / $normalTotal;
+                            $extrasTotal = $item->getOptionsTotal() * $item->quantity;
+                            $basePrice = (float) $item->subtotal;
+                            $proportion = $basePrice / $normalTotal;
                             $discount = $totalDiscount * $proportion;
 
                             $itemDiscounts[$item->id]['discount_amount'] = round($discount, 2);
-                            $itemDiscounts[$item->id]['final_price'] = round($item->subtotal - $discount, 2);
+                            $itemDiscounts[$item->id]['original_price'] = round($basePrice + $extrasTotal, 2);
+                            $itemDiscounts[$item->id]['final_price'] = round(($basePrice - $discount) + $extrasTotal, 2);
+                            // Calcular porcentaje de ahorro para el bundle
+                            $bundleSavingsPercent = round((($normalTotal - $bundlePrice) / $normalTotal) * 100);
                             $itemDiscounts[$item->id]['applied_promotion'] = [
                                 'id' => $promotion->id,
                                 'name' => $promotion->name,
+                                'name_display' => "{$promotion->name} (Ahorra {$bundleSavingsPercent}%)",
                                 'type' => $promotion->type,
                                 'value' => 'Q'.number_format($bundlePrice, 2),
                             ];
@@ -485,19 +532,5 @@ class PromotionApplicationService
         $serviceType = $cart->service_type ?? 'pickup';
 
         return $promotion->getPriceForZoneCombinado($zone, $serviceType);
-    }
-
-    /**
-     * Obtiene el nombre del campo de precio según zona y tipo de servicio
-     */
-    protected function getPriceField(string $zone, string $serviceType): string
-    {
-        return match ([$zone, $serviceType]) {
-            ['capital', 'pickup'] => 'precio_pickup_capital',
-            ['capital', 'delivery'] => 'precio_domicilio_capital',
-            ['interior', 'pickup'] => 'precio_pickup_interior',
-            ['interior', 'delivery'] => 'precio_domicilio_interior',
-            default => 'precio_pickup_capital',
-        };
     }
 }

@@ -2,13 +2,15 @@
 
 namespace App\Http\Resources\Api\V1\Cart;
 
-use App\Models\Menu\Section;
-use App\Models\Menu\SectionOption;
+use App\Traits\FormatsSelectedOptions;
+use App\Traits\HasPriceZones;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class CartItemResource extends JsonResource
 {
+    use FormatsSelectedOptions, HasPriceZones;
+
     /**
      * Transform the resource into an array.
      *
@@ -18,6 +20,24 @@ class CartItemResource extends JsonResource
     {
         $isProduct = $this->product_id !== null;
         $isCombo = $this->combo_id !== null;
+
+        // Calcular extras una sola vez
+        $optionsTotal = method_exists($this->resource, 'getOptionsTotal')
+            ? (float) $this->getOptionsTotal()
+            : 0.0;
+        $optionsTotalWithQuantity = $optionsTotal * $this->quantity;
+
+        // Obtener precio correcto según zona/servicio del carrito
+        $correctUnitPrice = $this->getCorrectUnitPrice();
+
+        // subtotal usa el precio correcto de zona/servicio + extras
+        $subtotalWithExtras = ($correctUnitPrice * $this->quantity) + $optionsTotalWithQuantity;
+
+        // original_price viene del cálculo de descuentos o es igual al subtotal con extras
+        $originalPrice = $this->discount_info['original_price'] ?? $subtotalWithExtras;
+
+        // final_price viene del cálculo de descuentos o es igual al subtotal con extras
+        $finalPrice = $this->discount_info['final_price'] ?? $subtotalWithExtras;
 
         return [
             'id' => $this->id,
@@ -46,64 +66,51 @@ class CartItemResource extends JsonResource
                 ];
             }),
             'quantity' => $this->quantity,
-            'unit_price' => (float) $this->unit_price,
-            'subtotal' => (float) $this->subtotal,
-            // Campos de descuento para mostrar precio tachado en Flutter
-            'discount_amount' => $this->discount_info['discount_amount'] ?? 0.0,
-            'final_price' => $this->discount_info['final_price'] ?? (float) $this->subtotal,
+            'unit_price' => round($correctUnitPrice, 2),
+            'options_total' => $optionsTotal,
+            // subtotal = (base * cantidad) + (extras * cantidad) - precio completo sin descuento
+            'subtotal' => round($subtotalWithExtras, 2),
+            // original_price = precio según zona/servicio + extras (para mostrar tachado)
+            'original_price' => round($originalPrice, 2),
+            // discount_amount = descuento aplicado (solo sobre precio base, nunca sobre extras)
+            'discount_amount' => (float) ($this->discount_info['discount_amount'] ?? 0.0),
+            // final_price = precio con descuento aplicado + extras (lo que paga el cliente)
+            'final_price' => round($finalPrice, 2),
             'is_daily_special' => $this->discount_info['is_daily_special'] ?? false,
             'applied_promotion' => $this->discount_info['applied_promotion'] ?? null,
-            'selected_options' => $this->formatSelectedOptions(),
+            'selected_options' => $this->formatSelectedOptions($this->selected_options),
             'combo_selections' => $this->combo_selections,
-            'options_total' => $this->when(method_exists($this->resource, 'getOptionsTotal'), function () {
-                return (float) $this->getOptionsTotal();
-            }),
-            'line_total' => $this->when(method_exists($this->resource, 'getLineTotal'), function () {
-                return (float) $this->getLineTotal();
-            }),
             'notes' => $this->notes,
         ];
     }
 
     /**
-     * Format selected options with section and option names.
-     * Uses batch loading for scalability.
-     *
-     * @return array<int, array<string, mixed>>
+     * Obtiene el precio unitario correcto según zona y tipo de servicio del carrito.
+     * Esto asegura consistencia cuando el usuario cambia de pickup a delivery o viceversa.
      */
-    protected function formatSelectedOptions(): array
+    protected function getCorrectUnitPrice(): float
     {
-        if (! $this->selected_options) {
-            return [];
+        $cart = $this->relationLoaded('cart') ? $this->cart : null;
+        $zone = $cart->zone ?? 'capital';
+        $serviceType = $cart->service_type ?? 'pickup';
+        $priceField = $this->getPriceField($zone, $serviceType);
+
+        // Para productos con variante
+        if ($this->variant_id && $this->relationLoaded('variant') && $this->variant) {
+            return (float) ($this->variant->{$priceField} ?? $this->unit_price);
         }
 
-        $options = collect($this->selected_options);
+        // Para productos sin variante
+        if ($this->product_id && $this->relationLoaded('product') && $this->product) {
+            return (float) ($this->product->{$priceField} ?? $this->unit_price);
+        }
 
-        // Colectar todos los IDs únicos para batch loading
-        $sectionIds = $options->pluck('section_id')->filter()->unique()->values()->toArray();
-        $optionIds = $options->pluck('option_id')->filter()->unique()->values()->toArray();
+        // Para combos
+        if ($this->combo_id && $this->relationLoaded('combo') && $this->combo) {
+            return (float) ($this->combo->{$priceField} ?? $this->unit_price);
+        }
 
-        // Batch load secciones y opciones (2 queries en lugar de N)
-        $sections = ! empty($sectionIds)
-            ? Section::whereIn('id', $sectionIds)->pluck('title', 'id')
-            : collect();
-
-        $sectionOptions = ! empty($optionIds)
-            ? SectionOption::whereIn('id', $optionIds)->pluck('name', 'id')
-            : collect();
-
-        // Mapear con los nombres
-        return $options->map(function ($option) use ($sections, $sectionOptions) {
-            $sectionId = $option['section_id'] ?? null;
-            $optionId = $option['option_id'] ?? null;
-
-            return [
-                'section_id' => $sectionId,
-                'section_name' => $sectionId ? ($sections[$sectionId] ?? null) : null,
-                'option_id' => $optionId,
-                'option_name' => $option['name'] ?? ($optionId ? ($sectionOptions[$optionId] ?? null) : null),
-                'price' => isset($option['price']) ? (float) $option['price'] : 0,
-            ];
-        })->toArray();
+        // Fallback al precio almacenado
+        return (float) $this->unit_price;
     }
 }

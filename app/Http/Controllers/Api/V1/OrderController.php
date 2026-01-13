@@ -197,7 +197,7 @@ class OrderController extends Controller
             $order = $this->orderService->createFromCart($cart, $request->validated());
 
             return response()->json([
-                'data' => new OrderResource($order->load(['items', 'promotions', 'restaurant'])),
+                'data' => new OrderResource($order->load(['items.product', 'items.combo', 'items.variant', 'promotions', 'restaurant'])),
                 'message' => 'Orden creada exitosamente',
             ], 201);
         } catch (AddressOutsideDeliveryZoneException $e) {
@@ -313,7 +313,7 @@ class OrderController extends Controller
 
         $query = Order::query()
             ->where('customer_id', $customer->id)
-            ->with(['restaurant', 'items'])
+            ->with(['restaurant', 'items.product', 'items.combo', 'items.variant'])
             ->latest();
 
         if ($status) {
@@ -363,7 +363,7 @@ class OrderController extends Controller
         $orders = Order::query()
             ->where('customer_id', $customer->id)
             ->active()
-            ->with(['restaurant', 'items'])
+            ->with(['restaurant', 'items.product', 'items.combo', 'items.variant'])
             ->latest()
             ->get();
 
@@ -459,7 +459,7 @@ class OrderController extends Controller
             ], 403);
         }
 
-        $order->load(['restaurant', 'items', 'promotions']);
+        $order->load(['restaurant', 'items.product', 'items.combo', 'items.variant', 'promotions']);
 
         return response()->json([
             'data' => new OrderResource($order),

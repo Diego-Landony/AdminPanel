@@ -110,13 +110,41 @@ class CartController extends Controller
     {
         $customer = auth()->user();
         $cart = $this->cartService->getOrCreateCart($customer);
-        $cart->load(['restaurant', 'deliveryAddress', 'items.product', 'items.variant', 'items.combo']);
+        $cart->load(['restaurant', 'deliveryAddress', 'items.product', 'items.variant', 'items.combo', 'items.cart']);
 
         $summary = $this->cartService->getCartSummary($cart);
         $validation = $this->cartService->validateCart($cart);
 
         // Calcular puntos a ganar
         $pointsToEarn = $this->pointsService->calculatePointsToEarn($summary['total'], $customer);
+
+        // Validar monto mínimo del restaurante
+        $minimumOrderAmount = (float) ($cart->restaurant?->minimum_order_amount ?? 0);
+        $meetsMinimumOrder = $minimumOrderAmount <= 0 || $summary['total'] >= $minimumOrderAmount;
+
+        if (! $meetsMinimumOrder && $cart->restaurant) {
+            $validation['messages'][] = sprintf(
+                'El monto mínimo de pedido para %s es Q%.2f. Faltan Q%.2f.',
+                $cart->restaurant->name,
+                $minimumOrderAmount,
+                $minimumOrderAmount - $summary['total']
+            );
+            $validation['valid'] = false;
+        }
+
+        // Obtener información de disponibilidad del restaurante
+        $restaurantAvailability = null;
+        $canAcceptOrders = true;
+        if ($cart->restaurant) {
+            $serviceType = $cart->service_type ?? 'pickup';
+            $restaurantAvailability = $cart->restaurant->getAvailabilityInfo($serviceType);
+            $canAcceptOrders = $restaurantAvailability['can_accept_orders'];
+
+            if (! $canAcceptOrders) {
+                $validation['messages'][] = $restaurantAvailability['message'] ?? 'El restaurante no puede aceptar pedidos en este momento.';
+                $validation['valid'] = false;
+            }
+        }
 
         // Agregar información de descuentos a cada item
         $itemDiscounts = $summary['item_discounts'] ?? [];
@@ -142,6 +170,9 @@ class CartController extends Controller
                     'name' => $cart->restaurant->name,
                     'address' => $cart->restaurant->address,
                     'price_location' => $cart->restaurant->price_location,
+                    'minimum_order_amount' => (float) $cart->restaurant->minimum_order_amount,
+                    'estimated_delivery_time' => $cart->restaurant->estimated_delivery_time,
+                    'estimated_pickup_time' => $cart->restaurant->estimated_pickup_time ?? 15,
                 ] : null,
                 'delivery_address_id' => $cart->delivery_address_id,
                 'delivery_address' => $cart->deliveryAddress ? [
@@ -160,7 +191,10 @@ class CartController extends Controller
                     'total' => number_format($summary['total'], 2, '.', ''),
                     'points_to_earn' => $pointsToEarn,
                 ],
-                'can_checkout' => $validation['valid'] && ! $cart->isEmpty(),
+                'can_checkout' => $validation['valid'] && ! $cart->isEmpty() && $meetsMinimumOrder && $canAcceptOrders,
+                'meets_minimum_order' => $meetsMinimumOrder,
+                'minimum_order_amount' => $minimumOrderAmount,
+                'restaurant_availability' => $restaurantAvailability,
                 'validation_messages' => $validation['messages'],
                 'expires_at' => $cart->expires_at,
                 'created_at' => $cart->created_at,
@@ -299,7 +333,7 @@ class CartController extends Controller
 
         try {
             $item = $this->cartService->addItem($cart, $validated);
-            $item->load(['product', 'variant', 'combo']);
+            $item->load(['product', 'variant', 'combo', 'cart']);
 
             return response()->json([
                 'data' => [
@@ -380,7 +414,7 @@ class CartController extends Controller
 
         $validated = $request->validated();
         $item = $this->cartService->updateItem($item, $validated);
-        $item->load(['product', 'variant', 'combo']);
+        $item->load(['product', 'variant', 'combo', 'cart']);
 
         return response()->json([
             'data' => [
@@ -686,7 +720,7 @@ class CartController extends Controller
         }
 
         $cart = $this->cartService->updateServiceType($cart, $serviceType, $zone);
-        $cart->load(['restaurant', 'items.product', 'items.variant', 'items.combo']);
+        $cart->load(['restaurant', 'items.product', 'items.variant', 'items.combo', 'items.cart']);
 
         $summary = $this->cartService->getCartSummary($cart);
 

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\Delivery\AddressOutsideDeliveryZoneException;
+use App\Exceptions\Order\RestaurantClosedException;
 use App\Models\Cart;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
@@ -54,8 +55,36 @@ class OrderService
 
         // Obtener tiempos estimados del restaurante
         $restaurant = \App\Models\Restaurant::find($data['restaurant_id'] ?? $cart->restaurant_id);
-        $estimatedPickupMinutes = $restaurant?->estimated_pickup_time ?? 30;
-        $estimatedDeliveryMinutes = $restaurant?->estimated_delivery_time ?? 45;
+        if (! $restaurant) {
+            throw new \InvalidArgumentException('Restaurante no encontrado');
+        }
+
+        // Validar monto mínimo de pedido
+        $summary = $this->cartService->getCartSummary($cart);
+        $orderTotal = $summary['total'];
+        $minimumAmount = (float) ($restaurant->minimum_order_amount ?? 0);
+
+        if ($minimumAmount > 0 && $orderTotal < $minimumAmount) {
+            throw new \App\Exceptions\Order\MinimumOrderAmountException(
+                $minimumAmount,
+                $orderTotal,
+                $restaurant->name
+            );
+        }
+
+        // Validar horario de atención del restaurante
+        if (! $restaurant->canAcceptOrdersNow($serviceType)) {
+            throw new RestaurantClosedException(
+                $restaurant->name,
+                $serviceType,
+                $restaurant->getClosingTimeToday(),
+                $restaurant->getLastOrderTime($serviceType),
+                $restaurant->getNextOpenTime()['time'] ?? null
+            );
+        }
+
+        $estimatedPickupMinutes = $restaurant->estimated_pickup_time ?? 30;
+        $estimatedDeliveryMinutes = $restaurant->estimated_delivery_time ?? 45;
 
         // Determinar tiempo estimado según tipo de servicio
         $estimatedMinutes = $serviceType === 'pickup' ? $estimatedPickupMinutes : $estimatedDeliveryMinutes;
@@ -99,6 +128,21 @@ class OrderService
 
             if ($cart->zone !== $result->zone) {
                 $cart->update(['zone' => $result->zone]);
+            }
+
+            // Manejar hora de entrega programada
+            $minimumDeliveryTime = now()->addMinutes($estimatedDeliveryMinutes);
+
+            if (isset($data['scheduled_delivery_time'])) {
+                $scheduledTime = \Carbon\Carbon::parse($data['scheduled_delivery_time']);
+
+                // Auto-recalcular si la hora programada ya pasó o es muy pronto
+                if ($scheduledTime->lt($minimumDeliveryTime)) {
+                    $data['scheduled_delivery_time'] = $minimumDeliveryTime->toIso8601String();
+                }
+            } else {
+                // Si no se especificó hora, usar la hora mínima como default
+                $data['scheduled_delivery_time'] = $minimumDeliveryTime->toIso8601String();
             }
         }
 
@@ -147,6 +191,7 @@ class OrderService
                 'payment_status' => 'pending',
                 'estimated_ready_at' => now()->addMinutes($estimatedMinutes),
                 'scheduled_pickup_time' => $data['scheduled_pickup_time'] ?? null,
+                'scheduled_for' => $data['scheduled_delivery_time'] ?? null,
                 'points_earned' => $pointsToEarn,
                 'nit_id' => $data['nit_id'] ?? null,
                 'nit_snapshot' => $nitSnapshot,
@@ -201,6 +246,12 @@ class OrderService
                     ];
                 }
 
+                // Calcular precio de extras (opciones adicionales)
+                $optionsPrice = $cartItem->getOptionsTotal();
+
+                // subtotal incluye: (precio_base * cantidad) + (extras * cantidad)
+                $itemSubtotal = (float) $cartItem->subtotal + ($optionsPrice * $cartItem->quantity);
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $cartItem->product_id,
@@ -209,8 +260,8 @@ class OrderService
                     'product_snapshot' => $productSnapshot,
                     'quantity' => $cartItem->quantity,
                     'unit_price' => $cartItem->unit_price,
-                    'options_price' => 0,
-                    'subtotal' => $cartItem->subtotal,
+                    'options_price' => $optionsPrice,
+                    'subtotal' => $itemSubtotal,
                     'selected_options' => $cartItem->selected_options,
                     'combo_selections' => $cartItem->combo_selections,
                     'notes' => $cartItem->notes,

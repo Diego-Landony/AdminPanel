@@ -84,4 +84,13 @@ class OrderItem extends Model
     {
         return (float) $this->subtotal;
     }
+
+    /**
+     * Obtiene el total de extras por unidad.
+     * Retorna el valor almacenado en options_price.
+     */
+    public function getOptionsTotal(): float
+    {
+        return (float) ($this->options_price ?? 0);
+    }
 }

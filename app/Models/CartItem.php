@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Menu\Combo;
 use App\Models\Menu\Product;
 use App\Models\Menu\ProductVariant;
+use App\Models\Menu\SectionOption;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -90,7 +91,9 @@ class CartItem extends Model
     }
 
     /**
-     * Calcula el total de las opciones seleccionadas
+     * Calcula el total de las opciones seleccionadas (extras).
+     * Obtiene los precios desde la DB usando SectionOption::getPriceModifier().
+     * Solo los extras (is_extra = true) tienen precio adicional.
      */
     public function getOptionsTotal(): float
     {
@@ -98,14 +101,31 @@ class CartItem extends Model
             return 0.0;
         }
 
+        $optionIds = collect($this->selected_options)
+            ->pluck('option_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        if (empty($optionIds)) {
+            return 0.0;
+        }
+
+        // Batch load opciones para obtener precios reales
+        $sectionOptions = SectionOption::whereIn('id', $optionIds)->get()->keyBy('id');
+
         $total = 0.0;
         foreach ($this->selected_options as $option) {
-            if (isset($option['price'])) {
-                $total += (float) $option['price'];
+            $optionId = $option['option_id'] ?? null;
+            if ($optionId) {
+                $sectionOption = $sectionOptions[$optionId] ?? null;
+                // getPriceModifier() retorna el precio solo si is_extra = true
+                $total += $sectionOption?->getPriceModifier() ?? 0;
             }
         }
 
-        return $total;
+        return round($total, 2);
     }
 
     /**

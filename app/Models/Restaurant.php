@@ -170,6 +170,235 @@ class Restaurant extends Model implements ActivityLoggable
     }
 
     /**
+     * Verifica si el restaurante puede aceptar pedidos según el tipo de servicio.
+     *
+     * - Pickup: Puede pedir hasta (horario_cierre - tiempo_preparación)
+     * - Delivery: Puede pedir hasta horario_cierre (el motorista puede entregar después)
+     */
+    public function canAcceptOrdersNow(string $serviceType = 'pickup'): bool
+    {
+        if (! $this->is_active || ! $this->schedule) {
+            return false;
+        }
+
+        // Verificar que el servicio esté activo
+        if ($serviceType === 'pickup' && ! $this->pickup_active) {
+            return false;
+        }
+        if ($serviceType === 'delivery' && ! $this->delivery_active) {
+            return false;
+        }
+
+        $today = strtolower(now()->format('l'));
+        $todaySchedule = $this->schedule[$today] ?? null;
+
+        if (! $todaySchedule || ! $todaySchedule['is_open']) {
+            return false;
+        }
+
+        $currentTime = now()->format('H:i');
+        $openTime = $todaySchedule['open'];
+        $closeTime = $todaySchedule['close'];
+
+        // Verificar que estemos después de la hora de apertura
+        if ($currentTime < $openTime) {
+            return false;
+        }
+
+        // Para pickup: último pedido = cierre - tiempo de preparación
+        if ($serviceType === 'pickup') {
+            $lastOrderTime = $this->getLastOrderTimeForPickup($closeTime);
+
+            return $currentTime <= $lastOrderTime;
+        }
+
+        // Para delivery: puede pedir hasta el cierre
+        return $currentTime <= $closeTime;
+    }
+
+    /**
+     * Obtiene el último horario para realizar un pedido según el tipo de servicio.
+     */
+    public function getLastOrderTime(string $serviceType = 'pickup'): ?string
+    {
+        if (! $this->schedule) {
+            return null;
+        }
+
+        $today = strtolower(now()->format('l'));
+        $todaySchedule = $this->schedule[$today] ?? null;
+
+        if (! $todaySchedule || ! $todaySchedule['is_open']) {
+            return null;
+        }
+
+        $closeTime = $todaySchedule['close'];
+
+        if ($serviceType === 'pickup') {
+            return $this->getLastOrderTimeForPickup($closeTime);
+        }
+
+        // Para delivery, el último pedido es al cierre
+        return $closeTime;
+    }
+
+    /**
+     * Calcula el último horario para pedidos de pickup.
+     */
+    protected function getLastOrderTimeForPickup(string $closeTime): string
+    {
+        $preparationMinutes = $this->estimated_pickup_time ?? 15;
+
+        $closeCarbon = \Carbon\Carbon::createFromFormat('H:i', $closeTime);
+        $lastOrderCarbon = $closeCarbon->copy()->subMinutes($preparationMinutes);
+
+        return $lastOrderCarbon->format('H:i');
+    }
+
+    /**
+     * Obtiene el horario de cierre de hoy.
+     */
+    public function getClosingTimeToday(): ?string
+    {
+        if (! $this->schedule) {
+            return null;
+        }
+
+        $today = strtolower(now()->format('l'));
+        $todaySchedule = $this->schedule[$today] ?? null;
+
+        if (! $todaySchedule || ! $todaySchedule['is_open']) {
+            return null;
+        }
+
+        return $todaySchedule['close'];
+    }
+
+    /**
+     * Obtiene el horario de apertura de hoy.
+     */
+    public function getOpeningTimeToday(): ?string
+    {
+        if (! $this->schedule) {
+            return null;
+        }
+
+        $today = strtolower(now()->format('l'));
+        $todaySchedule = $this->schedule[$today] ?? null;
+
+        if (! $todaySchedule || ! $todaySchedule['is_open']) {
+            return null;
+        }
+
+        return $todaySchedule['open'];
+    }
+
+    /**
+     * Obtiene el próximo horario de apertura (hoy o mañana).
+     */
+    public function getNextOpenTime(): ?array
+    {
+        if (! $this->schedule) {
+            return null;
+        }
+
+        $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        $todayIndex = array_search(strtolower(now()->format('l')), $days);
+        $currentTime = now()->format('H:i');
+
+        // Primero verificar si aún puede abrir hoy
+        $today = $days[$todayIndex];
+        $todaySchedule = $this->schedule[$today] ?? null;
+
+        if ($todaySchedule && $todaySchedule['is_open'] && $currentTime < $todaySchedule['open']) {
+            return [
+                'day' => 'Hoy',
+                'time' => $todaySchedule['open'],
+            ];
+        }
+
+        // Buscar en los próximos días
+        for ($i = 1; $i <= 7; $i++) {
+            $nextDayIndex = ($todayIndex + $i) % 7;
+            $nextDay = $days[$nextDayIndex];
+            $nextSchedule = $this->schedule[$nextDay] ?? null;
+
+            if ($nextSchedule && $nextSchedule['is_open']) {
+                $dayName = $i === 1 ? 'Mañana' : ucfirst($nextDay);
+
+                return [
+                    'day' => $dayName,
+                    'time' => $nextSchedule['open'],
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Obtiene información completa de disponibilidad para el API.
+     */
+    public function getAvailabilityInfo(string $serviceType = 'pickup'): array
+    {
+        $isOpen = $this->isOpenNow();
+        $canAcceptOrders = $this->canAcceptOrdersNow($serviceType);
+        $closingTime = $this->getClosingTimeToday();
+        $lastOrderTime = $this->getLastOrderTime($serviceType);
+        $nextOpen = $this->getNextOpenTime();
+
+        return [
+            'is_open' => $isOpen,
+            'can_accept_orders' => $canAcceptOrders,
+            'service_type' => $serviceType,
+            'closing_time' => $closingTime,
+            'last_order_time' => $lastOrderTime,
+            'preparation_time_minutes' => $serviceType === 'pickup'
+                ? ($this->estimated_pickup_time ?? 15)
+                : ($this->estimated_delivery_time ?? 30),
+            'next_open' => $nextOpen,
+            'message' => $this->getAvailabilityMessage($serviceType, $canAcceptOrders, $closingTime, $lastOrderTime, $nextOpen),
+        ];
+    }
+
+    /**
+     * Genera mensaje de disponibilidad legible.
+     */
+    protected function getAvailabilityMessage(
+        string $serviceType,
+        bool $canAcceptOrders,
+        ?string $closingTime,
+        ?string $lastOrderTime,
+        ?array $nextOpen
+    ): ?string {
+        if ($canAcceptOrders) {
+            if ($serviceType === 'pickup' && $lastOrderTime && $closingTime) {
+                return sprintf(
+                    'Puedes ordenar hasta las %s (cierre: %s)',
+                    $lastOrderTime,
+                    $closingTime
+                );
+            }
+            if ($closingTime) {
+                return sprintf('Abierto hasta las %s', $closingTime);
+            }
+
+            return 'Abierto';
+        }
+
+        // No puede aceptar pedidos
+        if ($nextOpen) {
+            return sprintf(
+                'Cerrado. Abre %s a las %s',
+                $nextOpen['day'],
+                $nextOpen['time']
+            );
+        }
+
+        return 'Cerrado actualmente';
+    }
+
+    /**
      * Verifica si el restaurante tiene geofence KML definido
      */
     public function hasGeofence(): bool

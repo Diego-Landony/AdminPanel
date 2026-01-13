@@ -10,6 +10,7 @@ use App\Models\Menu\Combo;
 use App\Models\Menu\Product;
 use App\Models\Menu\ProductVariant;
 use App\Models\Restaurant;
+use App\Traits\HasPriceZones;
 
 /**
  * Servicio de Gestión de Carrito
@@ -24,6 +25,8 @@ use App\Models\Restaurant;
  */
 class CartService
 {
+    use HasPriceZones;
+
     public function __construct(
         protected PromotionApplicationService $promotionService
     ) {}
@@ -427,19 +430,29 @@ class CartService
     /**
      * Obtiene el resumen del carrito con subtotal, descuentos, promociones y total
      *
+     * El subtotal incluye: precio base de productos + extras (opciones adicionales)
+     * Los descuentos se aplican SOLO al precio base, NO a los extras
+     *
      * @return array Array con 'subtotal', 'discounts', 'promotions_applied', 'total', 'items_count', 'item_discounts', 'delivery_fee'
      */
     public function getCartSummary(Cart $cart): array
     {
         $items = $cart->items;
-        $subtotal = $items->sum('subtotal');
 
-        // Aplicar promociones automaticamente
-        $appliedPromotions = $this->promotionService->applyPromotions($cart);
-        $discounts = collect($appliedPromotions)->sum('discount_amount');
+        // Subtotal = suma de (precio_base * cantidad) + total_extras de cada item
+        $subtotal = $items->sum(function ($item) {
+            return (float) $item->subtotal + ($item->getOptionsTotal() * $item->quantity);
+        });
 
-        // Calcular descuentos detallados por item
+        // Calcular descuentos detallados por item (incluye Sub del Día y otras promociones)
+        // Los descuentos se calculan sobre el precio base, NO sobre extras
         $itemDiscounts = $this->promotionService->calculateItemDiscounts($cart);
+
+        // Calcular descuento total sumando los descuentos de cada item
+        $discounts = collect($itemDiscounts)->sum('discount_amount');
+
+        // Construir lista de promociones aplicadas desde los descuentos de items
+        $appliedPromotions = $this->buildAppliedPromotionsFromDiscounts($itemDiscounts);
 
         $total = $subtotal - $discounts;
 
@@ -452,6 +465,44 @@ class CartService
             'items_count' => $items->count(),
             'item_discounts' => $itemDiscounts,
         ];
+    }
+
+    /**
+     * Construye la lista de promociones aplicadas desde los descuentos de items
+     * Agrupa por promoción para evitar duplicados
+     */
+    protected function buildAppliedPromotionsFromDiscounts(array $itemDiscounts): array
+    {
+        $promotionsMap = [];
+
+        foreach ($itemDiscounts as $itemId => $discount) {
+            if ($discount['discount_amount'] <= 0 || empty($discount['applied_promotion'])) {
+                continue;
+            }
+
+            $promo = $discount['applied_promotion'];
+            $promoKey = $promo['type'].'_'.($promo['id'] ?? 0);
+
+            if (! isset($promotionsMap[$promoKey])) {
+                $promotionsMap[$promoKey] = [
+                    'promotion_id' => $promo['id'] ?? 0,
+                    'promotion_name' => $promo['name'],
+                    'promotion_type' => $promo['type'],
+                    'discount_amount' => 0,
+                    'items_affected' => [],
+                ];
+            }
+
+            $promotionsMap[$promoKey]['discount_amount'] += $discount['discount_amount'];
+            $promotionsMap[$promoKey]['items_affected'][] = $itemId;
+        }
+
+        // Redondear los descuentos y convertir a array indexado
+        return array_values(array_map(function ($promo) {
+            $promo['discount_amount'] = round($promo['discount_amount'], 2);
+
+            return $promo;
+        }, $promotionsMap));
     }
 
     /**
@@ -479,20 +530,6 @@ class CartService
         $priceField = $this->getPriceField($zone, $serviceType);
 
         return (float) ($combo->{$priceField} ?? 0);
-    }
-
-    /**
-     * Obtiene el nombre del campo de precio según zona y tipo de servicio
-     */
-    private function getPriceField(string $zone, string $serviceType): string
-    {
-        return match ([$zone, $serviceType]) {
-            ['capital', 'pickup'] => 'precio_pickup_capital',
-            ['capital', 'delivery'] => 'precio_domicilio_capital',
-            ['interior', 'pickup'] => 'precio_pickup_interior',
-            ['interior', 'delivery'] => 'precio_domicilio_interior',
-            default => 'precio_pickup_capital',
-        };
     }
 
     /**

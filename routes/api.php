@@ -190,6 +190,9 @@ Route::prefix('v1')->group(function () {
             Route::get('/active', [App\Http\Controllers\Api\V1\OrderController::class, 'active'])
                 ->name('active');
 
+            Route::get('/cancellation-reasons', [App\Http\Controllers\Api\V1\OrderController::class, 'cancellationReasons'])
+                ->name('cancellation-reasons');
+
             Route::get('/{order}', [App\Http\Controllers\Api\V1\OrderController::class, 'show'])
                 ->name('show');
 

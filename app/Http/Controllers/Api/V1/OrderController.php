@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\OrderCancellationReason;
 use App\Exceptions\Delivery\AddressOutsideDeliveryZoneException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Order\CancelOrderRequest;
@@ -554,6 +555,47 @@ class OrderController extends Controller
     }
 
     /**
+     * Get Cancellation Reasons
+     *
+     * @OA\Get(
+     *     path="/api/v1/orders/cancellation-reasons",
+     *     tags={"Orders"},
+     *     summary="Get order cancellation reasons",
+     *     description="Returns a list of predefined reasons for cancelling an order.",
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of cancellation reasons",
+     *
+     *         @OA\JsonContent(
+     *             type="object",
+     *
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *
+     *                 @OA\Items(
+     *                     type="object",
+     *
+     *                     @OA\Property(property="value", type="string", example="changed_mind"),
+     *                     @OA\Property(property="label", type="string", example="Cambié de opinión")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthenticated")
+     * )
+     */
+    public function cancellationReasons(): JsonResponse
+    {
+        return response()->json([
+            'data' => OrderCancellationReason::toArray(),
+        ]);
+    }
+
+    /**
      * Cancel order
      *
      * @OA\Post(
@@ -577,7 +619,8 @@ class OrderController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="reason", type="string", example="Cambié de opinión")
+     *             @OA\Property(property="reason_code", type="string", example="changed_mind", description="Código del motivo: changed_mind, long_wait_time, ordered_by_mistake, wrong_address, found_better_option, no_longer_needed, payment_issue, other"),
+     *             @OA\Property(property="reason_detail", type="string", example="Mi motivo personalizado", description="Requerido cuando reason_code es 'other'")
      *         )
      *     ),
      *
@@ -608,7 +651,7 @@ class OrderController extends Controller
         }
 
         try {
-            $order = $this->orderService->cancel($order, $request->validated()['reason']);
+            $order = $this->orderService->cancel($order, $request->getCancellationReason());
 
             return response()->json([
                 'data' => new OrderResource($order->load(['restaurant', 'items'])),

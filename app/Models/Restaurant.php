@@ -347,10 +347,13 @@ class Restaurant extends Model implements ActivityLoggable
         $lastOrderTime = $this->getLastOrderTime($serviceType);
         $nextOpen = $this->getNextOpenTime();
 
+        $openingTime = $this->getOpeningTimeToday();
+
         return [
             'is_open' => $isOpen,
             'can_accept_orders' => $canAcceptOrders,
             'service_type' => $serviceType,
+            'opening_time' => $openingTime,
             'closing_time' => $closingTime,
             'last_order_time' => $lastOrderTime,
             'preparation_time_minutes' => $serviceType === 'pickup'

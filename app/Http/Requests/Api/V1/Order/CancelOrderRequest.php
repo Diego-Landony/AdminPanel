@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Api\V1\Order;
 
+use App\Enums\OrderCancellationReason;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CancelOrderRequest extends FormRequest
 {
@@ -22,10 +24,16 @@ class CancelOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'reason' => [
+            'reason_code' => [
                 'required',
                 'string',
+                Rule::enum(OrderCancellationReason::class),
+            ],
+            'reason_detail' => [
+                'nullable',
+                'string',
                 'max:500',
+                'required_if:reason_code,other',
             ],
         ];
     }
@@ -38,9 +46,10 @@ class CancelOrderRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'reason.required' => 'El motivo de cancelación es requerido.',
-            'reason.string' => 'El motivo debe ser texto.',
-            'reason.max' => 'El motivo no puede exceder 500 caracteres.',
+            'reason_code.required' => 'El motivo de cancelación es requerido.',
+            'reason_code.enum' => 'El motivo de cancelación no es válido.',
+            'reason_detail.required_if' => 'Por favor especifica el motivo de cancelación.',
+            'reason_detail.max' => 'El detalle del motivo no puede exceder 500 caracteres.',
         ];
     }
 
@@ -52,7 +61,23 @@ class CancelOrderRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'reason' => 'motivo de cancelación',
+            'reason_code' => 'motivo de cancelación',
+            'reason_detail' => 'detalle del motivo',
         ];
+    }
+
+    /**
+     * Get the cancellation reason text.
+     */
+    public function getCancellationReason(): string
+    {
+        $reasonCode = $this->validated()['reason_code'];
+        $reasonEnum = OrderCancellationReason::from($reasonCode);
+
+        if ($reasonEnum === OrderCancellationReason::Other) {
+            return $this->validated()['reason_detail'];
+        }
+
+        return $reasonEnum->label();
     }
 }

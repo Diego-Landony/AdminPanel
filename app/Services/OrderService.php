@@ -171,7 +171,7 @@ class OrderService
 
             $summary = $this->cartService->getCartSummary($cart);
 
-            $pointsToEarn = $this->pointsService->calculatePointsToEarn($summary['total']);
+            $pointsToEarn = $this->pointsService->calculatePointsToEarn($summary['total'], $customer);
 
             $order = Order::create([
                 'order_number' => $orderNumber,

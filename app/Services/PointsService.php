@@ -7,6 +7,7 @@ use App\Models\CustomerPointsTransaction;
 use App\Models\CustomerType;
 use App\Models\Order;
 use App\Models\PointsSetting;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Servicio de Gestión de Puntos
@@ -98,7 +99,11 @@ class PointsService
     {
         $pointsToCredit = $this->calculatePointsToEarn($order->total, $customer);
 
-        if ($pointsToCredit > 0) {
+        if ($pointsToCredit <= 0) {
+            return;
+        }
+
+        DB::transaction(function () use ($customer, $order, $pointsToCredit) {
             $settings = PointsSetting::get();
 
             CustomerPointsTransaction::create([
@@ -117,7 +122,7 @@ class PointsService
             $customer->save();
 
             $this->checkAndApplyUpgrade($customer);
-        }
+        });
     }
 
     /**

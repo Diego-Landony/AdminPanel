@@ -10,7 +10,6 @@ enum OrderCancellationReason: string
     case WrongAddress = 'wrong_address';
     case FoundBetterOption = 'found_better_option';
     case NoLongerNeeded = 'no_longer_needed';
-    case PaymentIssue = 'payment_issue';
     case Other = 'other';
 
     public function label(): string
@@ -22,7 +21,6 @@ enum OrderCancellationReason: string
             self::WrongAddress => 'Dirección de entrega incorrecta',
             self::FoundBetterOption => 'Encontré una mejor opción',
             self::NoLongerNeeded => 'Ya no necesito el pedido',
-            self::PaymentIssue => 'Problemas con el método de pago',
             self::Other => 'Otro',
         };
     }

@@ -619,7 +619,7 @@ class OrderController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="reason_code", type="string", example="changed_mind", description="Código del motivo: changed_mind, long_wait_time, ordered_by_mistake, wrong_address, found_better_option, no_longer_needed, payment_issue, other"),
+     *             @OA\Property(property="reason_code", type="string", example="changed_mind", description="Código del motivo: changed_mind, long_wait_time, ordered_by_mistake, wrong_address, found_better_option, no_longer_needed, other"),
      *             @OA\Property(property="reason_detail", type="string", example="Mi motivo personalizado", description="Requerido cuando reason_code es 'other'")
      *         )
      *     ),

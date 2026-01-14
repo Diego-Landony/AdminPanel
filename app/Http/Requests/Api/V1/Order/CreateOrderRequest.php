@@ -2,11 +2,18 @@
 
 namespace App\Http\Requests\Api\V1\Order;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 
 class CreateOrderRequest extends FormRequest
 {
+    /**
+     * Metadata adicional para errores de validación (ej: hora mínima sugerida)
+     */
+    protected array $validationMeta = [];
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -61,7 +68,10 @@ class CreateOrderRequest extends FormRequest
                     // Validar tiempo mínimo de preparación
                     $minimumTime = now()->addMinutes($estimatedMinutes);
                     if ($scheduledTime->lt($minimumTime)) {
-                        $fail("La hora de recogida debe ser al menos {$estimatedMinutes} minutos desde ahora.");
+                        $this->validationMeta['suggested_pickup_time'] = $minimumTime->format('Y-m-d H:i:s');
+                        $this->validationMeta['suggested_pickup_time_formatted'] = $minimumTime->format('H:i');
+                        $this->validationMeta['time_expired'] = true;
+                        $fail("La hora de recogida ya no está disponible. Hora mínima sugerida: {$minimumTime->format('H:i')}.");
 
                         return;
                     }
@@ -98,7 +108,10 @@ class CreateOrderRequest extends FormRequest
                     // Validar tiempo mínimo (preparación + entrega)
                     $minimumTime = now()->addMinutes($estimatedMinutes);
                     if ($scheduledTime->lt($minimumTime)) {
-                        $fail("La hora de entrega debe ser al menos {$estimatedMinutes} minutos desde ahora.");
+                        $this->validationMeta['suggested_delivery_time'] = $minimumTime->format('Y-m-d H:i:s');
+                        $this->validationMeta['suggested_delivery_time_formatted'] = $minimumTime->format('H:i');
+                        $this->validationMeta['time_expired'] = true;
+                        $fail("La hora de entrega ya no está disponible. Hora mínima sugerida: {$minimumTime->format('H:i')}.");
 
                         return;
                     }
@@ -209,5 +222,26 @@ class CreateOrderRequest extends FormRequest
             'nit_id' => 'NIT',
             'notes' => 'notas',
         ];
+    }
+
+    /**
+     * Handle a failed validation attempt.
+     * Incluye metadata adicional cuando hay errores de tiempo expirado.
+     */
+    protected function failedValidation(Validator $validator): void
+    {
+        $response = [
+            'message' => 'Los datos proporcionados no son válidos.',
+            'errors' => $validator->errors()->toArray(),
+        ];
+
+        // Agregar metadata si hay información de tiempo sugerido
+        if (! empty($this->validationMeta)) {
+            $response['meta'] = $this->validationMeta;
+        }
+
+        throw new HttpResponseException(
+            response()->json($response, 422)
+        );
     }
 }

@@ -1506,6 +1506,12 @@
                                                                     "type": "string",
                                                                     "example": "Italian B.M.T."
                                                                 },
+                                                                "category_name": {
+                                                                    "description": "Nombre de la categoria del producto",
+                                                                    "type": "string",
+                                                                    "example": "Subs",
+                                                                    "nullable": true
+                                                                },
                                                                 "image_url": {
                                                                     "type": "string",
                                                                     "example": "/storage/menu/products/example.webp"
@@ -5941,9 +5947,40 @@
                                                             "id": {
                                                                 "type": "integer"
                                                             },
-                                                            "name": {
+                                                            "type": {
                                                                 "type": "string",
-                                                                "example": "Italian BMT 15cm"
+                                                                "enum": [
+                                                                    "product",
+                                                                    "combo"
+                                                                ]
+                                                            },
+                                                            "product": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Italian BMT"
+                                                                    },
+                                                                    "category_name": {
+                                                                        "description": "Nombre de la categoria del producto",
+                                                                        "type": "string",
+                                                                        "example": "Subs",
+                                                                        "nullable": true
+                                                                    },
+                                                                    "image_url": {
+                                                                        "type": "string",
+                                                                        "nullable": true
+                                                                    },
+                                                                    "variant": {
+                                                                        "type": "object",
+                                                                        "nullable": true
+                                                                    }
+                                                                },
+                                                                "type": "object",
+                                                                "nullable": true
                                                             },
                                                             "quantity": {
                                                                 "type": "integer",
@@ -6295,7 +6332,7 @@
                             "schema": {
                                 "properties": {
                                     "reason_code": {
-                                        "description": "Código del motivo: changed_mind, long_wait_time, ordered_by_mistake, wrong_address, found_better_option, no_longer_needed, payment_issue, other",
+                                        "description": "Código del motivo: changed_mind, long_wait_time, ordered_by_mistake, wrong_address, found_better_option, no_longer_needed, other",
                                         "type": "string",
                                         "example": "changed_mind"
                                     },

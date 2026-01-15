@@ -1,24 +1,28 @@
-import { router, useForm } from '@inertiajs/react';
+import { router, useForm, Link } from '@inertiajs/react';
 import L from 'leaflet';
-import { Building2, Clock, DollarSign, FileText, Hash, Mail, MapPin, Navigation, Network, Pentagon, Phone, Search, Settings } from 'lucide-react';
+import { Building2, Clock, DollarSign, Eye, EyeOff, FileText, Hash, Lock, Mail, MapPin, Navigation, Network, Pencil, Pentagon, Phone, Plus, Search, Settings, Trash2, Truck, Users, UserCog } from 'lucide-react';
 import React, { useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
 import { GeomanControl } from '@/components/GeomanControl';
 import { EditRestaurantsSkeleton } from '@/components/skeletons';
+import { ACTIVE_STATUS_CONFIGS, StatusBadge } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AUTOCOMPLETE, PLACEHOLDERS } from '@/constants/ui-constants';
+import { showNotification } from '@/hooks/useNotifications';
 import { coordinatesToKML, parseKMLToCoordinates } from '@/utils/kmlParser';
 
 // Fix for default markers in React Leaflet
@@ -52,8 +56,27 @@ interface Restaurant {
     updated_at: string;
 }
 
+interface RestaurantUser {
+    id: number;
+    name: string;
+    email: string;
+    is_active: boolean;
+    last_login_at: string | null;
+}
+
+interface Driver {
+    id: number;
+    name: string;
+    email: string;
+    phone: string | null;
+    is_active: boolean;
+    is_available: boolean;
+}
+
 interface EditPageProps {
     restaurant: Restaurant;
+    restaurant_users?: RestaurantUser[];
+    drivers?: Driver[];
 }
 
 interface RestaurantFormData {
@@ -107,7 +130,37 @@ function MapCenterUpdater({ center }: MapCenterUpdaterProps) {
     return null;
 }
 
-export default function RestaurantEdit({ restaurant }: EditPageProps) {
+/**
+ * Formulario de usuario de restaurante
+ */
+interface UserFormData {
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+    is_active: boolean;
+}
+
+export default function RestaurantEdit({ restaurant, restaurant_users = [], drivers = [] }: EditPageProps) {
+    // Estado para modales de usuarios
+    const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState<RestaurantUser | null>(null);
+    const [userToDelete, setUserToDelete] = useState<RestaurantUser | null>(null);
+    const [showDeleteUserDialog, setShowDeleteUserDialog] = useState(false);
+    const [isDeletingUser, setIsDeletingUser] = useState(false);
+    const [showUserPassword, setShowUserPassword] = useState(false);
+    const [userFormProcessing, setUserFormProcessing] = useState(false);
+
+    // Form para usuario
+    const [userForm, setUserForm] = useState<UserFormData>({
+        name: '',
+        email: '',
+        password: '',
+        password_confirmation: '',
+        is_active: true,
+    });
+    const [userFormErrors, setUserFormErrors] = useState<Record<string, string>>({});
+
     const { data, setData, put, processing, errors } = useForm<RestaurantFormData>({
         name: restaurant.name,
         address: restaurant.address,
@@ -340,6 +393,114 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
     };
 
     const hasGeofence = !!restaurant.geofence_kml;
+
+    // Funciones para CRUD de usuarios de restaurante
+    const resetUserForm = () => {
+        setUserForm({
+            name: '',
+            email: '',
+            password: '',
+            password_confirmation: '',
+            is_active: true,
+        });
+        setUserFormErrors({});
+        setShowUserPassword(false);
+    };
+
+    const openCreateUserModal = () => {
+        setEditingUser(null);
+        resetUserForm();
+        setIsUserModalOpen(true);
+    };
+
+    const openEditUserModal = (user: RestaurantUser) => {
+        setEditingUser(user);
+        setUserForm({
+            name: user.name,
+            email: user.email,
+            password: '',
+            password_confirmation: '',
+            is_active: user.is_active,
+        });
+        setUserFormErrors({});
+        setShowUserPassword(false);
+        setIsUserModalOpen(true);
+    };
+
+    const closeUserModal = () => {
+        setIsUserModalOpen(false);
+        setEditingUser(null);
+        resetUserForm();
+    };
+
+    const handleUserFormSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setUserFormProcessing(true);
+        setUserFormErrors({});
+
+        const url = editingUser
+            ? route('restaurants.users.update', { restaurant: restaurant.id, restaurantUser: editingUser.id })
+            : route('restaurants.users.store', { restaurant: restaurant.id });
+
+        const method = editingUser ? 'put' : 'post';
+
+        // Preparar datos
+        const submitData: Record<string, unknown> = {
+            name: userForm.name,
+            email: userForm.email,
+            is_active: userForm.is_active,
+        };
+
+        // Solo incluir password si se proporcionó (para crear es requerido, para editar es opcional)
+        if (userForm.password) {
+            submitData.password = userForm.password;
+            submitData.password_confirmation = userForm.password_confirmation;
+        }
+
+        router[method](url, submitData, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                closeUserModal();
+                showNotification.success(editingUser ? 'Usuario actualizado exitosamente' : 'Usuario creado exitosamente');
+            },
+            onError: (errors) => {
+                setUserFormErrors(errors as Record<string, string>);
+            },
+            onFinish: () => {
+                setUserFormProcessing(false);
+            },
+        });
+    };
+
+    const openDeleteUserDialog = (user: RestaurantUser) => {
+        setUserToDelete(user);
+        setShowDeleteUserDialog(true);
+    };
+
+    const closeDeleteUserDialog = () => {
+        setUserToDelete(null);
+        setShowDeleteUserDialog(false);
+        setIsDeletingUser(false);
+    };
+
+    const handleDeleteUser = () => {
+        if (!userToDelete) return;
+
+        setIsDeletingUser(true);
+        router.delete(route('restaurants.users.destroy', { restaurant: restaurant.id, restaurantUser: userToDelete.id }), {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                closeDeleteUserDialog();
+                showNotification.success('Usuario eliminado exitosamente');
+            },
+            onError: () => {
+                setIsDeletingUser(false);
+                showNotification.error('Error al eliminar el usuario');
+            },
+        });
+    };
 
     return (
         <EditPageLayout
@@ -771,6 +932,268 @@ export default function RestaurantEdit({ restaurant }: EditPageProps) {
                         </div>
                     ))}
                 </div>
+                        </FormSection>
+                    </CardContent>
+                </Card>
+
+                {/* Usuarios del Restaurante */}
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={UserCog} title="Usuarios del Restaurante" description="Usuarios con acceso al panel del restaurante">
+                            <div className="flex items-center justify-between mb-4">
+                                <p className="text-sm text-muted-foreground">
+                                    {restaurant_users.length} usuario(s) registrado(s)
+                                </p>
+                                <Button type="button" variant="outline" size="sm" onClick={openCreateUserModal}>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Agregar Usuario
+                                </Button>
+                            </div>
+                            {restaurant_users.length > 0 ? (
+                                <div className="rounded-md border">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Nombre</TableHead>
+                                                <TableHead>Email</TableHead>
+                                                <TableHead>Estado</TableHead>
+                                                <TableHead className="w-[100px]">Acciones</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {restaurant_users.map((user) => (
+                                                <TableRow key={user.id}>
+                                                    <TableCell className="font-medium">{user.name}</TableCell>
+                                                    <TableCell>{user.email}</TableCell>
+                                                    <TableCell>
+                                                        <StatusBadge
+                                                            status={user.is_active ? 'active' : 'inactive'}
+                                                            configs={ACTIVE_STATUS_CONFIGS}
+                                                            className="text-xs"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-1">
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8"
+                                                                onClick={() => openEditUserModal(user)}
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                                                onClick={() => openDeleteUserDialog(user)}
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            ) : (
+                                <div className="py-8 text-center">
+                                    <Users className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                                    <p className="mt-2 text-sm text-muted-foreground">No hay usuarios asignados a este restaurante</p>
+                                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={openCreateUserModal}>
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Crear primer usuario
+                                    </Button>
+                                </div>
+                            )}
+                        </FormSection>
+                    </CardContent>
+                </Card>
+
+                {/* Modal de Crear/Editar Usuario */}
+                <Dialog open={isUserModalOpen} onOpenChange={(open) => !open && closeUserModal()}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</DialogTitle>
+                            <DialogDescription>
+                                {editingUser
+                                    ? 'Modifica los datos del usuario del restaurante'
+                                    : 'Crea un nuevo usuario con acceso al panel del restaurante'}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleUserFormSubmit} className="space-y-4">
+                            <FormField label="Nombre" error={userFormErrors.name} required>
+                                <Input
+                                    value={userForm.name}
+                                    onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
+                                    placeholder="Nombre completo"
+                                    autoComplete={AUTOCOMPLETE.name}
+                                />
+                            </FormField>
+
+                            <FormField label="Correo Electronico" error={userFormErrors.email} required>
+                                <div className="relative">
+                                    <Mail className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        type="email"
+                                        value={userForm.email}
+                                        onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                                        placeholder={PLACEHOLDERS.email}
+                                        className="pl-10"
+                                        autoComplete={AUTOCOMPLETE.email}
+                                    />
+                                </div>
+                            </FormField>
+
+                            <FormField
+                                label={editingUser ? 'Nueva Contrasena (opcional)' : 'Contrasena'}
+                                error={userFormErrors.password}
+                                required={!editingUser}
+                                description={editingUser ? 'Dejar en blanco para mantener la actual' : 'Minimo 8 caracteres'}
+                            >
+                                <div className="relative">
+                                    <Lock className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        type={showUserPassword ? 'text' : 'password'}
+                                        value={userForm.password}
+                                        onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                                        placeholder={PLACEHOLDERS.password}
+                                        className="pr-10 pl-10"
+                                        autoComplete={AUTOCOMPLETE.newPassword}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="absolute top-1 right-1 h-8 w-8 p-0"
+                                        onClick={() => setShowUserPassword(!showUserPassword)}
+                                    >
+                                        {showUserPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </Button>
+                                </div>
+                            </FormField>
+
+                            {(userForm.password || !editingUser) && (
+                                <FormField label="Confirmar Contrasena" error={userFormErrors.password_confirmation} required={!editingUser}>
+                                    <div className="relative">
+                                        <Lock className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            type={showUserPassword ? 'text' : 'password'}
+                                            value={userForm.password_confirmation}
+                                            onChange={(e) => setUserForm({ ...userForm, password_confirmation: e.target.value })}
+                                            placeholder={PLACEHOLDERS.password}
+                                            className="pl-10"
+                                            autoComplete={AUTOCOMPLETE.newPassword}
+                                        />
+                                    </div>
+                                </FormField>
+                            )}
+
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="user_is_active" className="cursor-pointer">
+                                    Usuario Activo
+                                </Label>
+                                <Switch
+                                    id="user_is_active"
+                                    checked={userForm.is_active}
+                                    onCheckedChange={(checked) => setUserForm({ ...userForm, is_active: checked })}
+                                />
+                            </div>
+
+                            <DialogFooter>
+                                <Button type="button" variant="outline" onClick={closeUserModal}>
+                                    Cancelar
+                                </Button>
+                                <Button type="submit" disabled={userFormProcessing}>
+                                    {userFormProcessing ? 'Guardando...' : editingUser ? 'Actualizar' : 'Crear Usuario'}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Dialog de Confirmacion de Eliminar Usuario */}
+                <DeleteConfirmationDialog
+                    isOpen={showDeleteUserDialog}
+                    onClose={closeDeleteUserDialog}
+                    onConfirm={handleDeleteUser}
+                    isDeleting={isDeletingUser}
+                    entityName={userToDelete?.name || ''}
+                    entityType="el usuario"
+                />
+
+                {/* Motoristas del Restaurante (Solo visualizacion - gestion desde /drivers) */}
+                <Card>
+                    <CardContent className="pt-6">
+                        <FormSection icon={Truck} title="Motoristas del Restaurante" description="Motoristas asignados a este restaurante. Gestionalos desde la seccion de Motoristas.">
+                            <div className="flex items-center justify-between mb-4">
+                                <p className="text-sm text-muted-foreground">
+                                    {drivers.length} motorista(s) asignado(s)
+                                </p>
+                                <Link href={`/drivers?restaurant_id=${restaurant.id}`}>
+                                    <Button type="button" variant="outline" size="sm">
+                                        <Truck className="mr-2 h-4 w-4" />
+                                        Gestionar Motoristas
+                                    </Button>
+                                </Link>
+                            </div>
+                            {drivers.length > 0 ? (
+                                <div className="rounded-md border">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Nombre</TableHead>
+                                                <TableHead>Telefono</TableHead>
+                                                <TableHead>Estado</TableHead>
+                                                <TableHead>Disponibilidad</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {drivers.slice(0, 5).map((driver) => (
+                                                <TableRow key={driver.id}>
+                                                    <TableCell className="font-medium">{driver.name}</TableCell>
+                                                    <TableCell>{driver.phone || 'N/A'}</TableCell>
+                                                    <TableCell>
+                                                        <StatusBadge
+                                                            status={driver.is_active ? 'active' : 'inactive'}
+                                                            configs={ACTIVE_STATUS_CONFIGS}
+                                                            className="text-xs"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge
+                                                            variant={driver.is_available ? 'default' : 'secondary'}
+                                                            className={`text-xs ${driver.is_available ? 'bg-green-600' : ''}`}
+                                                        >
+                                                            {driver.is_available ? 'Disponible' : 'No disponible'}
+                                                        </Badge>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                    {drivers.length > 5 && (
+                                        <div className="p-3 text-center border-t">
+                                            <Link href={`/drivers?restaurant_id=${restaurant.id}`}>
+                                                <Button type="button" variant="ghost" size="sm">
+                                                    Ver {drivers.length - 5} motoristas mas
+                                                </Button>
+                                            </Link>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="py-8 text-center">
+                                    <Truck className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                                    <p className="mt-2 text-sm text-muted-foreground">No hay motoristas asignados a este restaurante</p>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        Asigna motoristas desde la seccion <Link href="/drivers" className="text-primary underline">Motoristas</Link>
+                                    </p>
+                                </div>
+                            )}
                         </FormSection>
                     </CardContent>
                 </Card>

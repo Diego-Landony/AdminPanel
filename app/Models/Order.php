@@ -35,6 +35,7 @@ class Order extends Model
         'order_number',
         'customer_id',
         'restaurant_id',
+        'driver_id',
         'service_type',
         'zone',
         'delivery_address_id',
@@ -51,6 +52,8 @@ class Order extends Model
         'estimated_ready_at',
         'ready_at',
         'delivered_at',
+        'assigned_to_driver_at',
+        'picked_up_at',
         'points_earned',
         'nit_id',
         'nit_snapshot',
@@ -71,6 +74,8 @@ class Order extends Model
             'estimated_ready_at' => 'datetime',
             'ready_at' => 'datetime',
             'delivered_at' => 'datetime',
+            'assigned_to_driver_at' => 'datetime',
+            'picked_up_at' => 'datetime',
             'subtotal' => 'decimal:2',
             'discount_total' => 'decimal:2',
             'delivery_fee' => 'decimal:2',
@@ -91,6 +96,11 @@ class Order extends Model
     public function restaurant(): BelongsTo
     {
         return $this->belongsTo(Restaurant::class);
+    }
+
+    public function driver(): BelongsTo
+    {
+        return $this->belongsTo(Driver::class);
     }
 
     public function deliveryAddress(): BelongsTo
@@ -171,5 +181,33 @@ class Order extends Model
     public function isPickup(): bool
     {
         return $this->service_type === 'pickup';
+    }
+
+    /**
+     * Verifica si la orden tiene un motorista asignado
+     */
+    public function hasDriver(): bool
+    {
+        return $this->driver_id !== null;
+    }
+
+    /**
+     * Verifica si la orden puede ser asignada a un motorista
+     * Solo ordenes de delivery en estado 'ready'
+     */
+    public function canBeAssignedToDriver(): bool
+    {
+        return $this->status === self::STATUS_READY && $this->service_type === 'delivery';
+    }
+
+    /**
+     * Asigna un motorista a la orden
+     */
+    public function assignDriver(Driver $driver): void
+    {
+        $this->update([
+            'driver_id' => $driver->id,
+            'assigned_to_driver_at' => now(),
+        ]);
     }
 }

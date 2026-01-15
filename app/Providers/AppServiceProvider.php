@@ -3,11 +3,16 @@
 namespace App\Providers;
 
 use App\Models\Customer;
+use App\Models\Driver;
+use App\Models\RestaurantUser;
 use App\Observers\PersonalAccessTokenObserver;
+use App\Policies\DriverPolicy;
+use App\Policies\RestaurantUserPolicy;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -45,6 +50,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configurePasswordValidation();
         $this->configureRateLimiting();
         $this->configureCustomerNotifications();
+        $this->configurePolicies();
 
         PersonalAccessToken::observe(PersonalAccessTokenObserver::class);
 
@@ -145,5 +151,14 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('oauth', function (Request $request) {
             return Limit::perMinute(10)->by($request->ip());
         });
+    }
+
+    /**
+     * Configure policies for models.
+     */
+    protected function configurePolicies(): void
+    {
+        Gate::policy(Driver::class, DriverPolicy::class);
+        Gate::policy(RestaurantUser::class, RestaurantUserPolicy::class);
     }
 }

@@ -233,3 +233,136 @@ export interface PaginationLink {
     label: string;
     active: boolean;
 }
+
+/**
+ * Motorista (Driver)
+ */
+export interface Driver {
+    id: number;
+    restaurant_id: number;
+    name: string;
+    email: string;
+    phone: string | null;
+    is_active: boolean;
+    is_available: boolean;
+    current_latitude: number | null;
+    current_longitude: number | null;
+    last_location_update: string | null;
+    last_login_at: string | null;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    // Relations
+    restaurant?: Restaurant;
+    orders?: Order[];
+    active_orders_count?: number;
+}
+
+/**
+ * Usuario de Restaurante
+ * Todos los usuarios tienen los mismos permisos: aceptar ordenes, cambiar estado, asignar motoristas
+ */
+export interface RestaurantUser {
+    id: number;
+    restaurant_id: number;
+    name: string;
+    email: string;
+    is_active: boolean;
+    last_login_at: string | null;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    // Relations
+    restaurant?: Restaurant;
+}
+
+/**
+ * Orden/Pedido
+ */
+export interface Order {
+    id: number;
+    order_number: string;
+    restaurant_id: number;
+    customer_id: number;
+    driver_id: number | null;
+    service_type: 'pickup' | 'delivery';
+    status: OrderStatus;
+    subtotal: number;
+    delivery_fee: number;
+    discount: number;
+    total: number;
+    payment_method: 'cash' | 'card' | 'online';
+    payment_status: 'pending' | 'paid' | 'refunded';
+    notes: string | null;
+    delivery_address: string | null;
+    delivery_latitude: number | null;
+    delivery_longitude: number | null;
+    estimated_delivery_time: number | null;
+    assigned_to_driver_at: string | null;
+    picked_up_at: string | null;
+    delivered_at: string | null;
+    completed_at: string | null;
+    cancelled_at: string | null;
+    cancellation_reason: string | null;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    // Relations
+    restaurant?: Restaurant;
+    customer?: Customer;
+    driver?: Driver;
+    items?: OrderItem[];
+    status_history?: OrderStatusHistory[];
+}
+
+/**
+ * Estados posibles de una orden
+ */
+export type OrderStatus =
+    | 'pending'
+    | 'confirmed'
+    | 'preparing'
+    | 'ready'
+    | 'out_for_delivery'
+    | 'delivered'
+    | 'completed'
+    | 'cancelled';
+
+/**
+ * Item de una orden
+ */
+export interface OrderItem {
+    id: number;
+    order_id: number;
+    product_id: number | null;
+    combo_id: number | null;
+    name: string;
+    quantity: number;
+    unit_price: number;
+    total_price: number;
+    notes: string | null;
+    options: OrderItemOption[] | null;
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Opción de un item de orden
+ */
+export interface OrderItemOption {
+    name: string;
+    price: number;
+}
+
+/**
+ * Historial de estados de una orden
+ */
+export interface OrderStatusHistory {
+    id: number;
+    order_id: number;
+    status: OrderStatus;
+    notes: string | null;
+    changed_by_type: 'user' | 'customer' | 'driver' | 'system';
+    changed_by_id: number | null;
+    created_at: string;
+}

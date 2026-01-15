@@ -6,6 +6,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerDeviceController;
 use App\Http\Controllers\CustomerNitController;
 use App\Http\Controllers\CustomerTypeController;
+use App\Http\Controllers\DriverController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\Marketing\PromotionalBannerController;
 use App\Http\Controllers\Menu\BadgeTypeController;
@@ -16,8 +17,10 @@ use App\Http\Controllers\Menu\ProductController;
 use App\Http\Controllers\Menu\ProductVariantController;
 use App\Http\Controllers\Menu\PromotionController;
 use App\Http\Controllers\Menu\SectionController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\RestaurantGeofencesController;
+use App\Http\Controllers\RestaurantUserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\Support\LegalDocumentController;
 use App\Http\Controllers\Support\SupportReasonController;
@@ -185,6 +188,48 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Vista general de geocercas
     Route::get('restaurants-geofences', [RestaurantGeofencesController::class, 'index'])->name('restaurants.geofences')
         ->middleware('permission:restaurants.view');
+
+    // Gestión de usuarios de restaurante
+    Route::get('restaurants/{restaurant}/users', [RestaurantUserController::class, 'index'])->name('restaurants.users.index')
+        ->middleware('permission:restaurants.view');
+    Route::post('restaurants/{restaurant}/users', [RestaurantUserController::class, 'store'])->name('restaurants.users.store')
+        ->middleware('permission:restaurants.edit');
+    Route::put('restaurants/{restaurant}/users/{restaurantUser}', [RestaurantUserController::class, 'update'])->name('restaurants.users.update')
+        ->middleware('permission:restaurants.edit');
+    Route::delete('restaurants/{restaurant}/users/{restaurantUser}', [RestaurantUserController::class, 'destroy'])->name('restaurants.users.destroy')
+        ->middleware('permission:restaurants.delete');
+    Route::post('restaurants/{restaurant}/users/{restaurantUser}/reset-password', [RestaurantUserController::class, 'resetPassword'])->name('restaurants.users.reset-password')
+        ->middleware('permission:restaurants.edit');
+
+    // Gestión de motoristas - requiere permisos específicos
+    Route::get('drivers', [DriverController::class, 'index'])->name('drivers.index')
+        ->middleware('permission:drivers.view');
+    Route::get('drivers/create', [DriverController::class, 'create'])->name('drivers.create')
+        ->middleware('permission:drivers.create');
+    Route::post('drivers', [DriverController::class, 'store'])->name('drivers.store')
+        ->middleware('permission:drivers.create');
+    Route::get('drivers/{driver}', [DriverController::class, 'show'])->name('drivers.show')
+        ->middleware('permission:drivers.view');
+    Route::get('drivers/{driver}/edit', [DriverController::class, 'edit'])->name('drivers.edit')
+        ->middleware('permission:drivers.edit');
+    Route::put('drivers/{driver}', [DriverController::class, 'update'])->name('drivers.update')
+        ->middleware('permission:drivers.edit');
+    Route::patch('drivers/{driver}', [DriverController::class, 'update'])
+        ->middleware('permission:drivers.edit');
+    Route::delete('drivers/{driver}', [DriverController::class, 'destroy'])->name('drivers.destroy')
+        ->middleware('permission:drivers.delete');
+    Route::post('drivers/{driver}/toggle-availability', [DriverController::class, 'toggleAvailability'])->name('drivers.toggle-availability')
+        ->middleware('permission:drivers.edit');
+
+    // Gestión de órdenes - requiere permisos específicos
+    Route::get('orders', [OrderController::class, 'index'])->name('orders.index')
+        ->middleware('permission:orders.view');
+    Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show')
+        ->middleware('permission:orders.view');
+    Route::post('orders/{order}/assign-driver', [OrderController::class, 'assignDriver'])->name('orders.assign-driver')
+        ->middleware('permission:orders.edit');
+    Route::post('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status')
+        ->middleware('permission:orders.edit');
 
     // Actividad - requiere permiso específico
     Route::get('activity', [ActivityController::class, 'index'])->name('activity.index')
@@ -477,3 +522,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
+
+/*
+|--------------------------------------------------------------------------
+| Restaurant Panel Routes
+|--------------------------------------------------------------------------
+*/
+Route::prefix('restaurant')->name('restaurant.')->group(function () {
+    // Guest routes (no autenticado como restaurant)
+    Route::middleware('guest:restaurant')->group(function () {
+        Route::get('login', [App\Http\Controllers\Restaurant\AuthController::class, 'showLoginForm'])->name('login');
+        Route::post('login', [App\Http\Controllers\Restaurant\AuthController::class, 'login']);
+    });
+
+    // Authenticated routes (autenticado como restaurant)
+    Route::middleware('auth:restaurant')->group(function () {
+        Route::post('logout', [App\Http\Controllers\Restaurant\AuthController::class, 'logout'])->name('logout');
+
+        // Dashboard
+        Route::get('/', [App\Http\Controllers\Restaurant\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('dashboard', [App\Http\Controllers\Restaurant\DashboardController::class, 'index'])->name('dashboard.index');
+
+        // Orders
+        Route::get('orders', [App\Http\Controllers\Restaurant\OrderController::class, 'index'])->name('orders.index');
+        Route::get('orders/{order}', [App\Http\Controllers\Restaurant\OrderController::class, 'show'])->name('orders.show');
+        Route::post('orders/{order}/accept', [App\Http\Controllers\Restaurant\OrderController::class, 'accept'])->name('orders.accept');
+        Route::post('orders/{order}/ready', [App\Http\Controllers\Restaurant\OrderController::class, 'markReady'])->name('orders.ready');
+        Route::post('orders/{order}/assign-driver', [App\Http\Controllers\Restaurant\OrderController::class, 'assignDriver'])->name('orders.assign-driver');
+
+        // Drivers (solo lectura)
+        Route::get('drivers', [App\Http\Controllers\Restaurant\DriverController::class, 'index'])->name('drivers.index');
+
+        // Profile
+        Route::get('profile', [App\Http\Controllers\Restaurant\ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('profile', [App\Http\Controllers\Restaurant\ProfileController::class, 'update'])->name('profile.update');
+    });
+});

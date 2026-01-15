@@ -76,6 +76,7 @@ class RestaurantFactory extends Factory
             'minimum_order_amount' => $this->faker->randomFloat(2, 50, 200),
             'email' => $this->faker->companyEmail(),
             'estimated_delivery_time' => $deliveryActive ? $this->faker->numberBetween(20, 60) : null,
+            'estimated_pickup_time' => $pickupActive ? $this->faker->numberBetween(10, 30) : null,
         ];
     }
 }

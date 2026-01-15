@@ -1,5 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
-import { CheckCircle, Eye, EyeOff, Loader2, LogIn } from 'lucide-react';
+import { Building2, CheckCircle, Eye, EyeOff, Loader2, LogIn, Shield, Store } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 
 import TextLink from '@/components/text-link';
@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AUTOCOMPLETE, PLACEHOLDERS } from '@/constants/ui-constants';
 import AuthLayout from '@/layouts/auth-layout';
 
@@ -22,44 +23,87 @@ type LoginForm = {
 };
 
 /**
- * Props de la página de login
+ * Props de la pagina de login
  */
 interface LoginProps {
     status?: string;
     canResetPassword: boolean;
 }
 
+type LoginType = 'admin' | 'restaurant';
+
 /**
- * Página de inicio de sesión
+ * Pagina de inicio de sesion con tabs para Administrativo y Restaurante
  */
 export default function Login({ status, canResetPassword }: LoginProps) {
     const [showPassword, setShowPassword] = useState(false);
+    const [loginType, setLoginType] = useState<LoginType>('admin');
 
     // Hook de Inertia para manejar el formulario
-    const { data, setData, post, processing, errors, reset } = useForm<Required<LoginForm>>({
+    const { data, setData, post, processing, errors, reset, clearErrors } = useForm<Required<LoginForm>>({
         email: '',
         password: '',
         remember: false,
     });
 
     /**
-     * Maneja el envío del formulario
+     * Maneja el envio del formulario
      */
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(route('login'), {
+
+        const routeName = loginType === 'admin' ? 'login' : 'restaurant.login';
+
+        post(route(routeName), {
             onFinish: () => reset('password'),
-            // Los mensajes de éxito/error se manejan automáticamente por el layout
         });
     };
 
+    /**
+     * Cambia el tipo de login y limpia errores
+     */
+    const handleLoginTypeChange = (type: LoginType) => {
+        setLoginType(type);
+        clearErrors();
+    };
+
     return (
-        <AuthLayout title="Inicia sesión" description="Accede a tu cuenta">
-            <Head title="Iniciar Sesión" />
+        <AuthLayout
+            title={loginType === 'admin' ? 'Panel Administrativo' : 'Panel de Restaurante'}
+            description={loginType === 'admin' ? 'Acceso para administradores' : 'Acceso para restaurantes'}
+        >
+            <Head title="Iniciar Sesion" />
 
             <Card className="w-full max-w-sm">
-                <CardHeader className="text-center">
-                    <CardTitle>Inicia sesión</CardTitle>
+                <CardHeader className="space-y-4 text-center">
+                    {/* Tabs para seleccionar tipo de login */}
+                    <Tabs value={loginType} onValueChange={(v) => handleLoginTypeChange(v as LoginType)} className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="admin" className="flex items-center gap-2">
+                                <Shield className="h-4 w-4" />
+                                <span className="hidden sm:inline">Administrativo</span>
+                                <span className="sm:hidden">Admin</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="restaurant" className="flex items-center gap-2">
+                                <Store className="h-4 w-4" />
+                                <span>Restaurante</span>
+                            </TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+
+                    <CardTitle className="flex items-center justify-center gap-2">
+                        {loginType === 'admin' ? (
+                            <>
+                                <Shield className="h-5 w-5 text-primary" />
+                                Panel Administrativo
+                            </>
+                        ) : (
+                            <>
+                                <Building2 className="h-5 w-5 text-orange-500" />
+                                Panel de Restaurante
+                            </>
+                        )}
+                    </CardTitle>
                 </CardHeader>
 
                 <CardContent>
@@ -116,7 +160,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                 </div>
                             </FormField>
 
-                            {/* Checkbox de recordar sesión */}
+                            {/* Checkbox de recordar sesion */}
                             <div className="flex items-center space-x-3">
                                 <Checkbox
                                     id="remember"
@@ -132,31 +176,42 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                 </CardContent>
 
                 <CardFooter className="flex-col gap-4">
-                    {/* Botón de envío */}
-                    <Button type="submit" className="w-full" onClick={submit} disabled={processing}>
+                    {/* Boton de envio */}
+                    <Button
+                        type="submit"
+                        className={`w-full ${loginType === 'restaurant' ? 'bg-orange-500 hover:bg-orange-600' : ''}`}
+                        onClick={submit}
+                        disabled={processing}
+                    >
                         {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
                         {processing ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                     </Button>
 
                     {/* Mensaje de estado */}
                     {status && (
-                        <div className="text-center text-sm font-medium text-green-600">
+                        <div className="flex items-center justify-center text-sm font-medium text-green-600">
                             <CheckCircle className="mr-2 h-4 w-4" />
                             {status}
                         </div>
                     )}
 
-                    {/* Enlaces de navegación */}
-                    <div className="flex flex-col gap-2 text-center text-sm text-muted-foreground">
-                        {canResetPassword && (
-                            <TextLink href={route('password.request')} className="hover:text-foreground">
-                                ¿Olvidaste tu contraseña?
-                            </TextLink>
-                        )}
-                        <TextLink href={route('register')} className="hover:text-foreground">
-                            ¿No tienes cuenta? Regístrate
-                        </TextLink>
-                    </div>
+                    {/* Enlaces de navegación - solo para admin */}
+                    {loginType === 'admin' && (
+                        <div className="flex flex-col gap-2 text-center text-sm text-muted-foreground">
+                            {canResetPassword && (
+                                <TextLink href={route('password.request')} className="hover:text-foreground">
+                                    ¿Olvidaste tu contraseña?
+                                </TextLink>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Nota para restaurantes */}
+                    {loginType === 'restaurant' && (
+                        <p className="text-center text-xs text-muted-foreground">
+                            Si no tienes acceso, contacta al administrador responsable.
+                        </p>
+                    )}
                 </CardFooter>
             </Card>
         </AuthLayout>

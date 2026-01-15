@@ -34,6 +34,7 @@ class StoreRestaurantRequest extends FormRequest
             'schedule' => 'nullable|array',
             'minimum_order_amount' => 'nullable|numeric|min:0',
             'estimated_delivery_time' => 'nullable|integer|min:1',
+            'estimated_pickup_time' => 'nullable|integer|min:1',
         ];
     }
 
@@ -64,6 +65,8 @@ class StoreRestaurantRequest extends FormRequest
             'minimum_order_amount.min' => 'El monto mínimo no puede ser negativo',
             'estimated_delivery_time.integer' => 'El tiempo de entrega debe ser un número entero',
             'estimated_delivery_time.min' => 'El tiempo de entrega debe ser al menos 1 minuto',
+            'estimated_pickup_time.integer' => 'El tiempo de pickup debe ser un número entero',
+            'estimated_pickup_time.min' => 'El tiempo de pickup debe ser al menos 1 minuto',
         ];
     }
 }

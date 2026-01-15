@@ -6,6 +6,8 @@ use App\Contracts\ActivityLoggable;
 use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Restaurant extends Model implements ActivityLoggable
@@ -438,5 +440,29 @@ class Restaurant extends Model implements ActivityLoggable
     public static function getActivityModelName(): string
     {
         return 'Restaurante';
+    }
+
+    /**
+     * Relacion con los usuarios del restaurante
+     */
+    public function users(): HasMany
+    {
+        return $this->hasMany(RestaurantUser::class);
+    }
+
+    /**
+     * Relacion con los motoristas del restaurante
+     */
+    public function drivers(): HasMany
+    {
+        return $this->hasMany(Driver::class);
+    }
+
+    /**
+     * Relacion con el primer usuario del restaurante (considerado propietario)
+     */
+    public function owner(): HasOne
+    {
+        return $this->hasOne(RestaurantUser::class)->oldest();
     }
 }

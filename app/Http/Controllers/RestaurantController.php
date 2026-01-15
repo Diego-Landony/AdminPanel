@@ -139,6 +139,7 @@ class RestaurantController extends Controller
             'schedule' => 'nullable|array',
             'minimum_order_amount' => 'nullable|numeric|min:0',
             'estimated_delivery_time' => 'nullable|integer|min:1',
+            'estimated_pickup_time' => 'nullable|integer|min:1',
             'geofence_kml' => 'nullable|string',
         ]);
 
@@ -161,6 +162,33 @@ class RestaurantController extends Controller
      */
     public function edit(Restaurant $restaurant): Response
     {
+        // Cargar usuarios del restaurante
+        $restaurantUsers = $restaurant->users()
+            ->select(['id', 'restaurant_id', 'name', 'email', 'is_active', 'last_login_at'])
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'is_active' => $user->is_active,
+                'last_login_at' => $user->last_login_at,
+            ]);
+
+        // Cargar motoristas del restaurante
+        $drivers = $restaurant->drivers()
+            ->select(['id', 'restaurant_id', 'name', 'email', 'phone', 'is_active', 'is_available'])
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($driver) => [
+                'id' => $driver->id,
+                'name' => $driver->name,
+                'email' => $driver->email,
+                'phone' => $driver->phone,
+                'is_active' => $driver->is_active,
+                'is_available' => $driver->is_available,
+            ]);
+
         return Inertia::render('restaurants/edit', [
             'restaurant' => [
                 'id' => $restaurant->id,
@@ -174,13 +202,18 @@ class RestaurantController extends Controller
                 'pickup_active' => $restaurant->pickup_active,
                 'phone' => $restaurant->phone,
                 'email' => $restaurant->email,
+                'ip' => $restaurant->ip,
+                'franchise_number' => $restaurant->franchise_number,
                 'schedule' => $restaurant->schedule,
                 'minimum_order_amount' => $restaurant->minimum_order_amount,
                 'estimated_delivery_time' => $restaurant->estimated_delivery_time,
+                'estimated_pickup_time' => $restaurant->estimated_pickup_time,
                 'geofence_kml' => $restaurant->geofence_kml,
                 'created_at' => $restaurant->created_at,
                 'updated_at' => $restaurant->updated_at,
             ],
+            'restaurant_users' => $restaurantUsers,
+            'drivers' => $drivers,
         ]);
     }
 
@@ -203,6 +236,7 @@ class RestaurantController extends Controller
             'schedule' => 'nullable|array',
             'minimum_order_amount' => 'nullable|numeric|min:0',
             'estimated_delivery_time' => 'nullable|integer|min:1',
+            'estimated_pickup_time' => 'nullable|integer|min:1',
         ]);
 
         $restaurant->update($request->all());

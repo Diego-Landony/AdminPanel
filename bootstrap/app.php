@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Middleware\CheckRestaurantAccess;
 use App\Http\Middleware\CheckUserPermissions;
+use App\Http\Middleware\EnsureDriverOwnership;
+use App\Http\Middleware\EnsureOrderBelongsToRestaurant;
 use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -48,6 +51,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'permission' => CheckUserPermissions::class,
             'verified.api' => \App\Http\Middleware\EnsureEmailIsVerifiedForApi::class,
+            'restaurant.access' => CheckRestaurantAccess::class,
+            'driver.ownership' => EnsureDriverOwnership::class,
+            'restaurant.order' => EnsureOrderBelongsToRestaurant::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

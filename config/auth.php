@@ -50,6 +50,16 @@ return [
             'driver' => 'sanctum',
             'provider' => 'customers',
         ],
+
+        'restaurant' => [
+            'driver' => 'session',
+            'provider' => 'restaurant_users',
+        ],
+
+        'driver' => [
+            'driver' => 'sanctum',
+            'provider' => 'drivers',
+        ],
     ],
 
     /*
@@ -78,6 +88,16 @@ return [
         'customers' => [
             'driver' => 'eloquent',
             'model' => App\Models\Customer::class,
+        ],
+
+        'restaurant_users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\RestaurantUser::class,
+        ],
+
+        'drivers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Driver::class,
         ],
 
         // 'users' => [
@@ -116,6 +136,20 @@ return [
         'customers' => [
             'provider' => 'customers',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'restaurant_users' => [
+            'provider' => 'restaurant_users',
+            'table' => 'password_reset_tokens',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'drivers' => [
+            'provider' => 'drivers',
+            'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],

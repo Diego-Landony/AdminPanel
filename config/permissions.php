@@ -64,6 +64,22 @@ return [
             'actions' => ['view', 'create', 'edit', 'delete'],
         ],
 
+        // ==================== GESTIÓN DE MOTORISTAS ====================
+
+        'drivers' => [
+            'display_name' => 'Motoristas',
+            'description' => 'Gestión de motoristas de delivery',
+            'actions' => ['view', 'create', 'edit', 'delete'],
+        ],
+
+        // ==================== GESTIÓN DE ÓRDENES ====================
+
+        'orders' => [
+            'display_name' => 'Órdenes',
+            'description' => 'Gestión y seguimiento de órdenes',
+            'actions' => ['view', 'edit'],
+        ],
+
         // ==================== MÓDULO DE MENÚ ====================
 
         'menu.categories' => [

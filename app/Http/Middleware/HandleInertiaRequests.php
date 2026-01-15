@@ -36,8 +36,11 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        // Eager load roles y permisos una sola vez para toda la aplicación
-        $user = $request->user()?->load('roles.permissions');
+        // Eager load roles y permisos solo para usuarios del guard web (admin)
+        $user = auth('web')->user();
+        if ($user) {
+            $user->load('roles.permissions');
+        }
 
         return [
             ...parent::share($request),
@@ -52,6 +55,10 @@ class HandleInertiaRequests extends Middleware
                     'roles' => $user->roles->pluck('name')->toArray(), // Array simple de nombres de roles
                 ] : null,
             ],
+            'restaurantAuth' => fn () => auth('restaurant')->check() ? [
+                'user' => auth('restaurant')->user()->only(['id', 'name', 'email']),
+                'restaurant' => auth('restaurant')->user()->restaurant?->only(['id', 'name']),
+            ] : null,
             'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),

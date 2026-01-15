@@ -13,6 +13,9 @@ export * from './common';
 // Re-export component types (advanced type-safe components)
 export * from './components';
 
+// Re-export restaurant types (restaurant panel specific)
+export * from './restaurant';
+
 // Extend Inertia core types
 declare module '@inertiajs/core' {
     export interface PageProps {

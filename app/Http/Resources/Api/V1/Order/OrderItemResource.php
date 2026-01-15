@@ -27,6 +27,7 @@ class OrderItemResource extends JsonResource
                 return [
                     'id' => $snapshot['product_id'] ?? null,
                     'name' => $snapshot['name'] ?? null,
+                    'category_name' => $snapshot['category'] ?? null,
                     'image_url' => $this->getProductImageUrl(),
                     'variant' => isset($snapshot['variant_id']) ? [
                         'id' => $snapshot['variant_id'],

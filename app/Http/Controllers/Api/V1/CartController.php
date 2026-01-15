@@ -110,7 +110,7 @@ class CartController extends Controller
     {
         $customer = auth()->user();
         $cart = $this->cartService->getOrCreateCart($customer);
-        $cart->load(['restaurant', 'deliveryAddress', 'items.product', 'items.variant', 'items.combo', 'items.cart']);
+        $cart->load(['restaurant', 'deliveryAddress', 'items.product.category', 'items.variant', 'items.combo', 'items.cart']);
 
         $summary = $this->cartService->getCartSummary($cart);
         $validation = $this->cartService->validateCart($cart);
@@ -283,6 +283,7 @@ class CartController extends Controller
      *                     @OA\Property(property="product", type="object", nullable=true,
      *                         @OA\Property(property="id", type="integer", example=1),
      *                         @OA\Property(property="name", type="string", example="Italian B.M.T."),
+     *                         @OA\Property(property="category_name", type="string", nullable=true, example="Subs", description="Nombre de la categoria del producto"),
      *                         @OA\Property(property="image_url", type="string", example="/storage/menu/products/example.webp"),
      *                         @OA\Property(property="variant", type="object", nullable=true,
      *                             @OA\Property(property="id", type="integer", example=1),
@@ -333,7 +334,7 @@ class CartController extends Controller
 
         try {
             $item = $this->cartService->addItem($cart, $validated);
-            $item->load(['product', 'variant', 'combo', 'cart']);
+            $item->load(['product.category', 'variant', 'combo', 'cart']);
 
             return response()->json([
                 'data' => [
@@ -414,7 +415,7 @@ class CartController extends Controller
 
         $validated = $request->validated();
         $item = $this->cartService->updateItem($item, $validated);
-        $item->load(['product', 'variant', 'combo', 'cart']);
+        $item->load(['product.category', 'variant', 'combo', 'cart']);
 
         return response()->json([
             'data' => [
@@ -720,7 +721,7 @@ class CartController extends Controller
         }
 
         $cart = $this->cartService->updateServiceType($cart, $serviceType, $zone);
-        $cart->load(['restaurant', 'items.product', 'items.variant', 'items.combo', 'items.cart']);
+        $cart->load(['restaurant', 'items.product.category', 'items.variant', 'items.combo', 'items.cart']);
 
         $summary = $this->cartService->getCartSummary($cart);
 
@@ -769,7 +770,7 @@ class CartController extends Controller
     {
         $customer = auth()->user();
         $cart = $this->cartService->getOrCreateCart($customer);
-        $cart->load(['items.product', 'items.variant', 'items.combo']);
+        $cart->load(['items.product.category', 'items.variant', 'items.combo']);
 
         $validation = $this->cartService->validateCart($cart);
 

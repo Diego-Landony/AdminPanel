@@ -414,7 +414,14 @@ class OrderController extends Controller
      *                 @OA\Property(property="delivery_address", type="object", nullable=true, description="Solo para delivery"),
      *                 @OA\Property(property="items", type="array", @OA\Items(type="object",
      *                     @OA\Property(property="id", type="integer"),
-     *                     @OA\Property(property="name", type="string", example="Italian BMT 15cm"),
+     *                     @OA\Property(property="type", type="string", enum={"product","combo"}),
+     *                     @OA\Property(property="product", type="object", nullable=true,
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Italian BMT"),
+     *                         @OA\Property(property="category_name", type="string", nullable=true, example="Subs", description="Nombre de la categoria del producto"),
+     *                         @OA\Property(property="image_url", type="string", nullable=true),
+     *                         @OA\Property(property="variant", type="object", nullable=true)
+     *                     ),
      *                     @OA\Property(property="quantity", type="integer", example=2),
      *                     @OA\Property(property="unit_price", type="number", format="float", example=45.00),
      *                     @OA\Property(property="subtotal", type="number", format="float", example=90.00)

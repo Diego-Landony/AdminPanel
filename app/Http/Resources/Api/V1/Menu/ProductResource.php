@@ -23,6 +23,7 @@ class ProductResource extends JsonResource
             'description' => $this->description,
             'image_url' => $this->getImageUrl(),
             'category_id' => $this->category_id,
+            'category_name' => $this->whenLoaded('category', fn () => $this->category->name),
             'has_variants' => $hasVariants,
 
             // Solo incluir precios si NO tiene variantes

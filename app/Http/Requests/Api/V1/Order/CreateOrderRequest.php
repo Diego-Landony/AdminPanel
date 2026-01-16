@@ -68,10 +68,12 @@ class CreateOrderRequest extends FormRequest
                     // Validar tiempo mínimo de preparación
                     $minimumTime = now()->addMinutes($estimatedMinutes);
                     if ($scheduledTime->lt($minimumTime)) {
-                        $this->validationMeta['suggested_pickup_time'] = $minimumTime->format('Y-m-d H:i:s');
-                        $this->validationMeta['suggested_pickup_time_formatted'] = $minimumTime->format('H:i');
+                        // Agregar 2 minutos de buffer para que el usuario tenga tiempo de aceptar
+                        $suggestedTime = now()->addMinutes($estimatedMinutes + 2);
+                        $this->validationMeta['suggested_pickup_time'] = $suggestedTime->format('Y-m-d H:i:s');
+                        $this->validationMeta['suggested_pickup_time_formatted'] = $suggestedTime->format('H:i');
                         $this->validationMeta['time_expired'] = true;
-                        $fail("La hora de recogida ya no está disponible. Hora mínima sugerida: {$minimumTime->format('H:i')}.");
+                        $fail("La hora de recogida ya no está disponible. Hora mínima sugerida: {$suggestedTime->format('H:i')}.");
 
                         return;
                     }
@@ -108,16 +110,17 @@ class CreateOrderRequest extends FormRequest
                     // Validar tiempo mínimo (preparación + entrega)
                     $minimumTime = now()->addMinutes($estimatedMinutes);
                     if ($scheduledTime->lt($minimumTime)) {
-                        $this->validationMeta['suggested_delivery_time'] = $minimumTime->format('Y-m-d H:i:s');
-                        $this->validationMeta['suggested_delivery_time_formatted'] = $minimumTime->format('H:i');
+                        // Agregar 2 minutos de buffer para que el usuario tenga tiempo de aceptar
+                        $suggestedTime = now()->addMinutes($estimatedMinutes + 2);
+                        $this->validationMeta['suggested_delivery_time'] = $suggestedTime->format('Y-m-d H:i:s');
+                        $this->validationMeta['suggested_delivery_time_formatted'] = $suggestedTime->format('H:i');
                         $this->validationMeta['time_expired'] = true;
-                        $fail("La hora de entrega ya no está disponible. Hora mínima sugerida: {$minimumTime->format('H:i')}.");
+                        $fail("La hora de entrega ya no está disponible. Hora mínima sugerida: {$suggestedTime->format('H:i')}.");
 
                         return;
                     }
 
-                    // Para delivery, el último pedido es al cierre, pero la entrega puede ser después
-                    // Solo validamos que no sea demasiado tarde (cierre + tiempo de entrega máximo)
+                    // Para delivery, validamos que no sea demasiado tarde
                     $closingTime = $restaurant?->getClosingTimeToday();
                     if ($closingTime) {
                         $maxDeliveryTime = \Carbon\Carbon::createFromFormat('H:i', $closingTime)

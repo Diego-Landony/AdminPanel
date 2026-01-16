@@ -337,8 +337,11 @@ export interface OrderItem {
     product_id: number | null;
     combo_id: number | null;
     name: string;
+    variant?: string | null;
+    category?: string | null;
     quantity: number;
     unit_price: number;
+    options_price?: number;
     total_price: number;
     notes: string | null;
     options: OrderItemOption[] | null;
@@ -350,6 +353,7 @@ export interface OrderItem {
  * Opción de un item de orden
  */
 export interface OrderItemOption {
+    section_name?: string;
     name: string;
     price: number;
 }

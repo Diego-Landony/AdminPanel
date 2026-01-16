@@ -10,6 +10,10 @@ use Illuminate\Database\Eloquent\Builder;
 
 class OrderManagementService
 {
+    public function __construct(
+        protected PointsService $pointsService
+    ) {}
+
     /**
      * Asignar un motorista a una orden.
      */
@@ -86,9 +90,18 @@ class OrderManagementService
             $updateData['ready_at'] = now();
         } elseif ($status === Order::STATUS_DELIVERED) {
             $updateData['delivered_at'] = now();
+        } elseif ($status === Order::STATUS_COMPLETED) {
+            $updateData['delivered_at'] = now();
         }
 
         $order->update($updateData);
+
+        // Acreditar puntos al cliente cuando la orden se completa
+        if ($status === Order::STATUS_COMPLETED && $order->customer) {
+            $order->load('customer');
+            $this->pointsService->creditPoints($order->customer, $order);
+            $order->customer->update(['last_purchase_at' => now()]);
+        }
 
         $this->recordStatusChange($order, $status, $notes, $previousStatus);
 

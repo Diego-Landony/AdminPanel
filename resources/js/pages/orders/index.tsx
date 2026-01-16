@@ -187,7 +187,13 @@ export default function OrdersIndex({
         );
     };
 
-    const availableDrivers = drivers.filter((driver) => driver.is_active && driver.is_available);
+    // Filtrar motoristas por restaurante de la orden seleccionada
+    const availableDrivers = drivers.filter(
+        (driver) =>
+            driver.is_active &&
+            driver.is_available &&
+            (!selectedOrder || driver.restaurant_id === selectedOrder.restaurant?.id),
+    );
 
     const stats = [
         {
@@ -499,7 +505,9 @@ export default function OrdersIndex({
                                 </>
                             ) : (
                                 <div className="py-4 text-center">
-                                    <p className="text-muted-foreground">No hay motoristas disponibles en este momento.</p>
+                                    <p className="text-muted-foreground">
+                                        No hay motoristas disponibles para el restaurante {selectedOrder?.restaurant?.name || 'seleccionado'}.
+                                    </p>
                                 </div>
                             )}
                         </div>

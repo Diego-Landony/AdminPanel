@@ -43,7 +43,8 @@ export const formatDateOnly = (dateString: string | null): string => {
 /**
  * Formatea números con separadores de miles
  */
-export const formatNumber = (num: number): string => {
+export const formatNumber = (num: number | null | undefined): string => {
+    if (num === null || num === undefined) return '0';
     return num.toLocaleString('es-GT');
 };
 
@@ -83,7 +84,7 @@ export const formatPoints = (points: number): string => {
 /**
  * Formatea moneda con el símbolo de Quetzal
  */
-export const formatCurrency = (amount: number, showSymbol: boolean = true): string => {
-    const formatted = formatNumber(amount);
+export const formatCurrency = (amount: number | null | undefined, showSymbol: boolean = true): string => {
+    const formatted = formatNumber(amount ?? 0);
     return showSymbol ? `Q${formatted}` : formatted;
 };

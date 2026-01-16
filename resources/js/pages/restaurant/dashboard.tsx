@@ -1,23 +1,46 @@
-import { StatusBadge, StatusConfig } from '@/components/status-badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CURRENCY } from '@/constants/ui-constants';
 import RestaurantLayout from '@/layouts/restaurant-layout';
-import { Order, RestaurantUser } from '@/types';
+import { Driver, RestaurantUser } from '@/types';
 import { RestaurantDashboardStats } from '@/types/restaurant';
 import { formatCurrency } from '@/utils/format';
-import { Head, Link } from '@inertiajs/react';
+import { cn } from '@/lib/utils';
+import { Head, Link, router } from '@inertiajs/react';
 import {
     AlertCircle,
+    Banknote,
+    Check,
     CheckCircle,
     ChefHat,
+    ChevronsUpDown,
     Clock,
+    CreditCard,
     Eye,
     Package,
     ShoppingBag,
     Truck,
-    User,
+    Users,
     XCircle,
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+interface ActiveOrder {
+    id: number;
+    order_number: string;
+    customer_name: string;
+    customer_phone: string | null;
+    status: string;
+    service_type: string;
+    total: number;
+    payment_method: string;
+    items_count: number;
+    driver: { id: number; name: string } | null;
+    created_at: string;
+}
 
 interface Props {
     restaurantAuth: {
@@ -28,103 +51,149 @@ interface Props {
         };
     };
     stats: RestaurantDashboardStats;
-    recent_orders: Order[];
+    active_orders: ActiveOrder[];
+    available_drivers: Driver[];
 }
 
 /**
- * Configuraciones de estado de ordenes para el dashboard
+ * Calcula los minutos transcurridos desde una fecha
  */
-const ORDER_STATUS_CONFIGS: Record<string, StatusConfig> = {
-    pending: {
-        color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-700',
-        text: 'Pendiente',
-        icon: <Clock className="h-3 w-3" />,
-    },
-    confirmed: {
-        color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-700',
-        text: 'Confirmado',
-        icon: <CheckCircle className="h-3 w-3" />,
-    },
-    preparing: {
-        color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-700',
-        text: 'Preparando',
-        icon: <Package className="h-3 w-3" />,
-    },
-    ready: {
-        color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-700',
-        text: 'Lista',
-        icon: <CheckCircle className="h-3 w-3" />,
-    },
-    out_for_delivery: {
-        color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 border border-orange-200 dark:border-orange-700',
-        text: 'En Camino',
-        icon: <Truck className="h-3 w-3" />,
-    },
-    delivered: {
-        color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-700',
-        text: 'Entregada',
-        icon: <CheckCircle className="h-3 w-3" />,
-    },
-    completed: {
-        color: 'bg-green-200 text-green-900 dark:bg-green-800 dark:text-green-200 border border-green-300 dark:border-green-600',
-        text: 'Completada',
-        icon: <CheckCircle className="h-3 w-3" />,
-    },
-    cancelled: {
-        color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border border-red-200 dark:border-red-700',
-        text: 'Cancelada',
-        icon: <XCircle className="h-3 w-3" />,
-    },
-    default: {
-        color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600',
-        text: 'Desconocido',
-        icon: <AlertCircle className="h-3 w-3" />,
-    },
-};
-
-/**
- * Configuraciones de tipo de servicio
- */
-const SERVICE_TYPE_CONFIGS: Record<string, StatusConfig> = {
-    delivery: {
-        color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-700',
-        text: 'Delivery',
-        icon: <Truck className="h-3 w-3" />,
-    },
-    pickup: {
-        color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 border border-orange-200 dark:border-orange-700',
-        text: 'Pickup',
-        icon: <ShoppingBag className="h-3 w-3" />,
-    },
-    default: {
-        color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600',
-        text: 'Desconocido',
-        icon: <AlertCircle className="h-3 w-3" />,
-    },
-};
+function getMinutesElapsed(dateString: string): number {
+    const date = new Date(dateString);
+    const now = new Date();
+    return Math.floor((now.getTime() - date.getTime()) / 60000);
+}
 
 /**
  * Helper para calcular tiempo relativo
  */
 function timeAgo(dateString: string): string {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
+    const diffMins = getMinutesElapsed(dateString);
 
     if (diffMins < 1) return 'Ahora';
-    if (diffMins < 60) return `Hace ${diffMins} min`;
+    if (diffMins < 60) return `${diffMins} min`;
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `Hace ${diffHours}h`;
-    return date.toLocaleDateString('es-GT');
+    if (diffHours < 24) return `${diffHours}h ${diffMins % 60}m`;
+    return new Date(dateString).toLocaleDateString('es-GT');
 }
 
 /**
- * Dashboard del panel de restaurante
- * Muestra estadisticas y ordenes recientes
+ * Obtiene la clase de color segun urgencia
  */
-export default function RestaurantDashboard({ restaurantAuth, stats, recent_orders }: Props) {
+function getUrgencyColor(dateString: string, status: string): string {
+    if (['completed', 'delivered', 'cancelled'].includes(status)) {
+        return 'border-l-gray-400';
+    }
+    const mins = getMinutesElapsed(dateString);
+    if (mins < 10) return 'border-l-green-500';
+    if (mins < 20) return 'border-l-yellow-500';
+    if (mins < 30) return 'border-l-orange-500';
+    return 'border-l-red-500';
+}
+
+/**
+ * Obtiene clase de fondo basada en urgencia
+ */
+function getUrgencyBgColor(dateString: string, status: string): string {
+    if (['completed', 'delivered', 'cancelled'].includes(status)) {
+        return 'bg-gray-50 dark:bg-gray-800/50';
+    }
+    const mins = getMinutesElapsed(dateString);
+    if (mins < 10) return 'bg-white dark:bg-gray-900';
+    if (mins < 20) return 'bg-yellow-50/50 dark:bg-yellow-900/10';
+    if (mins < 30) return 'bg-orange-50/50 dark:bg-orange-900/10';
+    return 'bg-red-50/50 dark:bg-red-900/10';
+}
+
+/**
+ * Labels de estados
+ */
+const STATUS_LABELS: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+    pending: {
+        label: 'Pendiente',
+        color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+        icon: <Clock className="h-3 w-3" />,
+    },
+    preparing: {
+        label: 'Preparando',
+        color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+        icon: <Package className="h-3 w-3" />,
+    },
+    ready: {
+        label: 'Lista',
+        color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+        icon: <CheckCircle className="h-3 w-3" />,
+    },
+    out_for_delivery: {
+        label: 'En Camino',
+        color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+        icon: <Truck className="h-3 w-3" />,
+    },
+    completed: {
+        label: 'Completada',
+        color: 'bg-green-200 text-green-900 dark:bg-green-800 dark:text-green-200',
+        icon: <CheckCircle className="h-3 w-3" />,
+    },
+    cancelled: {
+        label: 'Cancelada',
+        color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+        icon: <XCircle className="h-3 w-3" />,
+    },
+};
+
+/**
+ * Dashboard del panel de restaurante - Estilo KDS
+ */
+export default function RestaurantDashboard({ restaurantAuth, stats, active_orders, available_drivers }: Props) {
     const userName = restaurantAuth.user.name.split(' ')[0];
+    const [isUpdating, setIsUpdating] = useState<number | null>(null);
+    const [driverPopoverOpen, setDriverPopoverOpen] = useState<number | null>(null);
+    const [, setTick] = useState(0);
+
+    // Actualizar cada minuto para refrescar indicadores de urgencia
+    useEffect(() => {
+        const interval = setInterval(() => setTick((t) => t + 1), 60000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const handleAcceptOrder = (orderId: number) => {
+        setIsUpdating(orderId);
+        router.post(`/restaurant/orders/${orderId}/accept`, {}, {
+            preserveState: true,
+            preserveScroll: true,
+            onFinish: () => setIsUpdating(null),
+        });
+    };
+
+    const handleMarkReady = (orderId: number) => {
+        setIsUpdating(orderId);
+        router.post(`/restaurant/orders/${orderId}/ready`, {}, {
+            preserveState: true,
+            preserveScroll: true,
+            onFinish: () => setIsUpdating(null),
+        });
+    };
+
+    const handleMarkCompleted = (orderId: number) => {
+        setIsUpdating(orderId);
+        router.post(`/restaurant/orders/${orderId}/complete`, {}, {
+            preserveState: true,
+            preserveScroll: true,
+            onFinish: () => setIsUpdating(null),
+        });
+    };
+
+    const handleAssignDriver = (orderId: number, driverId: number) => {
+        setIsUpdating(orderId);
+        router.post(`/restaurant/orders/${orderId}/assign-driver`, { driver_id: driverId }, {
+            preserveState: true,
+            preserveScroll: true,
+            onFinish: () => {
+                setIsUpdating(null);
+                setDriverPopoverOpen(null);
+            },
+        });
+    };
 
     return (
         <RestaurantLayout title="Dashboard">
@@ -137,96 +206,102 @@ export default function RestaurantDashboard({ restaurantAuth, stats, recent_orde
                         Bienvenido, {userName}
                     </h1>
                     <p className="text-muted-foreground">
-                        Aqui tienes un resumen de las ordenes de hoy en {restaurantAuth.restaurant.name}
+                        Resumen de hoy en {restaurantAuth.restaurant.name}
                     </p>
                 </div>
 
-                {/* Cards de estadisticas */}
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    {/* Ordenes Pendientes */}
-                    <Card className="border-l-4 border-l-yellow-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Pendientes</CardTitle>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900">
-                                <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                            </div>
+                {/* Resumen del dia */}
+                <div className="grid gap-4 lg:grid-cols-2">
+                    {/* Estado de Ordenes */}
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-base font-medium">Estado de Ordenes</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                                {stats.pending_orders}
+                            <div className="grid grid-cols-4 gap-4">
+                                <div className="text-center">
+                                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/50">
+                                        <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                                    </div>
+                                    <div className="text-2xl font-bold">{stats.pending_orders}</div>
+                                    <div className="text-xs text-muted-foreground">Pendientes</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
+                                        <ChefHat className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                    </div>
+                                    <div className="text-2xl font-bold">{stats.preparing_orders}</div>
+                                    <div className="text-xs text-muted-foreground">Preparando</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
+                                        <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                                    </div>
+                                    <div className="text-2xl font-bold">{stats.ready_orders}</div>
+                                    <div className="text-xs text-muted-foreground">Listas</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                                        <Package className="h-5 w-5 text-muted-foreground" />
+                                    </div>
+                                    <div className="text-2xl font-bold">{stats.completed_today}</div>
+                                    <div className="text-xs text-muted-foreground">Completadas</div>
+                                </div>
                             </div>
-                            <p className="text-xs text-muted-foreground">
-                                Esperando confirmacion
-                            </p>
                         </CardContent>
                     </Card>
 
-                    {/* Ordenes en Preparacion */}
-                    <Card className="border-l-4 border-l-blue-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Preparando</CardTitle>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-                                <ChefHat className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                            </div>
+                    {/* Ventas del Dia */}
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-base font-medium">Ventas de Hoy</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                                {stats.preparing_orders}
+                            <div className="mb-4 text-center">
+                                <div className="text-3xl font-bold text-primary">
+                                    {CURRENCY.symbol}{formatCurrency(stats.total_sales_today, false)}
+                                </div>
+                                <div className="text-sm text-muted-foreground">Total en ventas</div>
                             </div>
-                            <p className="text-xs text-muted-foreground">
-                                En cocina actualmente
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    {/* Ordenes Listas */}
-                    <Card className="border-l-4 border-l-green-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Listas</CardTitle>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-                                <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
+                                        <Banknote className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                    </div>
+                                    <div>
+                                        <div className="font-semibold">
+                                            {CURRENCY.symbol}{formatCurrency(stats.cash_sales_today, false)}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">Efectivo</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-100 dark:bg-violet-900/50">
+                                        <CreditCard className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                                    </div>
+                                    <div>
+                                        <div className="font-semibold">
+                                            {CURRENCY.symbol}{formatCurrency(stats.card_sales_today, false)}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">Tarjeta</div>
+                                    </div>
+                                </div>
                             </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                                {stats.ready_orders}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Para entrega o recoleccion
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    {/* Ordenes Completadas Hoy */}
-                    <Card className="border-l-4 border-l-gray-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Completadas Hoy</CardTitle>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-                                <Package className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-bold">
-                                {stats.completed_today}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                De {stats.total_today} ordenes totales
-                            </p>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* Ordenes Recientes */}
+                {/* Ordenes Activas - KDS Style */}
                 <Card>
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <div>
                                 <CardTitle className="flex items-center gap-2">
                                     <ShoppingBag className="h-5 w-5" />
-                                    Ordenes Recientes
+                                    Ordenes Activas
                                 </CardTitle>
                                 <CardDescription>
-                                    Ultimas 5 ordenes recibidas
+                                    Ordenes pendientes, en preparacion o listas
                                 </CardDescription>
                             </div>
                             <Link
@@ -238,69 +313,174 @@ export default function RestaurantDashboard({ restaurantAuth, stats, recent_orde
                         </div>
                     </CardHeader>
                     <CardContent>
-                        {recent_orders.length === 0 ? (
+                        {active_orders.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-12 text-center">
                                 <ShoppingBag className="h-12 w-12 text-muted-foreground/50" />
                                 <p className="mt-4 text-muted-foreground">
-                                    No hay ordenes recientes
+                                    No hay ordenes activas
                                 </p>
                                 <p className="text-sm text-muted-foreground">
                                     Las nuevas ordenes apareceran aqui
                                 </p>
                             </div>
                         ) : (
-                            <div className="space-y-4">
-                                {recent_orders.map((order) => (
-                                    <div
-                                        key={order.id}
-                                        className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                                                <Package className="h-5 w-5 text-muted-foreground" />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-medium">
-                                                        #{order.order_number}
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                {active_orders.map((order) => {
+                                    const statusConfig = STATUS_LABELS[order.status] || {
+                                        label: 'Desconocido',
+                                        color: 'bg-gray-100 text-gray-800',
+                                        icon: <AlertCircle className="h-3 w-3" />,
+                                    };
+                                    const canAccept = order.status === 'pending';
+                                    const canMarkReady = order.status === 'preparing';
+                                    const canAssignDriver = order.status === 'ready' && order.service_type === 'delivery' && !order.driver;
+                                    const canMarkCompleted = order.status === 'ready' && order.service_type === 'pickup';
+
+                                    return (
+                                        <div
+                                            key={order.id}
+                                            className={cn(
+                                                'relative flex flex-col rounded-lg border-l-4 shadow-sm transition-all hover:shadow-md',
+                                                getUrgencyColor(order.created_at, order.status),
+                                                getUrgencyBgColor(order.created_at, order.status),
+                                                'border border-gray-200 dark:border-gray-700'
+                                            )}
+                                        >
+                                            {/* Header */}
+                                            <div className="flex items-start justify-between p-3 pb-2">
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-lg font-bold">#{order.order_number}</span>
+                                                    <span className="text-sm text-muted-foreground line-clamp-1">
+                                                        {order.customer_name}
                                                     </span>
-                                                    <StatusBadge
-                                                        status={order.status}
-                                                        configs={ORDER_STATUS_CONFIGS}
-                                                        className="text-xs"
-                                                    />
-                                                    <StatusBadge
-                                                        status={order.service_type}
-                                                        configs={SERVICE_TYPE_CONFIGS}
-                                                        className="text-xs"
-                                                    />
                                                 </div>
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                    <User className="h-3 w-3" />
-                                                    <span>{order.customer?.full_name || 'Cliente'}</span>
-                                                    <span className="text-muted-foreground/50">|</span>
-                                                    <span>{timeAgo(order.created_at)}</span>
+                                                <div className="flex flex-col items-end gap-1">
+                                                    <Badge className={cn('flex items-center gap-1 text-xs', statusConfig.color)}>
+                                                        {statusConfig.icon}
+                                                        {statusConfig.label}
+                                                    </Badge>
+                                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                        <Clock className="h-3 w-3" />
+                                                        {timeAgo(order.created_at)}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <div className="text-right">
-                                                <div className="font-semibold">
+
+                                            {/* Info */}
+                                            <div className="flex items-center justify-between border-t border-dashed px-3 py-2">
+                                                <div className="flex items-center gap-2">
+                                                    {order.service_type === 'delivery' ? (
+                                                        <Badge variant="outline" className="gap-1 text-xs">
+                                                            <Truck className="h-3 w-3" />
+                                                            Delivery
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant="outline" className="gap-1 text-xs">
+                                                            <ShoppingBag className="h-3 w-3" />
+                                                            Pickup
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                                <span className="text-base font-semibold">
                                                     {CURRENCY.symbol}{formatCurrency(order.total, false)}
-                                                </div>
-                                                <div className="text-xs text-muted-foreground">
-                                                    {order.items?.length || 0} items
-                                                </div>
+                                                </span>
                                             </div>
-                                            <Link
-                                                href={`/restaurant/orders/${order.id}`}
-                                                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                                            >
-                                                <Eye className="h-4 w-4" />
-                                            </Link>
+
+                                            {/* Asignacion de motorista inline */}
+                                            {canAssignDriver && (
+                                                <div className="border-t px-3 py-2">
+                                                    <Popover
+                                                        open={driverPopoverOpen === order.id}
+                                                        onOpenChange={(open) => setDriverPopoverOpen(open ? order.id : null)}
+                                                    >
+                                                        <PopoverTrigger asChild>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="w-full justify-between text-xs"
+                                                                disabled={isUpdating === order.id}
+                                                            >
+                                                                <span className="flex items-center gap-1">
+                                                                    <Users className="h-3 w-3" />
+                                                                    Asignar motorista
+                                                                </span>
+                                                                <ChevronsUpDown className="h-3 w-3 opacity-50" />
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-[200px] p-0" align="start">
+                                                            <Command>
+                                                                <CommandInput placeholder="Buscar..." className="h-8 text-sm" />
+                                                                <CommandList>
+                                                                    <CommandEmpty>Sin motoristas</CommandEmpty>
+                                                                    <CommandGroup>
+                                                                        {available_drivers.map((driver) => (
+                                                                            <CommandItem
+                                                                                key={driver.id}
+                                                                                value={driver.name}
+                                                                                onSelect={() => handleAssignDriver(order.id, driver.id)}
+                                                                                className="text-sm"
+                                                                            >
+                                                                                <Check className="mr-2 h-3 w-3 opacity-0" />
+                                                                                {driver.name}
+                                                                            </CommandItem>
+                                                                        ))}
+                                                                    </CommandGroup>
+                                                                </CommandList>
+                                                            </Command>
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                </div>
+                                            )}
+
+                                            {/* Motorista asignado */}
+                                            {order.driver && order.service_type === 'delivery' && (
+                                                <div className="flex items-center gap-1 border-t px-3 py-2 text-xs text-muted-foreground">
+                                                    <Users className="h-3 w-3" />
+                                                    <span>{order.driver.name}</span>
+                                                </div>
+                                            )}
+
+                                            {/* Acciones */}
+                                            <div className="mt-auto flex items-center gap-1 border-t p-2">
+                                                {canAccept && (
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => handleAcceptOrder(order.id)}
+                                                        disabled={isUpdating === order.id}
+                                                        className="flex-1 bg-green-600 text-xs hover:bg-green-700"
+                                                    >
+                                                        {isUpdating === order.id ? '...' : 'Aceptar'}
+                                                    </Button>
+                                                )}
+                                                {canMarkReady && (
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => handleMarkReady(order.id)}
+                                                        disabled={isUpdating === order.id}
+                                                        className="flex-1 text-xs"
+                                                    >
+                                                        {isUpdating === order.id ? '...' : 'Lista'}
+                                                    </Button>
+                                                )}
+                                                {canMarkCompleted && (
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => handleMarkCompleted(order.id)}
+                                                        disabled={isUpdating === order.id}
+                                                        className="flex-1 bg-green-600 text-xs hover:bg-green-700"
+                                                    >
+                                                        {isUpdating === order.id ? '...' : 'Completar'}
+                                                    </Button>
+                                                )}
+                                                <Link href={`/restaurant/orders/${order.id}`}>
+                                                    <Button variant="outline" size="sm" className="px-2">
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                </Link>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </CardContent>

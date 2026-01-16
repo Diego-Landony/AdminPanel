@@ -132,7 +132,7 @@ class Restaurant extends Model implements ActivityLoggable
     }
 
     /**
-     * Obtiene el horario como texto legible para hoy
+     * Obtiene el horario como texto legible para hoy (formato 24h)
      */
     public function getTodayScheduleAttribute(): ?string
     {
@@ -209,7 +209,7 @@ class Restaurant extends Model implements ActivityLoggable
 
         // Para pickup: último pedido = cierre - tiempo de preparación
         if ($serviceType === 'pickup') {
-            $lastOrderTime = $this->getLastOrderTimeForPickup($closeTime);
+            $lastOrderTime = $this->calculateLastOrderTimeForPickup($closeTime);
 
             return $currentTime <= $lastOrderTime;
         }
@@ -219,7 +219,7 @@ class Restaurant extends Model implements ActivityLoggable
     }
 
     /**
-     * Obtiene el último horario para realizar un pedido según el tipo de servicio.
+     * Obtiene el último horario para realizar un pedido según el tipo de servicio (formato 24h).
      */
     public function getLastOrderTime(string $serviceType = 'pickup'): ?string
     {
@@ -237,7 +237,7 @@ class Restaurant extends Model implements ActivityLoggable
         $closeTime = $todaySchedule['close'];
 
         if ($serviceType === 'pickup') {
-            return $this->getLastOrderTimeForPickup($closeTime);
+            return $this->calculateLastOrderTimeForPickup($closeTime);
         }
 
         // Para delivery, el último pedido es al cierre
@@ -245,9 +245,9 @@ class Restaurant extends Model implements ActivityLoggable
     }
 
     /**
-     * Calcula el último horario para pedidos de pickup.
+     * Calcula el último horario para pedidos de pickup (formato 24h).
      */
-    protected function getLastOrderTimeForPickup(string $closeTime): string
+    protected function calculateLastOrderTimeForPickup(string $closeTime): string
     {
         $preparationMinutes = $this->estimated_pickup_time ?? 15;
 
@@ -258,7 +258,7 @@ class Restaurant extends Model implements ActivityLoggable
     }
 
     /**
-     * Obtiene el horario de cierre de hoy.
+     * Obtiene el horario de cierre de hoy (formato 24h).
      */
     public function getClosingTimeToday(): ?string
     {
@@ -277,7 +277,7 @@ class Restaurant extends Model implements ActivityLoggable
     }
 
     /**
-     * Obtiene el horario de apertura de hoy.
+     * Obtiene el horario de apertura de hoy (formato 24h).
      */
     public function getOpeningTimeToday(): ?string
     {
@@ -296,7 +296,7 @@ class Restaurant extends Model implements ActivityLoggable
     }
 
     /**
-     * Obtiene el próximo horario de apertura (hoy o mañana).
+     * Obtiene el próximo horario de apertura (hoy o mañana) (formato 24h).
      */
     public function getNextOpenTime(): ?array
     {
@@ -339,7 +339,7 @@ class Restaurant extends Model implements ActivityLoggable
     }
 
     /**
-     * Obtiene información completa de disponibilidad para el API.
+     * Obtiene información completa de disponibilidad para el API (formato 24h).
      */
     public function getAvailabilityInfo(string $serviceType = 'pickup'): array
     {

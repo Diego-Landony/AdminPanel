@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Order\AssignDriverRequest;
 use App\Http\Requests\Order\UpdateOrderStatusRequest;
 use App\Models\Driver;
+use App\Models\Menu\Section;
+use App\Models\Menu\SectionOption;
 use App\Models\Order;
 use App\Models\Restaurant;
 use App\Services\OrderManagementService;
@@ -115,6 +117,18 @@ class OrderController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'phone']);
 
+        // Verificar si se puede cambiar el restaurante
+        $notAllowedStatuses = [
+            Order::STATUS_READY,
+            Order::STATUS_OUT_FOR_DELIVERY,
+            Order::STATUS_DELIVERED,
+            Order::STATUS_COMPLETED,
+        ];
+        $canChangeRestaurant = ! in_array($order->status, $notAllowedStatuses);
+
+        // Lista de restaurantes para cambio
+        $restaurants = Restaurant::active()->ordered()->get(['id', 'name']);
+
         return Inertia::render('orders/show', [
             'order' => $this->transformOrderDetail($order),
             'available_drivers' => $availableDrivers->map(fn ($driver) => [
@@ -123,6 +137,8 @@ class OrderController extends Controller
                 'phone' => $driver->phone,
             ]),
             'statuses' => $this->getStatuses(),
+            'restaurants' => $restaurants,
+            'can_change_restaurant' => $canChangeRestaurant,
         ]);
     }
 
@@ -150,6 +166,41 @@ class OrderController extends Controller
         $statusLabel = $this->getStatusLabel($data['status']);
 
         return back()->with('success', "Estado de la orden actualizado a '{$statusLabel}'.");
+    }
+
+    /**
+     * Cambia el restaurante de una orden.
+     * Solo se permite si la orden no ha sido marcada como lista.
+     */
+    public function changeRestaurant(Request $request, Order $order): RedirectResponse
+    {
+        // Validar que la orden no esté lista o más avanzada
+        $notAllowedStatuses = [
+            Order::STATUS_READY,
+            Order::STATUS_OUT_FOR_DELIVERY,
+            Order::STATUS_DELIVERED,
+            Order::STATUS_COMPLETED,
+        ];
+
+        if (in_array($order->status, $notAllowedStatuses)) {
+            return back()->with('error', 'No se puede cambiar el restaurante de una orden que ya está lista o entregada.');
+        }
+
+        $request->validate([
+            'restaurant_id' => ['required', 'exists:restaurants,id'],
+        ]);
+
+        $newRestaurant = Restaurant::findOrFail($request->restaurant_id);
+        $oldRestaurant = $order->restaurant;
+
+        // Cambiar el restaurante
+        $order->update([
+            'restaurant_id' => $newRestaurant->id,
+            'driver_id' => null, // Quitar motorista asignado ya que pertenece al restaurante anterior
+            'assigned_to_driver_at' => null,
+        ]);
+
+        return back()->with('success', "Restaurante cambiado de '{$oldRestaurant->name}' a '{$newRestaurant->name}'.");
     }
 
     /**
@@ -198,7 +249,7 @@ class OrderController extends Controller
             'order_number' => $order->order_number,
             'customer' => $order->customer ? [
                 'id' => $order->customer->id,
-                'name' => $order->customer->full_name,
+                'full_name' => $order->customer->full_name,
                 'email' => $order->customer->email,
                 'phone' => $order->customer->phone,
             ] : null,
@@ -211,15 +262,16 @@ class OrderController extends Controller
                 'name' => $order->driver->name,
                 'phone' => $order->driver->phone,
             ] : null,
+            'driver_id' => $order->driver_id,
             'service_type' => $order->service_type,
             'service_type_label' => $this->getServiceTypeLabel($order->service_type),
             'zone' => $order->zone,
-            'delivery_address_snapshot' => $order->delivery_address_snapshot,
-            'subtotal' => $order->subtotal,
-            'discount_total' => $order->discount_total,
-            'delivery_fee' => $order->delivery_fee,
-            'tax' => $order->tax,
-            'total' => $order->total,
+            'delivery_address' => $order->delivery_address_snapshot,
+            'subtotal' => $order->subtotal ?? 0,
+            'discount' => $order->discount_total ?? 0,
+            'delivery_fee' => $order->delivery_fee ?? 0,
+            'tax' => $order->tax ?? 0,
+            'total' => $order->total ?? 0,
             'status' => $order->status,
             'status_label' => $this->getStatusLabel($order->status),
             'payment_method' => $order->payment_method,
@@ -240,19 +292,21 @@ class OrderController extends Controller
             'delivery_person_comment' => $order->delivery_person_comment,
             'items' => $order->items->map(fn ($item) => [
                 'id' => $item->id,
-                'product_name' => $item->product?->name ?? $item->product_name ?? 'Producto',
-                'quantity' => $item->quantity,
-                'unit_price' => $item->unit_price,
-                'total_price' => $item->total_price,
-                'customizations' => $item->customizations,
+                'name' => $item->product_snapshot['name'] ?? $item->product?->name ?? 'Producto',
+                'quantity' => $item->quantity ?? 1,
+                'unit_price' => $item->unit_price ?? 0,
+                'total_price' => $item->subtotal ?? 0,
+                'options' => $this->resolveSelectedOptions($item->selected_options ?? []),
+                'notes' => $item->notes,
             ]),
             'status_history' => $order->statusHistory->map(fn ($history) => [
                 'id' => $history->id,
-                'status' => $history->status,
-                'status_label' => $this->getStatusLabel($history->status),
+                'status' => $history->new_status,
+                'status_label' => $history->new_status ? $this->getStatusLabel($history->new_status) : null,
                 'previous_status' => $history->previous_status,
                 'notes' => $history->notes,
-                'changed_at' => $history->changed_at,
+                'changed_by_type' => $history->changed_by_type,
+                'created_at' => $history->created_at,
             ]),
             'review' => $order->review ? [
                 'id' => $order->review->id,
@@ -309,6 +363,35 @@ class OrderController extends Controller
             'car' => 'Auto',
             default => $vehicleType,
         };
+    }
+
+    /**
+     * Resuelve los nombres de las opciones seleccionadas
+     *
+     * @param  array<int, array{section_id: int, option_id: int}>  $selectedOptions
+     * @return array<int, array{section_name: string, name: string, price: float}>
+     */
+    protected function resolveSelectedOptions(array $selectedOptions): array
+    {
+        if (empty($selectedOptions)) {
+            return [];
+        }
+
+        $sectionIds = collect($selectedOptions)->pluck('section_id')->unique()->values()->all();
+        $optionIds = collect($selectedOptions)->pluck('option_id')->unique()->values()->all();
+
+        $sections = Section::whereIn('id', $sectionIds)->pluck('title', 'id');
+        $options = SectionOption::whereIn('id', $optionIds)->get()->keyBy('id');
+
+        return collect($selectedOptions)->map(function ($selection) use ($sections, $options) {
+            $option = $options->get($selection['option_id']);
+
+            return [
+                'section_name' => $sections->get($selection['section_id'], 'Sección'),
+                'name' => $option?->name ?? 'Opción',
+                'price' => (float) ($option?->price_modifier ?? 0),
+            ];
+        })->all();
     }
 
     /**

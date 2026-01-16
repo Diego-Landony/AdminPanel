@@ -11,6 +11,7 @@ import {
     MapPin,
     Package,
     Phone,
+    Printer,
     ShoppingBag,
     Truck,
     User,
@@ -18,7 +19,9 @@ import {
     Users,
     XCircle,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+
+import { PrintComanda } from '@/components/orders/PrintComanda';
 
 import { StatusBadge, StatusConfig } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
@@ -242,15 +245,22 @@ export default function RestaurantOrderShow({ order, available_drivers }: Props)
     const [assignModalOpen, setAssignModalOpen] = useState(false);
     const [selectedDriverId, setSelectedDriverId] = useState<string>('');
     const [driverSearchOpen, setDriverSearchOpen] = useState(false);
+    const printRef = useRef<HTMLDivElement>(null);
+
+    const handlePrint = () => {
+        window.print();
+    };
 
     const canAccept = order.status === 'pending';
     const canMarkReady = order.status === 'preparing';
     const canAssignDriver =
         order.service_type === 'delivery' && order.status === 'ready' && !order.driver_id;
+    const canMarkCompleted =
+        order.service_type === 'pickup' && order.status === 'ready';
 
     const handleAcceptOrder = () => {
         setIsUpdating(true);
-        router.patch(
+        router.post(
             `/restaurant/orders/${order.id}/accept`,
             {},
             {
@@ -263,8 +273,21 @@ export default function RestaurantOrderShow({ order, available_drivers }: Props)
 
     const handleMarkReady = () => {
         setIsUpdating(true);
-        router.patch(
+        router.post(
             `/restaurant/orders/${order.id}/ready`,
+            {},
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onFinish: () => setIsUpdating(false),
+            },
+        );
+    };
+
+    const handleMarkCompleted = () => {
+        setIsUpdating(true);
+        router.post(
+            `/restaurant/orders/${order.id}/complete`,
             {},
             {
                 preserveState: true,
@@ -277,7 +300,7 @@ export default function RestaurantOrderShow({ order, available_drivers }: Props)
     const handleAssignDriver = () => {
         if (!selectedDriverId) return;
 
-        router.patch(
+        router.post(
             `/restaurant/orders/${order.id}/assign-driver`,
             { driver_id: selectedDriverId },
             {
@@ -310,6 +333,10 @@ export default function RestaurantOrderShow({ order, available_drivers }: Props)
                         </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
+                        <Button variant="outline" onClick={handlePrint}>
+                            <Printer className="mr-2 h-4 w-4" />
+                            Imprimir Comanda
+                        </Button>
                         {canAccept && (
                             <Button
                                 variant="default"
@@ -338,6 +365,17 @@ export default function RestaurantOrderShow({ order, available_drivers }: Props)
                             >
                                 <UserPlus className="mr-2 h-4 w-4" />
                                 Asignar Motorista
+                            </Button>
+                        )}
+                        {canMarkCompleted && (
+                            <Button
+                                variant="default"
+                                onClick={handleMarkCompleted}
+                                disabled={isUpdating}
+                                className="bg-green-600 hover:bg-green-700"
+                            >
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                {isUpdating ? 'Completando...' : 'Marcar Completada'}
                             </Button>
                         )}
                         <Link href="/restaurant/orders">
@@ -413,7 +451,19 @@ export default function RestaurantOrderShow({ order, available_drivers }: Props)
                                         </span>
                                         <div className="mt-1 flex items-start gap-2">
                                             <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                                            <p className="font-medium">{order.delivery_address}</p>
+                                            <div>
+                                                {order.delivery_address.label && (
+                                                    <p className="font-medium">{order.delivery_address.label}</p>
+                                                )}
+                                                <p className={order.delivery_address.label ? 'text-sm text-muted-foreground' : 'font-medium'}>
+                                                    {order.delivery_address.address_line}
+                                                </p>
+                                                {order.delivery_address.delivery_notes && (
+                                                    <p className="mt-1 text-sm italic text-muted-foreground">
+                                                        Notas: {order.delivery_address.delivery_notes}
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -431,61 +481,66 @@ export default function RestaurantOrderShow({ order, available_drivers }: Props)
                             <CardContent>
                                 {order.items && order.items.length > 0 ? (
                                     <div className="space-y-4">
-                                        {order.items.map((item) => (
-                                            <div
-                                                key={item.id}
-                                                className="flex items-start justify-between rounded-lg border bg-muted/50 p-4"
-                                            >
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <Badge
-                                                            variant="secondary"
-                                                            className="text-xs"
-                                                        >
-                                                            x{item.quantity}
-                                                        </Badge>
-                                                        <p className="font-medium">{item.name}</p>
-                                                    </div>
-                                                    {item.options && item.options.length > 0 && (
-                                                        <div className="mt-2 space-y-1">
-                                                            {item.options.map((option, idx) => (
-                                                                <p
-                                                                    key={idx}
-                                                                    className="text-sm text-muted-foreground"
-                                                                >
-                                                                    + {option.name}
-                                                                    {option.price > 0 && (
-                                                                        <span className="ml-1">
-                                                                            ({CURRENCY.symbol}
-                                                                            {formatCurrency(
-                                                                                option.price,
-                                                                                false,
-                                                                            )}
-                                                                            )
-                                                                        </span>
-                                                                    )}
-                                                                </p>
-                                                            ))}
+                                        {order.items.map((item) => {
+                                            // Agrupar opciones por sección
+                                            const groupedOptions: Record<string, { name: string; price: number }[]> = {};
+                                            if (item.options) {
+                                                for (const opt of item.options) {
+                                                    const sectionName = opt.section_name || 'Opciones';
+                                                    if (!groupedOptions[sectionName]) {
+                                                        groupedOptions[sectionName] = [];
+                                                    }
+                                                    groupedOptions[sectionName].push({ name: opt.name, price: opt.price });
+                                                }
+                                            }
+
+                                            return (
+                                                <div
+                                                    key={item.id}
+                                                    className="flex items-start justify-between rounded-lg border bg-muted/50 p-4"
+                                                >
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className="text-xs"
+                                                            >
+                                                                x{item.quantity}
+                                                            </Badge>
+                                                            <p className="font-medium">{item.name}</p>
                                                         </div>
-                                                    )}
-                                                    {item.notes && (
-                                                        <p className="mt-2 text-sm italic text-muted-foreground">
-                                                            Nota: {item.notes}
+                                                        {Object.keys(groupedOptions).length > 0 && (
+                                                            <div className="mt-2 space-y-1">
+                                                                {Object.entries(groupedOptions).map(([sectionName, options]) => (
+                                                                    <p
+                                                                        key={sectionName}
+                                                                        className="text-sm text-muted-foreground"
+                                                                    >
+                                                                        <span className="font-medium">{sectionName}:</span>{' '}
+                                                                        {options.map((o) => o.name).join(', ')}
+                                                                    </p>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {item.notes && (
+                                                            <p className="mt-2 text-sm italic text-muted-foreground">
+                                                                Nota: {item.notes}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-sm text-muted-foreground">
+                                                            {CURRENCY.symbol}
+                                                            {formatCurrency(item.unit_price, false)} c/u
                                                         </p>
-                                                    )}
+                                                        <p className="font-medium">
+                                                            {CURRENCY.symbol}
+                                                            {formatCurrency(item.total_price, false)}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {CURRENCY.symbol}
-                                                        {formatCurrency(item.unit_price, false)} c/u
-                                                    </p>
-                                                    <p className="font-medium">
-                                                        {CURRENCY.symbol}
-                                                        {formatCurrency(item.total_price, false)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
 
                                         <Separator />
 
@@ -796,6 +851,9 @@ export default function RestaurantOrderShow({ order, available_drivers }: Props)
                         </div>
                     </DialogContent>
                 </Dialog>
+
+                {/* Componente de impresion */}
+                <PrintComanda ref={printRef} order={order} />
             </div>
         </RestaurantLayout>
     );

@@ -230,6 +230,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:orders.edit');
     Route::post('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status')
         ->middleware('permission:orders.edit');
+    Route::post('orders/{order}/change-restaurant', [OrderController::class, 'changeRestaurant'])->name('orders.change-restaurant')
+        ->middleware('permission:orders.edit');
 
     // Actividad - requiere permiso específico
     Route::get('activity', [ActivityController::class, 'index'])->name('activity.index')
@@ -549,6 +551,7 @@ Route::prefix('restaurant')->name('restaurant.')->group(function () {
         Route::post('orders/{order}/accept', [App\Http\Controllers\Restaurant\OrderController::class, 'accept'])->name('orders.accept');
         Route::post('orders/{order}/ready', [App\Http\Controllers\Restaurant\OrderController::class, 'markReady'])->name('orders.ready');
         Route::post('orders/{order}/assign-driver', [App\Http\Controllers\Restaurant\OrderController::class, 'assignDriver'])->name('orders.assign-driver');
+        Route::post('orders/{order}/complete', [App\Http\Controllers\Restaurant\OrderController::class, 'markCompleted'])->name('orders.complete');
 
         // Drivers (solo lectura)
         Route::get('drivers', [App\Http\Controllers\Restaurant\DriverController::class, 'index'])->name('drivers.index');

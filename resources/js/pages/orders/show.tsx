@@ -4,12 +4,16 @@ import {
     ArrowLeft,
     Building2,
     Calendar,
+    Check,
     CheckCircle,
+    ChevronsUpDown,
     Clock,
     CreditCard,
     MapPin,
     Package,
     Phone,
+    Printer,
+    Search,
     ShoppingBag,
     Truck,
     User,
@@ -17,13 +21,17 @@ import {
     Users,
     XCircle,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useMemo, useState } from 'react';
+
+import { PrintComanda } from '@/components/orders/PrintComanda';
 
 import { StatusBadge, StatusConfig } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { CURRENCY } from '@/constants/ui-constants';
@@ -31,9 +39,17 @@ import AppLayout from '@/layouts/app-layout';
 import { Driver, Order, OrderStatusHistory } from '@/types';
 import { formatCurrency } from '@/utils/format';
 
+interface Restaurant {
+    id: number;
+    name: string;
+}
+
 interface ShowOrderProps {
     order: Order;
     available_drivers: Driver[];
+    statuses?: { value: string; label: string }[];
+    restaurants?: Restaurant[];
+    can_change_restaurant?: boolean;
 }
 
 /**
@@ -164,6 +180,23 @@ const formatTime = (dateString: string | null): string => {
     });
 };
 
+interface DeliveryAddressSnapshot {
+    label?: string;
+    address_line?: string;
+    delivery_notes?: string;
+    zone?: string;
+}
+
+const getDeliveryAddressDisplay = (address: string | DeliveryAddressSnapshot | null | undefined): { main: string; notes?: string } | null => {
+    if (!address) return null;
+    if (typeof address === 'string') return { main: address };
+    const mainParts: string[] = [];
+    if (address.label) mainParts.push(address.label);
+    if (address.address_line) mainParts.push(address.address_line);
+    if (address.zone) mainParts.push(`Zona: ${address.zone}`);
+    return mainParts.length > 0 ? { main: mainParts.join(' - '), notes: address.delivery_notes || undefined } : null;
+};
+
 /**
  * Componente de Timeline de estados
  */
@@ -217,9 +250,33 @@ const OrderTimeline = ({ statusHistory }: { statusHistory: OrderStatusHistory[] 
     );
 };
 
-export default function ShowOrder({ order, available_drivers }: ShowOrderProps) {
+export default function ShowOrder({
+    order,
+    available_drivers,
+    restaurants = [],
+    can_change_restaurant = false,
+}: ShowOrderProps) {
     const [assignModalOpen, setAssignModalOpen] = useState(false);
     const [selectedDriverId, setSelectedDriverId] = useState<string>('');
+    const [changeRestaurantModalOpen, setChangeRestaurantModalOpen] = useState(false);
+    const [selectedRestaurantId, setSelectedRestaurantId] = useState<string>('');
+    const [restaurantSearch, setRestaurantSearch] = useState('');
+    const [restaurantComboboxOpen, setRestaurantComboboxOpen] = useState(false);
+    const printRef = useRef<HTMLDivElement>(null);
+
+    const handlePrint = () => {
+        window.print();
+    };
+
+    // Filtrar restaurantes disponibles (excluyendo el actual) y por búsqueda
+    const filteredRestaurants = useMemo(() => {
+        const available = restaurants.filter((r) => r.id !== order.restaurant?.id);
+        if (!restaurantSearch) return available;
+        const searchLower = restaurantSearch.toLowerCase();
+        return available.filter((r) => r.name.toLowerCase().includes(searchLower));
+    }, [restaurants, order.restaurant?.id, restaurantSearch]);
+
+    const selectedRestaurant = restaurants.find((r) => r.id.toString() === selectedRestaurantId);
 
     const handleAssignDriver = () => {
         if (!selectedDriverId) return;
@@ -233,6 +290,23 @@ export default function ShowOrder({ order, available_drivers }: ShowOrderProps) 
                 onSuccess: () => {
                     setAssignModalOpen(false);
                     setSelectedDriverId('');
+                },
+            },
+        );
+    };
+
+    const handleChangeRestaurant = () => {
+        if (!selectedRestaurantId) return;
+
+        router.post(
+            `/orders/${order.id}/change-restaurant`,
+            { restaurant_id: selectedRestaurantId },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    setChangeRestaurantModalOpen(false);
+                    setSelectedRestaurantId('');
                 },
             },
         );
@@ -257,6 +331,10 @@ export default function ShowOrder({ order, available_drivers }: ShowOrderProps) 
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
+                        <Button variant="outline" onClick={handlePrint}>
+                            <Printer className="mr-2 h-4 w-4" />
+                            Imprimir Comanda
+                        </Button>
                         {canAssignDriver && (
                             <Button variant="default" onClick={() => setAssignModalOpen(true)}>
                                 <UserPlus className="mr-2 h-4 w-4" />
@@ -317,15 +395,24 @@ export default function ShowOrder({ order, available_drivers }: ShowOrderProps) 
                                     <p className="text-muted-foreground">Informacion del cliente no disponible</p>
                                 )}
 
-                                {order.service_type === 'delivery' && order.delivery_address && (
-                                    <div>
-                                        <span className="text-xs text-muted-foreground">Direccion de Entrega</span>
-                                        <div className="flex items-start gap-2 mt-1">
-                                            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                            <p className="font-medium">{order.delivery_address}</p>
+                                {order.service_type === 'delivery' && order.delivery_address && (() => {
+                                    const addressInfo = getDeliveryAddressDisplay(order.delivery_address);
+                                    if (!addressInfo) return null;
+                                    return (
+                                        <div>
+                                            <span className="text-xs text-muted-foreground">Direccion de Entrega</span>
+                                            <div className="flex items-start gap-2 mt-1">
+                                                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                                <div>
+                                                    <p className="font-medium">{addressInfo.main}</p>
+                                                    {addressInfo.notes && (
+                                                        <p className="text-sm text-muted-foreground mt-1">Notas: {addressInfo.notes}</p>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    );
+                                })()}
                             </CardContent>
                         </Card>
 
@@ -459,6 +546,16 @@ export default function ShowOrder({ order, available_drivers }: ShowOrderProps) 
                                                 <Phone className="h-3 w-3 text-muted-foreground" />
                                                 <span className="text-sm">{order.restaurant.phone}</span>
                                             </div>
+                                        )}
+                                        {can_change_restaurant && restaurants.length > 0 && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="mt-3 w-full"
+                                                onClick={() => setChangeRestaurantModalOpen(true)}
+                                            >
+                                                Cambiar Restaurante
+                                            </Button>
                                         )}
                                     </div>
                                 ) : (
@@ -645,6 +742,102 @@ export default function ShowOrder({ order, available_drivers }: ShowOrderProps) 
                         </div>
                     </DialogContent>
                 </Dialog>
+
+                {/* Modal para cambiar restaurante */}
+                <Dialog
+                    open={changeRestaurantModalOpen}
+                    onOpenChange={(open) => {
+                        setChangeRestaurantModalOpen(open);
+                        if (!open) {
+                            setRestaurantSearch('');
+                            setSelectedRestaurantId('');
+                            setRestaurantComboboxOpen(false);
+                        }
+                    }}
+                >
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Cambiar Restaurante</DialogTitle>
+                            <DialogDescription>
+                                Selecciona el nuevo restaurante para la orden #{order.order_number}
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="space-y-4">
+                            <Popover open={restaurantComboboxOpen} onOpenChange={setRestaurantComboboxOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        aria-expanded={restaurantComboboxOpen}
+                                        className="w-full justify-between"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <Building2 className="h-4 w-4 text-muted-foreground" />
+                                            {selectedRestaurant ? (
+                                                <span>{selectedRestaurant.name}</span>
+                                            ) : (
+                                                <span className="text-muted-foreground">Buscar restaurante...</span>
+                                            )}
+                                        </div>
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-full p-0" align="start">
+                                    <Command shouldFilter={false}>
+                                        <CommandInput
+                                            placeholder="Buscar restaurante..."
+                                            value={restaurantSearch}
+                                            onValueChange={setRestaurantSearch}
+                                        />
+                                        <CommandList>
+                                            <CommandEmpty>No se encontraron restaurantes</CommandEmpty>
+                                            <CommandGroup>
+                                                {filteredRestaurants.map((restaurant) => (
+                                                    <CommandItem
+                                                        key={restaurant.id}
+                                                        value={restaurant.id.toString()}
+                                                        onSelect={(value) => {
+                                                            setSelectedRestaurantId(value);
+                                                            setRestaurantComboboxOpen(false);
+                                                            setRestaurantSearch('');
+                                                        }}
+                                                    >
+                                                        <Check
+                                                            className={`mr-2 h-4 w-4 ${
+                                                                selectedRestaurantId === restaurant.id.toString()
+                                                                    ? 'opacity-100'
+                                                                    : 'opacity-0'
+                                                            }`}
+                                                        />
+                                                        <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                                                        {restaurant.name}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
+
+                            <p className="text-sm text-muted-foreground">
+                                Nota: Al cambiar el restaurante, se eliminara el motorista asignado (si existe).
+                            </p>
+
+                            <div className="flex justify-end gap-2">
+                                <Button variant="outline" onClick={() => setChangeRestaurantModalOpen(false)}>
+                                    Cancelar
+                                </Button>
+                                <Button onClick={handleChangeRestaurant} disabled={!selectedRestaurantId}>
+                                    Cambiar
+                                </Button>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Componente de impresion */}
+                <PrintComanda ref={printRef} order={order} />
             </div>
         </AppLayout>
     );

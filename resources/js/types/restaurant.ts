@@ -32,6 +32,9 @@ export interface RestaurantDashboardStats {
     ready_orders: number;
     completed_today: number;
     total_today: number;
+    cash_sales_today: number;
+    card_sales_today: number;
+    total_sales_today: number;
 }
 
 /**

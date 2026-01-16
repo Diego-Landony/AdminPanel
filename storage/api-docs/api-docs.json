@@ -1191,22 +1191,35 @@
                                                                 "type": "boolean"
                                                             },
                                                             "applied_promotion": {
+                                                                "description": "Promocion aplicada a este item (null si no tiene)",
                                                                 "properties": {
                                                                     "id": {
-                                                                        "type": "integer"
+                                                                        "description": "ID de la promocion",
+                                                                        "type": "integer",
+                                                                        "example": 2
                                                                     },
                                                                     "name": {
-                                                                        "type": "string"
+                                                                        "description": "Nombre de la promocion",
+                                                                        "type": "string",
+                                                                        "example": "2x1 en Bebidas"
+                                                                    },
+                                                                    "name_display": {
+                                                                        "description": "Nombre formateado para mostrar en UI",
+                                                                        "type": "string",
+                                                                        "example": "2x1 en Bebidas 2x1"
                                                                     },
                                                                     "type": {
                                                                         "type": "string",
                                                                         "enum": [
                                                                             "two_for_one",
                                                                             "percentage_discount",
+                                                                            "daily_special",
                                                                             "bundle_special"
-                                                                        ]
+                                                                        ],
+                                                                        "example": "two_for_one"
                                                                     },
                                                                     "value": {
+                                                                        "description": "Valor del descuento: '2x1', '15%', 'Q85.00'",
                                                                         "type": "string",
                                                                         "example": "2x1"
                                                                     }
@@ -1253,17 +1266,60 @@
                                                 "summary": {
                                                     "properties": {
                                                         "subtotal": {
-                                                            "type": "string"
+                                                            "description": "Suma de todos los items sin descuentos",
+                                                            "type": "string",
+                                                            "example": "93.00"
                                                         },
                                                         "total_discount": {
-                                                            "type": "string"
+                                                            "description": "Total de descuentos aplicados",
+                                                            "type": "string",
+                                                            "example": "20.00"
                                                         },
                                                         "total": {
-                                                            "type": "string"
+                                                            "description": "Total a pagar (subtotal - descuentos)",
+                                                            "type": "string",
+                                                            "example": "73.00"
                                                         },
                                                         "promotions_applied": {
+                                                            "description": "Lista de promociones aplicadas agrupadas",
                                                             "type": "array",
                                                             "items": {
+                                                                "properties": {
+                                                                    "promotion_id": {
+                                                                        "description": "ID de la promocion",
+                                                                        "type": "integer",
+                                                                        "example": 2
+                                                                    },
+                                                                    "promotion_name": {
+                                                                        "description": "Nombre de la promocion",
+                                                                        "type": "string",
+                                                                        "example": "2x1 en Bebidas"
+                                                                    },
+                                                                    "promotion_type": {
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "two_for_one",
+                                                                            "percentage_discount",
+                                                                            "daily_special",
+                                                                            "bundle_special"
+                                                                        ],
+                                                                        "example": "two_for_one"
+                                                                    },
+                                                                    "discount_amount": {
+                                                                        "description": "Monto total descontado por esta promocion",
+                                                                        "type": "number",
+                                                                        "format": "float",
+                                                                        "example": 20
+                                                                    },
+                                                                    "items_affected": {
+                                                                        "description": "IDs de los items del carrito afectados",
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "integer",
+                                                                            "example": 101
+                                                                        }
+                                                                    }
+                                                                },
                                                                 "type": "object"
                                                             }
                                                         },
@@ -4314,7 +4370,7 @@
                     "Menu"
                 ],
                 "summary": "Get all promotions grouped by type",
-                "description": "Returns all active promotions separated by type: daily_special (single object), two_for_one, percentage_discounts, and bundle_specials.",
+                "description": "Returns all active promotions separated by type.\n     *\n     * **Tipos de promociones:**\n     * - `daily_special`: Sub del Día con precio especial\n     * - `two_for_one`: 2x1 - por cada 2 productos, el más barato es gratis\n     * - `percentage_discount`: Descuento porcentual (ej: 15% off)\n     * - `bundle_special`: Combo promocional con precio fijo\n     *\n     * **Lógica del 2x1:**\n     * - El descuento se calcula automáticamente en el carrito\n     * - Por cada 2 productos de la misma promoción, el más barato es gratis\n     * - Con 4 bebidas: las 2 más baratas son gratis\n     * - Con 3 bebidas: solo 1 (la más barata) es gratis\n     * - Los extras/opciones siempre se cobran al 100%\n     *\n     * **Mostrar badges:**\n     * Los productos con promoción incluyen `active_promotion.badge` con `name`, `color` y `text_color` para mostrar en el menú.",
                 "operationId": "7d50101a4043d405ea335b1d93bb010b",
                 "responses": {
                     "200": {
@@ -4335,21 +4391,21 @@
                                                     "description": "Sub del Día - single object or null"
                                                 },
                                                 "two_for_one": {
-                                                    "description": "2x1 promotions",
+                                                    "description": "Promociones 2x1 - por cada 2 productos el mas barato es gratis",
                                                     "type": "array",
                                                     "items": {
                                                         "$ref": "#/components/schemas/Promotion"
                                                     }
                                                 },
                                                 "percentage_discounts": {
-                                                    "description": "Percentage discount promotions",
+                                                    "description": "Descuentos porcentuales",
                                                     "type": "array",
                                                     "items": {
                                                         "$ref": "#/components/schemas/Promotion"
                                                     }
                                                 },
                                                 "bundle_specials": {
-                                                    "description": "Promotional combos (temporary bundles)",
+                                                    "description": "Combos promocionales con precio fijo",
                                                     "type": "array",
                                                     "items": {
                                                         "$ref": "#/components/schemas/Promotion"

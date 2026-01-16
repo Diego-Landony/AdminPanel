@@ -72,11 +72,12 @@ class CartController extends Controller
      *                         @OA\Property(property="discount_amount", type="number", format="float", description="Monto del descuento aplicado"),
      *                         @OA\Property(property="final_price", type="number", format="float", description="Precio final despues del descuento"),
      *                         @OA\Property(property="is_daily_special", type="boolean", description="Si aplica Sub del Dia"),
-     *                         @OA\Property(property="applied_promotion", type="object", nullable=true,
-     *                             @OA\Property(property="id", type="integer"),
-     *                             @OA\Property(property="name", type="string"),
-     *                             @OA\Property(property="type", type="string", enum={"two_for_one", "percentage_discount", "bundle_special"}),
-     *                             @OA\Property(property="value", type="string", example="2x1")
+     *                         @OA\Property(property="applied_promotion", type="object", nullable=true, description="Promocion aplicada a este item (null si no tiene)",
+     *                             @OA\Property(property="id", type="integer", example=2, description="ID de la promocion"),
+     *                             @OA\Property(property="name", type="string", example="2x1 en Bebidas", description="Nombre de la promocion"),
+     *                             @OA\Property(property="name_display", type="string", example="2x1 en Bebidas 2x1", description="Nombre formateado para mostrar en UI"),
+     *                             @OA\Property(property="type", type="string", enum={"two_for_one", "percentage_discount", "daily_special", "bundle_special"}, example="two_for_one"),
+     *                             @OA\Property(property="value", type="string", example="2x1", description="Valor del descuento: '2x1', '15%', 'Q85.00'")
      *                         ),
      *                         @OA\Property(property="selected_options", type="array", description="Opciones seleccionadas del producto con nombres",
      *
@@ -92,10 +93,24 @@ class CartController extends Controller
      *                     )
      *                 ),
      *                 @OA\Property(property="summary", type="object",
-     *                     @OA\Property(property="subtotal", type="string"),
-     *                     @OA\Property(property="total_discount", type="string"),
-     *                     @OA\Property(property="total", type="string"),
-     *                     @OA\Property(property="promotions_applied", type="array", @OA\Items(type="object")),
+     *                     @OA\Property(property="subtotal", type="string", example="93.00", description="Suma de todos los items sin descuentos"),
+     *                     @OA\Property(property="total_discount", type="string", example="20.00", description="Total de descuentos aplicados"),
+     *                     @OA\Property(property="total", type="string", example="73.00", description="Total a pagar (subtotal - descuentos)"),
+     *                     @OA\Property(property="promotions_applied", type="array", description="Lista de promociones aplicadas agrupadas",
+     *
+     *                         @OA\Items(type="object",
+     *
+     *                             @OA\Property(property="promotion_id", type="integer", example=2, description="ID de la promocion"),
+     *                             @OA\Property(property="promotion_name", type="string", example="2x1 en Bebidas", description="Nombre de la promocion"),
+     *                             @OA\Property(property="promotion_type", type="string", enum={"two_for_one", "percentage_discount", "daily_special", "bundle_special"}, example="two_for_one"),
+     *                             @OA\Property(property="discount_amount", type="number", format="float", example=20.00, description="Monto total descontado por esta promocion"),
+     *                             @OA\Property(property="items_affected", type="array", description="IDs de los items del carrito afectados",
+     *
+     *                                 @OA\Items(type="integer", example=101)
+     *                             )
+     *                         )
+     *                     ),
+     *
      *                     @OA\Property(property="points_to_earn", type="integer", description="Puntos que el cliente ganara al completar esta orden")
      *                 ),
      *                 @OA\Property(property="can_checkout", type="boolean")

@@ -33,6 +33,13 @@ class PromotionResource extends JsonResource
             'weekdays' => $this->weekdays,
             'sort_order' => $this->sort_order,
 
+            // Badge para mostrar en UI (ej: "2x1", "15% OFF")
+            'badge' => $this->when($this->badgeType, fn () => [
+                'name' => $this->badgeType->name,
+                'color' => $this->badgeType->color,
+                'text_color' => $this->badgeType->text_color,
+            ]),
+
             // Relationships
             'items' => PromotionItemResource::collection($this->whenLoaded('items')),
             'bundle_items' => BundlePromotionItemResource::collection($this->whenLoaded('bundleItems')),

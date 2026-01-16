@@ -17,7 +17,23 @@ class PromotionController extends Controller
      *     path="/api/v1/menu/promotions",
      *     tags={"Menu"},
      *     summary="Get all promotions grouped by type",
-     *     description="Returns all active promotions separated by type: daily_special (single object), two_for_one, percentage_discounts, and bundle_specials.",
+     *     description="Returns all active promotions separated by type.
+     *
+     * **Tipos de promociones:**
+     * - `daily_special`: Sub del Día con precio especial
+     * - `two_for_one`: 2x1 - por cada 2 productos, el más barato es gratis
+     * - `percentage_discount`: Descuento porcentual (ej: 15% off)
+     * - `bundle_special`: Combo promocional con precio fijo
+     *
+     * **Lógica del 2x1:**
+     * - El descuento se calcula automáticamente en el carrito
+     * - Por cada 2 productos de la misma promoción, el más barato es gratis
+     * - Con 4 bebidas: las 2 más baratas son gratis
+     * - Con 3 bebidas: solo 1 (la más barata) es gratis
+     * - Los extras/opciones siempre se cobran al 100%
+     *
+     * **Mostrar badges:**
+     * Los productos con promoción incluyen `active_promotion.badge` con `name`, `color` y `text_color` para mostrar en el menú.",
      *
      *     @OA\Response(
      *         response=200,
@@ -27,17 +43,17 @@ class PromotionController extends Controller
      *
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="daily_special", ref="#/components/schemas/Promotion", nullable=true, description="Sub del Día - single object or null"),
-     *                 @OA\Property(property="two_for_one", type="array", description="2x1 promotions",
+     *                 @OA\Property(property="two_for_one", type="array", description="Promociones 2x1 - por cada 2 productos el mas barato es gratis",
      *
      *                     @OA\Items(ref="#/components/schemas/Promotion")
      *                 ),
      *
-     *                 @OA\Property(property="percentage_discounts", type="array", description="Percentage discount promotions",
+     *                 @OA\Property(property="percentage_discounts", type="array", description="Descuentos porcentuales",
      *
      *                     @OA\Items(ref="#/components/schemas/Promotion")
      *                 ),
      *
-     *                 @OA\Property(property="bundle_specials", type="array", description="Promotional combos (temporary bundles)",
+     *                 @OA\Property(property="bundle_specials", type="array", description="Combos promocionales con precio fijo",
      *
      *                     @OA\Items(ref="#/components/schemas/Promotion")
      *                 )
@@ -52,6 +68,7 @@ class PromotionController extends Controller
             ->active()
             ->orderBy('sort_order')
             ->with([
+                'badgeType',
                 'items' => function ($query) {
                     $query->with(['product', 'variant', 'category']);
                 },

@@ -20,6 +20,9 @@ class StoreSectionRequest extends FormRequest
             'allow_multiple' => 'boolean',
             'min_selections' => 'required|integer|min:0',
             'max_selections' => 'required|integer|min:1',
+            'bundle_discount_enabled' => 'boolean',
+            'bundle_size' => 'required_if:bundle_discount_enabled,true|integer|min:2|max:10',
+            'bundle_discount_amount' => 'required_if:bundle_discount_enabled,true|nullable|numeric|min:0.01',
             'is_active' => 'boolean',
             'options' => 'nullable|array',
             'options.*.name' => 'required|string|max:100',
@@ -37,6 +40,11 @@ class StoreSectionRequest extends FormRequest
             'min_selections.min' => 'El mínimo debe ser 0 o mayor.',
             'max_selections.required' => 'El máximo de selecciones es obligatorio.',
             'max_selections.min' => 'El máximo debe ser al menos 1.',
+            'bundle_size.required_if' => 'La cantidad para bundle es requerida cuando el descuento está habilitado.',
+            'bundle_size.min' => 'La cantidad para bundle debe ser al menos 2.',
+            'bundle_size.max' => 'La cantidad para bundle no puede exceder 10.',
+            'bundle_discount_amount.required_if' => 'El monto de descuento es requerido cuando el descuento está habilitado.',
+            'bundle_discount_amount.min' => 'El monto de descuento debe ser mayor a 0.',
             'options.*.name.required' => 'El nombre de la opción es obligatorio.',
         ];
     }

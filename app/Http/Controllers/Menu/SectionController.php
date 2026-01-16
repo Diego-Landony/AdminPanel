@@ -47,6 +47,12 @@ class SectionController extends Controller
         $maxOrder = Section::max('sort_order') ?? 0;
         $validated['sort_order'] = $maxOrder + 1;
 
+        // Si bundle no está habilitado, limpiar campos relacionados
+        if (! ($validated['bundle_discount_enabled'] ?? false)) {
+            $validated['bundle_size'] = 2;
+            $validated['bundle_discount_amount'] = null;
+        }
+
         $section = Section::create($validated);
 
         // Crear las opciones
@@ -90,6 +96,12 @@ class SectionController extends Controller
         $validated = $request->validated();
         $options = $validated['options'] ?? [];
         unset($validated['options']);
+
+        // Si bundle no está habilitado, limpiar campos relacionados
+        if (! ($validated['bundle_discount_enabled'] ?? false)) {
+            $validated['bundle_size'] = 2;
+            $validated['bundle_discount_amount'] = null;
+        }
 
         $section->update($validated);
 

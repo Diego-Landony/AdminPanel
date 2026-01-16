@@ -21,10 +21,12 @@ class CartItemResource extends JsonResource
         $isProduct = $this->product_id !== null;
         $isCombo = $this->combo_id !== null;
 
-        // Calcular extras una sola vez
-        $optionsTotal = method_exists($this->resource, 'getOptionsTotal')
-            ? (float) $this->getOptionsTotal()
-            : 0.0;
+        // Calcular extras y ahorro de bundle una sola vez
+        $bundleResult = method_exists($this->resource, 'getOptionsTotalWithBundle')
+            ? $this->getOptionsTotalWithBundle()
+            : ['total' => 0.0, 'savings' => 0.0];
+        $optionsTotal = $bundleResult['total'];
+        $bundleSavings = $bundleResult['savings'];
         $optionsTotalWithQuantity = $optionsTotal * $this->quantity;
 
         // Obtener precio correcto según zona/servicio del carrito
@@ -72,6 +74,7 @@ class CartItemResource extends JsonResource
             'quantity' => $this->quantity,
             'unit_price' => round($correctUnitPrice, 2),
             'options_total' => $optionsTotal,
+            'bundle_savings' => $bundleSavings,  // Ahorro por bundle de extras
             // subtotal = (base * cantidad) + (extras * cantidad) - precio completo sin descuento
             'subtotal' => round($subtotalWithExtras, 2),
             // original_price = precio según zona/servicio + extras (para mostrar tachado)

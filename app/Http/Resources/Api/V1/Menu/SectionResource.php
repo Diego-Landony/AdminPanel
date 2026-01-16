@@ -24,6 +24,11 @@ class SectionResource extends JsonResource
             'max_selections' => $this->max_selections,
             'sort_order' => $this->sort_order,
 
+            // Bundle pricing
+            'bundle_discount_enabled' => $this->bundle_discount_enabled,
+            'bundle_size' => $this->bundle_size,
+            'bundle_discount_amount' => $this->bundle_discount_amount ? (float) $this->bundle_discount_amount : null,
+
             // Relationships
             'options' => SectionOptionResource::collection($this->whenLoaded('options')),
         ];

@@ -20,7 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ENTITY_ICONS } from '@/constants/section-icons';
 import { NOTIFICATIONS } from '@/constants/ui-constants';
 import { generateUniqueId } from '@/utils/generateId';
-import { Banknote, GripVertical, ListChecks, Plus, Trash2 } from 'lucide-react';
+import { Banknote, GripVertical, ListChecks, Percent, Plus, Trash2 } from 'lucide-react';
 
 interface SectionOption {
     id: string;
@@ -106,6 +106,9 @@ export default function SectionCreate() {
         allow_multiple: false,
         min_selections: '',
         max_selections: '',
+        bundle_discount_enabled: false,
+        bundle_size: '',
+        bundle_discount_amount: '',
         is_active: true,
         options: [] as SectionOption[],
     });
@@ -196,6 +199,16 @@ export default function SectionCreate() {
                 : 0,
         })) as unknown as typeof data.options;
 
+        // Convertir bundle_size a número o null
+        data.bundle_size = data.bundle_size
+            ? (typeof data.bundle_size === 'string' ? parseInt(data.bundle_size) : data.bundle_size)
+            : (null as unknown as string);
+
+        // Convertir bundle_discount_amount a número o null
+        data.bundle_discount_amount = data.bundle_discount_amount
+            ? (typeof data.bundle_discount_amount === 'string' ? parseFloat(data.bundle_discount_amount) : data.bundle_discount_amount)
+            : (null as unknown as string);
+
         post(route('menu.sections.store'), {
             onSuccess: () => {
                 reset();
@@ -231,7 +244,7 @@ export default function SectionCreate() {
                                     <Input id="title" type="text" value={data.title} onChange={(e) => setData('title', e.target.value)} />
                                 </FormField>
 
-                                <FormField label="Descripción" error={errors.description}>
+                                <FormField label="Descripción en app" error={errors.description}>
                                     <Textarea id="description" value={data.description} onChange={(e) => setData('description', e.target.value)} rows={2} />
                                 </FormField>
 
@@ -321,6 +334,54 @@ export default function SectionCreate() {
                         </FormSection>
                     </CardContent>
                 </Card>
+
+                {/* Bundle Pricing - Solo si hay opciones con is_extra */}
+                {localOptions.some((opt) => opt.is_extra) && (
+                    <Card>
+                        <CardContent className="pt-6">
+                            <FormSection icon={Percent} title="Descuento por Cantidad" description="Descuento cuando se seleccionan múltiples extras del mismo precio">
+                                <div className="space-y-4">
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id="bundle_discount_enabled"
+                                            checked={data.bundle_discount_enabled}
+                                            onCheckedChange={(checked) => setData('bundle_discount_enabled', checked as boolean)}
+                                        />
+                                        <Label htmlFor="bundle_discount_enabled" className="cursor-pointer text-sm font-medium leading-none">
+                                            Habilitar descuento por cantidad
+                                        </Label>
+                                    </div>
+
+                                    {data.bundle_discount_enabled && (
+                                        <div className="grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2">
+                                            <FormField label="Items necesarios para descuento" error={errors.bundle_size}>
+                                                <Input
+                                                    id="bundle_size"
+                                                    type="number"
+                                                    min="2"
+                                                    max="10"
+                                                    value={data.bundle_size}
+                                                    onChange={(e) => setData('bundle_size', e.target.value ? parseInt(e.target.value) : '')}
+                                                />
+                                            </FormField>
+
+                                            <FormField label={`Descuento (Q)`} error={errors.bundle_discount_amount}>
+                                                <Input
+                                                    id="bundle_discount_amount"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={data.bundle_discount_amount}
+                                                    onChange={(e) => setData('bundle_discount_amount', e.target.value)}
+                                                />
+                                            </FormField>
+                                        </div>
+                                    )}
+                                </div>
+                            </FormSection>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         </CreatePageLayout>
     );

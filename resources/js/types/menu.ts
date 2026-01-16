@@ -127,6 +127,10 @@ export interface Section {
     allow_multiple: boolean;
     min_selections: number;
     max_selections: number;
+    // Bundle pricing
+    bundle_discount_enabled: boolean;
+    bundle_size: number;
+    bundle_discount_amount: number | null;
     is_active: boolean;
     sort_order: number;
     created_at?: string;

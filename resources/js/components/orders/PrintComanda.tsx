@@ -299,8 +299,9 @@ export const PrintComanda = forwardRef<HTMLDivElement, PrintComandaProps>(({ ord
             <div className="comanda-items">
                 {order.items?.map((item) => {
                     const groupedOptions = item.options ? groupOptionsBySection(item.options) : {};
-                    const extrasTotal = item.options_price || 0;
-                    const basePrice = (item.unit_price || 0) - extrasTotal;
+                    const extrasTotal = Number(item.options_price) || 0;
+                    const basePrice = (Number(item.unit_price) || 0) - extrasTotal;
+                    const totalPrice = Number(item.total_price) || 0;
 
                     return (
                         <div key={item.id} className="comanda-item">
@@ -334,7 +335,7 @@ export const PrintComanda = forwardRef<HTMLDivElement, PrintComandaProps>(({ ord
                             <div className="comanda-item-prices">
                                 <div className="comanda-price-row">
                                     <span>Base:</span>
-                                    <span>Q{(basePrice > 0 ? basePrice : item.unit_price || 0).toFixed(2)}</span>
+                                    <span>Q{(basePrice > 0 ? basePrice : Number(item.unit_price) || 0).toFixed(2)}</span>
                                 </div>
                                 {extrasTotal > 0 && (
                                     <div className="comanda-price-row">
@@ -344,7 +345,7 @@ export const PrintComanda = forwardRef<HTMLDivElement, PrintComandaProps>(({ ord
                                 )}
                                 <div className="comanda-price-row comanda-price-total">
                                     <span>TOTAL:</span>
-                                    <span>Q{(item.total_price || 0).toFixed(2)}</span>
+                                    <span>Q{totalPrice.toFixed(2)}</span>
                                 </div>
                             </div>
                         </div>

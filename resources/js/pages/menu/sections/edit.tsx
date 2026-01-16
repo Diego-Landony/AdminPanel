@@ -18,7 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { ENTITY_ICONS } from '@/constants/section-icons';
 import { generateUniqueId } from '@/utils/generateId';
-import { Banknote, GripVertical, ListChecks, Plus, Trash2 } from 'lucide-react';
+import { Banknote, GripVertical, ListChecks, Percent, Plus, Trash2 } from 'lucide-react';
 
 interface SectionOption {
     id: number | string;
@@ -99,6 +99,9 @@ interface Section {
     allow_multiple: boolean;
     min_selections: number;
     max_selections: number;
+    bundle_discount_enabled: boolean;
+    bundle_size: number;
+    bundle_discount_amount: number | null;
     is_active: boolean;
     options: Array<{
         id: number;
@@ -120,6 +123,9 @@ interface FormData {
     allow_multiple: boolean;
     min_selections: string | number;
     max_selections: string | number;
+    bundle_discount_enabled: boolean;
+    bundle_size: number;
+    bundle_discount_amount: string | number;
     is_active: boolean;
 }
 
@@ -134,6 +140,9 @@ export default function SectionEdit({ section }: EditPageProps) {
         allow_multiple: section.allow_multiple,
         min_selections: section.min_selections,
         max_selections: section.max_selections,
+        bundle_discount_enabled: section.bundle_discount_enabled || false,
+        bundle_size: section.bundle_size || '',
+        bundle_discount_amount: section.bundle_discount_amount || '',
         is_active: section.is_active,
     });
 
@@ -233,6 +242,14 @@ export default function SectionEdit({ section }: EditPageProps) {
             ...formData,
             min_selections: typeof formData.min_selections === 'string' ? parseInt(formData.min_selections) : formData.min_selections,
             max_selections: typeof formData.max_selections === 'string' ? parseInt(formData.max_selections) : formData.max_selections,
+            bundle_size:
+                typeof formData.bundle_size === 'string'
+                    ? (formData.bundle_size ? parseInt(formData.bundle_size) : null)
+                    : formData.bundle_size,
+            bundle_discount_amount:
+                typeof formData.bundle_discount_amount === 'string'
+                    ? (formData.bundle_discount_amount ? parseFloat(formData.bundle_discount_amount) : null)
+                    : formData.bundle_discount_amount,
             options: localOptions.map((option) => ({
                 // Incluir ID solo si es numérico (opción existente)
                 ...(typeof option.id === 'number' ? { id: option.id } : {}),
@@ -278,7 +295,7 @@ export default function SectionEdit({ section }: EditPageProps) {
                                     <Input id="title" type="text" value={formData.title} onChange={(e) => handleInputChange('title', e.target.value)} />
                                 </FormField>
 
-                                <FormField label="Descripción" error={errors.description}>
+                                <FormField label="Descripción en app" error={errors.description}>
                                     <Textarea
                                         id="description"
                                         value={formData.description}
@@ -376,6 +393,54 @@ export default function SectionEdit({ section }: EditPageProps) {
                         </FormSection>
                     </CardContent>
                 </Card>
+
+                {/* Bundle Pricing - Solo si hay opciones con is_extra */}
+                {localOptions.some((opt) => opt.is_extra) && (
+                    <Card>
+                        <CardContent className="pt-6">
+                            <FormSection icon={Percent} title="Descuento por Cantidad" description="Descuento cuando se seleccionan múltiples extras del mismo precio">
+                                <div className="space-y-4">
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id="bundle_discount_enabled"
+                                            checked={formData.bundle_discount_enabled}
+                                            onCheckedChange={(checked) => handleInputChange('bundle_discount_enabled', checked as boolean)}
+                                        />
+                                        <Label htmlFor="bundle_discount_enabled" className="cursor-pointer text-sm font-medium leading-none">
+                                            Habilitar descuento por cantidad
+                                        </Label>
+                                    </div>
+
+                                    {formData.bundle_discount_enabled && (
+                                        <div className="grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2">
+                                            <FormField label="Items necesarios para descuento" error={errors.bundle_size}>
+                                                <Input
+                                                    id="bundle_size"
+                                                    type="number"
+                                                    min="2"
+                                                    max="10"
+                                                    value={formData.bundle_size}
+                                                    onChange={(e) => handleInputChange('bundle_size', e.target.value ? parseInt(e.target.value) : '')}
+                                                />
+                                            </FormField>
+
+                                            <FormField label={`Descuento (Q)`} error={errors.bundle_discount_amount}>
+                                                <Input
+                                                    id="bundle_discount_amount"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={formData.bundle_discount_amount}
+                                                    onChange={(e) => handleInputChange('bundle_discount_amount', e.target.value)}
+                                                />
+                                            </FormField>
+                                        </div>
+                                    )}
+                                </div>
+                            </FormSection>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         </EditPageLayout>
     );

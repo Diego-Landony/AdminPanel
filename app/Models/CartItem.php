@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Menu\Combo;
 use App\Models\Menu\Product;
 use App\Models\Menu\ProductVariant;
+use App\Models\Menu\Section;
 use App\Models\Menu\SectionOption;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -91,41 +92,70 @@ class CartItem extends Model
     }
 
     /**
+     * Calcula el total de opciones con bundle pricing.
+     * Agrupa por sección y aplica descuentos de bundle si corresponde.
+     *
+     * @return array{total: float, savings: float}
+     */
+    public function getOptionsTotalWithBundle(): array
+    {
+        if (! $this->selected_options || ! is_array($this->selected_options)) {
+            return ['total' => 0.0, 'savings' => 0.0];
+        }
+
+        // Agrupar opciones por section_id
+        $optionsBySectionId = collect($this->selected_options)->groupBy('section_id');
+
+        // Pre-cargar todas las secciones para evitar N+1 queries
+        $sectionIds = $optionsBySectionId->keys()->filter()->toArray();
+        $sections = Section::whereIn('id', $sectionIds)->get()->keyBy('id');
+
+        $total = 0.0;
+        $savings = 0.0;
+
+        foreach ($optionsBySectionId as $sectionId => $options) {
+            $optionIds = $options->pluck('option_id')->filter()->unique()->toArray();
+
+            if (empty($optionIds)) {
+                continue;
+            }
+
+            $section = $sections->get($sectionId);
+            if (! $section) {
+                // Si la sección no existe, calcular suma simple
+                $sectionOptions = SectionOption::whereIn('id', $optionIds)->get();
+                $total += $sectionOptions->sum(fn ($opt) => $opt->getPriceModifier());
+
+                continue;
+            }
+
+            // Usar el método de bundle pricing de la sección
+            $result = $section->calculateOptionsPrice($optionIds);
+            $total += $result['total'];
+            $savings += $result['savings'];
+        }
+
+        return [
+            'total' => round($total, 2),
+            'savings' => round($savings, 2),
+        ];
+    }
+
+    /**
      * Calcula el total de las opciones seleccionadas (extras).
-     * Obtiene los precios desde la DB usando SectionOption::getPriceModifier().
-     * Solo los extras (is_extra = true) tienen precio adicional.
+     * Usa bundle pricing si está habilitado en la sección.
      */
     public function getOptionsTotal(): float
     {
-        if (! $this->selected_options || ! is_array($this->selected_options)) {
-            return 0.0;
-        }
+        return $this->getOptionsTotalWithBundle()['total'];
+    }
 
-        $optionIds = collect($this->selected_options)
-            ->pluck('option_id')
-            ->filter()
-            ->unique()
-            ->values()
-            ->toArray();
-
-        if (empty($optionIds)) {
-            return 0.0;
-        }
-
-        // Batch load opciones para obtener precios reales
-        $sectionOptions = SectionOption::whereIn('id', $optionIds)->get()->keyBy('id');
-
-        $total = 0.0;
-        foreach ($this->selected_options as $option) {
-            $optionId = $option['option_id'] ?? null;
-            if ($optionId) {
-                $sectionOption = $sectionOptions[$optionId] ?? null;
-                // getPriceModifier() retorna el precio solo si is_extra = true
-                $total += $sectionOption?->getPriceModifier() ?? 0;
-            }
-        }
-
-        return round($total, 2);
+    /**
+     * Obtener el ahorro por bundle de las opciones seleccionadas.
+     */
+    public function getBundleSavings(): float
+    {
+        return $this->getOptionsTotalWithBundle()['savings'];
     }
 
     /**

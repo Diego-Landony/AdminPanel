@@ -5517,20 +5517,10 @@
                                                                 "format": "float",
                                                                 "example": 10
                                                             },
-                                                            "delivery_fee": {
-                                                                "type": "number",
-                                                                "format": "float",
-                                                                "example": 15
-                                                            },
-                                                            "tax": {
-                                                                "type": "number",
-                                                                "format": "float",
-                                                                "example": 0
-                                                            },
                                                             "total": {
                                                                 "type": "number",
                                                                 "format": "float",
-                                                                "example": 90
+                                                                "example": 75
                                                             }
                                                         },
                                                         "type": "object"
@@ -5783,20 +5773,10 @@
                                                             "format": "float",
                                                             "example": 0
                                                         },
-                                                        "delivery_fee": {
-                                                            "type": "number",
-                                                            "format": "float",
-                                                            "example": 15
-                                                        },
-                                                        "tax": {
-                                                            "type": "number",
-                                                            "format": "float",
-                                                            "example": 0
-                                                        },
                                                         "total": {
                                                             "type": "number",
                                                             "format": "float",
-                                                            "example": 140
+                                                            "example": 125
                                                         }
                                                     },
                                                     "type": "object"
@@ -6088,16 +6068,6 @@
                                                             "type": "number",
                                                             "format": "float",
                                                             "example": 45
-                                                        },
-                                                        "delivery_fee": {
-                                                            "type": "number",
-                                                            "format": "float",
-                                                            "example": 0
-                                                        },
-                                                        "tax": {
-                                                            "type": "number",
-                                                            "format": "float",
-                                                            "example": 0
                                                         },
                                                         "total": {
                                                             "type": "number",
@@ -8868,8 +8838,30 @@
                         "type": "integer",
                         "example": 1
                     },
+                    "badge": {
+                        "description": "Badge visual para mostrar en productos con esta promoción",
+                        "properties": {
+                            "name": {
+                                "description": "Texto del badge",
+                                "type": "string",
+                                "example": "2x1"
+                            },
+                            "color": {
+                                "description": "Color de fondo",
+                                "type": "string",
+                                "example": "#ef4444"
+                            },
+                            "text_color": {
+                                "description": "Color del texto",
+                                "type": "string",
+                                "example": "#ffffff"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
                     "items": {
-                        "description": "Items de la promoción (para Sub del Día)",
+                        "description": "Items de la promoción (para Sub del Día, 2x1, porcentaje)",
                         "type": "array",
                         "items": {
                             "type": "object"

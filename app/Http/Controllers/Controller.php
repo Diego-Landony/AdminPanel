@@ -477,9 +477,18 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="weekdays", type="array", nullable=true, @OA\Items(type="integer"), example={1,3,5}),
  *     @OA\Property(property="sort_order", type="integer", example=1),
  *     @OA\Property(
+ *         property="badge",
+ *         type="object",
+ *         nullable=true,
+ *         description="Badge visual para mostrar en productos con esta promoción",
+ *         @OA\Property(property="name", type="string", example="2x1", description="Texto del badge"),
+ *         @OA\Property(property="color", type="string", example="#ef4444", description="Color de fondo"),
+ *         @OA\Property(property="text_color", type="string", example="#ffffff", description="Color del texto")
+ *     ),
+ *     @OA\Property(
  *         property="items",
  *         type="array",
- *         description="Items de la promoción (para Sub del Día)",
+ *         description="Items de la promoción (para Sub del Día, 2x1, porcentaje)",
  *
  *         @OA\Items(type="object")
  *     ),

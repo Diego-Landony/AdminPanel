@@ -441,6 +441,12 @@ class PromotionApplicationService
 
             if ($promotion->type === 'percentage_discount') {
                 foreach ($promoItems as $item) {
+                    // REGLA: Sub del Día tiene prioridad sobre Descuento %
+                    // Si el item ya tiene Sub del Día aplicado, NO aplicar descuento %
+                    if ($itemDiscounts[$item->id]['is_daily_special']) {
+                        continue;
+                    }
+
                     $promotionItem = $this->getPromotionItemForCartItem($item, $promotion);
                     if ($promotionItem && $promotionItem->discount_percentage) {
                         $extrasTotal = $item->getOptionsTotal() * $item->quantity;
@@ -541,9 +547,33 @@ class PromotionApplicationService
                             if ($dailySpecialData) {
                                 // Ya tiene Sub del Día aplicado, mantenerlo
                             } else {
-                                // Sin promoción
-                                $itemDiscounts[$item->id]['original_price'] = round($basePrice + $extrasTotal, 2);
-                                $itemDiscounts[$item->id]['final_price'] = round($basePrice + $extrasTotal, 2);
+                                // REGLA: Buscar si hay descuento % disponible para este item sobrante
+                                $percentagePromo = $this->findPercentageDiscountForItem($item, $datetime);
+                                if ($percentagePromo) {
+                                    $promotionItem = $this->getPromotionItemForCartItem($item, $percentagePromo['promotion']);
+                                    if ($promotionItem && $promotionItem->discount_percentage) {
+                                        // Aplicar descuento % al item sobrante
+                                        $discount = $basePrice * ($promotionItem->discount_percentage / 100);
+                                        $itemDiscounts[$item->id]['discount_amount'] = round($discount, 2);
+                                        $itemDiscounts[$item->id]['original_price'] = round($basePrice + $extrasTotal, 2);
+                                        $itemDiscounts[$item->id]['final_price'] = round(($basePrice - $discount) + $extrasTotal, 2);
+                                        $itemDiscounts[$item->id]['applied_promotion'] = [
+                                            'id' => $percentagePromo['promotion']->id,
+                                            'name' => $percentagePromo['promotion']->name,
+                                            'name_display' => "{$percentagePromo['promotion']->name} -{$promotionItem->discount_percentage}%",
+                                            'type' => 'percentage_discount',
+                                            'value' => $promotionItem->discount_percentage.'%',
+                                        ];
+                                    } else {
+                                        // Sin promoción
+                                        $itemDiscounts[$item->id]['original_price'] = round($basePrice + $extrasTotal, 2);
+                                        $itemDiscounts[$item->id]['final_price'] = round($basePrice + $extrasTotal, 2);
+                                    }
+                                } else {
+                                    // Sin promoción
+                                    $itemDiscounts[$item->id]['original_price'] = round($basePrice + $extrasTotal, 2);
+                                    $itemDiscounts[$item->id]['final_price'] = round($basePrice + $extrasTotal, 2);
+                                }
                             }
                         }
                     }
@@ -597,5 +627,72 @@ class PromotionApplicationService
         $serviceType = $cart->service_type ?? 'pickup';
 
         return $promotion->getPriceForZoneCombinado($zone, $serviceType);
+    }
+
+    /**
+     * Busca promoción de descuento porcentual para un item específico
+     *
+     * Se usa para aplicar descuento % a items sobrantes del 2x1
+     *
+     * @return array|null Array con ['promotion' => Promotion] o null si no hay
+     */
+    protected function findPercentageDiscountForItem($item, Carbon $datetime): ?array
+    {
+        $dayOfWeekIso = $datetime->dayOfWeekIso;
+        $currentDate = $datetime->toDateString();
+        $currentTime = $datetime->format('H:i:s');
+
+        $query = Promotion::where('is_active', true)
+            ->where('type', 'percentage_discount');
+
+        if ($item->variant_id) {
+            $query->where(function ($q) use ($item) {
+                $q->whereHas('items', fn ($q2) => $q2->where('variant_id', $item->variant_id))
+                    ->orWhereHas('items', fn ($q2) => $q2->where('product_id', $item->product_id))
+                    ->orWhereHas('items', function ($q2) use ($item) {
+                        $categoryId = $item->product->category_id;
+                        if ($categoryId) {
+                            $q2->where('category_id', $categoryId);
+                        }
+                    });
+            });
+        } else {
+            $query->whereHas('items', function ($q) use ($item) {
+                $q->where(function ($q2) use ($item) {
+                    $q2->where('product_id', $item->product_id)
+                        ->orWhere('category_id', $item->product->category_id);
+                });
+            });
+        }
+
+        $promotion = $query
+            ->where(function ($q) use ($dayOfWeekIso) {
+                $q->whereNull('weekdays')
+                    ->orWhereJsonContains('weekdays', $dayOfWeekIso);
+            })
+            ->where(function ($q) use ($currentDate) {
+                $q->whereNull('valid_from')
+                    ->orWhereDate('valid_from', '<=', $currentDate);
+            })
+            ->where(function ($q) use ($currentDate) {
+                $q->whereNull('valid_until')
+                    ->orWhereDate('valid_until', '>=', $currentDate);
+            })
+            ->where(function ($q) use ($currentTime) {
+                $q->whereNull('time_from')
+                    ->orWhereTime('time_from', '<=', $currentTime);
+            })
+            ->where(function ($q) use ($currentTime) {
+                $q->whereNull('time_until')
+                    ->orWhereTime('time_until', '>=', $currentTime);
+            })
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if ($promotion) {
+            return ['promotion' => $promotion];
+        }
+
+        return null;
     }
 }

@@ -10,6 +10,7 @@ use App\Models\CustomerAddress;
 use App\Models\CustomerNit;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderPromotion;
 use App\Models\OrderStatusHistory;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -268,6 +269,9 @@ class OrderService
                 ]);
             }
 
+            // Consolidar promociones aplicadas a nivel de orden
+            $this->createOrderPromotions($order, $summary['item_discounts']);
+
             OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'previous_status' => null,
@@ -470,5 +474,64 @@ class OrderService
         ];
 
         return in_array($new, $validTransitions[$current] ?? []);
+    }
+
+    /**
+     * Consolidar promociones aplicadas a nivel de orden
+     *
+     * Agrupa los descuentos por promoción y crea registros en order_promotions
+     * para facilitar reportes y trazabilidad.
+     *
+     * @param  Order  $order  Orden creada
+     * @param  array<int, array{discount_amount: float, applied_promotion?: array}>  $itemDiscounts  Descuentos por item del carrito
+     */
+    private function createOrderPromotions(Order $order, array $itemDiscounts): void
+    {
+        $promotionsApplied = collect($itemDiscounts)
+            ->filter(fn ($discount) => isset($discount['applied_promotion']) && $discount['discount_amount'] > 0)
+            ->groupBy(fn ($discount) => $discount['applied_promotion']['id'])
+            ->map(function ($group) {
+                $firstPromo = $group->first()['applied_promotion'];
+
+                return [
+                    'promotion_id' => $firstPromo['id'],
+                    'promotion_type' => $firstPromo['type'],
+                    'promotion_name' => $firstPromo['name'],
+                    'discount_amount' => $group->sum('discount_amount'),
+                    'description' => $this->buildPromotionDescription($firstPromo, $group),
+                ];
+            });
+
+        foreach ($promotionsApplied as $promoData) {
+            OrderPromotion::create([
+                'order_id' => $order->id,
+                'promotion_id' => $promoData['promotion_id'],
+                'promotion_type' => $promoData['promotion_type'],
+                'promotion_name' => $promoData['promotion_name'],
+                'discount_amount' => $promoData['discount_amount'],
+                'description' => $promoData['description'],
+                'created_at' => now(),
+            ]);
+        }
+    }
+
+    /**
+     * Construir descripción de la promoción aplicada
+     *
+     * @param  array  $promo  Datos de la promoción
+     * @param  \Illuminate\Support\Collection  $group  Items que usaron esta promoción
+     */
+    private function buildPromotionDescription(array $promo, $group): string
+    {
+        $itemCount = $group->count();
+        $totalDiscount = $group->sum('discount_amount');
+
+        return match ($promo['type']) {
+            'two_for_one' => "2x1 aplicado a {$itemCount} item(s)",
+            'percentage_discount' => "{$promo['value']} de descuento en {$itemCount} item(s)",
+            'bundle_special' => "Bundle especial con {$itemCount} item(s)",
+            'daily_special' => "Sub del día aplicado a {$itemCount} item(s)",
+            default => "Descuento de Q{$totalDiscount} en {$itemCount} item(s)",
+        };
     }
 }

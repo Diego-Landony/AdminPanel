@@ -1055,7 +1055,7 @@
                     "Cart"
                 ],
                 "summary": "Get current cart",
-                "description": "Returns the current cart with items, totals and summary. Each item includes discount information for displaying strikethrough prices. For 'Sub del Día' items, discount_amount = (normal_price - special_price) * quantity, allowing Flutter to show the original price crossed out and the special price.",
+                "description": "Returns the current cart with items, totals and summary. Each item includes discount information for displaying strikethrough prices. Promotion stacking rules: 2x1 always uses NORMAL price (not Sub del Día price). For odd quantities, leftover items use Sub del Día price. Example: 3 items = 2 in 2x1 (normal price) + 1 Sub del Día. The applied_promotion.value will show '2x1 + Sub del Día' when both apply.",
                 "operationId": "2949ba84adf7767b0d9724b8cfdb4f92",
                 "responses": {
                     "200": {
@@ -1219,7 +1219,7 @@
                                                                         "example": "two_for_one"
                                                                     },
                                                                     "value": {
-                                                                        "description": "Valor del descuento: '2x1', '15%', 'Q85.00'",
+                                                                        "description": "Valor del descuento: '2x1', '2x1 + Sub del Día', '15%', 'Q85.00'",
                                                                         "type": "string",
                                                                         "example": "2x1"
                                                                     }

@@ -356,14 +356,15 @@ class PromotionApplicationService
                 continue;
             }
 
-            // Verificar si es Sub del Día
+            // Verificar si es Sub del Día y guardar datos para uso posterior
+            // El Sub del Día se aplicará inicialmente, pero puede ser reemplazado por 2x1
             if ($item->variant_id && $item->variant) {
                 $variant = $item->variant;
                 if ($variant->is_daily_special && ! empty($variant->daily_special_days)) {
                     if (in_array($dayOfWeek, $variant->daily_special_days)) {
                         $itemDiscounts[$item->id]['is_daily_special'] = true;
 
-                        // Calcular el descuento: precio normal - precio especial (solo sobre base)
+                        // Calcular datos del Sub del Día
                         $cartModel = $item->cart;
                         $zone = $cartModel->zone ?? 'capital';
                         $serviceType = $cartModel->service_type ?? 'pickup';
@@ -377,18 +378,16 @@ class PromotionApplicationService
                             $discountPerUnit = $normalPricePerUnit - $specialPricePerUnit;
                             $totalDiscount = $discountPerUnit * $item->quantity;
 
-                            // Buscar el ID real de la promoción Sub del Día
                             $dailySpecialPromo = Promotion::where('type', 'daily_special')
                                 ->where('is_active', true)
                                 ->first();
 
-                            // original_price = precio_base_normal + extras
-                            // final_price = precio_base_especial + extras
+                            $discountPercent = round((($normalPricePerUnit - $specialPricePerUnit) / $normalPricePerUnit) * 100);
+
+                            // Aplicar Sub del Día inicialmente (puede ser sobrescrito por 2x1)
                             $itemDiscounts[$item->id]['discount_amount'] = round($totalDiscount, 2);
                             $itemDiscounts[$item->id]['original_price'] = round(($normalPricePerUnit * $item->quantity) + $extrasTotal, 2);
                             $itemDiscounts[$item->id]['final_price'] = round(($specialPricePerUnit * $item->quantity) + $extrasTotal, 2);
-                            // Calcular porcentaje de descuento para mostrar
-                            $discountPercent = round((($normalPricePerUnit - $specialPricePerUnit) / $normalPricePerUnit) * 100);
                             $itemDiscounts[$item->id]['applied_promotion'] = [
                                 'id' => $dailySpecialPromo?->id,
                                 'name' => 'Sub del Día',
@@ -396,9 +395,18 @@ class PromotionApplicationService
                                 'type' => 'daily_special',
                                 'value' => 'Q'.number_format($specialPricePerUnit, 2),
                             ];
+
+                            // Guardar datos del Sub del Día para el cálculo híbrido con 2x1
+                            $itemDiscounts[$item->id]['_daily_special_data'] = [
+                                'normal_price' => $normalPricePerUnit,
+                                'special_price' => $specialPricePerUnit,
+                                'discount_per_unit' => $discountPerUnit,
+                                'promo_id' => $dailySpecialPromo?->id,
+                                'discount_percent' => $discountPercent,
+                            ];
                         }
 
-                        continue; // Sub del día no acumula con otras promociones
+                        // NO hacer continue - permitir que el item participe en 2x1
                     }
                 }
             }
@@ -457,34 +465,86 @@ class PromotionApplicationService
                 $totalQuantity = $promoItems->sum('quantity');
 
                 if ($totalQuantity >= 2) {
+                    // 2x1 siempre usa precio normal, Sub del Día solo aplica al sobrante
+                    // Ejemplo: 3 productos Sub del Día (Q35 normal, Q22 especial)
+                    // - 2 productos van al 2x1: pagas Q35 (1 gratis con precio normal)
+                    // - 1 producto sobrante: Sub del Día Q22
+                    // - Total: Q35 + Q22 = Q57
+
                     $sorted = $promoItems->sortBy('unit_price');
                     $freeItems = floor($totalQuantity / 2);
+                    $itemsFor2x1 = $freeItems * 2; // Cantidad que entra en el 2x1
+                    $leftoverItems = $totalQuantity - $itemsFor2x1; // Sobrantes para Sub del Día
+
                     $freeCount = 0;
+                    $processedFor2x1 = 0;
 
                     foreach ($sorted as $item) {
                         $extrasTotal = $item->getOptionsTotal() * $item->quantity;
                         $basePrice = (float) $item->subtotal;
+                        $dailySpecialData = $itemDiscounts[$item->id]['_daily_special_data'] ?? null;
 
-                        if ($freeCount < $freeItems) {
-                            $quantityToDiscount = min($item->quantity, $freeItems - $freeCount);
-                            // El descuento es solo el precio base de las unidades gratis
-                            $discount = $item->unit_price * $quantityToDiscount;
+                        // Determinar cuántas unidades de este item van al 2x1
+                        $quantityAvailableFor2x1 = min($item->quantity, $itemsFor2x1 - $processedFor2x1);
+                        $quantityForDailySpecial = $item->quantity - $quantityAvailableFor2x1;
+
+                        if ($quantityAvailableFor2x1 > 0) {
+                            $processedFor2x1 += $quantityAvailableFor2x1;
+
+                            // Calcular descuento del 2x1 (unidades gratis con precio normal)
+                            $quantityToDiscount = min($quantityAvailableFor2x1, $freeItems - $freeCount);
+                            $discount2x1 = $item->unit_price * $quantityToDiscount;
                             $freeCount += $quantityToDiscount;
 
-                            $itemDiscounts[$item->id]['discount_amount'] = round($discount, 2);
-                            $itemDiscounts[$item->id]['original_price'] = round($basePrice + $extrasTotal, 2);
-                            $itemDiscounts[$item->id]['final_price'] = round(($basePrice - $discount) + $extrasTotal, 2);
-                            $itemDiscounts[$item->id]['applied_promotion'] = [
-                                'id' => $promotion->id,
-                                'name' => $promotion->name,
-                                'name_display' => "{$promotion->name} 2x1",
-                                'type' => $promotion->type,
-                                'value' => '2x1',
-                            ];
+                            // Calcular precio de las unidades en 2x1 (precio normal)
+                            $price2x1Units = $item->unit_price * $quantityAvailableFor2x1;
+
+                            // Calcular precio de las unidades sobrantes (Sub del Día si aplica)
+                            $priceDailySpecialUnits = 0;
+                            $discountDailySpecial = 0;
+                            if ($quantityForDailySpecial > 0 && $dailySpecialData) {
+                                $priceDailySpecialUnits = $dailySpecialData['special_price'] * $quantityForDailySpecial;
+                                $discountDailySpecial = $dailySpecialData['discount_per_unit'] * $quantityForDailySpecial;
+                            } elseif ($quantityForDailySpecial > 0) {
+                                $priceDailySpecialUnits = $item->unit_price * $quantityForDailySpecial;
+                            }
+
+                            $totalDiscount = $discount2x1 + $discountDailySpecial;
+                            $originalPrice = $basePrice + $extrasTotal;
+                            $finalPrice = ($price2x1Units - $discount2x1) + $priceDailySpecialUnits + $extrasTotal;
+
+                            $itemDiscounts[$item->id]['discount_amount'] = round($totalDiscount, 2);
+                            $itemDiscounts[$item->id]['original_price'] = round($originalPrice, 2);
+                            $itemDiscounts[$item->id]['final_price'] = round($finalPrice, 2);
+                            $itemDiscounts[$item->id]['is_daily_special'] = false;
+
+                            // Mostrar promoción combinada si hay sobrante con Sub del Día
+                            if ($quantityForDailySpecial > 0 && $dailySpecialData) {
+                                $itemDiscounts[$item->id]['applied_promotion'] = [
+                                    'id' => $promotion->id,
+                                    'name' => $promotion->name,
+                                    'name_display' => "{$promotion->name} 2x1 + Sub del Día",
+                                    'type' => 'two_for_one',
+                                    'value' => '2x1 + Sub del Día',
+                                ];
+                            } else {
+                                $itemDiscounts[$item->id]['applied_promotion'] = [
+                                    'id' => $promotion->id,
+                                    'name' => $promotion->name,
+                                    'name_display' => "{$promotion->name} 2x1",
+                                    'type' => $promotion->type,
+                                    'value' => '2x1',
+                                ];
+                            }
                         } else {
-                            // Items sin descuento pero actualizar original_price y final_price con extras
-                            $itemDiscounts[$item->id]['original_price'] = round($basePrice + $extrasTotal, 2);
-                            $itemDiscounts[$item->id]['final_price'] = round($basePrice + $extrasTotal, 2);
+                            // Este item completo es sobrante - mantener Sub del Día si aplica
+                            if ($dailySpecialData) {
+                                // Ya tiene Sub del Día aplicado, mantenerlo
+                            } else {
+                                // Sin promoción
+                                $itemDiscounts[$item->id]['original_price'] = round($basePrice + $extrasTotal, 2);
+                                $itemDiscounts[$item->id]['final_price'] = round($basePrice + $extrasTotal, 2);
+                            }
                         }
                     }
                 }
@@ -518,6 +578,11 @@ class PromotionApplicationService
                     }
                 }
             }
+        }
+
+        // Limpiar campos temporales
+        foreach ($itemDiscounts as $itemId => $data) {
+            unset($itemDiscounts[$itemId]['_daily_special_data']);
         }
 
         return $itemDiscounts;

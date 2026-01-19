@@ -236,7 +236,7 @@ export interface LocalChoiceOption {
 }
 
 // ============================================
-// BADGE (Insignia/Etiqueta)
+// BADGE
 // ============================================
 
 export interface BadgeType {

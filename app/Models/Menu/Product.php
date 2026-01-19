@@ -287,12 +287,64 @@ class Product extends Model implements ActivityLoggable
                 $q->whereNull('weekdays')
                     ->orWhereJsonContains('weekdays', $currentWeekday);
             })
-            // Ordenar por sort_order y retornar la primera
-            ->orderBy('sort_order')
             // Cargar relaciones (incluir badgeType para mostrar el badge en el menú)
             ->with(['items', 'badgeType']);
 
-        return $query->first();
+        // Obtener todas las promociones válidas
+        $promotions = $query->get();
+
+        if ($promotions->isEmpty()) {
+            return null;
+        }
+
+        // Si solo hay una promoción, devolverla
+        if ($promotions->count() === 1) {
+            return $promotions->first();
+        }
+
+        // PRIORIDAD DE BADGES (según reglas de acumulación):
+        // 1. Sub del Día (si tiene item válido HOY) - prioridad absoluta
+        // 2. 2x1
+        // 3. Porcentaje (el mayor descuento)
+        // 4. Bundle Special
+
+        // 1. Buscar Sub del Día con item válido HOY para ESTE PRODUCTO específico
+        // IMPORTANTE: Para Sub del Día, solo buscar por product_id (no category_id)
+        // porque cada sub tiene su día específico de la semana
+        $dailySpecial = $promotions->first(function ($promo) use ($datetime) {
+            if ($promo->type !== 'daily_special') {
+                return false;
+            }
+            // Buscar item específico para este producto (no por categoría)
+            $item = $promo->items->first(fn ($i) => $i->product_id === $this->id);
+
+            return $item && $item->isValidToday($datetime);
+        });
+
+        if ($dailySpecial) {
+            return $dailySpecial;
+        }
+
+        // 2. Buscar 2x1
+        $twoForOne = $promotions->first(fn ($p) => $p->type === 'two_for_one');
+        if ($twoForOne) {
+            return $twoForOne;
+        }
+
+        // 3. Buscar porcentaje con mayor descuento
+        $percentagePromos = $promotions->filter(fn ($p) => $p->type === 'percentage_discount');
+        if ($percentagePromos->isNotEmpty()) {
+            return $percentagePromos->sortByDesc(function ($promo) {
+                $item = $promo->items->first(function ($i) {
+                    return $i->product_id === $this->id || $i->category_id === $this->category_id;
+                });
+
+                return $item?->discount_percentage ?? 0;
+            })->first();
+        }
+
+        // 4. Bundle Special u otras
+        return $promotions->first();
     }
 
     /**

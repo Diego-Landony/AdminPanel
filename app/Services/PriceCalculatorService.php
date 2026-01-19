@@ -21,7 +21,12 @@ use Carbon\Carbon;
  * - Sub del Día (precio especial en días específicos)
  * - Promociones (2x1, descuentos %)
  *
- * Regla de negocio: Sub del Día NO acumula con otras promociones
+ * Regla de negocio para 2x1 + Sub del Día:
+ * - El 2x1 siempre usa precio NORMAL (no precio Sub del Día)
+ * - El producto sobrante (cantidad impar) usa precio Sub del Día
+ * - Ejemplo: 3 productos = 2 en 2x1 (precio normal) + 1 Sub del Día
+ *
+ * NOTA: Para cálculos completos del carrito, usar PromotionApplicationService
  */
 class PriceCalculatorService
 {

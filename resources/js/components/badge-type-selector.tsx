@@ -27,18 +27,18 @@ export function BadgeTypeSelector({ value, onChange, badgeTypes, error }: BadgeT
     const activeBadges = badgeTypes.filter((b) => b.is_active);
 
     return (
-        <FormField label="Insignia" error={error} description="Se mostrará en los productos con esta promoción">
+        <FormField label="Badge" error={error} description="Se mostrará en los productos con esta promoción">
             <div className="flex items-center gap-3">
                 <Select
                     value={value?.toString() || 'none'}
                     onValueChange={(val) => onChange(val === 'none' ? null : parseInt(val, 10))}
                 >
                     <SelectTrigger className="w-[200px]">
-                        <SelectValue placeholder="Sin insignia" />
+                        <SelectValue placeholder="Sin badge" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="none">
-                            <span className="text-muted-foreground">Sin insignia</span>
+                            <span className="text-muted-foreground">Sin badge</span>
                         </SelectItem>
                         {activeBadges.map((badge) => (
                             <SelectItem key={badge.id} value={badge.id.toString()}>

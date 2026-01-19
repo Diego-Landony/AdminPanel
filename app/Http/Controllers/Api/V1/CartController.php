@@ -33,7 +33,7 @@ class CartController extends Controller
      *     path="/api/v1/cart",
      *     tags={"Cart"},
      *     summary="Get current cart",
-     *     description="Returns the current cart with items, totals and summary. Each item includes discount information for displaying strikethrough prices. For 'Sub del Día' items, discount_amount = (normal_price - special_price) * quantity, allowing Flutter to show the original price crossed out and the special price.",
+     *     description="Returns the current cart with items, totals and summary. Each item includes discount information for displaying strikethrough prices. Promotion stacking rules: 2x1 always uses NORMAL price (not Sub del Día price). For odd quantities, leftover items use Sub del Día price. Example: 3 items = 2 in 2x1 (normal price) + 1 Sub del Día. The applied_promotion.value will show '2x1 + Sub del Día' when both apply.",
      *     security={{"sanctum":{}}},
      *
      *     @OA\Response(
@@ -77,7 +77,7 @@ class CartController extends Controller
      *                             @OA\Property(property="name", type="string", example="2x1 en Bebidas", description="Nombre de la promocion"),
      *                             @OA\Property(property="name_display", type="string", example="2x1 en Bebidas 2x1", description="Nombre formateado para mostrar en UI"),
      *                             @OA\Property(property="type", type="string", enum={"two_for_one", "percentage_discount", "daily_special", "bundle_special"}, example="two_for_one"),
-     *                             @OA\Property(property="value", type="string", example="2x1", description="Valor del descuento: '2x1', '15%', 'Q85.00'")
+     *                             @OA\Property(property="value", type="string", example="2x1", description="Valor del descuento: '2x1', '2x1 + Sub del Día', '15%', 'Q85.00'")
      *                         ),
      *                         @OA\Property(property="selected_options", type="array", description="Opciones seleccionadas del producto con nombres",
      *

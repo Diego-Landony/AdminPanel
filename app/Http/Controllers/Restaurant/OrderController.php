@@ -155,7 +155,6 @@ class OrderController extends Controller
                 'payment_method' => $order->payment_method,
                 'payment_status' => $order->payment_status,
                 'subtotal' => $order->subtotal ?? 0,
-                'delivery_fee' => $order->delivery_fee ?? 0,
                 'discount' => $order->discount_total ?? 0,
                 'total' => $order->total ?? 0,
                 'notes' => $order->notes,

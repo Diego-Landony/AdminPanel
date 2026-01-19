@@ -183,8 +183,6 @@ class OrderService
                 'delivery_address_snapshot' => $deliveryAddressSnapshot,
                 'subtotal' => $summary['subtotal'],
                 'discount_total' => $summary['discounts'],
-                'delivery_fee' => $summary['delivery_fee'],
-                'tax' => 0,
                 'total' => $summary['total'],
                 'status' => Order::STATUS_PENDING,
                 'payment_method' => $data['payment_method'],

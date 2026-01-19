@@ -33,9 +33,7 @@ class OrderFactory extends Factory
 
         $subtotal = fake()->randomFloat(2, 20, 200);
         $discountTotal = fake()->randomFloat(2, 0, 20);
-        $deliveryFee = $serviceType === 'delivery' ? fake()->randomFloat(2, 5, 15) : 0;
-        $tax = 0;
-        $total = $subtotal - $discountTotal + $deliveryFee + $tax;
+        $total = $subtotal - $discountTotal;
 
         return [
             'order_number' => fake()->unique()->numerify('ORD-######'),
@@ -53,8 +51,6 @@ class OrderFactory extends Factory
             ] : null,
             'subtotal' => $subtotal,
             'discount_total' => $discountTotal,
-            'delivery_fee' => $deliveryFee,
-            'tax' => $tax,
             'total' => $total,
             'status' => $status,
             'payment_method' => fake()->randomElement(['card', 'cash']),
@@ -143,7 +139,6 @@ class OrderFactory extends Factory
                 'longitude' => fake()->longitude(),
                 'delivery_notes' => fake()->optional()->sentence(),
             ],
-            'delivery_fee' => fake()->randomFloat(2, 5, 15),
         ]);
     }
 
@@ -153,7 +148,6 @@ class OrderFactory extends Factory
             'service_type' => 'pickup',
             'delivery_address_id' => null,
             'delivery_address_snapshot' => null,
-            'delivery_fee' => 0,
         ]);
     }
 

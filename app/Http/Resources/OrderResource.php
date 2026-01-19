@@ -42,8 +42,6 @@ class OrderResource extends JsonResource
             'delivery_address_snapshot' => $this->delivery_address_snapshot,
             'subtotal' => $this->subtotal,
             'discount_total' => $this->discount_total,
-            'delivery_fee' => $this->delivery_fee,
-            'tax' => $this->tax,
             'total' => $this->total,
             'status' => $this->status,
             'status_label' => $this->getStatusLabel(),

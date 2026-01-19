@@ -137,9 +137,7 @@ class OrderController extends Controller
      *                 @OA\Property(property="summary", type="object",
      *                     @OA\Property(property="subtotal", type="number", format="float", example=125.00),
      *                     @OA\Property(property="discount_total", type="number", format="float", example=0.00),
-     *                     @OA\Property(property="delivery_fee", type="number", format="float", example=15.00),
-     *                     @OA\Property(property="tax", type="number", format="float", example=0.00),
-     *                     @OA\Property(property="total", type="number", format="float", example=140.00)
+     *                     @OA\Property(property="total", type="number", format="float", example=125.00)
      *                 ),
      *                 @OA\Property(property="payment", type="object",
      *                     @OA\Property(property="method", type="string", example="cash"),
@@ -274,9 +272,7 @@ class OrderController extends Controller
      *                     @OA\Property(property="summary", type="object",
      *                         @OA\Property(property="subtotal", type="number", format="float", example=85.00),
      *                         @OA\Property(property="discount_total", type="number", format="float", example=10.00),
-     *                         @OA\Property(property="delivery_fee", type="number", format="float", example=15.00),
-     *                         @OA\Property(property="tax", type="number", format="float", example=0.00),
-     *                         @OA\Property(property="total", type="number", format="float", example=90.00)
+     *                         @OA\Property(property="total", type="number", format="float", example=75.00)
      *                     ),
      *                     @OA\Property(property="status", type="string", example="completed"),
      *                     @OA\Property(property="payment", type="object",
@@ -434,8 +430,6 @@ class OrderController extends Controller
      *                 @OA\Property(property="summary", type="object",
      *                     @OA\Property(property="subtotal", type="number", format="float", example=90.00),
      *                     @OA\Property(property="discount_total", type="number", format="float", example=45.00),
-     *                     @OA\Property(property="delivery_fee", type="number", format="float", example=0.00),
-     *                     @OA\Property(property="tax", type="number", format="float", example=0.00),
      *                     @OA\Property(property="total", type="number", format="float", example=45.00)
      *                 ),
      *                 @OA\Property(property="status", type="string", example="completed"),

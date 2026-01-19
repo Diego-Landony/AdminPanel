@@ -437,7 +437,7 @@ class CartService
      * El subtotal incluye: precio base de productos + extras (opciones adicionales)
      * Los descuentos se aplican SOLO al precio base, NO a los extras
      *
-     * @return array Array con 'subtotal', 'discounts', 'promotions_applied', 'total', 'items_count', 'item_discounts', 'delivery_fee'
+     * @return array Array con 'subtotal', 'discounts', 'promotions_applied', 'total', 'items_count', 'item_discounts'
      */
     public function getCartSummary(Cart $cart): array
     {
@@ -464,7 +464,6 @@ class CartService
             'subtotal' => round($subtotal, 2),
             'discounts' => round($discounts, 2),
             'promotions_applied' => $appliedPromotions,
-            'delivery_fee' => 0, // Subway maneja delivery internamente, sin cargo adicional
             'total' => round(max(0, $total), 2),
             'items_count' => $items->count(),
             'item_discounts' => $itemDiscounts,

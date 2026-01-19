@@ -269,8 +269,6 @@ class OrderController extends Controller
             'delivery_address' => $order->delivery_address_snapshot,
             'subtotal' => $order->subtotal ?? 0,
             'discount' => $order->discount_total ?? 0,
-            'delivery_fee' => $order->delivery_fee ?? 0,
-            'tax' => $order->tax ?? 0,
             'total' => $order->total ?? 0,
             'status' => $order->status,
             'status_label' => $this->getStatusLabel($order->status),

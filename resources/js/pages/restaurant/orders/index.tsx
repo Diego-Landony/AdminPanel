@@ -2,25 +2,24 @@ import { router } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
+    Bike,
     CalendarIcon,
-    Check,
-    CheckCircle,
-    ChevronsUpDown,
     Clock,
-    Eye,
+    CreditCard,
+    MapPin,
     Package,
-    ShoppingBag,
-    Truck,
-    Users,
+    Phone,
+    Printer,
+    User,
+    Wallet,
 } from 'lucide-react';
-import { useRef, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
-import { PrintComanda } from '@/components/orders/PrintComanda';
+import { printOrder } from '@/components/orders/PrintComanda';
 import { PaginationWrapper } from '@/components/PaginationWrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import {
     Dialog,
     DialogContent,
@@ -36,11 +35,12 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
 import { CURRENCY } from '@/constants/ui-constants';
+import { useOrderPolling } from '@/hooks/useOrderPolling';
 import RestaurantLayout from '@/layouts/restaurant-layout';
 import { Driver, Filters, Order, PaginatedData } from '@/types';
 import { formatCurrency } from '@/utils/format';
+import { OrdersListTable, OrderListItem } from '@/components/restaurant/OrdersListTable';
 
 interface Props {
     orders: PaginatedData<Order>;
@@ -56,57 +56,23 @@ interface Props {
         date: string | null;
     };
     available_drivers: Driver[];
+    config?: {
+        polling_interval: number;
+        auto_print_new_orders: boolean;
+    };
 }
 
 /**
- * Calcula los minutos transcurridos desde una fecha
+ * Formatea el SubwayCard en formato 8XXX-XXXX-XXX
  */
-function getMinutesElapsed(dateString: string): number {
-    const date = new Date(dateString);
-    const now = new Date();
-    return Math.floor((now.getTime() - date.getTime()) / 60000);
-}
-
-/**
- * Helper para calcular tiempo relativo corto
- */
-function timeAgoShort(dateString: string): string {
-    const diffMins = getMinutesElapsed(dateString);
-
-    if (diffMins < 1) return 'ahora';
-    if (diffMins < 60) return `${diffMins}m`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h`;
-    return new Date(dateString).toLocaleDateString('es-GT');
-}
-
-/**
- * Obtiene clase de color del indicador de tiempo
- */
-function getTimeColor(dateString: string, status: string): string {
-    if (['completed', 'delivered', 'cancelled'].includes(status)) {
-        return 'text-muted-foreground';
+const formatSubwayCard = (card: string | null | undefined): string | null => {
+    if (!card) return null;
+    // Si tiene 11 dígitos, formatear como 8XXX-XXXX-XXX
+    if (card.length === 11) {
+        return `${card.slice(0, 4)}-${card.slice(4, 8)}-${card.slice(8)}`;
     }
-    const mins = getMinutesElapsed(dateString);
-    if (mins < 10) return 'text-green-600 dark:text-green-400';
-    if (mins < 20) return 'text-yellow-600 dark:text-yellow-400';
-    if (mins < 30) return 'text-orange-600 dark:text-orange-400';
-    return 'text-red-600 dark:text-red-400 font-semibold';
-}
-
-/**
- * Obtiene clase de fondo para la fila
- */
-function getRowBg(dateString: string, status: string): string {
-    if (['completed', 'delivered', 'cancelled'].includes(status)) {
-        return '';
-    }
-    const mins = getMinutesElapsed(dateString);
-    if (mins < 10) return '';
-    if (mins < 20) return 'bg-yellow-50/50 dark:bg-yellow-900/10';
-    if (mins < 30) return 'bg-orange-50/50 dark:bg-orange-900/10';
-    return 'bg-red-50/50 dark:bg-red-900/10';
-}
+    return card;
+};
 
 /**
  * Tabs de filtro por estado
@@ -127,13 +93,20 @@ export default function RestaurantOrdersIndex({
     status_counts,
     filters,
     available_drivers,
+    config,
 }: Props) {
     const [isUpdating, setIsUpdating] = useState<number | null>(null);
     const [dateOpen, setDateOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-    const [driverPopoverOpen, setDriverPopoverOpen] = useState<number | null>(null);
     const [, setTick] = useState(0);
-    const printRef = useRef<HTMLDivElement>(null);
+
+    // Polling para detectar nuevas órdenes en tiempo real
+    useOrderPolling({
+        intervalSeconds: config?.polling_interval || 15,
+        autoPrint: config?.auto_print_new_orders ?? false,
+        enabled: true,
+        reloadProps: ['orders', 'status_counts'],
+    });
 
     // Actualizar el tiempo cada minuto
     useEffect(() => {
@@ -207,13 +180,30 @@ export default function RestaurantOrdersIndex({
             preserveScroll: true,
             onFinish: () => {
                 setIsUpdating(null);
-                setDriverPopoverOpen(null);
             },
         });
     };
 
     const handlePrint = () => {
-        window.print();
+        if (selectedOrder) {
+            printOrder(selectedOrder);
+        }
+    };
+
+    const handleViewOrder = (order: OrderListItem) => {
+        // Buscar la orden completa en orders.data
+        const fullOrder = orders.data.find(o => o.id === order.id);
+        if (fullOrder) {
+            setSelectedOrder(fullOrder);
+        }
+    };
+
+    const handlePrintOrder = (order: OrderListItem) => {
+        // Buscar la orden completa y imprimir
+        const fullOrder = orders.data.find(o => o.id === order.id);
+        if (fullOrder) {
+            printOrder(fullOrder);
+        }
     };
 
     const currentStatus = filters.status || 'all';
@@ -222,6 +212,24 @@ export default function RestaurantOrdersIndex({
     const sortedOrders = [...orders.data].sort(
         (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
+
+    // Adaptar órdenes al formato de OrdersListTable
+    const tableOrders: OrderListItem[] = sortedOrders.map(order => ({
+        id: order.id,
+        order_number: order.order_number,
+        customer: order.customer ? {
+            full_name: order.customer.full_name,
+            phone: order.customer.phone || null,
+            subway_card: (order.customer as any).subway_card || null,
+        } : null,
+        status: order.status,
+        service_type: order.service_type as 'pickup' | 'delivery',
+        driver: order.driver,
+        created_at: order.created_at,
+        updated_at: (order as any).updated_at,
+        total: order.total,
+        items: order.items,
+    }));
 
     return (
         <RestaurantLayout title="Ordenes">
@@ -309,7 +317,7 @@ export default function RestaurantOrdersIndex({
                 </div>
 
                 {/* Lista de ordenes */}
-                {sortedOrders.length === 0 ? (
+                {tableOrders.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16">
                         <Package className="h-12 w-12 text-muted-foreground/50" />
                         <p className="mt-4 text-muted-foreground">
@@ -319,148 +327,17 @@ export default function RestaurantOrdersIndex({
                 ) : (
                     <>
                         <div className="rounded-lg border">
-                            {sortedOrders.map((order, index) => {
-                                const canAccept = order.status === 'pending';
-                                const canMarkReady = order.status === 'preparing';
-                                const canAssignDriver = order.status === 'ready' && order.service_type === 'delivery' && !order.driver;
-                                const canMarkCompleted = order.status === 'ready' && order.service_type === 'pickup';
-
-                                return (
-                                    <div
-                                        key={order.id}
-                                        className={cn(
-                                            'flex items-center justify-between gap-2 px-3 py-2',
-                                            index !== 0 && 'border-t',
-                                            getRowBg(order.created_at, order.status)
-                                        )}
-                                    >
-                                        {/* Info principal */}
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            {/* Numero de orden */}
-                                            <span className="font-bold text-sm w-16 shrink-0">
-                                                #{order.order_number}
-                                            </span>
-
-                                            {/* Tipo de servicio */}
-                                            {order.service_type === 'delivery' ? (
-                                                <Truck className="h-4 w-4 text-blue-600 shrink-0" />
-                                            ) : (
-                                                <ShoppingBag className="h-4 w-4 text-orange-600 shrink-0" />
-                                            )}
-
-                                            {/* Cliente (solo en desktop) */}
-                                            <span className="text-sm text-muted-foreground truncate hidden sm:block max-w-[120px]">
-                                                {order.customer?.full_name || 'N/A'}
-                                            </span>
-
-                                            {/* Items count */}
-                                            <span className="text-xs text-muted-foreground shrink-0">
-                                                {order.items_count} items
-                                            </span>
-
-                                            {/* Tiempo */}
-                                            <span className={cn('text-xs shrink-0', getTimeColor(order.created_at, order.status))}>
-                                                {timeAgoShort(order.created_at)}
-                                            </span>
-
-                                            {/* Motorista (si esta asignado) */}
-                                            {order.driver && (
-                                                <span className="text-xs text-muted-foreground shrink-0 hidden md:flex items-center gap-1">
-                                                    <Users className="h-3 w-3" />
-                                                    {order.driver.name}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {/* Acciones */}
-                                        <div className="flex items-center gap-1 shrink-0">
-                                            {/* Boton de accion principal */}
-                                            {canAccept && (
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => handleAcceptOrder(order.id)}
-                                                    disabled={isUpdating === order.id}
-                                                    className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700"
-                                                >
-                                                    {isUpdating === order.id ? '...' : 'Aceptar'}
-                                                </Button>
-                                            )}
-                                            {canMarkReady && (
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => handleMarkReady(order.id)}
-                                                    disabled={isUpdating === order.id}
-                                                    className="h-7 px-2 text-xs"
-                                                >
-                                                    {isUpdating === order.id ? '...' : 'Lista'}
-                                                </Button>
-                                            )}
-                                            {canMarkCompleted && (
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => handleMarkCompleted(order.id)}
-                                                    disabled={isUpdating === order.id}
-                                                    className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700"
-                                                >
-                                                    {isUpdating === order.id ? '...' : 'Completar'}
-                                                </Button>
-                                            )}
-
-                                            {/* Asignar motorista */}
-                                            {canAssignDriver && (
-                                                <Popover
-                                                    open={driverPopoverOpen === order.id}
-                                                    onOpenChange={(open) => setDriverPopoverOpen(open ? order.id : null)}
-                                                >
-                                                    <PopoverTrigger asChild>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-7 px-2 text-xs"
-                                                            disabled={isUpdating === order.id}
-                                                        >
-                                                            <Users className="h-3 w-3 mr-1" />
-                                                            <span className="hidden sm:inline">Asignar</span>
-                                                            <ChevronsUpDown className="h-3 w-3 ml-1" />
-                                                        </Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="w-[180px] p-0" align="end">
-                                                        <Command>
-                                                            <CommandInput placeholder="Buscar..." className="h-8 text-sm" />
-                                                            <CommandList>
-                                                                <CommandEmpty>Sin motoristas</CommandEmpty>
-                                                                <CommandGroup>
-                                                                    {available_drivers.map((driver) => (
-                                                                        <CommandItem
-                                                                            key={driver.id}
-                                                                            value={driver.name}
-                                                                            onSelect={() => handleAssignDriver(order.id, driver.id)}
-                                                                            className="text-sm"
-                                                                        >
-                                                                            <Check className="mr-2 h-3 w-3 opacity-0" />
-                                                                            {driver.name}
-                                                                        </CommandItem>
-                                                                    ))}
-                                                                </CommandGroup>
-                                                            </CommandList>
-                                                        </Command>
-                                                    </PopoverContent>
-                                                </Popover>
-                                            )}
-
-                                            {/* Ver detalle */}
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => setSelectedOrder(order)}
-                                                className="h-7 w-7 p-0"
-                                            >
-                                                <Eye className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                            <OrdersListTable
+                                orders={tableOrders}
+                                availableDrivers={available_drivers}
+                                onAccept={handleAcceptOrder}
+                                onMarkReady={handleMarkReady}
+                                onMarkCompleted={handleMarkCompleted}
+                                onAssignDriver={handleAssignDriver}
+                                onViewOrder={handleViewOrder}
+                                onPrintOrder={handlePrintOrder}
+                                isUpdating={isUpdating}
+                            />
                         </div>
 
                         {/* Paginacion */}
@@ -483,28 +360,101 @@ export default function RestaurantOrdersIndex({
                     <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
                         {selectedOrder && (
                             <>
-                                <DialogHeader>
+                                <DialogHeader className="pb-2">
                                     <DialogTitle className="flex items-center justify-between">
-                                        <span>Orden #{selectedOrder.order_number}</span>
-                                        <Badge variant={selectedOrder.service_type === 'delivery' ? 'default' : 'secondary'}>
-                                            {selectedOrder.service_type === 'delivery' ? 'Delivery' : 'Pickup'}
-                                        </Badge>
+                                        <span className="text-xl">Orden #{selectedOrder.order_number}</span>
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant={selectedOrder.service_type === 'delivery' ? 'default' : 'secondary'}>
+                                                {selectedOrder.service_type === 'delivery' ? 'Delivery' : 'Pickup'}
+                                            </Badge>
+                                            <Badge variant="outline" className="gap-1">
+                                                {selectedOrder.payment_method === 'card' ? (
+                                                    <><CreditCard className="h-3 w-3" /> Tarjeta</>
+                                                ) : (
+                                                    <><Wallet className="h-3 w-3" /> Efectivo</>
+                                                )}
+                                            </Badge>
+                                        </div>
                                     </DialogTitle>
+                                    {/* Fecha y hora */}
+                                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
+                                        <Clock className="h-3.5 w-3.5" />
+                                        <span>{format(new Date(selectedOrder.created_at), "d MMM yyyy 'a las' HH:mm", { locale: es })}</span>
+                                    </div>
                                 </DialogHeader>
 
                                 <div className="space-y-4">
                                     {/* Info del cliente */}
-                                    <div className="rounded-lg bg-muted/50 p-3">
-                                        <p className="font-medium">{selectedOrder.customer?.full_name || 'N/A'}</p>
+                                    <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <User className="h-4 w-4 text-muted-foreground" />
+                                            <span className="font-medium">{selectedOrder.customer?.full_name || 'Cliente sin nombre'}</span>
+                                        </div>
                                         {selectedOrder.customer?.phone && (
-                                            <p className="text-sm text-muted-foreground">{selectedOrder.customer.phone}</p>
+                                            <div className="flex items-center gap-2">
+                                                <Phone className="h-4 w-4 text-muted-foreground" />
+                                                <a href={`tel:${selectedOrder.customer.phone}`} className="text-sm text-primary hover:underline">
+                                                    {selectedOrder.customer.phone}
+                                                </a>
+                                            </div>
+                                        )}
+                                        {(selectedOrder.customer as any)?.subway_card && (
+                                            <div className="flex items-center gap-2">
+                                                <CreditCard className="h-4 w-4 text-green-600" />
+                                                <span className="text-sm font-mono font-medium text-green-700 dark:text-green-400">
+                                                    SubwayCard: {formatSubwayCard((selectedOrder.customer as any).subway_card)}
+                                                </span>
+                                            </div>
                                         )}
                                     </div>
+
+                                    {/* Direccion de entrega (solo delivery) */}
+                                    {selectedOrder.service_type === 'delivery' && selectedOrder.delivery_address && (
+                                        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950">
+                                            <div className="flex items-start gap-2">
+                                                <MapPin className="h-4 w-4 text-blue-600 mt-0.5" />
+                                                <div>
+                                                    <p className="text-sm font-medium text-blue-800 dark:text-blue-200">Direccion de Entrega</p>
+                                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                                        {typeof selectedOrder.delivery_address === 'string'
+                                                            ? selectedOrder.delivery_address
+                                                            : (selectedOrder.delivery_address as any)?.address_line || 'Sin direccion'}
+                                                    </p>
+                                                    {typeof selectedOrder.delivery_address === 'object' && (selectedOrder.delivery_address as any)?.delivery_notes && (
+                                                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 italic">
+                                                            Notas: {(selectedOrder.delivery_address as any).delivery_notes}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Info del motorista (solo si delivery y tiene motorista) */}
+                                    {selectedOrder.service_type === 'delivery' && selectedOrder.driver && (
+                                        <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-950">
+                                            <div className="flex items-center gap-2">
+                                                <Bike className="h-4 w-4 text-green-600" />
+                                                <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                                                    Motorista: {selectedOrder.driver.name}
+                                                </span>
+                                                {selectedOrder.driver.phone && (
+                                                    <a href={`tel:${selectedOrder.driver.phone}`} className="text-sm text-green-700 dark:text-green-300 hover:underline ml-auto">
+                                                        {selectedOrder.driver.phone}
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <Separator />
 
                                     {/* Items del pedido */}
-                                    <div className="space-y-4">
+                                    <div>
+                                        <h4 className="font-semibold text-sm text-muted-foreground mb-3">
+                                            PRODUCTOS ({selectedOrder.items?.length || 0})
+                                        </h4>
+                                        <div className="space-y-4">
                                         {selectedOrder.items?.map((item) => {
                                             // Agrupar opciones por seccion
                                             const groupedOptions: Record<string, { name: string; price: number }[]> = {};
@@ -581,6 +531,7 @@ export default function RestaurantOrdersIndex({
                                                 </div>
                                             );
                                         })}
+                                        </div>
                                     </div>
 
                                     {/* Notas del pedido */}
@@ -620,13 +571,11 @@ export default function RestaurantOrdersIndex({
                                     </div>
 
                                     {/* Boton de imprimir */}
-                                    <Button variant="outline" onClick={handlePrint} className="w-full">
+                                    <Button variant="default" onClick={handlePrint} className="w-full gap-2">
+                                        <Printer className="h-4 w-4" />
                                         Imprimir Comanda
                                     </Button>
                                 </div>
-
-                                {/* Componente de impresion */}
-                                <PrintComanda ref={printRef} order={selectedOrder} />
                             </>
                         )}
                     </DialogContent>

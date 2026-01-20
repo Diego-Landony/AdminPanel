@@ -534,7 +534,7 @@ Route::prefix('restaurant')->name('restaurant.')->group(function () {
     // Guest routes (no autenticado como restaurant)
     Route::middleware('guest:restaurant')->group(function () {
         Route::get('login', [App\Http\Controllers\Restaurant\AuthController::class, 'showLoginForm'])->name('login');
-        Route::post('login', [App\Http\Controllers\Restaurant\AuthController::class, 'login']);
+        Route::post('login', [App\Http\Controllers\Restaurant\AuthController::class, 'login'])->name('login.store');
     });
 
     // Authenticated routes (autenticado como restaurant)
@@ -544,6 +544,7 @@ Route::prefix('restaurant')->name('restaurant.')->group(function () {
         // Dashboard
         Route::get('/', [App\Http\Controllers\Restaurant\DashboardController::class, 'index'])->name('dashboard');
         Route::get('dashboard', [App\Http\Controllers\Restaurant\DashboardController::class, 'index'])->name('dashboard.index');
+        Route::get('poll', [App\Http\Controllers\Restaurant\DashboardController::class, 'poll'])->name('poll');
 
         // Orders
         Route::get('orders', [App\Http\Controllers\Restaurant\OrderController::class, 'index'])->name('orders.index');

@@ -52,7 +52,8 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
 
-        const routeName = loginType === 'admin' ? 'login' : 'restaurant.login';
+        // Admin usa 'login', Restaurant usa 'restaurant.login.store' (POST route)
+        const routeName = loginType === 'admin' ? 'login' : 'restaurant.login.store';
 
         post(route(routeName), {
             onFinish: () => reset('password'),

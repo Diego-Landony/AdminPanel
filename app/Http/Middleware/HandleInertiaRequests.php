@@ -55,7 +55,9 @@ class HandleInertiaRequests extends Middleware
                     'roles' => $user->roles->pluck('name')->toArray(), // Array simple de nombres de roles
                 ] : null,
             ],
-            'restaurantAuth' => fn () => auth('restaurant')->check() ? [
+            // IMPORTANTE: No usar fn() lazy prop para restaurantAuth
+            // porque causa que se pierda el estado de auth en navegación cliente Inertia
+            'restaurantAuth' => auth('restaurant')->check() ? [
                 'user' => auth('restaurant')->user()->only(['id', 'name', 'email']),
                 'restaurant' => auth('restaurant')->user()->restaurant?->only(['id', 'name']),
             ] : null,

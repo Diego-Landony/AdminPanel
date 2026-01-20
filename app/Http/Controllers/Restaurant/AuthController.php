@@ -12,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
     /**
-     * Redirige al login principal
+     * Redirige al login principal del sistema
      */
     public function showLoginForm(): RedirectResponse
     {
@@ -34,7 +34,7 @@ class AuthController extends Controller
 
         if (! $user) {
             throw ValidationException::withMessages([
-                'email' => ['Las credenciales no coinciden con nuestros registros.'],
+                'email' => [__('auth.failed')],
             ]);
         }
 
@@ -46,7 +46,7 @@ class AuthController extends Controller
 
         if (! Auth::guard('restaurant')->attempt($credentials, $request->boolean('remember'))) {
             throw ValidationException::withMessages([
-                'email' => ['Las credenciales no coinciden con nuestros registros.'],
+                'email' => [__('auth.failed')],
             ]);
         }
 

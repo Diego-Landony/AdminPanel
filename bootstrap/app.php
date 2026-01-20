@@ -11,6 +11,7 @@ use App\Http\Middleware\HandleValidationErrors;
 use App\Http\Middleware\TrackUserActivity;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
@@ -55,6 +56,17 @@ return Application::configure(basePath: dirname(__DIR__))
             'driver.ownership' => EnsureDriverOwnership::class,
             'restaurant.order' => EnsureOrderBelongsToRestaurant::class,
         ]);
+
+        // Configurar redirección para usuarios ya autenticados (middleware guest)
+        RedirectIfAuthenticated::redirectUsing(function ($request) {
+            // Si la petición es para rutas de restaurante, redirigir al dashboard de restaurante
+            if ($request->is('restaurant/*') || $request->is('restaurant')) {
+                return route('restaurant.dashboard');
+            }
+
+            // Para rutas de admin, redirigir al home
+            return route('home');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Handle AuthenticationException (401)
@@ -119,6 +131,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // Handle ValidationException (422)
+        // Solo manejamos explícitamente para API, para web/Inertia dejamos que Laravel maneje normalmente
         $exceptions->render(function (ValidationException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
@@ -126,6 +139,10 @@ return Application::configure(basePath: dirname(__DIR__))
                     'errors' => $e->errors(),
                 ], 422);
             }
+
+            // Para peticiones web/Inertia, retornar null permite que Laravel
+            // maneje la excepción con su comportamiento por defecto (redirect back with errors)
+            return null;
         });
 
         // Handle InvalidSignatureException (403) - for expired/invalid signed URLs

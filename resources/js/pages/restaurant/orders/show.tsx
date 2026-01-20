@@ -19,7 +19,7 @@ import {
     Users,
     XCircle,
 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import { PrintComanda } from '@/components/orders/PrintComanda';
 
@@ -246,6 +246,18 @@ export default function RestaurantOrderShow({ order, available_drivers }: Props)
     const [selectedDriverId, setSelectedDriverId] = useState<string>('');
     const [driverSearchOpen, setDriverSearchOpen] = useState(false);
     const printRef = useRef<HTMLDivElement>(null);
+
+    // Auto-imprimir si viene con ?print=1
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('print') === '1') {
+            // Pequeño delay para asegurar que el componente esté renderizado
+            const timer = setTimeout(() => {
+                window.print();
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, []);
 
     const handlePrint = () => {
         window.print();

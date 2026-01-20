@@ -82,9 +82,13 @@ export const formatPoints = (points: number): string => {
 };
 
 /**
- * Formatea moneda con el símbolo de Quetzal
+ * Formatea moneda con el símbolo de Quetzal y 2 decimales
  */
 export const formatCurrency = (amount: number | null | undefined, showSymbol: boolean = true): string => {
-    const formatted = formatNumber(amount ?? 0);
+    const value = amount ?? 0;
+    const formatted = value.toLocaleString('es-GT', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
     return showSymbol ? `Q${formatted}` : formatted;
 };

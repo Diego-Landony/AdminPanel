@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Restaurant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\ResolvesOrderOptions;
 use App\Models\Driver;
-use App\Models\Menu\Section;
-use App\Models\Menu\SectionOption;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
 use App\Notifications\OrderStatusChangedNotification;
@@ -17,6 +16,8 @@ use Inertia\Response;
 
 class OrderController extends Controller
 {
+    use ResolvesOrderOptions;
+
     public function __construct(
         protected PointsService $pointsService
     ) {}
@@ -36,7 +37,7 @@ class OrderController extends Controller
         $date = $request->get('date', now()->format('Y-m-d'));
 
         $query = Order::where('restaurant_id', $restaurantId)
-            ->with(['customer:id,first_name,last_name,phone', 'driver:id,name,phone', 'items'])
+            ->with(['customer:id,first_name,last_name,phone,subway_card', 'driver:id,name,phone', 'items'])
             ->orderBy('created_at', 'desc');
 
         // Filtrar por fecha
@@ -62,6 +63,7 @@ class OrderController extends Controller
                 'customer' => $order->customer ? [
                     'full_name' => $order->customer->full_name,
                     'phone' => $order->customer->phone,
+                    'subway_card' => $order->customer->subway_card,
                 ] : null,
                 'driver' => $order->driver ? [
                     'name' => $order->driver->name,
@@ -86,6 +88,7 @@ class OrderController extends Controller
                     'options' => $this->resolveSelectedOptions($item->selected_options ?? []),
                 ]),
                 'created_at' => $order->created_at,
+                'updated_at' => $order->updated_at,
                 'estimated_ready_at' => $order->estimated_ready_at,
             ]);
 
@@ -121,6 +124,10 @@ class OrderController extends Controller
                 'per_page' => (int) $perPage,
             ],
             'available_drivers' => $availableDrivers,
+            'config' => [
+                'polling_interval' => config('restaurant.polling_interval', 15),
+                'auto_print_new_orders' => config('restaurant.auto_print_new_orders', false),
+            ],
         ]);
     }
 
@@ -133,7 +140,7 @@ class OrderController extends Controller
         $this->authorizeOrder($order);
 
         $order->load([
-            'customer:id,first_name,last_name,email,phone',
+            'customer:id,first_name,last_name,email,phone,subway_card',
             'driver:id,name,phone',
             'items.product:id,name',
             'statusHistory',
@@ -166,6 +173,7 @@ class OrderController extends Controller
                     'full_name' => $order->customer->full_name,
                     'email' => $order->customer->email,
                     'phone' => $order->customer->phone,
+                    'subway_card' => $order->customer->subway_card,
                 ] : null,
                 'driver' => $order->driver ? [
                     'id' => $order->driver->id,
@@ -224,7 +232,7 @@ class OrderController extends Controller
 
         // Notificar al cliente
         if ($order->customer) {
-            $order->customer->notify(new OrderStatusChangedNotification($order));
+            $order->customer->notify(new OrderStatusChangedNotification($order, 'pending'));
         }
 
         return back()->with('success', 'Orden aceptada. A preparar!');
@@ -250,7 +258,7 @@ class OrderController extends Controller
 
         // Notificar al cliente
         if ($order->customer) {
-            $order->customer->notify(new OrderStatusChangedNotification($order));
+            $order->customer->notify(new OrderStatusChangedNotification($order, 'preparing'));
         }
 
         return back()->with('success', 'Orden marcada como lista');
@@ -288,7 +296,7 @@ class OrderController extends Controller
 
         // Notificar al cliente
         if ($order->customer) {
-            $order->customer->notify(new OrderStatusChangedNotification($order));
+            $order->customer->notify(new OrderStatusChangedNotification($order, 'ready'));
         }
 
         return back()->with('success', "Orden asignada a {$driver->name}");
@@ -321,7 +329,7 @@ class OrderController extends Controller
 
         // Notificar al cliente
         if ($order->customer) {
-            $order->customer->notify(new OrderStatusChangedNotification($order));
+            $order->customer->notify(new OrderStatusChangedNotification($order, 'ready'));
         }
 
         return back()->with('success', 'Orden marcada como completada');
@@ -350,34 +358,5 @@ class OrderController extends Controller
             'changed_by_id' => auth('restaurant')->id(),
             'notes' => $notes,
         ]);
-    }
-
-    /**
-     * Resuelve los nombres de las opciones seleccionadas
-     *
-     * @param  array<int, array{section_id: int, option_id: int}>  $selectedOptions
-     * @return array<int, array{section_name: string, name: string, price: float}>
-     */
-    protected function resolveSelectedOptions(array $selectedOptions): array
-    {
-        if (empty($selectedOptions)) {
-            return [];
-        }
-
-        $sectionIds = collect($selectedOptions)->pluck('section_id')->unique()->values()->all();
-        $optionIds = collect($selectedOptions)->pluck('option_id')->unique()->values()->all();
-
-        $sections = Section::whereIn('id', $sectionIds)->pluck('title', 'id');
-        $options = SectionOption::whereIn('id', $optionIds)->get()->keyBy('id');
-
-        return collect($selectedOptions)->map(function ($selection) use ($sections, $options) {
-            $option = $options->get($selection['option_id']);
-
-            return [
-                'section_name' => $sections->get($selection['section_id'], 'Sección'),
-                'name' => $option?->name ?? 'Opción',
-                'price' => (float) ($option?->price_modifier ?? 0),
-            ];
-        })->all();
     }
 }

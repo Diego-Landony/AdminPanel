@@ -2,6 +2,7 @@ import { Link, router } from '@inertiajs/react';
 import {
     AlertCircle,
     ArrowLeft,
+    Bike,
     Calendar,
     Check,
     CheckCircle,
@@ -13,15 +14,14 @@ import {
     Phone,
     Printer,
     ShoppingBag,
-    Truck,
     User,
     UserPlus,
     Users,
     XCircle,
 } from 'lucide-react';
-import { useRef, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
-import { PrintComanda } from '@/components/orders/PrintComanda';
+import { printOrder } from '@/components/orders/PrintComanda';
 
 import { StatusBadge, StatusConfig } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
@@ -75,7 +75,7 @@ const ORDER_STATUS_CONFIGS: Record<string, StatusConfig> = {
     out_for_delivery: {
         color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 border border-orange-200 dark:border-orange-700',
         text: 'En Camino',
-        icon: <Truck className="h-3 w-3" />,
+        icon: <Bike className="h-3 w-3" />,
     },
     delivered: {
         color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-700',
@@ -106,7 +106,7 @@ const SERVICE_TYPE_CONFIGS: Record<string, StatusConfig> = {
     delivery: {
         color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-700',
         text: 'Delivery',
-        icon: <Truck className="h-3 w-3" />,
+        icon: <Bike className="h-3 w-3" />,
     },
     pickup: {
         color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 border border-orange-200 dark:border-orange-700',
@@ -245,22 +245,29 @@ export default function RestaurantOrderShow({ order, available_drivers }: Props)
     const [assignModalOpen, setAssignModalOpen] = useState(false);
     const [selectedDriverId, setSelectedDriverId] = useState<string>('');
     const [driverSearchOpen, setDriverSearchOpen] = useState(false);
-    const printRef = useRef<HTMLDivElement>(null);
 
-    // Auto-imprimir si viene con ?print=1
+    // Detectar si es modo print-only
+    const [isPrintMode, setIsPrintMode] = useState(false);
+
+    // Auto-imprimir si viene con ?print=1 y cerrar la ventana
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('print') === '1') {
+            setIsPrintMode(true);
             // Pequeño delay para asegurar que el componente esté renderizado
             const timer = setTimeout(() => {
-                window.print();
+                printOrder(order);
+                // Cerrar la ventana después de un breve delay para permitir que se abra el diálogo de impresión
+                setTimeout(() => {
+                    window.close();
+                }, 500);
             }, 300);
             return () => clearTimeout(timer);
         }
-    }, []);
+    }, [order]);
 
     const handlePrint = () => {
-        window.print();
+        printOrder(order);
     };
 
     const canAccept = order.status === 'pending';
@@ -269,6 +276,7 @@ export default function RestaurantOrderShow({ order, available_drivers }: Props)
         order.service_type === 'delivery' && order.status === 'ready' && !order.driver_id;
     const canMarkCompleted =
         order.service_type === 'pickup' && order.status === 'ready';
+    // El motorista marca como entregada, no el restaurante
 
     const handleAcceptOrder = () => {
         setIsUpdating(true);
@@ -325,6 +333,20 @@ export default function RestaurantOrderShow({ order, available_drivers }: Props)
             },
         );
     };
+
+    // Si es modo print, mostrar pantalla de carga mínima
+    if (isPrintMode) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-background">
+                <div className="text-center">
+                    <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                    <p className="mt-4 text-sm text-muted-foreground">
+                        Imprimiendo orden #{order.order_number}...
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <RestaurantLayout title={`Orden #${order.order_number}`}>
@@ -625,7 +647,7 @@ export default function RestaurantOrderShow({ order, available_drivers }: Props)
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
-                                        <Truck className="h-5 w-5" />
+                                        <Bike className="h-5 w-5" />
                                         Motorista
                                     </CardTitle>
                                 </CardHeader>
@@ -864,8 +886,6 @@ export default function RestaurantOrderShow({ order, available_drivers }: Props)
                     </DialogContent>
                 </Dialog>
 
-                {/* Componente de impresion */}
-                <PrintComanda ref={printRef} order={order} />
             </div>
         </RestaurantLayout>
     );

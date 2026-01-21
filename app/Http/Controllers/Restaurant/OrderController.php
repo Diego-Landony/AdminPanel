@@ -144,6 +144,7 @@ class OrderController extends Controller
             'driver:id,name,phone',
             'items.product:id,name',
             'statusHistory',
+            'restaurant:id,name',
         ]);
 
         // Obtener motoristas disponibles del restaurante
@@ -157,6 +158,7 @@ class OrderController extends Controller
             'order' => [
                 'id' => $order->id,
                 'order_number' => $order->order_number,
+                'restaurant_name' => $order->restaurant?->name,
                 'status' => $order->status,
                 'service_type' => $order->service_type,
                 'payment_method' => $order->payment_method,
@@ -292,6 +294,9 @@ class OrderController extends Controller
             'assigned_to_driver_at' => now(),
         ]);
 
+        // Marcar motorista como no disponible
+        $driver->update(['is_available' => false]);
+
         $this->logStatusChange($order, 'ready', 'out_for_delivery', "Asignado a {$driver->name}");
 
         // Notificar al cliente
@@ -333,6 +338,44 @@ class OrderController extends Controller
         }
 
         return back()->with('success', 'Orden marcada como completada');
+    }
+
+    /**
+     * Marcar orden delivery como completada (out_for_delivery -> completed)
+     */
+    public function markDelivered(Order $order): RedirectResponse
+    {
+        $this->authorizeOrder($order);
+
+        if ($order->status !== 'out_for_delivery' || $order->service_type !== 'delivery') {
+            return back()->with('error', 'Esta orden no puede marcarse como entregada');
+        }
+
+        $order->update([
+            'status' => 'completed',
+            'delivered_at' => now(),
+        ]);
+
+        $this->logStatusChange($order, 'out_for_delivery', 'completed', 'Orden entregada al cliente');
+
+        // Marcar motorista como disponible nuevamente
+        if ($order->driver_id) {
+            Driver::where('id', $order->driver_id)->update(['is_available' => true]);
+        }
+
+        // Acreditar puntos al cliente
+        if ($order->customer) {
+            $order->load('customer');
+            $this->pointsService->creditPoints($order->customer, $order);
+            $order->customer->update(['last_purchase_at' => now()]);
+        }
+
+        // Notificar al cliente
+        if ($order->customer) {
+            $order->customer->notify(new OrderStatusChangedNotification($order, 'out_for_delivery'));
+        }
+
+        return back()->with('success', 'Orden marcada como entregada');
     }
 
     /**

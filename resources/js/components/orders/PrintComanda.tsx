@@ -19,6 +19,7 @@ interface DeliveryAddressSnapshot {
 interface PrintComandaProps {
     order: Order & {
         delivery_address?: string | DeliveryAddressSnapshot | null;
+        restaurant_name?: string | null;
     };
 }
 
@@ -76,8 +77,8 @@ const generatePrintHTML = (order: PrintComandaProps['order']): string => {
     let itemsHTML = '';
     order.items?.forEach((item) => {
         const groupedOptions = item.options ? groupOptionsBySection(item.options) : {};
+        const basePrice = Number(item.unit_price) || 0;
         const extrasTotal = Number(item.options_price) || 0;
-        const basePrice = (Number(item.unit_price) || 0) - extrasTotal;
         const totalPrice = Number(item.total_price) || 0;
 
         let optionsHTML = '';
@@ -93,22 +94,25 @@ const generatePrintHTML = (order: PrintComandaProps['order']): string => {
             ? `<div style="display:flex;justify-content:space-between;margin:1px 0;"><span>Extras:</span><span>Q${extrasTotal.toFixed(2)}</span></div>`
             : '';
 
+        // Construir el nombre completo del producto para mostrar en precios
+        const productDisplayName = item.variant ? `${item.name} ${item.variant}` : item.name;
+        const quantityLabel = item.quantity > 1 ? ` x${item.quantity}` : '';
+
         itemsHTML += `
             <div style="margin-bottom:8px;padding-bottom:6px;border-bottom:1px dotted #999;">
                 <div style="display:flex;align-items:flex-start;gap:6px;">
                     <span style="font-size:18px;font-weight:bold;min-width:24px;text-align:center;border:1px solid #000;padding:1px 3px;">${item.quantity}</span>
                     <div style="flex:1;">
-                        ${item.category ? `<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.3px;">${item.category}</div>` : ''}
-                        <div style="font-size:12px;font-weight:bold;text-transform:uppercase;">${item.name}</div>
-                        ${item.variant ? `<div style="font-size:10px;">${item.variant}</div>` : ''}
+                        ${item.category ? `<div style="font-size:12px;font-weight:bold;text-transform:uppercase;">${item.category}</div>` : ''}
+                        <div style="font-size:12px;font-weight:bold;text-transform:uppercase;">${item.name}${item.variant ? ` - ${item.variant}` : ''}</div>
                     </div>
                 </div>
                 ${optionsHTML ? `<div style="margin-left:30px;margin-top:3px;">${optionsHTML}</div>` : ''}
                 ${notesHTML}
                 <div style="margin-left:30px;margin-top:4px;padding-top:3px;border-top:1px dotted #999;font-size:10px;">
                     <div style="display:flex;justify-content:space-between;margin:1px 0;">
-                        <span>Base:</span>
-                        <span>Q${(basePrice > 0 ? basePrice : Number(item.unit_price) || 0).toFixed(2)}</span>
+                        <span>${productDisplayName}${quantityLabel}:</span>
+                        <span>Q${basePrice.toFixed(2)}</span>
                     </div>
                     ${extrasRow}
                     <div style="display:flex;justify-content:space-between;margin:1px 0;font-weight:bold;border-top:1px solid #000;padding-top:2px;margin-top:2px;">
@@ -142,6 +146,8 @@ const generatePrintHTML = (order: PrintComandaProps['order']): string => {
             <div>${getDeliveryAddressText(order.delivery_address)}</div>
         </div>
     ` : '';
+
+    const restaurantName = (order as any).restaurant_name || '';
 
     return `<!DOCTYPE html>
 <html>
@@ -178,6 +184,7 @@ const generatePrintHTML = (order: PrintComandaProps['order']): string => {
 </head>
 <body>
     <div style="text-align:center;border-bottom:1px dashed #000;padding-bottom:6px;margin-bottom:6px;">
+        ${restaurantName ? `<p style="font-size:14px;font-weight:bold;margin:0 0 4px 0;text-transform:uppercase;">${restaurantName}</p>` : ''}
         <p style="font-size:16px;font-weight:bold;margin:0;">COMANDA</p>
         <p style="font-size:22px;font-weight:bold;margin:3px 0;">#${order.order_number}</p>
         <span style="font-size:14px;font-weight:bold;padding:3px 6px;border:1px solid #000;display:inline-block;margin:3px 0;">${serviceTypeLabel}</span>
@@ -193,6 +200,13 @@ const generatePrintHTML = (order: PrintComandaProps['order']): string => {
 
     <div style="border-bottom:1px dashed #000;padding-bottom:6px;margin-bottom:6px;">
         ${itemsHTML}
+    </div>
+
+    <div style="border-bottom:1px dashed #000;padding-bottom:6px;margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:bold;">
+            <span>SUMA TOTAL</span>
+            <span>Q${(Number(order.total) || 0).toFixed(2)}</span>
+        </div>
     </div>
 
     ${notesHTML}
@@ -215,7 +229,7 @@ const generatePrintHTML = (order: PrintComandaProps['order']): string => {
  * Función para imprimir una orden directamente (abre ventana nueva)
  */
 export const printOrder = (order: PrintComandaProps['order']): void => {
-    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    const printWindow = window.open('', '_blank');
     if (printWindow) {
         printWindow.document.write(generatePrintHTML(order));
         printWindow.document.close();

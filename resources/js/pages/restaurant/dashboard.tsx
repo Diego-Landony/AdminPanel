@@ -1,7 +1,7 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CURRENCY } from '@/constants/ui-constants';
 import RestaurantLayout from '@/layouts/restaurant-layout';
-import { Driver, RestaurantUser } from '@/types';
+import { Driver } from '@/types';
 import { RestaurantDashboardStats } from '@/types/restaurant';
 import { formatCurrency } from '@/utils/format';
 import { Head, Link, router } from '@inertiajs/react';
@@ -24,6 +24,7 @@ import {
     SheetTitle,
 } from '@/components/ui/sheet';
 import { OrderDetailContent, OrderDetailData } from '@/components/restaurant/OrderDetailContent';
+import { printOrder } from '@/components/orders/PrintComanda';
 
 interface OrderItem {
     id: number;
@@ -45,6 +46,7 @@ interface OrderItem {
 interface ActiveOrder {
     id: number;
     order_number: string;
+    restaurant_name?: string | null;
     customer_name: string;
     customer_phone: string | null;
     customer_email?: string | null;
@@ -72,13 +74,6 @@ interface ActiveOrder {
 }
 
 interface Props {
-    restaurantAuth: {
-        user: RestaurantUser;
-        restaurant: {
-            id: number;
-            name: string;
-        };
-    };
     stats: RestaurantDashboardStats;
     active_orders: ActiveOrder[];
     available_drivers: Driver[];
@@ -91,8 +86,7 @@ interface Props {
 /**
  * Dashboard del panel de restaurante - Estilo KDS
  */
-export default function RestaurantDashboard({ restaurantAuth, stats, active_orders, available_drivers, config }: Props) {
-    const userName = restaurantAuth.user.name.split(' ')[0];
+export default function RestaurantDashboard({ stats, active_orders, available_drivers, config }: Props) {
     const [isUpdating, setIsUpdating] = useState<number | null>(null);
     const [, setTick] = useState(0);
     const [selectedOrder, setSelectedOrder] = useState<ActiveOrder | null>(null);
@@ -147,7 +141,14 @@ export default function RestaurantDashboard({ restaurantAuth, stats, active_orde
     const handleMarkCompleted = (orderId: number) => {
         setIsUpdating(orderId);
         router.post(`/restaurant/orders/${orderId}/complete`, {}, {
-            preserveState: true,
+            preserveScroll: true,
+            onFinish: () => setIsUpdating(null),
+        });
+    };
+
+    const handleMarkDelivered = (orderId: number) => {
+        setIsUpdating(orderId);
+        router.post(`/restaurant/orders/${orderId}/delivered`, {}, {
             preserveScroll: true,
             onFinish: () => setIsUpdating(null),
         });
@@ -173,8 +174,11 @@ export default function RestaurantDashboard({ restaurantAuth, stats, active_orde
     };
 
     const handlePrintOrder = (order: OrderListItem) => {
-        // Abrir en nueva pestaña para imprimir
-        window.open(`/restaurant/orders/${order.id}?print=1`, '_blank');
+        // Buscar la orden completa y abrir directamente la impresión
+        const fullOrder = active_orders.find(o => o.id === order.id);
+        if (fullOrder) {
+            printOrder(fullOrder as any);
+        }
     };
 
     return (
@@ -182,28 +186,23 @@ export default function RestaurantDashboard({ restaurantAuth, stats, active_orde
             <Head title="Dashboard - Restaurante" />
 
             <div className="flex flex-col gap-6">
-                {/* Bienvenida */}
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-                        Bienvenido, {userName}
-                    </h1>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                        </span>
-                        <span className="hidden sm:inline text-green-600 dark:text-green-400 font-medium">
-                            En vivo
-                        </span>
-                    </div>
-                </div>
-
                 {/* Resumen del dia */}
                 <div className="grid gap-4 lg:grid-cols-2">
                     {/* Estado de Ordenes */}
                     <Card>
                         <CardHeader className="pb-3">
-                            <CardTitle className="text-base font-medium">Estado de Ordenes</CardTitle>
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-base font-medium">
+                                    Estado de Ordenes - {new Date().toLocaleDateString('es-GT', { day: 'numeric', month: 'short' })}
+                                </CardTitle>
+                                <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                    </span>
+                                    Online
+                                </div>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-4 gap-4">
@@ -288,9 +287,6 @@ export default function RestaurantDashboard({ restaurantAuth, stats, active_orde
                                     <ShoppingBag className="h-5 w-5" />
                                     Ordenes Activas
                                 </CardTitle>
-                                <CardDescription>
-                                    Ordenes pendientes, en preparacion o listas
-                                </CardDescription>
                             </div>
                             <Link
                                 href="/restaurant/orders"
@@ -307,6 +303,7 @@ export default function RestaurantDashboard({ restaurantAuth, stats, active_orde
                             onAccept={handleAcceptOrder}
                             onMarkReady={handleMarkReady}
                             onMarkCompleted={handleMarkCompleted}
+                            onMarkDelivered={handleMarkDelivered}
                             onAssignDriver={handleAssignDriver}
                             onViewOrder={handleViewOrder}
                             onPrintOrder={handlePrintOrder}
@@ -338,11 +335,14 @@ export default function RestaurantDashboard({ restaurantAuth, stats, active_orde
                                 onMarkCompleted={(orderId) => {
                                     handleMarkCompleted(orderId);
                                 }}
+                                onMarkDelivered={(orderId) => {
+                                    handleMarkDelivered(orderId);
+                                }}
                                 onAssignDriver={(orderId, driverId) => {
                                     handleAssignDriver(orderId, driverId);
                                 }}
                                 onPrint={() => {
-                                    window.open(`/restaurant/orders/${selectedOrder.id}?print=1`, '_blank');
+                                    printOrder(selectedOrder as any);
                                 }}
                                 isUpdating={isUpdating === selectedOrder.id}
                                 variant="sheet"

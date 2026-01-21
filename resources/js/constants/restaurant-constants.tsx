@@ -1,11 +1,11 @@
 import {
     AlertCircle,
+    Bike,
     Check,
     CheckCircle,
     Clock,
     Package,
     ShoppingBag,
-    Truck,
     XCircle,
 } from 'lucide-react';
 import { StatusConfig } from '@/components/status-badge';
@@ -37,7 +37,7 @@ export const ORDER_STATUS_CONFIGS: Record<string, StatusConfig> = {
     out_for_delivery: {
         color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 border border-orange-200 dark:border-orange-700',
         text: 'En Camino',
-        icon: <Truck className="h-3 w-3" />,
+        icon: <Bike className="h-3 w-3" />,
     },
     delivered: {
         color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border border-green-200 dark:border-green-700',
@@ -68,7 +68,7 @@ export const SERVICE_TYPE_CONFIGS: Record<string, StatusConfig> = {
     delivery: {
         color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-700',
         text: 'Delivery',
-        icon: <Truck className="h-3 w-3" />,
+        icon: <Bike className="h-3 w-3" />,
     },
     pickup: {
         color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 border border-orange-200 dark:border-orange-700',
@@ -129,49 +129,49 @@ export const ORDER_TABLE_STATUS_CONFIG: Record<string, {
 }> = {
     pending: {
         label: 'Nueva Orden',
-        rowBg: 'bg-yellow-50 dark:bg-yellow-950/30 border-l-4 border-l-yellow-500',
+        rowBg: 'border-l-4 border-l-yellow-500',
         textColor: 'text-yellow-700 dark:text-yellow-400',
         icon: <Clock className="h-4 w-4" />,
         description: 'Esperando que aceptes',
     },
     preparing: {
         label: 'En Preparación',
-        rowBg: 'bg-blue-50 dark:bg-blue-950/30 border-l-4 border-l-blue-500',
+        rowBg: 'border-l-4 border-l-blue-500',
         textColor: 'text-blue-700 dark:text-blue-400',
         icon: <Package className="h-4 w-4" />,
         description: 'Preparando el pedido',
     },
     ready: {
         label: 'Lista para Entregar',
-        rowBg: 'bg-green-50 dark:bg-green-950/30 border-l-4 border-l-green-500',
+        rowBg: 'border-l-4 border-l-green-500',
         textColor: 'text-green-700 dark:text-green-400',
         icon: <Check className="h-4 w-4" />,
         description: 'Pedido listo',
     },
     out_for_delivery: {
         label: 'En Camino',
-        rowBg: 'bg-purple-50 dark:bg-purple-950/30 border-l-4 border-l-purple-500',
+        rowBg: 'border-l-4 border-l-purple-500',
         textColor: 'text-purple-700 dark:text-purple-400',
-        icon: <Truck className="h-4 w-4" />,
+        icon: <Bike className="h-4 w-4" />,
         description: 'Motorista en camino',
     },
     delivered: {
         label: 'Entregada',
-        rowBg: 'bg-gray-50 dark:bg-gray-900/30 border-l-4 border-l-gray-400',
+        rowBg: 'border-l-4 border-l-gray-400',
         textColor: 'text-gray-600 dark:text-gray-400',
         icon: <Check className="h-4 w-4" />,
         description: 'Pedido entregado',
     },
     completed: {
         label: 'Completada',
-        rowBg: 'bg-gray-50 dark:bg-gray-900/30 border-l-4 border-l-gray-400',
+        rowBg: 'border-l-4 border-l-gray-400',
         textColor: 'text-gray-600 dark:text-gray-400',
         icon: <Check className="h-4 w-4" />,
         description: 'Pedido completado',
     },
     cancelled: {
         label: 'Cancelada',
-        rowBg: 'bg-red-50 dark:bg-red-950/30 border-l-4 border-l-red-500',
+        rowBg: 'border-l-4 border-l-red-500',
         textColor: 'text-red-600 dark:text-red-400',
         icon: <XCircle className="h-4 w-4" />,
         description: 'Pedido cancelado',

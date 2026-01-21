@@ -32,7 +32,7 @@ class DashboardController extends Controller
                 ->where('status', 'ready')
                 ->count(),
             'completed_today' => Order::where('restaurant_id', $restaurantId)
-                ->where('status', 'completed')
+                ->whereIn('status', ['completed', 'delivered'])
                 ->where('created_at', '>=', $today)
                 ->count(),
             'total_today' => Order::where('restaurant_id', $restaurantId)
@@ -40,10 +40,10 @@ class DashboardController extends Controller
                 ->count(),
         ];
 
-        // Estadisticas de ventas del dia (solo ordenes completadas)
+        // Estadisticas de ventas del dia (ordenes completadas y entregadas)
         $salesStats = Order::where('restaurant_id', $restaurantId)
             ->where('created_at', '>=', $today)
-            ->where('status', 'completed')
+            ->whereIn('status', ['completed', 'delivered'])
             ->selectRaw("
                 COALESCE(SUM(CASE WHEN payment_method = 'cash' THEN total ELSE 0 END), 0) as cash_total,
                 COALESCE(SUM(CASE WHEN payment_method = 'card' THEN total ELSE 0 END), 0) as card_total,
@@ -55,15 +55,17 @@ class DashboardController extends Controller
         $stats['card_sales_today'] = (float) $salesStats->card_total;
         $stats['total_sales_today'] = (float) $salesStats->total_sales;
 
-        // Ordenes activas (no completadas ni canceladas) - ordenadas por llegada (mas antiguas primero)
+        // Ordenes activas - ordenadas por prioridad de estado y luego más recientes primero
         $activeOrders = Order::where('restaurant_id', $restaurantId)
-            ->with(['customer:id,first_name,last_name,email,phone,subway_card', 'driver:id,name,phone', 'items'])
+            ->with(['customer:id,first_name,last_name,email,phone,subway_card', 'driver:id,name,phone', 'items', 'restaurant:id,name'])
             ->whereIn('status', ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery'])
-            ->orderBy('created_at', 'asc')
+            ->orderByRaw("FIELD(status, 'pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery')")
+            ->orderBy('created_at', 'desc')
             ->get()
             ->map(fn ($order) => [
                 'id' => $order->id,
                 'order_number' => $order->order_number,
+                'restaurant_name' => $order->restaurant?->name,
                 'customer_name' => $order->customer?->full_name ?? 'Cliente',
                 'customer_phone' => $order->customer?->phone,
                 'customer_subway_card' => $order->customer?->subway_card,

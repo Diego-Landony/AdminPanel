@@ -14,6 +14,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import {
+    Bike,
     Check,
     ChefHat,
     Clock,
@@ -21,7 +22,6 @@ import {
     Loader2,
     Phone,
     Printer,
-    Truck,
     User,
     CreditCard,
     Package,
@@ -78,6 +78,7 @@ interface OrdersListTableProps {
     onAccept: (orderId: number) => void;
     onMarkReady: (orderId: number) => void;
     onMarkCompleted: (orderId: number) => void;
+    onMarkDelivered: (orderId: number) => void;
     onAssignDriver: (orderId: number, driverId: number) => void;
     onViewOrder: (order: OrderListItem) => void;
     onPrintOrder: (order: OrderListItem) => void;
@@ -90,6 +91,7 @@ export function OrdersListTable({
     onAccept,
     onMarkReady,
     onMarkCompleted,
+    onMarkDelivered,
     onAssignDriver,
     onViewOrder,
     onPrintOrder,
@@ -152,7 +154,7 @@ export function OrdersListTable({
                                     <div className="flex items-center gap-1">
                                         {order.service_type === 'delivery' ? (
                                             <span className="inline-flex items-center text-xs font-medium text-blue-700 dark:text-blue-400">
-                                                <Truck className="h-3 w-3 mr-1" />
+                                                <Bike className="h-3 w-3 mr-1" />
                                                 Delivery
                                             </span>
                                         ) : (
@@ -216,17 +218,14 @@ export function OrdersListTable({
                                         {order.status === 'pending' && (
                                             <Button
                                                 size="sm"
-                                                className="bg-green-600 hover:bg-green-700 text-white font-medium"
+                                                className="bg-amber-500 hover:bg-amber-600 text-white font-medium"
                                                 onClick={() => onAccept(order.id)}
                                                 disabled={isLoading}
                                             >
                                                 {isLoading ? (
                                                     <Loader2 className="h-4 w-4 animate-spin" />
                                                 ) : (
-                                                    <>
-                                                        <ChefHat className="h-4 w-4 mr-1.5" />
-                                                        Aceptar Orden
-                                                    </>
+                                                    'Aceptar Orden'
                                                 )}
                                             </Button>
                                         )}
@@ -241,10 +240,7 @@ export function OrdersListTable({
                                                 {isLoading ? (
                                                     <Loader2 className="h-4 w-4 animate-spin" />
                                                 ) : (
-                                                    <>
-                                                        <Check className="h-4 w-4 mr-1.5" />
-                                                        Marcar Lista
-                                                    </>
+                                                    'Marcar Lista'
                                                 )}
                                             </Button>
                                         )}
@@ -259,10 +255,7 @@ export function OrdersListTable({
                                                 {isLoading ? (
                                                     <Loader2 className="h-4 w-4 animate-spin" />
                                                 ) : (
-                                                    <>
-                                                        <HandPlatter className="h-4 w-4 mr-1.5" />
-                                                        Entregar al Cliente
-                                                    </>
+                                                    'Entregar al Cliente'
                                                 )}
                                             </Button>
                                         )}
@@ -281,10 +274,7 @@ export function OrdersListTable({
                                                         {isLoading ? (
                                                             <Loader2 className="h-4 w-4 animate-spin" />
                                                         ) : (
-                                                            <>
-                                                                <Truck className="h-4 w-4 mr-1.5" />
-                                                                Asignar Motorista
-                                                            </>
+                                                            'Asignar Motorista'
                                                         )}
                                                     </Button>
                                                 </PopoverTrigger>
@@ -318,15 +308,15 @@ export function OrdersListTable({
 
                                         {order.status === 'ready' && order.service_type === 'delivery' && order.driver && (
                                             <div className="flex items-center gap-2 text-sm text-purple-700 dark:text-purple-400">
-                                                <Truck className="h-4 w-4" />
+                                                <Bike className="h-4 w-4" />
                                                 <span className="font-medium">{order.driver.name}</span>
                                             </div>
                                         )}
 
                                         {order.status === 'out_for_delivery' && order.driver && (
-                                            <div className="flex items-center gap-2 text-sm text-purple-700 dark:text-purple-400">
-                                                <Truck className="h-4 w-4" />
-                                                <span className="font-medium">{order.driver.name}</span>
+                                            <div className="flex items-center gap-2 text-sm text-orange-700 dark:text-orange-400">
+                                                <Bike className="h-4 w-4" />
+                                                <span className="font-medium">En camino con {order.driver.name}</span>
                                             </div>
                                         )}
                                     </div>

@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { RestaurantAuth, RestaurantNavItem } from '@/types/restaurant';
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutDashboard, ShoppingBag, Truck, User, Utensils } from 'lucide-react';
+import { Bike, LayoutDashboard, ShoppingBag, User, Utensils } from 'lucide-react';
 
 /**
  * Items de navegacion del sidebar del restaurante
@@ -22,7 +22,7 @@ const getNavigationItems = (pendingOrdersCount?: number): RestaurantNavItem[] =>
     {
         title: 'Motoristas',
         href: '/restaurant/drivers',
-        icon: Truck,
+        icon: Bike,
     },
     {
         title: 'Mi Perfil',
@@ -123,29 +123,6 @@ export function RestaurantSidebar({ isOpen, onClose }: RestaurantSidebarProps) {
                     </ul>
                 </nav>
 
-                {/* Footer del sidebar */}
-                <div className="border-t border-border p-4">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-sm font-medium">
-                            {restaurantAuth?.user.name
-                                ? restaurantAuth.user.name
-                                      .split(' ')
-                                      .map((n) => n[0])
-                                      .join('')
-                                      .toUpperCase()
-                                      .slice(0, 2)
-                                : 'U'}
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-sm font-medium truncate max-w-[150px]">
-                                {restaurantAuth?.user.name || 'Usuario'}
-                            </span>
-                            <span className="text-xs text-muted-foreground truncate max-w-[150px]">
-                                {restaurantAuth?.user.email || ''}
-                            </span>
-                        </div>
-                    </div>
-                </div>
             </aside>
         </>
     );

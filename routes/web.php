@@ -553,6 +553,7 @@ Route::prefix('restaurant')->name('restaurant.')->group(function () {
         Route::post('orders/{order}/ready', [App\Http\Controllers\Restaurant\OrderController::class, 'markReady'])->name('orders.ready');
         Route::post('orders/{order}/assign-driver', [App\Http\Controllers\Restaurant\OrderController::class, 'assignDriver'])->name('orders.assign-driver');
         Route::post('orders/{order}/complete', [App\Http\Controllers\Restaurant\OrderController::class, 'markCompleted'])->name('orders.complete');
+        Route::post('orders/{order}/delivered', [App\Http\Controllers\Restaurant\OrderController::class, 'markDelivered'])->name('orders.delivered');
 
         // Drivers (solo lectura)
         Route::get('drivers', [App\Http\Controllers\Restaurant\DriverController::class, 'index'])->name('drivers.index');

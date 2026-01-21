@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { router } from '@inertiajs/react';
 
 interface PollingOrder {
@@ -26,6 +26,19 @@ interface UseOrderPollingOptions {
     enabled?: boolean;
     /** Props específicos a recargar (si no se especifica, recarga todos) */
     reloadProps?: string[];
+}
+
+// Track if Inertia is currently navigating
+let isNavigating = false;
+
+// Set up global navigation listeners (only once)
+if (typeof window !== 'undefined') {
+    router.on('start', () => {
+        isNavigating = true;
+    });
+    router.on('finish', () => {
+        isNavigating = false;
+    });
 }
 
 // Clave para localStorage
@@ -115,9 +128,18 @@ export function useOrderPolling({
     const [error, setError] = useState<string | null>(null);
     const previousOrderIds = useRef<Set<number>>(new Set());
     const isFirstPoll = useRef(true);
+    const isMounted = useRef(true);
+
+    // Memoize reloadProps to prevent unnecessary callback recreations
+    const stableReloadProps = useMemo(
+        () => reloadProps,
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [reloadProps?.join(',')]
+    );
 
     const poll = useCallback(async () => {
-        if (!enabled) return;
+        // Don't poll if disabled, navigating, or unmounted
+        if (!enabled || isNavigating || !isMounted.current) return;
 
         try {
             setIsPolling(true);
@@ -132,6 +154,9 @@ export function useOrderPolling({
                 credentials: 'same-origin',
             });
 
+            // Check again after fetch in case navigation started
+            if (!isMounted.current || isNavigating) return;
+
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
@@ -141,7 +166,7 @@ export function useOrderPolling({
             const printedOrderIds = getPrintedOrderIds();
 
             // Detectar nuevas órdenes (solo si no es el primer poll)
-            if (!isFirstPoll.current) {
+            if (!isFirstPoll.current && !isNavigating && isMounted.current) {
                 const newOrders = data.orders.filter(
                     order => !previousOrderIds.current.has(order.id) && order.status === 'pending'
                 );
@@ -167,35 +192,45 @@ export function useOrderPolling({
                         }
                     }
 
-                    // Recargar la página para mostrar las nuevas órdenes
-                    const reloadOptions = reloadProps ? { only: reloadProps } : {};
-                    router.reload(reloadOptions);
-                }
+                    // Recargar la página para mostrar las nuevas órdenes (only if not navigating)
+                    if (!isNavigating && isMounted.current) {
+                        const reloadOptions = stableReloadProps ? { only: stableReloadProps } : {};
+                        router.reload(reloadOptions);
+                    }
+                } else {
+                    // Detectar cambios en estados (para actualizar la UI)
+                    const hasChanges =
+                        currentOrderIds.size !== previousOrderIds.current.size ||
+                        data.orders.some(order => !previousOrderIds.current.has(order.id));
 
-                // Detectar cambios en estados (para actualizar la UI)
-                const hasChanges =
-                    currentOrderIds.size !== previousOrderIds.current.size ||
-                    data.orders.some(order => !previousOrderIds.current.has(order.id));
-
-                if (hasChanges) {
-                    onOrdersChanged?.();
-                    const reloadOptions = reloadProps ? { only: reloadProps } : {};
-                    router.reload(reloadOptions);
+                    if (hasChanges && !isNavigating && isMounted.current) {
+                        onOrdersChanged?.();
+                        const reloadOptions = stableReloadProps ? { only: stableReloadProps } : {};
+                        router.reload(reloadOptions);
+                    }
                 }
             }
 
             previousOrderIds.current = currentOrderIds;
             isFirstPoll.current = false;
-            setLastPollTime(new Date());
+            if (isMounted.current) {
+                setLastPollTime(new Date());
+            }
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error de conexión');
+            if (isMounted.current) {
+                setError(err instanceof Error ? err.message : 'Error de conexión');
+            }
             console.error('Polling error:', err);
         } finally {
-            setIsPolling(false);
+            if (isMounted.current) {
+                setIsPolling(false);
+            }
         }
-    }, [enabled, autoPrint, onNewOrders, onOrdersChanged, reloadProps]);
+    }, [enabled, autoPrint, onNewOrders, onOrdersChanged, stableReloadProps]);
 
     useEffect(() => {
+        isMounted.current = true;
+
         if (!enabled) return;
 
         // Poll inicial
@@ -205,6 +240,7 @@ export function useOrderPolling({
         const intervalId = setInterval(poll, intervalSeconds * 1000);
 
         return () => {
+            isMounted.current = false;
             clearInterval(intervalId);
         };
     }, [enabled, intervalSeconds, poll]);

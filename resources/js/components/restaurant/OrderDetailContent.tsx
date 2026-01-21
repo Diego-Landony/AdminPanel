@@ -2,20 +2,17 @@ import { CURRENCY } from '@/constants/ui-constants';
 import {
     ORDER_STATUS_CONFIGS,
     SERVICE_TYPE_CONFIGS,
-    PAYMENT_STATUS_CONFIGS,
     PAYMENT_METHOD_LABELS,
 } from '@/constants/restaurant-constants';
-import { formatDateTime } from '@/utils/restaurant-helpers';
 import { formatCurrency } from '@/utils/format';
 import {
-    Clock,
+    Bike,
     CreditCard,
     Loader2,
     MapPin,
     Phone,
     Printer,
     ShoppingBag,
-    Truck,
     User,
     Users,
     UserPlus,
@@ -130,6 +127,7 @@ interface OrderDetailContentProps {
     onAccept: (orderId: number) => void;
     onMarkReady: (orderId: number) => void;
     onMarkCompleted: (orderId: number) => void;
+    onMarkDelivered: (orderId: number) => void;
     onAssignDriver: (orderId: number, driverId: number) => void;
     onPrint: () => void;
     isUpdating?: boolean;
@@ -142,6 +140,7 @@ export function OrderDetailContent({
     onAccept,
     onMarkReady,
     onMarkCompleted,
+    onMarkDelivered,
     onAssignDriver,
     onPrint,
     isUpdating = false,
@@ -159,7 +158,7 @@ export function OrderDetailContent({
     // Delivery address
     const deliveryAddressLine = order.delivery_address?.address_line || order.delivery_address?.address_line_1 || '';
 
-    // Actions available
+    // Actions available (el motorista marca como entregada, no el restaurante)
     const canAccept = order.status === 'pending';
     const canMarkReady = order.status === 'preparing';
     const canAssignDriver = order.service_type === 'delivery' && order.status === 'ready' && !order.driver_id;
@@ -252,13 +251,14 @@ export function OrderDetailContent({
                 )}
             </div>
 
-            {/* Status badges */}
-            <div className="flex flex-wrap gap-2">
+            {/* Status badges + Payment method */}
+            <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge status={order.status} configs={ORDER_STATUS_CONFIGS} />
                 <StatusBadge status={order.service_type} configs={SERVICE_TYPE_CONFIGS} />
-                {order.payment_status && (
-                    <StatusBadge status={order.payment_status} configs={PAYMENT_STATUS_CONFIGS} />
-                )}
+                <Badge variant="outline" className="gap-1">
+                    <CreditCard className="h-3 w-3" />
+                    {PAYMENT_METHOD_LABELS[order.payment_method] || order.payment_method}
+                </Badge>
             </div>
 
             {/* Customer info */}
@@ -314,7 +314,7 @@ export function OrderDetailContent({
                 <Card>
                     <CardHeader className="pb-3">
                         <CardTitle className="flex items-center gap-2 text-base">
-                            <Truck className="h-4 w-4" />
+                            <Bike className="h-4 w-4" />
                             Motorista
                         </CardTitle>
                     </CardHeader>
@@ -344,7 +344,7 @@ export function OrderDetailContent({
                 <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-base">
                         <ShoppingBag className="h-4 w-4" />
-                        Items ({order.items?.length || 0})
+                        Items
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -363,42 +363,32 @@ export function OrderDetailContent({
                         return (
                             <div
                                 key={item.id}
-                                className="flex items-start justify-between rounded-lg border bg-muted/50 p-3"
+                                className="rounded-lg border bg-muted/50 p-4"
                             >
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <Badge variant="secondary" className="text-xs">
-                                            x{item.quantity}
-                                        </Badge>
-                                        <p className="font-medium">{item.name}</p>
+                                <div className="flex items-center gap-2">
+                                    <Badge variant="secondary" className="text-sm font-semibold">
+                                        x{item.quantity}
+                                    </Badge>
+                                    <p className="font-semibold text-base">{item.name}</p>
+                                </div>
+                                {item.variant && (
+                                    <p className="text-sm text-muted-foreground mt-1">{item.variant}</p>
+                                )}
+                                {Object.keys(groupedOptions).length > 0 && (
+                                    <div className="mt-2 space-y-1">
+                                        {Object.entries(groupedOptions).map(([sectionName, options]) => (
+                                            <p key={sectionName} className="text-sm text-muted-foreground">
+                                                <span className="font-medium">{sectionName}:</span>{' '}
+                                                {options.join(', ')}
+                                            </p>
+                                        ))}
                                     </div>
-                                    {item.variant && (
-                                        <p className="text-xs text-muted-foreground mt-0.5">{item.variant}</p>
-                                    )}
-                                    {Object.keys(groupedOptions).length > 0 && (
-                                        <div className="mt-1 space-y-0.5">
-                                            {Object.entries(groupedOptions).map(([sectionName, options]) => (
-                                                <p key={sectionName} className="text-xs text-muted-foreground">
-                                                    <span className="font-medium">{sectionName}:</span>{' '}
-                                                    {options.join(', ')}
-                                                </p>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {item.notes && (
-                                        <p className="mt-1 text-xs italic text-orange-600 dark:text-orange-400">
-                                            Nota: {item.notes}
-                                        </p>
-                                    )}
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-xs text-muted-foreground">
-                                        {CURRENCY.symbol}{formatCurrency(item.unit_price, false)} c/u
+                                )}
+                                {item.notes && (
+                                    <p className="mt-2 text-sm italic text-orange-600 dark:text-orange-400">
+                                        Nota: {item.notes}
                                     </p>
-                                    <p className="font-medium">
-                                        {CURRENCY.symbol}{formatCurrency(item.total_price, false)}
-                                    </p>
-                                </div>
+                                )}
                             </div>
                         );
                     })}
@@ -442,59 +432,6 @@ export function OrderDetailContent({
                 </Card>
             )}
 
-            {/* Payment info */}
-            <Card>
-                <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-base">
-                        <CreditCard className="h-4 w-4" />
-                        Pago
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Metodo</span>
-                        <span>{PAYMENT_METHOD_LABELS[order.payment_method] || order.payment_method}</span>
-                    </div>
-                    {order.payment_status && (
-                        <div className="flex justify-between text-sm items-center">
-                            <span className="text-muted-foreground">Estado</span>
-                            <StatusBadge status={order.payment_status} configs={PAYMENT_STATUS_CONFIGS} className="text-xs" />
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
-            {/* System info */}
-            <Card>
-                <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-base">
-                        <Clock className="h-4 w-4" />
-                        Informacion
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">ID</span>
-                        <span className="font-mono">#{order.id}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Creado</span>
-                        <span>{formatDateTime(order.created_at)}</span>
-                    </div>
-                    {order.estimated_ready_at && (
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Estimado</span>
-                            <span>{formatDateTime(order.estimated_ready_at)}</span>
-                        </div>
-                    )}
-                    {order.ready_at && (
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Lista</span>
-                            <span>{formatDateTime(order.ready_at)}</span>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
         </div>
     );
 }

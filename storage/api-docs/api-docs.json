@@ -1270,7 +1270,7 @@
                                                             "type": "string",
                                                             "example": "93.00"
                                                         },
-                                                        "total_discount": {
+                                                        "discount_total": {
                                                             "description": "Total de descuentos aplicados",
                                                             "type": "string",
                                                             "example": "20.00"
@@ -3512,6 +3512,85 @@
                     },
                     "401": {
                         "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/devices/{device}/fcm-token": {
+            "patch": {
+                "tags": [
+                    "Devices"
+                ],
+                "summary": "Update device FCM token",
+                "description": "Updates only the FCM token for push notifications. Use this when the FCM token refreshes without needing to re-register the entire device.",
+                "operationId": "32d5c722cddd3d36002b2a1021a3de1b",
+                "parameters": [
+                    {
+                        "name": "device",
+                        "in": "path",
+                        "description": "Device ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "fcm_token"
+                                ],
+                                "properties": {
+                                    "fcm_token": {
+                                        "description": "New Firebase Cloud Messaging token",
+                                        "type": "string",
+                                        "example": "fKw8h4Xj..."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "FCM token updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Token FCM actualizado exitosamente."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/CustomerDevice"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden - device belongs to another customer"
+                    },
+                    "404": {
+                        "description": "Device not found"
                     },
                     "422": {
                         "description": "Validation error"

@@ -19,6 +19,7 @@ class CustomerAddressResource extends JsonResource
             'zone' => $this->zone ?? 'capital',
             'is_default' => $this->is_default,
             'created_at' => $this->created_at->toIso8601String(),
+            'updated_at' => $this->updated_at->toIso8601String(),
         ];
     }
 }

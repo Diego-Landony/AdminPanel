@@ -33,7 +33,6 @@ class CustomerResource extends JsonResource
             'last_purchase_at' => $this->last_purchase_at,
             'points' => $this->points ?? 0,
             'points_updated_at' => $this->points_updated_at,
-            'status' => $this->status,
             'is_online' => $this->is_online,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

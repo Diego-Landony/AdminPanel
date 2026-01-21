@@ -232,6 +232,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:orders.edit');
     Route::post('orders/{order}/change-restaurant', [OrderController::class, 'changeRestaurant'])->name('orders.change-restaurant')
         ->middleware('permission:orders.edit');
+    Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel')
+        ->middleware('permission:orders.edit');
+    Route::get('orders-poll', [OrderController::class, 'poll'])->name('orders.poll')
+        ->middleware('permission:orders.view');
 
     // Actividad - requiere permiso específico
     Route::get('activity', [ActivityController::class, 'index'])->name('activity.index')

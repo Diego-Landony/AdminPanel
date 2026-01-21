@@ -13,11 +13,6 @@ class Category extends Model implements ActivityLoggable
 {
     use HasFactory, LogsActivity;
 
-    public function getActivityLabelField(): string
-    {
-        return 'name';
-    }
-
     public static function getActivityModelName(): string
     {
         return 'Categoría';

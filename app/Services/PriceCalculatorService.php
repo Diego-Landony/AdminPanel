@@ -380,7 +380,7 @@ class PriceCalculatorService
         return [
             'items' => $cartItems,
             'subtotal' => round($subtotal, 2),
-            'total_discount' => round($totalDiscount, 2),
+            'discount_total' => round($totalDiscount, 2),
             'total' => round($total, 2),
             'items_count' => count($cartItems),
         ];

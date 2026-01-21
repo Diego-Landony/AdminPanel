@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Models\Customer;
 use App\Models\Driver;
+use App\Models\Menu\Promotion;
 use App\Models\RestaurantUser;
 use App\Observers\PersonalAccessTokenObserver;
+use App\Observers\PromotionObserver;
 use App\Policies\DriverPolicy;
 use App\Policies\RestaurantUserPolicy;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -53,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configurePolicies();
 
         PersonalAccessToken::observe(PersonalAccessTokenObserver::class);
+        Promotion::observe(PromotionObserver::class);
 
         // Register mail views namespace for custom email templates
         $this->loadViewsFrom([

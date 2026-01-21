@@ -17,11 +17,6 @@ class Combo extends Model implements ActivityLoggable
 {
     use HasBadges, HasFactory, HasReportingCategory, LogsActivity, SoftDeletes;
 
-    public function getActivityLabelField(): string
-    {
-        return 'name';
-    }
-
     public static function getActivityModelName(): string
     {
         return 'Combo';

@@ -34,7 +34,6 @@ class CustomerDevice extends Model implements ActivityLoggable
         'last_used_at',
         'is_active',
         'login_count',
-        'trust_score',
     ];
 
     /**

@@ -2,8 +2,10 @@
 
 namespace App\Jobs;
 
+use App\Events\CustomerTypeDowngraded;
 use App\Models\Customer;
 use App\Models\CustomerType;
+use App\Notifications\CustomerTypeDowngradedNotification;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -95,10 +97,14 @@ class UpdateCustomerTypes implements ShouldQueue
             ->get()
             ->keyBy('customer_id');
 
+        // Indexar tipos por ID para búsqueda rápida
+        $typesById = $customerTypes->keyBy('id');
+        $typesById[$defaultType->id] = $defaultType;
+
         // Procesar clientes en lotes
         Customer::query()
-            ->select(['id', 'customer_type_id'])
-            ->chunk(500, function ($customers) use ($customerPoints, $customerTypes, $defaultType, &$updated) {
+            ->select(['id', 'customer_type_id', 'first_name', 'email', 'email_offers_enabled'])
+            ->chunk(500, function ($customers) use ($customerPoints, $customerTypes, $defaultType, $typesById, &$updated) {
                 foreach ($customers as $customer) {
                     $earnedPoints = $customerPoints->get($customer->id)?->total_points ?? 0;
 
@@ -113,9 +119,31 @@ class UpdateCustomerTypes implements ShouldQueue
 
                     // Solo actualizar si el tipo cambió
                     if ($customer->customer_type_id !== $newTypeId) {
+                        $previousTypeId = $customer->customer_type_id;
+                        $previousType = $typesById->get($previousTypeId);
+                        $newType = $typesById->get($newTypeId);
+
                         Customer::where('id', $customer->id)
                             ->update(['customer_type_id' => $newTypeId]);
                         $updated++;
+
+                        // Detectar si es un downgrade (nuevo tipo tiene menos puntos requeridos)
+                        if ($previousType && $newType && $newType->points_required < $previousType->points_required) {
+                            // Cargar el cliente completo para la notificación
+                            $fullCustomer = Customer::find($customer->id);
+
+                            // Disparar evento de downgrade
+                            event(new CustomerTypeDowngraded($fullCustomer, $previousType, $newType));
+
+                            // Enviar notificación al cliente
+                            $fullCustomer->notify(new CustomerTypeDowngradedNotification($previousType, $newType));
+
+                            Log::info('CustomerTypeDowngraded: Cliente degradado', [
+                                'customer_id' => $customer->id,
+                                'from' => $previousType->name,
+                                'to' => $newType->name,
+                            ]);
+                        }
                     }
                 }
             });

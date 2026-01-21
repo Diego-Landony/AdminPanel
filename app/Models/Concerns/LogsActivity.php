@@ -80,10 +80,22 @@ trait LogsActivity
 
     /**
      * Nombre por defecto del modelo para activity logs
-     * Override OBLIGATORIO en cada modelo que implemente ActivityLoggable
+     * Override en cada modelo si necesitas un nombre diferente
      */
     public static function getActivityModelName(): string
     {
         return class_basename(static::class);
+    }
+
+    /**
+     * Campo por defecto para el label en activity logs
+     * Override en cada modelo si usas un campo diferente a 'name'
+     *
+     * Por defecto usa 'name', pero modelos como Customer pueden usar 'email',
+     * o Comment puede usar 'body', etc.
+     */
+    public function getActivityLabelField(): string
+    {
+        return 'name';
     }
 }

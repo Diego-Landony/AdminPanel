@@ -1,48 +1,77 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
     AlertCircle,
+    Ban,
+    Banknote,
     Calendar,
+    Check,
     CheckCircle,
+    ChefHat,
+    ChevronsUpDown,
     Clock,
+    CreditCard,
     Eye,
+    Filter,
+    ListFilter,
     Package,
     ShoppingBag,
+    Store,
     Truck,
-    UserPlus,
     Users,
+    X,
     XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
 
 import { DataTable } from '@/components/DataTable';
 import { EntityInfoCell } from '@/components/EntityInfoCell';
+import { FormSection } from '@/components/form-section';
 import { StandardMobileCard } from '@/components/StandardMobileCard';
 import { StatusBadge, StatusConfig } from '@/components/status-badge';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 import { CURRENCY } from '@/constants/ui-constants';
+import { useAdminOrderPolling } from '@/hooks/useAdminOrderPolling';
 import AppLayout from '@/layouts/app-layout';
-import { Driver, Filters, Order, PaginatedData, Restaurant } from '@/types';
+import { Filters, Order, PaginatedData, Restaurant } from '@/types';
 import { formatCurrency, formatDate } from '@/utils/format';
+
+interface Statistics {
+    total_today: number;
+    pending: number;
+    preparing: number;
+    ready: number;
+    out_for_delivery: number;
+    completed_today: number;
+    cancelled_today: number;
+    total_sales_today: number;
+    cash_sales_today: number;
+    card_sales_today: number;
+}
+
+interface PollingConfig {
+    polling_interval: number;
+    enabled: boolean;
+}
 
 interface OrdersPageProps {
     orders: PaginatedData<Order>;
     restaurants: Restaurant[];
-    drivers: Driver[];
-    total_orders: number;
-    pending_orders: number;
-    preparing_orders: number;
-    out_for_delivery_orders: number;
-    completed_today: number;
+    statistics: Statistics;
+    polling_config: PollingConfig;
     filters: Filters & {
-        restaurant_id?: string | null;
+        restaurant_id?: number | null;
         status?: string | null;
         service_type?: string | null;
-        driver_id?: string | null;
         date_from?: string | null;
         date_to?: string | null;
     };
@@ -121,36 +150,47 @@ const SERVICE_TYPE_CONFIGS: Record<string, StatusConfig> = {
 };
 
 /**
- * Pagina principal de gestion de ordenes
+ * Pagina principal de gestion de ordenes (Admin)
  */
 export default function OrdersIndex({
     orders,
     restaurants,
-    drivers,
-    total_orders,
-    pending_orders,
-    preparing_orders,
-    out_for_delivery_orders,
-    completed_today,
+    statistics,
+    polling_config,
     filters,
 }: OrdersPageProps) {
-    const [assignModalOpen, setAssignModalOpen] = useState(false);
+    const [cancelModalOpen, setCancelModalOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-    const [selectedDriverId, setSelectedDriverId] = useState<string>('');
+    const [cancellationReason, setCancellationReason] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+    const [restaurantPopoverOpen, setRestaurantPopoverOpen] = useState(false);
+
+    // Obtener el nombre del restaurante seleccionado
+    const selectedRestaurant = filters.restaurant_id
+        ? restaurants.find((r) => r.id === Number(filters.restaurant_id))
+        : null;
+
+    // Polling para actualizaciones en tiempo real
+    useAdminOrderPolling({
+        intervalSeconds: polling_config?.polling_interval || 30,
+        enabled: polling_config?.enabled ?? true,
+        reloadProps: ['orders', 'statistics'],
+        restaurantId: filters.restaurant_id ? Number(filters.restaurant_id) : null,
+    });
 
     const handleFilterChange = (key: string, value: string | null) => {
         const params: Record<string, string | number | undefined> = {
             per_page: filters.per_page,
         };
-        if (filters.search) params.search = filters.search;
+        if (key === 'search' && value) params.search = value;
+        else if (filters.search) params.search = filters.search;
         if (key === 'restaurant_id' && value) params.restaurant_id = value;
-        else if (filters.restaurant_id) params.restaurant_id = filters.restaurant_id;
+        else if (filters.restaurant_id) params.restaurant_id = String(filters.restaurant_id);
         if (key === 'status' && value) params.status = value;
         else if (filters.status) params.status = filters.status;
         if (key === 'service_type' && value) params.service_type = value;
         else if (filters.service_type) params.service_type = filters.service_type;
-        if (key === 'driver_id' && value) params.driver_id = value;
-        else if (filters.driver_id) params.driver_id = filters.driver_id;
         if (key === 'date_from' && value) params.date_from = value;
         else if (filters.date_from) params.date_from = filters.date_from;
         if (key === 'date_to' && value) params.date_to = value;
@@ -163,88 +203,66 @@ export default function OrdersIndex({
         });
     };
 
-    const openAssignModal = (order: Order) => {
-        setSelectedOrder(order);
-        setSelectedDriverId('');
-        setAssignModalOpen(true);
+    const handleClearFilters = () => {
+        router.get('/orders', { per_page: filters.per_page }, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+        setFilterSheetOpen(false);
     };
 
-    const handleAssignDriver = () => {
-        if (!selectedOrder || !selectedDriverId) return;
+    const today = new Date().toISOString().split('T')[0];
+    const activeFiltersCount = [
+        filters.restaurant_id,
+        filters.status,
+        filters.service_type,
+        filters.date_from !== today ? filters.date_from : null,
+        filters.date_to !== today ? filters.date_to : null,
+    ].filter(Boolean).length;
 
-        router.patch(
-            `/orders/${selectedOrder.id}/assign-driver`,
-            { driver_id: selectedDriverId },
+    const openCancelModal = (order: Order) => {
+        setSelectedOrder(order);
+        setCancellationReason('');
+        setCancelModalOpen(true);
+    };
+
+    const handleCancelOrder = () => {
+        if (!selectedOrder || !cancellationReason.trim()) return;
+
+        setIsSubmitting(true);
+        router.post(
+            `/orders/${selectedOrder.id}/cancel`,
+            { cancellation_reason: cancellationReason },
             {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
-                    setAssignModalOpen(false);
+                    setCancelModalOpen(false);
                     setSelectedOrder(null);
-                    setSelectedDriverId('');
+                    setCancellationReason('');
                 },
+                onFinish: () => setIsSubmitting(false),
             },
         );
     };
 
-    // Filtrar motoristas por restaurante de la orden seleccionada
-    const availableDrivers = drivers.filter(
-        (driver) =>
-            driver.is_active &&
-            driver.is_available &&
-            (!selectedOrder || driver.restaurant_id === selectedOrder.restaurant?.id),
-    );
-
-    const stats = [
-        {
-            title: 'total',
-            value: total_orders,
-            icon: <Package className="h-4 w-4" />,
-        },
-        {
-            title: 'pendientes',
-            value: pending_orders,
-            icon: <Clock className="h-4 w-4 text-yellow-600" />,
-        },
-        {
-            title: 'preparando',
-            value: preparing_orders,
-            icon: <Package className="h-4 w-4 text-blue-600" />,
-        },
-        {
-            title: 'en camino',
-            value: out_for_delivery_orders,
-            icon: <Truck className="h-4 w-4 text-orange-600" />,
-        },
-        {
-            title: 'completados hoy',
-            value: completed_today,
-            icon: <CheckCircle className="h-4 w-4 text-green-600" />,
-        },
-    ];
-
     const columns = [
         {
             key: 'order',
-            title: '# Orden',
-            width: 'md' as const,
+            title: 'Orden / Cliente',
+            width: 'lg' as const,
             sortable: true,
             render: (order: Order) => (
-                <EntityInfoCell
-                    icon={Package}
-                    primaryText={`#${order.order_number}`}
-                    secondaryText={formatDate(order.created_at)}
-                />
-            ),
-        },
-        {
-            key: 'customer',
-            title: 'Cliente',
-            width: 'md' as const,
-            render: (order: Order) => (
-                <div className="text-sm">
-                    <p className="font-medium">{order.customer?.full_name || 'N/A'}</p>
-                    <p className="text-muted-foreground">{order.customer?.phone || ''}</p>
+                <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="font-medium">#{order.order_number}</p>
+                        <p className="text-sm text-muted-foreground truncate">{order.customer?.full_name || 'N/A'}</p>
+                        <p className="text-xs text-muted-foreground">{formatDate(order.created_at)}</p>
+                    </div>
                 </div>
             ),
         },
@@ -255,19 +273,23 @@ export default function OrdersIndex({
             render: (order: Order) => <div className="text-sm">{order.restaurant?.name || 'N/A'}</div>,
         },
         {
-            key: 'service_type',
-            title: 'Tipo',
-            width: 'sm' as const,
-            render: (order: Order) => (
-                <StatusBadge status={order.service_type} configs={SERVICE_TYPE_CONFIGS} className="text-xs" />
-            ),
-        },
-        {
             key: 'status',
-            title: 'Estado',
-            width: 'sm' as const,
+            title: 'Estado / Servicio',
+            width: 'md' as const,
             sortable: true,
-            render: (order: Order) => <StatusBadge status={order.status} configs={ORDER_STATUS_CONFIGS} className="text-xs" />,
+            render: (order: Order) => (
+                <div className="flex flex-col gap-1">
+                    <StatusBadge status={order.status} configs={ORDER_STATUS_CONFIGS} className="text-xs" />
+                    <div className="flex items-center gap-1.5">
+                        <StatusBadge status={order.service_type} configs={SERVICE_TYPE_CONFIGS} className="text-xs" />
+                        {order.service_type === 'delivery' && (
+                            <span className="text-xs text-muted-foreground">
+                                {order.driver ? order.driver.name : 'Sin motorista'}
+                            </span>
+                        )}
+                    </div>
+                </div>
+            ),
         },
         {
             key: 'total',
@@ -282,38 +304,29 @@ export default function OrdersIndex({
             ),
         },
         {
-            key: 'driver',
-            title: 'Motorista',
-            width: 'md' as const,
-            render: (order: Order) => (
-                <div className="text-sm">
-                    {order.driver ? (
-                        <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                            <span>{order.driver.name}</span>
-                        </div>
-                    ) : order.service_type === 'delivery' && order.status === 'ready' ? (
-                        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => openAssignModal(order)}>
-                            <UserPlus className="mr-1 h-3 w-3" />
-                            Asignar
-                        </Button>
-                    ) : (
-                        <span className="text-muted-foreground">-</span>
-                    )}
-                </div>
-            ),
-        },
-        {
             key: 'actions',
             title: 'Acciones',
-            width: 'xs' as const,
+            width: 'sm' as const,
             align: 'right' as const,
             render: (order: Order) => (
-                <Link href={`/orders/${order.id}`}>
-                    <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                    </Button>
-                </Link>
+                <div className="flex items-center gap-1">
+                    <Link href={`/orders/${order.id}`}>
+                        <Button variant="ghost" size="sm" title="Ver detalle">
+                            <Eye className="h-4 w-4" />
+                        </Button>
+                    </Link>
+                    {order.can_be_cancelled && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            title="Cancelar orden"
+                            onClick={() => openCancelModal(order)}
+                        >
+                            <Ban className="h-4 w-4" />
+                        </Button>
+                    )}
+                </div>
             ),
         },
     ];
@@ -361,156 +374,316 @@ export default function OrdersIndex({
             <Head title="Gestion de Ordenes" />
 
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
-                {/* Filtros adicionales */}
-                <div className="flex flex-wrap gap-4">
-                    <Select
-                        value={filters.restaurant_id || 'all'}
-                        onValueChange={(value) => handleFilterChange('restaurant_id', value === 'all' ? null : value)}
-                    >
-                        <SelectTrigger className="w-[200px]">
-                            <SelectValue placeholder="Todos los restaurantes" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Todos los restaurantes</SelectItem>
-                            {restaurants.map((restaurant) => (
-                                <SelectItem key={restaurant.id} value={restaurant.id.toString()}>
-                                    {restaurant.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                {/* Cards de Estadísticas de HOY */}
+                <div className="grid gap-4 lg:grid-cols-2">
+                    {/* Estado de Ordenes Activas */}
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-base font-medium">
+                                    Estado de Ordenes - {new Date().toLocaleDateString('es-GT', { day: 'numeric', month: 'short' })}
+                                </CardTitle>
+                                <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                    </span>
+                                    Online
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-4 gap-4">
+                                <div className="text-center">
+                                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/50">
+                                        <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                                    </div>
+                                    <div className="text-2xl font-bold">{statistics.pending}</div>
+                                    <div className="text-xs text-muted-foreground">Pendientes</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
+                                        <ChefHat className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                    </div>
+                                    <div className="text-2xl font-bold">{statistics.preparing}</div>
+                                    <div className="text-xs text-muted-foreground">Preparando</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/50">
+                                        <Truck className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                                    </div>
+                                    <div className="text-2xl font-bold">{statistics.out_for_delivery}</div>
+                                    <div className="text-xs text-muted-foreground">En Camino</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
+                                        <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                                    </div>
+                                    <div className="text-2xl font-bold">{statistics.completed_today}</div>
+                                    <div className="text-xs text-muted-foreground">Completadas</div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                    <Select
-                        value={filters.status || 'all'}
-                        onValueChange={(value) => handleFilterChange('status', value === 'all' ? null : value)}
-                    >
-                        <SelectTrigger className="w-[150px]">
-                            <SelectValue placeholder="Estado" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Todos</SelectItem>
-                            <SelectItem value="pending">Pendiente</SelectItem>
-                            <SelectItem value="confirmed">Confirmado</SelectItem>
-                            <SelectItem value="preparing">Preparando</SelectItem>
-                            <SelectItem value="ready">Listo</SelectItem>
-                            <SelectItem value="out_for_delivery">En Camino</SelectItem>
-                            <SelectItem value="delivered">Entregado</SelectItem>
-                            <SelectItem value="completed">Completado</SelectItem>
-                            <SelectItem value="cancelled">Cancelado</SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    <Select
-                        value={filters.service_type || 'all'}
-                        onValueChange={(value) => handleFilterChange('service_type', value === 'all' ? null : value)}
-                    >
-                        <SelectTrigger className="w-[150px]">
-                            <SelectValue placeholder="Tipo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Todos</SelectItem>
-                            <SelectItem value="delivery">Delivery</SelectItem>
-                            <SelectItem value="pickup">Pickup</SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    <Select
-                        value={filters.driver_id || 'all'}
-                        onValueChange={(value) => handleFilterChange('driver_id', value === 'all' ? null : value)}
-                    >
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Motorista" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Todos los motoristas</SelectItem>
-                            {drivers.map((driver) => (
-                                <SelectItem key={driver.id} value={driver.id.toString()}>
-                                    {driver.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-
-                    <div className="flex items-center gap-2">
-                        <Label className="text-sm text-muted-foreground">Desde:</Label>
-                        <DatePicker
-                            date={filters.date_from ? new Date(filters.date_from) : undefined}
-                            onSelect={(date) => handleFilterChange('date_from', date ? date.toISOString().split('T')[0] : null)}
-                        />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <Label className="text-sm text-muted-foreground">Hasta:</Label>
-                        <DatePicker
-                            date={filters.date_to ? new Date(filters.date_to) : undefined}
-                            onSelect={(date) => handleFilterChange('date_to', date ? date.toISOString().split('T')[0] : null)}
-                        />
-                    </div>
+                    {/* Ventas del Dia */}
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-base font-medium">Ventas de Hoy</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="mb-4 text-center">
+                                <div className="text-3xl font-bold text-primary">
+                                    {CURRENCY.symbol}{formatCurrency(statistics.total_sales_today, false)}
+                                </div>
+                                <div className="text-sm text-muted-foreground">Total en ventas</div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
+                                        <Banknote className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                    </div>
+                                    <div>
+                                        <div className="font-semibold">
+                                            {CURRENCY.symbol}{formatCurrency(statistics.cash_sales_today, false)}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">Efectivo</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-100 dark:bg-violet-900/50">
+                                        <CreditCard className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                                    </div>
+                                    <div>
+                                        <div className="font-semibold">
+                                            {CURRENCY.symbol}{formatCurrency(statistics.card_sales_today, false)}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">Tarjeta</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 <DataTable
                     title="Ordenes"
                     data={orders}
                     columns={columns}
-                    stats={stats}
                     filters={filters}
-                    searchPlaceholder="Buscar por numero de orden, cliente o restaurante..."
+                    searchPlaceholder="Buscar por # orden, cliente..."
                     renderMobileCard={(order) => <OrderMobileCard order={order} />}
                     routeName="/orders"
                     breakpoint="lg"
+                    headerActions={
+                        <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+                            <SheetTrigger asChild>
+                                <Button variant="outline" size="sm" className="gap-2">
+                                    <Filter className="h-4 w-4" />
+                                    Filtros
+                                    {activeFiltersCount > 0 && (
+                                        <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                                            {activeFiltersCount}
+                                        </span>
+                                    )}
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+                                <SheetHeader>
+                                    <SheetTitle className="flex items-center gap-2">
+                                        <Filter className="h-5 w-5" />
+                                        Filtros de Órdenes
+                                    </SheetTitle>
+                                </SheetHeader>
+
+                                <div className="mt-6 space-y-6">
+                                    {/* Sección: Restaurante */}
+                                    <FormSection icon={Store} title="Restaurante">
+                                        <Popover open={restaurantPopoverOpen} onOpenChange={setRestaurantPopoverOpen}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={restaurantPopoverOpen}
+                                                    className="w-full justify-between font-normal"
+                                                >
+                                                    <span className="truncate">
+                                                        {selectedRestaurant?.name || 'Todos los restaurantes'}
+                                                    </span>
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-[350px] p-0" align="start">
+                                                <Command>
+                                                    <CommandInput placeholder="Buscar restaurante..." />
+                                                    <CommandList>
+                                                        <CommandEmpty>No se encontró ningún restaurante.</CommandEmpty>
+                                                        <CommandGroup>
+                                                            <CommandItem
+                                                                value="all"
+                                                                onSelect={() => {
+                                                                    handleFilterChange('restaurant_id', null);
+                                                                    setRestaurantPopoverOpen(false);
+                                                                }}
+                                                            >
+                                                                <Check
+                                                                    className={cn(
+                                                                        'mr-2 h-4 w-4',
+                                                                        !filters.restaurant_id ? 'opacity-100' : 'opacity-0',
+                                                                    )}
+                                                                />
+                                                                Todos los restaurantes
+                                                            </CommandItem>
+                                                            {restaurants.map((restaurant) => (
+                                                                <CommandItem
+                                                                    key={restaurant.id}
+                                                                    value={restaurant.name}
+                                                                    onSelect={() => {
+                                                                        handleFilterChange('restaurant_id', restaurant.id.toString());
+                                                                        setRestaurantPopoverOpen(false);
+                                                                    }}
+                                                                >
+                                                                    <Check
+                                                                        className={cn(
+                                                                            'mr-2 h-4 w-4',
+                                                                            filters.restaurant_id === restaurant.id
+                                                                                ? 'opacity-100'
+                                                                                : 'opacity-0',
+                                                                        )}
+                                                                    />
+                                                                    {restaurant.name}
+                                                                </CommandItem>
+                                                            ))}
+                                                        </CommandGroup>
+                                                    </CommandList>
+                                                </Command>
+                                            </PopoverContent>
+                                        </Popover>
+                                    </FormSection>
+
+                                    {/* Sección: Filtros de Estado */}
+                                    <FormSection icon={ListFilter} title="Estado y Tipo">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium">Estado de Orden</Label>
+                                            <Select
+                                                value={filters.status || 'all'}
+                                                onValueChange={(value) => handleFilterChange('status', value === 'all' ? null : value)}
+                                            >
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue placeholder="Todos los estados" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">Todos los estados</SelectItem>
+                                                    <SelectItem value="pending">Pendiente</SelectItem>
+                                                    <SelectItem value="confirmed">Confirmado</SelectItem>
+                                                    <SelectItem value="preparing">Preparando</SelectItem>
+                                                    <SelectItem value="ready">Listo</SelectItem>
+                                                    <SelectItem value="out_for_delivery">En Camino</SelectItem>
+                                                    <SelectItem value="delivered">Entregado</SelectItem>
+                                                    <SelectItem value="completed">Completado</SelectItem>
+                                                    <SelectItem value="cancelled">Cancelado</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium">Tipo de Servicio</Label>
+                                            <Select
+                                                value={filters.service_type || 'all'}
+                                                onValueChange={(value) => handleFilterChange('service_type', value === 'all' ? null : value)}
+                                            >
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue placeholder="Todos los tipos" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">Todos los tipos</SelectItem>
+                                                    <SelectItem value="delivery">Delivery</SelectItem>
+                                                    <SelectItem value="pickup">Pickup</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </FormSection>
+
+                                    {/* Sección: Rango de Fechas */}
+                                    <FormSection icon={Calendar} title="Rango de Fechas">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-sm font-medium">Desde</Label>
+                                                <DatePicker
+                                                    value={filters.date_from || undefined}
+                                                    onChange={(date) => handleFilterChange('date_from', date ? date.toISOString().split('T')[0] : null)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-sm font-medium">Hasta</Label>
+                                                <DatePicker
+                                                    value={filters.date_to || undefined}
+                                                    onChange={(date) => handleFilterChange('date_to', date ? date.toISOString().split('T')[0] : null)}
+                                                />
+                                            </div>
+                                        </div>
+                                    </FormSection>
+
+                                    {/* Botón limpiar filtros */}
+                                    <div className="pt-2">
+                                        <Button
+                                            variant="outline"
+                                            className="w-full gap-2"
+                                            onClick={handleClearFilters}
+                                        >
+                                            <X className="h-4 w-4" />
+                                            Limpiar todos los filtros
+                                        </Button>
+                                    </div>
+                                </div>
+                            </SheetContent>
+                        </Sheet>
+                    }
                 />
 
-                {/* Modal de asignar motorista */}
-                <Dialog open={assignModalOpen} onOpenChange={setAssignModalOpen}>
+                {/* Modal de cancelar orden */}
+                <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
                     <DialogContent className="sm:max-w-md">
                         <DialogHeader>
-                            <DialogTitle>Asignar Motorista</DialogTitle>
+                            <DialogTitle className="flex items-center gap-2 text-red-600">
+                                <Ban className="h-5 w-5" />
+                                Cancelar Orden
+                            </DialogTitle>
                             <DialogDescription>
-                                Selecciona un motorista disponible para la orden #{selectedOrder?.order_number}
+                                ¿Estás seguro de que deseas cancelar la orden #{selectedOrder?.order_number}?
+                                Esta acción no se puede deshacer.
                             </DialogDescription>
                         </DialogHeader>
 
                         <div className="space-y-4">
-                            {availableDrivers.length > 0 ? (
-                                <>
-                                    <Select value={selectedDriverId} onValueChange={setSelectedDriverId}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Seleccionar motorista" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {availableDrivers.map((driver) => (
-                                                <SelectItem key={driver.id} value={driver.id.toString()}>
-                                                    <div className="flex items-center gap-2">
-                                                        <Users className="h-4 w-4" />
-                                                        <span>{driver.name}</span>
-                                                        {driver.active_orders_count !== undefined && driver.active_orders_count > 0 && (
-                                                            <Badge variant="secondary" className="text-xs">
-                                                                {driver.active_orders_count} orden(es)
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-
-                                    <div className="flex justify-end gap-2">
-                                        <Button variant="outline" onClick={() => setAssignModalOpen(false)}>
-                                            Cancelar
-                                        </Button>
-                                        <Button onClick={handleAssignDriver} disabled={!selectedDriverId}>
-                                            Asignar
-                                        </Button>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="py-4 text-center">
-                                    <p className="text-muted-foreground">
-                                        No hay motoristas disponibles para el restaurante {selectedOrder?.restaurant?.name || 'seleccionado'}.
-                                    </p>
-                                </div>
-                            )}
+                            <div className="space-y-2">
+                                <Label htmlFor="cancellation_reason">Razón de cancelación *</Label>
+                                <Textarea
+                                    id="cancellation_reason"
+                                    placeholder="Escribe la razón por la que se cancela esta orden..."
+                                    value={cancellationReason}
+                                    onChange={(e) => setCancellationReason(e.target.value)}
+                                    rows={3}
+                                    maxLength={500}
+                                />
+                                <p className="text-xs text-muted-foreground text-right">
+                                    {cancellationReason.length}/500
+                                </p>
+                            </div>
                         </div>
+
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setCancelModalOpen(false)} disabled={isSubmitting}>
+                                Volver
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={handleCancelOrder}
+                                disabled={!cancellationReason.trim() || isSubmitting}
+                            >
+                                {isSubmitting ? 'Cancelando...' : 'Confirmar Cancelación'}
+                            </Button>
+                        </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </div>

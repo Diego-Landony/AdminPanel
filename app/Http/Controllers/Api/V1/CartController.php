@@ -94,7 +94,7 @@ class CartController extends Controller
      *                 ),
      *                 @OA\Property(property="summary", type="object",
      *                     @OA\Property(property="subtotal", type="string", example="93.00", description="Suma de todos los items sin descuentos"),
-     *                     @OA\Property(property="total_discount", type="string", example="20.00", description="Total de descuentos aplicados"),
+     *                     @OA\Property(property="discount_total", type="string", example="20.00", description="Total de descuentos aplicados"),
      *                     @OA\Property(property="total", type="string", example="73.00", description="Total a pagar (subtotal - descuentos)"),
      *                     @OA\Property(property="promotions_applied", type="array", description="Lista de promociones aplicadas agrupadas",
      *
@@ -202,7 +202,7 @@ class CartController extends Controller
                 'summary' => [
                     'subtotal' => number_format($summary['subtotal'], 2, '.', ''),
                     'promotions_applied' => $summary['promotions_applied'],
-                    'total_discount' => number_format($summary['discounts'], 2, '.', ''),
+                    'discount_total' => number_format($summary['discounts'], 2, '.', ''),
                     'total' => number_format($summary['total'], 2, '.', ''),
                     'points_to_earn' => $pointsToEarn,
                 ],

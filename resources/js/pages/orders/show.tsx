@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import {
     AlertCircle,
     ArrowLeft,
+    Ban,
     Building2,
     Calendar,
     Check,
@@ -13,11 +14,9 @@ import {
     Package,
     Phone,
     Printer,
-    Search,
     ShoppingBag,
     Truck,
     User,
-    UserPlus,
     Users,
     XCircle,
 } from 'lucide-react';
@@ -30,13 +29,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { CURRENCY } from '@/constants/ui-constants';
 import AppLayout from '@/layouts/app-layout';
-import { Driver, Order, OrderStatusHistory } from '@/types';
+import { Order, OrderStatusHistory } from '@/types';
 import { formatCurrency } from '@/utils/format';
 
 interface Restaurant {
@@ -46,10 +46,9 @@ interface Restaurant {
 
 interface ShowOrderProps {
     order: Order;
-    available_drivers: Driver[];
-    statuses?: { value: string; label: string }[];
     restaurants?: Restaurant[];
     can_change_restaurant?: boolean;
+    can_cancel?: boolean;
 }
 
 /**
@@ -252,16 +251,17 @@ const OrderTimeline = ({ statusHistory }: { statusHistory: OrderStatusHistory[] 
 
 export default function ShowOrder({
     order,
-    available_drivers,
     restaurants = [],
     can_change_restaurant = false,
+    can_cancel = false,
 }: ShowOrderProps) {
-    const [assignModalOpen, setAssignModalOpen] = useState(false);
-    const [selectedDriverId, setSelectedDriverId] = useState<string>('');
     const [changeRestaurantModalOpen, setChangeRestaurantModalOpen] = useState(false);
     const [selectedRestaurantId, setSelectedRestaurantId] = useState<string>('');
     const [restaurantSearch, setRestaurantSearch] = useState('');
     const [restaurantComboboxOpen, setRestaurantComboboxOpen] = useState(false);
+    const [cancelModalOpen, setCancelModalOpen] = useState(false);
+    const [cancellationReason, setCancellationReason] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const printRef = useRef<HTMLDivElement>(null);
 
     const handlePrint = () => {
@@ -277,23 +277,6 @@ export default function ShowOrder({
     }, [restaurants, order.restaurant?.id, restaurantSearch]);
 
     const selectedRestaurant = restaurants.find((r) => r.id.toString() === selectedRestaurantId);
-
-    const handleAssignDriver = () => {
-        if (!selectedDriverId) return;
-
-        router.patch(
-            `/orders/${order.id}/assign-driver`,
-            { driver_id: selectedDriverId },
-            {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    setAssignModalOpen(false);
-                    setSelectedDriverId('');
-                },
-            },
-        );
-    };
 
     const handleChangeRestaurant = () => {
         if (!selectedRestaurantId) return;
@@ -312,7 +295,27 @@ export default function ShowOrder({
         );
     };
 
-    const canAssignDriver = order.service_type === 'delivery' && order.status === 'ready' && !order.driver_id;
+    const handleCancelOrder = () => {
+        if (!cancellationReason.trim()) return;
+
+        setIsSubmitting(true);
+        router.post(
+            `/orders/${order.id}/cancel`,
+            { cancellation_reason: cancellationReason },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    setCancelModalOpen(false);
+                    setCancellationReason('');
+                },
+                onFinish: () => setIsSubmitting(false),
+            },
+        );
+    };
+
+    // Verificar si la orden puede ser cancelada (no completada, cancelada o reembolsada)
+    const canBeCancelled = can_cancel && !['completed', 'cancelled', 'refunded'].includes(order.status);
 
     return (
         <AppLayout>
@@ -335,10 +338,10 @@ export default function ShowOrder({
                             <Printer className="mr-2 h-4 w-4" />
                             Imprimir Comanda
                         </Button>
-                        {canAssignDriver && (
-                            <Button variant="default" onClick={() => setAssignModalOpen(true)}>
-                                <UserPlus className="mr-2 h-4 w-4" />
-                                Asignar Motorista
+                        {canBeCancelled && (
+                            <Button variant="destructive" onClick={() => setCancelModalOpen(true)}>
+                                <Ban className="mr-2 h-4 w-4" />
+                                Cancelar Orden
                             </Button>
                         )}
                         <Link href="/orders">
@@ -598,15 +601,7 @@ export default function ShowOrder({
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="space-y-2">
-                                            <p className="text-sm text-muted-foreground">Sin motorista asignado</p>
-                                            {canAssignDriver && (
-                                                <Button variant="outline" size="sm" onClick={() => setAssignModalOpen(true)}>
-                                                    <UserPlus className="mr-1 h-3 w-3" />
-                                                    Asignar
-                                                </Button>
-                                            )}
-                                        </div>
+                                        <p className="text-sm text-muted-foreground">Sin motorista asignado</p>
                                     )}
                                 </CardContent>
                             </Card>
@@ -693,53 +688,49 @@ export default function ShowOrder({
                     </div>
                 </div>
 
-                {/* Modal de asignar motorista */}
-                <Dialog open={assignModalOpen} onOpenChange={setAssignModalOpen}>
+                {/* Modal de cancelar orden */}
+                <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
                     <DialogContent className="sm:max-w-md">
                         <DialogHeader>
-                            <DialogTitle>Asignar Motorista</DialogTitle>
-                            <DialogDescription>Selecciona un motorista disponible para la orden #{order.order_number}</DialogDescription>
+                            <DialogTitle className="flex items-center gap-2 text-red-600">
+                                <Ban className="h-5 w-5" />
+                                Cancelar Orden
+                            </DialogTitle>
+                            <DialogDescription>
+                                ¿Estás seguro de que deseas cancelar la orden #{order.order_number}?
+                                Esta acción no se puede deshacer.
+                            </DialogDescription>
                         </DialogHeader>
 
                         <div className="space-y-4">
-                            {available_drivers.length > 0 ? (
-                                <>
-                                    <Select value={selectedDriverId} onValueChange={setSelectedDriverId}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Seleccionar motorista" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {available_drivers.map((driver) => (
-                                                <SelectItem key={driver.id} value={driver.id.toString()}>
-                                                    <div className="flex items-center gap-2">
-                                                        <Users className="h-4 w-4" />
-                                                        <span>{driver.name}</span>
-                                                        {driver.active_orders_count !== undefined && driver.active_orders_count > 0 && (
-                                                            <Badge variant="secondary" className="text-xs">
-                                                                {driver.active_orders_count} orden(es)
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-
-                                    <div className="flex justify-end gap-2">
-                                        <Button variant="outline" onClick={() => setAssignModalOpen(false)}>
-                                            Cancelar
-                                        </Button>
-                                        <Button onClick={handleAssignDriver} disabled={!selectedDriverId}>
-                                            Asignar
-                                        </Button>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="py-4 text-center">
-                                    <p className="text-muted-foreground">No hay motoristas disponibles en este momento.</p>
-                                </div>
-                            )}
+                            <div className="space-y-2">
+                                <Label htmlFor="cancellation_reason">Razón de cancelación *</Label>
+                                <Textarea
+                                    id="cancellation_reason"
+                                    placeholder="Escribe la razón por la que se cancela esta orden..."
+                                    value={cancellationReason}
+                                    onChange={(e) => setCancellationReason(e.target.value)}
+                                    rows={3}
+                                    maxLength={500}
+                                />
+                                <p className="text-xs text-muted-foreground text-right">
+                                    {cancellationReason.length}/500
+                                </p>
+                            </div>
                         </div>
+
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setCancelModalOpen(false)} disabled={isSubmitting}>
+                                Volver
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={handleCancelOrder}
+                                disabled={!cancellationReason.trim() || isSubmitting}
+                            >
+                                {isSubmitting ? 'Cancelando...' : 'Confirmar Cancelación'}
+                            </Button>
+                        </DialogFooter>
                     </DialogContent>
                 </Dialog>
 

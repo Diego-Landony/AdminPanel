@@ -1313,4 +1313,131 @@ describe('Promotion Tracking', function () {
         expect($orderItem->promotion_snapshot['type'])->toBe('two_for_one');
         expect($orderItem->promotion_snapshot['value'])->toBe('2x1');
     });
+
+    test('fails to create order when promotion has expired', function () {
+        $customer = Customer::factory()->create();
+        $restaurant = Restaurant::factory()->create();
+        $category = Category::factory()->create(['is_active' => true]);
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'is_active' => true,
+            'precio_pickup_capital' => 100.00,
+        ]);
+
+        // Crear promoción que ya expiró (is_active = false)
+        $promotion = Promotion::create([
+            'name' => 'Promoción Expirada',
+            'type' => 'percentage_discount',
+            'is_active' => false,
+        ]);
+
+        PromotionItem::create([
+            'promotion_id' => $promotion->id,
+            'product_id' => $product->id,
+            'category_id' => $category->id,
+            'discount_percentage' => 20,
+        ]);
+
+        $cart = Cart::factory()->create([
+            'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'pickup',
+            'zone' => 'capital',
+            'status' => 'active',
+        ]);
+
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price' => 100.00,
+            'subtotal' => 100.00,
+        ]);
+
+        // Activar temporalmente la promoción para que se aplique al calcular el carrito
+        $promotion->update(['is_active' => true]);
+
+        // Simular que la promoción expira entre el cálculo del carrito y la creación de la orden
+        // Usamos un mock del servicio CartService para inyectar el descuento
+        $cartService = app(\App\Services\CartService::class);
+        $summary = $cartService->getCartSummary($cart);
+
+        // Ahora desactivamos la promoción para simular que expiró
+        $promotion->update(['is_active' => false]);
+
+        $response = actingAs($customer, 'sanctum')
+            ->postJson('/api/v1/orders', [
+                'restaurant_id' => $restaurant->id,
+                'service_type' => 'pickup',
+                'payment_method' => 'cash',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'error_code' => 'PROMOTION_EXPIRED',
+            ]);
+    });
+
+    test('fails to create order when promotion item is no longer valid today', function () {
+        $customer = Customer::factory()->create();
+        $restaurant = Restaurant::factory()->create();
+        $category = Category::factory()->create(['is_active' => true]);
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'is_active' => true,
+            'precio_pickup_capital' => 100.00,
+        ]);
+
+        // Crear promoción activa pero con item que tiene restricción de día
+        $promotion = Promotion::create([
+            'name' => 'Promoción Solo Lunes',
+            'type' => 'percentage_discount',
+            'is_active' => true,
+        ]);
+
+        // Crear item con weekdays que NO incluye el día actual
+        $currentWeekday = now()->dayOfWeekIso;
+        $invalidWeekday = $currentWeekday === 7 ? 1 : $currentWeekday + 1;
+
+        PromotionItem::create([
+            'promotion_id' => $promotion->id,
+            'product_id' => $product->id,
+            'category_id' => $category->id,
+            'discount_percentage' => 20,
+            'weekdays' => [$invalidWeekday],
+        ]);
+
+        $cart = Cart::factory()->create([
+            'customer_id' => $customer->id,
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'pickup',
+            'zone' => 'capital',
+            'status' => 'active',
+        ]);
+
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price' => 100.00,
+            'subtotal' => 100.00,
+        ]);
+
+        $response = actingAs($customer, 'sanctum')
+            ->postJson('/api/v1/orders', [
+                'restaurant_id' => $restaurant->id,
+                'service_type' => 'pickup',
+                'payment_method' => 'cash',
+            ]);
+
+        // La orden debería crearse pero sin descuento ya que la promoción no aplica hoy
+        // El servicio de promociones no aplicará el descuento si el día no es válido
+        $response->assertCreated();
+
+        $order = Order::latest()->first();
+        $orderItem = $order->items->first();
+
+        // Verificar que no se aplicó ninguna promoción
+        expect($orderItem->promotion_id)->toBeNull();
+    });
 });

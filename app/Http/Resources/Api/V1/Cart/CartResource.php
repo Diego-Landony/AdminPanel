@@ -35,7 +35,7 @@ class CartResource extends JsonResource
                 return [
                     'subtotal' => (float) $summary['subtotal'],
                     'promotions_applied' => $summary['promotions_applied'] ?? [],
-                    'total_discount' => (float) ($summary['total_discount'] ?? 0),
+                    'discount_total' => (float) ($summary['discount_total'] ?? $summary['total_discount'] ?? 0),
                     'total' => $total,
                     'points_to_earn' => $pointsToEarn,
                     'estimated_pickup_time' => $estimatedTimes['pickup'],

@@ -144,6 +144,76 @@ class DeviceController extends Controller
     }
 
     /**
+     * Update FCM token for a device
+     *
+     * @OA\Patch(
+     *     path="/api/v1/devices/{device}/fcm-token",
+     *     tags={"Devices"},
+     *     summary="Update device FCM token",
+     *     description="Updates only the FCM token for push notifications. Use this when the FCM token refreshes without needing to re-register the entire device.",
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="device",
+     *         in="path",
+     *         required=true,
+     *         description="Device ID",
+     *
+     *         @OA\Schema(type="integer")
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(
+     *             required={"fcm_token"},
+     *
+     *             @OA\Property(property="fcm_token", type="string", example="fKw8h4Xj...", description="New Firebase Cloud Messaging token")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="FCM token updated successfully",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Token FCM actualizado exitosamente."),
+     *             @OA\Property(property="data", ref="#/components/schemas/CustomerDevice")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Unauthenticated"),
+     *     @OA\Response(response=403, description="Forbidden - device belongs to another customer"),
+     *     @OA\Response(response=404, description="Device not found"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
+    public function updateFcmToken(Request $request, CustomerDevice $device): JsonResponse
+    {
+        // Verificar que el dispositivo pertenezca al usuario autenticado
+        if ($device->customer_id !== $request->user()->id) {
+            return response()->json([
+                'message' => 'No tienes permiso para actualizar este dispositivo.',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'fcm_token' => ['required', 'string', 'max:255'],
+        ]);
+
+        $device->update([
+            'fcm_token' => $validated['fcm_token'],
+            'last_used_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Token FCM actualizado exitosamente.',
+            'data' => CustomerDeviceResource::make($device),
+        ]);
+    }
+
+    /**
      * Delete/deactivate a device
      *
      * @OA\Delete(

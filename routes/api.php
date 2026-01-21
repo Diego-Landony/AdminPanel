@@ -108,8 +108,13 @@ Route::prefix('v1')->group(function () {
             Route::get('/', [DeviceController::class, 'index'])
                 ->name('index');
 
+            // Rate limiting más estricto para registro de dispositivos (10 por minuto)
             Route::post('/register', [DeviceController::class, 'register'])
+                ->middleware('throttle:10,1')
                 ->name('register');
+
+            Route::patch('/{device}/fcm-token', [DeviceController::class, 'updateFcmToken'])
+                ->name('update-fcm-token');
 
             Route::delete('/{device}', [DeviceController::class, 'destroy'])
                 ->name('destroy');

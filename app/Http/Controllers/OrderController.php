@@ -10,6 +10,7 @@ use App\Models\Menu\SectionOption;
 use App\Models\Order;
 use App\Models\Restaurant;
 use App\Services\OrderManagementService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -33,8 +34,11 @@ class OrderController extends Controller
         $status = $request->get('status');
         $serviceType = $request->get('service_type');
         $restaurantId = $request->get('restaurant_id');
-        $dateFrom = $request->get('date_from');
-        $dateTo = $request->get('date_to');
+
+        // Default a hoy si no se especifican fechas
+        $today = now()->format('Y-m-d');
+        $dateFrom = $request->get('date_from', $today);
+        $dateTo = $request->get('date_to', $today);
 
         $filters = [
             'search' => $search,
@@ -53,35 +57,25 @@ class OrderController extends Controller
             return $this->transformOrder($order);
         });
 
-        // Obtener estadisticas
-        $statistics = $this->orderService->getOrderStatistics($restaurantId ? (int) $restaurantId : null);
+        // Obtener estadisticas de HOY (siempre del dia actual)
+        $statistics = $this->orderService->getTodayStatistics($restaurantId ? (int) $restaurantId : null);
 
         // Lista de restaurantes para filtro
         $restaurants = Restaurant::active()->ordered()->get(['id', 'name']);
 
-        // Lista de motoristas para filtro y asignación
-        $drivers = Driver::query()
-            ->active()
-            ->orderBy('name')
-            ->get(['id', 'name', 'is_active', 'is_available', 'restaurant_id']);
+        // Configuracion de polling
+        $pollingConfig = [
+            'polling_interval' => (int) config('app.admin_polling_interval', 30),
+            'enabled' => true,
+        ];
 
         return Inertia::render('orders/index', [
             'orders' => $orders,
             'restaurants' => $restaurants,
-            'drivers' => $drivers->map(fn ($driver) => [
-                'id' => $driver->id,
-                'name' => $driver->name,
-                'is_active' => $driver->is_active,
-                'is_available' => $driver->is_available,
-                'restaurant_id' => $driver->restaurant_id,
-            ]),
-            'total_orders' => $statistics['total'] ?? 0,
-            'pending_orders' => $statistics['pending'] ?? 0,
-            'preparing_orders' => $statistics['preparing'] ?? 0,
-            'out_for_delivery_orders' => $statistics['out_for_delivery'] ?? 0,
-            'completed_today' => $statistics['completed_today'] ?? 0,
+            'statistics' => $statistics,
             'statuses' => $this->getStatuses(),
             'service_types' => $this->getServiceTypes(),
+            'polling_config' => $pollingConfig,
             'filters' => [
                 'search' => $search,
                 'per_page' => (int) $perPage,
@@ -93,6 +87,23 @@ class OrderController extends Controller
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
             ],
+        ]);
+    }
+
+    /**
+     * Endpoint de polling para actualizaciones en tiempo real (admin).
+     */
+    public function poll(Request $request): JsonResponse
+    {
+        $restaurantId = $request->get('restaurant_id');
+
+        $orders = $this->orderService->getActiveOrdersForPolling(
+            $restaurantId ? (int) $restaurantId : null
+        );
+
+        return response()->json([
+            'orders' => $orders,
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 
@@ -110,13 +121,6 @@ class OrderController extends Controller
             'review',
         ]);
 
-        // Obtener motoristas disponibles para el restaurante
-        $availableDrivers = Driver::query()
-            ->forRestaurant($order->restaurant_id)
-            ->available()
-            ->orderBy('name')
-            ->get(['id', 'name', 'phone']);
-
         // Verificar si se puede cambiar el restaurante
         $notAllowedStatuses = [
             Order::STATUS_READY,
@@ -126,19 +130,22 @@ class OrderController extends Controller
         ];
         $canChangeRestaurant = ! in_array($order->status, $notAllowedStatuses);
 
+        // Verificar si se puede cancelar la orden
+        $notAllowedForCancel = [
+            Order::STATUS_COMPLETED,
+            Order::STATUS_CANCELLED,
+            Order::STATUS_REFUNDED,
+        ];
+        $canCancel = ! in_array($order->status, $notAllowedForCancel);
+
         // Lista de restaurantes para cambio
         $restaurants = Restaurant::active()->ordered()->get(['id', 'name']);
 
         return Inertia::render('orders/show', [
             'order' => $this->transformOrderDetail($order),
-            'available_drivers' => $availableDrivers->map(fn ($driver) => [
-                'id' => $driver->id,
-                'name' => $driver->name,
-                'phone' => $driver->phone,
-            ]),
-            'statuses' => $this->getStatuses(),
             'restaurants' => $restaurants,
             'can_change_restaurant' => $canChangeRestaurant,
+            'can_cancel' => $canCancel,
         ]);
     }
 
@@ -204,6 +211,57 @@ class OrderController extends Controller
     }
 
     /**
+     * Cancela una orden.
+     * Solo el admin puede cancelar ordenes.
+     */
+    public function cancel(Request $request, Order $order): RedirectResponse
+    {
+        // Validar que la orden no esté ya cancelada, completada o reembolsada
+        $notAllowedStatuses = [
+            Order::STATUS_COMPLETED,
+            Order::STATUS_CANCELLED,
+            Order::STATUS_REFUNDED,
+        ];
+
+        if (in_array($order->status, $notAllowedStatuses)) {
+            return back()->with('error', 'Esta orden no puede ser cancelada.');
+        }
+
+        $request->validate([
+            'cancellation_reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        // Si tiene motorista asignado, liberarlo
+        if ($order->driver_id) {
+            Driver::where('id', $order->driver_id)->update(['is_available' => true]);
+        }
+
+        // Cancelar la orden
+        $order->update([
+            'status' => Order::STATUS_CANCELLED,
+            'cancellation_reason' => $request->cancellation_reason,
+            'driver_id' => null,
+            'assigned_to_driver_at' => null,
+        ]);
+
+        // Registrar en historial
+        $order->statusHistory()->create([
+            'previous_status' => $order->getOriginal('status'),
+            'new_status' => Order::STATUS_CANCELLED,
+            'changed_by_type' => 'admin',
+            'changed_by_id' => auth()->id(),
+            'notes' => $request->cancellation_reason,
+        ]);
+
+        // Notificar al cliente si existe
+        if ($order->customer) {
+            $order->customer->notify(new \App\Notifications\OrderStatusChangedNotification($order, $order->getOriginal('status')));
+        }
+
+        return back()->with('success', 'Orden cancelada exitosamente.');
+    }
+
+    /**
      * Transforma una orden para la lista.
      *
      * @return array<string, mixed>
@@ -234,6 +292,11 @@ class OrderController extends Controller
             'items_count' => $order->items->count(),
             'created_at' => $order->created_at,
             'updated_at' => $order->updated_at,
+            'can_be_cancelled' => ! in_array($order->status, [
+                Order::STATUS_COMPLETED,
+                Order::STATUS_CANCELLED,
+                Order::STATUS_REFUNDED,
+            ]),
         ];
     }
 

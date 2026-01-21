@@ -237,14 +237,6 @@ class User extends Authenticatable implements ActivityLoggable
     }
 
     /**
-     * Campo usado para identificar el modelo en los logs de actividad
-     */
-    public function getActivityLabelField(): string
-    {
-        return 'name';
-    }
-
-    /**
      * Nombre del modelo para los logs de actividad
      */
     public static function getActivityModelName(): string

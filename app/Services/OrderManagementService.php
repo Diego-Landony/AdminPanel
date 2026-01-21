@@ -214,4 +214,88 @@ class OrderManagementService
             'cancelled' => (clone $query)->where('status', Order::STATUS_CANCELLED)->count(),
         ];
     }
+
+    /**
+     * Obtener estadisticas de ordenes solo para el dia de hoy (admin dashboard).
+     *
+     * @return array{
+     *     total_today: int,
+     *     pending: int,
+     *     preparing: int,
+     *     ready: int,
+     *     out_for_delivery: int,
+     *     completed_today: int,
+     *     cancelled_today: int,
+     *     total_sales_today: float,
+     *     cash_sales_today: float,
+     *     card_sales_today: float
+     * }
+     */
+    public function getTodayStatistics(?int $restaurantId = null): array
+    {
+        $query = Order::query()->whereDate('created_at', today());
+
+        if ($restaurantId !== null) {
+            $query->where('restaurant_id', $restaurantId);
+        }
+
+        // Estadisticas de ordenes activas (sin filtro de fecha para estados pendientes)
+        $activeQuery = Order::query();
+        if ($restaurantId !== null) {
+            $activeQuery->where('restaurant_id', $restaurantId);
+        }
+
+        // Ventas completadas hoy
+        $completedTodayQuery = (clone $query)
+            ->where('status', Order::STATUS_COMPLETED);
+
+        $totalSalesToday = (clone $completedTodayQuery)->sum('total');
+        $cashSalesToday = (clone $completedTodayQuery)
+            ->where('payment_method', 'cash')
+            ->sum('total');
+        $cardSalesToday = (clone $completedTodayQuery)
+            ->where('payment_method', 'card')
+            ->sum('total');
+
+        return [
+            'total_today' => (clone $query)->count(),
+            'pending' => (clone $activeQuery)->where('status', Order::STATUS_PENDING)->count(),
+            'preparing' => (clone $activeQuery)->where('status', Order::STATUS_PREPARING)->count(),
+            'ready' => (clone $activeQuery)->where('status', Order::STATUS_READY)->count(),
+            'out_for_delivery' => (clone $activeQuery)->where('status', Order::STATUS_OUT_FOR_DELIVERY)->count(),
+            'completed_today' => (clone $completedTodayQuery)->count(),
+            'cancelled_today' => (clone $query)->where('status', Order::STATUS_CANCELLED)->count(),
+            'total_sales_today' => (float) $totalSalesToday,
+            'cash_sales_today' => (float) $cashSalesToday,
+            'card_sales_today' => (float) $cardSalesToday,
+        ];
+    }
+
+    /**
+     * Obtener ordenes activas para polling (admin).
+     *
+     * @return array<int, array{id: int, order_number: string, status: string, created_at: string}>
+     */
+    public function getActiveOrdersForPolling(?int $restaurantId = null): array
+    {
+        $query = Order::query()
+            ->whereNotIn('status', [
+                Order::STATUS_COMPLETED,
+                Order::STATUS_CANCELLED,
+                Order::STATUS_REFUNDED,
+            ])
+            ->select(['id', 'order_number', 'status', 'created_at'])
+            ->orderBy('created_at', 'desc');
+
+        if ($restaurantId !== null) {
+            $query->where('restaurant_id', $restaurantId);
+        }
+
+        return $query->get()->map(fn ($order) => [
+            'id' => $order->id,
+            'order_number' => $order->order_number,
+            'status' => $order->status,
+            'created_at' => $order->created_at->toIso8601String(),
+        ])->all();
+    }
 }

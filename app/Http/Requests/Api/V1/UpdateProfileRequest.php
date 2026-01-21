@@ -30,7 +30,7 @@ class UpdateProfileRequest extends FormRequest
             'last_name' => ['sometimes', 'string', 'max:255'],
             'email' => ['sometimes', 'string', 'lowercase', 'email', 'max:255', 'unique:customers,email,'.$customerId],
             'phone' => ['nullable', 'string', 'max:20'],
-            'birth_date' => ['nullable', 'date', 'before:today'],
+            'birth_date' => ['nullable', 'date', 'before:-18 years', 'after:1900-01-01'],
             'gender' => ['nullable', Rule::enum(Gender::class)],
             'subway_card' => ['nullable', 'string', 'max:50'],
             'email_offers_enabled' => ['sometimes', 'boolean'],
@@ -51,7 +51,8 @@ class UpdateProfileRequest extends FormRequest
             'email.unique' => 'Este correo electrónico ya está en uso.',
             'phone.max' => 'El teléfono no puede exceder 20 caracteres.',
             'birth_date.date' => 'La fecha de nacimiento debe ser una fecha válida.',
-            'birth_date.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
+            'birth_date.before' => 'Debes tener al menos 18 años.',
+            'birth_date.after' => 'La fecha de nacimiento no es válida.',
             'gender.in' => 'El género debe ser: male, female u other.',
         ];
     }

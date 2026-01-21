@@ -295,48 +295,63 @@ class CartService
     /**
      * Actualiza el restaurante del carrito (para pickup)
      * Automáticamente establece service_type como 'pickup' y zone según restaurant.price_location
+     * Usa transacción con lock para evitar race conditions
      */
     public function updateRestaurant(Cart $cart, Restaurant $restaurant): Cart
     {
-        $oldZone = $cart->zone;
-        $oldServiceType = $cart->service_type;
-        $newZone = $restaurant->price_location ?? 'capital';
+        return DB::transaction(function () use ($cart, $restaurant) {
+            // Obtener el carrito con lock para evitar race conditions
+            $cart = Cart::query()
+                ->where('id', $cart->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $cart->update([
-            'restaurant_id' => $restaurant->id,
-            'service_type' => 'pickup',
-            'zone' => $newZone,
-            'delivery_address_id' => null, // Limpiar dirección de delivery al cambiar a pickup
-        ]);
+            $oldZone = $cart->zone;
+            $oldServiceType = $cart->service_type;
+            $newZone = $restaurant->price_location ?? 'capital';
 
-        // Recalcular precios si cambió zona o tipo de servicio
-        if ($oldZone !== $newZone || $oldServiceType !== 'pickup') {
-            $cart = $cart->fresh(['items.product', 'items.variant', 'items.combo']);
-            foreach ($cart->items as $item) {
-                if ($item->isCombo()) {
-                    $unitPrice = $this->getPriceForCombo($item->combo, $newZone, 'pickup');
-                } else {
-                    $unitPrice = $this->getPriceForProduct($item->product, $item->variant_id, $newZone, 'pickup');
+            $cart->update([
+                'restaurant_id' => $restaurant->id,
+                'service_type' => 'pickup',
+                'zone' => $newZone,
+                'delivery_address_id' => null, // Limpiar dirección de delivery al cambiar a pickup
+            ]);
+
+            // Recalcular precios si cambió zona o tipo de servicio
+            if ($oldZone !== $newZone || $oldServiceType !== 'pickup') {
+                $cart = $cart->fresh(['items.product', 'items.variant', 'items.combo']);
+                foreach ($cart->items as $item) {
+                    if ($item->isCombo()) {
+                        $unitPrice = $this->getPriceForCombo($item->combo, $newZone, 'pickup');
+                    } else {
+                        $unitPrice = $this->getPriceForProduct($item->product, $item->variant_id, $newZone, 'pickup');
+                    }
+
+                    $item->update([
+                        'unit_price' => $unitPrice,
+                        'subtotal' => $unitPrice * $item->quantity,
+                    ]);
                 }
-
-                $item->update([
-                    'unit_price' => $unitPrice,
-                    'subtotal' => $unitPrice * $item->quantity,
-                ]);
             }
-        }
 
-        return $cart->fresh(['items', 'restaurant']);
+            return $cart->fresh(['items', 'restaurant']);
+        });
     }
 
     /**
      * Actualiza el tipo de servicio y zona del carrito
      * Recalcula los precios de todos los items
-     * Usa transacción para evitar race conditions
+     * Usa transacción con lock para evitar race conditions
      */
     public function updateServiceType(Cart $cart, string $serviceType, string $zone): Cart
     {
         return DB::transaction(function () use ($cart, $serviceType, $zone) {
+            // Obtener el carrito con lock para evitar race conditions
+            $cart = Cart::query()
+                ->where('id', $cart->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
             $cart->update([
                 'service_type' => $serviceType,
                 'zone' => $zone,
@@ -537,6 +552,7 @@ class CartService
 
     /**
      * Actualiza la dirección de entrega del carrito y asigna el restaurante
+     * Usa transacción con lock para evitar race conditions
      */
     public function updateDeliveryAddress(
         Cart $cart,
@@ -544,20 +560,28 @@ class CartService
         Restaurant $restaurant,
         string $zone
     ): Cart {
-        $oldZone = $cart->zone;
+        return DB::transaction(function () use ($cart, $address, $restaurant, $zone) {
+            // Obtener el carrito con lock para evitar race conditions
+            $cart = Cart::query()
+                ->where('id', $cart->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $cart->update([
-            'delivery_address_id' => $address->id,
-            'restaurant_id' => $restaurant->id,
-            'zone' => $zone,
-            'service_type' => 'delivery',
-        ]);
+            $oldZone = $cart->zone;
 
-        if ($oldZone !== $zone) {
-            $this->recalculatePricesForZone($cart, $zone);
-        }
+            $cart->update([
+                'delivery_address_id' => $address->id,
+                'restaurant_id' => $restaurant->id,
+                'zone' => $zone,
+                'service_type' => 'delivery',
+            ]);
 
-        return $cart->fresh(['items', 'restaurant', 'deliveryAddress']);
+            if ($oldZone !== $zone) {
+                $this->recalculatePricesForZone($cart, $zone);
+            }
+
+            return $cart->fresh(['items', 'restaurant', 'deliveryAddress']);
+        });
     }
 
     /**

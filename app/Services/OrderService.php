@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Exceptions\Delivery\AddressOutsideDeliveryZoneException;
+use App\Exceptions\Order\PromotionExpiredException;
 use App\Exceptions\Order\RestaurantClosedException;
 use App\Models\Cart;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\CustomerNit;
+use App\Models\Menu\Promotion;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderPromotion;
@@ -171,6 +173,9 @@ class OrderService
             $orderNumber = $this->numberGenerator->generate();
 
             $summary = $this->cartService->getCartSummary($cart);
+
+            // Validar que las promociones aplicadas sigan vigentes
+            $this->validateAppliedPromotions($summary['item_discounts']);
 
             $pointsToEarn = $this->pointsService->calculatePointsToEarn($summary['total'], $customer);
 
@@ -533,5 +538,45 @@ class OrderService
             'daily_special' => "Sub del día aplicado a {$itemCount} item(s)",
             default => "Descuento de Q{$totalDiscount} en {$itemCount} item(s)",
         };
+    }
+
+    /**
+     * Validar que las promociones aplicadas sigan vigentes
+     *
+     * Verifica en tiempo real que cada promoción aplicada a los items del carrito
+     * siga siendo válida al momento de crear la orden.
+     *
+     * @param  array<int, array{discount_amount: float, applied_promotion?: array}>  $itemDiscounts  Descuentos por item del carrito
+     *
+     * @throws PromotionExpiredException Si alguna promoción ya no está vigente
+     */
+    private function validateAppliedPromotions(array $itemDiscounts): void
+    {
+        $validatedPromotionIds = [];
+
+        foreach ($itemDiscounts as $discount) {
+            if (! isset($discount['applied_promotion']) || $discount['discount_amount'] <= 0) {
+                continue;
+            }
+
+            $promotionId = $discount['applied_promotion']['id'];
+
+            // Evitar validar la misma promoción múltiples veces
+            if (in_array($promotionId, $validatedPromotionIds)) {
+                continue;
+            }
+
+            $promotion = Promotion::find($promotionId);
+
+            if (! $promotion || ! $promotion->isValidNow()) {
+                throw new PromotionExpiredException(
+                    $discount['applied_promotion']['name'],
+                    $promotionId,
+                    $promotion?->valid_until
+                );
+            }
+
+            $validatedPromotionIds[] = $promotionId;
+        }
     }
 }

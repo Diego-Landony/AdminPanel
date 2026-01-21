@@ -43,6 +43,8 @@ interface DataTableProps<T> {
     renderMobileCard?: (item: T) => React.ReactNode;
     routeName: string;
     breakpoint?: 'sm' | 'md' | 'lg' | 'xl';
+    /** Custom actions to render in the header, next to Sincronizar button */
+    headerActions?: React.ReactNode;
 }
 
 interface TruncatedTextProps {
@@ -97,6 +99,7 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
     renderMobileCard,
     routeName,
     breakpoint = 'md',
+    headerActions,
 }: DataTableProps<T>) {
     const [searchInput, setSearchInput] = useState(filters.search || '');
     const [isLoading, setIsLoading] = useState(false);
@@ -280,6 +283,9 @@ const DataTableComponent = function DataTable<T extends { id: number | string }>
                                 <RefreshCw className={`mr-1 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
                                 Sincronizar
                             </Button>
+
+                            {/* Custom header actions */}
+                            {headerActions}
                         </div>
                     </CardHeader>
 

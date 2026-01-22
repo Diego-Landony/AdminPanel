@@ -150,7 +150,7 @@ class FavoriteController extends Controller
         if ($existing) {
             return response()->json([
                 'data' => new FavoriteResource($existing),
-                'message' => 'Este item ya está en tus favoritos',
+                'message' => 'Ya está en favoritos',
             ]);
         }
 
@@ -163,7 +163,7 @@ class FavoriteController extends Controller
 
         return response()->json([
             'data' => new FavoriteResource($favorite),
-            'message' => 'Agregado a favoritos exitosamente',
+            'message' => 'Agregado a favoritos',
         ], 201);
     }
 
@@ -236,7 +236,7 @@ class FavoriteController extends Controller
         $favorite->delete();
 
         return response()->json([
-            'message' => 'Removido de favoritos exitosamente',
+            'message' => 'Removido de favoritos',
         ]);
     }
 }

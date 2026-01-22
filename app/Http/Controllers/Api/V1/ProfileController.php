@@ -120,7 +120,7 @@ class ProfileController extends Controller
         $customer->update($validated);
 
         return response()->json([
-            'message' => 'Perfil actualizado exitosamente.',
+            'message' => 'Perfil actualizado',
             'data' => [
                 'customer' => CustomerResource::make($customer->fresh()->load('customerType')),
             ],
@@ -169,7 +169,7 @@ class ProfileController extends Controller
         $customer->delete();
 
         return response()->json([
-            'message' => 'Cuenta eliminada exitosamente.',
+            'message' => 'Cuenta eliminada',
             'data' => [
                 'can_reactivate_until' => now()->addDays(30)->toIso8601String(),
                 'days_to_reactivate' => 30,

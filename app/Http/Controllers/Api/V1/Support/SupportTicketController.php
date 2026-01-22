@@ -121,7 +121,7 @@ class SupportTicketController extends Controller
         broadcast(new SupportMessageSent($message))->toOthers();
 
         return response()->json([
-            'message' => 'Ticket creado exitosamente.',
+            'message' => 'Ticket creado',
             'data' => [
                 'ticket' => new SupportTicketResource($ticket),
             ],
@@ -155,7 +155,7 @@ class SupportTicketController extends Controller
 
         if ($ticket->customer_id !== $customer->id) {
             return response()->json([
-                'message' => 'No tienes acceso a este ticket.',
+                'message' => 'Sin acceso al ticket',
             ], 403);
         }
 
@@ -209,13 +209,13 @@ class SupportTicketController extends Controller
 
         if ($ticket->customer_id !== $customer->id) {
             return response()->json([
-                'message' => 'No tienes acceso a este ticket.',
+                'message' => 'Sin acceso al ticket',
             ], 403);
         }
 
         if ($ticket->status === 'closed') {
             return response()->json([
-                'message' => 'No puedes enviar mensajes a un ticket cerrado.',
+                'message' => 'Ticket cerrado, no permite mensajes',
             ], 422);
         }
 
@@ -247,7 +247,7 @@ class SupportTicketController extends Controller
         broadcast(new SupportMessageSent($message))->toOthers();
 
         return response()->json([
-            'message' => 'Mensaje enviado exitosamente.',
+            'message' => 'Mensaje enviado',
             'data' => [
                 'message' => new SupportMessageResource($message),
             ],

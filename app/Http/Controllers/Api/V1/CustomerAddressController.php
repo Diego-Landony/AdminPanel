@@ -150,7 +150,7 @@ class CustomerAddressController extends Controller
 
         return response()->json([
             'data' => new CustomerAddressResource($address),
-            'message' => 'Dirección creada exitosamente',
+            'message' => 'Dirección creada',
         ], 201);
     }
 
@@ -270,7 +270,7 @@ class CustomerAddressController extends Controller
 
         return response()->json([
             'data' => new CustomerAddressResource($address->fresh()),
-            'message' => 'Dirección actualizada exitosamente',
+            'message' => 'Dirección actualizada',
         ]);
     }
 
@@ -316,7 +316,7 @@ class CustomerAddressController extends Controller
         $address->delete();
 
         return response()->json([
-            'message' => 'Dirección eliminada exitosamente',
+            'message' => 'Dirección eliminada',
         ]);
     }
 
@@ -367,7 +367,7 @@ class CustomerAddressController extends Controller
 
         return response()->json([
             'data' => new CustomerAddressResource($address->fresh()),
-            'message' => 'Dirección marcada como predeterminada',
+            'message' => 'Dirección predeterminada',
         ]);
     }
 

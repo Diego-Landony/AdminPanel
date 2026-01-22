@@ -203,7 +203,7 @@ class PromotionController extends Controller
 
         if (! $promotion) {
             return response()->json([
-                'message' => 'No hay Sub del Día disponible.',
+                'message' => 'Sub del Día no disponible',
             ], 404);
         }
 

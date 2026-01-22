@@ -37,17 +37,31 @@ class Section extends Model implements ActivityLoggable
         'sort_order',
     ];
 
-    protected $casts = [
-        'is_required' => 'boolean',
-        'allow_multiple' => 'boolean',
-        'min_selections' => 'integer',
-        'max_selections' => 'integer',
-        'bundle_discount_enabled' => 'boolean',
-        'bundle_size' => 'integer',
-        'bundle_discount_amount' => 'decimal:2',
-        'is_active' => 'boolean',
-        'sort_order' => 'integer',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'is_required' => 'boolean',
+            'allow_multiple' => 'boolean',
+            'min_selections' => 'integer',
+            'max_selections' => 'integer',
+            'bundle_discount_enabled' => 'boolean',
+            'bundle_size' => 'integer',
+            'is_active' => 'boolean',
+            'sort_order' => 'integer',
+        ];
+    }
+
+    /**
+     * Get the bundle discount amount, ensuring null instead of empty string.
+     */
+    public function getBundleDiscountAmountAttribute($value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (float) $value;
+    }
 
     public function options(): HasMany
     {

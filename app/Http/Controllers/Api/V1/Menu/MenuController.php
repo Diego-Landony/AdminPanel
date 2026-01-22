@@ -68,7 +68,7 @@ class MenuController extends Controller
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="price_disclaimer", type="string", example="El precio puede variar segun area y tipo de servicio.", description="Disclaimer obligatorio a mostrar en UI junto a los precios"),
+     *                 @OA\Property(property="price_disclaimer", type="string", example="Precio sujeto a ubicación/servicio.", description="Disclaimer obligatorio a mostrar en UI junto a los precios"),
      *                 @OA\Property(property="categories", type="array", description="Product categories (excludes combo category). Order by sort_order.",
      *
      *                     @OA\Items(ref="#/components/schemas/Category")
@@ -143,7 +143,7 @@ class MenuController extends Controller
 
         return response()->json([
             'data' => [
-                'price_disclaimer' => 'El precio puede variar segun area y tipo de servicio.',
+                'price_disclaimer' => 'Precio sujeto a ubicación/servicio.',
                 'categories' => CategoryResource::collection($categories),
                 'combos_category' => $combosCategory ? [
                     'id' => $combosCategory->id,
@@ -182,7 +182,7 @@ class MenuController extends Controller
 
         return response()->json([
             'data' => [
-                'price_disclaimer' => 'El precio puede variar segun area y tipo de servicio.',
+                'price_disclaimer' => 'Precio sujeto a ubicación/servicio.',
                 'categories' => $categories->map(fn ($cat) => [
                     'id' => $cat->id,
                     'name' => $cat->name,

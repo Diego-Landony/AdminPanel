@@ -2,12 +2,15 @@
 
 namespace App\Http\Resources\Api\V1\Menu;
 
+use App\Http\Resources\Concerns\CastsNullableNumbers;
 use App\Models\Menu\PromotionItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ProductResource extends JsonResource
 {
+    use CastsNullableNumbers;
+
     /**
      * Transform the resource into an array.
      *
@@ -57,12 +60,7 @@ class ProductResource extends JsonResource
                     'type' => $promotion->type,
                     'name' => $promotion->name,
                     'discount_percent' => $promotionItem?->discount_percentage,
-                    'special_prices' => [
-                        'pickup_capital' => $promotionItem?->special_price_pickup_capital ? (float) $promotionItem->special_price_pickup_capital : null,
-                        'delivery_capital' => $promotionItem?->special_price_delivery_capital ? (float) $promotionItem->special_price_delivery_capital : null,
-                        'pickup_interior' => $promotionItem?->special_price_pickup_interior ? (float) $promotionItem->special_price_pickup_interior : null,
-                        'delivery_interior' => $promotionItem?->special_price_delivery_interior ? (float) $promotionItem->special_price_delivery_interior : null,
-                    ],
+                    'special_prices' => $promotionItem ? $this->buildSpecialPrices($promotionItem) : null,
                     'discounted_prices' => $this->calculateDiscountedPrices($promotionItem),
                     'badge' => $promotion->badgeType ? [
                         'name' => $promotion->badgeType->name,
@@ -88,12 +86,7 @@ class ProductResource extends JsonResource
         // If special fixed prices are set, use them directly (4 independent prices)
         if ($item->special_price_pickup_capital || $item->special_price_delivery_capital ||
             $item->special_price_pickup_interior || $item->special_price_delivery_interior) {
-            return [
-                'pickup_capital' => $item->special_price_pickup_capital ? (float) $item->special_price_pickup_capital : null,
-                'delivery_capital' => $item->special_price_delivery_capital ? (float) $item->special_price_delivery_capital : null,
-                'pickup_interior' => $item->special_price_pickup_interior ? (float) $item->special_price_pickup_interior : null,
-                'delivery_interior' => $item->special_price_delivery_interior ? (float) $item->special_price_delivery_interior : null,
-            ];
+            return $this->buildSpecialPrices($item);
         }
 
         // If percentage discount is set, calculate discounted prices

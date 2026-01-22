@@ -221,7 +221,7 @@ class PointsController extends Controller
                     'days_until_expiration' => null,
                     'last_activity_at' => $customer->points_last_activity_at?->toIso8601String(),
                     'warning_level' => 'none',
-                    'message' => 'No tienes puntos acumulados actualmente.',
+                    'message' => 'Sin puntos acumulados',
                 ],
             ]);
         }

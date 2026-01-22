@@ -173,7 +173,7 @@ return [
 
     'custom' => [
         'email' => [
-            'unique' => 'Este correo ya está registrado. ¿Ya tienes cuenta? Inicia sesión.',
+            'unique' => 'Correo ya registrado. Inicia sesión.',
         ],
         'password' => [
             'confirmed' => 'Las contraseñas no coinciden.',

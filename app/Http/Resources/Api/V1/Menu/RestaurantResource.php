@@ -2,11 +2,14 @@
 
 namespace App\Http\Resources\Api\V1\Menu;
 
+use App\Http\Resources\Concerns\CastsNullableNumbers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class RestaurantResource extends JsonResource
 {
+    use CastsNullableNumbers;
+
     /**
      * Transform the resource into an array.
      *
@@ -20,8 +23,8 @@ class RestaurantResource extends JsonResource
             'address' => $this->address,
             'phone' => $this->phone,
             'email' => $this->email,
-            'latitude' => $this->latitude ? (float) $this->latitude : null,
-            'longitude' => $this->longitude ? (float) $this->longitude : null,
+            'latitude' => $this->toFloatOrNull($this->latitude),
+            'longitude' => $this->toFloatOrNull($this->longitude),
             'is_active' => $this->is_active,
             'zone' => $this->price_location,
             'delivery_active' => $this->delivery_active,
@@ -29,7 +32,7 @@ class RestaurantResource extends JsonResource
             'schedule' => $this->schedule,
             'estimated_delivery_time' => $this->estimated_delivery_time,
             'estimated_pickup_time' => $this->estimated_pickup_time,
-            'minimum_order_amount' => $this->minimum_order_amount ? (float) $this->minimum_order_amount : null,
+            'minimum_order_amount' => $this->toFloatOrNull($this->minimum_order_amount),
             'has_geofence' => $this->hasGeofence(),
             'is_open_now' => $this->isOpenNow(),
             'today_schedule' => $this->today_schedule,

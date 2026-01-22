@@ -424,7 +424,7 @@ class CartController extends Controller
 
         if (! $item) {
             return response()->json([
-                'message' => 'Item no encontrado en el carrito',
+                'message' => 'Item no encontrado',
             ], 404);
         }
 
@@ -486,7 +486,7 @@ class CartController extends Controller
 
         if (! $item) {
             return response()->json([
-                'message' => 'Item no encontrado en el carrito',
+                'message' => 'Item no encontrado',
             ], 404);
         }
 
@@ -603,7 +603,7 @@ class CartController extends Controller
                 'zone' => $cart->zone,
                 'prices_updated' => true,
             ],
-            'message' => 'Restaurante seleccionado para pickup',
+            'message' => 'Restaurante seleccionado',
         ]);
     }
 
@@ -698,7 +698,7 @@ class CartController extends Controller
             // Para pickup: zona del restaurante seleccionado
             if (! $cart->restaurant_id) {
                 return response()->json([
-                    'message' => 'Debe seleccionar un restaurante primero para pickup.',
+                    'message' => 'Selecciona restaurante para pickup',
                     'error_code' => 'RESTAURANT_REQUIRED',
                 ], 422);
             }
@@ -709,7 +709,7 @@ class CartController extends Controller
             // Para delivery: zona de la dirección de entrega
             if (! $cart->delivery_address_id) {
                 return response()->json([
-                    'message' => 'Debe seleccionar una dirección de entrega primero para delivery.',
+                    'message' => 'Selecciona dirección para delivery',
                     'error_code' => 'DELIVERY_ADDRESS_REQUIRED',
                 ], 422);
             }
@@ -910,7 +910,7 @@ class CartController extends Controller
                 'zone' => $result->zone,
                 'prices_updated' => true,
             ],
-            'message' => 'Dirección de entrega asignada exitosamente',
+            'message' => 'Dirección asignada',
         ]);
     }
 }

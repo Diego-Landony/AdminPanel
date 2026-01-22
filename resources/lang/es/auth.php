@@ -7,19 +7,19 @@ return [
     'throttle' => 'Demasiados intentos de acceso. Inténtalo de nuevo en :seconds segundos.',
 
     // Mensajes de éxito
-    'register_success' => 'Registro exitoso. Por favor verifica tu email.',
+    'register_success' => 'Registro exitoso. Verifica tu email.',
     'login_success' => 'Inicio de sesión exitoso.',
-    'logout_success' => 'Sesión cerrada exitosamente.',
-    'logout_all_success' => 'Se cerraron todas las sesiones exitosamente.',
-    'token_refreshed' => 'Token renovado exitosamente.',
-    'password_reset_link_sent' => 'Enlace de restablecimiento de contraseña enviado.',
-    'password_reset_success' => 'Contraseña restablecida exitosamente.',
+    'logout_success' => 'Sesión cerrada',
+    'logout_all_success' => 'Todas las sesiones cerradas',
+    'token_refreshed' => 'Token renovado',
+    'password_reset_link_sent' => 'Enlace de restablecimiento enviado',
+    'password_reset_success' => 'Contraseña restablecida',
     'password_reset_throttled' => 'Demasiados intentos. Por favor espera :seconds segundos antes de volver a intentarlo.',
-    'password_created' => 'Contraseña creada exitosamente. Ahora puedes iniciar sesión con tu correo y contraseña.',
-    'password_updated' => 'Contraseña actualizada exitosamente. Se cerraron todas las otras sesiones.',
-    'email_verified' => 'Email verificado exitosamente.',
+    'password_created' => 'Contraseña creada. Ya puedes iniciar sesión.',
+    'password_updated' => 'Contraseña actualizada. Sesiones cerradas.',
+    'email_verified' => 'Email verificado',
     'email_already_verified' => 'El email ya ha sido verificado.',
-    'verification_link_resent' => 'Enlace de verificación reenviado.',
+    'verification_link_resent' => 'Enlace reenviado',
 
     // Errores de credenciales
     'invalid_credentials' => 'Las credenciales proporcionadas son incorrectas.',
@@ -57,7 +57,7 @@ return [
     'oauth_account_deleted_recoverable' => 'Tu cuenta fue eliminada pero aún puede recuperarse. Tienes :points puntos acumulados y :days_left días restantes para recuperar tu cuenta.',
 
     // Reactivación de cuenta
-    'account_reactivated' => 'Cuenta reactivada exitosamente. Bienvenido de nuevo.',
+    'account_reactivated' => 'Cuenta reactivada. Bienvenido.',
     'account_not_found_deleted' => 'No se encontró una cuenta eliminada con este correo electrónico.',
     'reactivation_period_expired' => 'El período de reactivación ha expirado. La cuenta fue eliminada hace más de 30 días.',
     'oauth_deleted_use_provider' => 'Esta cuenta eliminada usa :provider. Para reactivarla, inicia sesión con :provider.',

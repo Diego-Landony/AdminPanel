@@ -787,7 +787,7 @@ class OrderController extends Controller
 
         if (! in_array($order->status, ['completed', 'delivered'])) {
             return response()->json([
-                'message' => 'Solo puedes calificar órdenes completadas',
+                'message' => 'Solo órdenes completadas',
             ], 422);
         }
 

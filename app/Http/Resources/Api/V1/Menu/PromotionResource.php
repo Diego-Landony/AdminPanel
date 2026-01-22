@@ -2,11 +2,14 @@
 
 namespace App\Http\Resources\Api\V1\Menu;
 
+use App\Http\Resources\Concerns\CastsNullableNumbers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class PromotionResource extends JsonResource
 {
+    use CastsNullableNumbers;
+
     /**
      * Transform the resource into an array.
      *
@@ -20,12 +23,10 @@ class PromotionResource extends JsonResource
             'description' => $this->description,
             'image_url' => $this->image_url,
             'type' => $this->type,
-            'prices' => $this->when($this->type === 'bundle_special', fn () => [
-                'pickup_capital' => $this->special_bundle_price_pickup_capital ? (float) $this->special_bundle_price_pickup_capital : null,
-                'delivery_capital' => $this->special_bundle_price_delivery_capital ? (float) $this->special_bundle_price_delivery_capital : null,
-                'pickup_interior' => $this->special_bundle_price_pickup_interior ? (float) $this->special_bundle_price_pickup_interior : null,
-                'delivery_interior' => $this->special_bundle_price_delivery_interior ? (float) $this->special_bundle_price_delivery_interior : null,
-            ]),
+            'prices' => $this->when(
+                $this->type === 'bundle_special',
+                fn () => $this->buildBundlePrices($this->resource)
+            ),
             'valid_from' => $this->valid_from,
             'valid_until' => $this->valid_until,
             'time_from' => $this->time_from,

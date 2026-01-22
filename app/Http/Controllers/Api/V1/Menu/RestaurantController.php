@@ -299,7 +299,7 @@ class RestaurantController extends Controller
         if ($lat === null || $lng === null) {
             return response()->json([
                 'error' => 'location_required',
-                'message' => 'Por favor activa tu ubicación para ver los restaurantes cercanos.',
+                'message' => 'Activa tu ubicación para ver restaurantes',
                 'data' => [
                     'restaurants' => [],
                     'search_radius_km' => null,
@@ -425,7 +425,7 @@ class RestaurantController extends Controller
         if (! $address) {
             return response()->json([
                 'error' => 'address_not_found',
-                'message' => 'La dirección no fue encontrada o no pertenece al cliente.',
+                'message' => 'Dirección no válida',
                 'data' => [
                     'restaurant' => null,
                     'delivery_available' => false,
@@ -441,7 +441,7 @@ class RestaurantController extends Controller
         if (! $restaurant) {
             return response()->json([
                 'error' => 'no_coverage',
-                'message' => 'No tenemos cobertura de delivery en esta dirección. Puedes usar pickup en uno de nuestros restaurantes.',
+                'message' => 'Sin cobertura delivery en esta ubicación. Prueba pickup en restaurantes.',
                 'data' => [
                     'restaurant' => null,
                     'delivery_available' => false,

@@ -2,11 +2,14 @@
 
 namespace App\Http\Resources\Api\V1\Menu;
 
+use App\Http\Resources\Concerns\CastsNullableNumbers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class PromotionItemResource extends JsonResource
 {
+    use CastsNullableNumbers;
+
     /**
      * Transform the resource into an array.
      *
@@ -21,12 +24,12 @@ class PromotionItemResource extends JsonResource
             'category_id' => $this->category_id,
 
             // 4 precios estandarizados (consistente con productos)
-            'special_price_pickup_capital' => $this->special_price_pickup_capital ? (float) $this->special_price_pickup_capital : null,
-            'special_price_delivery_capital' => $this->special_price_delivery_capital ? (float) $this->special_price_delivery_capital : null,
-            'special_price_pickup_interior' => $this->special_price_pickup_interior ? (float) $this->special_price_pickup_interior : null,
-            'special_price_delivery_interior' => $this->special_price_delivery_interior ? (float) $this->special_price_delivery_interior : null,
+            'special_price_pickup_capital' => $this->toFloatOrNull($this->special_price_pickup_capital),
+            'special_price_delivery_capital' => $this->toFloatOrNull($this->special_price_delivery_capital),
+            'special_price_pickup_interior' => $this->toFloatOrNull($this->special_price_pickup_interior),
+            'special_price_delivery_interior' => $this->toFloatOrNull($this->special_price_delivery_interior),
 
-            'discount_percentage' => $this->discount_percentage ? (float) $this->discount_percentage : null,
+            'discount_percentage' => $this->toFloatOrNull($this->discount_percentage),
 
             // Precios en formato estandarizado para el API
             'discounted_prices' => $this->getDiscountedPrices(),
@@ -57,12 +60,7 @@ class PromotionItemResource extends JsonResource
         // Si hay precios especiales definidos, usarlos directamente
         if ($this->special_price_pickup_capital || $this->special_price_delivery_capital ||
             $this->special_price_pickup_interior || $this->special_price_delivery_interior) {
-            return [
-                'pickup_capital' => $this->special_price_pickup_capital ? (float) $this->special_price_pickup_capital : null,
-                'delivery_capital' => $this->special_price_delivery_capital ? (float) $this->special_price_delivery_capital : null,
-                'pickup_interior' => $this->special_price_pickup_interior ? (float) $this->special_price_pickup_interior : null,
-                'delivery_interior' => $this->special_price_delivery_interior ? (float) $this->special_price_delivery_interior : null,
-            ];
+            return $this->buildSpecialPrices($this->resource);
         }
 
         // Si hay porcentaje de descuento, los precios se calculan en ProductResource/ProductVariantResource

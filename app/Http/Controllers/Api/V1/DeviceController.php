@@ -194,7 +194,7 @@ class DeviceController extends Controller
         // Verificar que el dispositivo pertenezca al usuario autenticado
         if ($device->customer_id !== $request->user()->id) {
             return response()->json([
-                'message' => 'No tienes permiso para actualizar este dispositivo.',
+                'message' => 'Sin permiso',
             ], 403);
         }
 
@@ -208,7 +208,7 @@ class DeviceController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Token FCM actualizado exitosamente.',
+            'message' => 'Token FCM actualizado',
             'data' => CustomerDeviceResource::make($device),
         ]);
     }
@@ -252,7 +252,7 @@ class DeviceController extends Controller
         // Verificar que el dispositivo pertenezca al usuario autenticado
         if ($device->customer_id !== $request->user()->id) {
             return response()->json([
-                'message' => 'No tienes permiso para eliminar este dispositivo.',
+                'message' => 'Sin permiso',
             ], 403);
         }
 
@@ -262,7 +262,7 @@ class DeviceController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Dispositivo desactivado exitosamente.',
+            'message' => 'Dispositivo desactivado',
         ]);
     }
 }

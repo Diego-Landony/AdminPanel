@@ -2,11 +2,14 @@
 
 namespace App\Http\Resources\Api\V1\Menu;
 
+use App\Http\Resources\Concerns\CastsNullableNumbers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class SectionResource extends JsonResource
 {
+    use CastsNullableNumbers;
+
     /**
      * Transform the resource into an array.
      *
@@ -27,7 +30,7 @@ class SectionResource extends JsonResource
             // Bundle pricing
             'bundle_discount_enabled' => $this->bundle_discount_enabled,
             'bundle_size' => $this->bundle_size,
-            'bundle_discount_amount' => $this->bundle_discount_amount ? (float) $this->bundle_discount_amount : null,
+            'bundle_discount_amount' => $this->toFloatOrNull($this->bundle_discount_amount),
 
             // Relationships
             'options' => SectionOptionResource::collection($this->whenLoaded('options')),

@@ -326,7 +326,7 @@ class CustomerNitController extends Controller
 
         return response()->json([
             'data' => new CustomerNitResource($nit->fresh()),
-            'message' => 'NIT marcado como predeterminado',
+            'message' => 'NIT predeterminado',
         ]);
     }
 

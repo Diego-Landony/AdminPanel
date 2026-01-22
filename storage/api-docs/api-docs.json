@@ -119,7 +119,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Registro exitoso. Por favor verifica tu email."
+                                            "example": "Registro exitoso. Verifica tu email."
                                         },
                                         "data": {
                                             "properties": {
@@ -424,7 +424,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Sesión cerrada exitosamente."
+                                            "example": "Sesión cerrada"
                                         }
                                     },
                                     "type": "object"
@@ -460,7 +460,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Se cerraron todas las sesiones exitosamente."
+                                            "example": "Todas las sesiones cerradas"
                                         }
                                     },
                                     "type": "object"
@@ -496,7 +496,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Token renovado exitosamente."
+                                            "example": "Token renovado"
                                         },
                                         "data": {
                                             "properties": {
@@ -561,7 +561,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Enlace de restablecimiento de contraseña enviado."
+                                            "example": "Enlace de restablecimiento enviado"
                                         }
                                     },
                                     "type": "object"
@@ -659,7 +659,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Contraseña restablecida exitosamente."
+                                            "example": "Contraseña restablecida"
                                         }
                                     },
                                     "type": "object"
@@ -738,7 +738,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Email verificado exitosamente."
+                                            "example": "Email verificado"
                                         }
                                     },
                                     "type": "object"
@@ -792,7 +792,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Enlace de verificación reenviado."
+                                            "example": "Enlace reenviado"
                                         }
                                     },
                                     "type": "object"
@@ -864,7 +864,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Cuenta reactivada exitosamente. Bienvenido de nuevo."
+                                            "example": "Cuenta reactivada. Bienvenido."
                                         },
                                         "data": {
                                             "properties": {
@@ -1928,7 +1928,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Restaurante seleccionado para pickup"
+                                            "example": "Restaurante seleccionado"
                                         }
                                     },
                                     "type": "object"
@@ -2058,7 +2058,7 @@
                                             "properties": {
                                                 "message": {
                                                     "type": "string",
-                                                    "example": "Debe seleccionar un restaurante primero para pickup."
+                                                    "example": "Selecciona restaurante para pickup"
                                                 },
                                                 "error_code": {
                                                     "type": "string",
@@ -2072,7 +2072,7 @@
                                             "properties": {
                                                 "message": {
                                                     "type": "string",
-                                                    "example": "Debe seleccionar una dirección de entrega primero para delivery."
+                                                    "example": "Selecciona dirección para delivery"
                                                 },
                                                 "error_code": {
                                                     "type": "string",
@@ -2247,7 +2247,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Dirección de entrega asignada exitosamente"
+                                            "example": "Dirección asignada"
                                         }
                                     },
                                     "type": "object"
@@ -2471,7 +2471,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Dirección creada exitosamente"
+                                            "example": "Dirección creada"
                                         },
                                         "data": {
                                             "properties": {
@@ -2679,7 +2679,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Dirección actualizada exitosamente"
+                                            "example": "Dirección actualizada"
                                         },
                                         "data": {
                                             "type": "object"
@@ -2737,7 +2737,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Dirección eliminada exitosamente"
+                                            "example": "Dirección eliminada"
                                         }
                                     },
                                     "type": "object"
@@ -2791,7 +2791,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Dirección marcada como predeterminada"
+                                            "example": "Dirección predeterminada"
                                         },
                                         "data": {
                                             "type": "object"
@@ -3384,7 +3384,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "NIT marcado como predeterminado"
+                                            "example": "NIT predeterminado"
                                         },
                                         "data": {
                                             "type": "object"
@@ -3572,7 +3572,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Token FCM actualizado exitosamente."
+                                            "example": "Token FCM actualizado"
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/CustomerDevice"
@@ -3631,7 +3631,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Dispositivo desactivado exitosamente."
+                                            "example": "Dispositivo desactivado"
                                         }
                                     },
                                     "type": "object"
@@ -3791,7 +3791,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Agregado a favoritos exitosamente"
+                                            "example": "Agregado a favoritos"
                                         },
                                         "data": {
                                             "properties": {
@@ -3837,7 +3837,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Este item ya está en tus favoritos"
+                                            "example": "Ya está en favoritos"
                                         },
                                         "data": {
                                             "type": "object"
@@ -3937,7 +3937,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Removido de favoritos exitosamente"
+                                            "example": "Removido de favoritos"
                                         }
                                     },
                                     "type": "object"
@@ -4714,7 +4714,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "No hay Sub del Día disponible."
+                                            "example": "Sub del Día no disponible"
                                         }
                                     },
                                     "type": "object"
@@ -5262,7 +5262,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "No tenemos cobertura de delivery en esta dirección"
+                                            "example": "Sin cobertura delivery en esta ubicación. Prueba pickup en restaurantes."
                                         },
                                         "data": {
                                             "properties": {
@@ -5384,7 +5384,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Por favor activa tu ubicación para ver los restaurantes ordenados por distancia."
+                                            "example": "Activa tu ubicación para ver restaurantes"
                                         },
                                         "data": {
                                             "properties": {
@@ -7130,7 +7130,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Perfil actualizado exitosamente."
+                                            "example": "Perfil actualizado"
                                         },
                                         "data": {
                                             "properties": {
@@ -7205,7 +7205,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Cuenta eliminada exitosamente."
+                                            "example": "Cuenta eliminada"
                                         },
                                         "data": {
                                             "properties": {

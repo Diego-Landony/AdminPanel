@@ -308,7 +308,7 @@ class CustomerNitController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="NIT marcado como predeterminado"),
+     *             @OA\Property(property="message", type="string", example="NIT predeterminado"),
      *             @OA\Property(property="data", type="object")
      *         )
      *     ),

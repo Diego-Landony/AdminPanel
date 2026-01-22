@@ -68,7 +68,7 @@ class AuthController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Registro exitoso. Por favor verifica tu email."),
+     *             @OA\Property(property="message", type="string", example="Registro exitoso. Verifica tu email."),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="customer", ref="#/components/schemas/Customer"),
      *                 @OA\Property(property="token", type="string", example="1|abc123xyz...")
@@ -344,7 +344,7 @@ class AuthController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Sesión cerrada exitosamente.")
+     *             @OA\Property(property="message", type="string", example="Sesión cerrada")
      *         )
      *     ),
      *
@@ -376,7 +376,7 @@ class AuthController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Se cerraron todas las sesiones exitosamente.")
+     *             @OA\Property(property="message", type="string", example="Todas las sesiones cerradas")
      *         )
      *     ),
      *
@@ -408,7 +408,7 @@ class AuthController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Token renovado exitosamente."),
+     *             @OA\Property(property="message", type="string", example="Token renovado"),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="token", type="string", example="2|xyz456abc...")
      *             )
@@ -468,7 +468,7 @@ class AuthController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Enlace de restablecimiento de contraseña enviado.")
+     *             @OA\Property(property="message", type="string", example="Enlace de restablecimiento enviado")
      *         )
      *     ),
      *
@@ -566,7 +566,7 @@ class AuthController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Contraseña restablecida exitosamente.")
+     *             @OA\Property(property="message", type="string", example="Contraseña restablecida")
      *         )
      *     ),
      *
@@ -647,7 +647,7 @@ class AuthController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Email verificado exitosamente.")
+     *             @OA\Property(property="message", type="string", example="Email verificado")
      *         )
      *     ),
      *
@@ -739,7 +739,7 @@ class AuthController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Enlace de verificación reenviado.")
+     *             @OA\Property(property="message", type="string", example="Enlace reenviado")
      *         )
      *     ),
      *
@@ -819,7 +819,7 @@ class AuthController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Cuenta reactivada exitosamente. Bienvenido de nuevo."),
+     *             @OA\Property(property="message", type="string", example="Cuenta reactivada. Bienvenido."),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="customer", ref="#/components/schemas/Customer"),
      *                 @OA\Property(property="token", type="string", example="1|abc123xyz..."),

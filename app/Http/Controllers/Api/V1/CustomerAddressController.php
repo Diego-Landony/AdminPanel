@@ -99,7 +99,7 @@ class CustomerAddressController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Dirección creada exitosamente"),
+     *             @OA\Property(property="message", type="string", example="Dirección creada"),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="label", type="string", example="Casa"),
@@ -230,7 +230,7 @@ class CustomerAddressController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Dirección actualizada exitosamente"),
+     *             @OA\Property(property="message", type="string", example="Dirección actualizada"),
      *             @OA\Property(property="data", type="object")
      *         )
      *     ),
@@ -300,7 +300,7 @@ class CustomerAddressController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Dirección eliminada exitosamente")
+     *             @OA\Property(property="message", type="string", example="Dirección eliminada")
      *         )
      *     ),
      *
@@ -346,7 +346,7 @@ class CustomerAddressController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Dirección marcada como predeterminada"),
+     *             @OA\Property(property="message", type="string", example="Dirección predeterminada"),
      *             @OA\Property(property="data", type="object")
      *         )
      *     ),

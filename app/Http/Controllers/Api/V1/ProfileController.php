@@ -88,7 +88,7 @@ class ProfileController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Perfil actualizado exitosamente."),
+     *             @OA\Property(property="message", type="string", example="Perfil actualizado"),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="customer", type="object",
      *                     @OA\Property(property="id", type="integer", example=1),
@@ -147,7 +147,7 @@ class ProfileController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Cuenta eliminada exitosamente."),
+     *             @OA\Property(property="message", type="string", example="Cuenta eliminada"),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="can_reactivate_until", type="string", format="date-time", example="2025-12-27T10:30:00Z", description="Fecha límite para reactivar la cuenta"),
      *                 @OA\Property(property="days_to_reactivate", type="integer", example=30, description="Días restantes para reactivar")

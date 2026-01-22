@@ -180,7 +180,7 @@ class PromotionController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="No hay Sub del Día disponible.")
+     *             @OA\Property(property="message", type="string", example="Sub del Día no disponible")
      *         )
      *     )
      * )

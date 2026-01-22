@@ -4156,7 +4156,7 @@
                                                 "price_disclaimer": {
                                                     "description": "Disclaimer obligatorio a mostrar en UI junto a los precios",
                                                     "type": "string",
-                                                    "example": "El precio puede variar segun area y tipo de servicio."
+                                                    "example": "Precio sujeto a ubicación/servicio."
                                                 },
                                                 "categories": {
                                                     "description": "Product categories (excludes combo category). Order by sort_order.",

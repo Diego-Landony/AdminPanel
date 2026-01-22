@@ -396,7 +396,7 @@ class RestaurantController extends Controller
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="error", type="string", example="no_coverage"),
-     *             @OA\Property(property="message", type="string", example="No tenemos cobertura de delivery en esta dirección"),
+     *             @OA\Property(property="message", type="string", example="Sin cobertura delivery en esta ubicación. Prueba pickup en restaurantes."),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="restaurant", type="null"),
      *                 @OA\Property(property="delivery_available", type="boolean", example=false)
@@ -531,7 +531,7 @@ class RestaurantController extends Controller
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="error", type="string", example="location_required"),
-     *             @OA\Property(property="message", type="string", example="Por favor activa tu ubicación para ver los restaurantes ordenados por distancia."),
+     *             @OA\Property(property="message", type="string", example="Activa tu ubicación para ver restaurantes"),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="restaurants", type="array", @OA\Items(type="object")),
      *                 @OA\Property(property="total_found", type="integer", example=0)

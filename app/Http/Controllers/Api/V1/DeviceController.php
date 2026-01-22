@@ -178,7 +178,7 @@ class DeviceController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Token FCM actualizado exitosamente."),
+     *             @OA\Property(property="message", type="string", example="Token FCM actualizado"),
      *             @OA\Property(property="data", ref="#/components/schemas/CustomerDevice")
      *         )
      *     ),
@@ -238,7 +238,7 @@ class DeviceController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Dispositivo desactivado exitosamente.")
+     *             @OA\Property(property="message", type="string", example="Dispositivo desactivado")
      *         )
      *     ),
      *

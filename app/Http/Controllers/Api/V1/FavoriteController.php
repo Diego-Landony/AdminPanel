@@ -90,7 +90,7 @@ class FavoriteController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Agregado a favoritos exitosamente"),
+     *             @OA\Property(property="message", type="string", example="Agregado a favoritos"),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="favorable_type", type="string", example="Product"),
@@ -109,7 +109,7 @@ class FavoriteController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Este item ya está en tus favoritos"),
+     *             @OA\Property(property="message", type="string", example="Ya está en favoritos"),
      *             @OA\Property(property="data", type="object")
      *         )
      *     ),
@@ -202,7 +202,7 @@ class FavoriteController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Removido de favoritos exitosamente")
+     *             @OA\Property(property="message", type="string", example="Removido de favoritos")
      *         )
      *     ),
      *

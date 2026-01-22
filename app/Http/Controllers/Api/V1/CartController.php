@@ -572,7 +572,7 @@ class CartController extends Controller
      *                 @OA\Property(property="zone", type="string", enum={"capital", "interior"}, example="capital"),
      *                 @OA\Property(property="prices_updated", type="boolean", example=true)
      *             ),
-     *             @OA\Property(property="message", type="string", example="Restaurante seleccionado para pickup")
+     *             @OA\Property(property="message", type="string", example="Restaurante seleccionado")
      *         )
      *     ),
      *
@@ -660,14 +660,14 @@ class CartController extends Controller
      *                 @OA\Schema(
      *                     title="Restaurant Required",
      *
-     *                     @OA\Property(property="message", type="string", example="Debe seleccionar un restaurante primero para pickup."),
+     *                     @OA\Property(property="message", type="string", example="Selecciona restaurante para pickup"),
      *                     @OA\Property(property="error_code", type="string", example="RESTAURANT_REQUIRED")
      *                 ),
      *
      *                 @OA\Schema(
      *                     title="Delivery Address Required",
      *
-     *                     @OA\Property(property="message", type="string", example="Debe seleccionar una dirección de entrega primero para delivery."),
+     *                     @OA\Property(property="message", type="string", example="Selecciona dirección para delivery"),
      *                     @OA\Property(property="error_code", type="string", example="DELIVERY_ADDRESS_REQUIRED")
      *                 ),
      *
@@ -840,7 +840,7 @@ class CartController extends Controller
      *                 @OA\Property(property="zone", type="string", enum={"capital", "interior"}, example="capital"),
      *                 @OA\Property(property="prices_updated", type="boolean", example=true)
      *             ),
-     *             @OA\Property(property="message", type="string", example="Dirección de entrega asignada exitosamente")
+     *             @OA\Property(property="message", type="string", example="Dirección asignada")
      *         )
      *     ),
      *

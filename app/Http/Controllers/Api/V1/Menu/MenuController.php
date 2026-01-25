@@ -11,6 +11,7 @@ use App\Models\Menu\Category;
 use App\Models\Menu\Combo;
 use App\Models\Menu\Product;
 use App\Models\PromotionalBanner;
+use App\Services\MenuVersionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -80,7 +81,6 @@ class MenuController extends Controller
      *                     @OA\Property(property="image_url", type="string", example="/storage/categories/combos.jpg", nullable=true),
      *                     @OA\Property(property="sort_order", type="integer", example=2, description="Position in menu - mix with categories sort_order")
      *                 ),
-     *
      *                 @OA\Property(property="combos", type="array", description="Permanent menu combos (not promotional). Order by sort_order within combos section.",
      *
      *                     @OA\Items(ref="#/components/schemas/Combo")
@@ -90,11 +90,11 @@ class MenuController extends Controller
      *     )
      * )
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, MenuVersionService $menuVersionService): JsonResponse
     {
         // Si se pide versión lite, retornar solo estructura
         if ($request->boolean('lite')) {
-            return $this->indexLite();
+            return $this->indexLite($menuVersionService);
         }
         // NOTE: Variants now show active_promotion which calls getActivePromotion().
         // This method needs access to product.category for promotion lookup.
@@ -141,8 +141,11 @@ class MenuController extends Controller
             ->active()
             ->first(['id', 'name', 'image', 'sort_order']);
 
+        $version = $menuVersionService->getVersion();
+
         return response()->json([
             'data' => [
+                'version' => $version,
                 'price_disclaimer' => 'Precio sujeto a ubicación/servicio.',
                 'categories' => CategoryResource::collection($categories),
                 'combos_category' => $combosCategory ? [
@@ -153,13 +156,13 @@ class MenuController extends Controller
                 ] : null,
                 'combos' => ComboResource::collection($combos),
             ],
-        ]);
+        ])->header('X-Menu-Version', $version);
     }
 
     /**
      * Get lightweight menu structure for initial navigation.
      */
-    protected function indexLite(): JsonResponse
+    protected function indexLite(MenuVersionService $menuVersionService): JsonResponse
     {
         $categories = Category::query()
             ->active()
@@ -180,8 +183,11 @@ class MenuController extends Controller
             ->active()
             ->first(['id', 'name', 'image', 'sort_order']);
 
+        $version = $menuVersionService->getVersion();
+
         return response()->json([
             'data' => [
+                'version' => $version,
                 'price_disclaimer' => 'Precio sujeto a ubicación/servicio.',
                 'categories' => $categories->map(fn ($cat) => [
                     'id' => $cat->id,
@@ -204,7 +210,7 @@ class MenuController extends Controller
                     ],
                 ],
             ],
-        ]);
+        ])->header('X-Menu-Version', $version);
     }
 
     /**
@@ -383,6 +389,49 @@ class MenuController extends Controller
                 'horizontal' => $allBanners->where('orientation', 'horizontal')->values()->map($mapBanner),
                 'vertical' => $allBanners->where('orientation', 'vertical')->values()->map($mapBanner),
             ],
+        ]);
+    }
+
+    /**
+     * Get current menu version for cache validation.
+     *
+     * @OA\Get(
+     *     path="/api/v1/menu/version",
+     *     tags={"Menu"},
+     *     summary="Get menu version",
+     *     description="Returns the current menu version hash for cache validation.
+     *
+     * **Cache Strategy for Flutter:**
+     * 1. Store menu locally with version hash
+     * 2. On app start, call this endpoint
+     * 3. If version matches local cache → use cached menu (no download needed)
+     * 4. If version differs → call GET /menu to download updated menu
+     *
+     * **Version Format:** `m_[timestamp]_[random]` (e.g., `m_1706123456_a3f2`)
+     *
+     * The version changes automatically when any menu item is created, updated, or deleted:
+     * - Products, Categories, Combos
+     * - Variants, Sections, Options
+     * - Promotions, Banners, Badges",
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Menu version retrieved",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="version", type="string", example="m_1706123456_a3f2", description="Current menu version hash"),
+     *                 @OA\Property(property="generated_at", type="string", format="date-time", example="2024-01-24T15:30:56+00:00", description="When this version was generated")
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function version(MenuVersionService $menuVersionService): JsonResponse
+    {
+        return response()->json([
+            'data' => $menuVersionService->getVersionInfo(),
         ]);
     }
 }

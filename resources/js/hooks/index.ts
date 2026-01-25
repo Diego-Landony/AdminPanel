@@ -63,3 +63,30 @@ export { usePermissions } from './use-permissions';
 export { useBreadcrumbs } from './useBreadcrumbs';
 
 export { useNotifications } from './useNotifications';
+
+// Order hooks
+export {
+    useOrderWebSocket,
+    type ConnectionState,
+    type OrderStatusUpdatedEvent,
+    type UseOrderWebSocketOptions,
+    type UseOrderWebSocketResult,
+    type WebSocketOrder,
+} from './useOrderWebSocket';
+
+// Support ticket hooks
+export {
+    useSupportTicketWebSocket,
+    type SupportMessageSentEvent,
+    type TicketStatusChangedEvent,
+    type UseSupportTicketWebSocketOptions,
+    type UseSupportTicketWebSocketResult,
+    type WebSocketSupportMessage,
+} from './useSupportTicketWebSocket';
+
+// Support admin notifications hook
+export {
+    useSupportAdminNotifications,
+    type SupportStats,
+    type UseSupportAdminNotificationsResult,
+} from './useSupportAdminNotifications';

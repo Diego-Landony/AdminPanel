@@ -7,7 +7,7 @@ use App\Http\Traits\ResolvesOrderOptions;
 use App\Models\Driver;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
-use App\Notifications\OrderStatusChangedNotification;
+use App\Services\OrderService;
 use App\Services\PointsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +19,8 @@ class OrderController extends Controller
     use ResolvesOrderOptions;
 
     public function __construct(
-        protected PointsService $pointsService
+        protected PointsService $pointsService,
+        protected OrderService $orderService
     ) {}
 
     /**
@@ -221,8 +222,8 @@ class OrderController extends Controller
             return back()->with('error', 'Esta orden no puede ser aceptada');
         }
 
+        // Actualizar tiempo estimado
         $order->update([
-            'status' => 'preparing',
             'estimated_ready_at' => now()->addMinutes(
                 $order->service_type === 'delivery'
                     ? $order->restaurant->estimated_delivery_time
@@ -230,12 +231,14 @@ class OrderController extends Controller
             ),
         ]);
 
-        $this->logStatusChange($order, 'pending', 'preparing');
-
-        // Notificar al cliente
-        if ($order->customer) {
-            $order->customer->notify(new OrderStatusChangedNotification($order, 'pending'));
-        }
+        // Usar OrderService para disparar evento WebSocket
+        $this->orderService->updateStatus(
+            $order,
+            Order::STATUS_PREPARING,
+            'Orden aceptada por restaurante',
+            'restaurant',
+            auth('restaurant')->id()
+        );
 
         return back()->with('success', 'Orden aceptada. A preparar!');
     }
@@ -251,17 +254,14 @@ class OrderController extends Controller
             return back()->with('error', 'Esta orden no puede marcarse como lista');
         }
 
-        $order->update([
-            'status' => 'ready',
-            'ready_at' => now(),
-        ]);
-
-        $this->logStatusChange($order, 'preparing', 'ready');
-
-        // Notificar al cliente
-        if ($order->customer) {
-            $order->customer->notify(new OrderStatusChangedNotification($order, 'preparing'));
-        }
+        // Usar OrderService para disparar evento WebSocket
+        $this->orderService->updateStatus(
+            $order,
+            Order::STATUS_READY,
+            'Orden lista para recoger/entregar',
+            'restaurant',
+            auth('restaurant')->id()
+        );
 
         return back()->with('success', 'Orden marcada como lista');
     }
@@ -288,21 +288,23 @@ class OrderController extends Controller
             return back()->with('error', 'Este motorista no pertenece a tu restaurante');
         }
 
+        // Actualizar driver y timestamp
         $order->update([
             'driver_id' => $driver->id,
-            'status' => 'out_for_delivery',
             'assigned_to_driver_at' => now(),
         ]);
 
         // Marcar motorista como no disponible
         $driver->update(['is_available' => false]);
 
-        $this->logStatusChange($order, 'ready', 'out_for_delivery', "Asignado a {$driver->name}");
-
-        // Notificar al cliente
-        if ($order->customer) {
-            $order->customer->notify(new OrderStatusChangedNotification($order, 'ready'));
-        }
+        // Usar OrderService para disparar evento WebSocket
+        $this->orderService->updateStatus(
+            $order,
+            Order::STATUS_OUT_FOR_DELIVERY,
+            "Asignado a motorista: {$driver->name}",
+            'restaurant',
+            auth('restaurant')->id()
+        );
 
         return back()->with('success', "Orden asignada a {$driver->name}");
     }
@@ -318,30 +320,19 @@ class OrderController extends Controller
             return back()->with('error', 'Esta orden no puede marcarse como completada');
         }
 
-        $order->update([
-            'status' => 'completed',
-            'delivered_at' => now(),
-        ]);
-
-        $this->logStatusChange($order, 'ready', 'completed', 'Cliente recogio su orden');
-
-        // Acreditar puntos al cliente
-        if ($order->customer) {
-            $order->load('customer');
-            $this->pointsService->creditPoints($order->customer, $order);
-            $order->customer->update(['last_purchase_at' => now()]);
-        }
-
-        // Notificar al cliente
-        if ($order->customer) {
-            $order->customer->notify(new OrderStatusChangedNotification($order, 'ready'));
-        }
+        $this->orderService->updateStatus(
+            $order,
+            Order::STATUS_COMPLETED,
+            'Cliente recogió su orden',
+            'restaurant',
+            auth('restaurant')->id()
+        );
 
         return back()->with('success', 'Orden marcada como completada');
     }
 
     /**
-     * Marcar orden delivery como completada (out_for_delivery -> completed)
+     * Marcar orden delivery como entregada (out_for_delivery -> delivered)
      */
     public function markDelivered(Order $order): RedirectResponse
     {
@@ -351,29 +342,18 @@ class OrderController extends Controller
             return back()->with('error', 'Esta orden no puede marcarse como entregada');
         }
 
-        $order->update([
-            'status' => 'completed',
-            'delivered_at' => now(),
-        ]);
-
-        $this->logStatusChange($order, 'out_for_delivery', 'completed', 'Orden entregada al cliente');
-
         // Marcar motorista como disponible nuevamente
         if ($order->driver_id) {
             Driver::where('id', $order->driver_id)->update(['is_available' => true]);
         }
 
-        // Acreditar puntos al cliente
-        if ($order->customer) {
-            $order->load('customer');
-            $this->pointsService->creditPoints($order->customer, $order);
-            $order->customer->update(['last_purchase_at' => now()]);
-        }
-
-        // Notificar al cliente
-        if ($order->customer) {
-            $order->customer->notify(new OrderStatusChangedNotification($order, 'out_for_delivery'));
-        }
+        $this->orderService->updateStatus(
+            $order,
+            Order::STATUS_DELIVERED,
+            'Orden entregada al cliente',
+            'restaurant',
+            auth('restaurant')->id()
+        );
 
         return back()->with('success', 'Orden marcada como entregada');
     }

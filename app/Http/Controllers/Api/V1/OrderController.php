@@ -370,6 +370,84 @@ class OrderController extends Controller
     }
 
     /**
+     * Get orders pending review
+     *
+     * @OA\Get(
+     *     path="/api/v1/orders/pending-review",
+     *     tags={"Orders"},
+     *     summary="Órdenes pendientes de calificación",
+     *     description="Retorna las órdenes completadas que aún no han sido calificadas por el cliente.
+     *
+     * **Uso recomendado:** Llamar este endpoint al iniciar la app para mostrar el modal de calificación
+     * si hay órdenes pendientes de calificar (por ejemplo, si el usuario cerró la app antes de calificar).
+     *
+     * **Nota:** Solo retorna órdenes de los últimos 7 días para evitar solicitar calificaciones muy antiguas.",
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Órdenes pendientes de calificación",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="data", type="array",
+     *
+     *                 @OA\Items(type="object",
+     *
+     *                     @OA\Property(property="order_id", type="integer", example=123),
+     *                     @OA\Property(property="order_number", type="string", example="ORD-20260123-0001"),
+     *                     @OA\Property(property="restaurant", type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Subway Pradera")
+     *                     ),
+     *                     @OA\Property(property="total", type="number", format="float", example=125.00),
+     *                     @OA\Property(property="service_type", type="string", enum={"pickup","delivery"}),
+     *                     @OA\Property(property="completed_at", type="string", format="date-time")
+     *                 )
+     *             ),
+     *             @OA\Property(property="meta", type="object",
+     *                 @OA\Property(property="count", type="integer", example=1, description="Cantidad de órdenes pendientes")
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="No autenticado")
+     * )
+     */
+    public function pendingReview(): JsonResponse
+    {
+        $customer = auth()->user();
+
+        $orders = Order::query()
+            ->where('customer_id', $customer->id)
+            ->where('status', Order::STATUS_COMPLETED)
+            ->whereDoesntHave('review')
+            ->where('created_at', '>=', now()->subDays(7))
+            ->with('restaurant')
+            ->latest()
+            ->get();
+
+        $data = $orders->map(fn (Order $order) => [
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+            'restaurant' => [
+                'id' => $order->restaurant_id,
+                'name' => $order->restaurant?->name,
+            ],
+            'total' => $order->total,
+            'service_type' => $order->service_type,
+            'completed_at' => $order->updated_at->toIso8601String(),
+        ]);
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'count' => $orders->count(),
+            ],
+        ]);
+    }
+
+    /**
      * Get order details
      *
      * @OA\Get(

@@ -2,6 +2,7 @@
 
 namespace App\Models\Menu;
 
+use App\Traits\InvalidatesMenuVersion;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class PromotionItem extends Model
 {
-    use HasFactory;
+    use HasFactory, InvalidatesMenuVersion;
 
     protected $fillable = [
         'promotion_id',

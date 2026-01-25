@@ -12,15 +12,7 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
     /**
-     * Redirige al login principal del sistema
-     */
-    public function showLoginForm(): RedirectResponse
-    {
-        return redirect()->route('login');
-    }
-
-    /**
-     * Procesa el login
+     * Procesa el login de restaurante
      */
     public function login(Request $request): RedirectResponse
     {
@@ -35,19 +27,19 @@ class AuthController extends Controller
         if (! $user) {
             throw ValidationException::withMessages([
                 'email' => [__('auth.failed')],
-            ]);
+            ])->redirectTo(route('login'));
         }
 
         if (! $user->is_active) {
             throw ValidationException::withMessages([
                 'email' => ['Tu cuenta está desactivada. Contacta al administrador.'],
-            ]);
+            ])->redirectTo(route('login'));
         }
 
         if (! Auth::guard('restaurant')->attempt($credentials, $request->boolean('remember'))) {
             throw ValidationException::withMessages([
                 'email' => [__('auth.failed')],
-            ]);
+            ])->redirectTo(route('login'));
         }
 
         $request->session()->regenerate();
@@ -55,7 +47,7 @@ class AuthController extends Controller
         // Actualizar último login
         $user->update(['last_login_at' => now()]);
 
-        return redirect()->intended(route('restaurant.dashboard'));
+        return redirect()->intended(route('restaurant.dashboard.index'));
     }
 
     /**

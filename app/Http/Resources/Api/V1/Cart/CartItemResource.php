@@ -74,7 +74,12 @@ class CartItemResource extends JsonResource
             'quantity' => $this->quantity,
             'unit_price' => round($correctUnitPrice, 2),
             'options_total' => $optionsTotal,
-            'bundle_savings' => $bundleSavings,  // Ahorro por bundle de extras
+            'options_breakdown' => $this->when($optionsTotal > 0 || $bundleSavings > 0, [
+                'items_total' => round($optionsTotal + $bundleSavings, 2),
+                'bundle_discount' => round($bundleSavings, 2),
+                'final' => round($optionsTotal, 2),
+            ]),
+            'bundle_savings' => $bundleSavings,  // Ahorro por bundle de extras (legacy, usar options_breakdown)
             // subtotal = (base * cantidad) + (extras * cantidad) - precio completo sin descuento
             'subtotal' => round($subtotalWithExtras, 2),
             // original_price = precio según zona/servicio + extras (para mostrar tachado)

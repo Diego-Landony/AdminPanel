@@ -66,7 +66,8 @@ class CreateOrderRequest extends FormRequest
                     }
 
                     // Validar tiempo mínimo de preparación
-                    $minimumTime = now()->addMinutes($estimatedMinutes);
+                    // Buffer de 30 segundos para evitar race condition entre validación y procesamiento
+                    $minimumTime = now()->addMinutes($estimatedMinutes)->subSeconds(30);
                     if ($scheduledTime->lt($minimumTime)) {
                         // Agregar 2 minutos de buffer para que el usuario tenga tiempo de aceptar
                         $suggestedTime = now()->addMinutes($estimatedMinutes + 2);
@@ -108,7 +109,8 @@ class CreateOrderRequest extends FormRequest
                     }
 
                     // Validar tiempo mínimo (preparación + entrega)
-                    $minimumTime = now()->addMinutes($estimatedMinutes);
+                    // Buffer de 30 segundos para evitar race condition entre validación y procesamiento
+                    $minimumTime = now()->addMinutes($estimatedMinutes)->subSeconds(30);
                     if ($scheduledTime->lt($minimumTime)) {
                         // Agregar 2 minutos de buffer para que el usuario tenga tiempo de aceptar
                         $suggestedTime = now()->addMinutes($estimatedMinutes + 2);

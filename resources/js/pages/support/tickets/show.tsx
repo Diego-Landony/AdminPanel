@@ -2,13 +2,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { showNotification } from '@/hooks/useNotifications';
+import { useSupportTicketWebSocket } from '@/hooks/useSupportTicketWebSocket';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { ArrowLeft, CheckCircle, CreditCard, Hand, Inbox, Loader2, MapPin, Package, Paperclip, Send, User, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle, CreditCard, Hand, Inbox, Loader2, MapPin, Package, Paperclip, Send, Wifi, WifiOff, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface Customer {
@@ -59,9 +60,9 @@ interface SupportReason {
 
 interface SupportTicket {
     id: number;
+    ticket_number: string;
     reason: SupportReason | null;
     status: 'open' | 'closed';
-    priority: 'low' | 'medium' | 'high';
     customer: Customer;
     assigned_user: Admin | null;
     messages: Message[];
@@ -129,26 +130,20 @@ interface TicketShowProps {
 }
 
 const STATUS_CONFIG = {
-    open: { label: 'Abierto', color: 'bg-yellow-100 text-yellow-800', icon: Inbox },
-    closed: { label: 'Cerrado', color: 'bg-gray-100 text-gray-800', icon: CheckCircle },
-};
-
-const PRIORITY_CONFIG = {
-    low: { label: 'Baja', color: 'bg-gray-100 text-gray-700' },
-    medium: { label: 'Media', color: 'bg-yellow-100 text-yellow-700' },
-    high: { label: 'Alta', color: 'bg-red-100 text-red-700' },
+    open: { label: 'Abierto', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300', icon: Inbox },
+    closed: { label: 'Cerrado', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300', icon: CheckCircle },
 };
 
 const ORDER_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-    pending: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800' },
-    confirmed: { label: 'Confirmado', color: 'bg-blue-100 text-blue-800' },
-    preparing: { label: 'Preparando', color: 'bg-orange-100 text-orange-800' },
-    ready: { label: 'Listo', color: 'bg-green-100 text-green-800' },
-    out_for_delivery: { label: 'En camino', color: 'bg-purple-100 text-purple-800' },
-    delivered: { label: 'Entregado', color: 'bg-green-100 text-green-800' },
-    completed: { label: 'Completado', color: 'bg-gray-100 text-gray-800' },
-    cancelled: { label: 'Cancelado', color: 'bg-red-100 text-red-800' },
-    refunded: { label: 'Reembolsado', color: 'bg-red-100 text-red-800' },
+    pending: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' },
+    confirmed: { label: 'Confirmado', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' },
+    preparing: { label: 'Preparando', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' },
+    ready: { label: 'Listo', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' },
+    out_for_delivery: { label: 'En camino', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' },
+    delivered: { label: 'Entregado', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' },
+    completed: { label: 'Completado', color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300' },
+    cancelled: { label: 'Cancelado', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' },
+    refunded: { label: 'Reembolsado', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' },
 };
 
 export default function TicketShow({ ticket, customerOrders, customerProfile }: TicketShowProps) {
@@ -159,6 +154,24 @@ export default function TicketShow({ ticket, customerOrders, customerProfile }: 
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // WebSocket para mensajes en tiempo real
+    const { connectionState } = useSupportTicketWebSocket({
+        ticketId: ticket.id,
+        enabled: ticket.status === 'open',
+        reloadProps: ['ticket'],
+        playSound: true,
+        onNewMessage: (msg) => {
+            if (!msg.is_from_admin) {
+                showNotification.info('Nuevo mensaje del cliente');
+            }
+        },
+        onStatusChanged: (data) => {
+            if (data.status === 'closed') {
+                showNotification.info('El ticket ha sido cerrado');
+            }
+        },
+    });
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -222,17 +235,6 @@ export default function TicketShow({ ticket, customerOrders, customerProfile }: 
         );
     };
 
-    const handlePriorityChange = (priority: string) => {
-        router.patch(
-            `/support/tickets/${ticket.id}/priority`,
-            { priority },
-            {
-                preserveScroll: true,
-                onError: () => showNotification.error('Error al cambiar la prioridad'),
-            },
-        );
-    };
-
     const handleTakeTicket = () => {
         router.post(
             `/support/tickets/${ticket.id}/take`,
@@ -250,7 +252,7 @@ export default function TicketShow({ ticket, customerOrders, customerProfile }: 
 
     return (
         <AppLayout>
-            <Head title={`Ticket #${ticket.id}`} />
+            <Head title={`Ticket ${ticket.ticket_number}`} />
 
             <div className="flex h-[calc(100vh-8rem)] flex-col gap-4 lg:flex-row">
                 {/* Chat Section */}
@@ -265,24 +267,43 @@ export default function TicketShow({ ticket, customerOrders, customerProfile }: 
                             </Button>
                             <div>
                                 <h2 className="font-semibold">{ticket.reason?.name || 'Sin motivo'}</h2>
-                                <p className="text-sm text-muted-foreground">Ticket #{ticket.id}</p>
+                                <p className="text-sm text-muted-foreground">Ticket {ticket.ticket_number}</p>
                             </div>
                         </div>
-                        <Badge className={STATUS_CONFIG[ticket.status].color}>{STATUS_CONFIG[ticket.status].label}</Badge>
+                        <div className="flex items-center gap-2">
+                            {/* Indicador de conexión WebSocket */}
+                            {ticket.status === 'open' && (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div className="flex items-center">
+                                            {connectionState === 'connected' ? (
+                                                <Wifi className="h-4 w-4 text-green-500" />
+                                            ) : connectionState === 'connecting' ? (
+                                                <Wifi className="h-4 w-4 text-yellow-500 animate-pulse" />
+                                            ) : (
+                                                <WifiOff className="h-4 w-4 text-red-500" />
+                                            )}
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {connectionState === 'connected' && 'Conectado en tiempo real'}
+                                        {connectionState === 'connecting' && 'Conectando...'}
+                                        {connectionState === 'disconnected' && 'Desconectado'}
+                                        {connectionState === 'error' && 'Error de conexión'}
+                                    </TooltipContent>
+                                </Tooltip>
+                            )}
+                            <Badge className={STATUS_CONFIG[ticket.status].color}>{STATUS_CONFIG[ticket.status].label}</Badge>
+                        </div>
                     </div>
 
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
                         {ticket.messages.map((msg) => (
-                            <div key={msg.id} className={cn('flex gap-3', isFromAdmin(msg) ? 'justify-end' : 'justify-start')}>
-                                {!isFromAdmin(msg) && (
-                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-                                        <User className="h-4 w-4" />
-                                    </div>
-                                )}
+                            <div key={msg.id} className={cn('flex', isFromAdmin(msg) ? 'justify-end' : 'justify-start')}>
                                 <div
                                     className={cn(
-                                        'max-w-[70%] rounded-lg px-4 py-2',
+                                        'max-w-[75%] rounded-lg px-4 py-2',
                                         isFromAdmin(msg) ? 'bg-primary text-primary-foreground' : 'bg-muted',
                                     )}
                                 >
@@ -310,11 +331,6 @@ export default function TicketShow({ ticket, customerOrders, customerProfile }: 
                                         {new Date(msg.created_at).toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit' })}
                                     </p>
                                 </div>
-                                {isFromAdmin(msg) && (
-                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary">
-                                        <User className="h-4 w-4 text-primary-foreground" />
-                                    </div>
-                                )}
                             </div>
                         ))}
                         <div ref={messagesEndRef} />
@@ -379,26 +395,20 @@ export default function TicketShow({ ticket, customerOrders, customerProfile }: 
                 </div>
 
                 {/* Sidebar Info */}
-                <div className="w-full space-y-4 lg:w-80">
+                <div className="w-full space-y-4 lg:w-96 shrink-0">
                     {/* Customer Info */}
                     <Card>
                         <CardHeader className="pb-3">
                             <CardTitle className="text-sm font-medium">Cliente</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                                    <User className="h-5 w-5" />
+                            <div className="min-w-0">
+                                <div className="font-medium">
+                                    {ticket.customer.first_name} {ticket.customer.last_name}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="font-medium">
-                                        {ticket.customer.first_name} {ticket.customer.last_name}
-                                    </div>
-                                    <div className="text-sm text-muted-foreground truncate">{ticket.customer.email}</div>
-                                </div>
+                                <div className="text-sm text-muted-foreground truncate">{ticket.customer.email}</div>
                             </div>
                             <Button variant="outline" size="sm" className="w-full" onClick={() => setIsProfileOpen(true)}>
-                                <User className="mr-2 h-3 w-3" />
                                 Ver perfil completo
                             </Button>
                         </CardContent>
@@ -414,12 +424,9 @@ export default function TicketShow({ ticket, customerOrders, customerProfile }: 
                             <div>
                                 <label className="text-xs text-muted-foreground">Tomado por</label>
                                 {ticket.assigned_user ? (
-                                    <div className="mt-1 flex items-center gap-2 rounded-md border p-2">
-                                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
-                                            <User className="h-3 w-3 text-primary" />
-                                        </div>
+                                    <div className="mt-1 flex items-center justify-between rounded-md border p-2">
                                         <span className="text-sm font-medium">{ticket.assigned_user.name}</span>
-                                        {isMyTicket && <Badge variant="outline" className="ml-auto text-xs">Tú</Badge>}
+                                        {isMyTicket && <Badge variant="outline" className="text-xs">Tú</Badge>}
                                     </div>
                                 ) : (
                                     <Button onClick={handleTakeTicket} variant="outline" className="mt-1 w-full" disabled={isClosed}>
@@ -429,31 +436,31 @@ export default function TicketShow({ ticket, customerOrders, customerProfile }: 
                                 )}
                             </div>
 
+                            {/* Estado */}
                             <div>
                                 <label className="text-xs text-muted-foreground">Estado</label>
-                                <Select value={ticket.status} onValueChange={handleStatusChange}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="open">Abierto</SelectItem>
-                                        <SelectItem value="closed">Cerrado</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div>
-                                <label className="text-xs text-muted-foreground">Prioridad</label>
-                                <Select value={ticket.priority} onValueChange={handlePriorityChange} disabled={isClosed}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="low">Baja</SelectItem>
-                                        <SelectItem value="medium">Media</SelectItem>
-                                        <SelectItem value="high">Alta</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <div className="mt-1">
+                                    {isClosed ? (
+                                        <div className="flex items-center gap-2 rounded-md bg-green-50 p-2 dark:bg-green-900/20">
+                                            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                            <span className="text-sm font-medium text-green-700 dark:text-green-400">Cerrado</span>
+                                        </div>
+                                    ) : ticket.assigned_user ? (
+                                        <Button
+                                            onClick={() => handleStatusChange('closed')}
+                                            variant="default"
+                                            size="sm"
+                                            className="w-full bg-green-600 hover:bg-green-700"
+                                        >
+                                            <CheckCircle className="mr-2 h-4 w-4" />
+                                            Cerrar Ticket
+                                        </Button>
+                                    ) : (
+                                        <div className="rounded-md bg-muted p-2 text-center text-xs text-muted-foreground">
+                                            Debe tomar el ticket para poder cerrarlo
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="pt-2 border-t">

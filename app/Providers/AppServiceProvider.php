@@ -57,6 +57,11 @@ class AppServiceProvider extends ServiceProvider
         PersonalAccessToken::observe(PersonalAccessTokenObserver::class);
         Promotion::observe(PromotionObserver::class);
 
+        // Registrar canal FCM para notificaciones
+        $this->app->make(\Illuminate\Notifications\ChannelManager::class)->extend('fcm', function ($app) {
+            return $app->make(\App\Notifications\Channels\FcmChannel::class);
+        });
+
         // Register mail views namespace for custom email templates
         $this->loadViewsFrom([
             resource_path('views/vendor/mail/html'),

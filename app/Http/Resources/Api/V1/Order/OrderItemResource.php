@@ -19,6 +19,17 @@ class OrderItemResource extends JsonResource
     {
         $isCombo = $this->combo_id !== null;
         $snapshot = $this->product_snapshot;
+        $promoSnapshot = $this->promotion_snapshot;
+
+        // Calcular bundle_savings desde options_breakdown
+        $bundleSavings = isset($snapshot['options_breakdown']['bundle_discount'])
+            ? (float) $snapshot['options_breakdown']['bundle_discount']
+            : 0.0;
+
+        // Calcular precios con promoción
+        $originalPrice = (float) ($promoSnapshot['original_price'] ?? $this->subtotal);
+        $discountAmount = (float) ($promoSnapshot['discount_amount'] ?? 0);
+        $finalPrice = (float) ($promoSnapshot['final_price'] ?? $this->subtotal);
 
         return [
             'id' => $this->id,
@@ -45,21 +56,32 @@ class OrderItemResource extends JsonResource
             }),
             'quantity' => $this->quantity,
             'unit_price' => (float) $this->unit_price,
-            'options_price' => (float) $this->options_price,
+            'options_total' => (float) $this->options_price,
+            'options_breakdown' => $this->when(
+                isset($snapshot['options_breakdown']),
+                fn () => [
+                    'items_total' => (float) ($snapshot['options_breakdown']['items_total'] ?? 0),
+                    'bundle_discount' => (float) ($snapshot['options_breakdown']['bundle_discount'] ?? 0),
+                    'final' => (float) ($snapshot['options_breakdown']['final'] ?? $this->options_price),
+                ]
+            ),
+            'bundle_savings' => $bundleSavings,
             'subtotal' => (float) $this->subtotal,
+            'original_price' => $originalPrice,
+            'discount_amount' => $discountAmount,
+            'final_price' => $finalPrice,
+            'is_daily_special' => $promoSnapshot['is_daily_special'] ?? false,
+            'applied_promotion' => $this->when($promoSnapshot, function () use ($promoSnapshot) {
+                return [
+                    'id' => $promoSnapshot['id'] ?? null,
+                    'name' => $promoSnapshot['name'] ?? null,
+                    'type' => $promoSnapshot['type'] ?? null,
+                    'value' => $promoSnapshot['value'] ?? null,
+                ];
+            }),
             'selected_options' => $this->formatSelectedOptions($this->selected_options),
             'combo_selections' => $this->combo_selections,
             'notes' => $this->notes,
-            'promotion' => $this->when($this->promotion_snapshot, function () {
-                return [
-                    'name' => $this->promotion_snapshot['name'] ?? null,
-                    'type' => $this->promotion_snapshot['type'] ?? null,
-                    'discount_amount' => (float) ($this->promotion_snapshot['discount_amount'] ?? 0),
-                    'original_price' => (float) ($this->promotion_snapshot['original_price'] ?? $this->subtotal),
-                    'final_price' => (float) ($this->promotion_snapshot['final_price'] ?? $this->subtotal),
-                    'is_daily_special' => $this->promotion_snapshot['is_daily_special'] ?? false,
-                ];
-            }),
         ];
     }
 

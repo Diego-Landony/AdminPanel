@@ -695,17 +695,24 @@ class CartController extends Controller
 
         // Determinar zona automáticamente basado en el tipo de servicio
         if ($serviceType === 'pickup') {
-            // Para pickup: zona del restaurante seleccionado
-            if (! $cart->restaurant_id) {
-                return response()->json([
-                    'message' => 'Selecciona restaurante para pickup',
-                    'error_code' => 'RESTAURANT_REQUIRED',
-                ], 422);
+            // Si viene de delivery, limpiar restaurant y address
+            // El usuario debe elegir nuevo restaurante para pickup
+            if ($cart->service_type === 'delivery') {
+                $cart->update([
+                    'restaurant_id' => null,
+                    'delivery_address_id' => null,
+                ]);
+                // Zona default hasta que seleccione restaurante
+                $zone = 'capital';
+            } elseif ($cart->restaurant_id) {
+                // Ya en pickup con restaurante, usar su zona
+                $cart->load('restaurant');
+                $zone = $cart->restaurant->price_location ?? 'capital';
+            } else {
+                // Pickup sin restaurante (primera vez), zona default
+                $zone = 'capital';
             }
-
-            $cart->load('restaurant');
-            $zone = $cart->restaurant->price_location ?? 'capital';
-        } else {
+        } elseif ($serviceType === 'delivery') {
             // Para delivery: zona de la dirección de entrega
             if (! $cart->delivery_address_id) {
                 return response()->json([

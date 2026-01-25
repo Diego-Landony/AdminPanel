@@ -22,10 +22,18 @@ class SupportMessageSent implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
-        return [
+        $channels = [
             new PrivateChannel('support.ticket.'.$this->message->support_ticket_id),
             new PrivateChannel('support.admin'),
         ];
+
+        // Si el mensaje es del admin, notificar al cliente en su canal privado
+        if ($this->message->isFromAdmin()) {
+            $this->message->load('ticket');
+            $channels[] = new PrivateChannel('customer.'.$this->message->ticket->customer_id);
+        }
+
+        return $channels;
     }
 
     public function broadcastAs(): string

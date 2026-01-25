@@ -1,5 +1,6 @@
 import { NavMain } from '@/components/nav-main';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { useSupportNotifications } from '@/contexts/SupportNotificationsContext';
 import { usePermissions } from '@/hooks/use-permissions';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
@@ -216,11 +217,27 @@ export const systemPages: PageConfig[] = [
         permission: 'roles.view',
     },
     {
+        name: 'support-tickets',
+        title: 'Chat de Soporte',
+        href: '/support/tickets',
+        icon: MessageSquare,
+        group: 'Soporte',
+        permission: 'support.tickets.view',
+    },
+    {
+        name: 'support-access-issues',
+        title: 'Problemas de Acceso',
+        href: '/support/access-issues',
+        icon: Shield,
+        group: 'Soporte',
+        permission: 'support.tickets.view',
+    },
+    {
         name: 'support-terms',
         title: 'Términos y Condiciones',
         href: '/support/terms-and-conditions',
         icon: FileText,
-        group: 'Soporte',
+        group: 'Legal',
         permission: 'support.legal.view',
     },
     {
@@ -228,16 +245,8 @@ export const systemPages: PageConfig[] = [
         title: 'Política de Privacidad',
         href: '/support/privacy-policy',
         icon: Shield,
-        group: 'Soporte',
+        group: 'Legal',
         permission: 'support.legal.view',
-    },
-    {
-        name: 'support-tickets',
-        title: 'Chat de Soporte',
-        href: '/support/tickets',
-        icon: MessageSquare,
-        group: 'Soporte',
-        permission: 'support.tickets.view',
     },
     {
         name: 'settings',
@@ -259,6 +268,7 @@ export const groupIcons: Record<string, LucideIcon> = {
     Promociones: Percent,
     Marketing: Megaphone,
     Soporte: Headset,
+    Legal: FileText,
 };
 
 /**
@@ -267,6 +277,13 @@ export const groupIcons: Record<string, LucideIcon> = {
  */
 export function AppSidebar() {
     const { hasPermission } = usePermissions();
+    const { stats } = useSupportNotifications();
+
+    // Mapeo de badges por nombre de página
+    const pageBadges: Record<string, number> = {
+        'support-tickets': stats.unreadTickets,
+        'support-access-issues': stats.pendingAccessIssues,
+    };
 
     // Generar items de navegación basados en permisos dinámicamente
     const getNavItems = (): NavItem[] => {
@@ -285,6 +302,7 @@ export function AppSidebar() {
                 title: page.title,
                 href: page.href,
                 icon: page.icon,
+                badge: pageBadges[page.name] || undefined,
             };
 
             // Guardar settings para agregarlo al final
@@ -304,6 +322,7 @@ export function AppSidebar() {
                     href: navItem.href,
                     // explicitly no icon for subitems
                     icon: null,
+                    badge: navItem.badge,
                 });
             } else {
                 // Sin grupo, agregar directamente

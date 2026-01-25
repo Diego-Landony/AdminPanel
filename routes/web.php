@@ -22,6 +22,7 @@ use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\RestaurantGeofencesController;
 use App\Http\Controllers\RestaurantUserController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\Support\AccessIssueReportController;
 use App\Http\Controllers\Support\LegalDocumentController;
 use App\Http\Controllers\Support\SupportReasonController;
 use App\Http\Controllers\Support\SupportTicketController;
@@ -73,6 +74,11 @@ Route::get('/oauth/success', function (Illuminate\Http\Request $request) {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/api/upload/image', [ImageUploadController::class, 'upload'])->name('upload.image');
     Route::post('/api/delete/image', [ImageUploadController::class, 'delete'])->name('delete.image');
+});
+
+// API interna para el panel admin (estadísticas en tiempo real)
+Route::middleware(['auth', 'verified'])->prefix('api/admin')->group(function () {
+    Route::get('/support/stats', [SupportTicketController::class, 'stats'])->name('admin.support.stats');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -507,8 +513,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('permission:support.tickets.manage');
         Route::patch('tickets/{ticket}/status', [SupportTicketController::class, 'updateStatus'])->name('tickets.status')
             ->middleware('permission:support.tickets.manage');
-        Route::patch('tickets/{ticket}/priority', [SupportTicketController::class, 'updatePriority'])->name('tickets.priority')
-            ->middleware('permission:support.tickets.manage');
         Route::delete('tickets/{ticket}', [SupportTicketController::class, 'destroy'])->name('tickets.destroy')
             ->middleware('permission:support.tickets.manage');
 
@@ -523,6 +527,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('permission:support.tickets.manage');
         Route::post('reasons/order', [SupportReasonController::class, 'updateOrder'])->name('reasons.order')
             ->middleware('permission:support.tickets.manage');
+
+        // Reportes de Problemas de Acceso
+        Route::get('access-issues', [AccessIssueReportController::class, 'index'])->name('access-issues.index')
+            ->middleware('permission:support.tickets.view');
+        Route::get('access-issues/{report}', [AccessIssueReportController::class, 'show'])->name('access-issues.show')
+            ->middleware('permission:support.tickets.view');
+        Route::patch('access-issues/{report}/status', [AccessIssueReportController::class, 'updateStatus'])->name('access-issues.status')
+            ->middleware('permission:support.tickets.manage');
+        Route::patch('access-issues/{report}/notes', [AccessIssueReportController::class, 'updateNotes'])->name('access-issues.notes')
+            ->middleware('permission:support.tickets.manage');
+        Route::delete('access-issues/{report}', [AccessIssueReportController::class, 'destroy'])->name('access-issues.destroy')
+            ->middleware('permission:support.tickets.manage');
     });
 });
 
@@ -535,11 +551,10 @@ require __DIR__.'/auth.php';
 |--------------------------------------------------------------------------
 */
 Route::prefix('restaurant')->name('restaurant.')->group(function () {
-    // Guest routes (no autenticado como restaurant)
-    Route::middleware('guest:restaurant')->group(function () {
-        Route::get('login', [App\Http\Controllers\Restaurant\AuthController::class, 'showLoginForm'])->name('login');
-        Route::post('login', [App\Http\Controllers\Restaurant\AuthController::class, 'login'])->name('login.store');
-    });
+    // Login route (el formulario está en /login con tabs, pero el POST viene aquí)
+    Route::post('login', [App\Http\Controllers\Restaurant\AuthController::class, 'login'])
+        ->middleware('guest:restaurant')
+        ->name('login.store');
 
     // Authenticated routes (autenticado como restaurant)
     Route::middleware('auth:restaurant')->group(function () {
@@ -549,6 +564,15 @@ Route::prefix('restaurant')->name('restaurant.')->group(function () {
         Route::get('/', [App\Http\Controllers\Restaurant\DashboardController::class, 'index'])->name('dashboard');
         Route::get('dashboard', [App\Http\Controllers\Restaurant\DashboardController::class, 'index'])->name('dashboard.index');
         Route::get('poll', [App\Http\Controllers\Restaurant\DashboardController::class, 'poll'])->name('poll');
+
+        // Broadcasting auth para WebSocket (usa el guard restaurant)
+        Route::post('broadcasting/auth', function (\Illuminate\Http\Request $request) {
+            $request->setUserResolver(function () {
+                return auth('restaurant')->user();
+            });
+
+            return \Illuminate\Support\Facades\Broadcast::auth($request);
+        })->name('broadcasting.auth');
 
         // Orders
         Route::get('orders', [App\Http\Controllers\Restaurant\OrderController::class, 'index'])->name('orders.index');

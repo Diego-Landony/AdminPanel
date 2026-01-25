@@ -50,6 +50,7 @@ export interface NavItem {
     icon?: React.ComponentType<{ className?: string }> | null;
     isActive?: boolean;
     items?: NavItem[]; // Para submenús
+    badge?: number; // Contador de notificaciones
 }
 
 export interface BreadcrumbItem {
@@ -76,8 +77,21 @@ export interface NavGroup {
     items: NavItem[];
 }
 
+export interface RestaurantAuth {
+    user: {
+        id: number;
+        name: string;
+        email: string;
+    };
+    restaurant: {
+        id: number;
+        name: string;
+    } | null;
+}
+
 export interface SharedData {
     auth: Auth;
+    restaurantAuth?: RestaurantAuth | null;
     name?: string;
     quote?: {
         message: string;

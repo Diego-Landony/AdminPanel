@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Contracts\ActivityLoggable;
 use App\Models\Concerns\LogsActivity;
+use App\Traits\InvalidatesMenuVersion;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 
 class PromotionalBanner extends Model implements ActivityLoggable
 {
-    use HasFactory, LogsActivity, SoftDeletes;
+    use HasFactory, InvalidatesMenuVersion, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'title',

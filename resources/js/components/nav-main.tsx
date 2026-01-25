@@ -40,7 +40,12 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                             >
                                 <Link href={item.href || '#'} prefetch className="flex min-w-0 items-center">
                                     {item.icon && <item.icon className="mr-2 h-4 w-4 flex-shrink-0" />}
-                                    <span className="truncate overflow-hidden text-ellipsis whitespace-nowrap">{item.title}</span>
+                                    <span className="flex-1 truncate overflow-hidden text-ellipsis whitespace-nowrap">{item.title}</span>
+                                    {item.badge && item.badge > 0 && (
+                                        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-medium text-white">
+                                            {item.badge > 99 ? '99+' : item.badge}
+                                        </span>
+                                    )}
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
@@ -64,6 +69,9 @@ function GroupItem({
     const { state, setOpen: setSidebarOpen } = useSidebar();
 
     const isSubItemActive = item.items?.some((subItem) => subItem.href && page.url.startsWith(subItem.href));
+
+    // Calcular el total de badges de los subitems
+    const totalBadge = item.items?.reduce((sum, subItem) => sum + (subItem.badge || 0), 0) || 0;
 
     // Solo abrir inicialmente si tiene items activos Y la sidebar está expandida
     const [open, setOpen] = React.useState<boolean>(() => state === 'expanded' && !!isSubItemActive);
@@ -109,6 +117,11 @@ function GroupItem({
                 >
                     {item.icon && <item.icon className="mr-2 h-4 w-4 flex-shrink-0" />}
                     <span className="flex-1 truncate overflow-hidden text-ellipsis whitespace-nowrap">{item.title}</span>
+                    {totalBadge > 0 && (
+                        <span className="ml-auto mr-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-medium text-white">
+                            {totalBadge > 99 ? '99+' : totalBadge}
+                        </span>
+                    )}
                 </SidebarMenuButton>
 
                 <SidebarMenuAction aria-expanded={open} onClick={handleItemClick}>
@@ -121,7 +134,12 @@ function GroupItem({
                             <SidebarMenuSubItem key={subItem.title}>
                                 <SidebarMenuSubButton asChild isActive={subItem.href ? page.url.startsWith(subItem.href) : false}>
                                     <Link href={subItem.href || '#'} prefetch className="flex min-w-0 items-center">
-                                        <span className="truncate overflow-hidden text-ellipsis whitespace-nowrap">{subItem.title}</span>
+                                        <span className="flex-1 truncate overflow-hidden text-ellipsis whitespace-nowrap">{subItem.title}</span>
+                                        {subItem.badge && subItem.badge > 0 && (
+                                            <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-medium text-white">
+                                                {subItem.badge > 99 ? '99+' : subItem.badge}
+                                            </span>
+                                        )}
                                     </Link>
                                 </SidebarMenuSubButton>
                             </SidebarMenuSubItem>

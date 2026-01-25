@@ -29,9 +29,12 @@ class SupportTicket extends Model implements ActivityLoggable
         'support_reason_id',
         'subject',
         'status',
-        'priority',
         'assigned_to',
         'resolved_at',
+    ];
+
+    protected $appends = [
+        'ticket_number',
     ];
 
     protected function casts(): array
@@ -39,6 +42,17 @@ class SupportTicket extends Model implements ActivityLoggable
         return [
             'resolved_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Obtener el número de ticket formateado (YYMMDD-NNNNN)
+     */
+    public function getTicketNumberAttribute(): string
+    {
+        $date = $this->created_at->format('ymd');
+        $number = str_pad($this->id, 5, '0', STR_PAD_LEFT);
+
+        return "{$date}-{$number}";
     }
 
     public function customer(): BelongsTo
@@ -104,14 +118,6 @@ class SupportTicket extends Model implements ActivityLoggable
         $this->update([
             'status' => 'closed',
             'resolved_at' => now(),
-        ]);
-    }
-
-    public function reopen(): void
-    {
-        $this->update([
-            'status' => 'open',
-            'resolved_at' => null,
         ]);
     }
 

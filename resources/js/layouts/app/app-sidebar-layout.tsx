@@ -4,6 +4,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { SupportNotificationsProvider } from '@/contexts/SupportNotificationsContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { type BreadcrumbItem } from '@/types';
 import { type PropsWithChildren } from 'react';
@@ -13,15 +14,17 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWi
     useNotifications();
 
     return (
-        <TooltipProvider>
-            <AppShell variant="sidebar">
-                <AppSidebar />
-                <AppContent variant="sidebar" className="overflow-x-hidden">
-                    <AppSidebarHeader breadcrumbs={breadcrumbs} />
-                    {children}
-                </AppContent>
-            </AppShell>
-            <Toaster position="top-center" richColors closeButton />
-        </TooltipProvider>
+        <SupportNotificationsProvider>
+            <TooltipProvider>
+                <AppShell variant="sidebar">
+                    <AppSidebar />
+                    <AppContent variant="sidebar" className="overflow-x-hidden">
+                        <AppSidebarHeader breadcrumbs={breadcrumbs} />
+                        {children}
+                    </AppContent>
+                </AppShell>
+                <Toaster position="top-center" richColors closeButton />
+            </TooltipProvider>
+        </SupportNotificationsProvider>
     );
 }

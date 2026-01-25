@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\Builder;
 class OrderManagementService
 {
     public function __construct(
-        protected PointsService $pointsService
+        protected PointsService $pointsService,
+        private OrderService $orderService
     ) {}
 
     /**
@@ -81,31 +82,13 @@ class OrderManagementService
      */
     public function updateOrderStatus(Order $order, string $status, ?string $notes = null): Order
     {
-        $previousStatus = $order->status;
-
-        $updateData = ['status' => $status];
-
-        // Actualizar campos de timestamp segun el nuevo estado
-        if ($status === Order::STATUS_READY) {
-            $updateData['ready_at'] = now();
-        } elseif ($status === Order::STATUS_DELIVERED) {
-            $updateData['delivered_at'] = now();
-        } elseif ($status === Order::STATUS_COMPLETED) {
-            $updateData['delivered_at'] = now();
-        }
-
-        $order->update($updateData);
-
-        // Acreditar puntos al cliente cuando la orden se completa
-        if ($status === Order::STATUS_COMPLETED && $order->customer) {
-            $order->load('customer');
-            $this->pointsService->creditPoints($order->customer, $order);
-            $order->customer->update(['last_purchase_at' => now()]);
-        }
-
-        $this->recordStatusChange($order, $status, $notes, $previousStatus);
-
-        return $order->fresh();
+        return $this->orderService->updateStatus(
+            $order,
+            $status,
+            $notes,
+            'admin',
+            auth()->id()
+        );
     }
 
     /**

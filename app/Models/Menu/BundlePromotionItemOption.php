@@ -2,11 +2,14 @@
 
 namespace App\Models\Menu;
 
+use App\Traits\InvalidatesMenuVersion;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BundlePromotionItemOption extends Model
 {
+    use InvalidatesMenuVersion;
+
     protected $fillable = [
         'bundle_item_id',
         'product_id',

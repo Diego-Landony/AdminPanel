@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
-import { AlertCircle, CheckCircle, Inbox, MessageSquare, Settings2, User } from 'lucide-react';
+import { AlertCircle, CheckCircle, Eye, Inbox, MessageSquare, Settings2 } from 'lucide-react';
 
 interface Customer {
     id: number;
@@ -33,9 +33,9 @@ interface SupportReason {
 
 interface SupportTicket {
     id: number;
+    ticket_number: string;
     reason: SupportReason | null;
     status: 'open' | 'closed';
-    priority: 'low' | 'medium' | 'high';
     customer: Customer;
     assigned_user: Admin | null;
     latest_message: LatestMessage | null;
@@ -60,20 +60,13 @@ interface TicketsPageProps {
     };
     filters: {
         status?: string;
-        priority?: string;
         assigned_to?: string;
     };
 }
 
 const STATUS_CONFIG = {
-    open: { label: 'Abierto', color: 'bg-yellow-100 text-yellow-800', icon: Inbox },
-    closed: { label: 'Cerrado', color: 'bg-gray-100 text-gray-800', icon: CheckCircle },
-};
-
-const PRIORITY_CONFIG = {
-    low: { label: 'Baja', color: 'bg-gray-100 text-gray-700' },
-    medium: { label: 'Media', color: 'bg-yellow-100 text-yellow-700' },
-    high: { label: 'Alta', color: 'bg-red-100 text-red-700' },
+    open: { label: 'Abierto', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300', icon: Inbox },
+    closed: { label: 'Cerrado', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300', icon: CheckCircle },
 };
 
 export default function TicketsIndex({ tickets, stats, filters }: TicketsPageProps) {
@@ -136,18 +129,6 @@ export default function TicketsIndex({ tickets, stats, filters }: TicketsPagePro
                                     </SelectContent>
                                 </Select>
 
-                                <Select value={filters.priority || 'all'} onValueChange={(value) => handleFilterChange('priority', value)}>
-                                    <SelectTrigger className="h-9 w-32">
-                                        <SelectValue placeholder="Prioridad" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Todas</SelectItem>
-                                        <SelectItem value="high">Alta</SelectItem>
-                                        <SelectItem value="medium">Media</SelectItem>
-                                        <SelectItem value="low">Baja</SelectItem>
-                                    </SelectContent>
-                                </Select>
-
                                 <Select value={filters.assigned_to || 'all'} onValueChange={(value) => handleFilterChange('assigned_to', value)}>
                                     <SelectTrigger className="h-9 w-32">
                                         <SelectValue placeholder="Tomado" />
@@ -165,13 +146,13 @@ export default function TicketsIndex({ tickets, stats, filters }: TicketsPagePro
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="w-48">Cliente</TableHead>
+                                        <TableHead className="w-40">Ticket</TableHead>
+                                        <TableHead className="w-44">Cliente</TableHead>
                                         <TableHead className="max-w-xs">Motivo</TableHead>
                                         <TableHead className="w-24 text-center">Estado</TableHead>
-                                        <TableHead className="w-24 text-center">Prioridad</TableHead>
                                         <TableHead className="w-32">Tomado por</TableHead>
                                         <TableHead className="w-28">Actualizado</TableHead>
-                                        <TableHead className="w-24"></TableHead>
+                                        <TableHead className="w-20"></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -185,16 +166,14 @@ export default function TicketsIndex({ tickets, stats, filters }: TicketsPagePro
                                         tickets.data.map((ticket) => (
                                             <TableRow key={ticket.id}>
                                                 <TableCell>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-                                                            <User className="h-4 w-4" />
+                                                    <span className="font-mono text-xs">{ticket.ticket_number}</span>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="min-w-0">
+                                                        <div className="truncate text-sm font-medium">
+                                                            {ticket.customer.first_name} {ticket.customer.last_name}
                                                         </div>
-                                                        <div className="min-w-0">
-                                                            <div className="truncate text-sm font-medium">
-                                                                {ticket.customer.first_name} {ticket.customer.last_name}
-                                                            </div>
-                                                            <div className="truncate text-xs text-muted-foreground">{ticket.customer.email}</div>
-                                                        </div>
+                                                        <div className="truncate text-xs text-muted-foreground">{ticket.customer.email}</div>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="max-w-xs">
@@ -220,11 +199,6 @@ export default function TicketsIndex({ tickets, stats, filters }: TicketsPagePro
                                                         {STATUS_CONFIG[ticket.status].label}
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell className="text-center">
-                                                    <Badge className={PRIORITY_CONFIG[ticket.priority].color}>
-                                                        {PRIORITY_CONFIG[ticket.priority].label}
-                                                    </Badge>
-                                                </TableCell>
                                                 <TableCell>
                                                     <span className="text-sm text-muted-foreground">
                                                         {ticket.assigned_user?.name || 'Sin tomar'}
@@ -236,8 +210,10 @@ export default function TicketsIndex({ tickets, stats, filters }: TicketsPagePro
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Button asChild size="sm" variant="outline">
-                                                        <Link href={`/support/tickets/${ticket.id}`}>Ver chat</Link>
+                                                    <Button asChild size="icon" variant="ghost" title="Ver chat">
+                                                        <Link href={`/support/tickets/${ticket.id}`}>
+                                                            <Eye className="h-4 w-4" />
+                                                        </Link>
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>

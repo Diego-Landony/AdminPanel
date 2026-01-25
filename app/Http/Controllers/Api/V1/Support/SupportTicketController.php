@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api\V1\Support;
 use App\Events\SupportMessageSent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Support\CreateSupportTicketRequest;
+use App\Http\Requests\Api\V1\Support\ReportAccessIssueRequest;
 use App\Http\Requests\Api\V1\Support\SendMessageRequest;
 use App\Http\Resources\Api\V1\Support\SupportMessageResource;
 use App\Http\Resources\Api\V1\Support\SupportTicketResource;
+use App\Models\AccessIssueReport;
 use App\Models\Customer;
 use App\Models\SupportMessage;
 use App\Models\SupportMessageAttachment;
@@ -35,7 +37,7 @@ class SupportTicketController extends Controller
         $customer = auth()->user();
 
         $tickets = SupportTicket::where('customer_id', $customer->id)
-            ->with(['reason', 'latestMessage', 'assignedUser:id,name'])
+            ->with(['reason', 'latestMessage.attachments', 'assignedUser:id,name'])
             ->withCount(['messages as unread_count' => function ($q) {
                 $q->where('is_read', false)->where('sender_type', \App\Models\User::class);
             }])
@@ -90,7 +92,6 @@ class SupportTicketController extends Controller
             'customer_id' => $customer->id,
             'support_reason_id' => $request->reason_id,
             'status' => 'open',
-            'priority' => 'medium',
         ]);
 
         $message = SupportMessage::create([
@@ -251,6 +252,52 @@ class SupportTicketController extends Controller
             'data' => [
                 'message' => new SupportMessageResource($message),
             ],
+        ], 201);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/v1/support/access-issues",
+     *     tags={"Support"},
+     *     summary="Report an access issue (public endpoint)",
+     *     description="Allows users who cannot log in to report access issues. No authentication required.",
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(
+     *             required={"email", "issue_type", "description"},
+     *
+     *             @OA\Property(property="email", type="string", format="email", example="usuario@email.com"),
+     *             @OA\Property(property="phone", type="string", example="12345678"),
+     *             @OA\Property(property="dpi", type="string", example="1234567890123", description="DPI (solo números)"),
+     *             @OA\Property(property="issue_type", type="string", enum={"cant_find_account", "cant_login", "account_locked", "no_reset_email", "other"}, example="cant_login"),
+     *             @OA\Property(property="description", type="string", example="No puedo iniciar sesión, me dice que mi contraseña es incorrecta")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Report submitted successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error"
+     *     )
+     * )
+     */
+    public function reportAccessIssue(ReportAccessIssueRequest $request): JsonResponse
+    {
+        AccessIssueReport::create([
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'dpi' => $request->dpi,
+            'issue_type' => $request->issue_type,
+            'description' => $request->description,
+        ]);
+
+        return response()->json([
+            'message' => 'Reporte recibido. Nuestro equipo te contactará pronto por correo o teléfono.',
         ], 201);
     }
 }

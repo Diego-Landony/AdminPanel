@@ -6,6 +6,7 @@ use App\Contracts\ActivityLoggable;
 use App\Models\Concerns\HasBadges;
 use App\Models\Concerns\HasReportingCategory;
 use App\Models\Concerns\LogsActivity;
+use App\Traits\InvalidatesMenuVersion;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Combo extends Model implements ActivityLoggable
 {
-    use HasBadges, HasFactory, HasReportingCategory, LogsActivity, SoftDeletes;
+    use HasBadges, HasFactory, HasReportingCategory, InvalidatesMenuVersion, LogsActivity, SoftDeletes;
 
     public static function getActivityModelName(): string
     {

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\OAuthController;
+use App\Http\Controllers\Api\V1\BroadcastingController;
 use App\Http\Controllers\Api\V1\CustomerAddressController;
 use App\Http\Controllers\Api\V1\CustomerNitController;
 use App\Http\Controllers\Api\V1\DeviceController;
@@ -72,12 +73,20 @@ Route::prefix('v1')->group(function () {
         });
     });
 
+    // Public support endpoint for access issues (no auth required)
+    Route::post('/support/access-issues', [App\Http\Controllers\Api\V1\Support\SupportTicketController::class, 'reportAccessIssue'])
+        ->middleware(['throttle:5,1']) // 5 requests per minute to prevent abuse
+        ->name('api.v1.support.access-issues');
+
     /*
     |--------------------------------------------------------------------------
     | Protected Routes (Authentication required)
     |--------------------------------------------------------------------------
     */
     Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+        // Broadcasting authentication
+        Route::post('/broadcasting/auth', [BroadcastingController::class, 'auth']);
+
         // Authentication management
         Route::post('/auth/logout', [AuthController::class, 'logout'])
             ->name('api.v1.auth.logout');
@@ -195,6 +204,9 @@ Route::prefix('v1')->group(function () {
             Route::get('/active', [App\Http\Controllers\Api\V1\OrderController::class, 'active'])
                 ->name('active');
 
+            Route::get('/pending-review', [App\Http\Controllers\Api\V1\OrderController::class, 'pendingReview'])
+                ->name('pending-review');
+
             Route::get('/cancellation-reasons', [App\Http\Controllers\Api\V1\OrderController::class, 'cancellationReasons'])
                 ->name('cancellation-reasons');
 
@@ -236,6 +248,10 @@ Route::prefix('v1')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware(['throttle:60,1'])->prefix('menu')->name('api.v1.menu.')->group(function () {
+        // Versión del menú (para cache en Flutter)
+        Route::get('/version', [App\Http\Controllers\Api\V1\Menu\MenuController::class, 'version'])
+            ->name('version');
+
         // Menú completo
         Route::get('/', [App\Http\Controllers\Api\V1\Menu\MenuController::class, 'index'])
             ->name('index');

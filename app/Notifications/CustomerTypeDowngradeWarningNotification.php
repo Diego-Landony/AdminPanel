@@ -16,7 +16,8 @@ class CustomerTypeDowngradeWarningNotification extends Notification implements S
         public CustomerType $currentType,
         public CustomerType $projectedType,
         public int $currentPoints,
-        public int $pointsNeeded
+        public int $pointsNeeded,
+        public int $daysUntilDowngrade = 7
     ) {}
 
     /**
@@ -36,8 +37,11 @@ class CustomerTypeDowngradeWarningNotification extends Notification implements S
     {
         $fcmService = app(FCMService::class);
 
-        $title = '¡Mantén tu nivel '.$this->currentType->name.'!';
-        $body = "Necesitas {$this->pointsNeeded} puntos más en los próximos días para mantener tu nivel. ¡Haz una compra y sigue disfrutando tus beneficios!";
+        $daysText = $this->daysUntilDowngrade === 1 ? 'mañana' : "en {$this->daysUntilDowngrade} días";
+        $urgency = $this->daysUntilDowngrade === 1 ? '⚠️ ' : '';
+
+        $title = $urgency.'¡Mantén tu nivel '.$this->currentType->name.'!';
+        $body = "Necesitas {$this->pointsNeeded} puntos más {$daysText} para mantener tu nivel. ¡Haz una compra y sigue disfrutando tus beneficios!";
 
         $fcmService->sendToCustomer(
             $notifiable->id,
@@ -49,6 +53,7 @@ class CustomerTypeDowngradeWarningNotification extends Notification implements S
                 'projected_tier' => $this->projectedType->name,
                 'current_points' => (string) $this->currentPoints,
                 'points_needed' => (string) $this->pointsNeeded,
+                'days_until_downgrade' => (string) $this->daysUntilDowngrade,
             ]
         );
     }
@@ -65,6 +70,7 @@ class CustomerTypeDowngradeWarningNotification extends Notification implements S
             'projected_tier' => $this->projectedType->name,
             'current_points' => $this->currentPoints,
             'points_needed' => $this->pointsNeeded,
+            'days_until_downgrade' => $this->daysUntilDowngrade,
         ];
     }
 }

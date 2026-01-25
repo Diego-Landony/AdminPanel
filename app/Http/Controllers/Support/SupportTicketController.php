@@ -6,10 +6,12 @@ use App\Events\SupportMessageSent;
 use App\Events\TicketStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Support\SendSupportMessageRequest;
+use App\Models\AccessIssueReport;
 use App\Models\SupportMessage;
 use App\Models\SupportMessageAttachment;
 use App\Models\SupportTicket;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -27,10 +29,6 @@ class SupportTicketController extends Controller
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
-        }
-
-        if ($request->filled('priority')) {
-            $query->where('priority', $request->priority);
         }
 
         if ($request->filled('assigned_to')) {
@@ -53,7 +51,7 @@ class SupportTicketController extends Controller
         return Inertia::render('support/tickets/index', [
             'tickets' => $tickets,
             'stats' => $stats,
-            'filters' => $request->only(['status', 'priority', 'assigned_to']),
+            'filters' => $request->only(['status', 'assigned_to']),
         ]);
     }
 
@@ -61,7 +59,7 @@ class SupportTicketController extends Controller
     {
         $ticket->load([
             'reason:id,name,slug',
-            'customer:id,first_name,last_name,email,avatar',
+            'customer:id,first_name,last_name,email',
             'assignedUser:id,name',
             'messages' => function ($q) {
                 $q->with(['sender', 'attachments'])->orderBy('created_at', 'asc');
@@ -105,7 +103,7 @@ class SupportTicketController extends Controller
             'sender_type' => User::class,
             'sender_id' => auth()->id(),
             'message' => $request->message,
-            'is_read' => true,
+            'is_read' => false,
         ]);
 
         if ($request->hasFile('attachments')) {
@@ -150,44 +148,27 @@ class SupportTicketController extends Controller
     public function updateStatus(Request $request, SupportTicket $ticket): RedirectResponse
     {
         $request->validate([
-            'status' => 'required|in:open,closed',
+            'status' => 'required|in:closed',
         ]);
 
-        $newStatus = $request->status;
-
-        if ($newStatus === 'closed') {
-            $ticket->close();
-        } else {
-            $ticket->reopen();
+        // Solo se puede cerrar, no reabrir
+        if ($ticket->status === 'closed') {
+            return redirect()->back()
+                ->with('error', 'Este ticket ya está cerrado.');
         }
+
+        // No se puede cerrar si no ha sido tomado
+        if (! $ticket->assigned_to) {
+            return redirect()->back()
+                ->with('error', 'No se puede cerrar un ticket que no ha sido tomado.');
+        }
+
+        $ticket->close();
 
         broadcast(new TicketStatusChanged($ticket))->toOthers();
 
-        $statusLabels = [
-            'open' => 'abierto',
-            'closed' => 'cerrado',
-        ];
-
         return redirect()->back()
-            ->with('success', "Estado cambiado a {$statusLabels[$newStatus]}.");
-    }
-
-    public function updatePriority(Request $request, SupportTicket $ticket): RedirectResponse
-    {
-        $request->validate([
-            'priority' => 'required|in:low,medium,high',
-        ]);
-
-        $ticket->update(['priority' => $request->priority]);
-
-        $priorityLabels = [
-            'low' => 'baja',
-            'medium' => 'media',
-            'high' => 'alta',
-        ];
-
-        return redirect()->back()
-            ->with('success', "Prioridad cambiada a {$priorityLabels[$request->priority]}.");
+            ->with('success', 'Ticket cerrado exitosamente.');
     }
 
     public function destroy(SupportTicket $ticket): RedirectResponse
@@ -202,5 +183,25 @@ class SupportTicketController extends Controller
 
         return redirect()->route('support.tickets.index')
             ->with('success', 'Ticket eliminado exitosamente.');
+    }
+
+    /**
+     * Obtener estadísticas de soporte para notificaciones en tiempo real
+     */
+    public function stats(): JsonResponse
+    {
+        // Contar tickets con mensajes no leídos de clientes
+        $unreadTickets = SupportTicket::whereHas('messages', function ($q) {
+            $q->where('is_read', false)
+                ->where('sender_type', \App\Models\Customer::class);
+        })->count();
+
+        // Contar reportes de acceso pendientes
+        $pendingAccessIssues = AccessIssueReport::where('status', 'pending')->count();
+
+        return response()->json([
+            'unread_tickets' => $unreadTickets,
+            'pending_access_issues' => $pendingAccessIssues,
+        ]);
     }
 }

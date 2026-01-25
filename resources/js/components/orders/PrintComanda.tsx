@@ -226,11 +226,14 @@ const generatePrintHTML = (order: PrintComandaProps['order']): string => {
 };
 
 /**
- * Función para imprimir una orden directamente (abre ventana nueva)
+ * Función para imprimir una orden directamente (abre en nueva pestaña)
  */
 export const printOrder = (order: PrintComandaProps['order']): void => {
-    const printWindow = window.open('', '_blank');
+    // Usar nombre único para cada orden para permitir múltiples pestañas
+    const windowName = `print_order_${order.id || order.order_number}_${Date.now()}`;
+    const printWindow = window.open('', windowName);
     if (printWindow) {
+        printWindow.document.open();
         printWindow.document.write(generatePrintHTML(order));
         printWindow.document.close();
     }

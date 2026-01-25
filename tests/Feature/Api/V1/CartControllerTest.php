@@ -471,7 +471,7 @@ describe('clear (DELETE /api/v1/cart)', function () {
 });
 
 describe('updateServiceType (PUT /api/v1/cart/service-type)', function () {
-    test('changes service type to pickup using restaurant zone', function () {
+    test('clears restaurant when changing from delivery to pickup', function () {
         $customer = Customer::factory()->create();
 
         $restaurant = Restaurant::factory()->create([
@@ -493,18 +493,25 @@ describe('updateServiceType (PUT /api/v1/cart/service-type)', function () {
 
         $response->assertOk();
         expect($response->json('data.service_type'))->toBe('pickup');
-        // Zone is determined automatically from restaurant.price_location
-        expect($response->json('data.zone'))->toBe('interior');
+        // Restaurant should be cleared when changing from delivery to pickup
+        expect($response->json('data.restaurant'))->toBeNull();
+        // Zone defaults to capital until user selects a restaurant
+        expect($response->json('data.zone'))->toBe('capital');
     });
 
-    test('requires restaurant for pickup', function () {
+    test('keeps restaurant zone when already in pickup', function () {
         $customer = Customer::factory()->create();
+
+        $restaurant = Restaurant::factory()->create([
+            'is_active' => true,
+            'price_location' => 'interior',
+        ]);
 
         Cart::factory()->create([
             'customer_id' => $customer->id,
-            'restaurant_id' => null,
-            'service_type' => 'delivery',
-            'zone' => 'capital',
+            'restaurant_id' => $restaurant->id,
+            'service_type' => 'pickup',
+            'zone' => 'interior',
         ]);
 
         $response = actingAs($customer, 'sanctum')
@@ -512,8 +519,10 @@ describe('updateServiceType (PUT /api/v1/cart/service-type)', function () {
                 'service_type' => 'pickup',
             ]);
 
-        $response->assertStatus(422);
-        expect($response->json('error_code'))->toBe('RESTAURANT_REQUIRED');
+        $response->assertOk();
+        expect($response->json('data.service_type'))->toBe('pickup');
+        expect($response->json('data.restaurant.id'))->toBe($restaurant->id);
+        expect($response->json('data.zone'))->toBe('interior');
     });
 
     test('requires delivery address for delivery', function () {
@@ -540,7 +549,7 @@ describe('updateServiceType (PUT /api/v1/cart/service-type)', function () {
         expect($response->json('error_code'))->toBe('DELIVERY_ADDRESS_REQUIRED');
     });
 
-    test('recalculates all item prices when changing to pickup', function () {
+    test('recalculates item prices with default zone when changing from delivery to pickup', function () {
         $customer = Customer::factory()->create();
         $category = Category::factory()->create(['is_active' => true]);
         $product = Product::factory()->create([
@@ -561,15 +570,15 @@ describe('updateServiceType (PUT /api/v1/cart/service-type)', function () {
             'customer_id' => $customer->id,
             'restaurant_id' => $restaurant->id,
             'service_type' => 'delivery',
-            'zone' => 'capital',
+            'zone' => 'interior',
         ]);
 
         CartItem::factory()->create([
             'cart_id' => $cart->id,
             'product_id' => $product->id,
             'quantity' => 2,
-            'unit_price' => 55.00,
-            'subtotal' => 110.00,
+            'unit_price' => 60.00, // precio_domicilio_interior
+            'subtotal' => 120.00,
         ]);
 
         $response = actingAs($customer, 'sanctum')
@@ -578,11 +587,15 @@ describe('updateServiceType (PUT /api/v1/cart/service-type)', function () {
             ]);
 
         $response->assertOk();
+        // Restaurant is cleared, zone defaults to capital
+        expect($response->json('data.restaurant'))->toBeNull();
+        expect($response->json('data.zone'))->toBe('capital');
+
         $updatedItem = $response->json('data.items')[0] ?? null;
         expect($updatedItem)->not->toBeNull();
-        // Price should be precio_pickup_interior = 45.00
-        expect($updatedItem['unit_price'])->toEqual(45.00);
-        expect($updatedItem['subtotal'])->toEqual(90.00);
+        // Price should be precio_pickup_capital = 50.00 (default zone)
+        expect($updatedItem['unit_price'])->toEqual(50.00);
+        expect($updatedItem['subtotal'])->toEqual(100.00);
     });
 
     test('validates service_type is required', function () {

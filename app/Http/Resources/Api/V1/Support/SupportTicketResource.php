@@ -11,19 +11,15 @@ class SupportTicketResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'ticket_number' => $this->ticket_number,
             'reason' => $this->whenLoaded('reason', fn () => new SupportReasonResource($this->reason)),
             'status' => $this->status,
-            'priority' => $this->priority,
             'unread_count' => $this->unread_count ?? 0,
             'assigned_to' => $this->whenLoaded('assignedUser', fn () => [
                 'id' => $this->assignedUser->id,
                 'name' => $this->assignedUser->name,
             ]),
-            'latest_message' => $this->whenLoaded('latestMessage', fn () => [
-                'message' => $this->latestMessage->message,
-                'created_at' => $this->latestMessage->created_at->toIso8601String(),
-                'is_from_admin' => $this->latestMessage->isFromAdmin(),
-            ]),
+            'latest_message' => $this->whenLoaded('latestMessage', fn () => new SupportMessageResource($this->latestMessage)),
             'messages' => SupportMessageResource::collection($this->whenLoaded('messages')),
             'resolved_at' => $this->resolved_at?->toIso8601String(),
             'created_at' => $this->created_at->toIso8601String(),

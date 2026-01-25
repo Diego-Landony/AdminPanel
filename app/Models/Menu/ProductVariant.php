@@ -5,6 +5,7 @@ namespace App\Models\Menu;
 use App\Contracts\ActivityLoggable;
 use App\Models\Concerns\HasReportingCategory;
 use App\Models\Concerns\LogsActivity;
+use App\Traits\InvalidatesMenuVersion;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,7 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class ProductVariant extends Model implements ActivityLoggable
 {
-    use HasFactory, HasReportingCategory, LogsActivity, SoftDeletes;
+    use HasFactory, HasReportingCategory, InvalidatesMenuVersion, LogsActivity, SoftDeletes;
 
     public function getActivityLabelField(): string
     {

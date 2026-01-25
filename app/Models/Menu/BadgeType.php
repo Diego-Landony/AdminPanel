@@ -4,13 +4,14 @@ namespace App\Models\Menu;
 
 use App\Contracts\ActivityLoggable;
 use App\Models\Concerns\LogsActivity;
+use App\Traits\InvalidatesMenuVersion;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class BadgeType extends Model implements ActivityLoggable
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, InvalidatesMenuVersion, LogsActivity;
 
     public function getActivityLabelField(): string
     {

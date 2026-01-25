@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Events\OrderStatusUpdated;
+use App\Events\RequestOrderReview;
 use App\Exceptions\Delivery\AddressOutsideDeliveryZoneException;
 use App\Exceptions\Order\PromotionExpiredException;
 use App\Exceptions\Order\RestaurantClosedException;
@@ -14,6 +16,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderPromotion;
 use App\Models\OrderStatusHistory;
+use App\Notifications\OrderStatusChangedNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -98,9 +101,16 @@ class OrderService
             if (isset($data['scheduled_pickup_time'])) {
                 $scheduledTime = \Carbon\Carbon::parse($data['scheduled_pickup_time']);
 
-                // Auto-recalcular si la hora programada ya pasó o es muy pronto
+                // Solo ajustar silenciosamente si la diferencia es menor a 60 segundos (race condition)
+                // Diferencias mayores indican un problema y deben rechazarse
                 if ($scheduledTime->lt($minimumPickupTime)) {
-                    $data['scheduled_pickup_time'] = $minimumPickupTime->toIso8601String();
+                    $diffSeconds = $minimumPickupTime->diffInSeconds($scheduledTime);
+
+                    if ($diffSeconds <= 60) {
+                        $data['scheduled_pickup_time'] = $minimumPickupTime->toIso8601String();
+                    } else {
+                        throw new \InvalidArgumentException('La hora de recogida ya no está disponible. Por favor selecciona una nueva hora.');
+                    }
                 }
             } else {
                 // Si no se especificó hora, usar la hora mínima como default
@@ -139,9 +149,16 @@ class OrderService
             if (isset($data['scheduled_delivery_time'])) {
                 $scheduledTime = \Carbon\Carbon::parse($data['scheduled_delivery_time']);
 
-                // Auto-recalcular si la hora programada ya pasó o es muy pronto
+                // Solo ajustar silenciosamente si la diferencia es menor a 60 segundos (race condition)
+                // Diferencias mayores indican un problema y deben rechazarse
                 if ($scheduledTime->lt($minimumDeliveryTime)) {
-                    $data['scheduled_delivery_time'] = $minimumDeliveryTime->toIso8601String();
+                    $diffSeconds = $minimumDeliveryTime->diffInSeconds($scheduledTime);
+
+                    if ($diffSeconds <= 60) {
+                        $data['scheduled_delivery_time'] = $minimumDeliveryTime->toIso8601String();
+                    } else {
+                        throw new \InvalidArgumentException('La hora de entrega ya no está disponible. Por favor selecciona una nueva hora.');
+                    }
                 }
             } else {
                 // Si no se especificó hora, usar la hora mínima como default
@@ -170,7 +187,8 @@ class OrderService
                 $nitSnapshot = $nit->toArray();
             }
 
-            $orderNumber = $this->numberGenerator->generate();
+            $restaurantId = $data['restaurant_id'] ?? $cart->restaurant_id;
+            $orderNumber = $this->numberGenerator->generate($restaurantId);
 
             $summary = $this->cartService->getCartSummary($cart);
 
@@ -182,7 +200,7 @@ class OrderService
             $order = Order::create([
                 'order_number' => $orderNumber,
                 'customer_id' => $customer->id,
-                'restaurant_id' => $data['restaurant_id'] ?? $cart->restaurant_id,
+                'restaurant_id' => $restaurantId,
                 'service_type' => $data['service_type'] ?? $cart->service_type,
                 'zone' => $cart->zone,
                 'delivery_address_id' => $data['delivery_address_id'] ?? null,
@@ -250,8 +268,19 @@ class OrderService
                     ];
                 }
 
-                // Calcular precio de extras (opciones adicionales)
-                $optionsPrice = $cartItem->getOptionsTotal();
+                // Calcular precio de extras con desglose de bundle
+                $optionsBreakdown = $cartItem->getOptionsTotalWithBundle();
+                $optionsPrice = $optionsBreakdown['total'];
+                $optionsSavings = $optionsBreakdown['savings'];
+
+                // Agregar desglose de extras al product_snapshot
+                if ($productSnapshot && ($optionsPrice > 0 || $optionsSavings > 0)) {
+                    $productSnapshot['options_breakdown'] = [
+                        'items_total' => $optionsPrice + $optionsSavings,
+                        'bundle_discount' => $optionsSavings,
+                        'final' => $optionsPrice,
+                    ];
+                }
 
                 // subtotal incluye: (precio_base * cantidad) + (extras * cantidad)
                 $itemSubtotal = (float) $cartItem->subtotal + ($optionsPrice * $cartItem->quantity);
@@ -309,7 +338,7 @@ class OrderService
     {
         $previousStatus = $order->status;
 
-        if (! $this->validateStatusTransition($previousStatus, $newStatus)) {
+        if (! $this->validateStatusTransition($previousStatus, $newStatus, $order->service_type)) {
             throw new \InvalidArgumentException("Transición de estado inválida: {$previousStatus} -> {$newStatus}");
         }
 
@@ -335,6 +364,17 @@ class OrderService
                 'created_at' => now(),
             ]);
         });
+
+        event(new OrderStatusUpdated($order, $previousStatus));
+
+        // Solicitar calificación cuando la orden se completa
+        if ($newStatus === Order::STATUS_COMPLETED) {
+            event(new RequestOrderReview($order));
+        }
+
+        if ($order->customer) {
+            $order->customer->notify(new OrderStatusChangedNotification($order, $previousStatus));
+        }
 
         return $order->fresh();
     }
@@ -463,20 +503,27 @@ class OrderService
      *
      * @param  string  $current  Estado actual
      * @param  string  $new  Nuevo estado
+     * @param  string  $serviceType  Tipo de servicio (pickup o delivery)
      * @return bool True si la transición es válida
      */
-    private function validateStatusTransition(string $current, string $new): bool
+    private function validateStatusTransition(string $current, string $new, string $serviceType): bool
     {
         $validTransitions = [
             Order::STATUS_PENDING => [Order::STATUS_PREPARING, Order::STATUS_CANCELLED],
-            Order::STATUS_PREPARING => [Order::STATUS_READY],
-            Order::STATUS_READY => [Order::STATUS_OUT_FOR_DELIVERY, Order::STATUS_COMPLETED],
-            Order::STATUS_OUT_FOR_DELIVERY => [Order::STATUS_DELIVERED],
-            Order::STATUS_DELIVERED => [Order::STATUS_COMPLETED],
+            Order::STATUS_PREPARING => [Order::STATUS_READY, Order::STATUS_CANCELLED],
             Order::STATUS_COMPLETED => [],
             Order::STATUS_CANCELLED => [],
             Order::STATUS_REFUNDED => [],
         ];
+
+        // Transiciones específicas según tipo de servicio
+        if ($serviceType === 'pickup') {
+            $validTransitions[Order::STATUS_READY] = [Order::STATUS_COMPLETED, Order::STATUS_CANCELLED];
+        } else { // delivery
+            $validTransitions[Order::STATUS_READY] = [Order::STATUS_OUT_FOR_DELIVERY, Order::STATUS_CANCELLED];
+            $validTransitions[Order::STATUS_OUT_FOR_DELIVERY] = [Order::STATUS_DELIVERED, Order::STATUS_CANCELLED];
+            $validTransitions[Order::STATUS_DELIVERED] = [Order::STATUS_COMPLETED];
+        }
 
         return in_array($new, $validTransitions[$current] ?? []);
     }

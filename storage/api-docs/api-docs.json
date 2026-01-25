@@ -4333,6 +4333,46 @@
                 }
             }
         },
+        "/api/v1/menu/version": {
+            "get": {
+                "tags": [
+                    "Menu"
+                ],
+                "summary": "Get menu version",
+                "description": "Returns the current menu version hash for cache validation.\n     *\n     * **Cache Strategy for Flutter:**\n     * 1. Store menu locally with version hash\n     * 2. On app start, call this endpoint\n     * 3. If version matches local cache → use cached menu (no download needed)\n     * 4. If version differs → call GET /menu to download updated menu\n     *\n     * **Version Format:** `m_[timestamp]_[random]` (e.g., `m_1706123456_a3f2`)\n     *\n     * The version changes automatically when any menu item is created, updated, or deleted:\n     * - Products, Categories, Combos\n     * - Variants, Sections, Options\n     * - Promotions, Banners, Badges",
+                "operationId": "41e6d3a187cea9bffd7faf69256eff5e",
+                "responses": {
+                    "200": {
+                        "description": "Menu version retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "version": {
+                                                    "description": "Current menu version hash",
+                                                    "type": "string",
+                                                    "example": "m_1706123456_a3f2"
+                                                },
+                                                "generated_at": {
+                                                    "description": "When this version was generated",
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2024-01-24T15:30:56+00:00"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/menu/products": {
             "get": {
                 "tags": [
@@ -5987,6 +6027,93 @@
                     },
                     "401": {
                         "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/orders/pending-review": {
+            "get": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Órdenes pendientes de calificación",
+                "description": "Retorna las órdenes completadas que aún no han sido calificadas por el cliente.\n     *\n     * **Uso recomendado:** Llamar este endpoint al iniciar la app para mostrar el modal de calificación\n     * si hay órdenes pendientes de calificar (por ejemplo, si el usuario cerró la app antes de calificar).\n     *\n     * **Nota:** Solo retorna órdenes de los últimos 7 días para evitar solicitar calificaciones muy antiguas.",
+                "operationId": "f7311f33dd21ecf3564848d327e8466a",
+                "responses": {
+                    "200": {
+                        "description": "Órdenes pendientes de calificación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "order_id": {
+                                                        "type": "integer",
+                                                        "example": 123
+                                                    },
+                                                    "order_number": {
+                                                        "type": "string",
+                                                        "example": "ORD-20260123-0001"
+                                                    },
+                                                    "restaurant": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Subway Pradera"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "total": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 125
+                                                    },
+                                                    "service_type": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "pickup",
+                                                            "delivery"
+                                                        ]
+                                                    },
+                                                    "completed_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "count": {
+                                                    "description": "Cantidad de órdenes pendientes",
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
                     }
                 },
                 "security": [
@@ -7765,6 +7892,70 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/v1/support/access-issues": {
+            "post": {
+                "tags": [
+                    "Support"
+                ],
+                "summary": "Report an access issue (public endpoint)",
+                "description": "Allows users who cannot log in to report access issues. No authentication required.",
+                "operationId": "7ebae82790f6869f699f95adf5e5925a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "issue_type",
+                                    "description"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "usuario@email.com"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "12345678"
+                                    },
+                                    "dpi": {
+                                        "description": "DPI (solo números)",
+                                        "type": "string",
+                                        "example": "1234567890123"
+                                    },
+                                    "issue_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "cant_find_account",
+                                            "cant_login",
+                                            "account_locked",
+                                            "no_reset_email",
+                                            "other"
+                                        ],
+                                        "example": "cant_login"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "No puedo iniciar sesión, me dice que mi contraseña es incorrecta"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Report submitted successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
             }
         }
     },

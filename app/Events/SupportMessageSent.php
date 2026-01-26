@@ -17,20 +17,33 @@ class SupportMessageSent implements ShouldBroadcast
     public function __construct(
         public SupportMessage $message
     ) {
-        $this->message->load('attachments');
+        // Cargar relaciones necesarias una sola vez
+        $this->message->load(['attachments', 'ticket']);
     }
 
     public function broadcastOn(): array
     {
+        $ticket = $this->message->ticket;
+
         $channels = [
+            // SIEMPRE: Canal especifico del ticket (para la vista del chat)
             new PrivateChannel('support.ticket.'.$this->message->support_ticket_id),
-            new PrivateChannel('support.admin'),
         ];
 
-        // Si el mensaje es del admin, notificar al cliente en su canal privado
+        // Si el mensaje es del CLIENTE, notificar a admins
+        if ($this->message->isFromCustomer()) {
+            if ($ticket->assigned_to) {
+                // Ticket asignado: solo notificar al admin asignado
+                $channels[] = new PrivateChannel('admin.'.$ticket->assigned_to);
+            } else {
+                // Ticket sin asignar: notificar a todos los admins
+                $channels[] = new PrivateChannel('support.admin');
+            }
+        }
+
+        // Si el mensaje es del ADMIN, notificar al cliente
         if ($this->message->isFromAdmin()) {
-            $this->message->load('ticket');
-            $channels[] = new PrivateChannel('customer.'.$this->message->ticket->customer_id);
+            $channels[] = new PrivateChannel('customer.'.$ticket->customer_id);
         }
 
         return $channels;
@@ -43,9 +56,15 @@ class SupportMessageSent implements ShouldBroadcast
 
     public function broadcastWith(): array
     {
+        $ticket = $this->message->ticket;
+
         return [
             'message' => new SupportMessageResource($this->message),
             'ticket_id' => $this->message->support_ticket_id,
+            'customer_id' => $ticket->customer_id,
+            'is_from_admin' => $this->message->isFromAdmin(),
+            'is_assigned' => $ticket->assigned_to !== null,
+            'assigned_to' => $ticket->assigned_to,
         ];
     }
 }

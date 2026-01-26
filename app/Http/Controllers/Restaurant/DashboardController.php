@@ -109,6 +109,7 @@ class DashboardController extends Controller
             ->get();
 
         return Inertia::render('restaurant/dashboard', [
+            'restaurant_id' => $restaurantId,
             'stats' => $stats,
             'active_orders' => $activeOrders,
             'available_drivers' => $availableDrivers,

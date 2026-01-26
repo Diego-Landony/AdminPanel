@@ -882,6 +882,9 @@ class OrderController extends Controller
             ...$request->validated(),
         ]);
 
+        // Broadcast evento para que la app actualice la UI
+        event(new \App\Events\OrderReviewSubmitted($order, $review));
+
         return response()->json([
             'data' => new OrderReviewResource($review),
             'message' => 'Gracias por tu calificación',

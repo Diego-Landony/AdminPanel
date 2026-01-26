@@ -170,12 +170,28 @@ export function useSupportTicketWebSocket({
     const reconnectAttempts = useRef(0);
     const maxReconnectAttempts = 5;
 
+    // Refs para mantener valores actuales sin causar re-subscripciones
+    const onNewMessageRef = useRef(onNewMessage);
+    const onStatusChangedRef = useRef(onStatusChanged);
+    const reloadPropsRef = useRef(reloadProps);
+    const playSoundRef = useRef(playSound);
+
+    // Actualizar refs cuando los props cambien
+    useEffect(() => {
+        onNewMessageRef.current = onNewMessage;
+        onStatusChangedRef.current = onStatusChanged;
+        reloadPropsRef.current = reloadProps;
+        playSoundRef.current = playSound;
+    }, [onNewMessage, onStatusChanged, reloadProps, playSound]);
+
     /**
      * Manejar evento de nuevo mensaje
+     * Usa refs para evitar closures stale
      */
     const handleMessageSent = useCallback(
         (event: SupportMessageSentEvent) => {
             if (!isMounted.current || isNavigating) {
+                console.log('[SupportWebSocket] Ignoring message - not mounted or navigating');
                 return;
             }
 
@@ -190,24 +206,26 @@ export function useSupportTicketWebSocket({
             setLastEventTime(new Date());
 
             // Solo reproducir sonido si el mensaje es del cliente (no del admin actual)
-            if (!message.is_from_admin && playSound) {
+            if (!message.is_from_admin && playSoundRef.current) {
                 playNotificationSound();
             }
 
             // Notificar callback
-            onNewMessage?.(message);
+            onNewMessageRef.current?.(message);
 
             // Recargar datos de la pagina
             if (!isNavigating && isMounted.current) {
-                const reloadOptions = reloadProps ? { only: reloadProps } : {};
+                const reloadOptions = reloadPropsRef.current ? { only: reloadPropsRef.current } : {};
+                console.log('[SupportWebSocket] Reloading page with options:', reloadOptions);
                 router.reload(reloadOptions);
             }
         },
-        [onNewMessage, reloadProps, playSound]
+        [] // Sin dependencias - usa refs
     );
 
     /**
      * Manejar evento de cambio de estado del ticket
+     * Usa refs para evitar closures stale
      */
     const handleStatusChanged = useCallback(
         (event: TicketStatusChangedEvent) => {
@@ -224,15 +242,15 @@ export function useSupportTicketWebSocket({
             setLastEventTime(new Date());
 
             // Notificar callback
-            onStatusChanged?.(event);
+            onStatusChangedRef.current?.(event);
 
             // Recargar datos de la pagina
             if (!isNavigating && isMounted.current) {
-                const reloadOptions = reloadProps ? { only: reloadProps } : {};
+                const reloadOptions = reloadPropsRef.current ? { only: reloadPropsRef.current } : {};
                 router.reload(reloadOptions);
             }
         },
-        [onStatusChanged, reloadProps]
+        [] // Sin dependencias - usa refs
     );
 
     /**
@@ -337,6 +355,7 @@ export function useSupportTicketWebSocket({
 
     /**
      * Efecto principal para manejar la suscripcion
+     * NOTA: No incluir connectionState en deps para evitar loop infinito
      */
     useEffect(() => {
         isMounted.current = true;
@@ -350,15 +369,18 @@ export function useSupportTicketWebSocket({
 
         // Manejar reconexion cuando la ventana vuelve a estar visible
         const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible' && connectionState !== 'connected' && enabled) {
-                console.log('[SupportWebSocket] Page became visible, reconnecting...');
-                reconnect();
+            if (document.visibilityState === 'visible' && enabled) {
+                console.log('[SupportWebSocket] Page became visible, checking connection...');
+                // Solo reconectar si no hay canal activo
+                if (!channelRef.current) {
+                    reconnect();
+                }
             }
         };
 
         // Manejar reconexion cuando vuelve la conexion a internet
         const handleOnline = () => {
-            if (connectionState !== 'connected' && enabled) {
+            if (enabled && !channelRef.current) {
                 console.log('[SupportWebSocket] Back online, reconnecting...');
                 reconnect();
             }
@@ -373,7 +395,8 @@ export function useSupportTicketWebSocket({
             window.removeEventListener('online', handleOnline);
             unsubscribe();
         };
-    }, [enabled, ticketId, subscribe, unsubscribe, reconnect, connectionState]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [enabled, ticketId]);
 
     return {
         connectionState,

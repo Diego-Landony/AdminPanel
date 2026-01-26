@@ -74,6 +74,7 @@ interface ActiveOrder {
 }
 
 interface Props {
+    restaurant_id: number;
     stats: RestaurantDashboardStats;
     active_orders: ActiveOrder[];
     available_drivers: Driver[];
@@ -86,15 +87,15 @@ interface Props {
 /**
  * Dashboard del panel de restaurante - Estilo KDS
  */
-export default function RestaurantDashboard({ stats, active_orders, available_drivers, config }: Props) {
+export default function RestaurantDashboard({ restaurant_id, stats, active_orders, available_drivers, config }: Props) {
     const [isUpdating, setIsUpdating] = useState<number | null>(null);
     const [, setTick] = useState(0);
     const [selectedOrder, setSelectedOrder] = useState<ActiveOrder | null>(null);
     const [sheetOpen, setSheetOpen] = useState(false);
 
-    // Polling para detectar nuevas órdenes (actualización automática en tiempo real)
+    // Polling para detectar nuevas órdenes (actualización automática cada 10 segundos)
     useOrderPolling({
-        intervalSeconds: config?.polling_interval || 15,
+        intervalSeconds: 10,
         autoPrint: config?.auto_print_new_orders ?? true,
         enabled: true,
         reloadProps: ['active_orders', 'stats'],
@@ -196,10 +197,7 @@ export default function RestaurantDashboard({ stats, active_orders, available_dr
                                     Estado de Ordenes - {new Date().toLocaleDateString('es-GT', { day: 'numeric', month: 'short' })}
                                 </CardTitle>
                                 <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
-                                    <span className="relative flex h-2 w-2">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                                    </span>
+                                    <span className="inline-flex rounded-full h-2 w-2 bg-green-500" />
                                     Online
                                 </div>
                             </div>

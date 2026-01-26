@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePoll } from '@inertiajs/react';
 import { AlertCircle, CheckCircle, Eye, Inbox, MessageSquare, Settings2 } from 'lucide-react';
 
 interface Customer {
@@ -70,6 +70,8 @@ const STATUS_CONFIG = {
 };
 
 export default function TicketsIndex({ tickets, stats, filters }: TicketsPageProps) {
+    usePoll(10000);
+
     const handleFilterChange = (key: string, value: string) => {
         const newFilters = { ...filters, [key]: value === 'all' ? undefined : value };
         router.get('/support/tickets', newFilters, { preserveState: true });
@@ -210,9 +212,10 @@ export default function TicketsIndex({ tickets, stats, filters }: TicketsPagePro
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Button asChild size="icon" variant="ghost" title="Ver chat">
+                                                    <Button asChild size="sm" variant="ghost">
                                                         <Link href={`/support/tickets/${ticket.id}`}>
                                                             <Eye className="h-4 w-4" />
+                                                            Ver
                                                         </Link>
                                                     </Button>
                                                 </TableCell>

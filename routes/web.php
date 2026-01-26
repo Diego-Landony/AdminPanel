@@ -81,6 +81,11 @@ Route::middleware(['auth', 'verified'])->prefix('api/admin')->group(function () 
     Route::get('/support/stats', [SupportTicketController::class, 'stats'])->name('admin.support.stats');
 });
 
+// Broadcasting auth para WebSocket del panel admin (usa el guard web/auth)
+Route::middleware(['auth'])->post('/broadcasting/auth', function (\Illuminate\Http\Request $request) {
+    return \Illuminate\Support\Facades\Broadcast::auth($request);
+})->name('admin.broadcasting.auth');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     // Home - página principal después del login
     Route::get('home', function () {

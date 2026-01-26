@@ -160,17 +160,7 @@ export default function TicketShow({ ticket, customerOrders, customerProfile }: 
         ticketId: ticket.id,
         enabled: ticket.status === 'open',
         reloadProps: ['ticket'],
-        playSound: true,
-        onNewMessage: (msg) => {
-            if (!msg.is_from_admin) {
-                showNotification.info('Nuevo mensaje del cliente');
-            }
-        },
-        onStatusChanged: (data) => {
-            if (data.status === 'closed') {
-                showNotification.info('El ticket ha sido cerrado');
-            }
-        },
+        playSound: false,
     });
 
     const scrollToBottom = () => {

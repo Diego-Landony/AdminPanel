@@ -125,8 +125,8 @@ class OrderController extends Controller
                 'per_page' => (int) $perPage,
             ],
             'available_drivers' => $availableDrivers,
+            'restaurant_id' => $restaurantId,
             'config' => [
-                'polling_interval' => config('restaurant.polling_interval', 15),
                 'auto_print_new_orders' => config('restaurant.auto_print_new_orders', false),
             ],
         ]);

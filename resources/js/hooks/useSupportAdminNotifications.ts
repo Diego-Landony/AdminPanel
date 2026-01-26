@@ -34,11 +34,24 @@ interface SupportMessageSentEvent {
     ticket_id: number;
 }
 
+interface AccessIssueCreatedEvent {
+    report_id: number;
+    email: string;
+    issue_type: string;
+    issue_type_label: string;
+    created_at: string;
+}
+
 type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error';
 
 interface SupportStats {
     unreadTickets: number;
     pendingAccessIssues: number;
+}
+
+interface UseSupportAdminNotificationsOptions {
+    enabled?: boolean;
+    userId?: number | null;
 }
 
 interface UseSupportAdminNotificationsResult {
@@ -93,9 +106,15 @@ const playNotificationSound = (): void => {
 
 /**
  * Hook para notificaciones globales de soporte en el panel admin.
- * Escucha el canal support.admin para recibir mensajes de clientes en tiempo real.
+ * Escucha dos canales:
+ * - support.admin: para tickets sin asignar (notifica a todos los admins)
+ * - admin.{userId}: para tickets asignados al usuario actual (notifica solo a el)
  */
-export function useSupportAdminNotifications(enabled = true): UseSupportAdminNotificationsResult {
+export function useSupportAdminNotifications(
+    options: UseSupportAdminNotificationsOptions = {}
+): UseSupportAdminNotificationsResult {
+    const { enabled = true, userId = null } = options;
+
     const [connectionState, setConnectionState] = useState<ConnectionState>('disconnected');
     const [lastEventTime, setLastEventTime] = useState<Date | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -105,9 +124,16 @@ export function useSupportAdminNotifications(enabled = true): UseSupportAdminNot
     });
 
     const isMounted = useRef(true);
-    const channelRef = useRef<PrivateChannel | null>(null);
+    const supportAdminChannelRef = useRef<PrivateChannel | null>(null);
+    const userChannelRef = useRef<PrivateChannel | null>(null);
     const reconnectAttempts = useRef(0);
     const maxReconnectAttempts = 5;
+    const userIdRef = useRef(userId);
+
+    // Mantener actualizado el userId en el ref
+    useEffect(() => {
+        userIdRef.current = userId;
+    }, [userId]);
 
     /**
      * Obtener estadisticas de soporte del servidor
@@ -140,7 +166,7 @@ export function useSupportAdminNotifications(enabled = true): UseSupportAdminNot
      * Manejar evento de nuevo mensaje
      */
     const handleMessageSent = useCallback(
-        (event: SupportMessageSentEvent) => {
+        (event: SupportMessageSentEvent, channelSource: 'support.admin' | 'admin.user') => {
             if (!isMounted.current || isNavigating) {
                 return;
             }
@@ -152,30 +178,58 @@ export function useSupportAdminNotifications(enabled = true): UseSupportAdminNot
                 console.log('[SupportAdminNotifications] New customer message received:', {
                     messageId: message.id,
                     ticketId: event.ticket_id,
+                    channel: channelSource,
                 });
 
                 setLastEventTime(new Date());
-                playNotificationSound();
 
-                // Incrementar contador temporalmente y luego refrescar stats reales
-                setStats((prev) => ({
-                    ...prev,
-                    unreadTickets: prev.unreadTickets + 1,
-                }));
+                // Solo reproducir sonido si NO estamos en la pagina del chat de ese ticket
+                // (si estamos viendo el chat, no necesitamos sonido porque ya lo vemos)
+                const isOnTicketShowPage = window.location.pathname.match(/\/support\/tickets\/\d+$/);
+                if (!isOnTicketShowPage) {
+                    playNotificationSound();
+                }
 
                 // Refrescar stats reales del servidor
-                setTimeout(() => {
-                    if (isMounted.current) {
-                        refreshStats();
-                    }
-                }, 500);
+                // NO incrementamos manualmente porque el servidor ya cuenta correctamente
+                // los tickets con mensajes no leidos (no los mensajes individuales)
+                refreshStats();
             }
         },
         [refreshStats]
     );
 
     /**
-     * Suscribirse al canal WebSocket de admin
+     * Manejar evento de nuevo reporte de acceso
+     */
+    const handleAccessIssueCreated = useCallback(
+        (event: AccessIssueCreatedEvent) => {
+            if (!isMounted.current || isNavigating) {
+                return;
+            }
+
+            console.log('[SupportAdminNotifications] New access issue report received:', {
+                reportId: event.report_id,
+                email: event.email,
+                issueType: event.issue_type,
+            });
+
+            setLastEventTime(new Date());
+
+            // Solo reproducir sonido si NO estamos en la pagina de access issues
+            const isOnAccessIssuesPage = window.location.pathname.includes('/support/access-issues');
+            if (!isOnAccessIssuesPage) {
+                playNotificationSound();
+            }
+
+            // Refrescar stats del servidor
+            refreshStats();
+        },
+        [refreshStats]
+    );
+
+    /**
+     * Suscribirse a los canales WebSocket de admin
      */
     const subscribe = useCallback(() => {
         if (!window.Echo) {
@@ -189,33 +243,81 @@ export function useSupportAdminNotifications(enabled = true): UseSupportAdminNot
             setConnectionState('connecting');
             setError(null);
 
-            const channelName = 'support.admin';
-            console.log('[SupportAdminNotifications] Subscribing to channel:', channelName);
+            // Canal 1: support.admin - para tickets sin asignar (todos los admins)
+            const supportAdminChannelName = 'support.admin';
+            console.log('[SupportAdminNotifications] Subscribing to channel:', supportAdminChannelName);
 
-            const channel = window.Echo.private(channelName);
-            channelRef.current = channel;
+            const supportAdminChannel = window.Echo.private(supportAdminChannelName);
+            supportAdminChannelRef.current = supportAdminChannel;
 
-            channel.listen('.message.sent', handleMessageSent);
+            supportAdminChannel.listen('.message.sent', (event: SupportMessageSentEvent) => {
+                handleMessageSent(event, 'support.admin');
+            });
 
-            channel.subscribed(() => {
+            // Escuchar nuevos reportes de acceso
+            supportAdminChannel.listen('.access-issue.created', (event: AccessIssueCreatedEvent) => {
+                handleAccessIssueCreated(event);
+            });
+
+            supportAdminChannel.subscribed(() => {
                 if (isMounted.current) {
-                    console.log('[SupportAdminNotifications] Successfully subscribed to channel:', channelName);
-                    setConnectionState('connected');
-                    setError(null);
+                    console.log('[SupportAdminNotifications] Successfully subscribed to channel:', supportAdminChannelName);
                     reconnectAttempts.current = 0;
 
                     // Cargar stats iniciales
                     refreshStats();
+
+                    // Marcar como conectado si el canal de usuario ya esta listo o no es necesario
+                    if (!userIdRef.current || userChannelRef.current) {
+                        setConnectionState('connected');
+                        setError(null);
+                    }
                 }
             });
 
-            channel.error((err: unknown) => {
+            supportAdminChannel.error((err: unknown) => {
                 if (isMounted.current) {
-                    console.error('[SupportAdminNotifications] Channel error:', err);
+                    console.error('[SupportAdminNotifications] Support admin channel error:', err);
                     setConnectionState('error');
-                    setError('Error en la conexion del canal');
+                    setError('Error en la conexion del canal support.admin');
                 }
             });
+
+            // Canal 2: admin.{userId} - para tickets asignados al usuario actual
+            if (userIdRef.current) {
+                const userChannelName = `admin.${userIdRef.current}`;
+                console.log('[SupportAdminNotifications] Subscribing to user channel:', userChannelName);
+
+                const userChannel = window.Echo.private(userChannelName);
+                userChannelRef.current = userChannel;
+
+                userChannel.listen('.message.sent', (event: SupportMessageSentEvent) => {
+                    handleMessageSent(event, 'admin.user');
+                });
+
+                userChannel.subscribed(() => {
+                    if (isMounted.current) {
+                        console.log('[SupportAdminNotifications] Successfully subscribed to user channel:', userChannelName);
+
+                        // Marcar como conectado si el canal de soporte tambien esta listo
+                        if (supportAdminChannelRef.current) {
+                            setConnectionState('connected');
+                            setError(null);
+                        }
+                    }
+                });
+
+                userChannel.error((err: unknown) => {
+                    if (isMounted.current) {
+                        console.error('[SupportAdminNotifications] User channel error:', err);
+                        // No marcar como error total si el canal principal funciona
+                    }
+                });
+            } else {
+                // Si no hay userId, solo conectamos al canal de soporte admin
+                setConnectionState('connected');
+                setError(null);
+            }
         } catch (err) {
             console.error('[SupportAdminNotifications] Subscription error:', err);
             if (isMounted.current) {
@@ -223,23 +325,40 @@ export function useSupportAdminNotifications(enabled = true): UseSupportAdminNot
                 setError(err instanceof Error ? err.message : 'Error al suscribirse');
             }
         }
-    }, [handleMessageSent, refreshStats]);
+    }, [handleMessageSent, handleAccessIssueCreated, refreshStats]);
 
     /**
-     * Desuscribirse del canal WebSocket
+     * Desuscribirse de los canales WebSocket
      */
     const unsubscribe = useCallback(() => {
-        if (channelRef.current && window.Echo) {
-            const channelName = 'support.admin';
-            console.log('[SupportAdminNotifications] Unsubscribing from channel:', channelName);
+        if (window.Echo) {
+            // Desuscribirse del canal support.admin
+            if (supportAdminChannelRef.current) {
+                const supportAdminChannelName = 'support.admin';
+                console.log('[SupportAdminNotifications] Unsubscribing from channel:', supportAdminChannelName);
 
-            try {
-                window.Echo.leave(channelName);
-            } catch (err) {
-                console.error('[SupportAdminNotifications] Error leaving channel:', err);
+                try {
+                    window.Echo.leave(supportAdminChannelName);
+                } catch (err) {
+                    console.error('[SupportAdminNotifications] Error leaving support.admin channel:', err);
+                }
+
+                supportAdminChannelRef.current = null;
             }
 
-            channelRef.current = null;
+            // Desuscribirse del canal admin.{userId}
+            if (userChannelRef.current && userIdRef.current) {
+                const userChannelName = `admin.${userIdRef.current}`;
+                console.log('[SupportAdminNotifications] Unsubscribing from user channel:', userChannelName);
+
+                try {
+                    window.Echo.leave(userChannelName);
+                } catch (err) {
+                    console.error('[SupportAdminNotifications] Error leaving user channel:', err);
+                }
+
+                userChannelRef.current = null;
+            }
         }
         setConnectionState('disconnected');
     }, []);
@@ -282,7 +401,7 @@ export function useSupportAdminNotifications(enabled = true): UseSupportAdminNot
 
     /**
      * Efecto principal para manejar la suscripcion
-     * Solo se re-ejecuta cuando cambia enabled
+     * Se re-ejecuta cuando cambia enabled o userId
      */
     useEffect(() => {
         isMounted.current = true;
@@ -300,7 +419,7 @@ export function useSupportAdminNotifications(enabled = true): UseSupportAdminNot
         // Cargar stats iniciales inmediatamente
         refreshStatsRef.current();
 
-        // Pequeño delay para asegurar que todo esté listo
+        // Pequeño delay para asegurar que todo este listo
         const timeoutId = setTimeout(() => {
             if (isMounted.current) {
                 subscribeRef.current();
@@ -312,7 +431,7 @@ export function useSupportAdminNotifications(enabled = true): UseSupportAdminNot
                 // Siempre refrescar stats cuando la pagina vuelve a ser visible
                 refreshStatsRef.current();
 
-                if (!channelRef.current) {
+                if (!supportAdminChannelRef.current) {
                     console.log('[SupportAdminNotifications] Page became visible, reconnecting...');
                     reconnectRef.current();
                 }
@@ -320,7 +439,7 @@ export function useSupportAdminNotifications(enabled = true): UseSupportAdminNot
         };
 
         const handleOnline = () => {
-            if (!channelRef.current) {
+            if (!supportAdminChannelRef.current) {
                 console.log('[SupportAdminNotifications] Back online, reconnecting...');
                 reconnectRef.current();
             }
@@ -344,7 +463,7 @@ export function useSupportAdminNotifications(enabled = true): UseSupportAdminNot
             clearInterval(statsInterval);
             unsubscribeRef.current();
         };
-    }, [enabled]);
+    }, [enabled, userId]);
 
     return {
         connectionState,
@@ -356,4 +475,4 @@ export function useSupportAdminNotifications(enabled = true): UseSupportAdminNot
     };
 }
 
-export type { ConnectionState, SupportStats, UseSupportAdminNotificationsResult };
+export type { ConnectionState, SupportStats, UseSupportAdminNotificationsResult, UseSupportAdminNotificationsOptions };

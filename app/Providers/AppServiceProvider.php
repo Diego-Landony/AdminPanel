@@ -20,6 +20,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging;
+use Laravel\Pulse\Facades\Pulse;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class AppServiceProvider extends ServiceProvider
@@ -53,6 +54,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
         $this->configureCustomerNotifications();
         $this->configurePolicies();
+        $this->configurePulse();
 
         PersonalAccessToken::observe(PersonalAccessTokenObserver::class);
         Promotion::observe(PromotionObserver::class);
@@ -168,5 +170,21 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Driver::class, DriverPolicy::class);
         Gate::policy(RestaurantUser::class, RestaurantUserPolicy::class);
+    }
+
+    /**
+     * Configure Laravel Pulse authorization.
+     */
+    protected function configurePulse(): void
+    {
+        Gate::define('viewPulse', function ($user = null) {
+            return $user?->isAdmin() ?? false;
+        });
+
+        Pulse::user(fn ($user) => [
+            'name' => $user->name,
+            'extra' => $user->email,
+            'avatar' => null,
+        ]);
     }
 }

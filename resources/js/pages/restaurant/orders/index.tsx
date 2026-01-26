@@ -28,7 +28,7 @@ import {
     SheetHeader,
     SheetTitle,
 } from '@/components/ui/sheet';
-import { useOrderPolling } from '@/hooks/useOrderPolling';
+import { useOrderWebSocket } from '@/hooks/useOrderWebSocket';
 import RestaurantLayout from '@/layouts/restaurant-layout';
 import { Driver, Filters, Order, PaginatedData } from '@/types';
 
@@ -46,8 +46,8 @@ interface Props {
         date: string | null;
     };
     available_drivers: Driver[];
+    restaurant_id: number;
     config?: {
-        polling_interval: number;
         auto_print_new_orders: boolean;
     };
 }
@@ -71,6 +71,7 @@ export default function RestaurantOrdersIndex({
     status_counts,
     filters,
     available_drivers,
+    restaurant_id,
     config,
 }: Props) {
     const [isUpdating, setIsUpdating] = useState<number | null>(null);
@@ -79,9 +80,9 @@ export default function RestaurantOrdersIndex({
     const [sheetOpen, setSheetOpen] = useState(false);
     const [, setTick] = useState(0);
 
-    // Polling para detectar nuevas órdenes en tiempo real
-    useOrderPolling({
-        intervalSeconds: config?.polling_interval || 15,
+    // WebSocket para detectar nuevas órdenes en tiempo real
+    useOrderWebSocket({
+        restaurantId: restaurant_id,
         autoPrint: config?.auto_print_new_orders ?? false,
         enabled: true,
         reloadProps: ['orders', 'status_counts'],

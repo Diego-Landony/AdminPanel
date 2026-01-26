@@ -29,6 +29,15 @@ Broadcast::channel('support.admin', function ($user) {
     return $user instanceof \App\Models\User;
 });
 
+// Canal privado para notificaciones personales de un admin específico
+Broadcast::channel('admin.{userId}', function ($user, $userId) {
+    if ($user instanceof \App\Models\User) {
+        return $user->id === (int) $userId;
+    }
+
+    return false;
+});
+
 // Canal privado para notificaciones del cliente (soporte, etc.)
 Broadcast::channel('customer.{customerId}', function ($user, $customerId) {
     if ($user instanceof \App\Models\Customer) {

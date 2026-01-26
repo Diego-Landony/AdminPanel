@@ -44,8 +44,10 @@ class OrderResource extends JsonResource
                 'paid_at' => $this->paid_at?->toIso8601String(),
             ],
             'points' => [
-                'earned' => $this->points_earned,
+                'earned' => $this->status === 'completed' ? $this->points_earned : 0,
+                'potential' => $this->status === 'completed' ? null : $this->points_earned,
                 'redeemed' => $this->points_redeemed,
+                'credited' => $this->status === 'completed',
             ],
             'timestamps' => [
                 'estimated_ready_at' => $this->estimated_ready_at?->toIso8601String(),

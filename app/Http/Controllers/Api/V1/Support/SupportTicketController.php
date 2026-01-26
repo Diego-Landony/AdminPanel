@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Support;
 
+use App\Events\AccessIssueReportCreated;
 use App\Events\SupportMessageSent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Support\CreateSupportTicketRequest;
@@ -288,13 +289,15 @@ class SupportTicketController extends Controller
      */
     public function reportAccessIssue(ReportAccessIssueRequest $request): JsonResponse
     {
-        AccessIssueReport::create([
+        $report = AccessIssueReport::create([
             'email' => $request->email,
             'phone' => $request->phone,
             'dpi' => $request->dpi,
             'issue_type' => $request->issue_type,
             'description' => $request->description,
         ]);
+
+        broadcast(new AccessIssueReportCreated($report));
 
         return response()->json([
             'message' => 'Reporte recibido. Nuestro equipo te contactará pronto por correo o teléfono.',

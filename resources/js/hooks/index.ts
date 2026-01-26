@@ -88,5 +88,6 @@ export {
 export {
     useSupportAdminNotifications,
     type SupportStats,
+    type UseSupportAdminNotificationsOptions,
     type UseSupportAdminNotificationsResult,
 } from './useSupportAdminNotifications';

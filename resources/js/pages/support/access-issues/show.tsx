@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, ArrowRight, CheckCircle, Clock, Mail, Phone } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, Clock, Mail, MessageCircle, Phone } from 'lucide-react';
 import { useState } from 'react';
 
 interface Handler {
@@ -75,6 +75,18 @@ export default function AccessIssueShow({ report }: ShowPageProps) {
             dateStyle: 'medium',
             timeStyle: 'short',
         });
+    };
+
+    const getWhatsAppLink = (phone: string) => {
+        // Limpiar el número (quitar espacios, guiones, paréntesis)
+        let cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+        // Si no tiene código de país, agregar Guatemala (502)
+        if (!cleanPhone.startsWith('+') && !cleanPhone.startsWith('502')) {
+            cleanPhone = '502' + cleanPhone;
+        }
+        // Quitar el + si existe
+        cleanPhone = cleanPhone.replace('+', '');
+        return `https://wa.me/${cleanPhone}`;
     };
 
     return (
@@ -268,9 +280,9 @@ export default function AccessIssueShow({ report }: ShowPageProps) {
                                     </Button>
                                     {report.phone && (
                                         <Button asChild variant="outline" size="sm" className="w-full">
-                                            <a href={`tel:${report.phone}`}>
-                                                <Phone className="mr-2 h-4 w-4" />
-                                                Llamar
+                                            <a href={getWhatsAppLink(report.phone)} target="_blank" rel="noopener noreferrer">
+                                                <MessageCircle className="mr-2 h-4 w-4" />
+                                                WhatsApp
                                             </a>
                                         </Button>
                                     )}

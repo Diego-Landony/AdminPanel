@@ -130,8 +130,7 @@ class SupportTicketController extends Controller
 
         broadcast(new SupportMessageSent($message))->toOthers();
 
-        return redirect()->back()
-            ->with('success', 'Mensaje enviado exitosamente.');
+        return redirect()->back();
     }
 
     public function takeTicket(SupportTicket $ticket): RedirectResponse
@@ -190,11 +189,21 @@ class SupportTicketController extends Controller
      */
     public function stats(): JsonResponse
     {
-        // Contar tickets con mensajes no leídos de clientes
-        $unreadTickets = SupportTicket::whereHas('messages', function ($q) {
-            $q->where('is_read', false)
-                ->where('sender_type', \App\Models\Customer::class);
-        })->count();
+        $userId = auth()->id();
+
+        // Contar tickets ABIERTOS con mensajes no leídos de clientes
+        // Solo tickets sin asignar O asignados al usuario actual
+        $unreadTickets = SupportTicket::query()
+            ->where('status', 'open')
+            ->where(function ($query) use ($userId) {
+                $query->whereNull('assigned_to')
+                    ->orWhere('assigned_to', $userId);
+            })
+            ->whereHas('messages', function ($q) {
+                $q->where('is_read', false)
+                    ->where('sender_type', \App\Models\Customer::class);
+            })
+            ->count();
 
         // Contar reportes de acceso pendientes
         $pendingAccessIssues = AccessIssueReport::where('status', 'pending')->count();

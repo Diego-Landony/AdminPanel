@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePoll } from '@inertiajs/react';
 import { CheckCircle, Clock, CreditCard, Eye, Mail, Phone, ShieldAlert } from 'lucide-react';
 
 interface Handler {
@@ -65,6 +65,8 @@ const ISSUE_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
 };
 
 export default function AccessIssuesIndex({ reports, stats, filters }: AccessIssuesPageProps) {
+    usePoll(20000);
+
     const handleFilterChange = (key: string, value: string) => {
         const newFilters = { ...filters, [key]: value === 'all' ? undefined : value };
         router.get('/support/access-issues', newFilters, { preserveState: true });
@@ -201,9 +203,10 @@ export default function AccessIssuesIndex({ reports, stats, filters }: AccessIss
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Button asChild size="icon" variant="ghost" title="Ver detalle">
+                                                    <Button asChild size="sm" variant="ghost">
                                                         <Link href={`/support/access-issues/${report.id}`}>
                                                             <Eye className="h-4 w-4" />
+                                                            Ver
                                                         </Link>
                                                     </Button>
                                                 </TableCell>

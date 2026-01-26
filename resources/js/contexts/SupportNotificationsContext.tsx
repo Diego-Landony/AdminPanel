@@ -1,5 +1,7 @@
 import { createContext, useContext, type ReactNode } from 'react';
+import { usePage } from '@inertiajs/react';
 import { useSupportAdminNotifications, type SupportStats } from '@/hooks';
+import { type SharedData } from '@/types';
 
 interface SupportNotificationsContextType {
     stats: SupportStats;
@@ -15,7 +17,14 @@ interface SupportNotificationsProviderProps {
 }
 
 export function SupportNotificationsProvider({ children, enabled = true }: SupportNotificationsProviderProps) {
-    const { stats, refreshStats, connectionState } = useSupportAdminNotifications(enabled);
+    // Obtener el userId del usuario autenticado via Inertia props
+    const { auth } = usePage<SharedData>().props;
+    const userId = auth?.user?.id ?? null;
+
+    const { stats, refreshStats, connectionState } = useSupportAdminNotifications({
+        enabled,
+        userId,
+    });
 
     return (
         <SupportNotificationsContext.Provider

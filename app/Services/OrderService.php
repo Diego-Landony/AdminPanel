@@ -96,25 +96,23 @@ class OrderService
         $estimatedMinutes = $serviceType === 'pickup' ? $estimatedPickupMinutes : $estimatedDeliveryMinutes;
 
         if ($serviceType === 'pickup') {
-            $minimumPickupTime = now()->addMinutes($estimatedPickupMinutes);
+            // Usar el mismo buffer de 30 segundos que en CreateOrderRequest para evitar
+            // recalculaciones innecesarias causadas por el tiempo de procesamiento
+            $minimumPickupTime = now()->addMinutes($estimatedPickupMinutes)->subSeconds(30);
 
             if (isset($data['scheduled_pickup_time'])) {
                 $scheduledTime = \Carbon\Carbon::parse($data['scheduled_pickup_time']);
 
-                // Solo ajustar silenciosamente si la diferencia es menor a 60 segundos (race condition)
-                // Diferencias mayores indican un problema y deben rechazarse
+                // Solo rechazar si el tiempo está REALMENTE vencido (más de 30 segundos antes del mínimo)
+                // La validación en CreateOrderRequest ya usa el mismo buffer, por lo que tiempos válidos
+                // no deberían llegar aquí con diferencias significativas
                 if ($scheduledTime->lt($minimumPickupTime)) {
-                    $diffSeconds = $minimumPickupTime->diffInSeconds($scheduledTime);
-
-                    if ($diffSeconds <= 60) {
-                        $data['scheduled_pickup_time'] = $minimumPickupTime->toIso8601String();
-                    } else {
-                        throw new \InvalidArgumentException('La hora de recogida ya no está disponible. Por favor selecciona una nueva hora.');
-                    }
+                    throw new \InvalidArgumentException('La hora de recogida ya no está disponible. Por favor selecciona una nueva hora.');
                 }
+                // Si el tiempo es válido, usarlo TAL COMO EL USUARIO LO SELECCIONÓ (sin recalcular)
             } else {
-                // Si no se especificó hora, usar la hora mínima como default
-                $data['scheduled_pickup_time'] = $minimumPickupTime->toIso8601String();
+                // Si no se especificó hora, usar la hora mínima como default (sin buffer)
+                $data['scheduled_pickup_time'] = now()->addMinutes($estimatedPickupMinutes)->toIso8601String();
             }
         }
 
@@ -144,25 +142,20 @@ class OrderService
             }
 
             // Manejar hora de entrega programada
-            $minimumDeliveryTime = now()->addMinutes($estimatedDeliveryMinutes);
+            // Usar el mismo buffer de 30 segundos que en CreateOrderRequest
+            $minimumDeliveryTime = now()->addMinutes($estimatedDeliveryMinutes)->subSeconds(30);
 
             if (isset($data['scheduled_delivery_time'])) {
                 $scheduledTime = \Carbon\Carbon::parse($data['scheduled_delivery_time']);
 
-                // Solo ajustar silenciosamente si la diferencia es menor a 60 segundos (race condition)
-                // Diferencias mayores indican un problema y deben rechazarse
+                // Solo rechazar si el tiempo está REALMENTE vencido
                 if ($scheduledTime->lt($minimumDeliveryTime)) {
-                    $diffSeconds = $minimumDeliveryTime->diffInSeconds($scheduledTime);
-
-                    if ($diffSeconds <= 60) {
-                        $data['scheduled_delivery_time'] = $minimumDeliveryTime->toIso8601String();
-                    } else {
-                        throw new \InvalidArgumentException('La hora de entrega ya no está disponible. Por favor selecciona una nueva hora.');
-                    }
+                    throw new \InvalidArgumentException('La hora de entrega ya no está disponible. Por favor selecciona una nueva hora.');
                 }
+                // Si el tiempo es válido, usarlo TAL COMO EL USUARIO LO SELECCIONÓ (sin recalcular)
             } else {
-                // Si no se especificó hora, usar la hora mínima como default
-                $data['scheduled_delivery_time'] = $minimumDeliveryTime->toIso8601String();
+                // Si no se especificó hora, usar la hora mínima como default (sin buffer)
+                $data['scheduled_delivery_time'] = now()->addMinutes($estimatedDeliveryMinutes)->toIso8601String();
             }
         }
 

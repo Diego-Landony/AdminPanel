@@ -27,9 +27,10 @@ window.Echo = new Echo({
     forceTLS: wsScheme === 'https',
     enabledTransports: ['ws', 'wss'],
     authEndpoint: authEndpoint,
-    // Deshabilitar activity check para mantener conexion activa en segundo plano
-    activityTimeout: 120000, // 2 minutos
-    pongTimeout: 30000, // 30 segundos
+    // Timeouts sincronizados con servidor (config/reverb.php)
+    // Servidor: ping_interval=25s, activity_timeout=120s
+    activityTimeout: 120000, // 2 minutos (igual que servidor)
+    pongTimeout: 30000, // 30 segundos para responder a ping
 });
 
 // Add Pusher to Window interface

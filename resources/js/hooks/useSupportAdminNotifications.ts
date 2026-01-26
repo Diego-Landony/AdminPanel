@@ -127,7 +127,7 @@ export function useSupportAdminNotifications(
     const supportAdminChannelRef = useRef<PrivateChannel | null>(null);
     const userChannelRef = useRef<PrivateChannel | null>(null);
     const reconnectAttempts = useRef(0);
-    const maxReconnectAttempts = 5;
+    const maxReconnectAttempts = 15; // Aumentado de 5 a 15 para mayor resiliencia
     const userIdRef = useRef(userId);
 
     // Mantener actualizado el userId en el ref
@@ -378,11 +378,21 @@ export function useSupportAdminNotifications(
 
         unsubscribe();
 
+        // Backoff exponencial con jitter: 1s, 2s, 4s, 8s, 16s, 30s (max)
+        const baseDelay = 1000;
+        const maxDelay = 30000;
+        const exponentialDelay = Math.min(baseDelay * Math.pow(2, reconnectAttempts.current - 1), maxDelay);
+        // Agregar jitter aleatorio (±25%) para evitar reconexiones sincronizadas
+        const jitter = exponentialDelay * 0.25 * (Math.random() * 2 - 1);
+        const delay = Math.round(exponentialDelay + jitter);
+
+        console.log(`[SupportAdminNotifications] Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current})`);
+
         setTimeout(() => {
             if (isMounted.current && enabled) {
                 subscribe();
             }
-        }, 1000 * reconnectAttempts.current);
+        }, delay);
     }, [enabled, subscribe, unsubscribe]);
 
     // Refs para guardar las funciones actuales sin causar re-renders
@@ -433,6 +443,7 @@ export function useSupportAdminNotifications(
 
                 if (!supportAdminChannelRef.current) {
                     console.log('[SupportAdminNotifications] Page became visible, reconnecting...');
+                    reconnectAttempts.current = 0; // Resetear intentos al volver visible
                     reconnectRef.current();
                 }
             }
@@ -441,6 +452,7 @@ export function useSupportAdminNotifications(
         const handleOnline = () => {
             if (!supportAdminChannelRef.current) {
                 console.log('[SupportAdminNotifications] Back online, reconnecting...');
+                reconnectAttempts.current = 0; // Resetear intentos al volver online
                 reconnectRef.current();
             }
         };

@@ -82,9 +82,8 @@ class OrderResource extends JsonResource
     protected function getStatusLabel(): string
     {
         return match ($this->status) {
-            Order::STATUS_PENDING => 'Pendiente',
-            Order::STATUS_CONFIRMED => 'Confirmada',
-            Order::STATUS_PREPARING => 'En preparacion',
+            Order::STATUS_PENDING => 'Recibida',
+            Order::STATUS_PREPARING => 'Preparando',
             Order::STATUS_READY => 'Lista',
             Order::STATUS_OUT_FOR_DELIVERY => 'En camino',
             Order::STATUS_DELIVERED => 'Entregada',

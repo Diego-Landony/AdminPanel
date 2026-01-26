@@ -15,8 +15,6 @@ class Order extends Model
 
     const STATUS_PENDING = 'pending';
 
-    const STATUS_CONFIRMED = 'confirmed';
-
     const STATUS_PREPARING = 'preparing';
 
     const STATUS_READY = 'ready';
@@ -149,9 +147,26 @@ class Order extends Model
         return $query->where('customer_id', $customerId);
     }
 
+    /**
+     * Verifica si la orden puede ser cancelada por el cliente.
+     * Los clientes solo pueden cancelar órdenes que aún no han sido aceptadas por el restaurante.
+     */
     public function canBeCancelled(): bool
     {
         return $this->status === self::STATUS_PENDING;
+    }
+
+    /**
+     * Verifica si la orden puede ser cancelada por un administrador.
+     * Los administradores pueden cancelar órdenes en cualquier estado activo.
+     */
+    public function canBeCancelledByAdmin(): bool
+    {
+        return ! in_array($this->status, [
+            self::STATUS_COMPLETED,
+            self::STATUS_CANCELLED,
+            self::STATUS_REFUNDED,
+        ]);
     }
 
     public function isPending(): bool

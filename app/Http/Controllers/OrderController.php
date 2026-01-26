@@ -388,9 +388,8 @@ class OrderController extends Controller
     protected function getStatusLabel(string $status): string
     {
         return match ($status) {
-            Order::STATUS_PENDING => 'Pendiente',
-            Order::STATUS_CONFIRMED => 'Confirmada',
-            Order::STATUS_PREPARING => 'En preparacion',
+            Order::STATUS_PENDING => 'Recibida',
+            Order::STATUS_PREPARING => 'Preparando',
             Order::STATUS_READY => 'Lista',
             Order::STATUS_OUT_FOR_DELIVERY => 'En camino',
             Order::STATUS_DELIVERED => 'Entregada',
@@ -463,9 +462,8 @@ class OrderController extends Controller
     protected function getStatuses(): array
     {
         return [
-            ['value' => Order::STATUS_PENDING, 'label' => 'Pendiente'],
-            ['value' => Order::STATUS_CONFIRMED, 'label' => 'Confirmada'],
-            ['value' => Order::STATUS_PREPARING, 'label' => 'En preparacion'],
+            ['value' => Order::STATUS_PENDING, 'label' => 'Recibida'],
+            ['value' => Order::STATUS_PREPARING, 'label' => 'Preparando'],
             ['value' => Order::STATUS_READY, 'label' => 'Lista'],
             ['value' => Order::STATUS_OUT_FOR_DELIVERY, 'label' => 'En camino'],
             ['value' => Order::STATUS_DELIVERED, 'label' => 'Entregada'],

@@ -127,13 +127,43 @@ class MenuController extends Controller
             ->available()
             ->ordered()
             ->with([
-                'items.product',
-                'items.variant',
-                'items.options.product',
-                'items.options.variant',
+                'items' => function ($query) {
+                    $query->orderBy('sort_order')
+                        ->where(function ($q) {
+                            // Items fijos con producto activo
+                            $q->where(function ($sub) {
+                                $sub->where('is_choice_group', false)
+                                    ->whereHas('product', fn ($p) => $p->where('is_active', true));
+                            })
+                            // O grupos de elección (se filtran las opciones después)
+                                ->orWhere('is_choice_group', true);
+                        })
+                        ->with([
+                            'product' => fn ($p) => $p->where('is_active', true),
+                            'variant',
+                            'options' => function ($q) {
+                                $q->orderBy('sort_order')
+                                    ->whereHas('product', fn ($p) => $p->where('is_active', true))
+                                    ->with([
+                                        'product' => fn ($p) => $p->where('is_active', true),
+                                        'variant',
+                                    ]);
+                            },
+                        ]);
+                },
                 'activeBadges',
             ])
-            ->get();
+            ->get()
+            // Filtrar combos que tienen choice groups sin opciones activas
+            ->filter(function ($combo) {
+                foreach ($combo->items as $item) {
+                    if ($item->is_choice_group && $item->options->isEmpty()) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
 
         // Get the combos category for Flutter to know where to position combos section
         $combosCategory = Category::query()
@@ -301,8 +331,20 @@ class MenuController extends Controller
             ->available()
             ->whereHas('activeBadges')
             ->with([
-                'items.product',
-                'items.variant',
+                'items' => function ($query) {
+                    $query->orderBy('sort_order')
+                        ->where(function ($q) {
+                            $q->where(function ($sub) {
+                                $sub->where('is_choice_group', false)
+                                    ->whereHas('product', fn ($p) => $p->where('is_active', true));
+                            })
+                                ->orWhere('is_choice_group', true);
+                        })
+                        ->with([
+                            'product' => fn ($p) => $p->where('is_active', true),
+                            'variant',
+                        ]);
+                },
                 'activeBadges.badgeType',
             ])
             ->ordered()

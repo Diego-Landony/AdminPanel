@@ -43,18 +43,41 @@ class ComboController extends Controller
             ->with([
                 'items' => function ($query) {
                     $query->orderBy('sort_order')
+                        ->where(function ($q) {
+                            // Items fijos con producto activo
+                            $q->where(function ($sub) {
+                                $sub->where('is_choice_group', false)
+                                    ->whereHas('product', fn ($p) => $p->where('is_active', true));
+                            })
+                            // O grupos de elección (se filtran las opciones después)
+                                ->orWhere('is_choice_group', true);
+                        })
                         ->with([
-                            'product',
+                            'product' => fn ($p) => $p->where('is_active', true),
                             'variant',
                             'options' => function ($q) {
                                 $q->orderBy('sort_order')
-                                    ->with(['product', 'variant']);
+                                    ->whereHas('product', fn ($p) => $p->where('is_active', true))
+                                    ->with([
+                                        'product' => fn ($p) => $p->where('is_active', true),
+                                        'variant',
+                                    ]);
                             },
                         ]);
                 },
                 'activeBadges',
             ])
-            ->get();
+            ->get()
+            // Filtrar combos que tienen choice groups sin opciones activas
+            ->filter(function ($combo) {
+                foreach ($combo->items as $item) {
+                    if ($item->is_choice_group && $item->options->isEmpty()) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
 
         return response()->json([
             'data' => [
@@ -100,21 +123,42 @@ class ComboController extends Controller
     {
         $combo = Combo::query()
             ->active()
+            ->available()
             ->with([
                 'items' => function ($query) {
                     $query->orderBy('sort_order')
+                        ->where(function ($q) {
+                            // Items fijos con producto activo
+                            $q->where(function ($sub) {
+                                $sub->where('is_choice_group', false)
+                                    ->whereHas('product', fn ($p) => $p->where('is_active', true));
+                            })
+                            // O grupos de elección (se filtran las opciones después)
+                                ->orWhere('is_choice_group', true);
+                        })
                         ->with([
-                            'product',
+                            'product' => fn ($p) => $p->where('is_active', true),
                             'variant',
                             'options' => function ($q) {
                                 $q->orderBy('sort_order')
-                                    ->with(['product', 'variant']);
+                                    ->whereHas('product', fn ($p) => $p->where('is_active', true))
+                                    ->with([
+                                        'product' => fn ($p) => $p->where('is_active', true),
+                                        'variant',
+                                    ]);
                             },
                         ]);
                 },
                 'activeBadges',
             ])
             ->findOrFail($id);
+
+        // Verificar que el combo tenga todos sus choice groups con opciones activas
+        foreach ($combo->items as $item) {
+            if ($item->is_choice_group && $item->options->isEmpty()) {
+                abort(404, 'Combo no disponible');
+            }
+        }
 
         return response()->json([
             'data' => [

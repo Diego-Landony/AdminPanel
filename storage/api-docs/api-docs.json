@@ -5533,7 +5533,7 @@
                     "Orders"
                 ],
                 "summary": "Historial de pedidos del cliente",
-                "description": "Retorna lista paginada de todos los pedidos del cliente, incluyendo puntos ganados y redimidos en cada pedido.\n     *\n     * **Información de Puntos por Pedido:**\n     * - `points.earned`: Puntos ganados al completar el pedido\n     * - `points.redeemed`: Puntos canjeados en el pedido (descuento aplicado)\n     *\n     * **Filtros disponibles:**\n     * - `status`: pending, confirmed, preparing, ready, out_for_delivery, delivered, completed, cancelled\n     * - `per_page`: Número de items por página (default: 15)",
+                "description": "Retorna lista paginada de todos los pedidos del cliente, incluyendo puntos ganados y redimidos en cada pedido.\n     *\n     * **Información de Puntos por Pedido:**\n     * - `points.earned`: Puntos ganados al completar el pedido\n     * - `points.redeemed`: Puntos canjeados en el pedido (descuento aplicado)\n     *\n     * **Filtros disponibles:**\n     * - `status`: pending, preparing, ready, out_for_delivery, delivered, completed, cancelled\n     * - `per_page`: Número de items por página (default: 15)",
                 "operationId": "00d3856d2d3d93124e0cc021d0cb5b79",
                 "parameters": [
                     {
@@ -5555,7 +5555,6 @@
                             "type": "string",
                             "enum": [
                                 "pending",
-                                "confirmed",
                                 "preparing",
                                 "ready",
                                 "out_for_delivery",
@@ -5837,7 +5836,6 @@
                                                     "type": "string",
                                                     "enum": [
                                                         "pending",
-                                                        "confirmed",
                                                         "preparing",
                                                         "ready",
                                                         "out_for_delivery",
@@ -6353,7 +6351,7 @@
                     "Orders"
                 ],
                 "summary": "Track order",
-                "description": "Returns current order status and complete status history with timestamps. Status Flow - Pickup: pending to confirmed to preparing to ready to completed. Delivery: pending to confirmed to preparing to ready to out_for_delivery to delivered to completed.",
+                "description": "Returns current order status and complete status history with timestamps. Status Flow - Pickup: pending to preparing to ready to completed. Delivery: pending to preparing to ready to out_for_delivery to delivered to completed.",
                 "operationId": "53cf1d869686c7ebd9af1ba74cc997ad",
                 "parameters": [
                     {
@@ -6384,7 +6382,6 @@
                                                     "type": "string",
                                                     "enum": [
                                                         "pending",
-                                                        "confirmed",
                                                         "preparing",
                                                         "ready",
                                                         "out_for_delivery",
@@ -6443,7 +6440,7 @@
                                                             },
                                                             "previous_status": {
                                                                 "type": "string",
-                                                                "example": "confirmed"
+                                                                "example": "pending"
                                                             },
                                                             "changed_by": {
                                                                 "type": "string",

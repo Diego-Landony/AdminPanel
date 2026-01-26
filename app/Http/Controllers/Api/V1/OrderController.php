@@ -24,10 +24,10 @@ use Illuminate\Http\JsonResponse;
  * This controller handles order creation, tracking, and management.
  *
  * **Order Status Flow:**
- * - **Pickup orders:** pending → confirmed → preparing → ready → completed
- * - **Delivery orders:** pending → confirmed → preparing → ready → out_for_delivery → delivered → completed
- * - **Cancellation:** Orders can be cancelled from pending or confirmed status
- * - **Available statuses:** pending, confirmed, preparing, ready, out_for_delivery, delivered, completed, cancelled
+ * - **Pickup orders:** pending → preparing → ready → completed
+ * - **Delivery orders:** pending → preparing → ready → out_for_delivery → delivered → completed
+ * - **Cancellation:** Orders can be cancelled from pending status (by customer)
+ * - **Available statuses:** pending, preparing, ready, out_for_delivery, delivered, completed, cancelled
  *
  * **Important Notes:**
  * - scheduled_pickup_time must be at least 30 minutes from current time for pickup orders
@@ -126,7 +126,7 @@ class OrderController extends Controller
      *                 description="Order details",
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="order_number", type="string", example="ORD-20251215-0001"),
-     *                 @OA\Property(property="status", type="string", enum={"pending","confirmed","preparing","ready","out_for_delivery","delivered","completed","cancelled"}, example="pending"),
+     *                 @OA\Property(property="status", type="string", enum={"pending","preparing","ready","out_for_delivery","delivered","completed","cancelled"}, example="pending"),
      *                 @OA\Property(property="service_type", type="string", enum={"pickup","delivery"}, example="pickup"),
      *                 @OA\Property(property="zone", type="string", enum={"capital","interior"}, example="capital"),
      *                 @OA\Property(property="restaurant", type="object",
@@ -229,7 +229,7 @@ class OrderController extends Controller
      * - `points.redeemed`: Puntos canjeados en el pedido (descuento aplicado)
      *
      * **Filtros disponibles:**
-     * - `status`: pending, confirmed, preparing, ready, out_for_delivery, delivered, completed, cancelled
+     * - `status`: pending, preparing, ready, out_for_delivery, delivered, completed, cancelled
      * - `per_page`: Número de items por página (default: 15)",
      *     security={{"sanctum":{}}},
      *
@@ -246,7 +246,7 @@ class OrderController extends Controller
      *         in="query",
      *         description="Filtrar por estado",
      *
-     *         @OA\Schema(type="string", enum={"pending","confirmed","preparing","ready","out_for_delivery","delivered","completed","cancelled"})
+     *         @OA\Schema(type="string", enum={"pending","preparing","ready","out_for_delivery","delivered","completed","cancelled"})
      *     ),
      *
      *     @OA\Response(
@@ -553,7 +553,7 @@ class OrderController extends Controller
      *     path="/api/v1/orders/{order}/track",
      *     tags={"Orders"},
      *     summary="Track order",
-     *     description="Returns current order status and complete status history with timestamps. Status Flow - Pickup: pending to confirmed to preparing to ready to completed. Delivery: pending to confirmed to preparing to ready to out_for_delivery to delivered to completed.",
+     *     description="Returns current order status and complete status history with timestamps. Status Flow - Pickup: pending to preparing to ready to completed. Delivery: pending to preparing to ready to out_for_delivery to delivered to completed.",
      *     security={{"sanctum":{}}},
      *
      *     @OA\Parameter(
@@ -575,7 +575,7 @@ class OrderController extends Controller
      *                 property="data",
      *                 type="object",
      *                 @OA\Property(property="order_number", type="string", example="ORD-20251215-0001"),
-     *                 @OA\Property(property="current_status", type="string", enum={"pending","confirmed","preparing","ready","out_for_delivery","delivered","completed","cancelled"}, example="preparing"),
+     *                 @OA\Property(property="current_status", type="string", enum={"pending","preparing","ready","out_for_delivery","delivered","completed","cancelled"}, example="preparing"),
      *                 @OA\Property(property="restaurant", type="object",
      *                     @OA\Property(property="id", type="integer", example=1),
      *                     @OA\Property(property="name", type="string", example="Subway Pradera Concepción")
@@ -589,7 +589,7 @@ class OrderController extends Controller
      *                     @OA\Items(type="object",
      *
      *                         @OA\Property(property="status", type="string", example="preparing"),
-     *                         @OA\Property(property="previous_status", type="string", example="confirmed"),
+     *                         @OA\Property(property="previous_status", type="string", example="pending"),
      *                         @OA\Property(property="changed_by", type="string", example="restaurant"),
      *                         @OA\Property(property="notes", type="string", nullable=true, example=null),
      *                         @OA\Property(property="timestamp", type="string", format="date-time", example="2025-12-15T15:10:00Z")

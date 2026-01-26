@@ -19,7 +19,6 @@ class OrderStatusHistoryFactory extends Factory
     {
         $statuses = [
             Order::STATUS_PENDING,
-            Order::STATUS_CONFIRMED,
             Order::STATUS_PREPARING,
             Order::STATUS_READY,
             Order::STATUS_OUT_FOR_DELIVERY,
@@ -46,23 +45,13 @@ class OrderStatusHistoryFactory extends Factory
         ];
     }
 
-    public function fromPendingToConfirmed(): static
+    public function fromPendingToPreparing(): static
     {
         return $this->state(fn (array $attributes) => [
             'previous_status' => Order::STATUS_PENDING,
-            'new_status' => Order::STATUS_CONFIRMED,
-            'changed_by_type' => 'admin',
-            'notes' => 'Orden confirmada por el administrador',
-        ]);
-    }
-
-    public function fromConfirmedToPreparing(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'previous_status' => Order::STATUS_CONFIRMED,
             'new_status' => Order::STATUS_PREPARING,
-            'changed_by_type' => 'admin',
-            'notes' => 'Orden en preparación',
+            'changed_by_type' => 'restaurant',
+            'notes' => 'Orden aceptada por el restaurante',
         ]);
     }
 

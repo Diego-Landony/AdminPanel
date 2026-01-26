@@ -84,9 +84,10 @@ class RewardsController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        // Combos canjeables (activos y con is_redeemable = true)
+        // Combos canjeables (activos, disponibles y con is_redeemable = true)
         $combos = Combo::query()
-            ->where('is_active', true)
+            ->active()
+            ->available()
             ->where('is_redeemable', true)
             ->orderBy('sort_order')
             ->get();

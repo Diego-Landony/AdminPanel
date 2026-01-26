@@ -2,11 +2,14 @@
 
 namespace App\Http\Resources\Api\V1\Order;
 
+use App\Http\Resources\Concerns\CastsNullableNumbers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class OrderResource extends JsonResource
 {
+    use CastsNullableNumbers;
+
     /**
      * Transform the resource into an array.
      *
@@ -21,6 +24,9 @@ class OrderResource extends JsonResource
                 'id' => $this->restaurant->id,
                 'name' => $this->restaurant->name,
                 'address' => $this->restaurant->address,
+                'phone' => $this->restaurant->phone,
+                'latitude' => $this->toFloatOrNull($this->restaurant->latitude),
+                'longitude' => $this->toFloatOrNull($this->restaurant->longitude),
             ]),
             'service_type' => $this->service_type,
             'zone' => $this->zone,
@@ -38,6 +44,7 @@ class OrderResource extends JsonResource
                 'total' => (float) $this->total,
             ],
             'status' => $this->status,
+            'status_label' => OrderStatusResource::getStatusLabel($this->status),
             'payment' => [
                 'method' => $this->payment_method,
                 'status' => $this->payment_status,

@@ -58,8 +58,8 @@ class DashboardController extends Controller
         // Ordenes activas - ordenadas por prioridad de estado y luego más recientes primero
         $activeOrders = Order::where('restaurant_id', $restaurantId)
             ->with(['customer:id,first_name,last_name,email,phone,subway_card', 'driver:id,name,phone', 'items', 'restaurant:id,name'])
-            ->whereIn('status', ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery'])
-            ->orderByRaw("FIELD(status, 'pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery')")
+            ->whereIn('status', ['pending', 'preparing', 'ready', 'out_for_delivery'])
+            ->orderByRaw("FIELD(status, 'pending', 'preparing', 'ready', 'out_for_delivery')")
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(fn ($order) => [
@@ -129,7 +129,7 @@ class DashboardController extends Controller
         $restaurantId = auth('restaurant')->user()->restaurant_id;
 
         $activeOrders = Order::where('restaurant_id', $restaurantId)
-            ->whereIn('status', ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery'])
+            ->whereIn('status', ['pending', 'preparing', 'ready', 'out_for_delivery'])
             ->orderBy('created_at', 'asc')
             ->get(['id', 'order_number', 'status', 'created_at']);
 

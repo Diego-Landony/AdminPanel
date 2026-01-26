@@ -25,7 +25,6 @@ class OrderFactory extends Factory
         $zone = fake()->randomElement(['capital', 'interior']);
         $status = fake()->randomElement([
             Order::STATUS_PENDING,
-            Order::STATUS_CONFIRMED,
             Order::STATUS_PREPARING,
             Order::STATUS_READY,
             Order::STATUS_COMPLETED,
@@ -74,15 +73,6 @@ class OrderFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => Order::STATUS_PENDING,
-            'ready_at' => null,
-            'delivered_at' => null,
-        ]);
-    }
-
-    public function confirmed(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'status' => Order::STATUS_CONFIRMED,
             'ready_at' => null,
             'delivered_at' => null,
         ]);

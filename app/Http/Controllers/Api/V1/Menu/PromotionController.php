@@ -70,16 +70,44 @@ class PromotionController extends Controller
             ->with([
                 'badgeType',
                 'items' => function ($query) {
-                    $query->with(['product', 'variant', 'category']);
+                    $query->where(function ($q) {
+                        // Items con producto activo
+                        $q->whereHas('product', fn ($p) => $p->where('is_active', true))
+                            // O items con variante cuyo producto está activo
+                            ->orWhereHas('variant.product', fn ($p) => $p->where('is_active', true))
+                            // O items por categoría (sin producto/variante específico)
+                            ->orWhere(function ($sub) {
+                                $sub->whereNotNull('category_id')
+                                    ->whereNull('product_id')
+                                    ->whereNull('variant_id');
+                            });
+                    })->with([
+                        'product' => fn ($p) => $p->where('is_active', true),
+                        'variant' => fn ($v) => $v->whereHas('product', fn ($p) => $p->where('is_active', true)),
+                        'category',
+                    ]);
                 },
                 'bundleItems' => function ($query) {
                     $query->orderBy('sort_order')
+                        ->where(function ($q) {
+                            // Items fijos con producto activo
+                            $q->where(function ($sub) {
+                                $sub->where('is_choice_group', false)
+                                    ->whereHas('product', fn ($p) => $p->where('is_active', true));
+                            })
+                            // O grupos de elección (se filtran las opciones después)
+                                ->orWhere('is_choice_group', true);
+                        })
                         ->with([
-                            'product',
+                            'product' => fn ($p) => $p->where('is_active', true),
                             'variant',
                             'options' => function ($q) {
                                 $q->orderBy('sort_order')
-                                    ->with(['product', 'variant']);
+                                    ->whereHas('product', fn ($p) => $p->where('is_active', true))
+                                    ->with([
+                                        'product' => fn ($p) => $p->where('is_active', true),
+                                        'variant',
+                                    ]);
                             },
                         ]);
                 },
@@ -89,15 +117,36 @@ class PromotionController extends Controller
         // Agrupar por tipo para facilitar consumo del frontend
         $grouped = $promotions->groupBy('type');
 
-        // daily_special: objeto único (solo hay 1 sub del día)
-        $dailySpecial = $grouped->get('daily_special')?->first();
+        // Filtrar promociones que requieren items (excluir las que quedaron sin items activos)
+        $filterWithItems = fn ($promotion) => $promotion->items->isNotEmpty();
+
+        // daily_special: objeto único (solo hay 1 sub del día), solo si tiene items
+        $dailySpecial = $grouped->get('daily_special', collect())
+            ->filter($filterWithItems)
+            ->first();
+
+        // two_for_one y percentage_discount: solo las que tienen items activos
+        $twoForOne = $grouped->get('two_for_one', collect())->filter($filterWithItems);
+        $percentageDiscounts = $grouped->get('percentage_discount', collect())->filter($filterWithItems);
+
+        // Filtrar bundle_specials que tienen choice groups sin opciones activas
+        $bundleSpecials = $grouped->get('bundle_special', collect())->filter(function ($promotion) {
+            foreach ($promotion->bundleItems as $item) {
+                // Si es un choice group, debe tener al menos 1 opción activa
+                if ($item->is_choice_group && $item->options->isEmpty()) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
 
         return response()->json([
             'data' => [
                 'daily_special' => $dailySpecial ? PromotionResource::make($dailySpecial) : null,
-                'two_for_one' => PromotionResource::collection($grouped->get('two_for_one', collect())),
-                'percentage_discounts' => PromotionResource::collection($grouped->get('percentage_discount', collect())),
-                'bundle_specials' => PromotionResource::collection($grouped->get('bundle_special', collect())),
+                'two_for_one' => PromotionResource::collection($twoForOne),
+                'percentage_discounts' => PromotionResource::collection($percentageDiscounts),
+                'bundle_specials' => PromotionResource::collection($bundleSpecials),
             ],
         ]);
     }
@@ -196,12 +245,28 @@ class PromotionController extends Controller
             ->dailySpecial()
             ->with([
                 'items' => function ($query) {
-                    $query->with(['product', 'variant', 'category']);
+                    $query->where(function ($q) {
+                        // Items con producto activo
+                        $q->whereHas('product', fn ($p) => $p->where('is_active', true))
+                            // O items con variante cuyo producto está activo
+                            ->orWhereHas('variant.product', fn ($p) => $p->where('is_active', true))
+                            // O items por categoría (sin producto/variante específico)
+                            ->orWhere(function ($sub) {
+                                $sub->whereNotNull('category_id')
+                                    ->whereNull('product_id')
+                                    ->whereNull('variant_id');
+                            });
+                    })->with([
+                        'product' => fn ($p) => $p->where('is_active', true),
+                        'variant' => fn ($v) => $v->whereHas('product', fn ($p) => $p->where('is_active', true)),
+                        'category',
+                    ]);
                 },
             ])
             ->first();
 
-        if (! $promotion) {
+        // Verificar que existe y tiene items con productos activos
+        if (! $promotion || $promotion->items->isEmpty()) {
             return response()->json([
                 'message' => 'Sub del Día no disponible',
             ], 404);
@@ -323,12 +388,25 @@ class PromotionController extends Controller
             ->with([
                 'bundleItems' => function ($query) {
                     $query->orderBy('sort_order')
+                        ->where(function ($q) {
+                            // Items fijos con producto activo
+                            $q->where(function ($sub) {
+                                $sub->where('is_choice_group', false)
+                                    ->whereHas('product', fn ($p) => $p->where('is_active', true));
+                            })
+                            // O grupos de elección (se filtran las opciones después)
+                                ->orWhere('is_choice_group', true);
+                        })
                         ->with([
-                            'product',
+                            'product' => fn ($p) => $p->where('is_active', true),
                             'variant',
                             'options' => function ($q) {
                                 $q->orderBy('sort_order')
-                                    ->with(['product', 'variant']);
+                                    ->whereHas('product', fn ($p) => $p->where('is_active', true))
+                                    ->with([
+                                        'product' => fn ($p) => $p->where('is_active', true),
+                                        'variant',
+                                    ]);
                             },
                         ]);
                 },

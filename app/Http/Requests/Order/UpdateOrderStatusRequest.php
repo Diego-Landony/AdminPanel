@@ -28,7 +28,6 @@ class UpdateOrderStatusRequest extends FormRequest
                 'string',
                 'in:'.implode(',', [
                     Order::STATUS_PENDING,
-                    Order::STATUS_CONFIRMED,
                     Order::STATUS_PREPARING,
                     Order::STATUS_READY,
                     Order::STATUS_OUT_FOR_DELIVERY,

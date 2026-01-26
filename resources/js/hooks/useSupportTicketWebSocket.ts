@@ -168,7 +168,7 @@ export function useSupportTicketWebSocket({
     const isMounted = useRef(true);
     const channelRef = useRef<PrivateChannel | null>(null);
     const reconnectAttempts = useRef(0);
-    const maxReconnectAttempts = 5;
+    const maxReconnectAttempts = 15; // Aumentado de 5 a 15 para mayor resiliencia
 
     // Refs para mantener valores actuales sin causar re-subscripciones
     const onNewMessageRef = useRef(onNewMessage);
@@ -345,12 +345,21 @@ export function useSupportTicketWebSocket({
 
         unsubscribe();
 
-        // Esperar un poco antes de reconectar
+        // Backoff exponencial con jitter: 1s, 2s, 4s, 8s, 16s, 30s (max)
+        const baseDelay = 1000;
+        const maxDelay = 30000;
+        const exponentialDelay = Math.min(baseDelay * Math.pow(2, reconnectAttempts.current - 1), maxDelay);
+        // Agregar jitter aleatorio (±25%) para evitar reconexiones sincronizadas
+        const jitter = exponentialDelay * 0.25 * (Math.random() * 2 - 1);
+        const delay = Math.round(exponentialDelay + jitter);
+
+        console.log(`[SupportWebSocket] Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current})`);
+
         setTimeout(() => {
             if (isMounted.current && enabled) {
                 subscribe();
             }
-        }, 1000 * reconnectAttempts.current); // Backoff exponencial
+        }, delay);
     }, [enabled, subscribe, unsubscribe]);
 
     /**
@@ -373,6 +382,7 @@ export function useSupportTicketWebSocket({
                 console.log('[SupportWebSocket] Page became visible, checking connection...');
                 // Solo reconectar si no hay canal activo
                 if (!channelRef.current) {
+                    reconnectAttempts.current = 0; // Resetear intentos al volver visible
                     reconnect();
                 }
             }
@@ -382,6 +392,7 @@ export function useSupportTicketWebSocket({
         const handleOnline = () => {
             if (enabled && !channelRef.current) {
                 console.log('[SupportWebSocket] Back online, reconnecting...');
+                reconnectAttempts.current = 0; // Resetear intentos al volver online
                 reconnect();
             }
         };

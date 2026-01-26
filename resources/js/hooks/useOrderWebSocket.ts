@@ -196,7 +196,7 @@ export function useOrderWebSocket({
     const isMounted = useRef(true);
     const channelRef = useRef<PrivateChannel | null>(null);
     const reconnectAttempts = useRef(0);
-    const maxReconnectAttempts = 5;
+    const maxReconnectAttempts = 15; // Aumentado de 5 a 15 para mayor resiliencia
 
     /**
      * Manejar evento de actualizacion de estado de orden
@@ -409,12 +409,21 @@ export function useOrderWebSocket({
 
         unsubscribe();
 
-        // Esperar un poco antes de reconectar
+        // Backoff exponencial con jitter: 1s, 2s, 4s, 8s, 16s, 30s (max)
+        const baseDelay = 1000;
+        const maxDelay = 30000;
+        const exponentialDelay = Math.min(baseDelay * Math.pow(2, reconnectAttempts.current - 1), maxDelay);
+        // Agregar jitter aleatorio (±25%) para evitar reconexiones sincronizadas
+        const jitter = exponentialDelay * 0.25 * (Math.random() * 2 - 1);
+        const delay = Math.round(exponentialDelay + jitter);
+
+        console.log(`[WebSocket] Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current})`);
+
         setTimeout(() => {
             if (isMounted.current && enabled) {
                 subscribe();
             }
-        }, 1000 * reconnectAttempts.current); // Backoff exponencial
+        }, delay);
     }, [enabled, subscribe, unsubscribe]);
 
     // Refs para guardar las funciones actuales sin causar re-renders
@@ -452,6 +461,7 @@ export function useOrderWebSocket({
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible' && !channelRef.current) {
                 console.log('[WebSocket] Page became visible, reconnecting...');
+                reconnectAttempts.current = 0; // Resetear intentos al volver visible
                 reconnectRef.current();
             }
         };
@@ -460,6 +470,7 @@ export function useOrderWebSocket({
         const handleOnline = () => {
             if (!channelRef.current) {
                 console.log('[WebSocket] Back online, reconnecting...');
+                reconnectAttempts.current = 0; // Resetear intentos al volver online
                 reconnectRef.current();
             }
         };

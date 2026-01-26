@@ -348,8 +348,14 @@ class Restaurant extends Model implements ActivityLoggable
         $closingTime = $this->getClosingTimeToday();
         $lastOrderTime = $this->getLastOrderTime($serviceType);
         $nextOpen = $this->getNextOpenTime();
-
         $openingTime = $this->getOpeningTimeToday();
+
+        $preparationMinutes = $serviceType === 'pickup'
+            ? ($this->estimated_pickup_time ?? 15)
+            : ($this->estimated_delivery_time ?? 30);
+
+        // Calcular ventana de tiempo para recogida/entrega
+        $pickupWindow = $this->calculatePickupWindow($closingTime, $preparationMinutes, $canAcceptOrders);
 
         return [
             'is_open' => $isOpen,
@@ -358,11 +364,47 @@ class Restaurant extends Model implements ActivityLoggable
             'opening_time' => $openingTime,
             'closing_time' => $closingTime,
             'last_order_time' => $lastOrderTime,
-            'preparation_time_minutes' => $serviceType === 'pickup'
-                ? ($this->estimated_pickup_time ?? 15)
-                : ($this->estimated_delivery_time ?? 30),
+            'preparation_time_minutes' => $preparationMinutes,
+            // Nuevos campos para facilitar cálculos en el cliente
+            'pickup_window' => $pickupWindow,
             'next_open' => $nextOpen,
             'message' => $this->getAvailabilityMessage($serviceType, $canAcceptOrders, $closingTime, $lastOrderTime, $nextOpen),
+        ];
+    }
+
+    /**
+     * Calcula la ventana de tiempo disponible para recogida.
+     *
+     * @return array{earliest: string|null, latest: string|null, has_availability: bool}
+     */
+    protected function calculatePickupWindow(?string $closingTime, int $preparationMinutes, bool $canAcceptOrders): array
+    {
+        if (! $canAcceptOrders || ! $closingTime) {
+            return [
+                'earliest' => null,
+                'latest' => null,
+                'has_availability' => false,
+            ];
+        }
+
+        $now = now();
+        $earliest = $now->copy()->addMinutes($preparationMinutes);
+        $latest = \Carbon\Carbon::createFromFormat('H:i', $closingTime);
+
+        // Si la hora de cierre es menor que la hora actual, es del día siguiente
+        if ($latest->lt($now->copy()->startOfDay()->addHours($latest->hour)->addMinutes($latest->minute))) {
+            $latest = $latest->addDay();
+        } else {
+            $latest = $now->copy()->startOfDay()->addHours($latest->hour)->addMinutes($latest->minute);
+        }
+
+        // Verificar si hay disponibilidad (earliest debe ser menor que latest)
+        $hasAvailability = $earliest->lt($latest);
+
+        return [
+            'earliest' => $earliest->format('H:i'),
+            'latest' => $latest->format('H:i'),
+            'has_availability' => $hasAvailability,
         ];
     }
 

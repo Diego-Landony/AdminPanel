@@ -437,12 +437,12 @@ class Restaurant extends Model implements ActivityLoggable
         if ($nextOpen) {
             return sprintf(
                 'Cerrado. Abre %s a las %s',
-                $nextOpen['day'],
+                strtolower($nextOpen['day']),
                 $nextOpen['time']
             );
         }
 
-        return 'Cerrado actualmente';
+        return 'Cerrado';
     }
 
     /**

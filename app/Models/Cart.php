@@ -144,4 +144,101 @@ class Cart extends Model
             default => 'precio_pickup_capital',
         };
     }
+
+    /**
+     * Calcula el resumen del carrito (subtotal, descuentos, total).
+     *
+     * @return array{subtotal: float, discounts: float, promotions_applied: array, total: float, items_count: int, discount_total: float, total_discount: float}
+     */
+    public function calculateSummary(): array
+    {
+        $cartService = app(\App\Services\CartService::class);
+        $summary = $cartService->getCartSummary($this);
+
+        // Normalizar los campos para compatibilidad
+        $summary['discount_total'] = $summary['discounts'] ?? 0;
+        $summary['total_discount'] = $summary['discounts'] ?? 0;
+
+        return $summary;
+    }
+
+    /**
+     * Verifica si el carrito puede proceder al checkout.
+     */
+    public function canCheckout(): bool
+    {
+        $messages = $this->getValidationMessages();
+
+        return empty($messages);
+    }
+
+    /**
+     * Obtiene los mensajes de validación que impiden el checkout.
+     *
+     * @return array<string>
+     */
+    public function getValidationMessages(): array
+    {
+        $messages = [];
+
+        // Verificar que el carrito tenga items
+        if ($this->isEmpty()) {
+            $messages[] = 'El carrito está vacío.';
+
+            return $messages;
+        }
+
+        // Verificar que tenga restaurante asignado
+        if (! $this->restaurant_id) {
+            $messages[] = 'No hay restaurante seleccionado.';
+
+            return $messages;
+        }
+
+        // Cargar restaurante si no está cargado
+        $restaurant = $this->relationLoaded('restaurant')
+            ? $this->restaurant
+            : $this->restaurant()->first();
+
+        if (! $restaurant) {
+            $messages[] = 'El restaurante no existe.';
+
+            return $messages;
+        }
+
+        // Verificar que el restaurante esté activo
+        if (! $restaurant->is_active) {
+            $messages[] = 'El restaurante no está disponible actualmente.';
+        }
+
+        // Verificar disponibilidad según tipo de servicio
+        if ($this->service_type === 'pickup' && ! $restaurant->pickup_active) {
+            $messages[] = 'El restaurante no acepta pedidos para recoger en este momento.';
+        }
+
+        if ($this->service_type === 'delivery' && ! $restaurant->delivery_active) {
+            $messages[] = 'El restaurante no acepta pedidos a domicilio en este momento.';
+        }
+
+        // Verificar si el restaurante está abierto
+        if (method_exists($restaurant, 'isOpenNow') && ! $restaurant->isOpenNow()) {
+            $messages[] = 'Este tipo de servicio no está disponible en este momento';
+        }
+
+        // Verificar monto mínimo de orden
+        $summary = $this->calculateSummary();
+        $total = (float) ($summary['total'] ?? 0);
+        $minimumOrder = (float) ($restaurant->minimum_order_amount ?? 0);
+
+        if ($minimumOrder > 0 && $total < $minimumOrder) {
+            $messages[] = "El monto mínimo de orden es Q{$minimumOrder}. Tu carrito tiene Q{$total}.";
+        }
+
+        // Verificar dirección para delivery
+        if ($this->service_type === 'delivery' && ! $this->delivery_address_id) {
+            $messages[] = 'Selecciona una dirección de entrega.';
+        }
+
+        return $messages;
+    }
 }

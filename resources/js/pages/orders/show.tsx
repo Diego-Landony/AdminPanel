@@ -20,9 +20,9 @@ import {
     Users,
     XCircle,
 } from 'lucide-react';
-import { useRef, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
-import { PrintComanda } from '@/components/orders/PrintComanda';
+import { printOrder } from '@/components/orders/PrintComanda';
 
 import { StatusBadge, StatusConfig } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
@@ -262,10 +262,8 @@ export default function ShowOrder({
     const [cancelModalOpen, setCancelModalOpen] = useState(false);
     const [cancellationReason, setCancellationReason] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const printRef = useRef<HTMLDivElement>(null);
-
     const handlePrint = () => {
-        window.print();
+        printOrder(order as any);
     };
 
     // Filtrar restaurantes disponibles (excluyendo el actual) y por búsqueda
@@ -430,46 +428,56 @@ export default function ShowOrder({
                             <CardContent>
                                 {order.items && order.items.length > 0 ? (
                                     <div className="space-y-4">
-                                        {order.items.map((item) => (
-                                            <div key={item.id} className="flex items-start justify-between rounded-lg border bg-muted/50 p-4">
-                                                <div className="flex-1">
+                                        {order.items.map((item) => {
+                                            // Agrupar opciones por sección
+                                            const groupedOptions: Record<string, string[]> = {};
+                                            if (item.options) {
+                                                for (const opt of item.options) {
+                                                    const sectionName = opt.section_name || 'Opciones';
+                                                    if (!groupedOptions[sectionName]) {
+                                                        groupedOptions[sectionName] = [];
+                                                    }
+                                                    groupedOptions[sectionName].push(opt.name);
+                                                }
+                                            }
+
+                                            return (
+                                                <div key={item.id} className="rounded-lg border bg-muted/50 p-4">
                                                     <div className="flex items-center gap-2">
-                                                        <Badge variant="secondary" className="text-xs">
+                                                        <Badge className="bg-yellow-500 hover:bg-yellow-500 text-black text-sm font-semibold">
                                                             x{item.quantity}
                                                         </Badge>
-                                                        <p className="font-medium">{item.name}</p>
+                                                        <p className="font-semibold text-base">{item.name}</p>
                                                     </div>
-                                                    {item.options && item.options.length > 0 && (
-                                                        <div className="mt-2 space-y-1">
-                                                            {item.options.map((option, idx) => (
-                                                                <p key={idx} className="text-sm text-muted-foreground">
-                                                                    + {option.name}
-                                                                    {option.price > 0 && (
-                                                                        <span className="ml-1">
-                                                                            ({CURRENCY.symbol}
-                                                                            {formatCurrency(option.price, false)})
-                                                                        </span>
-                                                                    )}
+                                                    {item.variant && (
+                                                        <p className="text-sm text-muted-foreground mt-1">{item.variant}</p>
+                                                    )}
+                                                    {Object.keys(groupedOptions).length > 0 && (
+                                                        <div className="mt-3 space-y-1">
+                                                            {Object.entries(groupedOptions).map(([sectionName, options]) => (
+                                                                <p key={sectionName} className="text-sm text-muted-foreground">
+                                                                    <span className="font-medium text-foreground">{sectionName}:</span>{' '}
+                                                                    {options.join(', ')}
                                                                 </p>
                                                             ))}
                                                         </div>
                                                     )}
                                                     {item.notes && (
-                                                        <p className="mt-2 text-sm italic text-muted-foreground">Nota: {item.notes}</p>
+                                                        <p className="mt-3 text-sm italic text-orange-600 dark:text-orange-400">
+                                                            Nota: {item.notes}
+                                                        </p>
                                                     )}
+                                                    <div className="mt-3 pt-3 border-t border-dashed flex justify-between text-sm">
+                                                        <span className="text-muted-foreground">
+                                                            {item.name}: {CURRENCY.symbol}{formatCurrency(item.unit_price, false)}
+                                                        </span>
+                                                        <span className="font-medium">
+                                                            {CURRENCY.symbol}{formatCurrency(item.total_price, false)}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {CURRENCY.symbol}
-                                                        {formatCurrency(item.unit_price, false)} c/u
-                                                    </p>
-                                                    <p className="font-medium">
-                                                        {CURRENCY.symbol}
-                                                        {formatCurrency(item.total_price, false)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
 
                                         <Separator />
 
@@ -827,8 +835,6 @@ export default function ShowOrder({
                     </DialogContent>
                 </Dialog>
 
-                {/* Componente de impresion */}
-                <PrintComanda ref={printRef} order={order} />
             </div>
         </AppLayout>
     );

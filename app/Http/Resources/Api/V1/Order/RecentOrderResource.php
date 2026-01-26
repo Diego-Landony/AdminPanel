@@ -18,25 +18,48 @@ class RecentOrderResource extends JsonResource
 
         $itemsData = $items->map(function ($item) {
             $isAvailable = $this->isItemAvailable($item);
+            $snapshot = $item->product_snapshot ?? [];
 
             return [
-                'name' => $item->product_snapshot['name'] ?? 'Unknown',
+                'name' => $snapshot['name'] ?? 'Unknown',
+                'variant' => $snapshot['variant'] ?? null,
+                'category_name' => $snapshot['category'] ?? null,
                 'quantity' => $item->quantity,
+                'unit_price' => (float) ($item->unit_price ?? 0),
+                'total_price' => (float) ($item->subtotal ?? 0),
+                'applied_promotion' => $snapshot['applied_promotion'] ?? $item->promotion_snapshot['name'] ?? null,
                 'is_available' => $isAvailable,
             ];
         })->values();
 
         $canReorder = $itemsData->every(fn ($item) => $item['is_available']);
 
+        // Delivery address snapshot
+        $deliveryAddress = null;
+        if ($this->service_type === 'delivery' && $this->delivery_address_snapshot) {
+            $addressSnapshot = is_string($this->delivery_address_snapshot)
+                ? json_decode($this->delivery_address_snapshot, true)
+                : $this->delivery_address_snapshot;
+            $deliveryAddress = [
+                'address' => $addressSnapshot['address_line'] ?? $addressSnapshot['address'] ?? null,
+            ];
+        }
+
         return [
             'id' => $this->id,
             'order_number' => $this->order_number,
             'ordered_at' => $this->created_at->toIso8601String(),
+            'service_type' => $this->service_type,
             'restaurant' => $this->when($this->relationLoaded('restaurant'), fn () => [
                 'id' => $this->restaurant->id,
                 'name' => $this->restaurant->name,
+                'address' => $this->restaurant->address,
+                'latitude' => $this->restaurant->latitude ? (float) $this->restaurant->latitude : null,
+                'longitude' => $this->restaurant->longitude ? (float) $this->restaurant->longitude : null,
             ]),
+            'delivery_address' => $deliveryAddress,
             'total' => (float) $this->total,
+            'points_earned' => (int) ($this->points_earned ?? 0),
             'items_summary' => $this->generateItemsSummary($items),
             'items' => $itemsData,
             'can_reorder' => $canReorder,
@@ -52,7 +75,12 @@ class RecentOrderResource extends JsonResource
             return '';
         }
 
-        $names = $items->map(fn ($item) => $item->product_snapshot['name'] ?? 'Unknown');
+        $names = $items->map(function ($item) {
+            $name = $item->product_snapshot['name'] ?? 'Unknown';
+            $variant = $item->product_snapshot['variant'] ?? null;
+
+            return $variant ? "{$name} ({$variant})" : $name;
+        });
         $summary = $names->join(', ');
 
         if (mb_strlen($summary) > 50) {

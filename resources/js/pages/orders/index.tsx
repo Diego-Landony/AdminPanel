@@ -309,21 +309,22 @@ export default function OrdersIndex({
             width: 'sm' as const,
             align: 'right' as const,
             render: (order: Order) => (
-                <div className="flex items-center gap-1">
+                <div className="flex flex-col gap-1">
                     <Link href={`/orders/${order.id}`}>
-                        <Button variant="ghost" size="sm" title="Ver detalle">
-                            <Eye className="h-4 w-4" />
+                        <Button variant="outline" size="sm" className="w-full justify-start text-xs h-7">
+                            <Eye className="h-3.5 w-3.5 mr-1.5" />
+                            Ver detalle
                         </Button>
                     </Link>
                     {order.can_be_cancelled && (
                         <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            title="Cancelar orden"
+                            className="w-full justify-start text-xs h-7 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
                             onClick={() => openCancelModal(order)}
                         >
-                            <Ban className="h-4 w-4" />
+                            <Ban className="h-3.5 w-3.5 mr-1.5" />
+                            Cancelar orden
                         </Button>
                     )}
                 </div>

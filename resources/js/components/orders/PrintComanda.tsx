@@ -72,14 +72,35 @@ const groupOptionsBySection = (options: OrderItemOption[]): Record<string, strin
  * Genera el HTML completo para imprimir la comanda en una ventana nueva
  */
 const generatePrintHTML = (order: PrintComandaProps['order']): string => {
-    const serviceTypeLabel = order.service_type === 'delivery' ? 'DELIVERY' : 'PARA LLEVAR';
+    const serviceTypeLabel = order.service_type === 'delivery' ? 'DOMICILIO' : 'RECOGER EN RESTAURANTE';
 
     let itemsHTML = '';
     order.items?.forEach((item) => {
         const groupedOptions = item.options ? groupOptionsBySection(item.options) : {};
         const basePrice = Number(item.unit_price) || 0;
-        const extrasTotal = Number(item.options_price) || 0;
         const totalPrice = Number(item.total_price) || 0;
+
+        // Usar options_breakdown si está disponible, sino calcular
+        const optionsBreakdown = (item as any).options_breakdown;
+        let extrasSubtotal = 0;
+        let extrasDiscount = 0;
+        let extrasFinal = 0;
+
+        if (optionsBreakdown) {
+            extrasSubtotal = Number(optionsBreakdown.items_total) || 0;
+            extrasDiscount = Number(optionsBreakdown.bundle_discount) || 0;
+            extrasFinal = Number(optionsBreakdown.final) || 0;
+        } else {
+            // Fallback: calcular sumando precios individuales de opciones
+            if (item.options) {
+                for (const opt of item.options) {
+                    extrasSubtotal += Number(opt.price) || 0;
+                }
+            }
+            extrasFinal = Number(item.options_price) || 0;
+            extrasDiscount = extrasSubtotal - extrasFinal;
+            if (extrasDiscount < 0) extrasDiscount = 0;
+        }
 
         let optionsHTML = '';
         Object.entries(groupedOptions).forEach(([sectionName, optionNames]) => {
@@ -90,13 +111,18 @@ const generatePrintHTML = (order: PrintComandaProps['order']): string => {
             ? `<div style="margin-left:30px;margin-top:4px;font-size:11px;font-weight:bold;padding:4px;border:1px solid #000;">*** NOTA: ${item.notes} ***</div>`
             : '';
 
-        const extrasRow = extrasTotal > 0
-            ? `<div style="display:flex;justify-content:space-between;margin:1px 0;"><span>Extras:</span><span>Q${extrasTotal.toFixed(2)}</span></div>`
-            : '';
-
         // Construir el nombre completo del producto para mostrar en precios
-        const productDisplayName = item.variant ? `${item.name} ${item.variant}` : item.name;
-        const quantityLabel = item.quantity > 1 ? ` x${item.quantity}` : '';
+        const productDisplayName = item.variant ? `${item.variant} - ${item.name}` : item.name;
+
+        // Generar filas de extras con desglose
+        let extrasRowsHTML = '';
+        if (extrasSubtotal > 0) {
+            extrasRowsHTML += `<div style="display:flex;justify-content:space-between;margin:1px 0;"><span>Subtotal extras:</span><span>Q${extrasSubtotal.toFixed(2)}</span></div>`;
+            if (extrasDiscount > 0) {
+                extrasRowsHTML += `<div style="display:flex;justify-content:space-between;margin:1px 0;"><span>Descuento extras:</span><span>-Q${extrasDiscount.toFixed(2)}</span></div>`;
+            }
+            extrasRowsHTML += `<div style="display:flex;justify-content:space-between;margin:1px 0;"><span>Total extras:</span><span>Q${extrasFinal.toFixed(2)}</span></div>`;
+        }
 
         itemsHTML += `
             <div style="margin-bottom:8px;padding-bottom:6px;border-bottom:1px dotted #999;">
@@ -111,10 +137,10 @@ const generatePrintHTML = (order: PrintComandaProps['order']): string => {
                 ${notesHTML}
                 <div style="margin-left:30px;margin-top:4px;padding-top:3px;border-top:1px dotted #999;font-size:10px;">
                     <div style="display:flex;justify-content:space-between;margin:1px 0;">
-                        <span>${productDisplayName}${quantityLabel}:</span>
+                        <span>${productDisplayName}:</span>
                         <span>Q${basePrice.toFixed(2)}</span>
                     </div>
-                    ${extrasRow}
+                    ${extrasRowsHTML}
                     <div style="display:flex;justify-content:space-between;margin:1px 0;font-weight:bold;border-top:1px solid #000;padding-top:2px;margin-top:2px;">
                         <span>TOTAL:</span>
                         <span>Q${totalPrice.toFixed(2)}</span>
@@ -214,6 +240,7 @@ const generatePrintHTML = (order: PrintComandaProps['order']): string => {
 
     <div style="text-align:center;font-size:9px;margin-top:6px;padding-top:6px;border-top:1px dashed #000;">
         <p>Impreso: ${formatDateTime(new Date().toISOString())}</p>
+        <p style="margin-top:4px;font-weight:bold;">Este documento no es una factura</p>
     </div>
 
     <script>

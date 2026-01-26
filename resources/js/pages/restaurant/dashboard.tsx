@@ -12,7 +12,9 @@ import {
     Clock,
     CreditCard,
     Package,
+    RefreshCw,
     ShoppingBag,
+    WifiOff,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { OrdersListTable, OrderListItem } from '@/components/restaurant/OrdersListTable';
@@ -94,7 +96,7 @@ export default function RestaurantDashboard({ restaurant_id, stats, active_order
     const [sheetOpen, setSheetOpen] = useState(false);
 
     // Polling para detectar nuevas órdenes (actualización automática cada 10 segundos)
-    useOrderPolling({
+    const { lastPollTime, error: pollingError, isPolling, manualPoll } = useOrderPolling({
         intervalSeconds: 10,
         autoPrint: config?.auto_print_new_orders ?? true,
         enabled: true,
@@ -196,9 +198,32 @@ export default function RestaurantDashboard({ restaurant_id, stats, active_order
                                 <CardTitle className="text-base font-medium">
                                     Estado de Ordenes - {new Date().toLocaleDateString('es-GT', { day: 'numeric', month: 'short' })}
                                 </CardTitle>
-                                <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
-                                    <span className="inline-flex rounded-full h-2 w-2 bg-green-500" />
-                                    Online
+                                <div className="flex items-center gap-2">
+                                    {pollingError ? (
+                                        <div className="flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400">
+                                            <WifiOff className="h-3 w-3" />
+                                            <span>Sin conexión</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
+                                            <span className="inline-flex rounded-full h-2 w-2 bg-green-500" />
+                                            {lastPollTime ? (
+                                                <span>
+                                                    Sync: {lastPollTime.toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                                </span>
+                                            ) : (
+                                                <span>Conectando...</span>
+                                            )}
+                                        </div>
+                                    )}
+                                    <button
+                                        onClick={() => manualPoll()}
+                                        disabled={isPolling}
+                                        className="p-1 rounded hover:bg-muted transition-colors disabled:opacity-50"
+                                        title="Forzar sincronización"
+                                    >
+                                        <RefreshCw className={`h-3.5 w-3.5 text-muted-foreground ${isPolling ? 'animate-spin' : ''}`} />
+                                    </button>
                                 </div>
                             </div>
                         </CardHeader>

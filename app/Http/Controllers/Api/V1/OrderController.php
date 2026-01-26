@@ -898,7 +898,7 @@ class OrderController extends Controller
      *     path="/api/v1/me/recent-orders",
      *     tags={"Orders"},
      *     summary="Obtener órdenes recientes completadas",
-     *     description="Retorna las últimas 5 órdenes completadas (status completed o delivered) del cliente autenticado, ordenadas por más reciente primero. Incluye indicador de disponibilidad de productos para reordenar.",
+     *     description="Retorna las últimas 3 órdenes completadas (status completed o delivered) del cliente autenticado, ordenadas por más reciente primero. Incluye indicador de disponibilidad de productos para reordenar.",
      *     security={{"sanctum":{}}},
      *
      *     @OA\Response(
@@ -939,7 +939,7 @@ class OrderController extends Controller
             ->whereIn('status', ['completed', 'delivered'])
             ->with(['restaurant', 'items.product', 'items.combo', 'items.variant'])
             ->orderBy('created_at', 'desc')
-            ->limit(5)
+            ->limit(3)
             ->get();
 
         return response()->json([

@@ -6773,7 +6773,7 @@
                     "Orders"
                 ],
                 "summary": "Obtener órdenes recientes completadas",
-                "description": "Retorna las últimas 5 órdenes completadas (status completed o delivered) del cliente autenticado, ordenadas por más reciente primero. Incluye indicador de disponibilidad de productos para reordenar.",
+                "description": "Retorna las últimas 3 órdenes completadas (status completed o delivered) del cliente autenticado, ordenadas por más reciente primero. Incluye indicador de disponibilidad de productos para reordenar.",
                 "operationId": "f23a34d5949e750106c735d64bbeb4eb",
                 "responses": {
                     "200": {

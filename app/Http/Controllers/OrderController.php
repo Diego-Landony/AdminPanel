@@ -320,6 +320,7 @@ class OrderController extends Controller
                 'id' => $order->restaurant->id,
                 'name' => $order->restaurant->name,
             ] : null,
+            'restaurant_name' => $order->restaurant?->name,
             'driver' => $order->driver ? [
                 'id' => $order->driver->id,
                 'name' => $order->driver->name,
@@ -354,8 +355,12 @@ class OrderController extends Controller
             'items' => $order->items->map(fn ($item) => [
                 'id' => $item->id,
                 'name' => $item->product_snapshot['name'] ?? $item->product?->name ?? 'Producto',
+                'variant' => $item->product_snapshot['variant'] ?? null,
+                'category' => $item->product_snapshot['category'] ?? null,
                 'quantity' => $item->quantity ?? 1,
                 'unit_price' => $item->unit_price ?? 0,
+                'options_price' => $item->options_price ?? 0,
+                'options_breakdown' => $item->product_snapshot['options_breakdown'] ?? null,
                 'total_price' => $item->subtotal ?? 0,
                 'options' => $this->resolveSelectedOptions($item->selected_options ?? []),
                 'notes' => $item->notes,

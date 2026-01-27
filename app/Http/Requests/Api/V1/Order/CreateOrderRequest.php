@@ -58,6 +58,16 @@ class CreateOrderRequest extends FormRequest
                     $estimatedMinutes = $restaurant?->estimated_pickup_time ?? 30;
                     $scheduledTime = \Carbon\Carbon::parse($value);
 
+                    // DEBUG: Log para depurar problema de validación de tiempo
+                    \Illuminate\Support\Facades\Log::info('ScheduledPickupTime Validation', [
+                        'raw_value' => $value,
+                        'parsed_time' => $scheduledTime->toIso8601String(),
+                        'now' => now()->toIso8601String(),
+                        'estimated_minutes' => $estimatedMinutes,
+                        'minimum_time' => now()->addMinutes($estimatedMinutes)->subSeconds(60)->toIso8601String(),
+                        'diff_seconds' => $scheduledTime->diffInSeconds(now()->addMinutes($estimatedMinutes)->subSeconds(60), false),
+                    ]);
+
                     // Validar que sea para hoy
                     if (! $scheduledTime->isToday()) {
                         $fail('Solo puedes programar pedidos para el día de hoy.');
@@ -66,8 +76,8 @@ class CreateOrderRequest extends FormRequest
                     }
 
                     // Validar tiempo mínimo de preparación
-                    // Buffer de 30 segundos para evitar race condition entre validación y procesamiento
-                    $minimumTime = now()->addMinutes($estimatedMinutes)->subSeconds(30);
+                    // Buffer de 60 segundos para evitar race condition entre validación y procesamiento
+                    $minimumTime = now()->addMinutes($estimatedMinutes)->subSeconds(60);
                     if ($scheduledTime->lt($minimumTime)) {
                         // Agregar 2 minutos de buffer para que el usuario tenga tiempo de aceptar
                         $suggestedTime = now()->addMinutes($estimatedMinutes + 2);
@@ -109,8 +119,8 @@ class CreateOrderRequest extends FormRequest
                     }
 
                     // Validar tiempo mínimo (preparación + entrega)
-                    // Buffer de 30 segundos para evitar race condition entre validación y procesamiento
-                    $minimumTime = now()->addMinutes($estimatedMinutes)->subSeconds(30);
+                    // Buffer de 60 segundos para evitar race condition entre validación y procesamiento
+                    $minimumTime = now()->addMinutes($estimatedMinutes)->subSeconds(60);
                     if ($scheduledTime->lt($minimumTime)) {
                         // Agregar 2 minutos de buffer para que el usuario tenga tiempo de aceptar
                         $suggestedTime = now()->addMinutes($estimatedMinutes + 2);

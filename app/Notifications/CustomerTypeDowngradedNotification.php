@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\CustomerType;
+use App\Services\FCMService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -27,17 +28,34 @@ class CustomerTypeDowngradedNotification extends Notification implements ShouldQ
      */
     public function via(object $notifiable): array
     {
-        $channels = [];
+        $channels = ['fcm', 'database'];
 
         // Solo enviar email si el usuario tiene ofertas habilitadas
         if ($notifiable->email_offers_enabled) {
             $channels[] = 'mail';
         }
 
-        // Siempre agregar a base de datos para mostrar en app
-        $channels[] = 'database';
-
         return $channels;
+    }
+
+    /**
+     * Send FCM notification
+     */
+    public function toFcm(object $notifiable): void
+    {
+        $fcmService = app(FCMService::class);
+
+        $fcmService->sendToCustomer(
+            $notifiable->id,
+            'Actualización de nivel',
+            "Tu nivel ha cambiado a {$this->newType->name}. Acumula puntos en tu próxima compra para subir de nuevo.",
+            [
+                'type' => 'tier_downgraded',
+                'previous_tier' => $this->previousType->name,
+                'new_tier' => $this->newType->name,
+                'points_needed_to_recover' => (string) $this->previousType->points_required,
+            ]
+        );
     }
 
     /**

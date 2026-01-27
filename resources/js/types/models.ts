@@ -313,6 +313,8 @@ export interface Order {
     driver?: Driver;
     items?: OrderItem[];
     status_history?: OrderStatusHistory[];
+    // Computed properties
+    can_be_cancelled?: boolean;
 }
 
 /**

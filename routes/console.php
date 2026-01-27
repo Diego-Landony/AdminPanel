@@ -34,3 +34,6 @@ Schedule::job(new \App\Jobs\UpdateCustomerTypes)->dailyAt('23:00');
 
 // Notify customers with points about to expire (daily check: 7, 3, 1 days warning)
 Schedule::job(new \App\Jobs\NotifyPointsExpirationRisk)->dailyAt('09:30');
+
+// Send reminders for scheduled pickup orders (30 minutes before)
+Schedule::job(new \App\Jobs\SendScheduledOrderReminders)->everyFiveMinutes();

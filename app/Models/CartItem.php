@@ -94,17 +94,21 @@ class CartItem extends Model
     /**
      * Calcula el total de opciones con bundle pricing.
      * Agrupa por sección y aplica descuentos de bundle si corresponde.
+     * Para combos, incluye los extras de todas las selecciones.
      *
      * @return array{total: float, savings: float}
      */
     public function getOptionsTotalWithBundle(): array
     {
-        if (! $this->selected_options || ! is_array($this->selected_options)) {
+        // Recolectar todas las opciones: de selected_options y de combo_selections
+        $allOptions = $this->collectAllSelectedOptions();
+
+        if (empty($allOptions)) {
             return ['total' => 0.0, 'savings' => 0.0];
         }
 
         // Agrupar opciones por section_id
-        $optionsBySectionId = collect($this->selected_options)->groupBy('section_id');
+        $optionsBySectionId = collect($allOptions)->groupBy('section_id');
 
         // Pre-cargar todas las secciones para evitar N+1 queries
         $sectionIds = $optionsBySectionId->keys()->filter()->toArray();
@@ -114,7 +118,8 @@ class CartItem extends Model
         $savings = 0.0;
 
         foreach ($optionsBySectionId as $sectionId => $options) {
-            $optionIds = $options->pluck('option_id')->filter()->unique()->toArray();
+            // NO usar unique() - pasar todos los IDs incluyendo duplicados para combos
+            $optionIds = $options->pluck('option_id')->filter()->values()->toArray();
 
             if (empty($optionIds)) {
                 continue;
@@ -122,14 +127,21 @@ class CartItem extends Model
 
             $section = $sections->get($sectionId);
             if (! $section) {
-                // Si la sección no existe, calcular suma simple
-                $sectionOptions = SectionOption::whereIn('id', $optionIds)->get();
-                $total += $sectionOptions->sum(fn ($opt) => $opt->getPriceModifier());
+                // Si la sección no existe, calcular suma simple con duplicados
+                $uniqueIds = array_unique($optionIds);
+                $optionCounts = array_count_values($optionIds);
+                $sectionOptions = SectionOption::whereIn('id', $uniqueIds)->get()->keyBy('id');
+                foreach ($optionCounts as $optionId => $count) {
+                    $opt = $sectionOptions->get($optionId);
+                    if ($opt) {
+                        $total += $opt->getPriceModifier() * $count;
+                    }
+                }
 
                 continue;
             }
 
-            // Usar el método de bundle pricing de la sección
+            // Usar el método de bundle pricing de la sección (ahora acepta duplicados)
             $result = $section->calculateOptionsPrice($optionIds);
             $total += $result['total'];
             $savings += $result['savings'];
@@ -139,6 +151,38 @@ class CartItem extends Model
             'total' => round($total, 2),
             'savings' => round($savings, 2),
         ];
+    }
+
+    /**
+     * Recolecta todas las opciones seleccionadas de productos y combos.
+     * Para productos: usa selected_options directamente.
+     * Para combos: extrae selected_options de cada selección en combo_selections.
+     *
+     * @return array<int, array{section_id: int, option_id: int}>
+     */
+    protected function collectAllSelectedOptions(): array
+    {
+        $allOptions = [];
+
+        // Opciones directas del producto (si existen)
+        if ($this->selected_options && is_array($this->selected_options)) {
+            $allOptions = array_merge($allOptions, $this->selected_options);
+        }
+
+        // Opciones de combo_selections (para combos)
+        if ($this->combo_selections && is_array($this->combo_selections)) {
+            foreach ($this->combo_selections as $comboSelection) {
+                $selections = $comboSelection['selections'] ?? [];
+                foreach ($selections as $selection) {
+                    $selectedOptions = $selection['selected_options'] ?? [];
+                    if (is_array($selectedOptions)) {
+                        $allOptions = array_merge($allOptions, $selectedOptions);
+                    }
+                }
+            }
+        }
+
+        return $allOptions;
     }
 
     /**

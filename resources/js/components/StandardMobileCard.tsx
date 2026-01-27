@@ -28,12 +28,15 @@ export interface StandardMobileCardProps {
     dataFields?: DataFieldConfig[];
     /** Actions configuration */
     actions?: {
+        viewHref?: string;
         editHref?: string;
         onDelete?: () => void;
         isDeleting?: boolean;
         canDelete?: boolean;
+        viewTooltip?: string;
         editTooltip?: string;
         deleteTooltip?: string;
+        showView?: boolean;
         showEdit?: boolean;
         showDelete?: boolean;
     };
@@ -125,12 +128,15 @@ const StandardMobileCardComponent: React.FC<StandardMobileCardProps> = ({
                 <CardActions>
                     {actions && (
                         <TableActions
+                            viewHref={actions.viewHref}
                             editHref={actions.editHref}
                             onDelete={actions.onDelete}
                             isDeleting={actions.isDeleting ?? false}
                             canDelete={actions.canDelete ?? true}
+                            viewTooltip={actions.viewTooltip ?? 'Ver'}
                             editTooltip={actions.editTooltip ?? 'Editar'}
                             deleteTooltip={actions.deleteTooltip ?? 'Eliminar'}
+                            showView={actions.showView ?? true}
                             showEdit={actions.showEdit ?? true}
                             showDelete={actions.showDelete ?? true}
                         />

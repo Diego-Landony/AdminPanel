@@ -2,19 +2,18 @@
 
 namespace App\Notifications;
 
+use App\Models\Order;
 use App\Services\FCMService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class PointsExpirationWarningNotification extends Notification implements ShouldQueue
+class DriverAssignedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     public function __construct(
-        public int $pointsToExpire,
-        public int $totalPoints,
-        public int $daysUntilExpiration
+        public Order $order
     ) {}
 
     /**
@@ -34,18 +33,14 @@ class PointsExpirationWarningNotification extends Notification implements Should
     {
         $fcmService = app(FCMService::class);
 
-        $title = 'Tus puntos expiran pronto';
-        $body = "Tienes {$this->pointsToExpire} puntos por vencer en {$this->daysUntilExpiration} días. Haz una compra para mantenerlos activos.";
-
         $fcmService->sendToCustomer(
             $notifiable->id,
-            $title,
-            $body,
+            'Repartidor asignado',
+            'Un repartidor ya está en el restaurante por tu pedido.',
             [
-                'type' => 'points_expiration_warning',
-                'points_to_expire' => (string) $this->pointsToExpire,
-                'total_points' => (string) $this->totalPoints,
-                'days_until_expiration' => (string) $this->daysUntilExpiration,
+                'type' => 'driver_assigned',
+                'order_id' => (string) $this->order->id,
+                'order_number' => $this->order->order_number,
             ]
         );
     }
@@ -58,9 +53,9 @@ class PointsExpirationWarningNotification extends Notification implements Should
     public function toArray(object $notifiable): array
     {
         return [
-            'points_to_expire' => $this->pointsToExpire,
-            'total_points' => $this->totalPoints,
-            'days_until_expiration' => $this->daysUntilExpiration,
+            'order_id' => $this->order->id,
+            'order_number' => $this->order->order_number,
+            'message' => 'Repartidor asignado',
         ];
     }
 }

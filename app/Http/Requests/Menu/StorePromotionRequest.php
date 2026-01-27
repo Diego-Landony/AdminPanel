@@ -32,10 +32,26 @@ class StorePromotionRequest extends FormRequest
                 'nullable',
                 'exists:product_variants,id',
                 function ($attribute, $value, $fail) {
+                    if (! $value) {
+                        return;
+                    }
+
+                    // Validar que la variante pertenezca al producto indicado
+                    preg_match('/items\.(\d+)\.variant_id/', $attribute, $matches);
+                    $index = $matches[1] ?? 0;
+                    $productId = $this->input("items.{$index}.product_id");
+
+                    if ($productId) {
+                        $variant = \App\Models\Menu\ProductVariant::find($value);
+                        if ($variant && (int) $variant->product_id !== (int) $productId) {
+                            $fail('La variante seleccionada no pertenece al producto indicado.');
+
+                            return;
+                        }
+                    }
+
                     // Para Sub del Día, validar que no haya conflicto de días con variante
-                    if ($this->type === 'daily_special' && $value) {
-                        preg_match('/items\.(\d+)\.variant_id/', $attribute, $matches);
-                        $index = $matches[1] ?? 0;
+                    if ($this->type === 'daily_special') {
                         $weekdays = $this->input("items.{$index}.weekdays");
 
                         if ($weekdays && count($weekdays) > 0) {

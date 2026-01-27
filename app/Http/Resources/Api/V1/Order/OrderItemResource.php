@@ -80,7 +80,7 @@ class OrderItemResource extends JsonResource
                 ];
             }),
             'selected_options' => $this->formatSelectedOptions($this->selected_options),
-            'combo_selections' => $this->combo_selections,
+            'combo_selections' => $this->formatComboSelections($this->combo_selections),
             'notes' => $this->notes,
         ];
     }

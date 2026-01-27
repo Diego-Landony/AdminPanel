@@ -11,6 +11,7 @@ use App\Models\SupportMessage;
 use App\Models\SupportMessageAttachment;
 use App\Models\SupportTicket;
 use App\Models\User;
+use App\Notifications\SupportTicketResponseNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -129,6 +130,11 @@ class SupportTicketController extends Controller
         }
 
         broadcast(new SupportMessageSent($message))->toOthers();
+
+        // Notificar al cliente por push
+        if ($ticket->customer) {
+            $ticket->customer->notify(new SupportTicketResponseNotification($ticket, $message));
+        }
 
         return redirect()->back();
     }

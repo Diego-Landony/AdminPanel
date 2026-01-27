@@ -6,6 +6,7 @@ use App\Events\CustomerTypeDowngraded;
 use App\Models\Customer;
 use App\Models\CustomerType;
 use App\Notifications\CustomerTypeDowngradedNotification;
+use App\Notifications\CustomerTypeUpgradedNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -92,11 +93,11 @@ class UpdateCustomerTypes implements ShouldQueue
                             ->update(['customer_type_id' => $newTypeId]);
                         $updated++;
 
+                        // Cargar el cliente completo para la notificación
+                        $fullCustomer = Customer::find($customer->id);
+
                         // Detectar si es un downgrade (nuevo tipo tiene menos puntos requeridos)
                         if ($previousType && $newType && $newType->points_required < $previousType->points_required) {
-                            // Cargar el cliente completo para la notificación
-                            $fullCustomer = Customer::find($customer->id);
-
                             // Disparar evento de downgrade
                             event(new CustomerTypeDowngraded($fullCustomer, $previousType, $newType));
 
@@ -104,6 +105,18 @@ class UpdateCustomerTypes implements ShouldQueue
                             $fullCustomer->notify(new CustomerTypeDowngradedNotification($previousType, $newType));
 
                             Log::info('CustomerTypeDowngraded: Cliente degradado', [
+                                'customer_id' => $customer->id,
+                                'from' => $previousType->name,
+                                'to' => $newType->name,
+                            ]);
+                        }
+
+                        // Detectar si es un upgrade (nuevo tipo tiene más puntos requeridos)
+                        if ($previousType && $newType && $newType->points_required > $previousType->points_required) {
+                            // Enviar notificación al cliente
+                            $fullCustomer->notify(new CustomerTypeUpgradedNotification($previousType, $newType));
+
+                            Log::info('CustomerTypeUpgraded: Cliente ascendido', [
                                 'customer_id' => $customer->id,
                                 'from' => $previousType->name,
                                 'to' => $newType->name,

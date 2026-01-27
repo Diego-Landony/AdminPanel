@@ -62,7 +62,7 @@ export interface DeliveryAddress {
 export interface OrderDriver {
     id: number;
     name: string;
-    phone?: string;
+    phone?: string | null;
 }
 
 export interface OrderCustomer {
@@ -117,7 +117,7 @@ export interface OrderDetailData {
 export interface AvailableDriver {
     id: number;
     name: string;
-    phone?: string;
+    phone?: string | null;
     active_orders_count?: number;
 }
 

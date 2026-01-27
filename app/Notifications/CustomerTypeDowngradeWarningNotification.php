@@ -37,11 +37,8 @@ class CustomerTypeDowngradeWarningNotification extends Notification implements S
     {
         $fcmService = app(FCMService::class);
 
-        $daysText = $this->daysUntilDowngrade === 1 ? 'mañana' : "en {$this->daysUntilDowngrade} días";
-        $urgency = $this->daysUntilDowngrade === 1 ? '⚠️ ' : '';
-
-        $title = $urgency.'¡Mantén tu nivel '.$this->currentType->name.'!';
-        $body = "Necesitas {$this->pointsNeeded} puntos más {$daysText} para mantener tu nivel. ¡Haz una compra y sigue disfrutando tus beneficios!";
+        $title = "Mantén tu nivel {$this->currentType->name}";
+        $body = "Te faltan {$this->pointsNeeded} puntos para conservar tus beneficios. Tienes {$this->daysUntilDowngrade} días más.";
 
         $fcmService->sendToCustomer(
             $notifiable->id,

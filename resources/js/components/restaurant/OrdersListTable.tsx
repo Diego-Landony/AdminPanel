@@ -46,7 +46,7 @@ export interface OrderCustomer {
 export interface OrderDriver {
     id: number;
     name: string;
-    phone?: string;
+    phone?: string | null;
 }
 
 export interface OrderListItem {
@@ -69,7 +69,7 @@ export interface OrderListItem {
 export interface Driver {
     id: number;
     name: string;
-    phone?: string;
+    phone?: string | null;
 }
 
 interface OrdersListTableProps {

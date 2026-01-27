@@ -4,7 +4,6 @@ namespace App\Http\Resources\Api\V1\Menu;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
 class ComboResource extends JsonResource
 {
@@ -19,7 +18,7 @@ class ComboResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'image_url' => $this->image ? Storage::url($this->image) : null,
+            'image_url' => $this->getImageUrl(),
             'price' => (float) $this->precio_pickup_capital,
             'prices' => [
                 'pickup_capital' => (float) $this->precio_pickup_capital,

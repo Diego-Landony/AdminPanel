@@ -2,6 +2,8 @@
 
 namespace App\Traits;
 
+use App\Models\Menu\ComboItem;
+use App\Models\Menu\ComboItemOption;
 use App\Models\Menu\Section;
 use App\Models\Menu\SectionOption;
 use Illuminate\Support\Collection;
@@ -156,5 +158,93 @@ trait FormatsSelectedOptions
         }
 
         return round($total, 2);
+    }
+
+    /**
+     * Format combo selections with product names and formatted options.
+     * Uses batch loading for scalability.
+     *
+     * @param  array|null  $comboSelections  Las selecciones del combo
+     * @return array<int, array<string, mixed>>
+     */
+    protected function formatComboSelections(?array $comboSelections): array
+    {
+        if (empty($comboSelections)) {
+            return [];
+        }
+
+        $selectionsCollection = collect($comboSelections);
+
+        // Collect all combo_item_ids and option_ids for batch loading
+        $comboItemIds = $selectionsCollection->pluck('combo_item_id')->filter()->unique()->values()->toArray();
+
+        $optionIds = $selectionsCollection->flatMap(function ($selection) {
+            return collect($selection['selections'] ?? [])->pluck('option_id');
+        })->filter()->unique()->values()->toArray();
+
+        // Batch load combo items with their labels
+        $comboItems = $this->batchLoadComboItems($comboItemIds);
+
+        // Batch load combo item options with products and variants
+        $comboItemOptions = $this->batchLoadComboItemOptions($optionIds);
+
+        // Format each selection
+        return $selectionsCollection->map(function ($selection) use ($comboItems, $comboItemOptions) {
+            $comboItemId = $selection['combo_item_id'] ?? null;
+            $comboItem = $comboItemId ? ($comboItems[$comboItemId] ?? null) : null;
+
+            return [
+                'combo_item_id' => $comboItemId,
+                'choice_label' => $comboItem?->choice_label,
+                'selections' => collect($selection['selections'] ?? [])->map(function ($sel) use ($comboItemOptions) {
+                    $optionId = $sel['option_id'] ?? null;
+                    $option = $optionId ? ($comboItemOptions[$optionId] ?? null) : null;
+                    $product = $option?->product;
+                    $variant = $option?->variant;
+
+                    return [
+                        'option_id' => $optionId,
+                        'product' => $product ? [
+                            'id' => $product->id,
+                            'name' => $product->name,
+                            'category_name' => $product->category?->name,
+                            'image_url' => $product->getImageUrl(),
+                            'variant' => $variant ? [
+                                'id' => $variant->id,
+                                'name' => $variant->name,
+                            ] : null,
+                        ] : null,
+                        'selected_options' => $this->formatSelectedOptions($sel['selected_options'] ?? []),
+                    ];
+                })->values()->toArray(),
+            ];
+        })->values()->toArray();
+    }
+
+    /**
+     * Batch load combo items by IDs.
+     */
+    protected function batchLoadComboItems(array $comboItemIds): Collection
+    {
+        if (empty($comboItemIds)) {
+            return collect();
+        }
+
+        return ComboItem::whereIn('id', $comboItemIds)->get()->keyBy('id');
+    }
+
+    /**
+     * Batch load combo item options with products, variants and categories.
+     */
+    protected function batchLoadComboItemOptions(array $optionIds): Collection
+    {
+        if (empty($optionIds)) {
+            return collect();
+        }
+
+        return ComboItemOption::with(['product.category', 'variant'])
+            ->whereIn('id', $optionIds)
+            ->get()
+            ->keyBy('id');
     }
 }

@@ -2,11 +2,14 @@
 
 namespace App\Http\Resources\Api\V1\Order;
 
+use App\Traits\FormatsSelectedOptions;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class RecentOrderResource extends JsonResource
 {
+    use FormatsSelectedOptions;
+
     /**
      * Transform the resource into an array.
      *
@@ -19,17 +22,29 @@ class RecentOrderResource extends JsonResource
         $itemsData = $items->map(function ($item) {
             $isAvailable = $this->isItemAvailable($item);
             $snapshot = $item->product_snapshot ?? [];
+            $isCombo = $item->isCombo();
 
-            return [
+            $data = [
+                'type' => $isCombo ? 'combo' : 'product',
                 'name' => $snapshot['name'] ?? 'Unknown',
                 'variant' => $snapshot['variant'] ?? null,
                 'category_name' => $snapshot['category'] ?? null,
                 'quantity' => $item->quantity,
                 'unit_price' => (float) ($item->unit_price ?? 0),
+                'options_total' => (float) ($item->options_price ?? 0),
                 'total_price' => (float) ($item->subtotal ?? 0),
                 'applied_promotion' => $snapshot['applied_promotion'] ?? $item->promotion_snapshot['name'] ?? null,
                 'is_available' => $isAvailable,
+                'selected_options' => $this->formatSelectedOptions($item->selected_options),
             ];
+
+            // Agregar combo_selections solo para combos
+            if ($isCombo) {
+                $data['combo_id'] = $item->combo_id;
+                $data['combo_selections'] = $this->formatComboSelections($item->combo_selections);
+            }
+
+            return $data;
         })->values();
 
         $canReorder = $itemsData->every(fn ($item) => $item['is_available']);

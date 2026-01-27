@@ -14,28 +14,28 @@ class OrderStatusChangedNotification extends Notification implements ShouldQueue
 
     private const STATUS_MESSAGES = [
         'preparing' => [
-            'title' => '¡Orden Confirmada!',
-            'body' => 'Tu orden #{order} ha sido aceptada y está siendo preparada.',
+            'title' => 'Pedido confirmado',
+            'body' => 'Estamos preparando tu pedido.',
         ],
         'ready' => [
-            'title' => '¡Orden Lista!',
-            'body' => 'Tu orden #{order} está lista para recoger.',
+            'title' => 'Pedido listo',
+            'body' => 'Tu pedido está listo para recoger.',
         ],
         'out_for_delivery' => [
-            'title' => 'Orden en Camino',
-            'body' => '¡Tu orden #{order} va en camino! Pronto llegará.',
+            'title' => 'Pedido en camino',
+            'body' => 'Tu pedido va en camino.',
         ],
         'delivered' => [
-            'title' => '¡Entregado!',
-            'body' => 'Tu orden #{order} ha sido entregada. ¡Buen provecho!',
+            'title' => 'Pedido entregado',
+            'body' => '¡Buen provecho!',
         ],
         'completed' => [
-            'title' => '¡Gracias por tu compra!',
-            'body' => 'Tu orden #{order} ha sido completada. ¡Esperamos verte pronto!',
+            'title' => 'Puntos acumulados',
+            'body' => 'Sumaste {points} puntos por esta compra.',
         ],
         'cancelled' => [
-            'title' => 'Orden Cancelada',
-            'body' => 'Tu orden #{order} ha sido cancelada.',
+            'title' => 'Pedido cancelado',
+            'body' => 'Tu pedido ha sido cancelado.',
         ],
     ];
 
@@ -67,10 +67,12 @@ class OrderStatusChangedNotification extends Notification implements ShouldQueue
 
         $fcmService = app(FCMService::class);
 
+        $body = str_replace('{points}', (string) ($this->order->points_earned ?? 0), $message['body']);
+
         $fcmService->sendToCustomer(
             $notifiable->id,
             $message['title'],
-            str_replace('{order}', $this->order->order_number, $message['body']),
+            $body,
             [
                 'type' => 'order_status',
                 'order_id' => (string) $this->order->id,

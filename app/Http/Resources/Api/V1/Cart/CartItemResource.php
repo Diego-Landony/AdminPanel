@@ -91,7 +91,7 @@ class CartItemResource extends JsonResource
             'is_daily_special' => $this->discount_info['is_daily_special'] ?? false,
             'applied_promotion' => $this->discount_info['applied_promotion'] ?? null,
             'selected_options' => $this->formatSelectedOptions($this->selected_options),
-            'combo_selections' => $this->combo_selections,
+            'combo_selections' => $this->formatComboSelections($this->combo_selections),
             'notes' => $this->notes,
             // Validación de precio - permite al frontend mostrar advertencias
             'price_valid' => $priceValid,

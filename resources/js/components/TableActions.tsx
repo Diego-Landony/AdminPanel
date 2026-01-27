@@ -2,10 +2,12 @@ import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Link } from '@inertiajs/react';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Eye, Trash2 } from 'lucide-react';
 import React from 'react';
 
 interface TableActionsProps {
+    /** URL for view action */
+    viewHref?: string;
     /** URL for edit action */
     editHref?: string;
     /** Function called when delete is clicked */
@@ -14,10 +16,14 @@ interface TableActionsProps {
     isDeleting?: boolean;
     /** Whether delete action should be disabled */
     canDelete?: boolean;
+    /** Tooltip text for view button */
+    viewTooltip?: string;
     /** Tooltip text for edit button */
     editTooltip?: string;
     /** Tooltip text for delete button */
     deleteTooltip?: string;
+    /** Whether to show view action */
+    showView?: boolean;
     /** Whether to show edit action */
     showEdit?: boolean;
     /** Whether to show delete action */
@@ -63,18 +69,42 @@ interface TableActionsProps {
  * ```
  */
 const TableActionsComponent: React.FC<TableActionsProps> = ({
+    viewHref,
     editHref,
     onDelete,
     isDeleting = false,
     canDelete = true,
+    viewTooltip = 'Ver',
     editTooltip = 'Editar',
     deleteTooltip = 'Eliminar',
+    showView = true,
     showEdit = true,
     showDelete = true,
     className = '',
 }) => {
     return (
         <div className={`flex items-center justify-end gap-1 ${className}`}>
+            {/* View Button */}
+            {showView && viewHref && (
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-11 w-11 p-0 text-muted-foreground hover:text-foreground md:h-8 md:w-8"
+                            asChild
+                        >
+                            <Link href={viewHref} aria-label={viewTooltip}>
+                                <Eye className="h-4 w-4" />
+                            </Link>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>{viewTooltip}</p>
+                    </TooltipContent>
+                </Tooltip>
+            )}
+
             {/* Edit Button */}
             {showEdit && editHref && (
                 <Tooltip>

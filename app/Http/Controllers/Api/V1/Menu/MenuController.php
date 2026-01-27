@@ -94,7 +94,7 @@ class MenuController extends Controller
     {
         // Si se pide versión lite, retornar solo estructura
         if ($request->boolean('lite')) {
-            return $this->indexLite($menuVersionService);
+            return $this->indexLite($request, $menuVersionService);
         }
         // NOTE: Variants now show active_promotion which calls getActivePromotion().
         // This method needs access to product.category for promotion lookup.
@@ -173,10 +173,16 @@ class MenuController extends Controller
 
         $version = $menuVersionService->getVersion();
 
+        // Determinar el disclaimer según si se ha seleccionado tipo de servicio
+        $hasServiceType = $request->has('service_type') && $request->filled('service_type');
+        $priceDisclaimer = $hasServiceType
+            ? null
+            : 'Precio sujeto a método de entrega.';
+
         return response()->json([
             'data' => [
                 'version' => $version,
-                'price_disclaimer' => 'Precio sujeto a ubicación/servicio.',
+                'price_disclaimer' => $priceDisclaimer,
                 'categories' => CategoryResource::collection($categories),
                 'combos_category' => $combosCategory ? [
                     'id' => $combosCategory->id,
@@ -192,7 +198,7 @@ class MenuController extends Controller
     /**
      * Get lightweight menu structure for initial navigation.
      */
-    protected function indexLite(MenuVersionService $menuVersionService): JsonResponse
+    protected function indexLite(Request $request, MenuVersionService $menuVersionService): JsonResponse
     {
         $categories = Category::query()
             ->active()
@@ -215,10 +221,16 @@ class MenuController extends Controller
 
         $version = $menuVersionService->getVersion();
 
+        // Determinar el disclaimer según si se ha seleccionado tipo de servicio
+        $hasServiceType = $request->has('service_type') && $request->filled('service_type');
+        $priceDisclaimer = $hasServiceType
+            ? null
+            : 'Precio sujeto a método de entrega.';
+
         return response()->json([
             'data' => [
                 'version' => $version,
-                'price_disclaimer' => 'Precio sujeto a ubicación/servicio.',
+                'price_disclaimer' => $priceDisclaimer,
                 'categories' => $categories->map(fn ($cat) => [
                     'id' => $cat->id,
                     'name' => $cat->name,

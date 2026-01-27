@@ -2,18 +2,20 @@
 
 namespace App\Notifications;
 
-use App\Models\Order;
+use App\Models\SupportMessage;
+use App\Models\SupportTicket;
 use App\Services\FCMService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class OrderCreatedNotification extends Notification implements ShouldQueue
+class SupportTicketResponseNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     public function __construct(
-        public Order $order
+        public SupportTicket $ticket,
+        public SupportMessage $message
     ) {}
 
     /**
@@ -23,7 +25,7 @@ class OrderCreatedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['fcm'];
+        return ['fcm', 'database'];
     }
 
     /**
@@ -35,14 +37,13 @@ class OrderCreatedNotification extends Notification implements ShouldQueue
 
         $fcmService->sendToCustomer(
             $notifiable->id,
-            'Pedido recibido',
-            'Recibimos tu pedido, te avisaremos cuando esté listo.',
+            'Respuesta a tu ticket',
+            "Tienes una respuesta en tu ticket #{$this->ticket->ticket_number}.",
             [
-                'type' => 'order_created',
-                'order_id' => (string) $this->order->id,
-                'order_number' => $this->order->order_number,
-                'status' => $this->order->status,
-                'total' => (string) $this->order->total,
+                'type' => 'support_ticket_response',
+                'ticket_id' => (string) $this->ticket->id,
+                'ticket_number' => $this->ticket->ticket_number,
+                'message_id' => (string) $this->message->id,
             ]
         );
     }
@@ -55,10 +56,10 @@ class OrderCreatedNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'order_id' => $this->order->id,
-            'order_number' => $this->order->order_number,
-            'status' => $this->order->status,
-            'message' => 'Pedido recibido',
+            'ticket_id' => $this->ticket->id,
+            'ticket_number' => $this->ticket->ticket_number,
+            'message_id' => $this->message->id,
+            'message' => 'Respuesta a tu ticket',
         ];
     }
 }

@@ -79,37 +79,61 @@ class Section extends Model implements ActivityLoggable
     /**
      * Calcula el precio total y ahorro de las opciones seleccionadas.
      * Agrupa por precio y aplica descuento solo a extras del mismo precio.
+     * Acepta IDs con duplicados para contar correctamente opciones repetidas (ej: mismo extra en 2 subs de un combo).
      *
-     * @param  array<int>  $selectedOptionIds
+     * @param  array<int>  $selectedOptionIds  IDs de opciones, puede contener duplicados
      * @return array{total: float, savings: float, details: array<int, array{price: float, count: int, bundles: int, savings: float}>}
      */
     public function calculateOptionsPrice(array $selectedOptionIds): array
     {
-        $options = $this->options()->whereIn('id', $selectedOptionIds)->get();
+        // Contar cuántas veces aparece cada opción (para manejar duplicados en combos)
+        $optionCounts = array_count_values($selectedOptionIds);
+        $uniqueIds = array_keys($optionCounts);
 
-        // Solo considerar opciones con is_extra = true para bundle
-        $extras = $options->where('is_extra', true);
+        $options = $this->options()->whereIn('id', $uniqueIds)->get()->keyBy('id');
 
-        // Suma de opciones sin extra (precio 0 o is_extra = false)
-        $nonExtrasTotal = $options->where('is_extra', false)->sum('price_modifier');
+        $nonExtrasTotal = 0.0;
+        $extrasWithCounts = [];
+
+        foreach ($optionCounts as $optionId => $count) {
+            $option = $options->get($optionId);
+            if (! $option) {
+                continue;
+            }
+
+            if ($option->is_extra) {
+                // Agregar cada ocurrencia del extra
+                for ($i = 0; $i < $count; $i++) {
+                    $extrasWithCounts[] = (float) $option->price_modifier;
+                }
+            } else {
+                $nonExtrasTotal += (float) $option->price_modifier * $count;
+            }
+        }
+
+        $extrasCount = count($extrasWithCounts);
 
         // Si bundle no está habilitado o no hay suficientes extras
-        if (! $this->bundle_discount_enabled || $extras->count() < $this->bundle_size) {
-            $total = $extras->sum('price_modifier') + $nonExtrasTotal;
+        if (! $this->bundle_discount_enabled || $extrasCount < $this->bundle_size) {
+            $total = array_sum($extrasWithCounts) + $nonExtrasTotal;
 
             return ['total' => (float) $total, 'savings' => 0.0, 'details' => []];
         }
 
-        // Agrupar extras por price_modifier
-        $groupedByPrice = $extras->groupBy('price_modifier');
+        // Agrupar extras por precio
+        $groupedByPrice = [];
+        foreach ($extrasWithCounts as $price) {
+            $key = (string) $price;
+            $groupedByPrice[$key] = ($groupedByPrice[$key] ?? 0) + 1;
+        }
 
         $total = 0.0;
         $savings = 0.0;
         $details = [];
 
-        foreach ($groupedByPrice as $price => $group) {
-            $count = $group->count();
-            $groupTotal = $count * (float) $price;
+        foreach ($groupedByPrice as $priceStr => $count) {
+            $price = (float) $priceStr;
+            $groupTotal = $count * $price;
 
             // Calcular bundles para este grupo de precio
             $bundles = intdiv($count, $this->bundle_size);
@@ -119,7 +143,7 @@ class Section extends Model implements ActivityLoggable
             $savings += $groupSavings;
 
             $details[] = [
-                'price' => (float) $price,
+                'price' => $price,
                 'count' => $count,
                 'bundles' => $bundles,
                 'savings' => $groupSavings,

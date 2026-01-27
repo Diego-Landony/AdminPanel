@@ -16,6 +16,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderPromotion;
 use App\Models\OrderStatusHistory;
+use App\Notifications\OrderCreatedNotification;
 use App\Notifications\OrderStatusChangedNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -96,22 +97,19 @@ class OrderService
         $estimatedMinutes = $serviceType === 'pickup' ? $estimatedPickupMinutes : $estimatedDeliveryMinutes;
 
         if ($serviceType === 'pickup') {
-            // Usar el mismo buffer de 30 segundos que en CreateOrderRequest para evitar
-            // recalculaciones innecesarias causadas por el tiempo de procesamiento
-            $minimumPickupTime = now()->addMinutes($estimatedPickupMinutes)->subSeconds(30);
-
             if (isset($data['scheduled_pickup_time'])) {
+                // La hora ya fue validada en CreateOrderRequest.
+                // Aquí solo verificamos que no haya pasado significativamente (más de 2 minutos)
+                // para cubrir casos extremos donde el request tardó mucho.
                 $scheduledTime = \Carbon\Carbon::parse($data['scheduled_pickup_time']);
+                $absoluteMinimum = now()->subMinutes(2);
 
-                // Solo rechazar si el tiempo está REALMENTE vencido (más de 30 segundos antes del mínimo)
-                // La validación en CreateOrderRequest ya usa el mismo buffer, por lo que tiempos válidos
-                // no deberían llegar aquí con diferencias significativas
-                if ($scheduledTime->lt($minimumPickupTime)) {
+                if ($scheduledTime->lt($absoluteMinimum)) {
                     throw new \InvalidArgumentException('La hora de recogida ya no está disponible. Por favor selecciona una nueva hora.');
                 }
-                // Si el tiempo es válido, usarlo TAL COMO EL USUARIO LO SELECCIONÓ (sin recalcular)
+                // Usar la hora TAL COMO EL USUARIO LA SELECCIONÓ (ya validada en CreateOrderRequest)
             } else {
-                // Si no se especificó hora, usar la hora mínima como default (sin buffer)
+                // Si no se especificó hora, usar la hora mínima como default
                 $data['scheduled_pickup_time'] = now()->addMinutes($estimatedPickupMinutes)->toIso8601String();
             }
         }
@@ -142,19 +140,19 @@ class OrderService
             }
 
             // Manejar hora de entrega programada
-            // Usar el mismo buffer de 30 segundos que en CreateOrderRequest
-            $minimumDeliveryTime = now()->addMinutes($estimatedDeliveryMinutes)->subSeconds(30);
-
             if (isset($data['scheduled_delivery_time'])) {
+                // La hora ya fue validada en CreateOrderRequest.
+                // Aquí solo verificamos que no haya pasado significativamente (más de 2 minutos)
+                // para cubrir casos extremos donde el request tardó mucho.
                 $scheduledTime = \Carbon\Carbon::parse($data['scheduled_delivery_time']);
+                $absoluteMinimum = now()->subMinutes(2);
 
-                // Solo rechazar si el tiempo está REALMENTE vencido
-                if ($scheduledTime->lt($minimumDeliveryTime)) {
+                if ($scheduledTime->lt($absoluteMinimum)) {
                     throw new \InvalidArgumentException('La hora de entrega ya no está disponible. Por favor selecciona una nueva hora.');
                 }
-                // Si el tiempo es válido, usarlo TAL COMO EL USUARIO LO SELECCIONÓ (sin recalcular)
+                // Usar la hora TAL COMO EL USUARIO LA SELECCIONÓ (ya validada en CreateOrderRequest)
             } else {
-                // Si no se especificó hora, usar la hora mínima como default (sin buffer)
+                // Si no se especificó hora, usar la hora mínima como default
                 $data['scheduled_delivery_time'] = now()->addMinutes($estimatedDeliveryMinutes)->toIso8601String();
             }
         }
@@ -311,8 +309,15 @@ class OrderService
 
             $cart->update(['status' => 'converted']);
 
-            return $order->load(['items', 'customer', 'restaurant', 'statusHistory']);
+            return $order;
         });
+
+        // Notificar al cliente que su orden fue recibida
+        if ($order->customer) {
+            $order->customer->notify(new OrderCreatedNotification($order));
+        }
+
+        return $order->load(['items', 'customer', 'restaurant', 'statusHistory']);
     }
 
     /**

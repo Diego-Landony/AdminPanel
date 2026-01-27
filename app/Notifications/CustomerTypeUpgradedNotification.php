@@ -2,19 +2,19 @@
 
 namespace App\Notifications;
 
+use App\Models\CustomerType;
 use App\Services\FCMService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class PointsExpirationWarningNotification extends Notification implements ShouldQueue
+class CustomerTypeUpgradedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     public function __construct(
-        public int $pointsToExpire,
-        public int $totalPoints,
-        public int $daysUntilExpiration
+        public CustomerType $previousType,
+        public CustomerType $newType
     ) {}
 
     /**
@@ -24,7 +24,7 @@ class PointsExpirationWarningNotification extends Notification implements Should
      */
     public function via(object $notifiable): array
     {
-        return ['fcm'];
+        return ['fcm', 'database'];
     }
 
     /**
@@ -34,18 +34,17 @@ class PointsExpirationWarningNotification extends Notification implements Should
     {
         $fcmService = app(FCMService::class);
 
-        $title = 'Tus puntos expiran pronto';
-        $body = "Tienes {$this->pointsToExpire} puntos por vencer en {$this->daysUntilExpiration} días. Haz una compra para mantenerlos activos.";
+        $multiplier = number_format($this->newType->multiplier, 0);
 
         $fcmService->sendToCustomer(
             $notifiable->id,
-            $title,
-            $body,
+            'Subiste de nivel',
+            "Ahora eres {$this->newType->name}. Tus puntos se multiplican x{$multiplier} en cada compra.",
             [
-                'type' => 'points_expiration_warning',
-                'points_to_expire' => (string) $this->pointsToExpire,
-                'total_points' => (string) $this->totalPoints,
-                'days_until_expiration' => (string) $this->daysUntilExpiration,
+                'type' => 'tier_upgraded',
+                'previous_tier' => $this->previousType->name,
+                'new_tier' => $this->newType->name,
+                'multiplier' => $multiplier,
             ]
         );
     }
@@ -58,9 +57,9 @@ class PointsExpirationWarningNotification extends Notification implements Should
     public function toArray(object $notifiable): array
     {
         return [
-            'points_to_expire' => $this->pointsToExpire,
-            'total_points' => $this->totalPoints,
-            'days_until_expiration' => $this->daysUntilExpiration,
+            'previous_tier' => $this->previousType->name,
+            'new_tier' => $this->newType->name,
+            'multiplier' => $this->newType->multiplier,
         ];
     }
 }

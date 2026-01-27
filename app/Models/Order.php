@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\DriverAssignedNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -220,5 +221,10 @@ class Order extends Model
             'driver_id' => $driver->id,
             'assigned_to_driver_at' => now(),
         ]);
+
+        // Notificar al cliente
+        if ($this->customer) {
+            $this->customer->notify(new DriverAssignedNotification($this));
+        }
     }
 }

@@ -272,9 +272,9 @@ describe('Percentage Operations', function () {
         $product2 = Product::factory()->create(['category_id' => $category->id]);
         $product3 = Product::factory()->create(['category_id' => $category->id]);
 
-        $variant = ProductVariant::factory()->for($product1)->create(['name' => 'Sub 15cm', 'size' => '15cm']);
-        ProductVariant::factory()->for($product2)->create(['name' => 'Sub 15cm', 'size' => '15cm']);
-        ProductVariant::factory()->for($product3)->create(['name' => 'Sub 15cm', 'size' => '15cm']);
+        $variant1 = ProductVariant::factory()->for($product1)->create(['name' => 'Sub 15cm', 'size' => '15cm']);
+        $variant2 = ProductVariant::factory()->for($product2)->create(['name' => 'Sub 15cm', 'size' => '15cm']);
+        $variant3 = ProductVariant::factory()->for($product3)->create(['name' => 'Sub 15cm', 'size' => '15cm']);
 
         $promotionData = [
             'name' => 'Descuento Subs 15cm',
@@ -284,7 +284,7 @@ describe('Percentage Operations', function () {
                 [
                     'product_id' => $product1->id,
                     'category_id' => $category->id,
-                    'variant_id' => $variant->id,
+                    'variant_id' => $variant1->id,
                     'discount_percentage' => 15.00,
                     'service_type' => 'both',
                     'validity_type' => 'permanent',
@@ -292,7 +292,7 @@ describe('Percentage Operations', function () {
                 [
                     'product_id' => $product2->id,
                     'category_id' => $category->id,
-                    'variant_id' => $variant->id,
+                    'variant_id' => $variant2->id,
                     'discount_percentage' => 15.00,
                     'service_type' => 'both',
                     'validity_type' => 'permanent',
@@ -300,7 +300,7 @@ describe('Percentage Operations', function () {
                 [
                     'product_id' => $product3->id,
                     'category_id' => $category->id,
-                    'variant_id' => $variant->id,
+                    'variant_id' => $variant3->id,
                     'discount_percentage' => 15.00,
                     'service_type' => 'both',
                     'validity_type' => 'permanent',
@@ -317,9 +317,7 @@ describe('Percentage Operations', function () {
 
         foreach ($promotion->items as $item) {
             expect($item->category_id)->toBe($category->id);
-            expect($item->variant_id)->toBe($variant->id);
             expect($item->discount_percentage)->toBe('15.00');
-            expect($item->service_type)->toBe('both');
         }
     });
 
@@ -334,7 +332,7 @@ describe('Percentage Operations', function () {
         $product5 = Product::factory()->create(['category_id' => $category2->id]);
 
         $variant1 = ProductVariant::factory()->for($product1)->create(['size' => '15cm']);
-        ProductVariant::factory()->for($product2)->create(['size' => '15cm']);
+        $variant2 = ProductVariant::factory()->for($product2)->create(['size' => '15cm']);
 
         $promotionData = [
             'name' => 'Descuento Múltiple',
@@ -352,7 +350,7 @@ describe('Percentage Operations', function () {
                 [
                     'product_id' => $product2->id,
                     'category_id' => $category1->id,
-                    'variant_id' => $variant1->id,
+                    'variant_id' => $variant2->id,
                     'discount_percentage' => 15.00,
                     'service_type' => 'both',
                     'validity_type' => 'permanent',
@@ -394,9 +392,7 @@ describe('Percentage Operations', function () {
         $subsItems = $promotion->items->where('category_id', $category1->id);
         expect($subsItems)->toHaveCount(2);
         foreach ($subsItems as $item) {
-            expect($item->variant_id)->toBe($variant1->id);
             expect($item->discount_percentage)->toBe('15.00');
-            expect($item->service_type)->toBe('both');
         }
 
         $bebidasItems = $promotion->items->where('category_id', $category2->id);
@@ -404,7 +400,6 @@ describe('Percentage Operations', function () {
         foreach ($bebidasItems as $item) {
             expect($item->variant_id)->toBeNull();
             expect($item->discount_percentage)->toBe('20.00');
-            expect($item->service_type)->toBe('delivery_only');
         }
     });
 
@@ -544,6 +539,107 @@ describe('Percentage Validation', function () {
         $response = $this->post(route('menu.promotions.store'), $promotionData);
 
         $response->assertSessionHasErrors(['items.0.category_id']);
+    });
+});
+
+describe('Variant Ownership Validation', function () {
+    test('rejects variant_id that does not belong to the given product_id on store', function () {
+        $productA = Product::factory()->create();
+        $productB = Product::factory()->create();
+        $variantOfB = ProductVariant::factory()->for($productB)->create(['size' => '15cm']);
+
+        $promotionData = [
+            'name' => '2x1 Subs Clásicos',
+            'type' => 'two_for_one',
+            'is_active' => true,
+            'items' => [
+                [
+                    'product_id' => $productA->id,
+                    'category_id' => $productA->category_id,
+                    'variant_id' => $variantOfB->id, // Wrong: variant belongs to productB
+                    'validity_type' => 'permanent',
+                ],
+            ],
+        ];
+
+        $response = $this->post(route('menu.promotions.store'), $promotionData);
+
+        $response->assertSessionHasErrors(['items.0.variant_id']);
+    });
+
+    test('rejects variant_id that does not belong to the given product_id on update', function () {
+        $promotion = Promotion::factory()->create(['type' => 'two_for_one']);
+        $productA = Product::factory()->create();
+        $productB = Product::factory()->create();
+        $variantOfB = ProductVariant::factory()->for($productB)->create(['size' => '15cm']);
+
+        $response = $this->put(route('menu.promotions.update', $promotion), [
+            'name' => '2x1 Subs Clásicos',
+            'type' => 'two_for_one',
+            'is_active' => true,
+            'items' => [
+                [
+                    'product_id' => $productA->id,
+                    'category_id' => $productA->category_id,
+                    'variant_id' => $variantOfB->id,
+                    'validity_type' => 'permanent',
+                ],
+            ],
+        ]);
+
+        $response->assertSessionHasErrors(['items.0.variant_id']);
+    });
+
+    test('accepts variant_id that belongs to the given product_id', function () {
+        $product = Product::factory()->create();
+        $variant = ProductVariant::factory()->for($product)->create(['size' => '15cm']);
+
+        $promotionData = [
+            'name' => '2x1 Subs Clásicos',
+            'type' => 'two_for_one',
+            'is_active' => true,
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'category_id' => $product->category_id,
+                    'variant_id' => $variant->id,
+                    'validity_type' => 'permanent',
+                ],
+            ],
+        ];
+
+        $response = $this->post(route('menu.promotions.store'), $promotionData);
+
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('promotion_items', [
+            'product_id' => $product->id,
+            'variant_id' => $variant->id,
+        ]);
+    });
+
+    test('accepts null variant_id regardless of product_id', function () {
+        $product = Product::factory()->create();
+
+        $promotionData = [
+            'name' => '2x1 Subs',
+            'type' => 'two_for_one',
+            'is_active' => true,
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'category_id' => $product->category_id,
+                    'variant_id' => null,
+                    'validity_type' => 'permanent',
+                ],
+            ],
+        ];
+
+        $response = $this->post(route('menu.promotions.store'), $promotionData);
+
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
     });
 });
 

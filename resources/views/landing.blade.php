@@ -64,8 +64,27 @@
             max-width: 1200px;
             margin: 0 auto;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
+        }
+
+        .login-btn {
+            display: inline-flex;
+            align-items: center;
+            background: transparent;
+            color: var(--subway-green);
+            padding: 0.5rem 1.25rem;
+            border: 2px solid var(--subway-green);
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            background: var(--subway-green);
+            color: #fff;
         }
 
         .logo {
@@ -173,25 +192,16 @@
         }
 
         .phone-frame {
-            width: 240px;
+            width: 300px;
             background: #1a1a1a;
-            border-radius: 36px;
-            padding: 10px;
+            border-radius: 40px;
+            padding: 12px;
             box-shadow: 0 40px 80px rgba(0,0,0,0.4);
             transition: transform 0.3s ease;
         }
 
         .phone-frame:hover {
             transform: translateY(-10px);
-        }
-
-        .phone-frame.secondary {
-            width: 210px;
-            transform: translateY(40px);
-        }
-
-        .phone-frame.secondary:hover {
-            transform: translateY(30px);
         }
 
         .phone-frame img {
@@ -203,7 +213,7 @@
         /* Features Section */
         .features {
             padding: 3.5rem 2rem;
-            background: var(--subway-green-dark);
+            background: var(--subway-yellow);
         }
 
         .features-content {
@@ -220,6 +230,10 @@
         .feature-card {
             padding: 2rem 2.25rem;
             position: relative;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .feature-card:not(:last-child)::after {
@@ -229,36 +243,19 @@
             top: 20%;
             height: 60%;
             width: 1px;
-            background: rgba(255,255,255,0.15);
-        }
-
-        .feature-icon {
-            width: 44px;
-            height: 44px;
-            background: var(--subway-yellow);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-        }
-
-        .feature-icon svg {
-            width: 22px;
-            height: 22px;
-            fill: #fff;
+            background: rgba(0,0,0,0.15);
         }
 
         .feature-card h3 {
-            font-size: 1.05rem;
+            font-size: 1.35rem;
             font-weight: 700;
-            color: #fff;
-            margin-bottom: 0.4rem;
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
         }
 
         .feature-card p {
-            color: rgba(255,255,255,0.75);
-            font-size: 0.9rem;
+            color: rgba(0,0,0,0.7);
+            font-size: 1.2rem;
             line-height: 1.5;
         }
 
@@ -367,11 +364,7 @@
             }
 
             .phone-frame {
-                width: 180px;
-            }
-
-            .phone-frame.secondary {
-                width: 160px;
+                width: 220px;
             }
 
             .features-grid {
@@ -416,22 +409,13 @@
             }
 
             .phone-frame {
-                width: 150px;
-                border-radius: 24px;
-                padding: 6px;
+                width: 180px;
+                border-radius: 28px;
+                padding: 8px;
             }
 
             .phone-frame img {
-                border-radius: 20px;
-            }
-
-            .phone-frame.secondary {
-                width: 130px;
-                transform: translateY(20px);
-            }
-
-            .phone-frame.secondary:hover {
-                transform: translateY(14px);
+                border-radius: 22px;
             }
 
             .store-btn {
@@ -460,6 +444,7 @@
     <header class="header" id="navbar">
         <div class="header-content">
             <img src="{{ asset('subway-logo.png') }}" alt="Subway Guatemala" class="logo">
+            <a href="{{ route('login') }}" class="login-btn">Acceder</a>
         </div>
     </header>
 
@@ -491,9 +476,6 @@
                 <div class="phone-frame">
                     <img src="{{ asset('home-app.png') }}" alt="Subway Guatemala App - Inicio">
                 </div>
-                <div class="phone-frame secondary">
-                    <img src="{{ asset('login-app.png') }}" alt="Subway Guatemala App - Inicio de sesión">
-                </div>
             </div>
         </div>
     </section>
@@ -503,23 +485,14 @@
         <div class="features-content">
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm-3 18h-4v-1h4v1zm3-3H7V5h10v12z"/></svg>
-                    </div>
                     <h3>Pedidos desde tu celular</h3>
-                    <p>Personaliza tu sub, elige tu restaurante y recógelo listo.</p>
+                    <p>Personaliza tu sub, recíbelo a domicilio o recógelo en tu restaurante más cercano.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-.52.07-1.06.07-1.58.02A7.94 7.94 0 0 1 4 12c0-4.42 3.58-8 8-8s8 3.58 8 8c0 3.73-2.56 6.87-6 7.73v-1.28c.95-.37 1.78-1 2.38-1.82L15 15.24a3.96 3.96 0 0 1-6 0l-1.38 1.39A5.93 5.93 0 0 0 10 18.5v1.43zM12 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
-                    </div>
                     <h3>Puntos con cada compra</h3>
                     <p>Acumula puntos automáticamente y canjéalos por productos gratis.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21.41 11.58l-9-9C12.04 2.21 11.53 2 11 2H4a2 2 0 0 0-2 2v7c0 .53.21 1.04.59 1.41l9 9c.36.36.86.59 1.41.59.55 0 1.05-.23 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
-                    </div>
                     <h3>Ofertas solo para ti</h3>
                     <p>Promociones y descuentos exclusivos disponibles dentro de la app.</p>
                 </div>

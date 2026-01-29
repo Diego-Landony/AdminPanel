@@ -1038,6 +1038,16 @@
                                     "device_identifier": {
                                         "description": "Unique device identifier",
                                         "type": "string"
+                                    },
+                                    "first_name": {
+                                        "description": "User's first name (Apple only provides this on first authorization)",
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "last_name": {
+                                        "description": "User's last name (Apple only provides this on first authorization)",
+                                        "type": "string",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -1075,126 +1085,6 @@
                     },
                     "409": {
                         "description": "Account already exists (register) or account deleted"
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/oauth/google/redirect": {
-            "get": {
-                "tags": [
-                    "OAuth"
-                ],
-                "summary": "Redirect to Google OAuth (Web & Mobile)",
-                "description": "Initiates Google OAuth flow for any platform. Uses OAuth 2.0 state parameter to maintain context across the redirect flow.",
-                "operationId": "d45644767bd0769d1084909175bff619",
-                "parameters": [
-                    {
-                        "name": "action",
-                        "in": "query",
-                        "description": "Action type: 'login' for existing users or 'register' for new users",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "login",
-                                "register"
-                            ],
-                            "example": "login"
-                        }
-                    },
-                    {
-                        "name": "platform",
-                        "in": "query",
-                        "description": "Client platform: 'web' for web applications (returns JSON) or 'mobile' for mobile apps (redirects via deep link)",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "web",
-                                "mobile"
-                            ],
-                            "example": "web"
-                        }
-                    },
-                    {
-                        "name": "device_id",
-                        "in": "query",
-                        "description": "Device identifier UUID for tracking. **REQUIRED when platform=mobile**, optional for web.",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "550e8400-e29b-41d4-a716-446655440000"
-                        }
-                    }
-                ],
-                "responses": {
-                    "302": {
-                        "description": "Redirect to Google OAuth consent screen"
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "The action field is required."
-                                        },
-                                        "errors": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/oauth/google/callback": {
-            "get": {
-                "tags": [
-                    "OAuth"
-                ],
-                "summary": "Callback de OAuth de Google (Web y Móvil)",
-                "description": "Maneja el callback de OAuth después de la autorización de Google. Este endpoint es llamado automáticamente por Google. Decodifica el parámetro state de OAuth 2.0 para determinar plataforma y acción, luego autentica o registra al usuario.\n     *\n     * **Respuestas de éxito:**\n     * - Web: redirige a /oauth/success con token, customer_id, is_new_customer=1|0, message\n     * - Móvil: redirige a subwayapp://oauth/callback?token=xxx&customer_id=xxx&is_new_customer=1|0\n     *\n     * **Respuestas de error:**\n     * - Web: redirige a /oauth/success con error=xxx&message=xxx\n     * - Móvil: redirige a subwayapp://oauth/callback?error=xxx&message=xxx\n     *\n     * **Códigos de error posibles:**\n     * - user_already_exists: La cuenta ya existe (en flujo de registro)\n     * - email_not_registered: El email no está registrado (en flujo de login)\n     * - authentication_failed: Error general de autenticación\n     *\n     * **Parámetro is_new_customer:**\n     * - 1: Usuario recién registrado (debe completar perfil)\n     * - 0: Usuario existente (login normal)",
-                "operationId": "281ab9caddb2b86e3614c9e34567db4f",
-                "parameters": [
-                    {
-                        "name": "code",
-                        "in": "query",
-                        "description": "Código de autorización de Google OAuth",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "example": "4/0AY0e-g7..."
-                        }
-                    },
-                    {
-                        "name": "state",
-                        "in": "query",
-                        "description": "Parámetro state de OAuth 2.0 con información codificada de plataforma, acción y device_id",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "example": "eyJwbGF0Zm9ybSI6IndlYiIsImFjdGlvbiI6ImxvZ2luIn0="
-                        }
-                    }
-                ],
-                "responses": {
-                    "302": {
-                        "description": "Respuesta de redirección según plataforma y resultado.\n     *\n     * **ÉXITO WEB:** /oauth/success?token=xxx&customer_id=xxx&is_new_customer=1|0&message=xxx\n     *\n     * **ERROR WEB:** /oauth/success?error=user_already_exists&message=Ya existe una cuenta...\n     *\n     * **ÉXITO MÓVIL:** subwayapp://oauth/callback?token=xxx&customer_id=xxx&is_new_customer=1|0\n     *\n     * **ERROR MÓVIL:** subwayapp://oauth/callback?error=user_already_exists&message=Ya existe una cuenta...",
-                        "headers": {
-                            "Location": {
-                                "description": "URL de redirección según plataforma y resultado",
-                                "schema": {
-                                    "type": "string",
-                                    "example": "/oauth/success?token=xxx&customer_id=123&is_new_customer=1"
-                                }
-                            }
-                        }
                     }
                 }
             }
@@ -7669,9 +7559,26 @@
                                                         "type": "string",
                                                         "example": "Subway Pollo Teriyaki"
                                                     },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Delicioso sub de pollo teriyaki",
+                                                        "nullable": true
+                                                    },
                                                     "image_url": {
                                                         "type": "string",
                                                         "example": "/storage/products/pollo-teriyaki.jpg",
+                                                        "nullable": true
+                                                    },
+                                                    "category_id": {
+                                                        "description": "ID de la categoría",
+                                                        "type": "integer",
+                                                        "example": 1,
+                                                        "nullable": true
+                                                    },
+                                                    "category_name": {
+                                                        "description": "Nombre de la categoría",
+                                                        "type": "string",
+                                                        "example": "Subs",
                                                         "nullable": true
                                                     },
                                                     "points_cost": {

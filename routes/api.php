@@ -67,20 +67,6 @@ Route::prefix('v1')->group(function () {
         // Receives Firebase ID token from native Apple Sign-In
         Route::post('/apple/firebase', [OAuthController::class, 'appleFirebase'])
             ->name('api.v1.auth.oauth.apple.firebase');
-
-        // Legacy: Browser-based OAuth redirect flow (web & mobile fallback)
-        // Uses OAuth 2.0 state parameter instead of session for stateless operation
-        Route::middleware(['web'])->group(function () {
-            // Unified OAuth redirect - works for web and mobile (React Native WebBrowser)
-            // Use ?action=login|register&platform=web|mobile&device_id=uuid
-            Route::get('/google/redirect', [OAuthController::class, 'googleRedirect'])
-                ->name('api.v1.auth.oauth.google.redirect');
-
-            // OAuth callback - automatically called by Google after authorization
-            Route::get('/google/callback', [OAuthController::class, 'googleCallback'])
-                ->name('api.v1.auth.oauth.google.callback');
-
-        });
     });
 
     // Public support endpoint for access issues (no auth required)

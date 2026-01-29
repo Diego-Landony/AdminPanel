@@ -75,26 +75,6 @@ Route::get('/password/reset', [App\Http\Controllers\CustomerPasswordResetControl
 Route::post('/password/reset', [App\Http\Controllers\CustomerPasswordResetController::class, 'reset'])
     ->name('customer.password.update');
 
-// OAuth Success Route (Web platform)
-Route::get('/oauth/success', function (Illuminate\Http\Request $request) {
-    // Recuperar datos de los query parameters (en lugar de sesión)
-    // Esto funciona igual que mobile y evita problemas de sesión perdida
-    $token = $request->query('token');
-    $customerId = $request->query('customer_id');
-    $isNew = $request->query('is_new');
-    $message = $request->query('message');
-    $error = $request->query('error');
-
-    // Retornar vista que procesa el token
-    return view('auth.oauth-success', [
-        'token' => $token,
-        'customerId' => $customerId,
-        'isNewCustomer' => $isNew,
-        'message' => $message,
-        'error' => $error,
-    ]);
-})->name('oauth.success');
-
 // Rutas de subida de imágenes (requieren autenticación)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/api/upload/image', [ImageUploadController::class, 'upload'])->name('upload.image');

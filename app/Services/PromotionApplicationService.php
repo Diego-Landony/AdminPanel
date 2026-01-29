@@ -188,6 +188,9 @@ class PromotionApplicationService
      *
      * Filtra por vigencia: weekdays (ISO-8601: 1=Lunes, 7=Domingo), fechas y horarios.
      * El backend maneja toda la lógica de vigencia para simplificar el trabajo de Flutter.
+     *
+     * IMPORTANTE: Verifica weekdays tanto en Promotion como en PromotionItem para
+     * asegurar consistencia con la validación posterior en validateAppliedPromotions().
      */
     protected function findActivePromotionForVariant($variant, Carbon $datetime): ?Promotion
     {
@@ -195,17 +198,45 @@ class PromotionApplicationService
         $currentDate = $datetime->toDateString();
         $currentTime = $datetime->format('H:i:s');
 
+        $categoryId = $variant->product->category_id;
+
         return Promotion::where('is_active', true)
-            ->where(function ($q) use ($variant) {
-                $q->whereHas('items', fn ($q2) => $q2->where('variant_id', $variant->id))
-                    ->orWhereHas('items', fn ($q2) => $q2->where('product_id', $variant->product_id))
-                    ->orWhereHas('items', function ($q2) use ($variant) {
-                        $categoryId = $variant->product->category_id;
-                        if ($categoryId) {
-                            $q2->where('category_id', $categoryId);
-                        }
+            ->whereHas('items', function ($q) use ($variant, $categoryId, $dayOfWeekIso, $currentDate, $currentTime) {
+                // Debe coincidir con variante, producto o categoría
+                $q->where(function ($q2) use ($variant, $categoryId) {
+                    $q2->where('variant_id', $variant->id)
+                        ->orWhere('product_id', $variant->product_id)
+                        ->orWhere(function ($q3) use ($categoryId) {
+                            if ($categoryId) {
+                                $q3->where('category_id', $categoryId);
+                            }
+                        });
+                })
+                // Verificar weekdays del item (debe coincidir con día actual si está definido)
+                    ->where(function ($q2) use ($dayOfWeekIso) {
+                        $q2->whereNull('weekdays')
+                            ->orWhereJsonContains('weekdays', $dayOfWeekIso);
+                    })
+                // Verificar fechas del item
+                    ->where(function ($q2) use ($currentDate) {
+                        $q2->whereNull('valid_from')
+                            ->orWhereDate('valid_from', '<=', $currentDate);
+                    })
+                    ->where(function ($q2) use ($currentDate) {
+                        $q2->whereNull('valid_until')
+                            ->orWhereDate('valid_until', '>=', $currentDate);
+                    })
+                // Verificar horarios del item
+                    ->where(function ($q2) use ($currentTime) {
+                        $q2->whereNull('time_from')
+                            ->orWhereTime('time_from', '<=', $currentTime);
+                    })
+                    ->where(function ($q2) use ($currentTime) {
+                        $q2->whereNull('time_until')
+                            ->orWhereTime('time_until', '>=', $currentTime);
                     });
             })
+            // También verificar weekdays a nivel de Promotion (si existe)
             ->where(function ($q) use ($dayOfWeekIso) {
                 $q->whereNull('weekdays')
                     ->orWhereJsonContains('weekdays', $dayOfWeekIso);
@@ -235,6 +266,9 @@ class PromotionApplicationService
      *
      * Filtra por vigencia: weekdays (ISO-8601: 1=Lunes, 7=Domingo), fechas y horarios.
      * El backend maneja toda la lógica de vigencia para simplificar el trabajo de Flutter.
+     *
+     * IMPORTANTE: Verifica weekdays tanto en Promotion como en PromotionItem para
+     * asegurar consistencia con la validación posterior en validateAppliedPromotions().
      */
     protected function findActivePromotionForProduct($product, int $categoryId, Carbon $datetime): ?Promotion
     {
@@ -243,12 +277,36 @@ class PromotionApplicationService
         $currentTime = $datetime->format('H:i:s');
 
         return Promotion::where('is_active', true)
-            ->whereHas('items', function ($q) use ($product, $categoryId) {
+            ->whereHas('items', function ($q) use ($product, $categoryId, $dayOfWeekIso, $currentDate, $currentTime) {
                 $q->where(function ($q2) use ($product, $categoryId) {
                     $q2->where('product_id', $product->id)
                         ->orWhere('category_id', $categoryId);
-                });
+                })
+                // Verificar weekdays del item (debe coincidir con día actual si está definido)
+                    ->where(function ($q2) use ($dayOfWeekIso) {
+                        $q2->whereNull('weekdays')
+                            ->orWhereJsonContains('weekdays', $dayOfWeekIso);
+                    })
+                // Verificar fechas del item
+                    ->where(function ($q2) use ($currentDate) {
+                        $q2->whereNull('valid_from')
+                            ->orWhereDate('valid_from', '<=', $currentDate);
+                    })
+                    ->where(function ($q2) use ($currentDate) {
+                        $q2->whereNull('valid_until')
+                            ->orWhereDate('valid_until', '>=', $currentDate);
+                    })
+                // Verificar horarios del item
+                    ->where(function ($q2) use ($currentTime) {
+                        $q2->whereNull('time_from')
+                            ->orWhereTime('time_from', '<=', $currentTime);
+                    })
+                    ->where(function ($q2) use ($currentTime) {
+                        $q2->whereNull('time_until')
+                            ->orWhereTime('time_until', '>=', $currentTime);
+                    });
             })
+            // También verificar weekdays a nivel de Promotion (si existe)
             ->where(function ($q) use ($dayOfWeekIso) {
                 $q->whereNull('weekdays')
                     ->orWhereJsonContains('weekdays', $dayOfWeekIso);

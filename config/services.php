@@ -55,6 +55,36 @@ return [
 
     'firebase' => [
         'credentials' => env('FIREBASE_CREDENTIALS', storage_path('app/firebase/credentials.json')),
+        'project_id' => env('FIREBASE_PROJECT_ID', 'flutter-subwayapp'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Apple Wallet (Passbook)
+    |--------------------------------------------------------------------------
+    */
+
+    'apple_wallet' => [
+        'certificate_path' => env('APPLE_WALLET_CERTIFICATE_PATH', storage_path('app/wallet/apple/certificates/pass.pem')),
+        'certificate_password' => env('APPLE_WALLET_CERTIFICATE_PASSWORD', ''),
+        'wwdr_certificate_path' => env('APPLE_WALLET_WWDR_CERTIFICATE_PATH', storage_path('app/wallet/apple/certificates/wwdr.pem')),
+        'pass_type_identifier' => env('APPLE_WALLET_PASS_TYPE_ID', 'pass.com.subwayguatemala.loyalty'),
+        'team_identifier' => env('APPLE_WALLET_TEAM_ID'),
+        'organization_name' => env('APPLE_WALLET_ORG_NAME', 'Subway Guatemala'),
+        'images_path' => env('APPLE_WALLET_IMAGES_PATH', storage_path('app/wallet/apple/images')),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Google Wallet
+    |--------------------------------------------------------------------------
+    */
+
+    'google_wallet' => [
+        'service_account_path' => env('GOOGLE_WALLET_SERVICE_ACCOUNT_PATH', storage_path('app/wallet/google/service-account.json')),
+        'issuer_id' => env('GOOGLE_WALLET_ISSUER_ID'),
+        'class_id' => env('GOOGLE_WALLET_CLASS_ID', 'subway_guatemala_loyalty'),
+        'program_name' => env('GOOGLE_WALLET_PROGRAM_NAME', 'Subway Guatemala Rewards'),
     ],
 
 ];

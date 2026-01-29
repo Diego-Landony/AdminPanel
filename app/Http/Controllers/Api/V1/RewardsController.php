@@ -43,7 +43,10 @@ class RewardsController extends Controller
      *                     @OA\Property(property="id", type="integer", example=1),
      *                     @OA\Property(property="type", type="string", enum={"product","combo"}, example="product"),
      *                     @OA\Property(property="name", type="string", example="Subway Pollo Teriyaki"),
+     *                     @OA\Property(property="description", type="string", nullable=true, example="Delicioso sub de pollo teriyaki"),
      *                     @OA\Property(property="image_url", type="string", nullable=true, example="/storage/products/pollo-teriyaki.jpg"),
+     *                     @OA\Property(property="category_id", type="integer", nullable=true, example=1, description="ID de la categoría"),
+     *                     @OA\Property(property="category_name", type="string", nullable=true, example="Subs", description="Nombre de la categoría"),
      *                     @OA\Property(property="points_cost", type="integer", nullable=true, example=150, description="Costo en puntos (null si tiene variantes)"),
      *                     @OA\Property(property="variants", type="array", nullable=true, description="Variantes canjeables del producto",
      *
@@ -75,6 +78,7 @@ class RewardsController extends Controller
                     });
             })
             ->with([
+                'category',
                 'variants' => function ($q) {
                     $q->where('is_active', true)
                         ->where('is_redeemable', true)
@@ -89,6 +93,7 @@ class RewardsController extends Controller
             ->active()
             ->available()
             ->where('is_redeemable', true)
+            ->with('category')
             ->orderBy('sort_order')
             ->get();
 

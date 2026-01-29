@@ -35,6 +35,7 @@ interface BadgeTypeData {
     id: number;
     name: string;
     color: string;
+    is_active?: boolean;
 }
 
 interface ItemBadge {
@@ -133,13 +134,14 @@ function SortableMenuItem({
                         };
 
                         const ValidityIcon = badge.validity_type === 'date_range' ? Calendar : badge.validity_type === 'weekdays' ? CalendarDays : Clock;
+                        const isInactive = badge.badge_type.is_active === false;
 
                         return (
                             <span
                                 key={badge.badge_type_id}
-                                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-white"
+                                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${isInactive ? 'line-through opacity-50' : 'text-white'}`}
                                 style={{ backgroundColor: badge.badge_type.color }}
-                                title={getValidityTitle()}
+                                title={isInactive ? `${getValidityTitle()} (Badge inactivo)` : getValidityTitle()}
                             >
                                 {ValidityIcon && <ValidityIcon className="h-2.5 w-2.5" />}
                                 {badge.badge_type.name}

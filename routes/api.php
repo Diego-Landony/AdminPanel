@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\CustomerNitController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\FavoriteController;
 use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\WalletController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -57,9 +58,18 @@ Route::prefix('v1')->group(function () {
 
     // OAuth endpoints (separate rate limiting)
     Route::middleware(['throttle:oauth'])->prefix('auth/oauth')->group(function () {
-        // OAuth redirect flow (unified for web & mobile)
+        // Firebase native flow (Flutter - no browser needed)
+        // Receives Firebase ID token from native Google Sign-In
+        Route::post('/google/firebase', [OAuthController::class, 'googleFirebase'])
+            ->name('api.v1.auth.oauth.google.firebase');
+
+        // Firebase native flow for Apple Sign-In (Flutter - no browser needed)
+        // Receives Firebase ID token from native Apple Sign-In
+        Route::post('/apple/firebase', [OAuthController::class, 'appleFirebase'])
+            ->name('api.v1.auth.oauth.apple.firebase');
+
+        // Legacy: Browser-based OAuth redirect flow (web & mobile fallback)
         // Uses OAuth 2.0 state parameter instead of session for stateless operation
-        // Only uses browser-based OAuth, no Google SDK required
         Route::middleware(['web'])->group(function () {
             // Unified OAuth redirect - works for web and mobile (React Native WebBrowser)
             // Use ?action=login|register&platform=web|mobile&device_id=uuid
@@ -240,7 +250,24 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/me/recent-orders', [App\Http\Controllers\Api\V1\OrderController::class, 'recentOrders'])
             ->name('api.v1.me.recent-orders');
+
+        // Wallet passes (Apple Wallet & Google Wallet)
+        Route::prefix('wallet')->name('api.v1.wallet.')->middleware('throttle:wallet')->group(function () {
+            Route::post('/apple/pass', [WalletController::class, 'applePass'])
+                ->name('apple.pass');
+            Route::post('/google/pass', [WalletController::class, 'googlePass'])
+                ->name('google.pass');
+        });
     });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Wallet Download (Signed URL - No Bearer Token Required)
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/wallet/apple/download/{customer}', [WalletController::class, 'applePassDownload'])
+        ->middleware(['signed', 'throttle:60,1'])
+        ->name('api.v1.wallet.apple.download');
 
     /*
     |--------------------------------------------------------------------------

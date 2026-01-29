@@ -929,6 +929,156 @@
                 }
             }
         },
+        "/api/v1/auth/oauth/google/firebase": {
+            "post": {
+                "tags": [
+                    "OAuth"
+                ],
+                "summary": "Google Sign-In via Firebase (Mobile native)",
+                "description": "Verifies a Firebase ID token from native Google Sign-In and authenticates/registers the customer. No browser redirect needed.",
+                "operationId": "adf8c857078313b8cb04fa81c69472bc",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "firebase_token",
+                                    "action",
+                                    "device_identifier"
+                                ],
+                                "properties": {
+                                    "firebase_token": {
+                                        "description": "Firebase ID token from FirebaseAuth.signInWithCredential()",
+                                        "type": "string"
+                                    },
+                                    "action": {
+                                        "description": "Action type",
+                                        "type": "string",
+                                        "enum": [
+                                            "login",
+                                            "register"
+                                        ]
+                                    },
+                                    "device_identifier": {
+                                        "description": "Unique device identifier",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Authentication successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string"
+                                        },
+                                        "customer_id": {
+                                            "type": "integer"
+                                        },
+                                        "is_new_customer": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error or invalid token"
+                    },
+                    "409": {
+                        "description": "Account already exists (register) or account deleted"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/oauth/apple/firebase": {
+            "post": {
+                "tags": [
+                    "OAuth"
+                ],
+                "summary": "Apple Sign-In via Firebase (Mobile native)",
+                "description": "Verifies a Firebase ID token from native Apple Sign-In and authenticates/registers the customer. No browser redirect needed.",
+                "operationId": "6ff44689f44819dc145c776ec4cb02b8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "firebase_token",
+                                    "action",
+                                    "device_identifier"
+                                ],
+                                "properties": {
+                                    "firebase_token": {
+                                        "description": "Firebase ID token from FirebaseAuth.signInWithCredential()",
+                                        "type": "string"
+                                    },
+                                    "action": {
+                                        "description": "Action type",
+                                        "type": "string",
+                                        "enum": [
+                                            "login",
+                                            "register"
+                                        ]
+                                    },
+                                    "device_identifier": {
+                                        "description": "Unique device identifier",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Authentication successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string"
+                                        },
+                                        "customer_id": {
+                                            "type": "integer"
+                                        },
+                                        "is_new_customer": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error or invalid token"
+                    },
+                    "409": {
+                        "description": "Account already exists (register) or account deleted"
+                    }
+                }
+            }
+        },
         "/api/v1/auth/oauth/google/redirect": {
             "get": {
                 "tags": [
@@ -7954,6 +8104,141 @@
                     }
                 }
             }
+        },
+        "/api/v1/wallet/apple/pass": {
+            "post": {
+                "tags": [
+                    "Wallet"
+                ],
+                "summary": "Generar pase Apple Wallet",
+                "description": "Genera una URL temporal firmada para descargar el archivo .pkpass de la tarjeta de lealtad.\n     *\n     * **Flujo:**\n     * 1. El endpoint genera una URL firmada temporal (15 min)\n     * 2. Flutter abre la URL con url_launcher\n     * 3. iOS detecta el .pkpass y muestra el preview\n     * 4. El usuario confirma y agrega a Apple Wallet\n     *\n     * **Nota:** No se envía body. El customer_id se extrae del token JWT de autenticación.",
+                "operationId": "345595743bc60c0c377452762b815722",
+                "responses": {
+                    "200": {
+                        "description": "URL de descarga generada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string",
+                                                    "example": "https://appmobile.subwaycardgt.com/api/v1/wallet/apple/download/1?signature=..."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "422": {
+                        "description": "El cliente no tiene una tarjeta Subway asignada"
+                    },
+                    "429": {
+                        "description": "Demasiadas peticiones (límite: 1 cada 5 minutos)"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/wallet/apple/download/{customer}": {
+            "get": {
+                "tags": [
+                    "Wallet"
+                ],
+                "summary": "Descargar archivo .pkpass",
+                "description": "Descarga el archivo .pkpass para Apple Wallet. Requiere una URL firmada válida (generada por POST /wallet/apple/pass).\n     *\n     * **Importante:** Este endpoint NO usa Bearer token. La seguridad la provee la firma de la URL.",
+                "operationId": "880dc0f45b3e1d66c1519bc5adebd976",
+                "parameters": [
+                    {
+                        "name": "customer",
+                        "in": "path",
+                        "description": "ID del cliente",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Archivo .pkpass generado exitosamente",
+                        "content": {
+                            "application/vnd.apple.pkpass": {}
+                        }
+                    },
+                    "403": {
+                        "description": "URL inválida o expirada"
+                    },
+                    "404": {
+                        "description": "Cliente no encontrado"
+                    },
+                    "500": {
+                        "description": "Error generando el pase"
+                    }
+                }
+            }
+        },
+        "/api/v1/wallet/google/pass": {
+            "post": {
+                "tags": [
+                    "Wallet"
+                ],
+                "summary": "Generar URL de Google Wallet",
+                "description": "Genera una URL de Google Pay para guardar la tarjeta de lealtad en Google Wallet.\n     *\n     * **Flujo:**\n     * 1. El endpoint crea/actualiza el LoyaltyObject en Google Wallet API\n     * 2. Genera un JWT firmado con la referencia al objeto\n     * 3. Retorna la URL `https://pay.google.com/gp/v/save/{JWT}`\n     * 4. Flutter abre la URL con url_launcher\n     * 5. Google Wallet muestra el preview y el usuario confirma\n     *\n     * **Nota:** No se envía body. El customer_id se extrae del token JWT de autenticación.",
+                "operationId": "31197fdec7d3594e04fa5457badcbed7",
+                "responses": {
+                    "200": {
+                        "description": "URL de Google Wallet generada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "save_url": {
+                                                    "type": "string",
+                                                    "example": "https://pay.google.com/gp/v/save/eyJhbGciOiJSUzI1NiIs..."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "422": {
+                        "description": "El cliente no tiene una tarjeta Subway asignada"
+                    },
+                    "429": {
+                        "description": "Demasiadas peticiones (límite: 1 cada 5 minutos)"
+                    },
+                    "500": {
+                        "description": "Error generando el pase"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -9447,6 +9732,10 @@
         {
             "name": "Support",
             "description": "Support"
+        },
+        {
+            "name": "Wallet",
+            "description": "Wallet"
         }
     ]
 }

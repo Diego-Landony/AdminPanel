@@ -37,8 +37,33 @@ Route::get('/', function () {
         return redirect()->route('home');
     }
 
-    return redirect()->route('login');
+    return view('landing');
 })->name('root');
+
+// ============================================================================
+// Páginas Públicas de Documentos Legales (sin autenticación)
+// URLs para Firebase/Google OAuth: términos y política de privacidad
+// ============================================================================
+Route::get('/legal/terms', function () {
+    return view('legal.show', [
+        'document' => \App\Models\LegalDocument::getPublishedTerms(),
+        'title' => 'Términos y Condiciones',
+        'type' => 'terms',
+    ]);
+})->name('legal.terms');
+
+Route::get('/legal/privacy', function () {
+    return view('legal.show', [
+        'document' => \App\Models\LegalDocument::getPublishedPrivacyPolicy(),
+        'title' => 'Política de Privacidad',
+        'type' => 'privacy',
+    ]);
+})->name('legal.privacy');
+
+// Landing Page pública de la app (para Firebase/Google OAuth y marketing)
+Route::get('/app', function () {
+    return view('landing');
+})->name('landing');
 
 // Rutas para el manejo del tema
 Route::post('/theme/update', [ThemeController::class, 'update'])->name('theme.update');

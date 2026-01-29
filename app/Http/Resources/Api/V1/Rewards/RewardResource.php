@@ -24,6 +24,8 @@ class RewardResource extends JsonResource
             'name' => $item->name,
             'description' => $item->description,
             'image_url' => $item->getImageUrl(),
+            'category_id' => $item->category_id,
+            'category_name' => $item->relationLoaded('category') ? $item->category?->name : null,
             'points_cost' => $item->points_cost,
         ];
 

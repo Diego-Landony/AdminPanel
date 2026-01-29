@@ -14,6 +14,17 @@ trait HasBadges
 
     public function activeBadges(): MorphMany
     {
+        return $this->badges()
+            ->validNow()
+            ->whereHas('badgeType', fn ($q) => $q->where('is_active', true))
+            ->with('badgeType');
+    }
+
+    /**
+     * Badges válidos incluyendo los de tipos inactivos (para el admin panel).
+     */
+    public function allValidBadges(): MorphMany
+    {
         return $this->badges()->validNow()->with('badgeType');
     }
 

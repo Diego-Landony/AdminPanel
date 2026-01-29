@@ -34,6 +34,10 @@ yarn-error.log
 # Google OAuth credentials
 /crendenciales google/
 
+# Wallet certificates and credentials
+/storage/app/wallet/apple/certificates/*.pem
+/storage/app/wallet/google/service-account.json
+
 # Claude Code
 CLAUDE.md
 .mcp.json

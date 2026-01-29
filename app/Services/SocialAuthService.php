@@ -6,10 +6,45 @@ use App\Exceptions\AccountDeletedException;
 use App\Models\Customer;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Validation\ValidationException;
+use Kreait\Firebase\Contract\Auth as FirebaseAuth;
 use Laravel\Socialite\Facades\Socialite;
 
 class SocialAuthService
 {
+    public function __construct(protected FirebaseAuth $firebaseAuth) {}
+
+    /**
+     * Verify Firebase ID token from Flutter (native Google Sign-In via Firebase Auth)
+     *
+     * @throws ValidationException
+     */
+    public function verifyFirebaseToken(string $idToken): object
+    {
+        try {
+            $verifiedToken = $this->firebaseAuth->verifyIdToken($idToken);
+            $claims = $verifiedToken->claims();
+
+            $uid = $claims->get('sub');
+            $email = $claims->get('email');
+            $name = $claims->get('name', '');
+            $picture = $claims->get('picture', '');
+
+            if (! $email) {
+                throw new \Exception('Firebase token does not contain an email');
+            }
+
+            return (object) [
+                'provider_id' => $uid,
+                'email' => $email,
+                'name' => $name,
+            ];
+        } catch (\Exception $e) {
+            throw ValidationException::withMessages([
+                'firebase_token' => [__('auth.oauth_invalid_token')],
+            ]);
+        }
+    }
+
     /**
      * Verify Google OAuth token and return user data
      *
@@ -26,7 +61,6 @@ class SocialAuthService
                 'provider_id' => $socialiteUser->getId(),
                 'email' => $socialiteUser->getEmail(),
                 'name' => $socialiteUser->getName(),
-                'avatar' => $socialiteUser->getAvatar(),
             ];
         } catch (\Exception $e) {
             throw ValidationException::withMessages([
@@ -64,9 +98,9 @@ class SocialAuthService
 
                 $deletedCustomer->update([
                     $providerIdField => $providerData->provider_id,
-                    'avatar' => $providerData->avatar ?? $deletedCustomer->avatar,
                     'last_login_at' => now(),
                     'last_activity_at' => now(),
+                    'email_verified_at' => $deletedCustomer->email_verified_at ?? now(),
                 ]);
 
                 return [
@@ -89,7 +123,7 @@ class SocialAuthService
             $customer->update([
                 'last_login_at' => now(),
                 'last_activity_at' => now(),
-                'avatar' => $providerData->avatar ?? $customer->avatar,
+                'email_verified_at' => $customer->email_verified_at ?? now(),
             ]);
 
             return [
@@ -125,9 +159,9 @@ class SocialAuthService
             // Esto permite que siga usando su contraseña
             $updateData = [
                 $providerIdField => $providerData->provider_id,
-                'avatar' => $providerData->avatar ?? $existingCustomer->avatar,
                 'last_login_at' => now(),
                 'last_activity_at' => now(),
+                'email_verified_at' => $existingCustomer->email_verified_at ?? now(),
             ];
 
             // Solo cambiar oauth_provider si NO es 'local'
@@ -207,7 +241,6 @@ class SocialAuthService
             'last_name' => $nameParts['last_name'],
             'email' => $providerData->email,
             $providerIdField => $providerData->provider_id,
-            'avatar' => $providerData->avatar,
             'oauth_provider' => $provider,
             'email_verified_at' => now(),
             'password' => null, // OAuth users don't have password until they create one

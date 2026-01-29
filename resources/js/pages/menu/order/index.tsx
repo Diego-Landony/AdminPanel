@@ -17,6 +17,7 @@ interface BadgeTypeData {
     id: number;
     name: string;
     color: string;
+    is_active?: boolean;
 }
 
 interface ItemBadge {

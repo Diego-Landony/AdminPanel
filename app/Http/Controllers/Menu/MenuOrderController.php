@@ -22,7 +22,7 @@ class MenuOrderController extends Controller
             $items = $category->is_combo_category
                 ? Combo::where('category_id', $category->id)
                     ->orderBy('sort_order')
-                    ->with(['activeBadges.badgeType'])
+                    ->with(['allValidBadges.badgeType'])
                     ->get()
                     ->map(fn ($combo) => [
                         'id' => $combo->id,
@@ -30,7 +30,7 @@ class MenuOrderController extends Controller
                         'image' => $combo->image,
                         'is_active' => $combo->is_active,
                         'sort_order' => $combo->sort_order,
-                        'badges' => $combo->activeBadges->map(fn ($b) => [
+                        'badges' => $combo->allValidBadges->map(fn ($b) => [
                             'id' => $b->id,
                             'badge_type_id' => $b->badge_type_id,
                             'validity_type' => $b->validity_type,
@@ -42,12 +42,13 @@ class MenuOrderController extends Controller
                                 'name' => $b->badgeType->name,
                                 'color' => $b->badgeType->color,
                                 'text_color' => $b->badgeType->text_color,
+                                'is_active' => $b->badgeType->is_active,
                             ],
                         ]),
                     ])
                 : Product::where('category_id', $category->id)
                     ->orderBy('sort_order')
-                    ->with(['activeBadges.badgeType'])
+                    ->with(['allValidBadges.badgeType'])
                     ->get()
                     ->map(fn ($product) => [
                         'id' => $product->id,
@@ -55,7 +56,7 @@ class MenuOrderController extends Controller
                         'image' => $product->image,
                         'is_active' => $product->is_active,
                         'sort_order' => $product->sort_order,
-                        'badges' => $product->activeBadges->map(fn ($b) => [
+                        'badges' => $product->allValidBadges->map(fn ($b) => [
                             'id' => $b->id,
                             'badge_type_id' => $b->badge_type_id,
                             'validity_type' => $b->validity_type,
@@ -67,6 +68,7 @@ class MenuOrderController extends Controller
                                 'name' => $b->badgeType->name,
                                 'color' => $b->badgeType->color,
                                 'text_color' => $b->badgeType->text_color,
+                                'is_active' => $b->badgeType->is_active,
                             ],
                         ]),
                     ]);

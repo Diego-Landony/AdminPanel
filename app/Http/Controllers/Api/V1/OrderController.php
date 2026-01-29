@@ -209,6 +209,14 @@ class OrderController extends Controller
                 ],
             ], 422);
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Order creation failed', [
+                'customer_id' => $customer->id,
+                'cart_id' => $cart->id,
+                'error' => $e->getMessage(),
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return response()->json([
                 'message' => $e->getMessage(),
             ], 422);

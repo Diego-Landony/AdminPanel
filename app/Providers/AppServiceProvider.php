@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Kreait\Firebase\Contract\Auth as FirebaseAuth;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging;
 use Laravel\Pulse\Facades\Pulse;
@@ -42,6 +43,20 @@ class AppServiceProvider extends ServiceProvider
             return (new Factory)
                 ->withServiceAccount($credentialsPath)
                 ->createMessaging();
+        });
+
+        $this->app->singleton(FirebaseAuth::class, function ($app) {
+            $credentialsPath = config('services.firebase.credentials');
+
+            if (! $credentialsPath || ! file_exists($credentialsPath)) {
+                throw new \RuntimeException(
+                    'Firebase credentials file not found. Please check FIREBASE_CREDENTIALS in your .env file.'
+                );
+            }
+
+            return (new Factory)
+                ->withServiceAccount($credentialsPath)
+                ->createAuth();
         });
     }
 
@@ -160,6 +175,11 @@ class AppServiceProvider extends ServiceProvider
         // Rate limiter para OAuth (10 intentos por minuto)
         RateLimiter::for('oauth', function (Request $request) {
             return Limit::perMinute(10)->by($request->ip());
+        });
+
+        // Rate limiter para wallet pass generation (10 requests por minuto por cliente)
+        RateLimiter::for('wallet', function (Request $request) {
+            return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
         });
     }
 

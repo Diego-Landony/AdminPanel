@@ -417,6 +417,7 @@ describe('store (POST /api/v1/orders)', function () {
             'pickup_active' => true,
             'is_active' => true,
             'schedule' => $alwaysOpenSchedule,
+            'estimated_pickup_time' => 30, // Required for validation test
         ]);
         $category = Category::factory()->create(['is_active' => true]);
         $product = Product::factory()->create([
@@ -457,6 +458,7 @@ describe('store (POST /api/v1/orders)', function () {
         $customer = Customer::factory()->create();
         $restaurant = Restaurant::factory()->create([
             'minimum_order_amount' => 0,
+            'estimated_pickup_time' => 30, // Required for validation test
             'pickup_active' => true,
             'is_active' => true,
             'schedule' => $alwaysOpenSchedule,

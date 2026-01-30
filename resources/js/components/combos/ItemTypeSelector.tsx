@@ -1,6 +1,8 @@
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ListChecks, Package } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { COMBO_LABELS } from '@/constants/ui-constants';
+import { HelpCircle, ListChecks, Package } from 'lucide-react';
 
 interface ItemTypeSelectorProps {
     value: 'fixed' | 'choice';
@@ -25,15 +27,35 @@ export function ItemTypeSelector({ value, onChange, disabled = false, id }: Item
                     <RadioGroupItem value="fixed" id={fixedId} />
                     <Label htmlFor={fixedId} className="flex cursor-pointer items-center gap-2 font-normal">
                         <Package className="h-4 w-4" />
-                        Producto fijo
+                        {COMBO_LABELS.itemTypes.fixed}
                     </Label>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <button type="button" className="text-muted-foreground transition-colors hover:text-foreground">
+                                <HelpCircle className="h-4 w-4" />
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{COMBO_LABELS.itemTypesDescription.fixed}</p>
+                        </TooltipContent>
+                    </Tooltip>
                 </div>
                 <div className="flex items-center space-x-2">
                     <RadioGroupItem value="choice" id={choiceId} />
                     <Label htmlFor={choiceId} className="flex cursor-pointer items-center gap-2 font-normal">
                         <ListChecks className="h-4 w-4" />
-                        Grupo de elección
+                        {COMBO_LABELS.itemTypes.choiceGroup}
                     </Label>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <button type="button" className="text-muted-foreground transition-colors hover:text-foreground">
+                                <HelpCircle className="h-4 w-4" />
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{COMBO_LABELS.itemTypesDescription.choiceGroup}</p>
+                        </TooltipContent>
+                    </Tooltip>
                 </div>
             </RadioGroup>
         </div>

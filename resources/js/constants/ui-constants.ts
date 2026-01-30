@@ -245,12 +245,16 @@ export const COMBO_ITEM_TYPES = {
 // Labels y textos para Combos
 export const COMBO_LABELS = {
     itemTypes: {
-        fixed: 'Item Fijo',
-        choiceGroup: 'Grupo de Elección',
+        fixed: 'Producto fijo',
+        choiceGroup: 'Grupo de elección',
     },
     itemTypesDescription: {
-        fixed: 'Producto específico incluido en el combo',
-        choiceGroup: 'Grupo de productos donde el cliente elige uno',
+        fixed: 'El cliente recibe exactamente este producto',
+        choiceGroup: 'El cliente elige 1 de varias opciones',
+    },
+    itemTypesPlaceholder: {
+        fixed: 'Selecciona un producto',
+        choiceGroup: 'Configura las opciones',
     },
     addFixedItem: 'Agregar Item Fijo',
     addChoiceGroup: 'Agregar Grupo de Elección',
@@ -261,4 +265,5 @@ export const COMBO_LABELS = {
     choiceGroupOptionsRequired: 'Debes agregar al menos 2 opciones',
     variantConsistencyError: 'Todas las opciones deben ser de la misma variante',
     choiceGroupExample: 'Ej: Elige tu bebida',
+    quantityBadge: 'Cantidad',
 } as const;

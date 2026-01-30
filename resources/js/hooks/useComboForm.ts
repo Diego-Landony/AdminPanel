@@ -76,7 +76,7 @@ export interface UseComboFormReturn {
     // Handlers
     handleInputChange: (field: keyof ComboFormData, value: string | boolean) => void;
     handleImageChange: (file: File | null, previewUrl: string | null) => void;
-    addItem: () => void;
+    addItem: (isChoiceGroup?: boolean) => void;
     removeItem: (index: number) => void;
     updateItem: (index: number, field: string, value: unknown) => void;
     batchUpdateItem: (index: number, updates: Partial<LocalComboItem>) => void;
@@ -286,10 +286,10 @@ export function useComboForm({
         [errors]
     );
 
-    const addItem = useCallback(() => {
+    const addItem = useCallback((isChoiceGroup: boolean = false) => {
         const newItem: LocalComboItem = {
             id: generateUniqueItemId(),
-            is_choice_group: false,
+            is_choice_group: isChoiceGroup,
             choice_label: '',
             product_id: null,
             variant_id: null,

@@ -250,12 +250,17 @@ class OrderService
                     $promotionSnapshot = [
                         'id' => $appliedPromo['id'],
                         'name' => $appliedPromo['name'],
+                        'name_display' => $appliedPromo['name_display'] ?? $appliedPromo['name'],
                         'type' => $appliedPromo['type'],
                         'value' => $appliedPromo['value'],
                         'discount_amount' => $itemDiscount['discount_amount'],
                         'original_price' => $itemDiscount['original_price'],
                         'final_price' => $itemDiscount['final_price'],
                         'is_daily_special' => $itemDiscount['is_daily_special'] ?? false,
+                        // Campos para discount_display en historial
+                        'per_unit_amount' => $appliedPromo['per_unit_amount'] ?? null,
+                        'percentage_value' => $appliedPromo['percentage_value'] ?? null,
+                        'show_amount' => $appliedPromo['show_amount'] ?? true,
                     ];
                 }
 

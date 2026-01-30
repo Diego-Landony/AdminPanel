@@ -490,6 +490,9 @@ class PromotionApplicationService
                 'name_display' => "Sub del Dia -{$discountPercent}%",
                 'type' => 'daily_special',
                 'value' => 'Q'.number_format($specialPricePerUnit, 2),
+                'per_unit_amount' => -round($discountPerUnit, 2),
+                'percentage_value' => $discountPercent,
+                'show_amount' => true,
             ];
 
             $itemDiscounts[$item->id]['_daily_special_data'] = [

@@ -4,7 +4,6 @@
  */
 
 import { FormSection } from '@/components/form-section';
-import { ImageCropperUpload } from '@/components/ImageCropperUpload';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
@@ -20,8 +19,6 @@ import type { CategoryFormData, FormErrors } from '@/types/menu';
 export interface CategoryFormFieldsProps {
     formData: CategoryFormData;
     onInputChange: (field: keyof CategoryFormData, value: string | boolean | string[]) => void;
-    imagePreview: string | null;
-    onImageChange: (file: File | null, preview: string | null) => void;
     errors: FormErrors;
     variantsChanged?: boolean;
     mode: 'create' | 'edit';
@@ -30,8 +27,6 @@ export interface CategoryFormFieldsProps {
 export function CategoryFormFields({
     formData,
     onInputChange,
-    imagePreview,
-    onImageChange,
     errors,
     variantsChanged = false,
     mode,
@@ -87,15 +82,6 @@ export function CategoryFormFields({
                                     placeholder="Descripción opcional de la categoría"
                                 />
                             </FormField>
-
-                            <ImageCropperUpload
-                                label="Imagen"
-                                currentImage={imagePreview}
-                                onImageChange={(file) => onImageChange(file, null)}
-                                error={errors.image}
-                                aspectRatio={5 / 3}
-                                aspectLabel="5:3"
-                            />
                         </div>
                     </FormSection>
                 </CardContent>

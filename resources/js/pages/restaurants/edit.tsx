@@ -458,7 +458,6 @@ export default function RestaurantEdit({ restaurant, restaurant_users = [], driv
         }
 
         router[method](url, submitData, {
-            preserveState: true,
             preserveScroll: true,
             onSuccess: () => {
                 closeUserModal();
@@ -489,7 +488,6 @@ export default function RestaurantEdit({ restaurant, restaurant_users = [], driv
 
         setIsDeletingUser(true);
         router.delete(route('restaurants.users.destroy', { restaurant: restaurant.id, restaurantUser: userToDelete.id }), {
-            preserveState: true,
             preserveScroll: true,
             onSuccess: () => {
                 closeDeleteUserDialog();

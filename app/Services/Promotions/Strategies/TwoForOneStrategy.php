@@ -84,6 +84,9 @@ class TwoForOneStrategy extends AbstractPromotionStrategy
                         'name_display' => "{$promotion->name} 2x1 + Sub del Dia",
                         'type' => 'two_for_one',
                         'value' => '2x1 + Sub del Dia',
+                        'per_unit_amount' => null,
+                        'percentage_value' => null,
+                        'show_amount' => false,
                     ];
                 } else {
                     $itemDiscounts[$item->id]['applied_promotion'] = [
@@ -92,6 +95,9 @@ class TwoForOneStrategy extends AbstractPromotionStrategy
                         'name_display' => "{$promotion->name} 2x1",
                         'type' => $promotion->type,
                         'value' => '2x1',
+                        'per_unit_amount' => null,
+                        'percentage_value' => null,
+                        'show_amount' => false,
                     ];
                 }
             } else {
@@ -106,6 +112,7 @@ class TwoForOneStrategy extends AbstractPromotionStrategy
                         if ($promotionItem && $promotionItem->discount_percentage) {
                             // Aplicar descuento % al item sobrante
                             $discount = $basePrice * ($promotionItem->discount_percentage / 100);
+                            $discountPerUnit = $discount / $item->quantity;
                             $itemDiscounts[$item->id]['discount_amount'] = round($discount, 2);
                             $itemDiscounts[$item->id]['original_price'] = round($basePrice + $extrasTotal, 2);
                             $itemDiscounts[$item->id]['final_price'] = round(($basePrice - $discount) + $extrasTotal, 2);
@@ -115,6 +122,9 @@ class TwoForOneStrategy extends AbstractPromotionStrategy
                                 'name_display' => "{$percentagePromo['promotion']->name} -{$promotionItem->discount_percentage}%",
                                 'type' => 'percentage_discount',
                                 'value' => $promotionItem->discount_percentage.'%',
+                                'per_unit_amount' => -round($discountPerUnit, 2),
+                                'percentage_value' => (int) $promotionItem->discount_percentage,
+                                'show_amount' => true,
                             ];
                         } else {
                             // Sin promocion

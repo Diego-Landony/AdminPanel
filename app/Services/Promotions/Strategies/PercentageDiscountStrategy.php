@@ -30,6 +30,7 @@ class PercentageDiscountStrategy extends AbstractPromotionStrategy
 
                 // Descuento solo sobre precio base
                 $discount = $basePrice * ($promotionItem->discount_percentage / 100);
+                $discountPerUnit = $discount / $item->quantity;
 
                 $itemDiscounts[$item->id]['discount_amount'] = round($discount, 2);
                 $itemDiscounts[$item->id]['original_price'] = round($basePrice + $extrasTotal, 2);
@@ -40,6 +41,9 @@ class PercentageDiscountStrategy extends AbstractPromotionStrategy
                     'name_display' => "{$promotion->name} -{$promotionItem->discount_percentage}%",
                     'type' => $promotion->type,
                     'value' => $promotionItem->discount_percentage.'%',
+                    'per_unit_amount' => -round($discountPerUnit, 2),
+                    'percentage_value' => (int) $promotionItem->discount_percentage,
+                    'show_amount' => true,
                 ];
             }
         }

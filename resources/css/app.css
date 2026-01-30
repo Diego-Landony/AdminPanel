@@ -68,6 +68,7 @@
 
     body {
         @apply bg-background text-foreground;
+        font-size: 17px;
     }
 
     /* Fix para iconos nativos de date/time inputs en modo oscuro */

@@ -6,7 +6,6 @@ import React, { useState } from 'react';
 import { EditPageLayout } from '@/components/edit-page-layout';
 import { FormSection } from '@/components/form-section';
 import { EditUsersSkeleton } from '@/components/skeletons';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -33,7 +32,6 @@ interface UserData {
     id: number;
     name: string;
     email: string;
-    email_verified_at: string | null;
     created_at: string;
     updated_at: string;
     last_activity_at: string | null;
@@ -381,20 +379,6 @@ export default function EditUser({ user, all_roles }: EditUserPageProps) {
                     <div>
                         <Label className="text-xs text-muted-foreground">ID</Label>
                         <p className="font-mono text-sm">#{user.id || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <Label className="text-xs text-muted-foreground">Email Verificado</Label>
-                        <p className="text-sm">
-                            {user.email_verified_at ? (
-                                <Badge variant="default" className="text-xs">
-                                    Verificado
-                                </Badge>
-                            ) : (
-                                <Badge variant="destructive" className="text-xs">
-                                    No verificado
-                                </Badge>
-                            )}
-                        </p>
                     </div>
                     <div>
                         <Label className="text-xs text-muted-foreground">Creado</Label>

@@ -76,13 +76,13 @@ Route::post('/password/reset', [App\Http\Controllers\CustomerPasswordResetContro
     ->name('customer.password.update');
 
 // Rutas de subida de imágenes (requieren autenticación)
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::post('/api/upload/image', [ImageUploadController::class, 'upload'])->name('upload.image');
     Route::post('/api/delete/image', [ImageUploadController::class, 'delete'])->name('delete.image');
 });
 
 // API interna para el panel admin (estadísticas en tiempo real)
-Route::middleware(['auth', 'verified'])->prefix('api/admin')->group(function () {
+Route::middleware(['auth'])->prefix('api/admin')->group(function () {
     Route::get('/support/stats', [SupportTicketController::class, 'stats'])->name('admin.support.stats');
 });
 
@@ -91,7 +91,7 @@ Route::middleware(['auth'])->post('/broadcasting/auth', function (\Illuminate\Ht
     return \Illuminate\Support\Facades\Broadcast::auth($request);
 })->name('admin.broadcasting.auth');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     // Home - página principal después del login
     Route::get('home', function () {
         return Inertia::render('home');

@@ -30,6 +30,7 @@ class DriverService
      * Actualizar un motorista existente.
      *
      * @param  array{
+     *     restaurant_id?: int,
      *     name?: string,
      *     email?: string,
      *     password?: string|null,

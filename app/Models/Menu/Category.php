@@ -8,7 +8,6 @@ use App\Traits\InvalidatesMenuVersion;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 
 class Category extends Model implements ActivityLoggable
 {
@@ -21,7 +20,6 @@ class Category extends Model implements ActivityLoggable
 
     protected $fillable = [
         'name',
-        'image',
         'description',
         'is_active',
         'is_combo_category',
@@ -76,29 +74,5 @@ class Category extends Model implements ActivityLoggable
     public function combos(): HasMany
     {
         return $this->hasMany(Combo::class);
-    }
-
-    /**
-     * Obtiene la URL completa de la imagen de la categoría
-     */
-    public function getImageUrl(): ?string
-    {
-        if (! $this->image) {
-            return null;
-        }
-
-        if (str_starts_with($this->image, 'http://') || str_starts_with($this->image, 'https://')) {
-            return $this->image;
-        }
-
-        if (str_starts_with($this->image, '/storage/')) {
-            return $this->image;
-        }
-
-        if (str_starts_with($this->image, 'storage/')) {
-            return '/'.$this->image;
-        }
-
-        return Storage::url($this->image);
     }
 }

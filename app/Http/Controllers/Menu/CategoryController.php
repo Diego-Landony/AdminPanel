@@ -9,8 +9,6 @@ use App\Models\Menu\Category;
 use App\Services\Menu\VariantSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -47,22 +45,6 @@ class CategoryController extends Controller
         $maxOrder = Category::max('sort_order') ?? 0;
         $validated['sort_order'] = $maxOrder + 1;
 
-        // Handle image upload
-        if ($request->hasFile('image') && $request->file('image')->isValid()) {
-            $image = $request->file('image');
-            $extension = $image->getClientOriginalExtension() ?: $image->guessExtension() ?: 'jpg';
-            $filename = Str::uuid().'.'.$extension;
-            $path = $image->storeAs('menu/categories', $filename, 'public');
-
-            if ($path) {
-                $validated['image'] = '/storage/'.$path;
-            } else {
-                unset($validated['image']);
-            }
-        } else {
-            unset($validated['image']);
-        }
-
         Category::create($validated);
 
         return redirect()->route('menu.categories.index')
@@ -83,9 +65,7 @@ class CategoryController extends Controller
     public function edit(Category $category): Response
     {
         return Inertia::render('menu/categories/edit', [
-            'category' => array_merge($category->toArray(), [
-                'image_url' => $category->getImageUrl(),
-            ]),
+            'category' => $category,
         ]);
     }
 
@@ -93,37 +73,6 @@ class CategoryController extends Controller
     {
         $oldDefinitions = $category->variant_definitions ?? [];
         $validated = $request->validated();
-        $removeImage = $validated['remove_image'] ?? false;
-        unset($validated['remove_image']);
-
-        // Handle image upload
-        if ($request->hasFile('image') && $request->file('image')->isValid()) {
-            // Delete old image if exists
-            if ($category->image && $category->image !== '/storage/') {
-                $oldPath = str_replace('/storage/', '', $category->image);
-                Storage::disk('public')->delete($oldPath);
-            }
-
-            $image = $request->file('image');
-            $extension = $image->getClientOriginalExtension() ?: $image->guessExtension() ?: 'jpg';
-            $filename = Str::uuid().'.'.$extension;
-            $path = $image->storeAs('menu/categories', $filename, 'public');
-
-            if ($path) {
-                $validated['image'] = '/storage/'.$path;
-            } else {
-                unset($validated['image']);
-            }
-        } elseif ($removeImage) {
-            // Remove image if requested
-            if ($category->image && $category->image !== '/storage/') {
-                $oldPath = str_replace('/storage/', '', $category->image);
-                Storage::disk('public')->delete($oldPath);
-            }
-            $validated['image'] = null;
-        } else {
-            unset($validated['image']);
-        }
 
         try {
             \DB::transaction(function () use ($category, $validated, $oldDefinitions, $variantSync) {

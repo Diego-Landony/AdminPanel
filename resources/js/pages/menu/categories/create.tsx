@@ -26,8 +26,6 @@ export default function CategoryCreate() {
             <CategoryFormFields
                 formData={form.formData}
                 onInputChange={form.handleInputChange}
-                imagePreview={form.imagePreview}
-                onImageChange={form.handleImageChange}
                 errors={form.errors}
                 mode="create"
             />

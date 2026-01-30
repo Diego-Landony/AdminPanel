@@ -46,14 +46,18 @@ class BundleSpecialStrategy extends AbstractPromotionStrategy
             $itemDiscounts[$item->id]['original_price'] = round($basePrice + $extrasTotal, 2);
             $itemDiscounts[$item->id]['final_price'] = round(($basePrice - $discount) + $extrasTotal, 2);
 
-            // Calcular porcentaje de ahorro para el bundle
+            // Calcular porcentaje de ahorro para el bundle y descuento por unidad
             $bundleSavingsPercent = round((($normalTotal - $bundlePrice) / $normalTotal) * 100);
+            $discountPerUnit = $discount / $item->quantity;
             $itemDiscounts[$item->id]['applied_promotion'] = [
                 'id' => $promotion->id,
                 'name' => $promotion->name,
                 'name_display' => "{$promotion->name} (Ahorra {$bundleSavingsPercent}%)",
                 'type' => $promotion->type,
                 'value' => 'Q'.number_format($bundlePrice, 2),
+                'per_unit_amount' => -round($discountPerUnit, 2),
+                'percentage_value' => null,
+                'show_amount' => true,
             ];
         }
 

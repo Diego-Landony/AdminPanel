@@ -31,8 +31,6 @@ export default function CategoryEdit({ category }: EditPageProps) {
             <CategoryFormFields
                 formData={form.formData}
                 onInputChange={form.handleInputChange}
-                imagePreview={form.imagePreview}
-                onImageChange={form.handleImageChange}
                 errors={form.errors}
                 variantsChanged={form.variantsChanged}
                 mode="edit"

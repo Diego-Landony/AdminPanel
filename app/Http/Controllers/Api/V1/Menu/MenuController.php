@@ -14,7 +14,6 @@ use App\Models\PromotionalBanner;
 use App\Services\MenuVersionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class MenuController extends Controller
 {
@@ -53,15 +52,6 @@ class MenuController extends Controller
      *
      * For promotions/offers, use GET /api/v1/menu/promotions.",
      *
-     *     @OA\Parameter(
-     *         name="lite",
-     *         in="query",
-     *         description="If true, returns lightweight menu structure for navigation",
-     *         required=false,
-     *
-     *         @OA\Schema(type="boolean", example=true)
-     *     ),
-     *
      *     @OA\Response(
      *         response=200,
      *         description="Menu retrieved successfully",
@@ -78,7 +68,6 @@ class MenuController extends Controller
      *                 @OA\Property(property="combos_category", type="object", description="Special category for combos section with sort_order to position it among other categories",
      *                     @OA\Property(property="id", type="integer", example=10),
      *                     @OA\Property(property="name", type="string", example="Combos"),
-     *                     @OA\Property(property="image_url", type="string", example="/storage/categories/combos.jpg", nullable=true),
      *                     @OA\Property(property="sort_order", type="integer", example=2, description="Position in menu - mix with categories sort_order")
      *                 ),
      *                 @OA\Property(property="combos", type="array", description="Permanent menu combos (not promotional). Order by sort_order within combos section.",
@@ -92,10 +81,6 @@ class MenuController extends Controller
      */
     public function index(Request $request, MenuVersionService $menuVersionService): JsonResponse
     {
-        // Si se pide versión lite, retornar solo estructura
-        if ($request->boolean('lite')) {
-            return $this->indexLite($request, $menuVersionService);
-        }
         // NOTE: Variants now show active_promotion which calls getActivePromotion().
         // This method needs access to product.category for promotion lookup.
         // For N+1 optimization, consider caching active promotions or using a
@@ -169,7 +154,7 @@ class MenuController extends Controller
         $combosCategory = Category::query()
             ->where('is_combo_category', true)
             ->active()
-            ->first(['id', 'name', 'image', 'sort_order']);
+            ->first(['id', 'name', 'sort_order']);
 
         $version = $menuVersionService->getVersion();
 
@@ -187,70 +172,9 @@ class MenuController extends Controller
                 'combos_category' => $combosCategory ? [
                     'id' => $combosCategory->id,
                     'name' => $combosCategory->name,
-                    'image_url' => $combosCategory->getImageUrl(),
                     'sort_order' => $combosCategory->sort_order,
                 ] : null,
                 'combos' => ComboResource::collection($combos),
-            ],
-        ])->header('X-Menu-Version', $version);
-    }
-
-    /**
-     * Get lightweight menu structure for initial navigation.
-     */
-    protected function indexLite(Request $request, MenuVersionService $menuVersionService): JsonResponse
-    {
-        $categories = Category::query()
-            ->active()
-            ->ordered()
-            ->where('is_combo_category', false)
-            ->withCount(['products' => fn ($q) => $q->active()])
-            ->get(['id', 'name', 'image', 'sort_order']);
-
-        $combosData = Combo::query()
-            ->active()
-            ->available()
-            ->selectRaw('COUNT(*) as count, MIN(precio_pickup_capital) as min_price, MAX(precio_pickup_capital) as max_price')
-            ->first();
-
-        // Get the combos category for Flutter to know where to position combos section
-        $combosCategory = Category::query()
-            ->where('is_combo_category', true)
-            ->active()
-            ->first(['id', 'name', 'image', 'sort_order']);
-
-        $version = $menuVersionService->getVersion();
-
-        // Determinar el disclaimer según si se ha seleccionado tipo de servicio
-        $hasServiceType = $request->has('service_type') && $request->filled('service_type');
-        $priceDisclaimer = $hasServiceType
-            ? null
-            : 'Precio sujeto a método de entrega.';
-
-        return response()->json([
-            'data' => [
-                'version' => $version,
-                'price_disclaimer' => $priceDisclaimer,
-                'categories' => $categories->map(fn ($cat) => [
-                    'id' => $cat->id,
-                    'name' => $cat->name,
-                    'image_url' => $cat->image ? Storage::url($cat->image) : null,
-                    'products_count' => $cat->products_count,
-                    'sort_order' => $cat->sort_order,
-                ]),
-                'combos_category' => $combosCategory ? [
-                    'id' => $combosCategory->id,
-                    'name' => $combosCategory->name,
-                    'image_url' => $combosCategory->getImageUrl(),
-                    'sort_order' => $combosCategory->sort_order,
-                ] : null,
-                'combos_summary' => [
-                    'count' => (int) $combosData->count,
-                    'price_range' => [
-                        'min' => (float) ($combosData->min_price ?? 0),
-                        'max' => (float) ($combosData->max_price ?? 0),
-                    ],
-                ],
             ],
         ])->header('X-Menu-Version', $version);
     }

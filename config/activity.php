@@ -148,6 +148,7 @@ return [
         'role_restored' => 'Rol restaurado',
         'role_force_deleted' => 'Rol eliminado permanentemente',
         'role_users_updated' => 'Usuarios de rol actualizados',
+        'roles_updated' => 'Roles actualizados',
 
         'customer_created' => 'Cliente creado',
         'customer_updated' => 'Cliente actualizado',
@@ -273,6 +274,7 @@ return [
         'force_deleted' => 'red',
         'reordered' => 'purple',
         'badges_updated' => 'purple',
+        'roles_updated' => 'purple',
         'login' => 'green',
         'logout' => 'blue',
     ],

@@ -27,7 +27,6 @@ interface User {
     id: number;
     name: string;
     email: string;
-    email_verified_at: string | null;
     created_at: string;
     updated_at: string;
     last_activity: string | null;
@@ -39,7 +38,6 @@ interface User {
 interface UsersPageProps {
     users: PaginatedData<User>;
     total_users: number;
-    verified_users: number;
     online_users: number;
     filters: Filters;
 }
@@ -114,14 +112,6 @@ const UserMobileCard: React.FC<{ user: User; onDelete: (user: User) => void; isD
                                 <span className="text-xs text-muted-foreground">Sin roles</span>
                             )}
                         </BadgeGroup>
-                    ),
-                },
-                {
-                    label: 'Verificación',
-                    value: (
-                        <Badge variant={user.email_verified_at ? 'default' : 'destructive'} className="text-xs">
-                            {user.email_verified_at ? 'Verificado' : 'Sin verificar'}
-                        </Badge>
                     ),
                 },
                 {
@@ -205,12 +195,6 @@ export default function UsersIndex({ users, total_users, online_users, filters }
             sortable: true,
             render: (user: User) => (
                 <div className="space-y-1 text-sm">
-                    <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground">Estado:</span>
-                        <Badge variant={user.email_verified_at ? 'default' : 'destructive'} className="text-xs">
-                            {user.email_verified_at ? 'Verificado' : 'Sin verificar'}
-                        </Badge>
-                    </div>
                     <div className="text-muted-foreground">Última actividad: {user.last_activity ? formatDate(user.last_activity) : 'Nunca'}</div>
                     <div className="text-muted-foreground">Creado: {formatDate(user.created_at)}</div>
                 </div>

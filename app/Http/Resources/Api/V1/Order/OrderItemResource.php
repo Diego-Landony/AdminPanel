@@ -79,6 +79,15 @@ class OrderItemResource extends JsonResource
                     'value' => $promoSnapshot['value'] ?? null,
                 ];
             }),
+            'discount_display' => $this->when($promoSnapshot, function () use ($promoSnapshot) {
+                return [
+                    'type' => $promoSnapshot['type'] ?? null,
+                    'label' => $promoSnapshot['name_display'] ?? $promoSnapshot['name'] ?? null,
+                    'per_unit_amount' => $promoSnapshot['per_unit_amount'] ?? null,
+                    'percentage_value' => $promoSnapshot['percentage_value'] ?? null,
+                    'show_amount' => $promoSnapshot['show_amount'] ?? true,
+                ];
+            }),
             'selected_options' => $this->formatSelectedOptions($this->selected_options),
             'combo_selections' => $this->formatComboSelections($this->combo_selections),
             'notes' => $this->notes,

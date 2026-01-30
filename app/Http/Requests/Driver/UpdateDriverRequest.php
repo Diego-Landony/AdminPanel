@@ -26,6 +26,7 @@ class UpdateDriverRequest extends FormRequest
         $driverId = $this->route('driver')?->id ?? $this->route('driver');
 
         return [
+            'restaurant_id' => ['required', 'exists:restaurants,id'],
             'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',

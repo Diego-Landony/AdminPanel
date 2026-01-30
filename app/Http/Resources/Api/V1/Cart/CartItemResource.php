@@ -90,6 +90,20 @@ class CartItemResource extends JsonResource
             'final_price' => round($finalPrice, 2),
             'is_daily_special' => $this->discount_info['is_daily_special'] ?? false,
             'applied_promotion' => $this->discount_info['applied_promotion'] ?? null,
+            'discount_display' => $this->when(
+                isset($this->discount_info['applied_promotion']),
+                function () {
+                    $promo = $this->discount_info['applied_promotion'];
+
+                    return [
+                        'type' => $promo['type'] ?? null,
+                        'label' => $promo['name_display'] ?? $promo['name'] ?? null,
+                        'per_unit_amount' => $promo['per_unit_amount'] ?? null,
+                        'percentage_value' => $promo['percentage_value'] ?? null,
+                        'show_amount' => $promo['show_amount'] ?? true,
+                    ];
+                }
+            ),
             'selected_options' => $this->formatSelectedOptions($this->selected_options),
             'combo_selections' => $this->formatComboSelections($this->combo_selections),
             'notes' => $this->notes,

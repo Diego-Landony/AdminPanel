@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\LogActivityJob;
+use App\Models\Role;
 use App\Models\User;
 use App\Rules\CustomPassword;
+use App\Support\ActivityLogging;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,7 +42,6 @@ class UserController extends Controller
                 'id',
                 'name',
                 'email',
-                'email_verified_at',
                 'created_at',
                 'updated_at',
                 'last_activity_at',
@@ -82,7 +84,6 @@ class UserController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'email_verified_at' => $user->email_verified_at,
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at,
                     'last_activity' => $user->last_activity_at,
@@ -102,14 +103,12 @@ class UserController extends Controller
         // Obtener estadísticas del total (sin paginación)
         $totalStats = User::select([
             'id',
-            'email_verified_at',
             'last_activity_at',
         ])->get();
 
         return Inertia::render('users/index', [
             'users' => $users,
             'total_users' => $totalStats->count(),
-            'verified_users' => $totalStats->where('email_verified_at', '!=', null)->count(),
             'online_users' => $totalStats->filter(function ($user) {
                 return $this->isUserOnline($user->last_activity_at);
             })->count(),
@@ -205,7 +204,6 @@ class UserController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
-            'email_verified_at' => $user->email_verified_at ? $user->email_verified_at->toISOString() : null,
             'created_at' => $user->created_at ? $user->created_at->toISOString() : null,
             'updated_at' => $user->updated_at ? $user->updated_at->toISOString() : null,
             'last_activity_at' => $user->last_activity_at ? $user->last_activity_at->toISOString() : null,
@@ -248,11 +246,6 @@ class UserController extends Controller
             // Solo actualizar contraseña si se proporciona
             if ($request->filled('password')) {
                 $userData['password'] = Hash::make($request->password);
-            }
-
-            // Si el email cambió, marcar como no verificado
-            if ($user->email !== $request->email) {
-                $userData['email_verified_at'] = null;
             }
 
             $user->update($userData);
@@ -332,7 +325,7 @@ class UserController extends Controller
             // Si el usuario siendo editado es el usuario autenticado y tiene el rol admin,
             // asegurar que el rol admin no se pueda remover
             if ($user->id === auth()->id() && $user->hasRole('admin')) {
-                $adminRole = \App\Models\Role::where('name', 'admin')->first();
+                $adminRole = Role::where('name', 'admin')->first();
                 if ($adminRole && ! in_array($adminRole->id, $roleIds)) {
                     return response()->json([
                         'success' => false,
@@ -341,10 +334,44 @@ class UserController extends Controller
                 }
             }
 
+            // Obtener roles anteriores para el log
+            $oldRoles = $user->roles()->pluck('name')->toArray();
+
             $user->roles()->sync($roleIds);
+
+            // Obtener nuevos roles para el log
+            $newRoles = Role::whereIn('id', $roleIds)->pluck('name')->toArray();
 
             // Invalidar cache de permisos del usuario
             $user->flushPermissionsCache();
+
+            // Registrar actividad si hay cambios
+            if ($oldRoles !== $newRoles && ActivityLogging::isEnabled()) {
+                $description = "Roles de '{$user->name}' actualizados";
+
+                if (! empty($oldRoles) || ! empty($newRoles)) {
+                    $oldStr = empty($oldRoles) ? '(ninguno)' : implode(', ', $oldRoles);
+                    $newStr = empty($newRoles) ? '(ninguno)' : implode(', ', $newRoles);
+                    $description .= " - roles: '{$oldStr}' -> '{$newStr}'";
+                }
+
+                $logData = [
+                    'user_id' => auth()->id(),
+                    'event_type' => 'roles_updated',
+                    'target_model' => User::class,
+                    'target_id' => $user->id,
+                    'description' => $description,
+                    'old_values' => ['roles' => $oldRoles],
+                    'new_values' => ['roles' => $newRoles],
+                    'user_agent' => $request->userAgent(),
+                ];
+
+                if (ActivityLogging::isAsync()) {
+                    LogActivityJob::dispatch($logData);
+                } else {
+                    \App\Models\ActivityLog::create($logData);
+                }
+            }
 
             return response()->json([
                 'success' => true,

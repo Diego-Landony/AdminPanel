@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\MenuVersionUpdated;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Cache;
  * 2. Al abrir app, Flutter llama GET /menu/version
  * 3. Si versión cambió, Flutter descarga menú completo
  * 4. Cualquier cambio en el menú invalida la versión automáticamente
+ * 5. WebSocket notifica a Flutter en tiempo real (canal: menu, evento: menu.version.updated)
  */
 class MenuVersionService
 {
@@ -55,11 +57,16 @@ class MenuVersionService
     /**
      * Invalida la versión actual y genera una nueva.
      * Llamar cuando cualquier elemento del menú cambie.
+     *
+     * @param  string  $reason  Razón del cambio (para debugging/analytics)
      */
-    public function invalidate(): string
+    public function invalidate(string $reason = 'menu_changed'): string
     {
         $newVersion = $this->generateVersion();
         Cache::put(self::CACHE_KEY, $newVersion, self::CACHE_TTL);
+
+        // Notificar a clientes Flutter vía WebSocket
+        broadcast(new MenuVersionUpdated($newVersion, $reason))->toOthers();
 
         return $newVersion;
     }

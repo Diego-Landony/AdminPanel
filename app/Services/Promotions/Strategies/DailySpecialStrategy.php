@@ -68,6 +68,9 @@ class DailySpecialStrategy extends AbstractPromotionStrategy
                     'name_display' => "Sub del Dia -{$discountPercent}%",
                     'type' => 'daily_special',
                     'value' => 'Q'.number_format($specialPricePerUnit, 2),
+                    'per_unit_amount' => -round($discountPerUnit, 2),
+                    'percentage_value' => $discountPercent,
+                    'show_amount' => true,
                 ];
 
                 // Guardar datos del Sub del Dia para el calculo hibrido con 2x1

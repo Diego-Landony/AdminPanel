@@ -236,6 +236,22 @@ class OrderService
                             'quantity' => $item->quantity,
                         ])->toArray(),
                     ];
+                } elseif ($cartItem->isCombinado()) {
+                    $combinado = $cartItem->combinado;
+                    $productSnapshot = [
+                        'combinado_id' => $cartItem->combinado_id,
+                        'name' => $combinado->name,
+                        'description' => $combinado->description,
+                        'image_url' => $combinado->image_url,
+                        'items' => $combinado->bundleItems?->map(fn ($item) => [
+                            'id' => $item->id,
+                            'product_id' => $item->product_id,
+                            'product_name' => $item->product?->name,
+                            'is_choice_group' => $item->is_choice_group,
+                            'choice_group_name' => $item->choice_group_name,
+                            'quantity' => $item->quantity ?? 1,
+                        ])->toArray(),
+                    ];
                 }
 
                 // Capturar información de promoción aplicada (si existe)
@@ -286,6 +302,7 @@ class OrderService
                     'product_id' => $cartItem->product_id,
                     'variant_id' => $cartItem->variant_id,
                     'combo_id' => $cartItem->combo_id,
+                    'combinado_id' => $cartItem->combinado_id,
                     'product_snapshot' => $productSnapshot,
                     'quantity' => $cartItem->quantity,
                     'unit_price' => $cartItem->unit_price,
@@ -293,6 +310,7 @@ class OrderService
                     'subtotal' => $itemSubtotal,
                     'selected_options' => $cartItem->selected_options,
                     'combo_selections' => $cartItem->combo_selections,
+                    'combinado_selections' => $cartItem->combinado_selections,
                     'notes' => $cartItem->notes,
                     'promotion_id' => $promotionId,
                     'promotion_snapshot' => $promotionSnapshot,

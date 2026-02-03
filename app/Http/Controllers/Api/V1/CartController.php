@@ -125,7 +125,7 @@ class CartController extends Controller
     {
         $customer = auth()->user();
         $cart = $this->cartService->getOrCreateCart($customer);
-        $cart->load(['restaurant', 'deliveryAddress', 'items.product.category', 'items.variant', 'items.combo', 'items.cart']);
+        $cart->load(['restaurant', 'deliveryAddress', 'items.product.category', 'items.variant', 'items.combo', 'items.combinado', 'items.cart']);
 
         $summary = $this->cartService->getCartSummary($cart);
         $validation = $this->cartService->validateCart($cart);
@@ -743,7 +743,7 @@ class CartController extends Controller
         }
 
         $cart = $this->cartService->updateServiceType($cart, $serviceType, $zone);
-        $cart->load(['restaurant', 'items.product.category', 'items.variant', 'items.combo', 'items.cart']);
+        $cart->load(['restaurant', 'items.product.category', 'items.variant', 'items.combo', 'items.combinado', 'items.cart']);
 
         $summary = $this->cartService->getCartSummary($cart);
 
@@ -792,7 +792,7 @@ class CartController extends Controller
     {
         $customer = auth()->user();
         $cart = $this->cartService->getOrCreateCart($customer);
-        $cart->load(['items.product.category', 'items.variant', 'items.combo']);
+        $cart->load(['items.product.category', 'items.variant', 'items.combo', 'items.combinado']);
 
         $validation = $this->cartService->validateCart($cart);
 

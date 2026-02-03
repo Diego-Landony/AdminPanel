@@ -3,9 +3,8 @@
  * Usado tanto en create como en edit
  */
 
-import { FormSection } from '@/components/form-section';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Card, CardContent } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,101 +33,109 @@ export function CategoryFormFields({
     const isEdit = mode === 'edit';
 
     return (
-        <div className="space-y-8">
-            {/* Informacion Basica */}
-            <Card>
-                <CardContent className="pt-6">
-                    <FormSection icon={Layers} title="Información Básica">
-                        <div className="space-y-6">
-                            <div className="grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2">
-                                <div className="flex items-center justify-between md:flex-col md:items-start md:gap-2">
-                                    <Label htmlFor="is_active" className="cursor-pointer text-sm font-medium">
-                                        Activa
-                                    </Label>
-                                    <Switch
-                                        id="is_active"
-                                        checked={formData.is_active}
-                                        onCheckedChange={(checked) => onInputChange('is_active', checked as boolean)}
-                                    />
-                                </div>
-
-                                <div className="flex items-center justify-between md:flex-col md:items-start md:gap-2">
-                                    <Label htmlFor="is_combo_category" className="cursor-pointer text-sm font-medium">
-                                        Categoría de combos
-                                    </Label>
-                                    <Switch
-                                        id="is_combo_category"
-                                        checked={formData.is_combo_category}
-                                        onCheckedChange={(checked) => onInputChange('is_combo_category', checked as boolean)}
-                                    />
-                                </div>
-                            </div>
-
-                            <FormField label="Nombre" error={errors.name} required>
-                                <Input
-                                    id="name"
-                                    type="text"
-                                    value={formData.name}
-                                    onChange={(e) => onInputChange('name', e.target.value)}
-                                />
-                            </FormField>
-
-                            <FormField label="Descripción" error={errors.description}>
-                                <Textarea
-                                    id="description"
-                                    value={formData.description}
-                                    onChange={(e) => onInputChange('description', e.target.value)}
-                                    rows={2}
-                                    placeholder="Descripción opcional de la categoría"
-                                />
-                            </FormField>
-                        </div>
-                    </FormSection>
-                </CardContent>
-            </Card>
-
-            {/* Variantes */}
-            <Card>
-                <CardContent className="pt-6">
-                    <FormSection icon={ListOrdered} title="Variantes">
-                        <div className="space-y-6">
-                            {isEdit && formData.uses_variants && variantsChanged && (
-                                <Alert variant="default" className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950">
-                                    <AlertCircle className="h-4 w-4 text-yellow-600" />
-                                    <AlertTitle className="text-yellow-800 dark:text-yellow-200">Atención</AlertTitle>
-                                    <AlertDescription className="text-yellow-700 dark:text-yellow-300">
-                                        Los cambios se aplicarán a todos los productos de esta categoría.
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-
-                            <div className="flex items-center justify-between rounded-lg border p-4">
-                                <Label htmlFor="uses_variants" className="cursor-pointer text-sm font-medium">
-                                    Usa variantes
+        <Accordion type="multiple" defaultValue={['basica', 'variantes']} className="space-y-4">
+            {/* Sección: Información Básica */}
+            <AccordionItem value="basica" className="rounded-lg border bg-card">
+                <AccordionTrigger className="px-6 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                        <Layers className="h-5 w-5 text-primary" />
+                        <span className="text-lg font-semibold">Información Básica</span>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-6">
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2">
+                            <div className="flex items-center justify-between md:flex-col md:items-start md:gap-2">
+                                <Label htmlFor="is_active" className="cursor-pointer text-sm font-medium">
+                                    Activa
                                 </Label>
                                 <Switch
-                                    id="uses_variants"
-                                    checked={formData.uses_variants}
-                                    onCheckedChange={(checked) => onInputChange('uses_variants', checked as boolean)}
+                                    id="is_active"
+                                    checked={formData.is_active}
+                                    onCheckedChange={(checked) => onInputChange('is_active', checked as boolean)}
                                 />
                             </div>
 
-                            {formData.uses_variants && (
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-medium">
-                                        Variantes <span className="text-destructive">*</span>
-                                    </Label>
-                                    <VariantDefinitionsInput
-                                        variants={formData.variant_definitions}
-                                        onChange={(variants) => onInputChange('variant_definitions', variants)}
-                                        error={errors.variant_definitions}
-                                    />
-                                </div>
-                            )}
+                            <div className="flex items-center justify-between md:flex-col md:items-start md:gap-2">
+                                <Label htmlFor="is_combo_category" className="cursor-pointer text-sm font-medium">
+                                    Categoría de combos
+                                </Label>
+                                <Switch
+                                    id="is_combo_category"
+                                    checked={formData.is_combo_category}
+                                    onCheckedChange={(checked) => onInputChange('is_combo_category', checked as boolean)}
+                                />
+                            </div>
                         </div>
-                    </FormSection>
-                </CardContent>
-            </Card>
-        </div>
+
+                        <FormField label="Nombre" error={errors.name} required>
+                            <Input
+                                id="name"
+                                type="text"
+                                value={formData.name}
+                                onChange={(e) => onInputChange('name', e.target.value)}
+                            />
+                        </FormField>
+
+                        <FormField label="Descripción" error={errors.description}>
+                            <Textarea
+                                id="description"
+                                value={formData.description}
+                                onChange={(e) => onInputChange('description', e.target.value)}
+                                rows={2}
+                                placeholder="Descripción opcional de la categoría"
+                            />
+                        </FormField>
+                    </div>
+                </AccordionContent>
+            </AccordionItem>
+
+            {/* Sección: Variantes */}
+            <AccordionItem value="variantes" className="rounded-lg border bg-card">
+                <AccordionTrigger className="px-6 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                        <ListOrdered className="h-5 w-5 text-primary" />
+                        <span className="text-lg font-semibold">Variantes</span>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-6">
+                    <div className="space-y-6">
+                        {isEdit && formData.uses_variants && variantsChanged && (
+                            <Alert variant="default" className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950">
+                                <AlertCircle className="h-4 w-4 text-yellow-600" />
+                                <AlertTitle className="text-yellow-800 dark:text-yellow-200">Atención</AlertTitle>
+                                <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+                                    Los cambios se aplicarán a todos los productos de esta categoría.
+                                </AlertDescription>
+                            </Alert>
+                        )}
+
+                        <div className="flex items-center justify-between rounded-lg border p-4">
+                            <Label htmlFor="uses_variants" className="cursor-pointer text-sm font-medium">
+                                Usa variantes
+                            </Label>
+                            <Switch
+                                id="uses_variants"
+                                checked={formData.uses_variants}
+                                onCheckedChange={(checked) => onInputChange('uses_variants', checked as boolean)}
+                            />
+                        </div>
+
+                        {formData.uses_variants && (
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium">
+                                    Variantes <span className="text-destructive">*</span>
+                                </Label>
+                                <VariantDefinitionsInput
+                                    variants={formData.variant_definitions}
+                                    onChange={(variants) => onInputChange('variant_definitions', variants)}
+                                    error={errors.variant_definitions}
+                                />
+                            </div>
+                        )}
+                    </div>
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
     );
 }

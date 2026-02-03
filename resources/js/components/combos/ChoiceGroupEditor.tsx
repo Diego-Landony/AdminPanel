@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { COMBO_LABELS, PLACEHOLDERS } from '@/constants/ui-constants';
 import { closestCenter, DndContext, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { SortableChoiceOption } from './SortableChoiceOption';
 
@@ -51,6 +52,7 @@ interface ChoiceGroupEditorProps {
 export function ChoiceGroupEditor({ label, options, onLabelChange, onOptionsChange, products, errors = {} }: ChoiceGroupEditorProps) {
     const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
     const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
+    const [comboboxOpen, setComboboxOpen] = useState(false);
 
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -59,21 +61,24 @@ export function ChoiceGroupEditor({ label, options, onLabelChange, onOptionsChan
         }),
     );
 
-    // Productos disponibles (excluir los ya agregados)
+    // Productos disponibles (solo filtrar inactivos)
+    // Los productos pueden repetirse entre grupos de elección
+    // Solo filtramos variantes ya usadas dentro del mismo grupo
     const availableProducts = products.filter((product) => {
         if (!product.is_active) return false;
 
-        // Si el producto tiene variantes, verificar si todas están usadas
+        // Si el producto tiene variantes, verificar si todas las variantes están usadas en ESTE grupo
         if (product.has_variants && product.variants) {
             const usedVariantIds = options
                 .filter((opt) => opt.product_id === product.id)
                 .map((opt) => opt.variant_id);
-            // Mostrar si hay al menos una variante no usada
+            // Mostrar si hay al menos una variante no usada en este grupo
             return product.variants.some((v) => !usedVariantIds.includes(v.id));
         }
 
-        // Si no tiene variantes, verificar si ya está agregado
-        return !options.some((opt) => opt.product_id === product.id && !opt.variant_id);
+        // Para productos sin variantes, siempre mostrar (pueden repetirse entre grupos)
+        // Solo ocultar si ya está agregado en ESTE MISMO grupo
+        return !options.some((opt) => opt.product_id === product.id);
     });
 
     const selectedProduct = products.find((p) => p.id === selectedProductId);
@@ -90,12 +95,15 @@ export function ChoiceGroupEditor({ label, options, onLabelChange, onOptionsChan
         setSelectedProductId(productId);
         setSelectedVariantId(null);
 
-        // Si el producto no tiene variantes, agregarlo directamente
         if (productId) {
             const product = products.find((p) => p.id === productId);
             if (product && !product.has_variants) {
+                // Producto sin variantes: agregar directamente, mantener combobox abierto
                 addOption(productId, null);
                 setSelectedProductId(null);
+            } else {
+                // Producto con variantes: cerrar combobox para mostrar selector de variantes
+                setComboboxOpen(false);
             }
         }
     };
@@ -192,22 +200,37 @@ export function ChoiceGroupEditor({ label, options, onLabelChange, onOptionsChan
                             onChange={handleProductSelect}
                             products={availableProducts}
                             label=""
-                            placeholder="Buscar producto..."
+                            placeholder={PLACEHOLDERS.selectProduct}
+                            open={comboboxOpen}
+                            onOpenChange={setComboboxOpen}
+                            keepOpenOnSelect
                         />
 
                         {hasVariants && availableVariants && availableVariants.length > 0 && (
-                            <Select value={selectedVariantId ? String(selectedVariantId) : ''} onValueChange={handleVariantSelect}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder={PLACEHOLDERS.selectVariant} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {availableVariants.map((variant) => (
-                                        <SelectItem key={variant.id} value={String(variant.id)}>
-                                            {variant.name} {variant.size && `- ${variant.size}`}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <div className="flex items-center gap-2">
+                                <Select value={selectedVariantId ? String(selectedVariantId) : ''} onValueChange={handleVariantSelect}>
+                                    <SelectTrigger className="flex-1">
+                                        <SelectValue placeholder={PLACEHOLDERS.selectVariant} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableVariants.map((variant) => (
+                                            <SelectItem key={variant.id} value={String(variant.id)}>
+                                                {variant.name} {variant.size && `- ${variant.size}`}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setSelectedProductId(null)}
+                                    className="h-10 w-10 shrink-0"
+                                    title="Cancelar selección"
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
                         )}
 
                         {availableProducts.length === 0 && (

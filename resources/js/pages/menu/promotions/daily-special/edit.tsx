@@ -1,24 +1,21 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { router } from '@inertiajs/react';
-import { Calendar, Plus, Store, Trash2, Truck } from 'lucide-react';
+import { Calendar, Package, Plus, Store, Trash2, Truck } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { CURRENCY, NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
+import { NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
 import { ProductOrComboSelector } from '@/components/ProductOrComboSelector';
 import { ConfirmationDialog } from '@/components/promotions/ConfirmationDialog';
 import { VariantSelector } from '@/components/promotions/VariantSelector';
 import { WeekdaySelector } from '@/components/WeekdaySelector';
 import { EditPageLayout } from '@/components/edit-page-layout';
-import { FormSection } from '@/components/form-section';
 import { EditPageSkeleton } from '@/components/skeletons';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { generateUniqueId } from '@/utils/generateId';
@@ -325,14 +322,16 @@ export default function EditPromotion({ promotion, products, combos }: EditPromo
             loading={processing}
             loadingSkeleton={EditPageSkeleton}
         >
-            <div className="space-y-8">
-                {/* INFORMACIÓN BÁSICA */}
-                <Card>
-                    <CardContent className="pt-6">
-                        <FormSection
-                            title="Información de la Promoción"
-                            description="Configura el nombre y descripción de la promoción"
-                        >
+            <Accordion type="multiple" defaultValue={['basica', 'items']} className="space-y-4">
+                <AccordionItem value="basica" className="rounded-lg border bg-card">
+                    <AccordionTrigger className="px-6 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                            <Package className="h-5 w-5 text-primary" />
+                            <span className="text-lg font-semibold">Información de la Promoción</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6">
+                        <div className="space-y-4">
                             <div className="flex items-center justify-between rounded-lg border p-4">
                                 <Label htmlFor="is_active" className="text-base">
                                     Promoción activa
@@ -361,233 +360,233 @@ export default function EditPromotion({ promotion, products, combos }: EditPromo
                                     rows={2}
                                 />
                             </FormField>
-                        </FormSection>
-                    </CardContent>
-                </Card>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
 
-                {/* PRODUCTOS Y COMBOS */}
-                <Card>
-                    <CardContent className="pt-6">
-                        <FormSection
-                            title="Productos y Combos"
-                            description="Agrega los productos o combos que forman parte de esta promoción"
-                        >
-                <div className="space-y-4">
-                    {localItems.map((item, index) => {
-                        const isProduct = item.item_type === 'product';
-                        const isCombo = item.item_type === 'combo';
-                        const selectedProduct = isProduct && item.product_id ? products.find((p) => p.id === Number(item.product_id)) : null;
-                        const _selectedCombo = isCombo && item.product_id ? combos.find((c) => c.id === Number(item.product_id)) : null;
-                        const hasVariants = isProduct && selectedProduct?.variants && selectedProduct.variants.length > 0;
+                <AccordionItem value="items" className="rounded-lg border bg-card">
+                    <AccordionTrigger className="px-6 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                            <Package className="h-5 w-5 text-primary" />
+                            <span className="text-lg font-semibold">Productos</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6">
+                        <div className="space-y-4">
+                            {localItems.map((item, index) => {
+                                const isProduct = item.item_type === 'product';
+                                const isCombo = item.item_type === 'combo';
+                                const selectedProduct = isProduct && item.product_id ? products.find((p) => p.id === Number(item.product_id)) : null;
+                                const _selectedCombo = isCombo && item.product_id ? combos.find((c) => c.id === Number(item.product_id)) : null;
+                                const hasVariants = isProduct && selectedProduct?.variants && selectedProduct.variants.length > 0;
 
-                        const excludedVariantIds = localItems
-                            .filter((i, idx) => idx !== index && i.product_id === item.product_id && i.variant_id !== null && i.item_type === 'product')
-                            .map((i) => i.variant_id!);
+                                const excludedVariantIds = localItems
+                                    .filter((i, idx) => idx !== index && i.product_id === item.product_id && i.variant_id !== null && i.item_type === 'product')
+                                    .map((i) => i.variant_id!);
 
-                        return (
-                            <div
-                                key={item.id}
-                                ref={index === localItems.length - 1 ? lastItemRef : null}
-                                className="relative space-y-4 rounded-lg border border-border p-4"
-                            >
-                                <div className="mb-2 flex items-center justify-between">
-                                    <h4 className="text-sm font-medium">
-                                        {isCombo ? 'Combo' : 'Producto'} {index + 1}
-                                    </h4>
-                                    {localItems.length > 1 && (
-                                        <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)}>
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                    )}
-                                </div>
-
-                                <ProductOrComboSelector
-                                    label="Producto o Combo"
-                                    value={item.product_id ? Number(item.product_id) : null}
-                                    onChange={(value, type) => updateProductOrCombo(index, value, type)}
-                                    products={products}
-                                    combos={combos}
-                                    type={item.item_type}
-                                    placeholder={PLACEHOLDERS.selectProduct}
-                                    error={errors[`items.${index}.product_id`]}
-                                    required
-                                />
-
-                                {hasVariants && (
-                                    <VariantSelector
-                                        variants={selectedProduct.variants!.filter((v) => !excludedVariantIds.includes(v.id))}
-                                        value={item.variant_id}
-                                        onChange={(variantId) => updateItem(index, 'variant_id', variantId)}
-                                        error={errors[`items.${index}.variant_id`]}
-                                        required
-                                    />
-                                )}
-
-                            {/* Precios - Capital */}
-                            <div className="space-y-2">
-                                <p className="text-sm font-medium text-muted-foreground">Precios Capital</p>
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <FormField label="Pickup Capital" error={errors[`items.${index}.special_price_pickup_capital`]} required>
-                                        <div className="relative">
-                                            <Store className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={item.special_price_pickup_capital}
-                                                onChange={(e) => updateItem(index, 'special_price_pickup_capital', e.target.value)}
-                                                className="pl-9"
-                                                placeholder={PLACEHOLDERS.price}
-                                            />
-                                        </div>
-                                    </FormField>
-
-                                    <FormField label="Delivery Capital" error={errors[`items.${index}.special_price_delivery_capital`]} required>
-                                        <div className="relative">
-                                            <Truck className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={item.special_price_delivery_capital}
-                                                onChange={(e) => updateItem(index, 'special_price_delivery_capital', e.target.value)}
-                                                className="pl-9"
-                                                placeholder={PLACEHOLDERS.price}
-                                            />
-                                        </div>
-                                    </FormField>
-                                </div>
-                            </div>
-
-                            {/* Precios - Interior */}
-                            <div className="space-y-2">
-                                <p className="text-sm font-medium text-muted-foreground">Precios Interior</p>
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <FormField label="Pickup Interior" error={errors[`items.${index}.special_price_pickup_interior`]} required>
-                                        <div className="relative">
-                                            <Store className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={item.special_price_pickup_interior}
-                                                onChange={(e) => updateItem(index, 'special_price_pickup_interior', e.target.value)}
-                                                className="pl-9"
-                                                placeholder={PLACEHOLDERS.price}
-                                            />
-                                        </div>
-                                    </FormField>
-
-                                    <FormField label="Delivery Interior" error={errors[`items.${index}.special_price_delivery_interior`]} required>
-                                        <div className="relative">
-                                            <Truck className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={item.special_price_delivery_interior}
-                                                onChange={(e) => updateItem(index, 'special_price_delivery_interior', e.target.value)}
-                                                className="pl-9"
-                                                placeholder={PLACEHOLDERS.price}
-                                            />
-                                        </div>
-                                    </FormField>
-                                </div>
-                            </div>
-
-                            {/* VIGENCIA */}
-                            <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                                    <h5 className="text-sm font-medium">Vigencia</h5>
-                                </div>
-
-                                {/* Días de la semana - SIEMPRE VISIBLE Y REQUERIDO */}
-                                <WeekdaySelector
-                                    value={item.weekdays}
-                                    onChange={(days) => updateItem(index, 'weekdays', days)}
-                                    error={errors[`items.${index}.weekdays`]}
-                                    label="Días activos"
-                                    required
-                                />
-
-                                {/* Checkbox: Restricciones */}
-                                <div className="flex items-center space-x-2">
-                                    <input
-                                        type="checkbox"
-                                        id={`has_schedule_${index}`}
-                                        checked={item.has_schedule}
-                                        onChange={(e) => updateItem(index, 'has_schedule', e.target.checked)}
-                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                    />
-                                    <label
-                                        htmlFor={`has_schedule_${index}`}
-                                        className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                return (
+                                    <div
+                                        key={item.id}
+                                        ref={index === localItems.length - 1 ? lastItemRef : null}
+                                        className="relative space-y-4 rounded-lg border border-border p-4"
                                     >
-                                        Restringir por fechas u horarios
-                                    </label>
-                                </div>
+                                        <div className="mb-2 flex items-center justify-between">
+                                            <h4 className="text-sm font-medium">
+                                                {isCombo ? 'Combo' : 'Producto'} {index + 1}
+                                            </h4>
+                                            {localItems.length > 1 && (
+                                                <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)}>
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                </Button>
+                                            )}
+                                        </div>
 
-                                {/* Campos condicionales */}
-                                {item.has_schedule && (
-                                    <div className="space-y-4 border-l-2 border-primary/20 pl-6">
-                                        {/* Rango de fechas */}
+                                        <ProductOrComboSelector
+                                            label="Producto o Combo"
+                                            value={item.product_id ? Number(item.product_id) : null}
+                                            onChange={(value, type) => updateProductOrCombo(index, value, type)}
+                                            products={products}
+                                            combos={combos}
+                                            type={item.item_type}
+                                            placeholder={PLACEHOLDERS.selectProduct}
+                                            error={errors[`items.${index}.product_id`]}
+                                            required
+                                        />
+
+                                        {hasVariants && (
+                                            <VariantSelector
+                                                variants={selectedProduct.variants!.filter((v) => !excludedVariantIds.includes(v.id))}
+                                                value={item.variant_id}
+                                                onChange={(variantId) => updateItem(index, 'variant_id', variantId)}
+                                                error={errors[`items.${index}.variant_id`]}
+                                                required
+                                            />
+                                        )}
+
+                                        {/* Precios - Capital */}
                                         <div className="space-y-2">
-                                            <p className="text-sm font-medium">Fechas</p>
+                                            <p className="text-sm font-medium text-muted-foreground">Precios Capital</p>
                                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                                <FormField label="Desde" error={errors[`items.${index}.valid_from`]}>
-                                                    <Input
-                                                        type="date"
-                                                        value={item.valid_from}
-                                                        onChange={(e) => updateItem(index, 'valid_from', e.target.value)}
-                                                    />
+                                                <FormField label="Pickup Capital" error={errors[`items.${index}.special_price_pickup_capital`]} required>
+                                                    <div className="relative">
+                                                        <Store className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                                        <Input
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0"
+                                                            value={item.special_price_pickup_capital}
+                                                            onChange={(e) => updateItem(index, 'special_price_pickup_capital', e.target.value)}
+                                                            className="pl-9"
+                                                            placeholder={PLACEHOLDERS.price}
+                                                        />
+                                                    </div>
                                                 </FormField>
-                                                <FormField label="Hasta" error={errors[`items.${index}.valid_until`]}>
-                                                    <Input
-                                                        type="date"
-                                                        value={item.valid_until}
-                                                        onChange={(e) => updateItem(index, 'valid_until', e.target.value)}
-                                                    />
+
+                                                <FormField label="Delivery Capital" error={errors[`items.${index}.special_price_delivery_capital`]} required>
+                                                    <div className="relative">
+                                                        <Truck className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                                        <Input
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0"
+                                                            value={item.special_price_delivery_capital}
+                                                            onChange={(e) => updateItem(index, 'special_price_delivery_capital', e.target.value)}
+                                                            className="pl-9"
+                                                            placeholder={PLACEHOLDERS.price}
+                                                        />
+                                                    </div>
                                                 </FormField>
                                             </div>
                                         </div>
 
-                                        {/* Horario */}
+                                        {/* Precios - Interior */}
                                         <div className="space-y-2">
-                                            <p className="text-sm font-medium">Horarios</p>
+                                            <p className="text-sm font-medium text-muted-foreground">Precios Interior</p>
                                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                                <FormField label="Desde" error={errors[`items.${index}.time_from`]}>
-                                                    <Input
-                                                        type="time"
-                                                        value={item.time_from}
-                                                        onChange={(e) => updateItem(index, 'time_from', e.target.value)}
-                                                    />
+                                                <FormField label="Pickup Interior" error={errors[`items.${index}.special_price_pickup_interior`]} required>
+                                                    <div className="relative">
+                                                        <Store className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                                        <Input
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0"
+                                                            value={item.special_price_pickup_interior}
+                                                            onChange={(e) => updateItem(index, 'special_price_pickup_interior', e.target.value)}
+                                                            className="pl-9"
+                                                            placeholder={PLACEHOLDERS.price}
+                                                        />
+                                                    </div>
                                                 </FormField>
-                                                <FormField label="Hasta" error={errors[`items.${index}.time_until`]}>
-                                                    <Input
-                                                        type="time"
-                                                        value={item.time_until}
-                                                        onChange={(e) => updateItem(index, 'time_until', e.target.value)}
-                                                    />
+
+                                                <FormField label="Delivery Interior" error={errors[`items.${index}.special_price_delivery_interior`]} required>
+                                                    <div className="relative">
+                                                        <Truck className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                                        <Input
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0"
+                                                            value={item.special_price_delivery_interior}
+                                                            onChange={(e) => updateItem(index, 'special_price_delivery_interior', e.target.value)}
+                                                            className="pl-9"
+                                                            placeholder={PLACEHOLDERS.price}
+                                                        />
+                                                    </div>
                                                 </FormField>
                                             </div>
+                                        </div>
+
+                                        {/* VIGENCIA */}
+                                        <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
+                                            <div className="flex items-center gap-2">
+                                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                                <h5 className="text-sm font-medium">Vigencia</h5>
+                                            </div>
+
+                                            {/* Días de la semana - SIEMPRE VISIBLE Y REQUERIDO */}
+                                            <WeekdaySelector
+                                                value={item.weekdays}
+                                                onChange={(days) => updateItem(index, 'weekdays', days)}
+                                                error={errors[`items.${index}.weekdays`]}
+                                                label="Días activos"
+                                                required
+                                            />
+
+                                            {/* Checkbox: Restricciones */}
+                                            <div className="flex items-center space-x-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id={`has_schedule_${index}`}
+                                                    checked={item.has_schedule}
+                                                    onChange={(e) => updateItem(index, 'has_schedule', e.target.checked)}
+                                                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                                />
+                                                <label
+                                                    htmlFor={`has_schedule_${index}`}
+                                                    className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                >
+                                                    Restringir por fechas u horarios
+                                                </label>
+                                            </div>
+
+                                            {/* Campos condicionales */}
+                                            {item.has_schedule && (
+                                                <div className="space-y-4 border-l-2 border-primary/20 pl-6">
+                                                    {/* Rango de fechas */}
+                                                    <div className="space-y-2">
+                                                        <p className="text-sm font-medium">Fechas</p>
+                                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                                            <FormField label="Desde" error={errors[`items.${index}.valid_from`]}>
+                                                                <Input
+                                                                    type="date"
+                                                                    value={item.valid_from}
+                                                                    onChange={(e) => updateItem(index, 'valid_from', e.target.value)}
+                                                                />
+                                                            </FormField>
+                                                            <FormField label="Hasta" error={errors[`items.${index}.valid_until`]}>
+                                                                <Input
+                                                                    type="date"
+                                                                    value={item.valid_until}
+                                                                    onChange={(e) => updateItem(index, 'valid_until', e.target.value)}
+                                                                />
+                                                            </FormField>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Horario */}
+                                                    <div className="space-y-2">
+                                                        <p className="text-sm font-medium">Horarios</p>
+                                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                                            <FormField label="Desde" error={errors[`items.${index}.time_from`]}>
+                                                                <Input
+                                                                    type="time"
+                                                                    value={item.time_from}
+                                                                    onChange={(e) => updateItem(index, 'time_from', e.target.value)}
+                                                                />
+                                                            </FormField>
+                                                            <FormField label="Hasta" error={errors[`items.${index}.time_until`]}>
+                                                                <Input
+                                                                    type="time"
+                                                                    value={item.time_until}
+                                                                    onChange={(e) => updateItem(index, 'time_until', e.target.value)}
+                                                                />
+                                                            </FormField>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                )}
-                            </div>
-                        </div>
-                        );
-                    })}
+                                );
+                            })}
 
-                    <Button type="button" variant="outline" onClick={addItem} className="w-full">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Agregar otro producto
-                    </Button>
-                </div>
-                        </FormSection>
-                    </CardContent>
-                </Card>
-            </div>
+                            <Button type="button" variant="outline" onClick={addItem} className="w-full">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Agregar otro producto
+                            </Button>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
 
             <ConfirmationDialog
                 open={confirmDialog.open}

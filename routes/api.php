@@ -302,6 +302,8 @@ Route::prefix('v1')->group(function () {
             ->name('promotions.daily');
         Route::get('/promotions/combinados', [App\Http\Controllers\Api\V1\Menu\PromotionController::class, 'combinados'])
             ->name('promotions.combinados');
+        Route::get('/promotions/combinados/{id}', [App\Http\Controllers\Api\V1\Menu\PromotionController::class, 'showCombinado'])
+            ->name('promotions.combinados.show');
 
         // Rewards catalog (redeemable items - redemption happens in-store)
         Route::get('/rewards', [App\Http\Controllers\Api\V1\RewardsController::class, 'index'])

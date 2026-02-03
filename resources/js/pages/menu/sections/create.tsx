@@ -6,11 +6,10 @@ import { CSS } from '@dnd-kit/utilities';
 import { useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
 
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { CreatePageLayout } from '@/components/create-page-layout';
-import { FormSection } from '@/components/form-section';
 import { CreateSectionsSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
@@ -234,155 +233,167 @@ export default function SectionCreate() {
             loading={processing}
             loadingSkeleton={CreateSectionsSkeleton}
         >
-            <div className="space-y-8">
-                {/* Información Básica */}
-                <Card>
-                    <CardContent className="pt-6">
-                        <FormSection icon={ListChecks} title="Información Básica" description="Datos principales de la sección">
-                            <div className="space-y-6">
-                                <FormField label="Título" error={errors.title} required>
-                                    <Input id="title" type="text" value={data.title} onChange={(e) => setData('title', e.target.value)} />
-                                </FormField>
+            <Accordion type="multiple" defaultValue={['basica', 'opciones']} className="space-y-4">
+                {/* Sección: Información Básica */}
+                <AccordionItem value="basica" className="rounded-lg border bg-card">
+                    <AccordionTrigger className="px-6 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                            <ListChecks className="h-5 w-5 text-primary" />
+                            <span className="text-lg font-semibold">Información Básica</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6">
+                        <div className="space-y-6">
+                            <FormField label="Título" error={errors.title} required>
+                                <Input id="title" type="text" value={data.title} onChange={(e) => setData('title', e.target.value)} />
+                            </FormField>
 
-                                <FormField label="Descripción en app" error={errors.description}>
-                                    <Textarea id="description" value={data.description} onChange={(e) => setData('description', e.target.value)} rows={2} />
-                                </FormField>
+                            <FormField label="Descripción en app" error={errors.description}>
+                                <Textarea id="description" value={data.description} onChange={(e) => setData('description', e.target.value)} rows={2} />
+                            </FormField>
 
-                                <div className="flex items-center justify-between rounded-lg border p-4">
-                                    <Label htmlFor="is_active" className="cursor-pointer text-sm font-medium">
-                                        Sección Activa
+                            <div className="flex items-center justify-between rounded-lg border p-4">
+                                <Label htmlFor="is_active" className="cursor-pointer text-sm font-medium">
+                                    Sección Activa
+                                </Label>
+                                <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked)} />
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="is_required"
+                                        checked={data.is_required}
+                                        onCheckedChange={(checked) => setData('is_required', checked as boolean)}
+                                    />
+                                    <Label htmlFor="is_required" className="cursor-pointer text-sm font-medium leading-none">
+                                        Obligatoria
                                     </Label>
-                                    <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked)} />
                                 </div>
 
-                                <div className="grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2">
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id="is_required"
-                                            checked={data.is_required}
-                                            onCheckedChange={(checked) => setData('is_required', checked as boolean)}
-                                        />
-                                        <Label htmlFor="is_required" className="cursor-pointer text-sm font-medium leading-none">
-                                            Obligatoria
-                                        </Label>
-                                    </div>
-
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id="allow_multiple"
-                                            checked={data.allow_multiple}
-                                            onCheckedChange={(checked) => setData('allow_multiple', checked as boolean)}
-                                        />
-                                        <Label htmlFor="allow_multiple" className="cursor-pointer text-sm font-medium leading-none">
-                                            Selección múltiple
-                                        </Label>
-                                    </div>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="allow_multiple"
+                                        checked={data.allow_multiple}
+                                        onCheckedChange={(checked) => setData('allow_multiple', checked as boolean)}
+                                    />
+                                    <Label htmlFor="allow_multiple" className="cursor-pointer text-sm font-medium leading-none">
+                                        Selección múltiple
+                                    </Label>
                                 </div>
-
-                                {data.allow_multiple && (
-                                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                        <FormField label="Mínimo de items seleccionables" error={errors.min_selections}>
-                                            <Input
-                                                id="min_selections"
-                                                type="number"
-                                                min="0"
-                                                value={data.min_selections}
-                                                onChange={(e) => setData('min_selections', e.target.value)}
-                                            />
-                                        </FormField>
-
-                                        <FormField label="Máximo de items seleccionables" error={errors.max_selections}>
-                                            <Input
-                                                id="max_selections"
-                                                type="number"
-                                                min="1"
-                                                value={data.max_selections}
-                                                onChange={(e) => setData('max_selections', e.target.value)}
-                                            />
-                                        </FormField>
-                                    </div>
-                                )}
                             </div>
-                        </FormSection>
-                    </CardContent>
-                </Card>
 
-                {/* Opciones */}
-                <Card>
-                    <CardContent className="pt-6">
-                        <FormSection icon={ENTITY_ICONS.menu.sectionOptions} title="Opciones" description="Define las opciones disponibles en esta sección">
-                            <div className="space-y-3">
-                                {localOptions.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground">Sin items aún</p>
-                                ) : (
-                                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                                        <SortableContext items={localOptions.map((opt) => opt.id)} strategy={verticalListSortingStrategy}>
-                                            <div className="space-y-3">
-                                                {localOptions.map((option, index) => (
-                                                    <SortableItem key={option.id} option={option} index={index} onUpdate={updateOption} onRemove={removeOption} />
-                                                ))}
-                                            </div>
-                                        </SortableContext>
-                                    </DndContext>
-                                )}
-
-                                <Button type="button" onClick={addOption} size="sm" variant="outline" className="w-full">
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Agregar Item
-                                </Button>
-                            </div>
-                        </FormSection>
-                    </CardContent>
-                </Card>
-
-                {/* Bundle Pricing - Solo si hay opciones con is_extra */}
-                {localOptions.some((opt) => opt.is_extra) && (
-                    <Card>
-                        <CardContent className="pt-6">
-                            <FormSection icon={Percent} title="Descuento por Cantidad" description="Descuento cuando se seleccionan múltiples extras del mismo precio">
-                                <div className="space-y-4">
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id="bundle_discount_enabled"
-                                            checked={data.bundle_discount_enabled}
-                                            onCheckedChange={(checked) => setData('bundle_discount_enabled', checked as boolean)}
+                            {data.allow_multiple && (
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                    <FormField label="Mínimo de items seleccionables" error={errors.min_selections}>
+                                        <Input
+                                            id="min_selections"
+                                            type="number"
+                                            min="0"
+                                            value={data.min_selections}
+                                            onChange={(e) => setData('min_selections', e.target.value)}
                                         />
-                                        <Label htmlFor="bundle_discount_enabled" className="cursor-pointer text-sm font-medium leading-none">
-                                            Habilitar descuento por cantidad
-                                        </Label>
-                                    </div>
+                                    </FormField>
 
-                                    {data.bundle_discount_enabled && (
-                                        <div className="grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2">
-                                            <FormField label="Items necesarios para descuento" error={errors.bundle_size}>
-                                                <Input
-                                                    id="bundle_size"
-                                                    type="number"
-                                                    min="2"
-                                                    max="10"
-                                                    value={data.bundle_size}
-                                                    onChange={(e) => setData('bundle_size', e.target.value ? parseInt(e.target.value) : '')}
-                                                />
-                                            </FormField>
+                                    <FormField label="Máximo de items seleccionables" error={errors.max_selections}>
+                                        <Input
+                                            id="max_selections"
+                                            type="number"
+                                            min="1"
+                                            value={data.max_selections}
+                                            onChange={(e) => setData('max_selections', e.target.value)}
+                                        />
+                                    </FormField>
+                                </div>
+                            )}
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
 
-                                            <FormField label={`Descuento (Q)`} error={errors.bundle_discount_amount}>
-                                                <Input
-                                                    id="bundle_discount_amount"
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    value={data.bundle_discount_amount}
-                                                    onChange={(e) => setData('bundle_discount_amount', e.target.value)}
-                                                />
-                                            </FormField>
+                {/* Sección: Opciones */}
+                <AccordionItem value="opciones" className="rounded-lg border bg-card">
+                    <AccordionTrigger className="px-6 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                            <ENTITY_ICONS.menu.sectionOptions className="h-5 w-5 text-primary" />
+                            <span className="text-lg font-semibold">Opciones</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6">
+                        <div className="space-y-3">
+                            {localOptions.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">Sin items aún</p>
+                            ) : (
+                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                    <SortableContext items={localOptions.map((opt) => opt.id)} strategy={verticalListSortingStrategy}>
+                                        <div className="space-y-3">
+                                            {localOptions.map((option, index) => (
+                                                <SortableItem key={option.id} option={option} index={index} onUpdate={updateOption} onRemove={removeOption} />
+                                            ))}
                                         </div>
-                                    )}
+                                    </SortableContext>
+                                </DndContext>
+                            )}
+
+                            <Button type="button" onClick={addOption} size="sm" variant="outline" className="w-full">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Agregar Item
+                            </Button>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* Sección: Descuento por Cantidad - Solo si hay opciones con is_extra */}
+                {localOptions.some((opt) => opt.is_extra) && (
+                    <AccordionItem value="descuento" className="rounded-lg border bg-card">
+                        <AccordionTrigger className="px-6 hover:no-underline">
+                            <div className="flex items-center gap-2">
+                                <Percent className="h-5 w-5 text-primary" />
+                                <span className="text-lg font-semibold">Descuento por Cantidad</span>
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-6 pb-6">
+                            <div className="space-y-4">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="bundle_discount_enabled"
+                                        checked={data.bundle_discount_enabled}
+                                        onCheckedChange={(checked) => setData('bundle_discount_enabled', checked as boolean)}
+                                    />
+                                    <Label htmlFor="bundle_discount_enabled" className="cursor-pointer text-sm font-medium leading-none">
+                                        Habilitar descuento por cantidad
+                                    </Label>
                                 </div>
-                            </FormSection>
-                        </CardContent>
-                    </Card>
+
+                                {data.bundle_discount_enabled && (
+                                    <div className="grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2">
+                                        <FormField label="Items necesarios para descuento" error={errors.bundle_size}>
+                                            <Input
+                                                id="bundle_size"
+                                                type="number"
+                                                min="2"
+                                                max="10"
+                                                value={data.bundle_size}
+                                                onChange={(e) => setData('bundle_size', e.target.value ? parseInt(e.target.value) : '')}
+                                            />
+                                        </FormField>
+
+                                        <FormField label={`Descuento (Q)`} error={errors.bundle_discount_amount}>
+                                            <Input
+                                                id="bundle_discount_amount"
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={data.bundle_discount_amount}
+                                                onChange={(e) => setData('bundle_discount_amount', e.target.value)}
+                                            />
+                                        </FormField>
+                                    </div>
+                                )}
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
                 )}
-            </div>
+            </Accordion>
         </CreatePageLayout>
     );
 }

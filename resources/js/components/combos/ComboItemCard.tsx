@@ -1,4 +1,15 @@
 import { ProductCombobox } from '@/components/ProductCombobox';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -8,10 +19,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { COMBO_LABELS, PLACEHOLDERS } from '@/constants/ui-constants';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronDown, ChevronUp, GripVertical, ListChecks, Package, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, GripVertical, ListChecks, Package, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { ChoiceGroupEditor } from './ChoiceGroupEditor';
-import { ItemTypeSelector } from './ItemTypeSelector';
 
 interface Product {
     id: number;
@@ -83,6 +93,20 @@ export function ComboItemCard({
         ? !item.choice_label || (item.options?.length || 0) < 2
         : !item.product_id;
 
+    // Obtener detalles de lo que falta para items incompletos
+    const getIncompleteDetails = (): string => {
+        if (!isIncomplete) return '';
+
+        if (item.is_choice_group) {
+            const missingParts: string[] = [];
+            if (!item.choice_label) missingParts.push('etiqueta');
+            if ((item.options?.length || 0) < 2) missingParts.push('opciones');
+            return `Falta: ${missingParts.join(', ')}`;
+        }
+
+        return 'Falta: producto';
+    };
+
     // Auto-expandir si el item está incompleto o si se especifica defaultExpanded
     const [isExpanded, setIsExpanded] = useState(() => defaultExpanded || isIncomplete);
 
@@ -90,39 +114,6 @@ export function ComboItemCard({
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.5 : 1,
-    };
-
-    const handleTypeChange = (type: 'fixed' | 'choice') => {
-        const isChoice = type === 'choice';
-
-        if (onBatchUpdate) {
-            if (isChoice) {
-                onBatchUpdate({
-                    is_choice_group: true,
-                    product_id: null,
-                    variant_id: null,
-                    options: [],
-                    choice_label: '',
-                });
-            } else {
-                onBatchUpdate({
-                    is_choice_group: false,
-                    options: [],
-                    choice_label: '',
-                });
-            }
-        } else {
-            onUpdate('is_choice_group', isChoice);
-            if (isChoice) {
-                onUpdate('product_id', null);
-                onUpdate('variant_id', null);
-                onUpdate('options', []);
-                onUpdate('choice_label', '');
-            } else {
-                onUpdate('options', []);
-                onUpdate('choice_label', '');
-            }
-        }
     };
 
     const handleProductChange = (productId: number | null) => {
@@ -220,16 +211,28 @@ export function ComboItemCard({
                     <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                             <h4 className="truncate text-sm font-medium">{getHeaderTitle()}</h4>
-                            {isIncomplete && (
-                                <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
-                                    Incompleto
-                                </Badge>
-                            )}
                         </div>
-                        <p className="truncate text-xs text-muted-foreground">
-                            {getHeaderSubtitle()}
-                            {item.quantity > 1 && ` · x${item.quantity}`}
-                        </p>
+                        <p className="truncate text-xs text-muted-foreground">{getHeaderSubtitle()}</p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-xs text-muted-foreground">Cant:</span>
+                            <Input
+                                type="number"
+                                min="1"
+                                max="10"
+                                value={item.quantity === 0 ? '' : item.quantity}
+                                onChange={handleQuantityChange}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-12 h-7 text-center text-sm"
+                            />
+                        </div>
+                        {isIncomplete && (
+                            <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
+                                {getIncompleteDetails()}
+                            </Badge>
+                        )}
                     </div>
 
                     <CollapsibleTrigger asChild>
@@ -239,17 +242,33 @@ export function ComboItemCard({
                     </CollapsibleTrigger>
 
                     {canDelete && (
-                        <Button type="button" variant="ghost" size="sm" onClick={onRemove} className="h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-destructive">
-                            <X className="h-4 w-4" />
-                        </Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button type="button" variant="ghost" size="sm" className="h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-destructive">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Eliminar item</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        ¿Estás seguro de eliminar "{getHeaderTitle()}"? Esta acción no se puede deshacer.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={onRemove} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                        Eliminar
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     )}
                 </div>
 
                 {/* Contenido colapsable */}
                 <CollapsibleContent>
                     <div className="space-y-4 border-t px-4 pb-4 pt-4">
-                        <ItemTypeSelector value={item.is_choice_group ? 'choice' : 'fixed'} onChange={handleTypeChange} id={item.id} />
-
                         {item.is_choice_group ? (
                             <ChoiceGroupEditor
                                 label={item.choice_label || ''}
@@ -294,17 +313,6 @@ export function ComboItemCard({
                                 )}
                             </>
                         )}
-
-                        {/* Campo de cantidad */}
-                        <FormField label={COMBO_LABELS.quantityBadge} error={errors[`items.${index}.quantity`]} required>
-                            <Input
-                                type="number"
-                                min="1"
-                                max="10"
-                                value={item.quantity === 0 ? '' : item.quantity}
-                                onChange={handleQuantityChange}
-                            />
-                        </FormField>
                     </div>
                 </CollapsibleContent>
             </Collapsible>

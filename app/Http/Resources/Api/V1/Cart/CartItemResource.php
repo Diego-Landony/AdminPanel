@@ -18,8 +18,9 @@ class CartItemResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $isProduct = $this->product_id !== null;
+        $isProduct = $this->product_id !== null && $this->combo_id === null && $this->combinado_id === null;
         $isCombo = $this->combo_id !== null;
+        $isCombinado = $this->combinado_id !== null;
 
         // Calcular extras y ahorro de bundle una sola vez
         $bundleResult = method_exists($this->resource, 'getOptionsTotalWithBundle')
@@ -44,9 +45,17 @@ class CartItemResource extends JsonResource
         // final_price viene del cálculo de descuentos o es igual al subtotal con extras
         $finalPrice = $this->discount_info['final_price'] ?? $subtotalWithExtras;
 
+        // Determinar el tipo de item
+        $type = 'product';
+        if ($isCombo) {
+            $type = 'combo';
+        } elseif ($isCombinado) {
+            $type = 'combinado';
+        }
+
         return [
             'id' => $this->id,
-            'type' => $isProduct ? 'product' : 'combo',
+            'type' => $type,
             'product' => $this->when($isProduct && $this->relationLoaded('product'), function () {
                 $product = $this->product;
                 $variant = $this->relationLoaded('variant') ? $this->variant : null;
@@ -71,6 +80,16 @@ class CartItemResource extends JsonResource
                     'image_url' => $combo->getImageUrl(),
                 ];
             }),
+            'combinado' => $this->when($isCombinado && $this->relationLoaded('combinado'), function () {
+                $combinado = $this->combinado;
+
+                return [
+                    'id' => $combinado->id,
+                    'name' => $combinado->name,
+                    'image_url' => $combinado->image_url,
+                ];
+            }),
+            'combinado_id' => $this->when($isCombinado, $this->combinado_id),
             'quantity' => $this->quantity,
             'unit_price' => round($correctUnitPrice, 2),
             'options_total' => $optionsTotal,
@@ -106,6 +125,7 @@ class CartItemResource extends JsonResource
             ),
             'selected_options' => $this->formatSelectedOptions($this->selected_options),
             'combo_selections' => $this->formatComboSelections($this->combo_selections),
+            'combinado_selections' => $this->formatComboSelections($this->combinado_selections),
             'notes' => $this->notes,
             // Validación de precio - permite al frontend mostrar advertencias
             'price_valid' => $priceValid,
@@ -165,6 +185,22 @@ class CartItemResource extends JsonResource
                     'price' => (float) $this->unit_price,
                     'valid' => false,
                     'warning' => "Este combo no tiene precio configurado para {$serviceName} en {$zoneName}",
+                ];
+            }
+
+            return ['price' => (float) $price, 'valid' => true, 'warning' => null];
+        }
+
+        // Para combinados (bundle_special)
+        if ($this->combinado_id && $this->relationLoaded('combinado') && $this->combinado) {
+            // Los combinados usan campos de precio diferentes: special_bundle_price_*
+            $bundlePriceField = 'special_bundle_'.$priceField;
+            $price = $this->combinado->{$bundlePriceField};
+            if ($price === null || $price <= 0) {
+                return [
+                    'price' => (float) $this->unit_price,
+                    'valid' => false,
+                    'warning' => "Este combinado no tiene precio configurado para {$serviceName} en {$zoneName}",
                 ];
             }
 

@@ -26,6 +26,9 @@ interface ProductComboboxProps {
     placeholder?: string;
     error?: string;
     required?: boolean;
+    keepOpenOnSelect?: boolean;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
 export function ProductCombobox({
@@ -36,9 +39,24 @@ export function ProductCombobox({
     placeholder = 'Seleccionar producto...',
     error,
     required = false,
+    keepOpenOnSelect = false,
+    open: controlledOpen,
+    onOpenChange,
 }: ProductComboboxProps) {
-    const [open, setOpen] = React.useState(false);
+    const [internalOpen, setInternalOpen] = React.useState(false);
     const [search, setSearch] = React.useState('');
+
+    // Modo controlado o no controlado
+    const isControlled = controlledOpen !== undefined;
+    const open = isControlled ? controlledOpen : internalOpen;
+    const setOpen = (newOpen: boolean) => {
+        if (onOpenChange) {
+            onOpenChange(newOpen);
+        }
+        if (!isControlled) {
+            setInternalOpen(newOpen);
+        }
+    };
 
     const selectedProduct = products.find((p) => p.id === value);
 
@@ -104,7 +122,7 @@ export function ProductCombobox({
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
 
-                <DialogContent className="p-0" showCloseButton={false}>
+                <DialogContent className="p-0">
                     <VisuallyHidden>
                         <DialogTitle>Seleccionar producto</DialogTitle>
                         <DialogDescription>Busca y selecciona un producto de la lista</DialogDescription>
@@ -121,8 +139,10 @@ export function ProductCombobox({
                                             value={product.id.toString()}
                                             onSelect={() => {
                                                 onChange(product.id === value ? null : product.id);
-                                                setOpen(false);
-                                                setSearch('');
+                                                if (!keepOpenOnSelect) {
+                                                    setOpen(false);
+                                                    setSearch('');
+                                                }
                                             }}
                                         >
                                             <Check className={`mr-2 h-4 w-4 ${product.id === value ? 'opacity-100' : 'opacity-0'}`} />

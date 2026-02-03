@@ -410,12 +410,95 @@ class PromotionController extends Controller
                             },
                         ]);
                 },
+                'badgeType',
             ])
-            ->get();
+            ->get()
+            // Filtrar combinados que tienen choice groups sin opciones activas
+            // (igual que se hace con combos en ComboController)
+            ->filter(function ($promotion) {
+                foreach ($promotion->bundleItems as $item) {
+                    if ($item->is_choice_group && $item->options->isEmpty()) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
 
         return response()->json([
             'data' => [
-                'promotions' => PromotionResource::collection($promotions),
+                'combinados' => PromotionResource::collection($promotions),
+            ],
+        ]);
+    }
+
+    /**
+     * Get a specific combinado by ID.
+     *
+     * @OA\Get(
+     *     path="/api/v1/menu/promotions/combinados/{id}",
+     *     tags={"Menu"},
+     *     summary="Get combinado details",
+     *     description="Returns a specific bundle special promotion if valid now.",
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Combinado ID",
+     *         required=true,
+     *
+     *         @OA\Schema(type="integer")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Combinado retrieved successfully"
+     *     ),
+     *     @OA\Response(response=404, description="Combinado not found or not available")
+     * )
+     */
+    public function showCombinado(int $id): JsonResponse
+    {
+        $promotion = Promotion::query()
+            ->validNowCombinados()
+            ->available()
+            ->with([
+                'bundleItems' => function ($query) {
+                    $query->orderBy('sort_order')
+                        ->where(function ($q) {
+                            $q->where(function ($sub) {
+                                $sub->where('is_choice_group', false)
+                                    ->whereHas('product', fn ($p) => $p->where('is_active', true));
+                            })
+                                ->orWhere('is_choice_group', true);
+                        })
+                        ->with([
+                            'product' => fn ($p) => $p->where('is_active', true),
+                            'variant',
+                            'options' => function ($q) {
+                                $q->orderBy('sort_order')
+                                    ->whereHas('product', fn ($p) => $p->where('is_active', true))
+                                    ->with([
+                                        'product' => fn ($p) => $p->where('is_active', true),
+                                        'variant',
+                                    ]);
+                            },
+                        ]);
+                },
+                'badgeType',
+            ])
+            ->findOrFail($id);
+
+        // Verificar que el combinado tenga todos sus choice groups con opciones activas
+        foreach ($promotion->bundleItems as $item) {
+            if ($item->is_choice_group && $item->options->isEmpty()) {
+                abort(404, 'Combinado no disponible');
+            }
+        }
+
+        return response()->json([
+            'data' => [
+                'combinado' => PromotionResource::make($promotion),
             ],
         ]);
     }

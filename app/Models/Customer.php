@@ -46,6 +46,7 @@ class Customer extends Authenticatable implements ActivityLoggable, MustVerifyEm
         'points_last_activity_at',
         'customer_type_id',
         'email_offers_enabled',
+        'push_notifications_enabled',
         'downgrade_warning_sent_at',
         'points_expiration_warning_sent_at',
     ];
@@ -79,6 +80,7 @@ class Customer extends Authenticatable implements ActivityLoggable, MustVerifyEm
             'points_updated_at' => 'datetime',
             'points_last_activity_at' => 'datetime',
             'email_offers_enabled' => 'boolean',
+            'push_notifications_enabled' => 'boolean',
             'downgrade_warning_sent_at' => 'datetime',
             'points_expiration_warning_sent_at' => 'datetime',
         ];

@@ -5,11 +5,10 @@ import { CSS } from '@dnd-kit/utilities';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { EditPageLayout } from '@/components/edit-page-layout';
-import { FormSection } from '@/components/form-section';
 import { EditSectionsSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
@@ -286,10 +285,17 @@ export default function SectionEdit({ section }: EditPageProps) {
             loading={false}
             loadingSkeleton={EditSectionsSkeleton}
         >
-            <div className="space-y-8">
-                <Card>
-                    <CardContent className="pt-6">
-                        <FormSection icon={ListChecks} title="Información Básica" description="Datos principales de la sección">
+            <Accordion type="multiple" defaultValue={['basica', 'opciones']} className="space-y-4">
+                {/* Sección: Información Básica */}
+                <AccordionItem value="basica" className="rounded-lg border bg-card">
+                    <AccordionTrigger className="px-6 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                            <ListChecks className="h-5 w-5 text-primary" />
+                            <span className="text-lg font-semibold">Información Básica</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6">
+                        <div className="space-y-6">
                             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                                 <FormField label="Título" error={errors.title} required>
                                     <Input id="title" type="text" value={formData.title} onChange={(e) => handleInputChange('title', e.target.value)} />
@@ -363,85 +369,94 @@ export default function SectionEdit({ section }: EditPageProps) {
                                     </FormField>
                                 </div>
                             )}
-                        </FormSection>
-                    </CardContent>
-                </Card>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
 
-                <Card>
-                    <CardContent className="pt-6">
-                        <FormSection icon={ENTITY_ICONS.menu.sectionOptions} title="Opciones" description="Define las opciones disponibles en esta sección">
-                            <div className="space-y-3">
-                                {localOptions.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground">Sin items aún</p>
-                                ) : (
-                                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                                        <SortableContext items={localOptions.map((opt) => opt.id)} strategy={verticalListSortingStrategy}>
-                                            <div className="space-y-3">
-                                                {localOptions.map((option, index) => (
-                                                    <SortableItem key={option.id} option={option} index={index} onUpdate={updateOption} onRemove={removeOption} />
-                                                ))}
-                                            </div>
-                                        </SortableContext>
-                                    </DndContext>
-                                )}
-
-                                <Button type="button" onClick={addOption} size="sm" variant="outline" className="w-full">
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Agregar Item
-                                </Button>
-                            </div>
-                        </FormSection>
-                    </CardContent>
-                </Card>
-
-                {/* Bundle Pricing - Solo si hay opciones con is_extra */}
-                {localOptions.some((opt) => opt.is_extra) && (
-                    <Card>
-                        <CardContent className="pt-6">
-                            <FormSection icon={Percent} title="Descuento por Cantidad" description="Descuento cuando se seleccionan múltiples extras del mismo precio">
-                                <div className="space-y-4">
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id="bundle_discount_enabled"
-                                            checked={formData.bundle_discount_enabled}
-                                            onCheckedChange={(checked) => handleInputChange('bundle_discount_enabled', checked as boolean)}
-                                        />
-                                        <Label htmlFor="bundle_discount_enabled" className="cursor-pointer text-sm font-medium leading-none">
-                                            Habilitar descuento por cantidad
-                                        </Label>
-                                    </div>
-
-                                    {formData.bundle_discount_enabled && (
-                                        <div className="grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2">
-                                            <FormField label="Items necesarios para descuento" error={errors.bundle_size}>
-                                                <Input
-                                                    id="bundle_size"
-                                                    type="number"
-                                                    min="2"
-                                                    max="10"
-                                                    value={formData.bundle_size}
-                                                    onChange={(e) => handleInputChange('bundle_size', e.target.value ? parseInt(e.target.value) : '')}
-                                                />
-                                            </FormField>
-
-                                            <FormField label={`Descuento (Q)`} error={errors.bundle_discount_amount}>
-                                                <Input
-                                                    id="bundle_discount_amount"
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    value={formData.bundle_discount_amount}
-                                                    onChange={(e) => handleInputChange('bundle_discount_amount', e.target.value)}
-                                                />
-                                            </FormField>
+                {/* Sección: Opciones */}
+                <AccordionItem value="opciones" className="rounded-lg border bg-card">
+                    <AccordionTrigger className="px-6 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                            <ENTITY_ICONS.menu.sectionOptions className="h-5 w-5 text-primary" />
+                            <span className="text-lg font-semibold">Opciones</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6">
+                        <div className="space-y-3">
+                            {localOptions.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">Sin items aún</p>
+                            ) : (
+                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                    <SortableContext items={localOptions.map((opt) => opt.id)} strategy={verticalListSortingStrategy}>
+                                        <div className="space-y-3">
+                                            {localOptions.map((option, index) => (
+                                                <SortableItem key={option.id} option={option} index={index} onUpdate={updateOption} onRemove={removeOption} />
+                                            ))}
                                         </div>
-                                    )}
+                                    </SortableContext>
+                                </DndContext>
+                            )}
+
+                            <Button type="button" onClick={addOption} size="sm" variant="outline" className="w-full">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Agregar Item
+                            </Button>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* Sección: Descuento por Cantidad - Solo si hay opciones con is_extra */}
+                {localOptions.some((opt) => opt.is_extra) && (
+                    <AccordionItem value="descuento" className="rounded-lg border bg-card">
+                        <AccordionTrigger className="px-6 hover:no-underline">
+                            <div className="flex items-center gap-2">
+                                <Percent className="h-5 w-5 text-primary" />
+                                <span className="text-lg font-semibold">Descuento por Cantidad</span>
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-6 pb-6">
+                            <div className="space-y-4">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="bundle_discount_enabled"
+                                        checked={formData.bundle_discount_enabled}
+                                        onCheckedChange={(checked) => handleInputChange('bundle_discount_enabled', checked as boolean)}
+                                    />
+                                    <Label htmlFor="bundle_discount_enabled" className="cursor-pointer text-sm font-medium leading-none">
+                                        Habilitar descuento por cantidad
+                                    </Label>
                                 </div>
-                            </FormSection>
-                        </CardContent>
-                    </Card>
+
+                                {formData.bundle_discount_enabled && (
+                                    <div className="grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2">
+                                        <FormField label="Items necesarios para descuento" error={errors.bundle_size}>
+                                            <Input
+                                                id="bundle_size"
+                                                type="number"
+                                                min="2"
+                                                max="10"
+                                                value={formData.bundle_size}
+                                                onChange={(e) => handleInputChange('bundle_size', e.target.value ? parseInt(e.target.value) : '')}
+                                            />
+                                        </FormField>
+
+                                        <FormField label={`Descuento (Q)`} error={errors.bundle_discount_amount}>
+                                            <Input
+                                                id="bundle_discount_amount"
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={formData.bundle_discount_amount}
+                                                onChange={(e) => handleInputChange('bundle_discount_amount', e.target.value)}
+                                            />
+                                        </FormField>
+                                    </div>
+                                )}
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
                 )}
-            </div>
+            </Accordion>
         </EditPageLayout>
     );
 }

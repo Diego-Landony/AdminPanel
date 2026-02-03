@@ -9,6 +9,7 @@ use App\Models\CustomerAddress;
 use App\Models\Menu\Combo;
 use App\Models\Menu\Product;
 use App\Models\Menu\ProductVariant;
+use App\Models\Menu\Promotion;
 use App\Models\Restaurant;
 use App\Traits\HasPriceZones;
 use Illuminate\Support\Facades\DB;
@@ -58,11 +59,11 @@ class CartService
     /**
      * Agrega un item al carrito
      *
-     * Si ya existe un item idéntico (mismo producto/combo, variante y opciones),
+     * Si ya existe un item idéntico (mismo producto/combo/combinado, variante y opciones),
      * se incrementa la cantidad en lugar de crear un nuevo item.
      *
-     * @param  array  $data  Debe contener: product_id OR combo_id, variant_id (opcional),
-     *                       quantity, selected_options (opcional), combo_selections (opcional), notes (opcional)
+     * @param  array  $data  Debe contener: product_id OR combo_id OR combinado_id, variant_id (opcional),
+     *                       quantity, selected_options (opcional), combo_selections/combinado_selections (opcional), notes (opcional)
      */
     public function addItem(Cart $cart, array $data): CartItem
     {
@@ -70,6 +71,7 @@ class CartService
         $unitPrice = 0;
         $selectedOptions = $data['selected_options'] ?? null;
         $comboSelections = $data['combo_selections'] ?? null;
+        $combinadoSelections = $data['combinado_selections'] ?? null;
         $notes = $data['notes'] ?? null;
 
         $itemData = [
@@ -77,6 +79,7 @@ class CartService
             'quantity' => $quantity,
             'selected_options' => $selectedOptions,
             'combo_selections' => $comboSelections,
+            'combinado_selections' => $combinadoSelections,
             'notes' => $notes,
         ];
 
@@ -92,7 +95,21 @@ class CartService
             $itemData['combo_id'] = $combo->id;
 
             // Buscar item idéntico existente
-            $existingItem = $this->findIdenticalItem($cart, null, null, $combo->id, $selectedOptions, $comboSelections);
+            $existingItem = $this->findIdenticalItem($cart, null, null, $combo->id, null, $selectedOptions, $comboSelections, null);
+        } elseif (isset($data['combinado_id'])) {
+            // Soporte para Combinados (bundle_special promotions)
+            $combinado = Promotion::where('type', 'bundle_special')->findOrFail($data['combinado_id']);
+
+            if (! $combinado->isValidNowCombinado()) {
+                throw new \InvalidArgumentException('El combinado no está disponible en este momento');
+            }
+
+            $unitPrice = $this->getPriceForCombinado($combinado, $cart->zone, $cart->service_type);
+
+            $itemData['combinado_id'] = $combinado->id;
+
+            // Buscar item idéntico existente
+            $existingItem = $this->findIdenticalItem($cart, null, null, null, $combinado->id, $selectedOptions, null, $combinadoSelections);
         } elseif (isset($data['product_id'])) {
             $product = Product::with('category')->findOrFail($data['product_id']);
 
@@ -107,9 +124,9 @@ class CartService
             $itemData['variant_id'] = $variantId;
 
             // Buscar item idéntico existente
-            $existingItem = $this->findIdenticalItem($cart, $product->id, $variantId, null, $selectedOptions, $comboSelections);
+            $existingItem = $this->findIdenticalItem($cart, $product->id, $variantId, null, null, $selectedOptions, $comboSelections, null);
         } else {
-            throw new \InvalidArgumentException('Se requiere product_id o combo_id');
+            throw new \InvalidArgumentException('Se requiere product_id, combo_id o combinado_id');
         }
 
         // Si existe un item idéntico, incrementar cantidad y combinar notas
@@ -123,7 +140,7 @@ class CartService
                 'notes' => $combinedNotes,
             ]);
 
-            return $existingItem->fresh(['product', 'variant', 'combo']);
+            return $existingItem->fresh(['product', 'variant', 'combo', 'combinado']);
         }
 
         $itemData['unit_price'] = $unitPrice;
@@ -133,28 +150,43 @@ class CartService
     }
 
     /**
+     * Obtiene el precio de un combinado según zona y tipo de servicio
+     */
+    protected function getPriceForCombinado(Promotion $combinado, ?string $zone, ?string $serviceType): float
+    {
+        $zone = $zone ?? 'capital';
+        $serviceType = $serviceType ?? 'pickup';
+
+        return $combinado->getPriceForZoneCombinado($zone, $serviceType) ?? 0;
+    }
+
+    /**
      * Busca un item idéntico en el carrito
-     * Compara: product_id, variant_id, combo_id, selected_options, combo_selections
+     * Compara: product_id, variant_id, combo_id, combinado_id, selected_options, combo_selections, combinado_selections
      */
     protected function findIdenticalItem(
         Cart $cart,
         ?int $productId,
         ?int $variantId,
         ?int $comboId,
+        ?int $combinadoId,
         ?array $selectedOptions,
-        ?array $comboSelections
+        ?array $comboSelections,
+        ?array $combinadoSelections
     ): ?CartItem {
         $query = $cart->items()
             ->where('product_id', $productId)
             ->where('variant_id', $variantId)
-            ->where('combo_id', $comboId);
+            ->where('combo_id', $comboId)
+            ->where('combinado_id', $combinadoId);
 
         // Obtener candidatos y comparar opciones en PHP
         $candidates = $query->get();
 
         foreach ($candidates as $item) {
             if ($this->optionsAreIdentical($item->selected_options, $selectedOptions) &&
-                $this->optionsAreIdentical($item->combo_selections, $comboSelections)) {
+                $this->optionsAreIdentical($item->combo_selections, $comboSelections) &&
+                $this->optionsAreIdentical($item->combinado_selections, $combinadoSelections)) {
                 return $item;
             }
         }
@@ -410,6 +442,46 @@ class CartService
                 if (! $combo->isAvailable()) {
                     $messages[] = "El combo '{$combo->name}' tiene items no disponibles";
                     $valid = false;
+                }
+            } elseif ($item->isCombinado()) {
+                // Validación para Combinados (bundle_special)
+                $combinado = $item->combinado;
+
+                if (! $combinado) {
+                    $messages[] = "El combinado del item #{$item->id} ya no existe";
+                    $valid = false;
+
+                    continue;
+                }
+
+                if (! $combinado->is_active) {
+                    $messages[] = "El combinado '{$combinado->name}' ya no está activo";
+                    $valid = false;
+                }
+
+                if (! $combinado->isValidNowCombinado()) {
+                    $messages[] = "El combinado '{$combinado->name}' no está disponible en este momento (fuera de vigencia)";
+                    $valid = false;
+                }
+
+                // Verificar que todos los items del combinado estén disponibles
+                $combinado->load('bundleItems.product', 'bundleItems.options.product');
+                foreach ($combinado->bundleItems as $bundleItem) {
+                    if ($bundleItem->is_choice_group) {
+                        // Verificar que al menos una opción esté activa
+                        $hasActiveOption = $bundleItem->options->contains(fn ($opt) => $opt->product && $opt->product->is_active);
+                        if (! $hasActiveOption) {
+                            $messages[] = "El combinado '{$combinado->name}' tiene opciones no disponibles";
+                            $valid = false;
+
+                            break;
+                        }
+                    } elseif ($bundleItem->product && ! $bundleItem->product->is_active) {
+                        $messages[] = "El combinado '{$combinado->name}' tiene productos no disponibles";
+                        $valid = false;
+
+                        break;
+                    }
                 }
             } else {
                 $product = $item->product;

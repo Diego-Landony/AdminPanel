@@ -1,23 +1,21 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { router, useForm } from '@inertiajs/react';
-import { Calendar, Plus, Store, Trash2, Truck } from 'lucide-react';
+import { Calendar, Package, Plus, Store, Trash2, Truck } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { CURRENCY, NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
+import { NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
 import { ProductOrComboSelector } from '@/components/ProductOrComboSelector';
 import { ConfirmationDialog } from '@/components/promotions/ConfirmationDialog';
 import { VariantSelector } from '@/components/promotions/VariantSelector';
 import { WeekdaySelector } from '@/components/WeekdaySelector';
 import { CreatePageLayout } from '@/components/create-page-layout';
-import { FormSection } from '@/components/form-section';
 import { CreatePageSkeleton } from '@/components/skeletons';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { generateUniqueId } from '@/utils/generateId';
@@ -351,242 +349,259 @@ export default function CreatePromotion({ products, combos }: CreatePromotionPag
             loading={processing}
             loadingSkeleton={CreatePageSkeleton}
         >
-            {/* INFORMACIÓN BÁSICA */}
-            <FormSection title="Información de la Promoción">
-                {/* Switch Activo */}
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                    <Label htmlFor="is_active" className="text-base">
-                        Promoción activa
-                    </Label>
-                    <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked)} />
-                </div>
-
-                <FormField label="Nombre" error={errors.name} required>
-                    <Input type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder={PLACEHOLDERS.name} />
-                </FormField>
-
-                <FormField label="Descripción" error={errors.description}>
-                    <Textarea
-                        value={data.description}
-                        onChange={(e) => setData('description', e.target.value)}
-                        placeholder={PLACEHOLDERS.description}
-                        rows={2}
-                    />
-                </FormField>
-            </FormSection>
-
-            {/* PRODUCTOS */}
-            <FormSection title="Productos">
-                <div className="space-y-4">
-                    {localItems.map((item, index) => {
-                        const selectedProduct = item.item_type === 'product' && item.product_id
-                            ? products.find((p) => p.id === Number(item.product_id))
-                            : null;
-                        const hasVariants = selectedProduct?.variants && selectedProduct.variants.length > 0;
-
-                        const excludedVariantIds = localItems
-                            .filter((i, idx) => idx !== index && i.product_id === item.product_id && i.variant_id !== null)
-                            .map((i) => i.variant_id!);
-
-                        return (
-                            <div
-                                key={item.id}
-                                ref={index === localItems.length - 1 ? lastItemRef : null}
-                                className="relative space-y-4 rounded-lg border border-border p-4"
-                            >
-                                <div className="mb-2 flex items-center justify-between">
-                                    <h4 className="text-sm font-medium">Producto/Combo {index + 1}</h4>
-                                    {localItems.length > 1 && (
-                                        <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)}>
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                    )}
-                                </div>
-
-                                <ProductOrComboSelector
-                                    label="Producto o Combo"
-                                    value={item.product_id ? Number(item.product_id) : null}
-                                    onChange={(value, type) => updateProductOrCombo(index, value, type)}
-                                    products={products}
-                                    combos={combos}
-                                    type={item.item_type}
-                                    placeholder={PLACEHOLDERS.selectProduct}
-                                    error={dynamicErrors[`items.${index}.product_id`]}
-                                    required
-                                />
-
-                                {hasVariants && item.item_type === 'product' && (
-                                    <VariantSelector
-                                        variants={selectedProduct.variants!.filter((v) => !excludedVariantIds.includes(v.id))}
-                                        value={item.variant_id}
-                                        onChange={(variantId) => updateItem(index, 'variant_id', variantId)}
-                                        error={dynamicErrors[`items.${index}.variant_id`]}
-                                        required
-                                    />
-                                )}
-
-                            {/* Precios - Capital */}
-                            <div className="space-y-2">
-                                <p className="text-sm font-medium text-muted-foreground">Precios Capital</p>
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <FormField label="Pickup Capital" error={dynamicErrors[`items.${index}.special_price_pickup_capital`]} required>
-                                        <div className="relative">
-                                            <Store className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={item.special_price_pickup_capital}
-                                                onChange={(e) => updateItem(index, 'special_price_pickup_capital', e.target.value)}
-                                                className="pl-9"
-                                                placeholder={PLACEHOLDERS.price}
-                                            />
-                                        </div>
-                                    </FormField>
-
-                                    <FormField label="Delivery Capital" error={dynamicErrors[`items.${index}.special_price_delivery_capital`]} required>
-                                        <div className="relative">
-                                            <Truck className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={item.special_price_delivery_capital}
-                                                onChange={(e) => updateItem(index, 'special_price_delivery_capital', e.target.value)}
-                                                className="pl-9"
-                                                placeholder={PLACEHOLDERS.price}
-                                            />
-                                        </div>
-                                    </FormField>
-                                </div>
+            <Accordion type="multiple" defaultValue={['basica', 'items']} className="space-y-4">
+                <AccordionItem value="basica" className="rounded-lg border bg-card">
+                    <AccordionTrigger className="px-6 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                            <Package className="h-5 w-5 text-primary" />
+                            <span className="text-lg font-semibold">Información de la Promoción</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6">
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between rounded-lg border p-4">
+                                <Label htmlFor="is_active" className="text-base">
+                                    Promoción activa
+                                </Label>
+                                <Switch id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked)} />
                             </div>
 
-                            {/* Precios - Interior */}
-                            <div className="space-y-2">
-                                <p className="text-sm font-medium text-muted-foreground">Precios Interior</p>
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <FormField label="Pickup Interior" error={dynamicErrors[`items.${index}.special_price_pickup_interior`]} required>
-                                        <div className="relative">
-                                            <Store className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={item.special_price_pickup_interior}
-                                                onChange={(e) => updateItem(index, 'special_price_pickup_interior', e.target.value)}
-                                                className="pl-9"
-                                                placeholder={PLACEHOLDERS.price}
-                                            />
-                                        </div>
-                                    </FormField>
+                            <FormField label="Nombre" error={errors.name} required>
+                                <Input type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder={PLACEHOLDERS.name} />
+                            </FormField>
 
-                                    <FormField label="Delivery Interior" error={dynamicErrors[`items.${index}.special_price_delivery_interior`]} required>
-                                        <div className="relative">
-                                            <Truck className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={item.special_price_delivery_interior}
-                                                onChange={(e) => updateItem(index, 'special_price_delivery_interior', e.target.value)}
-                                                className="pl-9"
-                                                placeholder={PLACEHOLDERS.price}
-                                            />
-                                        </div>
-                                    </FormField>
-                                </div>
-                            </div>
-
-                            {/* VIGENCIA */}
-                            <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                                    <h5 className="text-sm font-medium">Vigencia</h5>
-                                </div>
-
-                                {/* Días de la semana */}
-                                <WeekdaySelector
-                                    value={item.weekdays}
-                                    onChange={(days) => updateItem(index, 'weekdays', days)}
-                                    error={dynamicErrors[`items.${index}.weekdays`]}
-                                    label="Días activos"
-                                    required
+                            <FormField label="Descripción" error={errors.description}>
+                                <Textarea
+                                    value={data.description}
+                                    onChange={(e) => setData('description', e.target.value)}
+                                    placeholder={PLACEHOLDERS.description}
+                                    rows={2}
                                 />
+                            </FormField>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
 
-                                {/* Checkbox: Restricciones */}
-                                <div className="flex items-center space-x-2">
-                                    <input
-                                        type="checkbox"
-                                        id={`has_schedule_${index}`}
-                                        checked={item.has_schedule}
-                                        onChange={(e) => updateItem(index, 'has_schedule', e.target.checked)}
-                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                    />
-                                    <label
-                                        htmlFor={`has_schedule_${index}`}
-                                        className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                <AccordionItem value="items" className="rounded-lg border bg-card">
+                    <AccordionTrigger className="px-6 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                            <Package className="h-5 w-5 text-primary" />
+                            <span className="text-lg font-semibold">Productos</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6">
+                        <div className="space-y-4">
+                            {localItems.map((item, index) => {
+                                const selectedProduct = item.item_type === 'product' && item.product_id
+                                    ? products.find((p) => p.id === Number(item.product_id))
+                                    : null;
+                                const hasVariants = selectedProduct?.variants && selectedProduct.variants.length > 0;
+
+                                const excludedVariantIds = localItems
+                                    .filter((i, idx) => idx !== index && i.product_id === item.product_id && i.variant_id !== null)
+                                    .map((i) => i.variant_id!);
+
+                                return (
+                                    <div
+                                        key={item.id}
+                                        ref={index === localItems.length - 1 ? lastItemRef : null}
+                                        className="relative space-y-4 rounded-lg border border-border p-4"
                                     >
-                                        Restringir por fechas u horarios
-                                    </label>
-                                </div>
+                                        <div className="mb-2 flex items-center justify-between">
+                                            <h4 className="text-sm font-medium">Producto/Combo {index + 1}</h4>
+                                            {localItems.length > 1 && (
+                                                <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)}>
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                </Button>
+                                            )}
+                                        </div>
 
-                                {/* Campos condicionales */}
-                                {item.has_schedule && (
-                                    <div className="space-y-4 border-l-2 border-primary/20 pl-6">
-                                        {/* Rango de fechas */}
+                                        <ProductOrComboSelector
+                                            label="Producto o Combo"
+                                            value={item.product_id ? Number(item.product_id) : null}
+                                            onChange={(value, type) => updateProductOrCombo(index, value, type)}
+                                            products={products}
+                                            combos={combos}
+                                            type={item.item_type}
+                                            placeholder={PLACEHOLDERS.selectProduct}
+                                            error={dynamicErrors[`items.${index}.product_id`]}
+                                            required
+                                        />
+
+                                        {hasVariants && item.item_type === 'product' && (
+                                            <VariantSelector
+                                                variants={selectedProduct.variants!.filter((v) => !excludedVariantIds.includes(v.id))}
+                                                value={item.variant_id}
+                                                onChange={(variantId) => updateItem(index, 'variant_id', variantId)}
+                                                error={dynamicErrors[`items.${index}.variant_id`]}
+                                                required
+                                            />
+                                        )}
+
+                                        {/* Precios - Capital */}
                                         <div className="space-y-2">
-                                            <p className="text-sm font-medium">Fechas</p>
+                                            <p className="text-sm font-medium text-muted-foreground">Precios Capital</p>
                                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                                <FormField label="Desde" error={dynamicErrors[`items.${index}.valid_from`]}>
-                                                    <Input
-                                                        type="date"
-                                                        value={item.valid_from}
-                                                        onChange={(e) => updateItem(index, 'valid_from', e.target.value)}
-                                                    />
+                                                <FormField label="Pickup Capital" error={dynamicErrors[`items.${index}.special_price_pickup_capital`]} required>
+                                                    <div className="relative">
+                                                        <Store className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                                        <Input
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0"
+                                                            value={item.special_price_pickup_capital}
+                                                            onChange={(e) => updateItem(index, 'special_price_pickup_capital', e.target.value)}
+                                                            className="pl-9"
+                                                            placeholder={PLACEHOLDERS.price}
+                                                        />
+                                                    </div>
                                                 </FormField>
-                                                <FormField label="Hasta" error={dynamicErrors[`items.${index}.valid_until`]}>
-                                                    <Input
-                                                        type="date"
-                                                        value={item.valid_until}
-                                                        onChange={(e) => updateItem(index, 'valid_until', e.target.value)}
-                                                    />
+
+                                                <FormField label="Delivery Capital" error={dynamicErrors[`items.${index}.special_price_delivery_capital`]} required>
+                                                    <div className="relative">
+                                                        <Truck className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                                        <Input
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0"
+                                                            value={item.special_price_delivery_capital}
+                                                            onChange={(e) => updateItem(index, 'special_price_delivery_capital', e.target.value)}
+                                                            className="pl-9"
+                                                            placeholder={PLACEHOLDERS.price}
+                                                        />
+                                                    </div>
                                                 </FormField>
                                             </div>
                                         </div>
 
-                                        {/* Horario */}
+                                        {/* Precios - Interior */}
                                         <div className="space-y-2">
-                                            <p className="text-sm font-medium">Horarios</p>
+                                            <p className="text-sm font-medium text-muted-foreground">Precios Interior</p>
                                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                                <FormField label="Desde" error={dynamicErrors[`items.${index}.time_from`]}>
-                                                    <Input
-                                                        type="time"
-                                                        value={item.time_from}
-                                                        onChange={(e) => updateItem(index, 'time_from', e.target.value)}
-                                                    />
+                                                <FormField label="Pickup Interior" error={dynamicErrors[`items.${index}.special_price_pickup_interior`]} required>
+                                                    <div className="relative">
+                                                        <Store className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                                        <Input
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0"
+                                                            value={item.special_price_pickup_interior}
+                                                            onChange={(e) => updateItem(index, 'special_price_pickup_interior', e.target.value)}
+                                                            className="pl-9"
+                                                            placeholder={PLACEHOLDERS.price}
+                                                        />
+                                                    </div>
                                                 </FormField>
-                                                <FormField label="Hasta" error={dynamicErrors[`items.${index}.time_until`]}>
-                                                    <Input
-                                                        type="time"
-                                                        value={item.time_until}
-                                                        onChange={(e) => updateItem(index, 'time_until', e.target.value)}
-                                                    />
+
+                                                <FormField label="Delivery Interior" error={dynamicErrors[`items.${index}.special_price_delivery_interior`]} required>
+                                                    <div className="relative">
+                                                        <Truck className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                                        <Input
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0"
+                                                            value={item.special_price_delivery_interior}
+                                                            onChange={(e) => updateItem(index, 'special_price_delivery_interior', e.target.value)}
+                                                            className="pl-9"
+                                                            placeholder={PLACEHOLDERS.price}
+                                                        />
+                                                    </div>
                                                 </FormField>
                                             </div>
+                                        </div>
+
+                                        {/* VIGENCIA */}
+                                        <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
+                                            <div className="flex items-center gap-2">
+                                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                                <h5 className="text-sm font-medium">Vigencia</h5>
+                                            </div>
+
+                                            {/* Días de la semana */}
+                                            <WeekdaySelector
+                                                value={item.weekdays}
+                                                onChange={(days) => updateItem(index, 'weekdays', days)}
+                                                error={dynamicErrors[`items.${index}.weekdays`]}
+                                                label="Días activos"
+                                                required
+                                            />
+
+                                            {/* Checkbox: Restricciones */}
+                                            <div className="flex items-center space-x-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id={`has_schedule_${index}`}
+                                                    checked={item.has_schedule}
+                                                    onChange={(e) => updateItem(index, 'has_schedule', e.target.checked)}
+                                                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                                />
+                                                <label
+                                                    htmlFor={`has_schedule_${index}`}
+                                                    className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                >
+                                                    Restringir por fechas u horarios
+                                                </label>
+                                            </div>
+
+                                            {/* Campos condicionales */}
+                                            {item.has_schedule && (
+                                                <div className="space-y-4 border-l-2 border-primary/20 pl-6">
+                                                    {/* Rango de fechas */}
+                                                    <div className="space-y-2">
+                                                        <p className="text-sm font-medium">Fechas</p>
+                                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                                            <FormField label="Desde" error={dynamicErrors[`items.${index}.valid_from`]}>
+                                                                <Input
+                                                                    type="date"
+                                                                    value={item.valid_from}
+                                                                    onChange={(e) => updateItem(index, 'valid_from', e.target.value)}
+                                                                />
+                                                            </FormField>
+                                                            <FormField label="Hasta" error={dynamicErrors[`items.${index}.valid_until`]}>
+                                                                <Input
+                                                                    type="date"
+                                                                    value={item.valid_until}
+                                                                    onChange={(e) => updateItem(index, 'valid_until', e.target.value)}
+                                                                />
+                                                            </FormField>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Horario */}
+                                                    <div className="space-y-2">
+                                                        <p className="text-sm font-medium">Horarios</p>
+                                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                                            <FormField label="Desde" error={dynamicErrors[`items.${index}.time_from`]}>
+                                                                <Input
+                                                                    type="time"
+                                                                    value={item.time_from}
+                                                                    onChange={(e) => updateItem(index, 'time_from', e.target.value)}
+                                                                />
+                                                            </FormField>
+                                                            <FormField label="Hasta" error={dynamicErrors[`items.${index}.time_until`]}>
+                                                                <Input
+                                                                    type="time"
+                                                                    value={item.time_until}
+                                                                    onChange={(e) => updateItem(index, 'time_until', e.target.value)}
+                                                                />
+                                                            </FormField>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                )}
-                            </div>
-                        </div>
-                    );
-                    })}
+                                );
+                            })}
 
-                    <Button type="button" variant="outline" onClick={addItem} className="w-full">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Agregar otro producto
-                    </Button>
-                </div>
-            </FormSection>
+                            <Button type="button" variant="outline" onClick={addItem} className="w-full">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Agregar otro producto
+                            </Button>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
 
             <ConfirmationDialog
                 open={confirmDialog.open}

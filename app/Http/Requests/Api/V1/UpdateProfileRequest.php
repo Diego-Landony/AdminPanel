@@ -34,6 +34,7 @@ class UpdateProfileRequest extends FormRequest
             'gender' => ['nullable', Rule::enum(Gender::class)],
             'subway_card' => ['nullable', 'string', 'max:50'],
             'email_offers_enabled' => ['sometimes', 'boolean'],
+            'push_notifications_enabled' => ['sometimes', 'boolean'],
         ];
     }
 

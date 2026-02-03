@@ -5,23 +5,26 @@
 
 import { closestCenter, DndContext, DragEndEvent, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { useMemo, useState } from 'react';
 
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { CategoryCombobox } from '@/components/CategoryCombobox';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ComboItemCard } from '@/components/combos/ComboItemCard';
-import { FormSection } from '@/components/form-section';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { ImageCropperUpload } from '@/components/ImageCropperUpload';
 import { PriceFields } from '@/components/PriceFields';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { COMBO_LABELS, CURRENCY } from '@/constants/ui-constants';
-import { AlertCircle, Banknote, ChevronDown, ChevronUp, Eye, Gift, Layers, Package, Package2, Plus } from 'lucide-react';
+import { COMBO_LABELS } from '@/constants/ui-constants';
+import { AlertCircle, Banknote, Gift, Layers, Package, Package2, Plus } from 'lucide-react';
 
 import type { Category, Product, FormErrors, LocalComboItem } from '@/types/menu';
 import type { ComboFormData, InactiveProductInfo } from '@/hooks/useComboForm';
@@ -46,147 +49,6 @@ export interface ComboFormFieldsProps {
     mode: 'create' | 'edit';
 }
 
-function ComboPreviewPanel({
-    formData,
-    localItems,
-    products,
-    categories,
-}: {
-    formData: ComboFormData;
-    localItems: LocalComboItem[];
-    products: Product[];
-    categories: Category[];
-}) {
-    const [isOpen, setIsOpen] = useState(false);
-
-    const selectedCategory = useMemo(() => {
-        if (!formData.category_id) return null;
-        return categories.find((c) => c.id === Number(formData.category_id));
-    }, [formData.category_id, categories]);
-
-    const basePrice = useMemo(() => {
-        const price = parseFloat(formData.precio_pickup_capital);
-        return isNaN(price) ? 0 : price;
-    }, [formData.precio_pickup_capital]);
-
-    const getProductName = (productId: number | null) => {
-        if (!productId) return null;
-        const product = products.find((p) => p.id === productId);
-        return product?.name || null;
-    };
-
-    const itemsSummary = useMemo(() => {
-        return localItems.map((item) => {
-            if (item.is_choice_group) {
-                const optionNames = item.options
-                    .map((opt) => getProductName(opt.product_id))
-                    .filter(Boolean);
-                return {
-                    type: 'choice' as const,
-                    label: item.choice_label || COMBO_LABELS.itemTypes.choiceGroup,
-                    options: optionNames,
-                    quantity: item.quantity,
-                };
-            } else {
-                return {
-                    type: 'fixed' as const,
-                    label: getProductName(item.product_id) || COMBO_LABELS.itemTypes.fixed,
-                    options: [],
-                    quantity: item.quantity,
-                };
-            }
-        });
-    }, [localItems, products]);
-
-    return (
-        <Card>
-            <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-                <CardContent className="pt-6">
-                    <CollapsibleTrigger asChild>
-                        <button
-                            type="button"
-                            className="flex w-full items-center justify-between text-left"
-                        >
-                            <div className="flex items-center gap-2">
-                                <Eye className="h-4 w-4 text-muted-foreground" />
-                                <h3 className="text-sm font-medium">Vista previa del combo</h3>
-                            </div>
-                            {isOpen ? (
-                                <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                            )}
-                        </button>
-                    </CollapsibleTrigger>
-
-                    <CollapsibleContent className="pt-4">
-                        <div className="rounded-lg border bg-muted/30 p-4">
-                            {/* Nombre y categoría */}
-                            <div className="mb-4 border-b pb-4">
-                                <h4 className="text-lg font-semibold">
-                                    {formData.name || 'Sin nombre'}
-                                </h4>
-                                {selectedCategory && (
-                                    <p className="text-sm text-muted-foreground">
-                                        {selectedCategory.name}
-                                    </p>
-                                )}
-                                {formData.description && (
-                                    <p className="mt-2 text-sm text-muted-foreground">
-                                        {formData.description}
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* Items del combo */}
-                            <div className="mb-4 space-y-3">
-                                <h5 className="text-sm font-medium">Contenido del combo:</h5>
-                                {itemsSummary.length > 0 ? (
-                                    <ul className="space-y-2">
-                                        {itemsSummary.map((item, index) => (
-                                            <li
-                                                key={index}
-                                                className="rounded-md bg-background p-2 text-sm"
-                                            >
-                                                <div className="flex items-start gap-2">
-                                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
-                                                        {item.quantity}
-                                                    </span>
-                                                    <div className="flex-1">
-                                                        <span className="font-medium">{item.label}</span>
-                                                        {item.type === 'choice' && item.options.length > 0 && (
-                                                            <p className="mt-1 text-xs text-muted-foreground">
-                                                                Opciones: {item.options.join(', ')}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p className="text-sm text-muted-foreground">
-                                        No hay items agregados
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* Precio base */}
-                            <div className="flex items-center justify-between border-t pt-4">
-                                <span className="text-sm font-medium">Precio base (Pickup Capital):</span>
-                                <span className="text-lg font-bold text-primary">
-                                    {CURRENCY.symbol}
-                                    {basePrice.toFixed(2)}
-                                </span>
-                            </div>
-                        </div>
-                    </CollapsibleContent>
-                </CardContent>
-            </Collapsible>
-        </Card>
-    );
-}
-
 export function ComboFormFields({
     formData,
     onInputChange,
@@ -209,7 +71,7 @@ export function ComboFormFields({
     const hasInactiveProducts = inactiveItems.length > 0;
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-4">
             {/* Alerta de productos inactivos - versión detallada para edit */}
             {mode === 'edit' && hasInactiveProducts && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
@@ -251,9 +113,16 @@ export function ComboFormFields({
                 </div>
             )}
 
-            <Card>
-                <CardContent className="pt-6">
-                    <FormSection icon={Package2} title="Información Básica">
+            <Accordion type="multiple" defaultValue={['basica', 'items']} className="space-y-4">
+                {/* Sección: Información Básica */}
+                <AccordionItem value="basica" className="rounded-lg border bg-card">
+                    <AccordionTrigger className="px-6 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                            <Package2 className="h-5 w-5 text-primary" />
+                            <span className="text-lg font-semibold">Información Básica</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6">
                         <div className="space-y-6">
                             <div className="flex items-center justify-between rounded-lg border p-4">
                                 <Label htmlFor="is_active" className="cursor-pointer text-sm font-medium">
@@ -298,17 +167,22 @@ export function ComboFormFields({
                                 currentImage={imagePreview}
                                 onImageChange={(file) => onImageChange(file, null)}
                                 error={errors.image}
-                                aspectRatio={5 / 3}
-                                aspectLabel="5:3"
+                                aspectRatio={4 / 3}
+                                aspectLabel="4:3"
                             />
                         </div>
-                    </FormSection>
-                </CardContent>
-            </Card>
+                    </AccordionContent>
+                </AccordionItem>
 
-            <Card>
-                <CardContent className="pt-6">
-                    <FormSection icon={Banknote} title="Precios del Combo">
+                {/* Sección: Precios */}
+                <AccordionItem value="precios" className="rounded-lg border bg-card">
+                    <AccordionTrigger className="px-6 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                            <Banknote className="h-5 w-5 text-primary" />
+                            <span className="text-lg font-semibold">Precios del Combo</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6">
                         <PriceFields
                             capitalPickup={formData.precio_pickup_capital}
                             capitalDomicilio={formData.precio_domicilio_capital}
@@ -325,13 +199,18 @@ export function ComboFormFields({
                                 interiorDomicilio: errors.precio_domicilio_interior,
                             }}
                         />
-                    </FormSection>
-                </CardContent>
-            </Card>
+                    </AccordionContent>
+                </AccordionItem>
 
-            <Card>
-                <CardContent className="pt-6">
-                    <FormSection icon={Gift} title="Recompensas">
+                {/* Sección: Recompensas */}
+                <AccordionItem value="recompensas" className="rounded-lg border bg-card">
+                    <AccordionTrigger className="px-6 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                            <Gift className="h-5 w-5 text-primary" />
+                            <span className="text-lg font-semibold">Recompensas</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6">
                         <div className="space-y-6">
                             <div className="flex items-center justify-between rounded-lg border p-4">
                                 <Label htmlFor="is_redeemable" className="cursor-pointer text-sm font-medium">
@@ -357,13 +236,18 @@ export function ComboFormFields({
                                 </FormField>
                             )}
                         </div>
-                    </FormSection>
-                </CardContent>
-            </Card>
+                    </AccordionContent>
+                </AccordionItem>
 
-            <Card>
-                <CardContent className="pt-6">
-                    <FormSection icon={Package} title="Items del Combo">
+                {/* Sección: Items del Combo */}
+                <AccordionItem value="items" className="rounded-lg border bg-card">
+                    <AccordionTrigger className="px-6 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                            <Package className="h-5 w-5 text-primary" />
+                            <span className="text-lg font-semibold">Items del Combo</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6">
                         <div className="space-y-4">
                             {mode === 'create' && (
                                 <div className="flex items-center justify-between rounded-lg border border-muted bg-muted/50 px-4 py-2">
@@ -401,41 +285,31 @@ export function ComboFormFields({
                                 </div>
                             )}
 
-                            {/* Botones separados para agregar items */}
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => onAddItem(false)}
-                                    className="w-full"
-                                >
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    {COMBO_LABELS.addFixedItem}
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => onAddItem(true)}
-                                    className="w-full"
-                                >
-                                    <Layers className="mr-2 h-4 w-4" />
-                                    {COMBO_LABELS.addChoiceGroup}
-                                </Button>
-                            </div>
+                            {/* Dropdown para agregar items */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button type="button" variant="outline" className="w-full">
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Agregar Item
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="center" className="w-56">
+                                    <DropdownMenuItem onClick={() => onAddItem(false)}>
+                                        <Package className="mr-2 h-4 w-4" />
+                                        {COMBO_LABELS.itemTypes.fixed}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => onAddItem(true)}>
+                                        <Layers className="mr-2 h-4 w-4" />
+                                        {COMBO_LABELS.itemTypes.choiceGroup}
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
 
                             {errors.items && <p className="mt-2 text-sm text-destructive">{errors.items}</p>}
                         </div>
-                    </FormSection>
-                </CardContent>
-            </Card>
-
-            {/* Vista previa del combo */}
-            <ComboPreviewPanel
-                formData={formData}
-                localItems={localItems}
-                products={products}
-                categories={categories}
-            />
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
         </div>
     );
 }

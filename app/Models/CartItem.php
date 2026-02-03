@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Menu\Combo;
 use App\Models\Menu\Product;
 use App\Models\Menu\ProductVariant;
+use App\Models\Menu\Promotion;
 use App\Models\Menu\Section;
 use App\Models\Menu\SectionOption;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,11 +21,13 @@ class CartItem extends Model
         'product_id',
         'variant_id',
         'combo_id',
+        'combinado_id',
         'quantity',
         'unit_price',
         'subtotal',
         'selected_options',
         'combo_selections',
+        'combinado_selections',
         'notes',
     ];
 
@@ -35,11 +38,13 @@ class CartItem extends Model
             'product_id' => 'integer',
             'variant_id' => 'integer',
             'combo_id' => 'integer',
+            'combinado_id' => 'integer',
             'quantity' => 'integer',
             'unit_price' => 'decimal:2',
             'subtotal' => 'decimal:2',
             'selected_options' => 'array',
             'combo_selections' => 'array',
+            'combinado_selections' => 'array',
         ];
     }
 
@@ -76,11 +81,19 @@ class CartItem extends Model
     }
 
     /**
+     * Relación: Un item puede ser un combinado (bundle_special promotion)
+     */
+    public function combinado(): BelongsTo
+    {
+        return $this->belongsTo(Promotion::class, 'combinado_id');
+    }
+
+    /**
      * Verifica si el item es un producto
      */
     public function isProduct(): bool
     {
-        return $this->product_id !== null && $this->combo_id === null;
+        return $this->product_id !== null && $this->combo_id === null && $this->combinado_id === null;
     }
 
     /**
@@ -89,6 +102,14 @@ class CartItem extends Model
     public function isCombo(): bool
     {
         return $this->combo_id !== null;
+    }
+
+    /**
+     * Verifica si el item es un combinado (bundle_special)
+     */
+    public function isCombinado(): bool
+    {
+        return $this->combinado_id !== null;
     }
 
     /**
@@ -154,38 +175,6 @@ class CartItem extends Model
     }
 
     /**
-     * Recolecta todas las opciones seleccionadas de productos y combos.
-     * Para productos: usa selected_options directamente.
-     * Para combos: extrae selected_options de cada selección en combo_selections.
-     *
-     * @return array<int, array{section_id: int, option_id: int}>
-     */
-    protected function collectAllSelectedOptions(): array
-    {
-        $allOptions = [];
-
-        // Opciones directas del producto (si existen)
-        if ($this->selected_options && is_array($this->selected_options)) {
-            $allOptions = array_merge($allOptions, $this->selected_options);
-        }
-
-        // Opciones de combo_selections (para combos)
-        if ($this->combo_selections && is_array($this->combo_selections)) {
-            foreach ($this->combo_selections as $comboSelection) {
-                $selections = $comboSelection['selections'] ?? [];
-                foreach ($selections as $selection) {
-                    $selectedOptions = $selection['selected_options'] ?? [];
-                    if (is_array($selectedOptions)) {
-                        $allOptions = array_merge($allOptions, $selectedOptions);
-                    }
-                }
-            }
-        }
-
-        return $allOptions;
-    }
-
-    /**
      * Calcula el total de las opciones seleccionadas (extras).
      * Usa bundle pricing si está habilitado en la sección.
      */
@@ -219,10 +208,59 @@ class CartItem extends Model
             return $this->combo?->name ?? 'Combo';
         }
 
+        if ($this->isCombinado()) {
+            return $this->combinado?->name ?? 'Combinado';
+        }
+
         if ($this->variant) {
             return "{$this->product?->name} - {$this->variant->name}";
         }
 
         return $this->product?->name ?? 'Producto';
+    }
+
+    /**
+     * Recolecta todas las opciones seleccionadas de productos, combos y combinados.
+     * Para productos: usa selected_options directamente.
+     * Para combos/combinados: extrae selected_options de cada selección.
+     *
+     * @return array<int, array{section_id: int, option_id: int}>
+     */
+    protected function collectAllSelectedOptions(): array
+    {
+        $allOptions = [];
+
+        // Opciones directas del producto (si existen)
+        if ($this->selected_options && is_array($this->selected_options)) {
+            $allOptions = array_merge($allOptions, $this->selected_options);
+        }
+
+        // Opciones de combo_selections (para combos)
+        if ($this->combo_selections && is_array($this->combo_selections)) {
+            foreach ($this->combo_selections as $comboSelection) {
+                $selections = $comboSelection['selections'] ?? [];
+                foreach ($selections as $selection) {
+                    $selectedOptions = $selection['selected_options'] ?? [];
+                    if (is_array($selectedOptions)) {
+                        $allOptions = array_merge($allOptions, $selectedOptions);
+                    }
+                }
+            }
+        }
+
+        // Opciones de combinado_selections (para combinados - bundle_special)
+        if ($this->combinado_selections && is_array($this->combinado_selections)) {
+            foreach ($this->combinado_selections as $combinadoSelection) {
+                $selections = $combinadoSelection['selections'] ?? [];
+                foreach ($selections as $selection) {
+                    $selectedOptions = $selection['selected_options'] ?? [];
+                    if (is_array($selectedOptions)) {
+                        $allOptions = array_merge($allOptions, $selectedOptions);
+                    }
+                }
+            }
+        }
+
+        return $allOptions;
     }
 }

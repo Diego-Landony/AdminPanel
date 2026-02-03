@@ -1,17 +1,17 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { router, useForm } from '@inertiajs/react';
-import { Banknote, Image, Package, Plus, Store } from 'lucide-react';
+import { Banknote, Calendar, Package, Plus, ImageIcon } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 
 import { BadgeTypeSelector, type BadgeType } from '@/components/badge-type-selector';
 import { CreatePageLayout } from '@/components/create-page-layout';
-import { FormSection } from '@/components/form-section';
 import { ImageUpload } from '@/components/ImageUpload';
 import { ConfirmationDialog } from '@/components/promotions/ConfirmationDialog';
 import { PromotionItemEditor } from '@/components/promotions/PromotionItemEditor';
 import { CreatePageSkeleton } from '@/components/skeletons';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
@@ -344,45 +344,6 @@ export default function CreatePercentage({ products, categories, combos, badgeTy
             loading={processing}
             loadingSkeleton={CreatePageSkeleton}
         >
-            <FormSection icon={Package} title="Información Básica">
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
-                        <Label htmlFor="is-active" className="text-base">
-                            Promoción activa
-                        </Label>
-                        <Switch id="is-active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked)} />
-                    </div>
-
-                    <FormField label="Nombre" required error={errors.name}>
-                        <Input value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder={PLACEHOLDERS.name} required />
-                    </FormField>
-
-                    <FormField label="Descripción" error={errors.description}>
-                        <Textarea
-                            value={data.description || ''}
-                            onChange={(e) => setData('description', e.target.value)}
-                            placeholder={PLACEHOLDERS.description}
-                            rows={3}
-                        />
-                    </FormField>
-
-                    <BadgeTypeSelector
-                        value={data.badge_type_id}
-                        onChange={(value) => setData('badge_type_id', value)}
-                        badgeTypes={badgeTypes}
-                        error={errors.badge_type_id}
-                    />
-                </div>
-            </FormSection>
-
-            <FormSection icon={Image} title="Imagen de la Promoción" description="Imagen que se mostrará en la app">
-                <ImageUpload
-                    label="Imagen"
-                    onImageChange={(file) => setImage(file)}
-                    error={errors.image}
-                />
-            </FormSection>
-
             {hasInactiveProducts && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
                     <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
@@ -391,79 +352,140 @@ export default function CreatePercentage({ products, categories, combos, badgeTy
                 </div>
             )}
 
-            <FormSection icon={Store} title="Configuración Global">
-                <div className="space-y-4">
-                    <FormField label="Vigencia" required error={errors.validity_type}>
-                        <Select value={data.validity_type} onValueChange={(value) => setData('validity_type', value as typeof data.validity_type)}>
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="permanent">Permanente</SelectItem>
-                                <SelectItem value="date_range">Rango de Fechas</SelectItem>
-                                <SelectItem value="time_range">Rango de Horario</SelectItem>
-                                <SelectItem value="date_time_range">Fechas + Horario</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </FormField>
-
-                    {(data.validity_type === 'date_range' || data.validity_type === 'date_time_range') && (
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <FormField label="Fecha Inicio" required error={errors.valid_from}>
-                                <Input type="date" value={data.valid_from} onChange={(e) => setData('valid_from', e.target.value)} required />
-                            </FormField>
-
-                            <FormField label="Fecha Fin" required error={errors.valid_until}>
-                                <Input type="date" value={data.valid_until} onChange={(e) => setData('valid_until', e.target.value)} required />
-                            </FormField>
+            <Accordion type="multiple" defaultValue={['basica', 'items']} className="space-y-4">
+                <AccordionItem value="basica" className="rounded-lg border bg-card">
+                    <AccordionTrigger className="px-6 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                            <Package className="h-5 w-5 text-primary" />
+                            <span className="text-lg font-semibold">Información Básica</span>
                         </div>
-                    )}
-
-                    {(data.validity_type === 'time_range' || data.validity_type === 'date_time_range') && (
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <FormField label="Hora Inicio" required error={errors.time_from}>
-                                <Input type="time" value={data.time_from} onChange={(e) => setData('time_from', e.target.value)} required />
-                            </FormField>
-
-                            <FormField label="Hora Fin" required error={errors.time_until}>
-                                <Input type="time" value={data.time_until} onChange={(e) => setData('time_until', e.target.value)} required />
-                            </FormField>
-                        </div>
-                    )}
-                </div>
-            </FormSection>
-
-            <FormSection icon={Banknote} title="Items de la Promoción">
-                <div className="space-y-6">
-                    {localItems.map((item, index) => {
-                        const excludedVariantIds = localItems
-                            .filter((i) => i.id !== item.id && i.variant_id !== null)
-                            .map((i) => i.variant_id!);
-
-                        return (
-                            <div key={item.id} ref={index === localItems.length - 1 ? lastItemRef : null}>
-                                <PromotionItemEditor
-                                    item={item}
-                                    index={index}
-                                    categories={categories}
-                                    products={products}
-                                    combos={combos}
-                                    onUpdate={updateItem}
-                                    onRemove={removeItem}
-                                    canRemove={localItems.length > 1}
-                                    getItemError={getItemError}
-                                    excludedVariantIds={excludedVariantIds}
-                                />
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6">
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
+                                <Label htmlFor="is-active" className="text-base">
+                                    Promoción activa
+                                </Label>
+                                <Switch id="is-active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked)} />
                             </div>
-                        );
-                    })}
 
-                    <Button type="button" variant="outline" onClick={addItem} className="w-full">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Agregar Item
-                    </Button>
-                </div>
-            </FormSection>
+                            <FormField label="Nombre" required error={errors.name}>
+                                <Input value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder={PLACEHOLDERS.name} required />
+                            </FormField>
+
+                            <FormField label="Descripción" error={errors.description}>
+                                <Textarea
+                                    value={data.description || ''}
+                                    onChange={(e) => setData('description', e.target.value)}
+                                    placeholder={PLACEHOLDERS.description}
+                                    rows={3}
+                                />
+                            </FormField>
+
+                            <BadgeTypeSelector
+                                value={data.badge_type_id}
+                                onChange={(value) => setData('badge_type_id', value)}
+                                badgeTypes={badgeTypes}
+                                error={errors.badge_type_id}
+                            />
+
+                            {/* Imagen */}
+                            <div className="space-y-4 rounded-lg border border-dashed border-muted-foreground/25 p-4">
+                                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                    <ImageIcon className="h-4 w-4" />
+                                    Imagen de la Promoción
+                                </div>
+                                <ImageUpload label="Imagen" onImageChange={(file) => setImage(file)} error={errors.image} />
+                            </div>
+
+                            {/* Vigencia */}
+                            <div className="space-y-4 rounded-lg border border-dashed border-muted-foreground/25 p-4">
+                                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                    <Calendar className="h-4 w-4" />
+                                    Vigencia
+                                </div>
+                                <FormField label="Tipo de vigencia" required error={errors.validity_type}>
+                                    <Select value={data.validity_type} onValueChange={(value) => setData('validity_type', value as typeof data.validity_type)}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="permanent">Permanente</SelectItem>
+                                            <SelectItem value="date_range">Rango de Fechas</SelectItem>
+                                            <SelectItem value="time_range">Rango de Horario</SelectItem>
+                                            <SelectItem value="date_time_range">Fechas + Horario</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </FormField>
+
+                                {(data.validity_type === 'date_range' || data.validity_type === 'date_time_range') && (
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <FormField label="Fecha Inicio" required error={errors.valid_from}>
+                                            <Input type="date" value={data.valid_from} onChange={(e) => setData('valid_from', e.target.value)} required />
+                                        </FormField>
+
+                                        <FormField label="Fecha Fin" required error={errors.valid_until}>
+                                            <Input type="date" value={data.valid_until} onChange={(e) => setData('valid_until', e.target.value)} required />
+                                        </FormField>
+                                    </div>
+                                )}
+
+                                {(data.validity_type === 'time_range' || data.validity_type === 'date_time_range') && (
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <FormField label="Hora Inicio" required error={errors.time_from}>
+                                            <Input type="time" value={data.time_from} onChange={(e) => setData('time_from', e.target.value)} required />
+                                        </FormField>
+
+                                        <FormField label="Hora Fin" required error={errors.time_until}>
+                                            <Input type="time" value={data.time_until} onChange={(e) => setData('time_until', e.target.value)} required />
+                                        </FormField>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="items" className="rounded-lg border bg-card">
+                    <AccordionTrigger className="px-6 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                            <Banknote className="h-5 w-5 text-primary" />
+                            <span className="text-lg font-semibold">Items de la Promoción</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6">
+                        <div className="space-y-6">
+                            {localItems.map((item, index) => {
+                                const excludedVariantIds = localItems
+                                    .filter((i) => i.id !== item.id && i.variant_id !== null)
+                                    .map((i) => i.variant_id!);
+
+                                return (
+                                    <div key={item.id} ref={index === localItems.length - 1 ? lastItemRef : null}>
+                                        <PromotionItemEditor
+                                            item={item}
+                                            index={index}
+                                            categories={categories}
+                                            products={products}
+                                            combos={combos}
+                                            onUpdate={updateItem}
+                                            onRemove={removeItem}
+                                            canRemove={localItems.length > 1}
+                                            getItemError={getItemError}
+                                            excludedVariantIds={excludedVariantIds}
+                                        />
+                                    </div>
+                                );
+                            })}
+
+                            <Button type="button" variant="outline" onClick={addItem} className="w-full">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Agregar Item
+                            </Button>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
 
             <ConfirmationDialog
                 open={confirmDialog.open}

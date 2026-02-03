@@ -19,6 +19,7 @@ class OrderItem extends Model
         'product_id',
         'variant_id',
         'combo_id',
+        'combinado_id',
         'promotion_id',
         'promotion_snapshot',
         'product_snapshot',
@@ -28,6 +29,7 @@ class OrderItem extends Model
         'subtotal',
         'selected_options',
         'combo_selections',
+        'combinado_selections',
         'notes',
     ];
 
@@ -38,6 +40,7 @@ class OrderItem extends Model
             'promotion_snapshot' => 'array',
             'selected_options' => 'array',
             'combo_selections' => 'array',
+            'combinado_selections' => 'array',
             'unit_price' => 'decimal:2',
             'options_price' => 'decimal:2',
             'subtotal' => 'decimal:2',
@@ -65,6 +68,14 @@ class OrderItem extends Model
         return $this->belongsTo(Combo::class);
     }
 
+    /**
+     * Relación: Un item puede ser un combinado (bundle_special promotion)
+     */
+    public function combinado(): BelongsTo
+    {
+        return $this->belongsTo(Promotion::class, 'combinado_id');
+    }
+
     public function promotion(): BelongsTo
     {
         return $this->belongsTo(Promotion::class)->withTrashed();
@@ -72,12 +83,20 @@ class OrderItem extends Model
 
     public function isProduct(): bool
     {
-        return ! is_null($this->product_id) && is_null($this->combo_id);
+        return ! is_null($this->product_id) && is_null($this->combo_id) && is_null($this->combinado_id);
     }
 
     public function isCombo(): bool
     {
         return ! is_null($this->combo_id);
+    }
+
+    /**
+     * Verifica si el item es un combinado (bundle_special)
+     */
+    public function isCombinado(): bool
+    {
+        return ! is_null($this->combinado_id);
     }
 
     public function getLineTotal(): float

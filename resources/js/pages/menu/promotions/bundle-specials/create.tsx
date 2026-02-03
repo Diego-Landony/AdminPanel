@@ -7,21 +7,26 @@ import { useMemo, useState } from 'react';
 import { BadgeTypeSelector, type BadgeType } from '@/components/badge-type-selector';
 import { ComboItemCard } from '@/components/combos/ComboItemCard';
 import { CreatePageLayout } from '@/components/create-page-layout';
-import { FormSection } from '@/components/form-section';
 import { ImageUpload } from '@/components/ImageUpload';
 import { CreateProductsSkeleton } from '@/components/skeletons';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { WeekdaySelector } from '@/components/WeekdaySelector';
 import { CURRENCY, FORM_SECTIONS, NOTIFICATIONS, PLACEHOLDERS } from '@/constants/ui-constants';
 import { generateUniqueItemId, prepareComboDataForSubmit, validateMinimumComboStructure } from '@/utils/comboHelpers';
-import { Banknote, Calendar, Gift, Image, Package, Plus } from 'lucide-react';
+import { Banknote, Calendar, Gift, Layers, Package, Plus } from 'lucide-react';
 
 interface ProductVariant {
     id: number;
@@ -144,15 +149,16 @@ export default function BundleSpecialCreate({ products, badgeTypes }: CreateBund
         }),
     );
 
-    const addItem = () => {
+    const addItem = (isChoiceGroup: boolean = false) => {
         const newItem: ComboItem = {
             id: generateUniqueItemId(),
-            is_choice_group: false,
+            is_choice_group: isChoiceGroup,
             product_id: null,
             variant_id: null,
-            quantity: '',
+            quantity: 1,
             sort_order: localItems.length + 1,
-            options: [],
+            choice_label: isChoiceGroup ? '' : undefined,
+            options: isChoiceGroup ? [] : undefined,
         };
         const updated = [...localItems, newItem];
         setLocalItems(updated);
@@ -294,10 +300,26 @@ export default function BundleSpecialCreate({ products, badgeTypes }: CreateBund
             loading={processing}
             loadingSkeleton={CreateProductsSkeleton}
         >
-            <div className="space-y-8">
-                <Card>
-                    <CardContent className="pt-6">
-                        <FormSection icon={Gift} title="Información Básica" description="Datos principales del combinado">
+            <div className="space-y-4">
+                {hasInactiveProducts && (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
+                        <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                            Advertencia: Este combinado tiene productos inactivos seleccionados. El combinado no estara disponible para los clientes hasta
+                            que se activen todos los productos.
+                        </p>
+                    </div>
+                )}
+
+                <Accordion type="multiple" defaultValue={['basica', 'items']} className="space-y-4">
+                    {/* Sección: Información Básica */}
+                    <AccordionItem value="basica" className="rounded-lg border bg-card">
+                        <AccordionTrigger className="px-6 hover:no-underline">
+                            <div className="flex items-center gap-2">
+                                <Gift className="h-5 w-5 text-primary" />
+                                <span className="text-lg font-semibold">Información Básica</span>
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-6 pb-6">
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between rounded-lg border p-4">
                                     <Label htmlFor="is_active" className="text-base">
@@ -324,41 +346,86 @@ export default function BundleSpecialCreate({ products, badgeTypes }: CreateBund
                                     />
                                 </FormField>
 
+                                <ImageUpload
+                                    label="Imagen"
+                                    onImageChange={(file) => setImage(file)}
+                                    error={errors.image}
+                                />
+
                                 <BadgeTypeSelector
                                     value={data.badge_type_id}
                                     onChange={(value) => setData('badge_type_id', value)}
                                     badgeTypes={badgeTypes}
                                     error={errors.badge_type_id}
                                 />
+
+                                {/* Vigencia */}
+                                <div className="space-y-4 rounded-lg border border-dashed border-muted-foreground/25 p-4">
+                                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                        <Calendar className="h-4 w-4" />
+                                        Vigencia
+                                    </div>
+
+                                    <FormField label="Tipo de vigencia" required error={errors.validity_type}>
+                                        <Select value={data.validity_type} onValueChange={(value) => setData('validity_type', value as typeof data.validity_type)}>
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="permanent">Permanente</SelectItem>
+                                                <SelectItem value="date_range">Rango de Fechas</SelectItem>
+                                                <SelectItem value="time_range">Rango de Horario</SelectItem>
+                                                <SelectItem value="date_time_range">Fechas + Horario</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </FormField>
+
+                                    {(data.validity_type === 'date_range' || data.validity_type === 'date_time_range') && (
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <FormField label="Fecha Inicio" required error={errors.valid_from}>
+                                                <Input type="date" value={data.valid_from} onChange={(e) => setData('valid_from', e.target.value)} required />
+                                            </FormField>
+                                            <FormField label="Fecha Fin" required error={errors.valid_until}>
+                                                <Input type="date" value={data.valid_until} onChange={(e) => setData('valid_until', e.target.value)} required />
+                                            </FormField>
+                                        </div>
+                                    )}
+
+                                    {(data.validity_type === 'time_range' || data.validity_type === 'date_time_range') && (
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <FormField label="Hora Inicio" required error={errors.time_from}>
+                                                <Input type="time" value={data.time_from} onChange={(e) => setData('time_from', e.target.value)} required />
+                                            </FormField>
+                                            <FormField label="Hora Fin" required error={errors.time_until}>
+                                                <Input type="time" value={data.time_until} onChange={(e) => setData('time_until', e.target.value)} required />
+                                            </FormField>
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center justify-between rounded-lg border p-4">
+                                        <Label htmlFor="enable_weekdays" className="cursor-pointer text-sm font-medium">
+                                            Limitar por días de la semana
+                                        </Label>
+                                        <Switch id="enable_weekdays" checked={enableWeekdays} onCheckedChange={setEnableWeekdays} />
+                                    </div>
+
+                                    {enableWeekdays && (
+                                        <WeekdaySelector value={data.weekdays} onChange={(days) => setData('weekdays', days)} error={errors.weekdays} />
+                                    )}
+                                </div>
                             </div>
-                        </FormSection>
-                    </CardContent>
-                </Card>
+                        </AccordionContent>
+                    </AccordionItem>
 
-                <Card>
-                    <CardContent className="pt-6">
-                        <FormSection icon={Image} title="Imagen de la Promoción" description="Imagen que se mostrará en la app">
-                            <ImageUpload
-                                label="Imagen"
-                                onImageChange={(file) => setImage(file)}
-                                error={errors.image}
-                            />
-                        </FormSection>
-                    </CardContent>
-                </Card>
-
-                {hasInactiveProducts && (
-                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
-                        <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                            ⚠ Advertencia: Este combinado tiene productos inactivos seleccionados. El combinado no estará disponible para los clientes hasta
-                            que se activen todos los productos.
-                        </p>
-                    </div>
-                )}
-
-                <Card>
-                    <CardContent className="pt-6">
-                        <FormSection icon={Banknote} title={FORM_SECTIONS.specialPrices.title} description={FORM_SECTIONS.specialPrices.description}>
+                    {/* Seccion: Precios Especiales */}
+                    <AccordionItem value="precios" className="rounded-lg border bg-card">
+                        <AccordionTrigger className="px-6 hover:no-underline">
+                            <div className="flex items-center gap-2">
+                                <Banknote className="h-5 w-5 text-primary" />
+                                <span className="text-lg font-semibold">{FORM_SECTIONS.specialPrices.title}</span>
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-6 pb-6">
                             <div className="space-y-6">
                                 {/* Capital */}
                                 <div className="space-y-3">
@@ -436,78 +503,18 @@ export default function BundleSpecialCreate({ products, badgeTypes }: CreateBund
                                     </div>
                                 </div>
                             </div>
-                        </FormSection>
-                    </CardContent>
-                </Card>
+                        </AccordionContent>
+                    </AccordionItem>
 
-                <Card>
-                    <CardContent className="pt-6">
-                        <FormSection
-                            icon={Calendar}
-                            title={FORM_SECTIONS.temporalValidity.title}
-                            description={FORM_SECTIONS.temporalValidity.description}
-                        >
-                            <div className="space-y-4">
-                                <FormField label="Vigencia" required error={errors.validity_type}>
-                                    <Select value={data.validity_type} onValueChange={(value) => setData('validity_type', value as typeof data.validity_type)}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="permanent">Permanente</SelectItem>
-                                            <SelectItem value="date_range">Rango de Fechas</SelectItem>
-                                            <SelectItem value="time_range">Rango de Horario</SelectItem>
-                                            <SelectItem value="date_time_range">Fechas + Horario</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </FormField>
-
-                                {(data.validity_type === 'date_range' || data.validity_type === 'date_time_range') && (
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        <FormField label="Fecha Inicio" required error={errors.valid_from}>
-                                            <Input type="date" value={data.valid_from} onChange={(e) => setData('valid_from', e.target.value)} required />
-                                        </FormField>
-
-                                        <FormField label="Fecha Fin" required error={errors.valid_until}>
-                                            <Input type="date" value={data.valid_until} onChange={(e) => setData('valid_until', e.target.value)} required />
-                                        </FormField>
-                                    </div>
-                                )}
-
-                                {(data.validity_type === 'time_range' || data.validity_type === 'date_time_range') && (
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        <FormField label="Hora Inicio" required error={errors.time_from}>
-                                            <Input type="time" value={data.time_from} onChange={(e) => setData('time_from', e.target.value)} required />
-                                        </FormField>
-
-                                        <FormField label="Hora Fin" required error={errors.time_until}>
-                                            <Input type="time" value={data.time_until} onChange={(e) => setData('time_until', e.target.value)} required />
-                                        </FormField>
-                                    </div>
-                                )}
-
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between rounded-lg border p-4">
-                                        <Label htmlFor="enable_weekdays" className="text-base">
-                                            Limitar por días de la semana
-                                        </Label>
-                                        <Switch id="enable_weekdays" checked={enableWeekdays} onCheckedChange={setEnableWeekdays} />
-                                    </div>
-
-                                    {enableWeekdays && (
-                                        <div className="rounded-lg border p-4">
-                                            <WeekdaySelector value={data.weekdays} onChange={(days) => setData('weekdays', days)} error={errors.weekdays} />
-                                        </div>
-                                    )}
-                                </div>
+                    {/* Sección: Items del Combinado */}
+                    <AccordionItem value="items" className="rounded-lg border bg-card">
+                        <AccordionTrigger className="px-6 hover:no-underline">
+                            <div className="flex items-center gap-2">
+                                <Package className="h-5 w-5 text-primary" />
+                                <span className="text-lg font-semibold">{FORM_SECTIONS.combinadoItems.title}</span>
                             </div>
-                        </FormSection>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardContent className="pt-6">
-                        <FormSection icon={Package} title={FORM_SECTIONS.combinadoItems.title} description={FORM_SECTIONS.combinadoItems.description}>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-6 pb-6">
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between rounded-lg border border-muted bg-muted/50 px-4 py-2">
                                     <p className="text-sm text-muted-foreground">Un combinado debe tener al menos 2 items</p>
@@ -541,16 +548,30 @@ export default function BundleSpecialCreate({ products, badgeTypes }: CreateBund
                                     </div>
                                 )}
 
-                                <Button type="button" variant="outline" onClick={addItem} className="w-full">
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Agregar Item
-                                </Button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button type="button" variant="outline" className="w-full">
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Agregar Item
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="center" className="w-56">
+                                        <DropdownMenuItem onClick={() => addItem(false)}>
+                                            <Package className="mr-2 h-4 w-4" />
+                                            Producto Fijo
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => addItem(true)}>
+                                            <Layers className="mr-2 h-4 w-4" />
+                                            Producto Seleccionable
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
 
                                 {errors.items && <p className="mt-2 text-sm text-destructive">{errors.items}</p>}
                             </div>
-                        </FormSection>
-                    </CardContent>
-                </Card>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
             </div>
         </CreatePageLayout>
     );

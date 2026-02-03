@@ -23,10 +23,24 @@ class PromotionResource extends JsonResource
             'description' => $this->description,
             'image_url' => $this->image_url,
             'type' => $this->type,
+
+            // Precios para bundle_special (igual que combos)
+            'price' => $this->when(
+                $this->type === 'bundle_special',
+                fn () => $this->toFloatOrNull($this->special_bundle_price_pickup_capital)
+            ),
             'prices' => $this->when(
                 $this->type === 'bundle_special',
                 fn () => $this->buildBundlePrices($this->resource)
             ),
+
+            // Disponibilidad para bundle_special
+            'is_available' => $this->when(
+                $this->type === 'bundle_special',
+                fn () => $this->isValidNowCombinado()
+            ),
+
+            // Vigencia (solo para bundle_special)
             'valid_from' => $this->valid_from,
             'valid_until' => $this->valid_until,
             'time_from' => $this->time_from,

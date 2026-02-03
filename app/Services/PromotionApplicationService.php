@@ -38,7 +38,7 @@ class PromotionApplicationService
     public function applyPromotions(Cart $cart): array
     {
         $appliedPromotions = [];
-        $items = $cart->items()->with(['product.category', 'variant', 'combo'])->get();
+        $items = $cart->items()->with(['product.category', 'variant', 'combo', 'combinado'])->get();
 
         if ($items->isEmpty()) {
             return $appliedPromotions;
@@ -49,7 +49,8 @@ class PromotionApplicationService
         foreach ($items as $item) {
             $promotion = null;
 
-            if ($item->isCombo()) {
+            // Saltar combos y combinados (bundle_special) - ya tienen su precio fijo
+            if ($item->isCombo() || $item->isCombinado()) {
                 continue;
             }
 
@@ -58,7 +59,7 @@ class PromotionApplicationService
                     $item->variant,
                     $datetime
                 );
-            } else {
+            } elseif ($item->product && $item->product->category) {
                 $promotion = $this->findActivePromotionForProduct(
                     $item->product,
                     $item->product->category->id,
@@ -87,7 +88,7 @@ class PromotionApplicationService
      */
     public function getApplicablePromotions(Cart $cart): Collection
     {
-        $items = $cart->items()->with(['product.category', 'variant', 'combo'])->get();
+        $items = $cart->items()->with(['product.category', 'variant', 'combo', 'combinado'])->get();
 
         if ($items->isEmpty()) {
             return collect();
@@ -97,7 +98,8 @@ class PromotionApplicationService
         $promotionIds = collect();
 
         foreach ($items as $item) {
-            if ($item->isCombo()) {
+            // Saltar combos y combinados (bundle_special) - ya tienen su precio fijo
+            if ($item->isCombo() || $item->isCombinado()) {
                 continue;
             }
 
@@ -110,7 +112,7 @@ class PromotionApplicationService
                 if ($promotion) {
                     $promotionIds->push($promotion->id);
                 }
-            } else {
+            } elseif ($item->product && $item->product->category) {
                 $promotion = $this->findActivePromotionForProduct(
                     $item->product,
                     $item->product->category->id,
@@ -133,12 +135,13 @@ class PromotionApplicationService
      */
     public function calculateDiscount(Promotion $promotion, Cart $cart): float
     {
-        $items = $cart->items()->with(['product.category', 'variant', 'combo'])->get();
+        $items = $cart->items()->with(['product.category', 'variant', 'combo', 'combinado'])->get();
         $discount = 0;
 
         if ($promotion->type === 'percentage_discount') {
             foreach ($items as $item) {
-                if ($item->isCombo()) {
+                // Saltar combos y combinados (bundle_special)
+                if ($item->isCombo() || $item->isCombinado()) {
                     continue;
                 }
 
@@ -151,7 +154,8 @@ class PromotionApplicationService
             }
         } elseif ($promotion->type === 'two_for_one') {
             $qualifyingItems = $items->filter(function ($item) use ($promotion) {
-                return ! $item->isCombo() && $this->itemQualifiesForPromotion($item, $promotion);
+                // Excluir combos y combinados (bundle_special)
+                return ! $item->isCombo() && ! $item->isCombinado() && $this->itemQualifiesForPromotion($item, $promotion);
             });
 
             $totalQuantity = $qualifyingItems->sum('quantity');
@@ -393,7 +397,7 @@ class PromotionApplicationService
     public function calculateItemDiscounts(Cart $cart): array
     {
         $itemDiscounts = [];
-        $items = $cart->items()->with(['product.category', 'variant', 'combo'])->get();
+        $items = $cart->items()->with(['product.category', 'variant', 'combo', 'combinado'])->get();
 
         if ($items->isEmpty()) {
             return $itemDiscounts;
@@ -438,7 +442,8 @@ class PromotionApplicationService
                 'applied_promotion' => null,
             ];
 
-            if ($item->isCombo()) {
+            // Saltar combos y combinados (bundle_special) - ya tienen su precio fijo
+            if ($item->isCombo() || $item->isCombinado()) {
                 continue;
             }
 
@@ -515,14 +520,15 @@ class PromotionApplicationService
         $promotionsMap = [];
 
         foreach ($items as $item) {
-            if ($item->isCombo()) {
+            // Saltar combos y combinados (bundle_special) - ya tienen su precio fijo
+            if ($item->isCombo() || $item->isCombinado()) {
                 continue;
             }
 
             $promotion = null;
             if ($item->variant_id) {
                 $promotion = $this->findActivePromotionForVariant($item->variant, $datetime);
-            } else {
+            } elseif ($item->product && $item->product->category) {
                 $promotion = $this->findActivePromotionForProduct(
                     $item->product,
                     $item->product->category->id,

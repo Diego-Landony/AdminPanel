@@ -28,6 +28,7 @@ class CustomerResource extends JsonResource
             'gender' => $this->gender,
             'phone' => $this->phone,
             'email_offers_enabled' => (bool) $this->email_offers_enabled,
+            'push_notifications_enabled' => (bool) $this->push_notifications_enabled,
             'last_login_at' => $this->last_login_at,
             'last_activity_at' => $this->last_activity_at,
             'last_purchase_at' => $this->last_purchase_at,

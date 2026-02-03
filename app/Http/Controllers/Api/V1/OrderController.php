@@ -196,7 +196,7 @@ class OrderController extends Controller
             $order = $this->orderService->createFromCart($cart, $request->validated());
 
             return response()->json([
-                'data' => new OrderResource($order->load(['items.product', 'items.combo', 'items.variant', 'promotions', 'restaurant'])),
+                'data' => new OrderResource($order->load(['items.product', 'items.combo', 'items.combinado', 'items.variant', 'promotions', 'restaurant'])),
                 'message' => 'Orden creada exitosamente',
             ], 201);
         } catch (AddressOutsideDeliveryZoneException $e) {
@@ -318,7 +318,7 @@ class OrderController extends Controller
 
         $query = Order::query()
             ->where('customer_id', $customer->id)
-            ->with(['restaurant', 'items.product', 'items.combo', 'items.variant'])
+            ->with(['restaurant', 'items.product', 'items.combo', 'items.combinado', 'items.variant'])
             ->latest();
 
         if ($status) {
@@ -368,7 +368,7 @@ class OrderController extends Controller
         $orders = Order::query()
             ->where('customer_id', $customer->id)
             ->active()
-            ->with(['restaurant', 'items.product', 'items.combo', 'items.variant'])
+            ->with(['restaurant', 'items.product', 'items.combo', 'items.combinado', 'items.variant'])
             ->latest()
             ->get();
 
@@ -547,7 +547,7 @@ class OrderController extends Controller
             ], 403);
         }
 
-        $order->load(['restaurant', 'items.product', 'items.combo', 'items.variant', 'promotions']);
+        $order->load(['restaurant', 'items.product', 'items.combo', 'items.combinado', 'items.variant', 'promotions']);
 
         return response()->json([
             'data' => new OrderResource($order),
@@ -945,7 +945,7 @@ class OrderController extends Controller
         $orders = Order::query()
             ->where('customer_id', $customer->id)
             ->whereIn('status', ['completed', 'delivered'])
-            ->with(['restaurant', 'items.product', 'items.combo', 'items.variant'])
+            ->with(['restaurant', 'items.product', 'items.combo', 'items.combinado', 'items.variant'])
             ->orderBy('created_at', 'desc')
             ->limit(3)
             ->get();

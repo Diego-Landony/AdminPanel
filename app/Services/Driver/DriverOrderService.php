@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\OrderStatusHistory;
 use App\Notifications\OrderStatusChangedNotification;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 class DriverOrderService
@@ -54,6 +55,8 @@ class DriverOrderService
     /**
      * Accept an assigned order. Transition: ready -> out_for_delivery.
      *
+     * Uses database transaction with row locking to prevent race conditions.
+     *
      * @param  Driver  $driver  The driver accepting the order
      * @param  Order  $order  The order to accept
      * @return Order The updated order
@@ -63,48 +66,60 @@ class DriverOrderService
      */
     public function acceptOrder(Driver $driver, Order $order): Order
     {
-        $activeOrder = $this->getActiveOrder($driver);
-        if ($activeOrder) {
-            throw new DriverHasActiveOrderException($driver, $activeOrder);
-        }
+        return DB::transaction(function () use ($driver, $order) {
+            // Lock the order row to prevent race conditions
+            $order = Order::lockForUpdate()->find($order->id);
 
-        if ($order->driver_id !== $driver->id) {
-            throw new InvalidArgumentException('Esta orden no está asignada a este motorista');
-        }
+            // Check if driver already has an active order (with lock)
+            $activeOrder = Order::query()
+                ->lockForUpdate()
+                ->assignedToDriver($driver->id)
+                ->activeDelivery()
+                ->first();
 
-        if ($order->status !== Order::STATUS_READY) {
-            throw new InvalidArgumentException(
-                "La orden no puede ser aceptada. Estado actual: {$order->status}"
+            if ($activeOrder) {
+                throw new DriverHasActiveOrderException($driver, $activeOrder);
+            }
+
+            if ($order->driver_id !== $driver->id) {
+                throw new InvalidArgumentException('Esta orden no está asignada a este motorista.');
+            }
+
+            if ($order->status !== Order::STATUS_READY) {
+                throw new InvalidArgumentException('La orden no puede ser aceptada en su estado actual.');
+            }
+
+            $previousStatus = $order->status;
+
+            $order->update([
+                'status' => Order::STATUS_OUT_FOR_DELIVERY,
+                'picked_up_at' => now(),
+                'accepted_by_driver_at' => now(),
+            ]);
+
+            $this->recordStatusChange(
+                $order,
+                $previousStatus,
+                Order::STATUS_OUT_FOR_DELIVERY,
+                'Orden aceptada por el motorista'
             );
-        }
 
-        $previousStatus = $order->status;
+            // Disparar evento para WebSocket
+            event(new OrderStatusUpdated($order, $previousStatus));
 
-        $order->update([
-            'status' => Order::STATUS_OUT_FOR_DELIVERY,
-            'picked_up_at' => now(),
-        ]);
+            // Notificar al cliente que su orden va en camino
+            if ($order->customer) {
+                $order->customer->notify(new OrderStatusChangedNotification($order, $previousStatus));
+            }
 
-        $this->recordStatusChange(
-            $order,
-            $previousStatus,
-            Order::STATUS_OUT_FOR_DELIVERY,
-            'Orden aceptada por el motorista'
-        );
-
-        // Disparar evento para WebSocket
-        event(new OrderStatusUpdated($order, $previousStatus));
-
-        // Notificar al cliente que su orden va en camino
-        if ($order->customer) {
-            $order->customer->notify(new OrderStatusChangedNotification($order, $previousStatus));
-        }
-
-        return $order->fresh(['customer', 'restaurant', 'items', 'deliveryAddress']);
+            return $order->fresh(['customer', 'restaurant', 'items', 'deliveryAddress']);
+        });
     }
 
     /**
-     * Complete a delivery. Transition: out_for_delivery -> delivered.
+     * Complete a delivery. Transition: out_for_delivery -> delivered -> completed.
+     *
+     * Uses database transaction to ensure both status updates succeed or fail together.
      *
      * @param  Driver  $driver  The driver completing the delivery
      * @param  Order  $order  The order being delivered
@@ -124,59 +139,54 @@ class DriverOrderService
         ?string $notes = null
     ): Order {
         if ($order->driver_id !== $driver->id) {
-            throw new InvalidArgumentException('Esta orden no está asignada a este motorista');
+            throw new InvalidArgumentException('Esta orden no está asignada a este motorista.');
         }
 
         if ($order->status !== Order::STATUS_OUT_FOR_DELIVERY) {
-            throw new InvalidArgumentException(
-                "La orden no puede ser entregada. Estado actual: {$order->status}"
-            );
+            throw new InvalidArgumentException('La orden no puede ser entregada en su estado actual.');
         }
 
         $this->validateDeliveryLocation($order, $latitude, $longitude);
 
         $this->locationService->updateLocation($driver, $latitude, $longitude);
 
-        $previousStatus = $order->status;
+        return DB::transaction(function () use ($order, $notes) {
+            $previousStatus = $order->status;
+            $now = now();
 
-        $order->update([
-            'status' => Order::STATUS_DELIVERED,
-            'delivered_at' => now(),
-        ]);
+            // Single update for both delivered and completed status
+            $order->update([
+                'status' => Order::STATUS_COMPLETED,
+                'delivered_at' => $now,
+                'completed_at' => $now,
+            ]);
 
-        $this->recordStatusChange(
-            $order,
-            $previousStatus,
-            Order::STATUS_DELIVERED,
-            $notes
-        );
+            // Record delivered status change
+            $this->recordStatusChange(
+                $order,
+                $previousStatus,
+                Order::STATUS_DELIVERED,
+                $notes
+            );
 
-        // Disparar evento para WebSocket (delivered)
-        event(new OrderStatusUpdated($order, $previousStatus));
+            // Record completed status change
+            $this->recordStatusChange(
+                $order,
+                Order::STATUS_DELIVERED,
+                Order::STATUS_COMPLETED,
+                'Orden completada automáticamente tras entrega'
+            );
 
-        // Notificar al cliente que su orden fue entregada
-        if ($order->customer) {
-            $order->customer->notify(new OrderStatusChangedNotification($order, $previousStatus));
-        }
+            // Disparar evento para WebSocket (completed)
+            event(new OrderStatusUpdated($order, $previousStatus));
 
-        // Transition from delivered to completed automatically
-        $deliveredStatus = Order::STATUS_DELIVERED;
-        $order->update([
-            'status' => Order::STATUS_COMPLETED,
-            'completed_at' => now(),
-        ]);
+            // Notificar al cliente que su orden fue entregada
+            if ($order->customer) {
+                $order->customer->notify(new OrderStatusChangedNotification($order, $previousStatus));
+            }
 
-        $this->recordStatusChange(
-            $order,
-            $deliveredStatus,
-            Order::STATUS_COMPLETED,
-            'Orden completada automáticamente tras entrega'
-        );
-
-        // Disparar evento para WebSocket (completed)
-        event(new OrderStatusUpdated($order, $deliveredStatus));
-
-        return $order->fresh(['customer', 'restaurant', 'items', 'deliveryAddress']);
+            return $order->fresh(['customer', 'restaurant', 'items', 'deliveryAddress']);
+        });
     }
 
     /**

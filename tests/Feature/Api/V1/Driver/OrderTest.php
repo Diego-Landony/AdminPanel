@@ -155,8 +155,11 @@ describe('Driver Orders - Show', function () {
                     'status_label',
                     'customer',
                     'delivery_address',
-                    'summary',
+                    'items',
+                    'total',
                     'payment',
+                    'delivery_notes',
+                    'timestamps',
                 ],
                 'message',
             ]);

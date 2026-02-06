@@ -11,15 +11,20 @@ class DriverProfileService
     /**
      * Actualiza el perfil del driver (solo campos permitidos).
      *
-     * Nota: Actualmente no hay campos editables por el driver.
-     * El nombre y email son manejados por el administrador.
+     * Campos editables: name
+     * El email es manejado por el administrador.
      *
      * @param  array<string, mixed>  $data
      */
     public function updateProfile(Driver $driver, array $data): Driver
     {
-        // No hay campos editables por el driver actualmente
-        // El nombre y email son gestionados por el administrador
+        $allowedFields = ['name'];
+        $updateData = array_intersect_key($data, array_flip($allowedFields));
+
+        if (! empty($updateData)) {
+            $driver->update($updateData);
+        }
+
         return $driver->fresh();
     }
 
@@ -38,7 +43,7 @@ class DriverProfileService
         }
 
         $driver->update([
-            'password' => $newPassword,
+            'password' => Hash::make($newPassword),
         ]);
     }
 }

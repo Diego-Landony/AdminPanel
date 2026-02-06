@@ -36,7 +36,7 @@ class HistoryController extends Controller
 
         $query = Order::query()
             ->completedByDriver($driver->id)
-            ->with(['customer', 'restaurant']);
+            ->with(['customer', 'restaurant', 'items']);
 
         // Apply date filters
         if ($request->filled('from')) {
@@ -69,6 +69,17 @@ class HistoryController extends Controller
      */
     public function show(Order $order): JsonResponse
     {
+        $driver = auth('driver')->user();
+
+        // Verify the order belongs to this driver
+        if ($order->driver_id !== $driver->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes acceso a esta orden.',
+                'error_code' => 'ORDER_NOT_ASSIGNED',
+            ], 403);
+        }
+
         $order->load(['customer', 'restaurant', 'items', 'deliveryAddress']);
 
         return response()->json([

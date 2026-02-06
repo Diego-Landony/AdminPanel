@@ -12,11 +12,6 @@ class DriverLocationService
     private const EARTH_RADIUS_KM = 6371;
 
     /**
-     * Maximum allowed distance for completing a delivery (in meters).
-     */
-    private const MAX_DELIVERY_DISTANCE_METERS = 100;
-
-    /**
      * Update the GPS location of a driver.
      *
      * @param  Driver  $driver  The driver to update
@@ -84,7 +79,7 @@ class DriverLocationService
             $destinationLon
         );
 
-        return $distance <= self::MAX_DELIVERY_DISTANCE_METERS;
+        return $distance <= $this->getMaxDeliveryDistance();
     }
 
     /**
@@ -94,6 +89,6 @@ class DriverLocationService
      */
     public function getMaxDeliveryDistance(): int
     {
-        return self::MAX_DELIVERY_DISTANCE_METERS;
+        return (int) config('driver.max_delivery_distance_meters', 100);
     }
 }

@@ -453,10 +453,6 @@ Route::prefix('v1/driver')->name('driver.')->group(function () {
             ->middleware('driver.order.belongs')
             ->name('history.show');
 
-        // Stats
-        Route::get('stats', [App\Http\Controllers\Api\V1\Driver\StatsController::class, 'index'])
-            ->name('stats.index');
-
         // Device (FCM token)
         Route::prefix('device')->name('device.')->group(function () {
             Route::post('fcm-token', [App\Http\Controllers\Api\V1\Driver\DeviceController::class, 'updateFcmToken'])

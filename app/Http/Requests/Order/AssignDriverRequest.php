@@ -36,6 +36,7 @@ class AssignDriverRequest extends FormRequest
         $validator->after(function ($validator) {
             $this->validateDriverBelongsToRestaurant($validator);
             $this->validateOrderCanBeAssigned($validator);
+            $this->validateDriverIsAvailable($validator);
         });
     }
 
@@ -72,6 +73,47 @@ class AssignDriverRequest extends FormRequest
             $validator->errors()->add(
                 'order',
                 'Esta orden no puede ser asignada a un motorista. Solo ordenes de delivery en estado "lista" pueden ser asignadas.'
+            );
+        }
+    }
+
+    /**
+     * Verificar que el motorista está disponible para recibir órdenes.
+     */
+    protected function validateDriverIsAvailable(\Illuminate\Validation\Validator $validator): void
+    {
+        if ($validator->errors()->isNotEmpty()) {
+            return;
+        }
+
+        $driver = Driver::find($this->input('driver_id'));
+
+        if (! $driver) {
+            return;
+        }
+
+        if (! $driver->is_active) {
+            $validator->errors()->add(
+                'driver_id',
+                'El motorista no está activo.'
+            );
+
+            return;
+        }
+
+        if (! $driver->is_available) {
+            $validator->errors()->add(
+                'driver_id',
+                'El motorista no está disponible en este momento.'
+            );
+
+            return;
+        }
+
+        if ($driver->hasActiveOrder()) {
+            $validator->errors()->add(
+                'driver_id',
+                'El motorista ya tiene una orden en curso.'
             );
         }
     }

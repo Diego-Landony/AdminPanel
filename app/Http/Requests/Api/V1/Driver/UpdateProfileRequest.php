@@ -17,13 +17,13 @@ class UpdateProfileRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * Nota: Actualmente no hay campos editables por el driver.
-     *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        return [];
+        return [
+            'name' => ['sometimes', 'string', 'max:255'],
+        ];
     }
 
     /**
@@ -33,6 +33,9 @@ class UpdateProfileRequest extends FormRequest
      */
     public function messages(): array
     {
-        return [];
+        return [
+            'name.string' => 'El nombre debe ser un texto válido.',
+            'name.max' => 'El nombre no puede exceder los 255 caracteres.',
+        ];
     }
 }

@@ -66,10 +66,11 @@ class SupportTicketController extends Controller
      *             mediaType="multipart/form-data",
      *
      *             @OA\Schema(
-     *                 required={"reason_id", "message"},
+     *                 required={"reason_id", "message", "contact_preference"},
      *
      *                 @OA\Property(property="reason_id", type="integer", description="ID del motivo de soporte", example=1),
      *                 @OA\Property(property="message", type="string", description="Mensaje inicial del ticket", example="Tengo un problema con mi pedido #123"),
+     *                 @OA\Property(property="contact_preference", type="string", enum={"no_contact", "contact"}, description="Preferencia de contacto: 'no_contact' = solo feedback, 'contact' = espera que admin contacte", example="contact"),
      *                 @OA\Property(property="attachments[]", type="array", @OA\Items(type="string", format="binary"), description="Imágenes adjuntas (máx 4)")
      *             )
      *         )
@@ -89,10 +90,15 @@ class SupportTicketController extends Controller
     {
         $customer = auth()->user();
 
+        // Si es solo feedback (no_contact), crear cerrado directamente
+        $isNoContact = $request->contact_preference === 'no_contact';
+
         $ticket = SupportTicket::create([
             'customer_id' => $customer->id,
             'support_reason_id' => $request->reason_id,
-            'status' => 'open',
+            'status' => $isNoContact ? 'closed' : 'open',
+            'contact_preference' => $request->contact_preference,
+            'resolved_at' => $isNoContact ? now() : null,
         ]);
 
         $message = SupportMessage::create([
@@ -218,6 +224,18 @@ class SupportTicketController extends Controller
         if ($ticket->status === 'closed') {
             return response()->json([
                 'message' => 'Ticket cerrado, no permite mensajes',
+            ], 422);
+        }
+
+        // Verificar si el cliente puede enviar mensajes según contact_preference
+        if (! $ticket->customerCanSendMessages()) {
+            $errorMessage = $ticket->contact_preference === 'no_contact'
+                ? 'Este ticket es solo de feedback, no permite respuestas'
+                : 'Debes esperar a que el equipo de soporte te contacte primero';
+
+            return response()->json([
+                'message' => $errorMessage,
+                'error_code' => 'CANNOT_SEND_MESSAGE',
             ], 422);
         }
 

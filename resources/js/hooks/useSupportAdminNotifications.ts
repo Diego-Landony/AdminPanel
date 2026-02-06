@@ -127,8 +127,10 @@ export function useSupportAdminNotifications(
     const supportAdminChannelRef = useRef<PrivateChannel | null>(null);
     const userChannelRef = useRef<PrivateChannel | null>(null);
     const reconnectAttempts = useRef(0);
-    const maxReconnectAttempts = 15; // Aumentado de 5 a 15 para mayor resiliencia
+    const maxReconnectAttempts = 15;
     const userIdRef = useRef(userId);
+    const isSubscribing = useRef(false);
+    const isSubscribed = useRef(false);
 
     // Mantener actualizado el userId en el ref
     useEffect(() => {
@@ -232,6 +234,11 @@ export function useSupportAdminNotifications(
      * Suscribirse a los canales WebSocket de admin
      */
     const subscribe = useCallback(() => {
+        // Evitar suscripciones duplicadas
+        if (isSubscribing.current || isSubscribed.current) {
+            return;
+        }
+
         if (!window.Echo) {
             console.error('[SupportAdminNotifications] Laravel Echo not initialized');
             setError('Laravel Echo no esta inicializado');
@@ -240,6 +247,7 @@ export function useSupportAdminNotifications(
         }
 
         try {
+            isSubscribing.current = true;
             setConnectionState('connecting');
             setError(null);
 
@@ -263,6 +271,8 @@ export function useSupportAdminNotifications(
                 if (isMounted.current) {
                     console.log('[SupportAdminNotifications] Successfully subscribed to channel:', supportAdminChannelName);
                     reconnectAttempts.current = 0;
+                    isSubscribing.current = false;
+                    isSubscribed.current = true;
 
                     // Cargar stats iniciales
                     refreshStats();
@@ -278,6 +288,8 @@ export function useSupportAdminNotifications(
             supportAdminChannel.error((err: unknown) => {
                 if (isMounted.current) {
                     console.error('[SupportAdminNotifications] Support admin channel error:', err);
+                    isSubscribing.current = false;
+                    isSubscribed.current = false;
                     setConnectionState('error');
                     setError('Error en la conexion del canal support.admin');
                 }
@@ -320,6 +332,8 @@ export function useSupportAdminNotifications(
             }
         } catch (err) {
             console.error('[SupportAdminNotifications] Subscription error:', err);
+            isSubscribing.current = false;
+            isSubscribed.current = false;
             if (isMounted.current) {
                 setConnectionState('error');
                 setError(err instanceof Error ? err.message : 'Error al suscribirse');
@@ -360,6 +374,8 @@ export function useSupportAdminNotifications(
                 userChannelRef.current = null;
             }
         }
+        isSubscribing.current = false;
+        isSubscribed.current = false;
         setConnectionState('disconnected');
     }, []);
 

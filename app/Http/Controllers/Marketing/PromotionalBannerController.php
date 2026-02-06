@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Marketing;
 
+use App\Events\BannersUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Marketing\StorePromotionalBannerRequest;
 use App\Http\Requests\Marketing\UpdatePromotionalBannerRequest;
@@ -72,6 +73,8 @@ class PromotionalBannerController extends Controller
 
         PromotionalBanner::create($data);
 
+        broadcast(new BannersUpdated('created'));
+
         return redirect()->route('marketing.banners.index')
             ->with('success', 'Banner creado exitosamente.');
     }
@@ -113,6 +116,8 @@ class PromotionalBannerController extends Controller
 
         $banner->update($data);
 
+        broadcast(new BannersUpdated('updated'));
+
         return redirect()->route('marketing.banners.index')
             ->with('success', 'Banner actualizado exitosamente.');
     }
@@ -125,6 +130,8 @@ class PromotionalBannerController extends Controller
         }
 
         $banner->delete();
+
+        broadcast(new BannersUpdated('deleted'));
 
         return redirect()->route('marketing.banners.index')
             ->with('success', 'Banner eliminado exitosamente.');
@@ -156,6 +163,8 @@ class PromotionalBannerController extends Controller
             'user_agent' => request()->userAgent(),
         ]);
 
+        broadcast(new BannersUpdated('reordered'));
+
         return redirect()->back()
             ->with('success', 'Orden actualizado exitosamente.');
     }
@@ -163,6 +172,8 @@ class PromotionalBannerController extends Controller
     public function toggleActive(PromotionalBanner $banner): RedirectResponse
     {
         $banner->update(['is_active' => ! $banner->is_active]);
+
+        broadcast(new BannersUpdated('toggled'));
 
         $status = $banner->is_active ? 'activado' : 'desactivado';
 

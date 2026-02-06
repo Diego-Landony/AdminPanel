@@ -9,7 +9,7 @@ import { useSupportTicketWebSocket } from '@/hooks/useSupportTicketWebSocket';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { ArrowLeft, CheckCircle, CreditCard, Hand, Inbox, Loader2, MapPin, Package, Paperclip, Send, Wifi, WifiOff, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle, CreditCard, Hand, Inbox, Loader2, MapPin, MessageCircle, Package, Paperclip, Phone, Send, Wifi, WifiOff, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface Customer {
@@ -63,6 +63,9 @@ interface SupportTicket {
     ticket_number: string;
     reason: SupportReason | null;
     status: 'open' | 'closed';
+    contact_preference: 'no_contact' | 'contact';
+    has_admin_message: boolean;
+    can_send_messages: boolean;
     customer: Customer;
     assigned_user: Admin | null;
     messages: Message[];
@@ -287,6 +290,26 @@ export default function TicketShow({ ticket, customerOrders, customerProfile }: 
                         </div>
                     </div>
 
+                    {/* Contact Preference Banner */}
+                    {ticket.contact_preference === 'contact' && !ticket.has_admin_message && (
+                        <div className="mx-4 mt-2 flex items-center gap-2 rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                            <Phone className="h-5 w-5 shrink-0" />
+                            <div>
+                                <span className="font-medium">El cliente espera ser contactado.</span>
+                                <span className="ml-1">Escribe el primer mensaje para iniciar la conversación.</span>
+                            </div>
+                        </div>
+                    )}
+                    {ticket.contact_preference === 'no_contact' && (
+                        <div className="mx-4 mt-2 flex items-center gap-2 rounded-lg bg-gray-50 p-3 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                            <MessageCircle className="h-5 w-5 shrink-0" />
+                            <div>
+                                <span className="font-medium">Solo feedback.</span>
+                                <span className="ml-1">El cliente no espera respuesta, pero puedes responder si lo deseas.</span>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
                         {ticket.messages.map((msg) => (
@@ -448,6 +471,43 @@ export default function TicketShow({ ticket, customerOrders, customerProfile }: 
                                     ) : (
                                         <div className="rounded-md bg-muted p-2 text-center text-xs text-muted-foreground">
                                             Debe tomar el ticket para poder cerrarlo
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Preferencia de contacto */}
+                            <div>
+                                <label className="text-xs text-muted-foreground">Preferencia de contacto</label>
+                                <div className="mt-1">
+                                    {ticket.contact_preference === 'contact' ? (
+                                        <div className={cn(
+                                            'flex items-center gap-2 rounded-md p-2',
+                                            ticket.has_admin_message
+                                                ? 'bg-green-50 dark:bg-green-900/20'
+                                                : 'bg-blue-50 dark:bg-blue-900/20'
+                                        )}>
+                                            <Phone className={cn(
+                                                'h-4 w-4',
+                                                ticket.has_admin_message
+                                                    ? 'text-green-600 dark:text-green-400'
+                                                    : 'text-blue-600 dark:text-blue-400'
+                                            )} />
+                                            <span className={cn(
+                                                'text-sm font-medium',
+                                                ticket.has_admin_message
+                                                    ? 'text-green-700 dark:text-green-400'
+                                                    : 'text-blue-700 dark:text-blue-400'
+                                            )}>
+                                                {ticket.has_admin_message ? 'Contactado' : 'Espera contacto'}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2 rounded-md bg-gray-50 p-2 dark:bg-gray-800">
+                                            <MessageCircle className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-400">
+                                                Solo feedback
+                                            </span>
                                         </div>
                                     )}
                                 </div>

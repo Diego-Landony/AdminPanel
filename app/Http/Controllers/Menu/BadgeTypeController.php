@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Menu;
 
+use App\Events\BadgesUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Menu\BadgeType;
 use Illuminate\Http\RedirectResponse;
@@ -46,6 +47,8 @@ class BadgeTypeController extends Controller
 
         BadgeType::create($validated);
 
+        broadcast(new BadgesUpdated('created'));
+
         return redirect()->route('menu.badge-types.index')
             ->with('success', 'Badge creado exitosamente.');
     }
@@ -68,6 +71,8 @@ class BadgeTypeController extends Controller
 
         $badgeType->update($validated);
 
+        broadcast(new BadgesUpdated('updated'));
+
         return redirect()->route('menu.badge-types.index')
             ->with('success', 'Badge actualizado exitosamente.');
     }
@@ -75,6 +80,8 @@ class BadgeTypeController extends Controller
     public function destroy(BadgeType $badgeType): RedirectResponse
     {
         $badgeType->delete();
+
+        broadcast(new BadgesUpdated('deleted'));
 
         return redirect()->route('menu.badge-types.index')
             ->with('success', 'Badge eliminado exitosamente.');
@@ -105,6 +112,8 @@ class BadgeTypeController extends Controller
             'new_values' => ['items_count' => $count],
             'user_agent' => request()->userAgent(),
         ]);
+
+        broadcast(new BadgesUpdated('reordered'));
 
         return redirect()->back()
             ->with('success', 'Orden actualizado exitosamente.');

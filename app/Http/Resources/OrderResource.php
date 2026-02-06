@@ -34,7 +34,6 @@ class OrderResource extends JsonResource
             'driver' => $this->whenLoaded('driver', fn () => $this->driver ? [
                 'id' => $this->driver->id,
                 'name' => $this->driver->name,
-                'phone' => $this->driver->phone,
             ] : null),
             'service_type' => $this->service_type,
             'service_type_label' => $this->getServiceTypeLabel(),

@@ -26,6 +26,9 @@ class SupportTicketController extends Controller
         $query = SupportTicket::with(['reason:id,name,slug', 'customer:id,first_name,last_name,email', 'assignedUser:id,name', 'latestMessage'])
             ->withCount(['messages as unread_count' => function ($q) {
                 $q->where('is_read', false)->where('sender_type', \App\Models\Customer::class);
+            }])
+            ->withExists(['messages as has_admin_message' => function ($q) {
+                $q->where('sender_type', User::class);
             }]);
 
         if ($request->filled('status')) {
@@ -40,6 +43,15 @@ class SupportTicketController extends Controller
             }
         }
 
+        if ($request->filled('contact_preference')) {
+            if ($request->contact_preference === 'waiting_contact') {
+                // Tickets con preferencia 'contact' que aún no tienen mensaje de admin
+                $query->waitingContact();
+            } elseif ($request->contact_preference === 'no_contact') {
+                $query->feedbackOnly();
+            }
+        }
+
         $tickets = $query->latest()->paginate(20);
 
         $stats = [
@@ -47,12 +59,13 @@ class SupportTicketController extends Controller
             'open' => SupportTicket::open()->count(),
             'closed' => SupportTicket::closed()->count(),
             'unassigned' => SupportTicket::unassigned()->active()->count(),
+            'waiting_contact' => SupportTicket::waitingContact()->active()->count(),
         ];
 
         return Inertia::render('support/tickets/index', [
             'tickets' => $tickets,
             'stats' => $stats,
-            'filters' => $request->only(['status', 'assigned_to']),
+            'filters' => $request->only(['status', 'assigned_to', 'contact_preference']),
         ]);
     }
 
@@ -66,6 +79,10 @@ class SupportTicketController extends Controller
                 $q->with(['sender', 'attachments'])->orderBy('created_at', 'asc');
             },
         ]);
+
+        // Agregar campo calculado para saber si tiene mensajes de admin
+        $ticket->has_admin_message = $ticket->hasAdminMessage();
+        $ticket->can_send_messages = $ticket->customerCanSendMessages();
 
         $ticket->messages()
             ->where('sender_type', \App\Models\Customer::class)

@@ -44,7 +44,7 @@ class OrderResource extends JsonResource
                 'total' => (float) $this->total,
             ],
             'status' => $this->status,
-            'status_label' => OrderStatusResource::getStatusLabel($this->status),
+            'status_label' => OrderStatusResource::getStatusLabel($this->status, $this->service_type),
             'payment' => [
                 'method' => $this->payment_method,
                 'status' => $this->payment_status,

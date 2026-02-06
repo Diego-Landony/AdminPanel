@@ -29,6 +29,7 @@ class SupportTicket extends Model implements ActivityLoggable
         'support_reason_id',
         'subject',
         'status',
+        'contact_preference',
         'assigned_to',
         'resolved_at',
     ];
@@ -126,5 +127,42 @@ class SupportTicket extends Model implements ActivityLoggable
         $this->update([
             'assigned_to' => $user->id,
         ]);
+    }
+
+    /**
+     * Verifica si hay al menos un mensaje de admin en el ticket
+     */
+    public function hasAdminMessage(): bool
+    {
+        return $this->messages()
+            ->where('sender_type', User::class)
+            ->exists();
+    }
+
+    /**
+     * Verifica si el cliente puede enviar mensajes
+     * - Si contact_preference es 'no_contact': nunca puede
+     * - Si contact_preference es 'contact': solo si ya hay mensaje de admin
+     */
+    public function customerCanSendMessages(): bool
+    {
+        if ($this->contact_preference === 'no_contact') {
+            return false;
+        }
+
+        return $this->hasAdminMessage();
+    }
+
+    public function scopeWaitingContact($query)
+    {
+        return $query->where('contact_preference', 'contact')
+            ->whereDoesntHave('messages', function ($q) {
+                $q->where('sender_type', User::class);
+            });
+    }
+
+    public function scopeFeedbackOnly($query)
+    {
+        return $query->where('contact_preference', 'no_contact');
     }
 }

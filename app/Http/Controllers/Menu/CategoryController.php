@@ -7,6 +7,7 @@ use App\Http\Requests\Menu\StoreCategoryRequest;
 use App\Http\Requests\Menu\UpdateCategoryRequest;
 use App\Models\Menu\Category;
 use App\Services\Menu\VariantSyncService;
+use App\Services\MenuVersionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -138,6 +139,9 @@ class CategoryController extends Controller
             'new_values' => ['items_count' => $count],
             'user_agent' => request()->userAgent(),
         ]);
+
+        // Invalidar versión del menú para que Flutter actualice su caché
+        app(MenuVersionService::class)->invalidate('categories_reordered');
 
         return redirect()->back()
             ->with('success', 'Orden actualizado exitosamente.');

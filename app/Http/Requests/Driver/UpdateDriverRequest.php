@@ -35,7 +35,6 @@ class UpdateDriverRequest extends FormRequest
                 Rule::unique('drivers', 'email')->ignore($driverId),
             ],
             'password' => ['nullable', 'string', Password::min(8), 'confirmed'],
-            'phone' => ['nullable', 'string', 'max:255'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

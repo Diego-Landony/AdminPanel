@@ -115,7 +115,7 @@ class OrderController extends Controller
         $order->load([
             'customer',
             'restaurant:id,name',
-            'driver:id,name,phone',
+            'driver:id,name',
             'items.product:id,name',
             'statusHistory' => fn ($q) => $q->latest(),
             'review',
@@ -324,7 +324,6 @@ class OrderController extends Controller
             'driver' => $order->driver ? [
                 'id' => $order->driver->id,
                 'name' => $order->driver->name,
-                'phone' => $order->driver->phone,
             ] : null,
             'driver_id' => $order->driver_id,
             'service_type' => $order->service_type,

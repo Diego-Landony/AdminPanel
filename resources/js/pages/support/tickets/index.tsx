@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router, usePoll } from '@inertiajs/react';
-import { AlertCircle, CheckCircle, Eye, Inbox, MessageSquare, Settings2 } from 'lucide-react';
+import { AlertCircle, CheckCircle, Eye, Inbox, MessageCircle, MessageSquare, Phone, Settings2 } from 'lucide-react';
 
 interface Customer {
     id: number;
@@ -36,6 +36,8 @@ interface SupportTicket {
     ticket_number: string;
     reason: SupportReason | null;
     status: 'open' | 'closed';
+    contact_preference: 'no_contact' | 'contact';
+    has_admin_message: boolean;
     customer: Customer;
     assigned_user: Admin | null;
     latest_message: LatestMessage | null;
@@ -57,16 +59,31 @@ interface TicketsPageProps {
         open: number;
         closed: number;
         unassigned: number;
+        waiting_contact: number;
     };
     filters: {
         status?: string;
         assigned_to?: string;
+        contact_preference?: string;
     };
 }
 
 const STATUS_CONFIG = {
     open: { label: 'Abierto', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300', icon: Inbox },
     closed: { label: 'Cerrado', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300', icon: CheckCircle },
+};
+
+const CONTACT_PREFERENCE_CONFIG = {
+    no_contact: {
+        label: 'Solo feedback',
+        color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+        icon: MessageCircle,
+    },
+    contact: {
+        label: 'Espera contacto',
+        color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+        icon: Phone,
+    },
 };
 
 export default function TicketsIndex({ tickets, stats, filters }: TicketsPageProps) {
@@ -82,6 +99,7 @@ export default function TicketsIndex({ tickets, stats, filters }: TicketsPagePro
         { title: 'abiertos', value: stats.open, icon: <Inbox className="h-4 w-4 text-yellow-600" /> },
         { title: 'cerrados', value: stats.closed, icon: <CheckCircle className="h-4 w-4 text-gray-600" /> },
         { title: 'sin tomar', value: stats.unassigned, icon: <AlertCircle className="h-4 w-4 text-red-600" /> },
+        { title: 'esperan contacto', value: stats.waiting_contact, icon: <Phone className="h-4 w-4 text-blue-600" /> },
     ];
 
     return (
@@ -140,6 +158,17 @@ export default function TicketsIndex({ tickets, stats, filters }: TicketsPagePro
                                         <SelectItem value="unassigned">Sin tomar</SelectItem>
                                     </SelectContent>
                                 </Select>
+
+                                <Select value={filters.contact_preference || 'all'} onValueChange={(value) => handleFilterChange('contact_preference', value)}>
+                                    <SelectTrigger className="h-9 w-40">
+                                        <SelectValue placeholder="Preferencia" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todas</SelectItem>
+                                        <SelectItem value="waiting_contact">Esperan contacto</SelectItem>
+                                        <SelectItem value="no_contact">Solo feedback</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 
@@ -168,7 +197,20 @@ export default function TicketsIndex({ tickets, stats, filters }: TicketsPagePro
                                         tickets.data.map((ticket) => (
                                             <TableRow key={ticket.id}>
                                                 <TableCell>
-                                                    <span className="font-mono text-xs">{ticket.ticket_number}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-mono text-xs">{ticket.ticket_number}</span>
+                                                        {ticket.contact_preference === 'contact' && !ticket.has_admin_message && (
+                                                            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 text-[10px] px-1.5">
+                                                                <Phone className="h-3 w-3 mr-1" />
+                                                                Contactar
+                                                            </Badge>
+                                                        )}
+                                                        {ticket.contact_preference === 'no_contact' && (
+                                                            <Badge className="bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 text-[10px] px-1.5">
+                                                                Feedback
+                                                            </Badge>
+                                                        )}
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="min-w-0">

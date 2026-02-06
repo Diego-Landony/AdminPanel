@@ -26,7 +26,6 @@ class DriverResource extends JsonResource
             ]),
             'name' => $this->name,
             'email' => $this->email,
-            'phone' => $this->phone,
             'is_active' => $this->is_active,
             'is_available' => $this->is_available,
             'is_online' => $this->is_online,

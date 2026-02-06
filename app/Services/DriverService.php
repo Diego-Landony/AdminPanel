@@ -15,8 +15,7 @@ class DriverService
      *     restaurant_id: int,
      *     name: string,
      *     email: string,
-     *     password: string,
-     *     phone?: string|null
+     *     password: string
      * }  $data
      */
     public function create(array $data): Driver
@@ -34,7 +33,6 @@ class DriverService
      *     name?: string,
      *     email?: string,
      *     password?: string|null,
-     *     phone?: string|null,
      *     is_active?: bool
      * }  $data
      */
@@ -116,5 +114,13 @@ class DriverService
         ]);
 
         return $driver->fresh();
+    }
+
+    /**
+     * Verifica si el driver puede desconectarse (no tiene orden activa).
+     */
+    public function canGoOffline(Driver $driver): bool
+    {
+        return $driver->activeOrder()->doesntExist();
     }
 }

@@ -21,7 +21,6 @@ class DriverFactory extends Factory
             'restaurant_id' => Restaurant::factory(),
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'phone' => '+502 '.fake()->numerify('#### ####'),
             'password' => bcrypt('password'),
             'is_active' => true,
             'is_available' => true,
@@ -67,6 +66,18 @@ class DriverFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'is_active' => false,
             'is_available' => false,
+        ]);
+    }
+
+    /**
+     * Create a driver with GPS location coordinates (Guatemala area).
+     */
+    public function withLocation(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'current_latitude' => fake()->randomFloat(8, 14.5, 15.0),
+            'current_longitude' => fake()->randomFloat(8, -91.8, -90.2),
+            'last_location_update' => now(),
         ]);
     }
 }

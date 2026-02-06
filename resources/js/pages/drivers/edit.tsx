@@ -1,6 +1,6 @@
 import { showNotification } from '@/hooks/useNotifications';
 import { useForm } from '@inertiajs/react';
-import { Building2, Check, ChevronsUpDown, Eye, EyeOff, Lock, Mail, Phone, User } from 'lucide-react';
+import { Building2, Check, ChevronsUpDown, Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { EditPageLayout } from '@/components/edit-page-layout';
@@ -36,7 +36,6 @@ export default function EditDriver({ driver, restaurants }: EditDriverProps) {
         restaurant_id: driver.restaurant_id?.toString() || '',
         name: driver.name || '',
         email: driver.email || '',
-        phone: driver.phone || '',
         password: '',
         password_confirmation: '',
         is_active: driver.is_active,
@@ -164,37 +163,20 @@ export default function EditDriver({ driver, restaurants }: EditDriverProps) {
                                     />
                                 </FormField>
 
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                    <FormField label="Correo Electronico" error={errors.email} required>
-                                        <div className="relative">
-                                            <Mail className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
-                                            <Input
-                                                id="email"
-                                                type="email"
-                                                placeholder={PLACEHOLDERS.email}
-                                                value={data.email}
-                                                onChange={(e) => setData('email', e.target.value)}
-                                                className="pl-10"
-                                                autoComplete={AUTOCOMPLETE.email}
-                                            />
-                                        </div>
-                                    </FormField>
-
-                                    <FormField label="Telefono" error={errors.phone}>
-                                        <div className="relative">
-                                            <Phone className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
-                                            <Input
-                                                id="phone"
-                                                type="tel"
-                                                placeholder={PLACEHOLDERS.phone}
-                                                value={data.phone}
-                                                onChange={(e) => setData('phone', e.target.value)}
-                                                className="pl-10"
-                                                autoComplete={AUTOCOMPLETE.phone}
-                                            />
-                                        </div>
-                                    </FormField>
-                                </div>
+                                <FormField label="Correo Electronico" error={errors.email} required>
+                                    <div className="relative">
+                                        <Mail className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            placeholder={PLACEHOLDERS.email}
+                                            value={data.email}
+                                            onChange={(e) => setData('email', e.target.value)}
+                                            className="pl-10"
+                                            autoComplete={AUTOCOMPLETE.email}
+                                        />
+                                    </div>
+                                </FormField>
 
                                 <div className="flex items-center justify-between">
                                     <Label htmlFor="is_active" className="cursor-pointer">

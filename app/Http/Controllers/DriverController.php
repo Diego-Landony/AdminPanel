@@ -35,7 +35,6 @@ class DriverController extends Controller
                 'restaurant_id',
                 'name',
                 'email',
-                'phone',
                 'is_active',
                 'is_available',
                 'last_activity_at',
@@ -52,7 +51,6 @@ class DriverController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
                     ->orWhereHas('restaurant', function ($subQuery) use ($search) {
                         $subQuery->where('name', 'like', "%{$search}%");
                     });
@@ -86,7 +84,6 @@ class DriverController extends Controller
                     ] : null,
                     'name' => $driver->name,
                     'email' => $driver->email,
-                    'phone' => $driver->phone,
                     'is_active' => $driver->is_active,
                     'is_available' => $driver->is_available,
                     'is_online' => $driver->is_online,
@@ -165,7 +162,6 @@ class DriverController extends Controller
                 ] : null,
                 'name' => $driver->name,
                 'email' => $driver->email,
-                'phone' => $driver->phone,
                 'is_active' => $driver->is_active,
                 'is_available' => $driver->is_available,
                 'is_online' => $driver->is_online,
@@ -200,7 +196,6 @@ class DriverController extends Controller
                 'restaurant_id' => $driver->restaurant_id,
                 'name' => $driver->name,
                 'email' => $driver->email,
-                'phone' => $driver->phone,
                 'is_active' => $driver->is_active,
                 'is_available' => $driver->is_available,
                 'created_at' => $driver->created_at,

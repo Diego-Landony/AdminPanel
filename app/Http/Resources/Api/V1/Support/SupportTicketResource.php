@@ -14,6 +14,9 @@ class SupportTicketResource extends JsonResource
             'ticket_number' => $this->ticket_number,
             'reason' => $this->whenLoaded('reason', fn () => new SupportReasonResource($this->reason)),
             'status' => $this->status,
+            'contact_preference' => $this->contact_preference,
+            'has_admin_message' => $this->hasAdminMessage(),
+            'can_send_messages' => $this->customerCanSendMessages(),
             'unread_count' => $this->unread_count ?? 0,
             'assigned_to' => $this->whenLoaded('assignedUser', fn () => [
                 'id' => $this->assignedUser->id,

@@ -27,7 +27,7 @@ import {
     Package,
     HandPlatter,
 } from 'lucide-react';
-import { ORDER_TABLE_STATUS_CONFIG } from '@/constants/restaurant-constants';
+import { ORDER_TABLE_STATUS_CONFIG, getStatusLabel, getStatusDescription } from '@/constants/restaurant-constants';
 import {
     formatSubwayCard,
     getTimeAgo,
@@ -205,8 +205,8 @@ export function OrdersListTable({
                                     <div className={`flex items-center gap-2 ${status.textColor}`}>
                                         {status.icon}
                                         <div className="flex flex-col">
-                                            <span className="font-semibold text-sm">{status.label}</span>
-                                            <span className="text-xs opacity-80">{status.description}</span>
+                                            <span className="font-semibold text-sm">{getStatusLabel(order.status, order.service_type)}</span>
+                                            <span className="text-xs opacity-80">{getStatusDescription(order.status, order.service_type)}</span>
                                         </div>
                                     </div>
 

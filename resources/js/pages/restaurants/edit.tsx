@@ -433,8 +433,7 @@ export default function RestaurantEdit({ restaurant, restaurant_users = [], driv
         resetUserForm();
     };
 
-    const handleUserFormSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleUserFormSubmit = () => {
         setUserFormProcessing(true);
         setUserFormErrors({});
 
@@ -442,34 +441,36 @@ export default function RestaurantEdit({ restaurant, restaurant_users = [], driv
             ? route('restaurants.users.update', { restaurant: restaurant.id, restaurantUser: editingUser.id })
             : route('restaurants.users.store', { restaurant: restaurant.id });
 
-        const method = editingUser ? 'put' : 'post';
-
         // Preparar datos
-        const submitData: Record<string, unknown> = {
+        const submitData = {
             name: userForm.name,
             email: userForm.email,
             is_active: userForm.is_active,
+            ...(userForm.password && {
+                password: userForm.password,
+                password_confirmation: userForm.password_confirmation,
+            }),
         };
 
-        // Solo incluir password si se proporcionó (para crear es requerido, para editar es opcional)
-        if (userForm.password) {
-            submitData.password = userForm.password;
-            submitData.password_confirmation = userForm.password_confirmation;
-        }
-
-        router[method](url, submitData, {
+        const options = {
             preserveScroll: true,
             onSuccess: () => {
                 closeUserModal();
                 showNotification.success(editingUser ? 'Usuario actualizado exitosamente' : 'Usuario creado exitosamente');
             },
-            onError: (errors) => {
-                setUserFormErrors(errors as Record<string, string>);
+            onError: (errors: Record<string, string>) => {
+                setUserFormErrors(errors);
             },
             onFinish: () => {
                 setUserFormProcessing(false);
             },
-        });
+        };
+
+        if (editingUser) {
+            router.put(url, submitData, options);
+        } else {
+            router.post(url, submitData, options);
+        }
     };
 
     const openDeleteUserDialog = (user: RestaurantUser) => {
@@ -1011,7 +1012,7 @@ export default function RestaurantEdit({ restaurant, restaurant_users = [], driv
                     </CardContent>
                 </Card>
 
-                {/* Modal de Crear/Editar Usuario */}
+                {/* Modal de Crear/Editar Usuario - Fuera del formulario principal usando portal */}
                 <Dialog open={isUserModalOpen} onOpenChange={(open) => !open && closeUserModal()}>
                     <DialogContent className="sm:max-w-md">
                         <DialogHeader>
@@ -1022,7 +1023,7 @@ export default function RestaurantEdit({ restaurant, restaurant_users = [], driv
                                     : 'Crea un nuevo usuario con acceso al panel del restaurante'}
                             </DialogDescription>
                         </DialogHeader>
-                        <form onSubmit={handleUserFormSubmit} className="space-y-4">
+                        <div className="space-y-4">
                             <FormField label="Nombre" error={userFormErrors.name} required>
                                 <Input
                                     value={userForm.name}
@@ -1105,11 +1106,11 @@ export default function RestaurantEdit({ restaurant, restaurant_users = [], driv
                                 <Button type="button" variant="outline" onClick={closeUserModal}>
                                     Cancelar
                                 </Button>
-                                <Button type="submit" disabled={userFormProcessing}>
+                                <Button type="button" onClick={handleUserFormSubmit} disabled={userFormProcessing}>
                                     {userFormProcessing ? 'Guardando...' : editingUser ? 'Actualizar' : 'Crear Usuario'}
                                 </Button>
                             </DialogFooter>
-                        </form>
+                        </div>
                     </DialogContent>
                 </Dialog>
 

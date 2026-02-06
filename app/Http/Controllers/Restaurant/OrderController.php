@@ -38,7 +38,7 @@ class OrderController extends Controller
         $date = $request->get('date', now()->format('Y-m-d'));
 
         $query = Order::where('restaurant_id', $restaurantId)
-            ->with(['customer:id,first_name,last_name,phone,subway_card', 'driver:id,name,phone', 'items'])
+            ->with(['customer:id,first_name,last_name,phone,subway_card', 'driver:id,name', 'items'])
             ->orderBy('created_at', 'desc');
 
         // Filtrar por fecha
@@ -112,7 +112,7 @@ class OrderController extends Controller
         $availableDrivers = Driver::where('restaurant_id', $restaurantId)
             ->where('is_active', true)
             ->where('is_available', true)
-            ->select(['id', 'name', 'phone'])
+            ->select(['id', 'name'])
             ->get();
 
         return Inertia::render('restaurant/orders/index', [
@@ -142,7 +142,7 @@ class OrderController extends Controller
 
         $order->load([
             'customer:id,first_name,last_name,email,phone,subway_card',
-            'driver:id,name,phone',
+            'driver:id,name',
             'items.product:id,name',
             'statusHistory',
             'restaurant:id,name',
@@ -152,7 +152,7 @@ class OrderController extends Controller
         $availableDrivers = Driver::where('restaurant_id', auth('restaurant')->user()->restaurant_id)
             ->where('is_active', true)
             ->where('is_available', true)
-            ->select(['id', 'name', 'phone'])
+            ->select(['id', 'name'])
             ->get();
 
         return Inertia::render('restaurant/orders/show', [
@@ -181,7 +181,6 @@ class OrderController extends Controller
                 'driver' => $order->driver ? [
                     'id' => $order->driver->id,
                     'name' => $order->driver->name,
-                    'phone' => $order->driver->phone,
                 ] : null,
                 'driver_id' => $order->driver_id,
                 'items' => $order->items->map(fn ($item) => [
@@ -268,6 +267,9 @@ class OrderController extends Controller
 
     /**
      * Asignar motorista a la orden
+     *
+     * Nota: Solo asigna el motorista, la orden mantiene su estado 'ready'.
+     * El motorista debe aceptar la orden desde su app para que cambie a 'out_for_delivery'.
      */
     public function assignDriver(Request $request, Order $order): RedirectResponse
     {
@@ -288,25 +290,33 @@ class OrderController extends Controller
             return back()->with('error', 'Este motorista no pertenece a tu restaurante');
         }
 
-        // Actualizar driver y timestamp
+        // Verificar que el driver no tiene orden activa
+        if ($driver->hasActiveOrder()) {
+            return back()->with('error', 'Este motorista ya tiene una orden en curso');
+        }
+
+        // Solo asignar el motorista - el estado permanece 'ready'
+        // El motorista debe aceptar la orden desde su app para que cambie a 'out_for_delivery'
         $order->update([
             'driver_id' => $driver->id,
             'assigned_to_driver_at' => now(),
         ]);
 
-        // Marcar motorista como no disponible
-        $driver->update(['is_available' => false]);
+        // Registrar el cambio en el historial (sin cambiar estado)
+        OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'previous_status' => $order->status,
+            'new_status' => $order->status,
+            'changed_by_type' => 'restaurant',
+            'changed_by_id' => auth('restaurant')->id(),
+            'notes' => "Motorista asignado: {$driver->name}",
+            'created_at' => now(),
+        ]);
 
-        // Usar OrderService para disparar evento WebSocket
-        $this->orderService->updateStatus(
-            $order,
-            Order::STATUS_OUT_FOR_DELIVERY,
-            "Asignado a motorista: {$driver->name}",
-            'restaurant',
-            auth('restaurant')->id()
-        );
+        // Enviar notificación push al motorista
+        $driver->notify(new \App\Notifications\DriverOrderAssignedNotification($order));
 
-        return back()->with('success', "Orden asignada a {$driver->name}");
+        return back()->with('success', "Orden asignada a {$driver->name}. Esperando que el motorista acepte.");
     }
 
     /**
@@ -342,10 +352,7 @@ class OrderController extends Controller
             return back()->with('error', 'Esta orden no puede marcarse como entregada');
         }
 
-        // Marcar motorista como disponible nuevamente
-        if ($order->driver_id) {
-            Driver::where('id', $order->driver_id)->update(['is_available' => true]);
-        }
+        // Nota: is_available del motorista se calcula automáticamente basado en hasActiveOrder()
 
         $this->orderService->updateStatus(
             $order,

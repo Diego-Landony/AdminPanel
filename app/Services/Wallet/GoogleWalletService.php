@@ -52,11 +52,11 @@ class GoogleWalletService
         $loyaltyClass->setIssuerName('Subway Guatemala');
         $loyaltyClass->setProgramName(config('services.google_wallet.program_name'));
         $loyaltyClass->setReviewStatus('UNDER_REVIEW');
-        $loyaltyClass->setHexBackgroundColor('#008244');
+        $loyaltyClass->setHexBackgroundColor('#008938');
 
         $programLogo = new Walletobjects\Image;
         $logoSourceUri = new Walletobjects\ImageUri;
-        $logoSourceUri->setUri('https://appmobile.subwaycardgt.com/iconsubway.png');
+        $logoSourceUri->setUri(config('app.url').'/wallet/google/icon.png?v=2');
         $logoDescription = new Walletobjects\LocalizedString;
         $logoDescriptionValue = new Walletobjects\TranslatedString;
         $logoDescriptionValue->setLanguage('es');
@@ -100,6 +100,22 @@ class GoogleWalletService
             }
 
             throw new RuntimeException('Failed to verify Google Wallet class: '.$e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
+     * Update the wallet pass for a customer (e.g., when points change).
+     * This can be called externally to sync the pass with current data.
+     */
+    public function updateCustomerPass(Customer $customer): void
+    {
+        try {
+            $this->validateConfiguration();
+            $customer->loadMissing('customerType');
+            $this->createOrUpdateObject($customer);
+        } catch (\Exception $e) {
+            // Log error but don't throw - wallet update shouldn't break the main flow
+            \Log::warning('Failed to update Google Wallet pass for customer '.$customer->id.': '.$e->getMessage());
         }
     }
 

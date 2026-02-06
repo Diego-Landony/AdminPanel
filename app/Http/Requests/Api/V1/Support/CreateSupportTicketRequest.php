@@ -16,6 +16,7 @@ class CreateSupportTicketRequest extends FormRequest
         return [
             'reason_id' => ['required', 'exists:support_reasons,id'],
             'message' => ['required', 'string', 'max:5000'],
+            'contact_preference' => ['required', 'in:no_contact,contact'],
             'attachments' => ['nullable', 'array', 'max:4'],
             'attachments.*' => ['image', 'mimes:jpeg,png,gif,webp', 'max:5120'],
         ];
@@ -28,6 +29,8 @@ class CreateSupportTicketRequest extends FormRequest
             'reason_id.exists' => 'El motivo seleccionado no es válido.',
             'message.required' => 'El mensaje es obligatorio.',
             'message.max' => 'El mensaje no puede tener más de 5000 caracteres.',
+            'contact_preference.required' => 'Debes indicar tu preferencia de contacto.',
+            'contact_preference.in' => 'La preferencia de contacto no es válida.',
             'attachments.max' => 'Puedes adjuntar un máximo de 4 imágenes.',
             'attachments.*.image' => 'Solo se permiten archivos de imagen.',
             'attachments.*.mimes' => 'Solo se permiten imágenes en formato jpeg, png, gif o webp.',

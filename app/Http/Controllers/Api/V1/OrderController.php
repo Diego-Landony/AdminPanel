@@ -871,9 +871,9 @@ class OrderController extends Controller
             ], 403);
         }
 
-        if (! in_array($order->status, ['completed', 'delivered'])) {
+        if ($order->status !== 'completed') {
             return response()->json([
-                'message' => 'Solo órdenes completadas',
+                'message' => 'Solo puedes calificar órdenes completadas',
             ], 422);
         }
 

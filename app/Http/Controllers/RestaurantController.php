@@ -177,14 +177,13 @@ class RestaurantController extends Controller
 
         // Cargar motoristas del restaurante
         $drivers = $restaurant->drivers()
-            ->select(['id', 'restaurant_id', 'name', 'email', 'phone', 'is_active', 'is_available'])
+            ->select(['id', 'restaurant_id', 'name', 'email', 'is_active', 'is_available'])
             ->orderBy('name')
             ->get()
             ->map(fn ($driver) => [
                 'id' => $driver->id,
                 'name' => $driver->name,
                 'email' => $driver->email,
-                'phone' => $driver->phone,
                 'is_active' => $driver->is_active,
                 'is_available' => $driver->is_available,
             ]);

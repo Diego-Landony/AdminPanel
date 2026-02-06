@@ -72,6 +72,10 @@ return [
         'team_identifier' => env('APPLE_WALLET_TEAM_ID'),
         'organization_name' => env('APPLE_WALLET_ORG_NAME', 'Subway Guatemala'),
         'images_path' => env('APPLE_WALLET_IMAGES_PATH', storage_path('app/wallet/apple/images')),
+        // Push Notifications Configuration
+        'web_service_url' => env('APPLE_WALLET_WEB_SERVICE_URL'),
+        'auth_secret' => env('APPLE_WALLET_AUTH_SECRET'),
+        'apns_production' => env('APPLE_WALLET_APNS_PRODUCTION', true),
     ],
 
     /*

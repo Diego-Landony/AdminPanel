@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AppleWalletController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\OAuthController;
 use App\Http\Controllers\Api\V1\BroadcastingController;
@@ -257,6 +258,37 @@ Route::prefix('v1')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | Apple Wallet Web Service Endpoints
+    |--------------------------------------------------------------------------
+    |
+    | Endpoints requeridos por Apple Wallet para registro de dispositivos
+    | y actualización automática de pases mediante Push Notifications.
+    |
+    | @see https://developer.apple.com/documentation/walletpasses/adding_a_web_service_to_update_passes
+    */
+
+    // Registrar dispositivo para push notifications
+    Route::post('/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}', [AppleWalletController::class, 'registerDevice'])
+        ->name('api.v1.wallet.apple.register');
+
+    // Eliminar registro de dispositivo
+    Route::delete('/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}', [AppleWalletController::class, 'unregisterDevice'])
+        ->name('api.v1.wallet.apple.unregister');
+
+    // Obtener lista de pases actualizados para un dispositivo
+    Route::get('/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}', [AppleWalletController::class, 'getSerialNumbers'])
+        ->name('api.v1.wallet.apple.serial-numbers');
+
+    // Obtener pase actualizado
+    Route::get('/passes/{passTypeIdentifier}/{serialNumber}', [AppleWalletController::class, 'getPass'])
+        ->name('api.v1.wallet.apple.get-pass');
+
+    // Log de errores de dispositivos (opcional)
+    Route::post('/log', [AppleWalletController::class, 'log'])
+        ->name('api.v1.wallet.apple.log');
+
+    /*
+    |--------------------------------------------------------------------------
     | Menu API Routes (Public - No Authentication Required)
     |--------------------------------------------------------------------------
     */
@@ -356,5 +388,81 @@ Route::prefix('v1')->group(function () {
             ->name('tickets.show');
         Route::post('/tickets/{ticket}/messages', [App\Http\Controllers\Api\V1\Support\SupportTicketController::class, 'sendMessage'])
             ->name('tickets.messages.store');
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Driver API Routes (Motoristas)
+|--------------------------------------------------------------------------
+|
+| Rutas API para la aplicación móvil de motoristas.
+| Usa Laravel Sanctum con guard driver para autenticación basada en tokens.
+|
+*/
+
+Route::prefix('v1/driver')->name('driver.')->group(function () {
+    // Auth sin middleware (public)
+    Route::post('auth/login', [App\Http\Controllers\Api\V1\Driver\AuthController::class, 'login'])
+        ->middleware('throttle:5,1')
+        ->name('auth.login');
+
+    // Rutas protegidas (requieren autenticación y driver activo)
+    Route::middleware(['auth:driver', 'driver.active'])->group(function () {
+        Route::post('auth/logout', [App\Http\Controllers\Api\V1\Driver\AuthController::class, 'logout'])
+            ->name('auth.logout');
+        Route::get('auth/me', [App\Http\Controllers\Api\V1\Driver\AuthController::class, 'me'])
+            ->name('auth.me');
+
+        // Location
+        Route::post('location', [App\Http\Controllers\Api\V1\Driver\LocationController::class, 'update'])
+            ->middleware('throttle:120,1')
+            ->name('location.update');
+
+        // Orders
+        Route::prefix('orders')->name('orders.')->group(function () {
+            Route::get('pending', [App\Http\Controllers\Api\V1\Driver\OrderController::class, 'pending'])
+                ->name('pending');
+            Route::get('active', [App\Http\Controllers\Api\V1\Driver\OrderController::class, 'active'])
+                ->name('active');
+
+            Route::middleware('driver.order.belongs')->group(function () {
+                Route::get('{order}', [App\Http\Controllers\Api\V1\Driver\OrderController::class, 'show'])
+                    ->name('show');
+                Route::post('{order}/accept', [App\Http\Controllers\Api\V1\Driver\OrderController::class, 'accept'])
+                    ->name('accept');
+                Route::post('{order}/deliver', [App\Http\Controllers\Api\V1\Driver\OrderController::class, 'deliver'])
+                    ->name('deliver');
+            });
+        });
+
+        // Profile
+        Route::prefix('profile')->name('profile.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Api\V1\Driver\ProfileController::class, 'show'])
+                ->name('show');
+            Route::put('/', [App\Http\Controllers\Api\V1\Driver\ProfileController::class, 'update'])
+                ->name('update');
+            Route::put('password', [App\Http\Controllers\Api\V1\Driver\ProfileController::class, 'changePassword'])
+                ->name('password');
+        });
+
+        // History
+        Route::get('history', [App\Http\Controllers\Api\V1\Driver\HistoryController::class, 'index'])
+            ->name('history.index');
+        Route::get('history/{order}', [App\Http\Controllers\Api\V1\Driver\HistoryController::class, 'show'])
+            ->middleware('driver.order.belongs')
+            ->name('history.show');
+
+        // Stats
+        Route::get('stats', [App\Http\Controllers\Api\V1\Driver\StatsController::class, 'index'])
+            ->name('stats.index');
+
+        // Device (FCM token)
+        Route::prefix('device')->name('device.')->group(function () {
+            Route::post('fcm-token', [App\Http\Controllers\Api\V1\Driver\DeviceController::class, 'updateFcmToken'])
+                ->name('fcm-token.update');
+            Route::delete('fcm-token', [App\Http\Controllers\Api\V1\Driver\DeviceController::class, 'removeFcmToken'])
+                ->name('fcm-token.remove');
+        });
     });
 });

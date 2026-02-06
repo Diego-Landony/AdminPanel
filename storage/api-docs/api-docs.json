@@ -4172,18 +4172,6 @@
                 "summary": "Get complete menu",
                 "description": "Returns complete menu with categories, products and permanent combos.\n     *\n     * **⚠️ IMPORTANTE - Disclaimer de Precios:**\n     * El campo `price` muestra el precio de PICKUP en CAPITAL (precio base de referencia).\n     * Este NO es el precio de delivery ni el precio en interior.\n     * Puede variar segun area (capital/interior) y tipo de servicio (pickup/delivery).\n     *\n     * El precio final se calcula automaticamente cuando el usuario:\n     * - Selecciona un restaurante para pickup (PUT /cart/restaurant)\n     * - Selecciona una direccion para delivery (PUT /cart/delivery-address)\n     *\n     * **📋 IMPORTANTE - Ordenamiento del Menú:**\n     * Flutter debe combinar `categories` y `combos` usando el campo `sort_order` para mostrar\n     * el menú en el orden configurado por el administrador.\n     *\n     * 1. `categories[]` - Solo incluye categorías normales (is_combo_category = false)\n     * 2. `combos_category` - Categoría especial para combos con su `sort_order`\n     * 3. `combos[]` - Lista de combos que van en esa sección\n     *\n     * Flutter debe:\n     * - Combinar ambos arrays usando `sort_order`\n     * - Ordenar todo de menor a mayor\n     * - Permitir orden mixto (ej: Productos, Combos, Productos)\n     * - Ordenar productos dentro de cada categoría por `product.sort_order`\n     * - Ordenar combos dentro de la sección por `combo.sort_order`\n     *\n     * For promotions/offers, use GET /api/v1/menu/promotions.",
                 "operationId": "fa6c34f6134451c1793d68fdbf350ec6",
-                "parameters": [
-                    {
-                        "name": "lite",
-                        "in": "query",
-                        "description": "If true, returns lightweight menu structure for navigation",
-                        "required": false,
-                        "schema": {
-                            "type": "boolean",
-                            "example": true
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Menu retrieved successfully",
@@ -4215,11 +4203,6 @@
                                                         "name": {
                                                             "type": "string",
                                                             "example": "Combos"
-                                                        },
-                                                        "image_url": {
-                                                            "type": "string",
-                                                            "example": "/storage/categories/combos.jpg",
-                                                            "nullable": true
                                                         },
                                                         "sort_order": {
                                                             "description": "Position in menu - mix with categories sort_order",
@@ -4957,6 +4940,35 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/api/v1/menu/promotions/combinados/{id}": {
+            "get": {
+                "tags": [
+                    "Menu"
+                ],
+                "summary": "Get combinado details",
+                "description": "Returns a specific bundle special promotion if valid now.",
+                "operationId": "01efa9bd26ccde93990ac9d499cb8081",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Combinado ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Combinado retrieved successfully"
+                    },
+                    "404": {
+                        "description": "Combinado not found or not available"
                     }
                 }
             }
@@ -7833,7 +7845,8 @@
                             "schema": {
                                 "required": [
                                     "reason_id",
-                                    "message"
+                                    "message",
+                                    "contact_preference"
                                 ],
                                 "properties": {
                                     "reason_id": {
@@ -7845,6 +7858,15 @@
                                         "description": "Mensaje inicial del ticket",
                                         "type": "string",
                                         "example": "Tengo un problema con mi pedido #123"
+                                    },
+                                    "contact_preference": {
+                                        "description": "Preferencia de contacto: 'no_contact' = solo feedback, 'contact' = espera que admin contacte",
+                                        "type": "string",
+                                        "enum": [
+                                            "no_contact",
+                                            "contact"
+                                        ],
+                                        "example": "contact"
                                     },
                                     "attachments[]": {
                                         "description": "Imágenes adjuntas (máx 4)",

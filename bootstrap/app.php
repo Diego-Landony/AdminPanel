@@ -2,7 +2,10 @@
 
 use App\Http\Middleware\CheckRestaurantAccess;
 use App\Http\Middleware\CheckUserPermissions;
+use App\Http\Middleware\EnsureDriverIsActive;
+use App\Http\Middleware\EnsureDriverIsAvailable;
 use App\Http\Middleware\EnsureDriverOwnership;
+use App\Http\Middleware\EnsureOrderBelongsToDriver;
 use App\Http\Middleware\EnsureOrderBelongsToRestaurant;
 use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\HandleAppearance;
@@ -54,6 +57,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'verified.api' => \App\Http\Middleware\EnsureEmailIsVerifiedForApi::class,
             'restaurant.access' => CheckRestaurantAccess::class,
             'driver.ownership' => EnsureDriverOwnership::class,
+            'driver.active' => EnsureDriverIsActive::class,
+            'driver.available' => EnsureDriverIsAvailable::class,
+            'driver.order.belongs' => EnsureOrderBelongsToDriver::class,
             'restaurant.order' => EnsureOrderBelongsToRestaurant::class,
         ]);
 

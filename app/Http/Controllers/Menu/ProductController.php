@@ -10,6 +10,7 @@ use App\Models\Menu\Category;
 use App\Models\Menu\Product;
 use App\Models\Menu\ProductVariant;
 use App\Models\Menu\Section;
+use App\Services\MenuVersionService;
 use App\Support\ActivityLogging;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -624,6 +625,9 @@ class ProductController extends Controller
             'new_values' => ['items_count' => $count],
             'user_agent' => request()->userAgent(),
         ]);
+
+        // Invalidar versión del menú para que Flutter actualice su caché
+        app(MenuVersionService::class)->invalidate('products_reordered');
 
         return redirect()->back()
             ->with('success', 'Orden actualizado exitosamente.');

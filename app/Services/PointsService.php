@@ -7,6 +7,8 @@ use App\Models\CustomerPointsTransaction;
 use App\Models\CustomerType;
 use App\Models\Order;
 use App\Models\PointsSetting;
+use App\Services\Wallet\AppleWalletService;
+use App\Services\Wallet\GoogleWalletService;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -123,6 +125,30 @@ class PointsService
 
             $this->checkAndApplyUpgrade($customer);
         });
+
+        // Actualizar el pase de Google Wallet con los nuevos puntos
+        $this->updateWalletPass($customer);
+    }
+
+    /**
+     * Actualiza los pases de wallet del cliente (Google Wallet y Apple Wallet).
+     * Se ejecuta de forma segura sin interrumpir el flujo principal.
+     */
+    private function updateWalletPass(Customer $customer): void
+    {
+        // Actualizar Google Wallet
+        try {
+            app(GoogleWalletService::class)->updateCustomerPass($customer);
+        } catch (\Exception $e) {
+            \Log::warning('Failed to update Google Wallet pass: '.$e->getMessage());
+        }
+
+        // Actualizar Apple Wallet (enviar push notifications)
+        try {
+            app(AppleWalletService::class)->updateCustomerPass($customer);
+        } catch (\Exception $e) {
+            \Log::warning('Failed to update Apple Wallet pass: '.$e->getMessage());
+        }
     }
 
     /**

@@ -8,6 +8,7 @@ use App\Http\Requests\Menu\UpdateComboRequest;
 use App\Models\Menu\Category;
 use App\Models\Menu\Combo;
 use App\Models\Menu\Product;
+use App\Services\MenuVersionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -365,6 +366,9 @@ class ComboController extends Controller
             'new_values' => ['items_count' => $count],
             'user_agent' => request()->userAgent(),
         ]);
+
+        // Invalidar versión del menú para que Flutter actualice su caché
+        app(MenuVersionService::class)->invalidate('combos_reordered');
 
         return redirect()->back()
             ->with('success', 'Orden actualizado exitosamente.');

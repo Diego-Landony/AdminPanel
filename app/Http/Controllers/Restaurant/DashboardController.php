@@ -57,7 +57,7 @@ class DashboardController extends Controller
 
         // Ordenes activas - ordenadas por prioridad de estado y luego más recientes primero
         $activeOrders = Order::where('restaurant_id', $restaurantId)
-            ->with(['customer:id,first_name,last_name,email,phone,subway_card', 'driver:id,name,phone', 'items', 'restaurant:id,name'])
+            ->with(['customer:id,first_name,last_name,email,phone,subway_card', 'driver:id,name', 'items', 'restaurant:id,name'])
             ->whereIn('status', ['pending', 'preparing', 'ready', 'out_for_delivery'])
             ->orderByRaw("FIELD(status, 'pending', 'preparing', 'ready', 'out_for_delivery')")
             ->orderBy('created_at', 'desc')
@@ -95,7 +95,6 @@ class DashboardController extends Controller
                 'driver' => $order->driver ? [
                     'id' => $order->driver->id,
                     'name' => $order->driver->name,
-                    'phone' => $order->driver->phone,
                 ] : null,
                 'created_at' => $order->created_at,
                 'estimated_ready_at' => $order->estimated_ready_at,
@@ -105,7 +104,7 @@ class DashboardController extends Controller
         $availableDrivers = Driver::where('restaurant_id', $restaurantId)
             ->where('is_active', true)
             ->where('is_available', true)
-            ->select(['id', 'name', 'phone'])
+            ->select(['id', 'name'])
             ->get();
 
         return Inertia::render('restaurant/dashboard', [

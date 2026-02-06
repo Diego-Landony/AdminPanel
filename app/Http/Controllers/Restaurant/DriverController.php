@@ -24,7 +24,6 @@ class DriverController extends Controller
                 'id' => $driver->id,
                 'name' => $driver->name,
                 'email' => $driver->email,
-                'phone' => $driver->phone,
                 'is_active' => $driver->is_active,
                 'is_available' => $driver->is_available,
                 'active_orders_count' => $driver->active_orders_count,

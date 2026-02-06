@@ -27,7 +27,6 @@ class StoreDriverRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:drivers,email'],
             'password' => ['required', 'string', Password::min(8), 'confirmed'],
-            'phone' => ['nullable', 'string', 'max:255'],
         ];
     }
 

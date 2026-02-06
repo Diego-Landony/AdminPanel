@@ -177,3 +177,23 @@ export const ORDER_TABLE_STATUS_CONFIG: Record<string, {
         description: 'Pedido cancelado',
     },
 };
+
+/**
+ * Obtiene la etiqueta de estado sensible al contexto (delivery vs pickup)
+ */
+export function getStatusLabel(status: string, serviceType?: string): string {
+    if (status === 'ready') {
+        return serviceType === 'delivery' ? 'Lista para Envío' : 'Lista para Recoger';
+    }
+    return ORDER_TABLE_STATUS_CONFIG[status]?.label || status;
+}
+
+/**
+ * Obtiene la descripción de estado sensible al contexto (delivery vs pickup)
+ */
+export function getStatusDescription(status: string, serviceType?: string): string {
+    if (status === 'ready') {
+        return serviceType === 'delivery' ? 'Esperando motorista' : 'Cliente puede recoger';
+    }
+    return ORDER_TABLE_STATUS_CONFIG[status]?.description || '';
+}

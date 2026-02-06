@@ -50,6 +50,7 @@ class Order extends Model
         'ready_at',
         'delivered_at',
         'assigned_to_driver_at',
+        'accepted_by_driver_at',
         'picked_up_at',
         'points_earned',
         'nit_id',
@@ -72,6 +73,7 @@ class Order extends Model
             'ready_at' => 'datetime',
             'delivered_at' => 'datetime',
             'assigned_to_driver_at' => 'datetime',
+            'accepted_by_driver_at' => 'datetime',
             'picked_up_at' => 'datetime',
             'subtotal' => 'decimal:2',
             'discount_total' => 'decimal:2',
@@ -146,6 +148,32 @@ class Order extends Model
     public function scopeForCustomer($query, int $customerId)
     {
         return $query->where('customer_id', $customerId);
+    }
+
+    /**
+     * Scope para filtrar órdenes asignadas a un driver específico
+     */
+    public function scopeAssignedToDriver($query, int $driverId)
+    {
+        return $query->where('driver_id', $driverId);
+    }
+
+    /**
+     * Scope para filtrar órdenes listas para que el motorista las acepte
+     * (status 'ready' con driver asignado)
+     */
+    public function scopePendingDelivery($query)
+    {
+        return $query->where('status', self::STATUS_READY)
+            ->whereNotNull('driver_id');
+    }
+
+    /**
+     * Scope para filtrar órdenes en camino (out_for_delivery)
+     */
+    public function scopeActiveDelivery($query)
+    {
+        return $query->where('status', self::STATUS_OUT_FOR_DELIVERY);
     }
 
     /**
@@ -226,5 +254,75 @@ class Order extends Model
         if ($this->customer) {
             $this->customer->notify(new DriverAssignedNotification($this));
         }
+    }
+
+    /**
+     * Verifica si la orden puede ser aceptada por un motorista
+     * (status 'ready' con driver asignado)
+     */
+    public function canBeAcceptedByDriver(): bool
+    {
+        return $this->status === self::STATUS_READY && $this->driver_id !== null;
+    }
+
+    /**
+     * Verifica si la orden puede ser marcada como entregada
+     * (status 'out_for_delivery')
+     */
+    public function canBeDelivered(): bool
+    {
+        return $this->status === self::STATUS_OUT_FOR_DELIVERY;
+    }
+
+    /**
+     * Marca la orden como en camino (out_for_delivery)
+     */
+    public function markAsOutForDelivery(): void
+    {
+        $this->update([
+            'status' => self::STATUS_OUT_FOR_DELIVERY,
+            'accepted_by_driver_at' => now(),
+        ]);
+    }
+
+    /**
+     * Marca la orden como entregada
+     */
+    public function markAsDelivered(): void
+    {
+        $this->update([
+            'status' => self::STATUS_DELIVERED,
+            'delivered_at' => now(),
+        ]);
+    }
+
+    /**
+     * Scope para filtrar órdenes completadas/entregadas por un motorista específico
+     * Ordenadas por fecha de entrega descendente
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     */
+    public function scopeCompletedByDriver($query, int $driverId)
+    {
+        return $query->where('driver_id', $driverId)
+            ->whereIn('status', [self::STATUS_DELIVERED, self::STATUS_COMPLETED])
+            ->orderByDesc('delivered_at');
+    }
+
+    /**
+     * Scope para filtrar órdenes entregadas dentro de un período específico
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  string  $period  Acepta: 'today', 'week', 'month', 'year'
+     */
+    public function scopeDeliveredInPeriod($query, string $period)
+    {
+        return match ($period) {
+            'today' => $query->whereDate('delivered_at', today()),
+            'week' => $query->whereBetween('delivered_at', [now()->subDays(7), now()]),
+            'month' => $query->whereBetween('delivered_at', [now()->startOfMonth(), now()]),
+            'year' => $query->whereYear('delivered_at', now()->year),
+            default => $query,
+        };
     }
 }

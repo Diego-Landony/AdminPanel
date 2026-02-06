@@ -91,10 +91,15 @@
             height: 36px;
         }
 
+        /* Main Gradient Wrapper */
+        .main-gradient {
+            background: linear-gradient(180deg, var(--subway-green) 0%, #00a550 100%);
+            position: relative;
+        }
+
         /* Hero Section */
         .hero {
-            background: linear-gradient(135deg, var(--subway-green) 0%, var(--subway-green-dark) 100%);
-            padding: 7rem 2rem 4rem;
+            padding: 7rem 2rem 6rem;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -102,17 +107,6 @@
             overflow: hidden;
         }
 
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 80%;
-            height: 200%;
-            background: rgba(255,255,255,0.03);
-            transform: rotate(-15deg);
-            pointer-events: none;
-        }
 
         .hero-content {
             max-width: 1200px;
@@ -196,7 +190,9 @@
             background: #1a1a1a;
             border-radius: 40px;
             padding: 12px;
-            box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+            box-shadow:
+                0 25px 50px rgba(0,0,0,0.3),
+                0 10px 20px rgba(0,0,0,0.2);
             transition: transform 0.3s ease;
         }
 
@@ -212,9 +208,10 @@
 
         /* Features Section */
         .features {
-            padding: 3.5rem 2rem;
-            background: var(--subway-yellow);
+            padding: 5rem 2rem;
+            position: relative;
         }
+
 
         .features-content {
             max-width: 1100px;
@@ -224,7 +221,7 @@
         .features-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0;
+            gap: 1.5rem;
         }
 
         .feature-card {
@@ -234,35 +231,27 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-        }
-
-        .feature-card:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 20%;
-            height: 60%;
-            width: 1px;
-            background: rgba(0,0,0,0.15);
+            background: rgba(255,255,255,0.9);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
         .feature-card h3 {
             font-size: 1.35rem;
             font-weight: 700;
-            color: #1a1a1a;
+            color: var(--subway-green);
             margin-bottom: 0.5rem;
         }
 
         .feature-card p {
-            color: rgba(0,0,0,0.7);
-            font-size: 1.2rem;
+            color: var(--text-gray);
+            font-size: 1.1rem;
             line-height: 1.5;
         }
 
         /* CTA Section */
         .cta {
             padding: 6rem 2rem;
-            background: var(--subway-green);
             text-align: center;
         }
 
@@ -369,16 +358,11 @@
 
             .features-grid {
                 grid-template-columns: 1fr;
-                gap: 0;
+                gap: 1rem;
             }
 
-            .feature-card:not(:last-child)::after {
-                right: 10%;
-                left: 10%;
-                top: auto;
-                bottom: 0;
-                height: 1px;
-                width: 80%;
+            .feature-card {
+                padding: 1.5rem 1.75rem;
             }
         }
 
@@ -422,6 +406,22 @@
                 padding: 0.6rem 1rem;
             }
 
+            .features {
+                padding: 3rem 1rem;
+            }
+
+            .feature-card {
+                padding: 1.25rem 1.5rem;
+            }
+
+            .feature-card h3 {
+                font-size: 1.15rem;
+            }
+
+            .feature-card p {
+                font-size: 1rem;
+            }
+
             .cta h2 {
                 font-size: 1.75rem;
             }
@@ -448,6 +448,8 @@
         </div>
     </header>
 
+    <!-- Main Gradient Wrapper -->
+    <main class="main-gradient">
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
@@ -503,7 +505,7 @@
     <!-- CTA Section -->
     <section class="cta" id="descargar">
         <div class="cta-content">
-            <img src="{{ asset('iconsubway.png') }}" alt="Subway Guatemala App" class="cta-icon">
+            <img src="{{ asset('subway-icon.png') }}" alt="Subway Guatemala App" class="cta-icon">
             <h2>Descarga la app ahora</h2>
             <p>Únete a miles de usuarios que ya disfrutan los beneficios de ordenar con Subway Guatemala</p>
             <div class="store-buttons">
@@ -524,6 +526,7 @@
             </div>
         </div>
     </section>
+    </main>
 
     <!-- Footer -->
     <footer class="footer">

@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-import { printOrder } from '@/components/orders/PrintComanda';
+import { printOrder, generatePrintHTML } from '@/components/orders/PrintComanda';
 
 import { StatusBadge, StatusConfig } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
@@ -246,25 +246,17 @@ export default function RestaurantOrderShow({ order, available_drivers }: Props)
     const [selectedDriverId, setSelectedDriverId] = useState<string>('');
     const [driverSearchOpen, setDriverSearchOpen] = useState(false);
 
-    // Detectar si es modo print-only
-    const [isPrintMode, setIsPrintMode] = useState(false);
-
-    // Auto-imprimir si viene con ?print=1 y cerrar la ventana
+    // Auto-imprimir si viene con ?print=1
+    // Reemplaza esta pestaña con el HTML de la comanda directamente (sin abrir otra ventana)
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('print') === '1') {
-            setIsPrintMode(true);
-            // Pequeño delay para asegurar que el componente esté renderizado
-            const timer = setTimeout(() => {
-                printOrder(order);
-                // Cerrar la ventana después de un breve delay para permitir que se abra el diálogo de impresión
-                setTimeout(() => {
-                    window.close();
-                }, 500);
-            }, 300);
-            return () => clearTimeout(timer);
+            const html = generatePrintHTML(order as any, { autoClose: true });
+            document.open();
+            document.write(html);
+            document.close();
         }
-    }, [order]);
+    }, []);
 
     const handlePrint = () => {
         printOrder(order);
@@ -333,20 +325,6 @@ export default function RestaurantOrderShow({ order, available_drivers }: Props)
             },
         );
     };
-
-    // Si es modo print, mostrar pantalla de carga mínima
-    if (isPrintMode) {
-        return (
-            <div className="flex h-screen items-center justify-center bg-background">
-                <div className="text-center">
-                    <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                    <p className="mt-4 text-sm text-muted-foreground">
-                        Imprimiendo orden #{order.order_number}...
-                    </p>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <RestaurantLayout title={`Orden #${order.order_number}`}>

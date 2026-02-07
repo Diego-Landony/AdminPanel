@@ -69,9 +69,9 @@ const groupOptionsBySection = (options: OrderItemOption[]): Record<string, strin
 };
 
 /**
- * Genera el HTML completo para imprimir la comanda en una ventana nueva
+ * Genera el HTML completo para imprimir la comanda
  */
-const generatePrintHTML = (order: PrintComandaProps['order']): string => {
+export const generatePrintHTML = (order: PrintComandaProps['order'], options?: { autoClose?: boolean }): string => {
     const serviceTypeLabel = order.service_type === 'delivery' ? 'DOMICILIO' : 'RECOGER EN RESTAURANTE';
 
     let itemsHTML = '';
@@ -246,6 +246,12 @@ const generatePrintHTML = (order: PrintComandaProps['order']): string => {
     <script>
         window.onload = function() {
             window.print();
+            ${options?.autoClose ? `
+            // Auto-cerrar después de imprimir
+            window.onafterprint = function() { window.close(); };
+            // Fallback para navegadores que no soporten onafterprint
+            setTimeout(function() { window.close(); }, 2000);
+            ` : ''}
         };
     </script>
 </body>
@@ -254,15 +260,35 @@ const generatePrintHTML = (order: PrintComandaProps['order']): string => {
 
 /**
  * Función para imprimir una orden directamente (abre en nueva pestaña)
+ * Usa Blob URL para evitar problemas con about:blank y bloqueo del dashboard
  */
 export const printOrder = (order: PrintComandaProps['order']): void => {
-    // Usar nombre único para cada orden para permitir múltiples pestañas
-    const windowName = `print_order_${order.id || order.order_number}_${Date.now()}`;
-    const printWindow = window.open('', windowName);
+    const html = generatePrintHTML(order);
+
+    // Crear Blob con el HTML
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const blobUrl = URL.createObjectURL(blob);
+
+    // Abrir ventana con el blob URL (más confiable que about:blank)
+    const printWindow = window.open(blobUrl, '_blank');
+
     if (printWindow) {
-        printWindow.document.open();
-        printWindow.document.write(generatePrintHTML(order));
-        printWindow.document.close();
+        // Limpiar el blob URL después de que la ventana cargue
+        printWindow.onload = () => {
+            // Revocar después de un delay para asegurar que se complete la impresión
+            setTimeout(() => {
+                URL.revokeObjectURL(blobUrl);
+            }, 60000); // Limpiar después de 1 minuto
+        };
+
+        // Fallback: si onload no se dispara, limpiar de todas formas
+        setTimeout(() => {
+            URL.revokeObjectURL(blobUrl);
+        }, 120000); // 2 minutos máximo
+    } else {
+        // Si no se pudo abrir la ventana, limpiar inmediatamente
+        URL.revokeObjectURL(blobUrl);
+        console.warn('No se pudo abrir la ventana de impresión. Verifica que los pop-ups estén permitidos.');
     }
 };
 
